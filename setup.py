@@ -3,7 +3,7 @@
 # @Author: oesteban
 # @Date:   2015-11-19 16:44:27
 # @Last Modified by:   oesteban
-# @Last Modified time: 2016-03-10 13:32:41
+# @Last Modified time: 2016-03-10 13:35:06
 """ fmriprep setup script """
 import os
 import sys
@@ -17,17 +17,17 @@ def main():
     from setuptools import setup
 
     setup(
-        name='mriqc',
+        name='fmriprep',
         version=__version__,
         description='',
         author_email='crn.poldracklab@gmail.com',
-        url='https://github.com/poldracklab/mriqc',
+        url='https://github.com/poldracklab/preprocessing-workflow',
         download_url='',
         license='3-clause BSD',
         entry_points={'console_scripts': ['fmriprep=fmriprep.run_workflow:main',]},
         packages=['fmriprep', 'fmriprep.workflows', 'fmriprep.viz'],
         # package_data={'fmriprep': ['data/*.txt']},
-        install_requires=['numpy', 'nipype', 'nibabel'],
+        install_requires=['numpy', 'nipype', 'nibabel', 'mriqc', 'PyYAML'],
         zip_safe=False,
         classifiers=[
             'Development Status :: 3 - Alpha',
