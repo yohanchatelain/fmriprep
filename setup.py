@@ -3,7 +3,7 @@
 # @Author: oesteban
 # @Date:   2015-11-19 16:44:27
 # @Last Modified by:   oesteban
-# @Last Modified time: 2016-03-10 12:45:51
+# @Last Modified time: 2016-03-10 13:32:41
 """ fmriprep setup script """
 import os
 import sys
@@ -24,7 +24,7 @@ def main():
         url='https://github.com/poldracklab/mriqc',
         download_url='',
         license='3-clause BSD',
-        entry_points={'console_scripts': ['mriqc=fmriprep.run_workflow:main',]},
+        entry_points={'console_scripts': ['fmriprep=fmriprep.run_workflow:main',]},
         packages=['fmriprep', 'fmriprep.workflows', 'fmriprep.viz'],
         # package_data={'fmriprep': ['data/*.txt']},
         install_requires=['numpy', 'nipype', 'nibabel'],
