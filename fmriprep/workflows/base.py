@@ -10,7 +10,7 @@ Created on Wed Dec  2 17:35:40 2015
 
 import os
 import os.path as op
-
+import pkg_resources as pkgr
 from ..variables_preprocessing import data_dir, work_dir, plugin, plugin_args
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
@@ -27,7 +27,7 @@ def fmri_preprocess(name='fMRI_prep', settings=None, subject_list=None):
     if settings is None:
         settings = {}
 
-    for key in ['fsl', 'skull_strip', 'epi']:
+    for key in ['fsl', 'skull_strip', 'epi', 'connectivity']:
         if settings.get(key) is None:
             settings[key] = {}
 
@@ -70,11 +70,11 @@ def fmri_preprocess(name='fMRI_prep', settings=None, subject_list=None):
     T1_skull_strip = pe.Node(
         BrainExtraction(dimension=3), name="antsreg_T1_Brain_Extraction")
     T1_skull_strip.inputs.brain_template = settings[
-        'skull_strip'].get('brain_template')
+        'skull_strip'].get('brain_template', pkgr.resource_filename('fmriprep', 'data/brain_template.nii.gz'))
     T1_skull_strip.inputs.brain_probability_mask = settings[
-        'skull_strip'].get('brain_probmask')
+        'skull_strip'].get('brain_probmask', pkgr.resource_filename('fmriprep', 'data/brain_probmask.nii.gz'))
     T1_skull_strip.inputs.extraction_registration_mask = settings[
-        'skull_strip'].get('reg_mask')
+        'skull_strip'].get('reg_mask', pkgr.resource_filename('fmriprep', 'data/reg_mask.nii.gz'))
 
     # fast -o fast_test -N -v
     # ../Preprocessing_test_workflow/_subject_id_S2529LVY1263171/Bias_Field_Correction/sub-S2529LVY1263171_run-1_T1w_corrected.nii.gz
@@ -169,7 +169,7 @@ def fmri_preprocess(name='fMRI_prep', settings=None, subject_list=None):
     flt_bbr = pe.Node(FLIRT(dof=6, bins=640, cost_func='bbr', pedir=1, echospacing=dwell_time),
                       name="Flirt_BBR")
     flt_bbr.inputs.schedule = settings['fsl'].get(
-        'flirt_bbr', op.join(os.getenv('FSLDIR', 'etc/flirtsch/bbr.sch')))
+        'flirt_bbr', op.join(os.getenv('FSLDIR'), 'etc/flirtsch/bbr.sch'))
 
     # make equivalent warp fields
     # convert_xfm -omat ${vout}_inv.mat -inverse ${vout}.mat
@@ -224,12 +224,12 @@ def fmri_preprocess(name='fMRI_prep', settings=None, subject_list=None):
     bbr_sbref_2_T1 = pe.Node(
         FLIRT(dof=6, pedir=1, echospacing=dwell_time, bins=640, cost_func='bbr'), name="BBR_SBRef_to_T1")
     bbr_sbref_2_T1.inputs.schedule = settings['fsl'].get(
-        'flirt_bbr', op.join(os.getenv('FSLDIR', 'etc/flirtsch/bbr.sch')))
+        'flirt_bbr', op.join(os.getenv('FSLDIR'), 'etc/flirtsch/bbr.sch'))
 
     # ANTs registration
     antsreg = pe.Node(Registration(), name="T1_2_MNI_Registration")
     antsreg.inputs.fixed_image = settings['fsl'].get('mni_template', op.join(
-        os.getenv('FSLDIR', 'data/standard/MNI152_T1_2mm_brain.nii.gz')))
+        os.getenv('FSLDIR'), 'data/standard/MNI152_T1_2mm_brain.nii.gz'))
     antsreg.inputs.metric = ['Mattes'] * 3 + [['Mattes', 'CC']]
     antsreg.inputs.metric_weight = [1] * 3 + [[0.5, 0.5]]
     antsreg.inputs.dimension = 3
@@ -257,7 +257,7 @@ def fmri_preprocess(name='fMRI_prep', settings=None, subject_list=None):
     at = pe.Node(ApplyTransforms(dimension=3, interpolation='NearestNeighbor',
                                  default_value=0), name="Apply_ANTS_transform_MNI_2_T1")
     at.inputs.input_image = settings['connectivity'].get(
-        'parellation', "/home/cmoodie/Parcels_MNI_222.nii.gz")
+        'parellation', pkgr.resource_filename('fmriprep', 'data/parcellation.nii.gz'))
 
     invt_mat = pe.Node(
         ConvertXFM(invert_xfm=True), name="EpiReg_Inverse_Transform")
