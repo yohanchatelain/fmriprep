@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ==========================================================
 FMRIPREP: A Robust Preprocessing Pipeline for fMRI Data
 ==========================================================
@@ -97,9 +96,8 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 =======
 The fMRI preprocessing workflow
 ===============================
 
-
->>>>>>> 6aceddd0a2ca9f241d1bb6dacd98668b0111a67e
