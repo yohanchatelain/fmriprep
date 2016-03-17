@@ -16,8 +16,7 @@ from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 from nipype.interfaces.fsl import (Merge, MCFLIRT, BET, FAST, FLIRT, TOPUP, FUGUE, BinaryMaths,
                                    UnaryMaths, ApplyWarp, ConvertXFM, ConvertWarp, Split, MeanImage)
-from nipype.interfaces.ants import N4BiasFieldCorrection, Registration, ApplyTransforms
-from nipype.interfaces.ants.segmentation import BrainExtraction
+from nipype.interfaces.ants import N4BiasFieldCorrection, Registration, ApplyTransforms, BrainExtraction
 
 from .anatomical import t1w_preprocessing
 from variables_preprocessing import data_dir, work_dir, plugin, plugin_args
@@ -39,7 +38,7 @@ def fmri_preprocess(name='fMRI_prep', settings=None, subject_list=None):
     if subject_list is None or not subject_list:
         raise RuntimeError('No subjects were specified')
 
-    t1w_preprocessing_workflow = t1w_preprocessing()
+    t1w_preprocessing_workflow = t1w_preprocessing(settings=settings)
     
     workflow = pe.Workflow(name=name)
 
@@ -234,7 +233,12 @@ def fmri_preprocess(name='fMRI_prep', settings=None, subject_list=None):
         #(n4, T1_seg, [('output_image', 'in_files')]),
         #(n4, antsreg, [('output_image', 'moving_image')]),
         #(antsreg, at, [('inverse_composite_transform', 'transforms')]),
-        (T1_seg, flt_wmseg_sbref, [('tissue_class_map', 'in_file')]),
+        (t1w_preprocessing_workflow, flt_wmseg_sbref, [('tissue_class_map', 'in_file')]),
+        (t1w_preprocessing_workflow, bbr_sbref_2_T1, [('tissue_class_map', 'wm_seg')]),
+        (t1w_preprocessing_workflow, flt_parcels_2_sbref, [('output_image', 'in_file')]),
+        (t1w_preprocessing_workflow, flt_sbref_brain_t1_brain, [('BrainExtractionBrain', 'reference')]),
+        (t1w_preprocessing_workflow, flt_sbref_2_T1, [('output_image', 'reference')]),
+        (t1w_preprocessing_workflow, bbr_sbref_2_T1, [('output_image', 'reference')]),
         (inputnode, flt_wmseg_sbref, [('sbref', 'reference')]),
         #(inputnode, SBRef_skull_strip, [("sbref", "in_file")]),
         (inputnode, create_parameters_node, [('fieldmaps', 'fieldmaps')]),
@@ -302,18 +306,13 @@ def fmri_preprocess(name='fMRI_prep', settings=None, subject_list=None):
         (aw_final, merge_epi, [('out_file', 'in_files')]),
         (merge_epi, epi_mean, [('merged_file', 'in_file')]),
         (strip_corrected_sbref, flt_sbref_brain_t1_brain, [('out_file', 'in_file')]),
-        (T1_skull_strip, flt_sbref_brain_t1_brain, [('BrainExtractionBrain', 'reference')]),
         (fugue_sbref, flt_sbref_2_T1, [('unwarped_file', 'in_file')]),
-        (n4, flt_sbref_2_T1, [('output_image', 'reference')]),
         (flt_sbref_brain_t1_brain, flt_sbref_2_T1, [('out_matrix_file', 'in_matrix_file')]),
         (strip_corrected_sbref, bbr_sbref_2_T1, [('out_file', 'in_file')]),
-        (n4, bbr_sbref_2_T1, [('output_image', 'reference')]),
         (fugue_dilate, bbr_sbref_2_T1, [('fmap_out_file', 'fieldmap')]),
         (flt_sbref_2_T1, bbr_sbref_2_T1, [('out_matrix_file', 'in_matrix_file')]),
-        (T1_seg, bbr_sbref_2_T1, [('tissue_class_map', 'wm_seg')]),
         (inputnode, at, [('t1', 'reference_image')]),
         (bbr_sbref_2_T1, invt_mat, [('out_matrix_file', 'in_file')]),
-        (at, flt_parcels_2_sbref, [('output_image', 'in_file')]),
         (invt_mat, flt_parcels_2_sbref, [('out_file', 'in_matrix_file')]),
         (fugue_sbref, flt_parcels_2_sbref, [('unwarped_file', 'reference')])
     ])
