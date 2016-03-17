@@ -1,8 +1,8 @@
-from nipype.interfaces.ants import (ApplyTransform,  BrainExtraction, 
-    N4BiasFieldCorrection, Registration)
+from nipype.interfaces import utility as niu
+from nipype.interfaces.ants import N4BiasFieldCorrection, Registration, ApplyTransforms, BrainExtraction
 from nipype.pipeline import engine as pe
 
-def t1w_preprocessing(name='t1w_preprocessing'):
+def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     
     inputnode = pe.Node(niu.IdentityInterface(fields=['t1']), name='inputnode')
     
@@ -14,11 +14,11 @@ def t1w_preprocessing(name='t1w_preprocessing'):
     T1_skull_strip = pe.Node(
         BrainExtraction(dimension=3), name="antsreg_T1_Brain_Extraction")
     T1_skull_strip.inputs.brain_template = settings[
-        'skull_strip'].get('brain_template', pkgr.resource_filename('fmriprep', 'data/brain_template.nii.gz'))
+        'skull_strip'].get('brain_template', pkgr.resource_filename('fmriprep', '../data/brain_template.nii.gz'))
     T1_skull_strip.inputs.brain_probability_mask = settings[
-        'skull_strip'].get('brain_probmask', pkgr.resource_filename('fmriprep', 'data/brain_probmask.nii.gz'))
+        'skull_strip'].get('brain_probmask', pkgr.resource_filename('fmriprep', '../data/brain_probmask.nii.gz'))
     T1_skull_strip.inputs.extraction_registration_mask = settings[
-        'skull_strip'].get('reg_mask', pkgr.resource_filename('fmriprep', 'data/reg_mask.nii.gz'))
+        'skull_strip'].get('reg_mask', pkgr.resource_filename('fmriprep', '../data/reg_mask.nii.gz'))
     
     # ANTs registration
     antsreg = pe.Node(Registration(), name="T1_2_MNI_Registration")
