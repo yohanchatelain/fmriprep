@@ -1,3 +1,5 @@
+-
+
 ==========================================================
 FMRIPREP: A Robust Preprocessing Pipeline for fMRI Data
 ==========================================================
@@ -101,3 +103,4 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 The fMRI preprocessing workflow
 ===============================
 
+-
