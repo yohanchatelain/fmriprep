@@ -1,9 +1,17 @@
+import os
+import pkg_resources as pkgr
+
 from nipype.interfaces import utility as niu
 from nipype.interfaces.ants import N4BiasFieldCorrection, Registration, ApplyTransforms, BrainExtraction
+from nipype.interfaces.fsl import FAST
 from nipype.pipeline import engine as pe
 
-def t1w_preprocessing(name='t1w_preprocessing', settings=None):
-    
+def t1w_preprocessing(name='t1w_preprocessing', settings={}):
+    for key in ['fsl', 'skull_strip', 'epi', 'connectivity']:
+        if settings.get(key) is None:
+            settings[key] = {}
+
+
     inputnode = pe.Node(niu.IdentityInterface(fields=['t1']), name='inputnode')
     
     # T1 Bias Field Correction
@@ -14,15 +22,15 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     T1_skull_strip = pe.Node(
         BrainExtraction(dimension=3), name="antsreg_T1_Brain_Extraction")
     T1_skull_strip.inputs.brain_template = settings[
-        'skull_strip'].get('brain_template', pkgr.resource_filename('fmriprep', '../data/brain_template.nii.gz'))
+        'skull_strip'].get('brain_template', pkgr.resource_filename('fmriprep', 'data/brain_template.nii.gz'))
     T1_skull_strip.inputs.brain_probability_mask = settings[
-        'skull_strip'].get('brain_probmask', pkgr.resource_filename('fmriprep', '../data/brain_probmask.nii.gz'))
+        'skull_strip'].get('brain_probmask', pkgr.resource_filename('fmriprep', 'data/brain_probmask.nii.gz'))
     T1_skull_strip.inputs.extraction_registration_mask = settings[
-        'skull_strip'].get('reg_mask', pkgr.resource_filename('fmriprep', '../data/reg_mask.nii.gz'))
+        'skull_strip'].get('reg_mask', pkgr.resource_filename('fmriprep', 'data/reg_mask.nii.gz'))
     
     # ANTs registration
     antsreg = pe.Node(Registration(), name="T1_2_MNI_Registration")
-    antsreg.inputs.fixed_image = settings['fsl'].get('mni_template', op.join(
+    antsreg.inputs.fixed_image = settings['fsl'].get('mni_template', os.path.join(
         os.getenv('FSLDIR'), 'data/standard/MNI152_T1_2mm_brain.nii.gz'))
     antsreg.inputs.metric = ['Mattes'] * 3 + [['Mattes', 'CC']]
     antsreg.inputs.metric_weight = [1] * 3 + [[0.5, 0.5]]
@@ -60,6 +68,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     workflow = pe.Workflow(name=name)
     workflow.connect([
         (inputnode, n4, [('t1', 'input_image')]),
+        (inputnode, at, [('t1', 'reference_image')]),
         (n4, antsreg, [('output_image', 'moving_image')]),
         (antsreg, at, [('inverse_composite_transform', 'transforms')]),
         (n4, T1_skull_strip, [('output_image', 'anatomical_image')]),

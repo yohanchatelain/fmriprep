@@ -18,8 +18,8 @@ from nipype.interfaces.fsl import (Merge, MCFLIRT, BET, FAST, FLIRT, TOPUP, FUGU
                                    UnaryMaths, ApplyWarp, ConvertXFM, ConvertWarp, Split, MeanImage)
 from nipype.interfaces.ants import N4BiasFieldCorrection, Registration, ApplyTransforms, BrainExtraction
 
-from .anatomical import t1w_preprocessing
-from variables_preprocessing import data_dir, work_dir, plugin, plugin_args
+from fmriprep.workflows.anatomical import t1w_preprocessing
+from fmriprep.variables_preprocessing import data_dir, work_dir, plugin, plugin_args
 
 def fmri_preprocess(name='fMRI_prep', settings=None, subject_list=None):
     """
@@ -38,7 +38,7 @@ def fmri_preprocess(name='fMRI_prep', settings=None, subject_list=None):
     if subject_list is None or not subject_list:
         raise RuntimeError('No subjects were specified')
 
-    t1w_preprocessing_workflow = t1w_preprocessing(settings=settings)
+    t1w_preproc = t1w_preprocessing(settings=settings)
     
     workflow = pe.Workflow(name=name)
 
@@ -222,7 +222,10 @@ def fmri_preprocess(name='fMRI_prep', settings=None, subject_list=None):
 
     ########################################## Connecting Workflow pe.Nodes ##
 
-    workflow.connect([
+    workflow.connect([ 
+        (t1w_preproc, flt_wmseg_sbref, [('T1_Segmentation.tissue_class_files', 'in_file')]),
+    ])
+    '''
         (inputnode, fslmerge, [('fieldmaps', 'in_files')]),
         (fslmerge, motion_correct_SE_maps, [('merged_file', 'in_file')]),
         (inputnode, motion_correct_SE_maps, [('sbref', 'ref_file')]),
@@ -311,11 +314,10 @@ def fmri_preprocess(name='fMRI_prep', settings=None, subject_list=None):
         (strip_corrected_sbref, bbr_sbref_2_T1, [('out_file', 'in_file')]),
         (fugue_dilate, bbr_sbref_2_T1, [('fmap_out_file', 'fieldmap')]),
         (flt_sbref_2_T1, bbr_sbref_2_T1, [('out_matrix_file', 'in_matrix_file')]),
-        (inputnode, at, [('t1', 'reference_image')]),
         (bbr_sbref_2_T1, invt_mat, [('out_matrix_file', 'in_file')]),
         (invt_mat, flt_parcels_2_sbref, [('out_file', 'in_matrix_file')]),
         (fugue_sbref, flt_parcels_2_sbref, [('unwarped_file', 'reference')])
-    ])
+    '''
 
     return workflow
 
