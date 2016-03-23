@@ -223,9 +223,6 @@ def fmri_preprocess(name='fMRI_prep', settings=None, subject_list=None):
     ########################################## Connecting Workflow pe.Nodes ##
 
     workflow.connect([ 
-        (t1w_preproc, flt_wmseg_sbref, [('T1_Segmentation.tissue_class_files', 'in_file')]),
-    ])
-    '''
         (inputnode, fslmerge, [('fieldmaps', 'in_files')]),
         (fslmerge, motion_correct_SE_maps, [('merged_file', 'in_file')]),
         (inputnode, motion_correct_SE_maps, [('sbref', 'ref_file')]),
@@ -236,12 +233,12 @@ def fmri_preprocess(name='fMRI_prep', settings=None, subject_list=None):
         #(n4, T1_seg, [('output_image', 'in_files')]),
         #(n4, antsreg, [('output_image', 'moving_image')]),
         #(antsreg, at, [('inverse_composite_transform', 'transforms')]),
-        (t1w_preprocessing_workflow, flt_wmseg_sbref, [('tissue_class_map', 'in_file')]),
-        (t1w_preprocessing_workflow, bbr_sbref_2_T1, [('tissue_class_map', 'wm_seg')]),
-        (t1w_preprocessing_workflow, flt_parcels_2_sbref, [('output_image', 'in_file')]),
-        (t1w_preprocessing_workflow, flt_sbref_brain_t1_brain, [('BrainExtractionBrain', 'reference')]),
-        (t1w_preprocessing_workflow, flt_sbref_2_T1, [('output_image', 'reference')]),
-        (t1w_preprocessing_workflow, bbr_sbref_2_T1, [('output_image', 'reference')]),
+        (t1w_preproc, flt_wmseg_sbref, [('T1_Segmentation.tissue_class_map', 'in_file')]),
+        (t1w_preproc, bbr_sbref_2_T1, [('T1_Segmentation.tissue_class_map', 'wm_seg')]),
+        (t1w_preproc, flt_parcels_2_sbref, [('Bias_Field_Correction.output_image', 'in_file')]),
+        (t1w_preproc, flt_sbref_brain_t1_brain, [('antsreg_T1_Brain_Extraction.BrainExtractionBrain', 'reference')]),
+        (t1w_preproc, flt_sbref_2_T1, [('Bias_Field_Correction.output_image', 'reference')]),
+        (t1w_preproc, bbr_sbref_2_T1, [('Bias_Field_Correction.output_image', 'reference')]),
         (inputnode, flt_wmseg_sbref, [('sbref', 'reference')]),
         #(inputnode, SBRef_skull_strip, [("sbref", "in_file")]),
         (inputnode, create_parameters_node, [('fieldmaps', 'fieldmaps')]),
@@ -317,7 +314,7 @@ def fmri_preprocess(name='fMRI_prep', settings=None, subject_list=None):
         (bbr_sbref_2_T1, invt_mat, [('out_matrix_file', 'in_file')]),
         (invt_mat, flt_parcels_2_sbref, [('out_file', 'in_matrix_file')]),
         (fugue_sbref, flt_parcels_2_sbref, [('unwarped_file', 'reference')])
-    '''
+    ])
 
     return workflow
 
