@@ -233,6 +233,7 @@ def fmri_preprocess(name='fMRI_prep', settings=None, subject_list=None):
         #(n4, T1_seg, [('output_image', 'in_files')]),
         #(n4, antsreg, [('output_image', 'moving_image')]),
         #(antsreg, at, [('inverse_composite_transform', 'transforms')]),
+        (inputnode, t1w_preproc, [('t1', 'inputnode.t1')]),
         (t1w_preproc, flt_wmseg_sbref, [('T1_Segmentation.tissue_class_map', 'in_file')]),
         (t1w_preproc, bbr_sbref_2_T1, [('T1_Segmentation.tissue_class_map', 'wm_seg')]),
         (t1w_preproc, flt_parcels_2_sbref, [('Bias_Field_Correction.output_image', 'in_file')]),

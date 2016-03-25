@@ -11,6 +11,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings={}):
         if settings.get(key) is None:
             settings[key] = {}
 
+    workflow = pe.Workflow(name=name)
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['t1']), name='inputnode')
     
@@ -65,7 +66,6 @@ def t1w_preprocessing(name='t1w_preprocessing', settings={}):
     # ../Preprocessing_test_workflow/_subject_id_S2529LVY1263171/Bias_Field_Correction/sub-S2529LVY1263171_run-1_T1w_corrected.nii.gz
     T1_seg = pe.Node(FAST(no_bias=True), name="T1_Segmentation")
     
-    workflow = pe.Workflow(name=name)
     workflow.connect([
         (inputnode, n4, [('t1', 'input_image')]),
         (inputnode, at, [('t1', 'reference_image')]),
