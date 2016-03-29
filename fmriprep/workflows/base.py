@@ -223,6 +223,7 @@ def fmri_preprocess(name='fMRI_prep', settings=None, subject_list=None):
     ########################################## Connecting Workflow pe.Nodes ##
 
     workflow.connect([ 
+        (inputnode, t1w_preproc, [('t1', 'inputnode.t1')]),
         (inputnode, fslmerge, [('fieldmaps', 'in_files')]),
         (fslmerge, motion_correct_SE_maps, [('merged_file', 'in_file')]),
         (inputnode, motion_correct_SE_maps, [('sbref', 'ref_file')]),
