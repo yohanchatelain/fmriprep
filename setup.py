@@ -10,6 +10,17 @@ import sys
 
 __version__ = '0.0.1'
 
+REQ_LINKS = []
+with open('requirements.txt', 'r') as rfile:
+    REQUIREMENTS = [line.strip() for line in rfile.readlines()]
+
+for i, req in enumerate(REQUIREMENTS):
+    if req.startswith('-e'):
+        REQUIREMENTS[i] = req.split('=')[1]
+        REQ_LINKS.append(req.split()[1])
+
+if REQUIREMENTS is None:
+    REQUIREMENTS = []
 
 def main():
     """ Install entry-point """
@@ -27,7 +38,8 @@ def main():
         entry_points={'console_scripts': ['fmriprep=fmriprep.run_workflow:main',]},
         packages=['fmriprep', 'fmriprep.workflows', 'fmriprep.viz'],
         package_data={'fmriprep': ['data/*.nii.gz']},
-        install_requires=['numpy', 'nipype', 'nibabel', 'mriqc', 'PyYAML'],
+        install_requires=REQUIREMENTS,
+        dependency_links=REQ_LINKS,
         zip_safe=False,
         classifiers=[
             'Development Status :: 3 - Alpha',
