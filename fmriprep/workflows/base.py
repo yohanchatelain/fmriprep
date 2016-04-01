@@ -18,7 +18,9 @@ from nipype.interfaces.fsl import (Merge, MCFLIRT, BET, FAST, FLIRT, TOPUP, FUGU
                                    UnaryMaths, ApplyWarp, ConvertXFM, ConvertWarp, Split, MeanImage)
 from nipype.interfaces.ants import N4BiasFieldCorrection, Registration, ApplyTransforms, BrainExtraction
 
-from fmriprep.workflows.anatomical import t1w_preprocessing
+from .anatomical import t1w_preprocessing
+from .fieldmap import se_pair_workflow
+from .epi import sbref_workflow
 from fmriprep.variables_preprocessing import data_dir, work_dir, plugin, plugin_args
 
 def fmri_preprocess(name='fMRI_prep', settings=None, subject_list=None):
@@ -38,116 +40,35 @@ def fmri_preprocess(name='fMRI_prep', settings=None, subject_list=None):
     if subject_list is None or not subject_list:
         raise RuntimeError('No subjects were specified')
 
-    t1w_preproc = t1w_preprocessing(settings=settings)
     
     workflow = pe.Workflow(name=name)
-
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['fieldmaps', 'fieldmaps_meta', 'epi', 'epi_meta', 'sbref', 'sbref_meta', 't1']),
         name='inputnode')
 
-    fslmerge = pe.Node(Merge(dimension='t'), name="Merge_Fieldmaps")
-    motion_correct_SE_maps = pe.Node(MCFLIRT(), name="Motion_Correction")
+    t1w_preproc = t1w_preprocessing(settings=settings)
+    sepair_wf = se_pair_workflow(settings=settings)
+    sbref_wf = sbref_workflow(settings=settings)
 
     # Skull strip EPI  (try ComputeMask(BaseInterface))
     EPI_BET = pe.Node(
         BET(mask=True, functional=True, frac=0.6), name="EPI_BET")
 
-    # Skull strip SBRef to get reference brain
-    SBRef_BET = pe.Node(
-        BET(mask=True, functional=True, frac=0.6), name="SBRef_BET")
 
-    # Skull strip the SBRef with ANTS Brain Extraction
-
-    #from nipype.interfaces.ants.segmentation import BrainExtraction
-    #SBRef_skull_strip = pe.Node(BrainExtraction(), name = "antsreg_T1_Brain_Extraction")
-    #SBRef_skull_strip.inputs.dimension = 3
-    #SBRef_skull_strip.inputs.brain_template = "/home/cmoodie/Oasis_MICCAI2012-Multi-Atlas-Challenge-Data/T_template0.nii.gz"
-    #SBRef_skull_strip.inputs.brain_probability_mask = "/home/cmoodie/Oasis_MICCAI2012-Multi-Atlas-Challenge-Data/T_template0_BrainCerebellumProbabilityMask.nii.gz"
-    #SBRef_skull_strip.inputs.extraction_registration_mask = "/home/cmoodie/Oasis_MICCAI2012-Multi-Atlas-Challenge-Data/T_template0_BrainCerebellumRegistrationMask.nii.gz"
-
-
-    # Affine transform of T1 segmentation into SBRref space
-    flt_wmseg_sbref = pe.Node(FLIRT(dof=6, bins=640, cost_func='mutualinfo'),
-                              name="WMSeg_2_SBRef_Brain_Affine_Transform")
 
     # Topup Steps
     create_parameters_node = pe.Node(niu.Function(
         input_names=["fieldmaps", "fieldmaps_meta"], output_names=["parameters_file"],
         function=create_encoding_file), name="Create_Parameters", updatehash=True)
 
-    # Run topup to estimate filed distortions
-    topup = pe.Node(TOPUP(), name="TopUp")
 
     # Distortion Correction using the TopUp Fi
 
-    # Convert topup fieldmap to rad/s [ 1 Hz = 6.283 rad/s]
-    fmap_scale = pe.Node(BinaryMaths(operation='mul', operand_value=6.283),
-                         name="Scale_Fieldmap")
-
-    # Skull strip SE Fieldmap magnitude image to get reference brain and mask
-    fmap_mag_BET = pe.Node(BET(mask=True, robust=True), name="Fmap_Mag_BET")
-    # Might want to turn off bias reduction if it is being done in a separate node!
-    #fmap_mag_BET.inputs.reduce_bias = True
-
-    # Unwarp SBRef using Fugue  (N.B. duplicated in epi_reg_workflow!!!!!)
-    fugue_sbref = pe.Node(FUGUE(unwarp_direction='x', dwell_time=dwell_time),
-                          name="SBRef_Unwarping")
-
-    strip_corrected_sbref = pe.Node(BET(mask=True, frac=0.6, robust=True),
-                                    name="BET_Corrected_SBRef")
 
     # Run MCFLIRT to get motion matrices
     # Motion Correction of the EPI with SBRef as Target
     motion_correct_epi = pe.Node(
         MCFLIRT(save_mats=True), name="Motion_Correction_EPI")
-
-    ################################ Run the commands from epi_reg_dof #######
-    # do a standard flirt pre-alignment
-    # flirt -ref ${vrefbrain} -in ${vepi} -dof ${dof} -omat ${vout}_init.mat
-    flt_epi_sbref = pe.Node(FLIRT(
-        dof=6, bins=640, cost_func='mutualinfo'), name="EPI_2_SBRef_Brain_Affine_Transform")
-
-    # WITH FIELDMAP (unwarping steps)
-    # flirt -in ${fmapmagbrain} -ref ${vrefbrain} -dof ${dof} -omat ${vout}_fieldmap2str_init.mat
-    flt_fmap_mag_brain_sbref_brain = pe.Node(FLIRT(dof=6, bins=640, cost_func='mutualinfo'),
-                                             name="Fmap_Mag_Brain_2_SBRef_Brain_Affine_Transform")
-
-    # flirt -in ${fmapmaghead} -ref ${vrefhead} -dof ${dof} -init ${vout}_fieldmap2str_init.mat -omat ${vout}_fieldmap2str.mat -out ${vout}_fieldmap2str -nosearch
-    flt_fmap_mag_sbref = pe.Node(FLIRT(dof=6, no_search=True, bins=640, cost_func='mutualinfo'),
-                                 name="Fmap_Mag_2_SBRef_Affine_Transform")
-
-    # unmask the fieldmap (necessary to avoid edge effects)
-    # fslmaths ${fmapmagbrain} -abs -bin ${vout}_fieldmaprads_mask
-    fmapmagbrain_abs = pe.Node(
-        UnaryMaths(operation='abs'), name="Abs_Fieldmap_Mag_Brain")
-    fmapmagbrain_bin = pe.Node(
-        UnaryMaths(operation='bin'), name="Binarize_Fieldmap_Mag_Brain")
-
-    # fslmaths ${fmaprads} -abs -bin -mul ${vout}_fieldmaprads_mask ${vout}_fieldmaprads_mask
-    fmap_abs = pe.Node(UnaryMaths(operation='abs'), name="Abs_Fieldmap")
-    fmap_bin = pe.Node(UnaryMaths(operation='bin'), name="Binarize_Fieldmap")
-    fmap_mul = pe.Node(
-        BinaryMaths(operation='mul'), name="Fmap_Multiplied_by_Mask")
-
-    # fugue --loadfmap=${fmaprads} --mask=${vout}_fieldmaprads_mask --unmaskfmap --savefmap=${vout}_fieldmaprads_unmasked --unwarpdir=${fdir}   # the direction here should take into account the initial affine (it needs to be the direction in the EPI)
-    fugue_unmask = pe.Node(FUGUE(unwarp_direction='x', dwell_time=dwell_time,
-                                 save_unmasked_fmap=True), name="Fmap_Unmasking")
-
-    # the following is a NEW HACK to fix extrapolation when fieldmap is too small
-    # applywarp -i ${vout}_fieldmaprads_unmasked -r ${vrefhead} --premat=${vout}_fieldmap2str.mat -o ${vout}_fieldmaprads2str_pad0
-    aw_fmap_unmasked_sbref = pe.Node(
-        ApplyWarp(relwarp=True), name="Apply_Warp_Fmap_Unmasked_2_SBRef")
-
-    # fslmaths ${vout}_fieldmaprads2str_pad0 -abs -bin ${vout}_fieldmaprads2str_innermask
-    fmap_unmasked_abs = pe.Node(
-        UnaryMaths(operation='abs'), name="Abs_Fmap_Unmasked_Warp")
-    fmap_unmasked_bin = pe.Node(
-        UnaryMaths(operation='bin'), name="Binarize_Fmap_Unmasked_Warp")
-
-    # fugue --loadfmap=${vout}_fieldmaprads2str_pad0 --mask=${vout}_fieldmaprads2str_innermask --unmaskfmap --unwarpdir=${fdir} --savefmap=${vout}_fieldmaprads2str_dilated
-    fugue_dilate = pe.Node(FUGUE(unwarp_direction='x', dwell_time=dwell_time,
-                                 save_unmasked_fmap=True), name="Fmap_Dilating")
 
     # fslmaths ${vout}_fieldmaprads2str_dilated ${vout}_fieldmaprads2str
     # !!!! Don't need to do this since this just does the same thing as a "mv" command. Just connect previous fugue node directly to subsequent flirt command.
@@ -224,16 +145,11 @@ def fmri_preprocess(name='fMRI_prep', settings=None, subject_list=None):
 
     workflow.connect([ 
         (inputnode, t1w_preproc, [('t1', 'inputnode.t1')]),
-        (inputnode, fslmerge, [('fieldmaps', 'in_files')]),
-        (fslmerge, motion_correct_SE_maps, [('merged_file', 'in_file')]),
-        (inputnode, motion_correct_SE_maps, [('sbref', 'ref_file')]),
+        (inputnode, sepair_wf, [('fieldmaps', 'inputnode.fieldmaps'),
+                                ('sbref', 'inputnode.sbref')]),
+        (inputnode, sbref_wf, [('sbref', 'inputnode.sbref')]),
+
         (inputnode, EPI_BET, [('epi', 'in_file')]),
-        (inputnode, SBRef_BET, [('sbref', 'in_file')]),
-        #(inputnode, n4, [('t1', 'input_image')]),
-        #(n4, T1_skull_strip, [('output_image', 'anatomical_image')]),
-        #(n4, T1_seg, [('output_image', 'in_files')]),
-        #(n4, antsreg, [('output_image', 'moving_image')]),
-        #(antsreg, at, [('inverse_composite_transform', 'transforms')]),
         (inputnode, t1w_preproc, [('t1', 'inputnode.t1')]),
         (t1w_preproc, flt_wmseg_sbref, [('T1_Segmentation.tissue_class_map', 'in_file')]),
         (t1w_preproc, bbr_sbref_2_T1, [('T1_Segmentation.tissue_class_map', 'wm_seg')]),
@@ -241,81 +157,51 @@ def fmri_preprocess(name='fMRI_prep', settings=None, subject_list=None):
         (t1w_preproc, flt_sbref_brain_t1_brain, [('antsreg_T1_Brain_Extraction.BrainExtractionBrain', 'reference')]),
         (t1w_preproc, flt_sbref_2_T1, [('Bias_Field_Correction.output_image', 'reference')]),
         (t1w_preproc, bbr_sbref_2_T1, [('Bias_Field_Correction.output_image', 'reference')]),
-        (inputnode, flt_wmseg_sbref, [('sbref', 'reference')]),
         #(inputnode, SBRef_skull_strip, [("sbref", "in_file")]),
         (inputnode, create_parameters_node, [('fieldmaps', 'fieldmaps')]),
         (inputnode, create_parameters_node, [('fieldmaps_meta', 'fieldmaps_meta')]),
-        (create_parameters_node, topup, [('parameters_file', 'encoding_file')]),
-        (motion_correct_SE_maps, topup, [('out_file', 'in_file')]),
-        (topup, fmap_scale, [('out_field', 'in_file')]),
-        (topup, fmap_mag_BET, [('out_corrected', 'in_file')]),
-        (fmap_scale, fugue_sbref, [('out_file', 'fmap_in_file')]),
-        (fmap_mag_BET, fugue_sbref, [('mask_file', 'mask_file')]),
-        (inputnode, fugue_sbref, [('sbref', 'in_file')]),
-        (fugue_sbref, strip_corrected_sbref, [('unwarped_file', 'in_file')]),
+        (sepair_wf, sbref_wf, [('outputnode.fmap_scaled', 'inputnode.fmap_scaled')]),
+        (sepair_wf, sbref_wf, [('outputnode.mag_brain', 'inputnode.mag_brain')]),
+        (sepair_wf, sbref_wf, [('outputnode.fmap_mask', 'inputnode.fmap_mask')]),
+        (sepair_wf, sbref_wf, [('outputnode.out_topup', 'inputnode.in_topup')]),        
+        (sepair_wf, sbref_wf, [('outputnode.fmap_unmasked', 'inputnode.fmap_unmasked')]),
         (EPI_BET, motion_correct_epi, [('out_file', 'in_file')]),
         (inputnode, motion_correct_epi, [('sbref', 'ref_file')]),
         (EPI_BET, flt_epi_sbref, [('out_file', 'in_file')]),
-        # might need to switch to [strip_corrected_sbref, "in_file"] here
-        # instead of [SBRef_BET, "out_file"]
-        (SBRef_BET, flt_epi_sbref, [('out_file', 'reference')]),
-        (fmap_mag_BET, flt_fmap_mag_brain_sbref_brain, [('out_file', 'in_file')]),
-        # might need to switch to [strip_corrected_sbref, "in_file"] here
-        # instead of [SBRef_BET, "out_file"]
-        (SBRef_BET, flt_fmap_mag_brain_sbref_brain, [('out_file', 'reference')]),
-        (topup, flt_fmap_mag_sbref, [('out_corrected', 'in_file')]),
-        (fugue_sbref, flt_fmap_mag_sbref, [('unwarped_file', 'reference')]),
-        (flt_fmap_mag_brain_sbref_brain, flt_fmap_mag_sbref, [
-            ('out_matrix_file', 'in_matrix_file')]),
-        (topup, fmapmagbrain_abs, [('out_corrected', 'in_file')]),
-        (fmapmagbrain_abs, fmapmagbrain_bin, [('out_file', 'in_file')]),
-        (fmap_scale, fmap_abs, [('out_file', 'in_file')]),
-        (fmap_abs, fmap_bin, [('out_file', 'in_file')]),
-        (fmap_bin, fmap_mul, [('out_file', 'in_file')]),
-        (fmapmagbrain_bin, fmap_mul, [('out_file', 'operand_file')]),
-        (fmap_scale, fugue_unmask, [('out_file', 'fmap_in_file')]),
-        (fmap_mul, fugue_unmask, [('out_file', 'mask_file')]),
-        (fugue_unmask, aw_fmap_unmasked_sbref, [('fmap_out_file', 'in_file')]),
-        (flt_fmap_mag_sbref, aw_fmap_unmasked_sbref, [('out_matrix_file', 'premat')]),
-        (fugue_sbref, aw_fmap_unmasked_sbref, [('unwarped_file', 'ref_file')]),
-        (aw_fmap_unmasked_sbref, fmap_unmasked_abs, [('out_file', 'in_file')]),
-        (fmap_unmasked_abs, fmap_unmasked_bin, [('out_file', 'in_file')]),
-        (aw_fmap_unmasked_sbref, fugue_dilate, [('out_file', 'fmap_in_file')]),
-        (fmap_unmasked_bin, fugue_dilate, [('out_file', 'mask_file')]),
         (EPI_BET, flt_bbr, [('out_file', 'in_file')]),
-        (fugue_sbref, flt_bbr, [('unwarped_file', 'reference')]),
-        (fugue_dilate, flt_bbr, [('fmap_out_file', 'fieldmap')]),
+        (sbref_wf, flt_bbr, [('outputnode.sbref_unwarped', 'reference')]),
+        (sbref_wf, flt_bbr, [('outputnode.sbref_fmap', 'fieldmap')]),
         (flt_epi_sbref, flt_bbr, [('out_matrix_file', 'in_matrix_file')]),
         (flt_wmseg_sbref, flt_bbr, [('out_file', 'wm_seg')]),
         (flt_bbr, invt_bbr, [('out_matrix_file', 'in_file')]),
-        (flt_fmap_mag_sbref, concat_mats, [('out_matrix_file', 'in_file')]),
+        (sbref_wf, concat_mats, [('outputnode.mag2sbref_matrix', 'in_file')]),
         (invt_bbr, concat_mats, [('out_file', 'in_file2')]),
-        (fugue_unmask, aw_fmap_unmasked_epi, [('fmap_out_file', 'in_file')]),
+        (sepair_wf, aw_fmap_unmasked_epi, [('outputnode.fmap_unmasked', 'in_file')]),
         (EPI_BET, aw_fmap_unmasked_epi, [('out_file', 'ref_file')]),
         (concat_mats, aw_fmap_unmasked_epi, [('out_file', 'premat')]),
         (aw_fmap_unmasked_epi, fieldmaprads2epi_abs, [('out_file', 'in_file')]),
         (fieldmaprads2epi_abs, fieldmaprads2epi_bin, [('out_file', 'in_file')]),
         (aw_fmap_unmasked_epi, fugue_shift, [('out_file', 'fmap_in_file')]),
         (fieldmaprads2epi_bin, fugue_shift, [('out_file', 'mask_file')]),
-        (fugue_sbref, convert_fmap_shift, [('unwarped_file', 'reference')]),
+        (sbref_wf, convert_fmap_shift, [('outputnode.sbref_unwarped', 'reference')]),
         (fugue_shift, convert_fmap_shift, [('shift_out_file', 'shift_in_file')]),
         (flt_bbr, convert_fmap_shift, [('out_matrix_file', 'postmat')]),
         (motion_correct_epi, convert_fmap_shift, [('mat_file', 'premat')]),
         (inputnode, split_epi, [('epi', 'in_file')]),
         (split_epi, aw_final, [('out_files', 'in_file')]),
-        (fugue_sbref, aw_final, [('unwarped_file', 'ref_file')]),
+        (sbref_wf, aw_final, [('outputnode.sbref_unwarped', 'ref_file')]),
         (convert_fmap_shift, aw_final, [('out_file', 'field_file')]),
         (aw_final, merge_epi, [('out_file', 'in_files')]),
         (merge_epi, epi_mean, [('merged_file', 'in_file')]),
         (strip_corrected_sbref, flt_sbref_brain_t1_brain, [('out_file', 'in_file')]),
-        (fugue_sbref, flt_sbref_2_T1, [('unwarped_file', 'in_file')]),
+        (sbref_wf, flt_sbref_2_T1, [('outputnode.sbref_unwarped', 'in_file')]),
         (flt_sbref_brain_t1_brain, flt_sbref_2_T1, [('out_matrix_file', 'in_matrix_file')]),
         (strip_corrected_sbref, bbr_sbref_2_T1, [('out_file', 'in_file')]),
-        (fugue_dilate, bbr_sbref_2_T1, [('fmap_out_file', 'fieldmap')]),
+        (sbref_wf, bbr_sbref_2_T1, [('outputnode.sbref_fmap', 'fieldmap')]),
         (flt_sbref_2_T1, bbr_sbref_2_T1, [('out_matrix_file', 'in_matrix_file')]),
         (bbr_sbref_2_T1, invt_mat, [('out_matrix_file', 'in_file')]),
         (invt_mat, flt_parcels_2_sbref, [('out_file', 'in_matrix_file')]),
-        (fugue_sbref, flt_parcels_2_sbref, [('unwarped_file', 'reference')])
+        (sbref_wf, flt_parcels_2_sbref, [('outputnode.sbref_unwarped', 'reference')])
     ])
 
     return workflow
