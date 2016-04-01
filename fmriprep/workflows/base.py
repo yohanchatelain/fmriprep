@@ -30,14 +30,14 @@ def fmri_preprocess(name='fMRI_prep', settings=None, subject_list=None):
     if 'dwell_time' not in settings['epi'].keys():
         settings['epi']['dwell_time'] = 0.000700012460221792
 
-    if subject_list is None or not subject_list:
-        raise RuntimeError('No subjects were specified')
+    # if subject_list is None or not subject_list:
+    #     raise RuntimeError('No subjects were specified')
 
 
     workflow = pe.Workflow(name=name)
     inputnode = pe.Node(niu.IdentityInterface(
-        fields=['fieldmaps', 'fieldmaps_meta', 'epi', 'epi_meta', 'sbref', 'sbref_meta', 't1']),
-        name='inputnode')
+        fields=['fieldmaps', 'fieldmaps_meta', 'epi', 'epi_meta', 'sbref', 'sbref_meta',
+                't1']), name='inputnode')
 
     t1w_preproc = t1w_preprocessing(settings=settings)
     sepair_wf = se_pair_workflow(settings=settings)
