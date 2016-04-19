@@ -20,6 +20,7 @@ def fmri_preprocess_multiple(subject_list, plugin_settings, settings=None):
         for session in subject_list[subject]:
             imaging_data = subject_list[subject][session]
             workflow = fmri_preprocess_single(imaging_data=imaging_data, settings=settings)
+            workflow.base_dir = settings['work_dir']
             workflow.run(**plugin_settings)
             return
 
@@ -50,12 +51,8 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None, imaging_data=None):
     sbref_wf = sbref_workflow(settings=settings)
     unwarp_wf = correction_workflow(settings=settings)
 
-    inputnode.inputs.fieldmaps = imaging_data['fieldmaps']
-    inputnode.inputs.fieldmaps_meta = imaging_data['fieldmaps_meta']
-    inputnode.inputs.epi = imaging_data['epi']
-    inputnode.inputs.sbref = imaging_data['sbref']
-    inputnode.inputs.sbref_meta = imaging_data['sbref_meta']
-    inputnode.inputs.t1 = imaging_data['t1']
+    for key in imaging_data.keys():
+        setattr(inputnode.inputs, key, imaging_data[key])
 
     # create_parameters_node = pe.Node(niu.Function(
     #     input_names=["fieldmaps", "fieldmaps_meta"], output_names=["parameters_file"],
@@ -85,8 +82,6 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None, imaging_data=None):
                                ('outputnode.sbref_unwarped', 'inputnode.sbref_unwarped'),
                                ('outputnode.sbref_fmap', 'inputnode.sbref_fmap'),
                                ('outputnode.mag2sbref_matrix', 'inputnode.mag2sbref_matrix')])
-        #(inputnode, create_parameters_node, [('fieldmaps', 'fieldmaps')]),
-        #(inputnode, create_parameters_node, [('fieldmaps_meta', 'fieldmaps_meta')]),
     ])
 
     return workflow
