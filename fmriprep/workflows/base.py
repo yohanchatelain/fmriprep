@@ -15,6 +15,82 @@ from .anatomical import t1w_preprocessing
 from .fieldmap import se_pair_workflow
 from .epi import sbref_workflow, correction_workflow
 
+def fmri_preprocess_multiple(subject_list, plugin_settings, settings=None):
+    for subject in subject_list:
+        for session in subject_list[subject]:
+            imaging_data = subject_list[subject][session]
+            workflow = fmri_preprocess_single(imaging_data=imaging_data, settings=settings)
+            workflow.run(**plugin_settings)
+            return
+
+def fmri_preprocess_single(name='fMRI_prep', settings=None, imaging_data=None):
+    """
+    The main fmri preprocessing workflow.
+    """
+
+    if settings is None:
+        settings = {}
+
+    for key in ['fsl', 'skull_strip', 'epi', 'connectivity']:
+        if settings.get(key) is None:
+            settings[key] = {}
+
+    if 'dwell_time' not in settings['epi'].keys():
+        # pull from effective echo spacing
+        settings['epi']['dwell_time'] = 0.000700012460221792
+
+
+    workflow = pe.Workflow(name=name)
+    inputnode = pe.Node(niu.IdentityInterface(
+        fields=['fieldmaps', 'fieldmaps_meta', 'epi', 'epi_meta', 'sbref', 'sbref_meta',
+                't1']), name='inputnode')
+
+    t1w_preproc = t1w_preprocessing(settings=settings)
+    sepair_wf = se_pair_workflow(settings=settings)
+    sbref_wf = sbref_workflow(settings=settings)
+    unwarp_wf = correction_workflow(settings=settings)
+
+    inputnode.inputs.fieldmaps = imaging_data['fieldmaps']
+    inputnode.inputs.fieldmaps_meta = imaging_data['fieldmaps_meta']
+    inputnode.inputs.epi = imaging_data['epi']
+    inputnode.inputs.sbref = imaging_data['sbref']
+    inputnode.inputs.sbref_meta = imaging_data['sbref_meta']
+    inputnode.inputs.t1 = imaging_data['t1']
+
+    # create_parameters_node = pe.Node(niu.Function(
+    #     input_names=["fieldmaps", "fieldmaps_meta"], output_names=["parameters_file"],
+    #     function=create_encoding_file), name="Create_Parameters", updatehash=True)
+
+    ########################################## Connecting Workflow pe.Nodes ##
+
+    workflow.connect([
+        (inputnode, t1w_preproc, [('t1', 'inputnode.t1'),
+                                  ('sbref', 'inputnode.sbref')]),
+        (inputnode, sepair_wf, [('fieldmaps', 'inputnode.fieldmaps')]),
+        (inputnode, unwarp_wf, [('epi', 'inputnode.epi'),
+                                ('sbref', 'inputnode.sbref')]),
+        (inputnode, sbref_wf, [('sbref', 'inputnode.sbref')]),
+        (sbref_wf, t1w_preproc, [
+            ('outputnode.sbref_brain_corrected', 'inputnode.sbref_brain_corrected'),
+            ('outputnode.sbref_fmap', 'inputnode.sbref_fmap'),
+            ('outputnode.sbref_unwarped', 'inputnode.sbref_unwarped')]),
+        (sepair_wf, sbref_wf, [('outputnode.fmap_scaled', 'inputnode.fmap_scaled'),
+                               ('outputnode.mag_brain', 'inputnode.mag_brain'),
+                               ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
+                               ('outputnode.out_topup', 'inputnode.in_topup'),
+                               ('outputnode.fmap_unmasked', 'inputnode.fmap_unmasked')]),
+        (t1w_preproc, unwarp_wf, [('outputnode.wm_seg', 'inputnode.wm_seg')]),
+        (sepair_wf, unwarp_wf, [('outputnode.fmap_unmasked', 'inputnode.fmap_unmasked')]),
+        (sbref_wf, unwarp_wf, [('outputnode.sbref_brain', 'inputnode.sbref_brain'),
+                               ('outputnode.sbref_unwarped', 'inputnode.sbref_unwarped'),
+                               ('outputnode.sbref_fmap', 'inputnode.sbref_fmap'),
+                               ('outputnode.mag2sbref_matrix', 'inputnode.mag2sbref_matrix')])
+        #(inputnode, create_parameters_node, [('fieldmaps', 'fieldmaps')]),
+        #(inputnode, create_parameters_node, [('fieldmaps_meta', 'fieldmaps_meta')]),
+    ])
+
+    return workflow
+
 def fmri_preprocess(name='fMRI_prep', settings=None, subject_list=None):
     """
     The main fmri preprocessing workflow.
