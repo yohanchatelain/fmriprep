@@ -15,14 +15,6 @@ from .anatomical import t1w_preprocessing
 from .fieldmap import se_pair_workflow
 from .epi import sbref_workflow, correction_workflow
 
-def fmri_preprocess_multiple(subject_list, plugin_settings, settings=None):
-    for subject in subject_list:
-        for session in subject_list[subject]:
-            imaging_data = subject_list[subject][session]
-            workflow = fmri_preprocess_single(imaging_data=imaging_data, settings=settings)
-            workflow.base_dir = settings['work_dir']
-            workflow.run(**plugin_settings)
-            return
 
 def fmri_preprocess_single(name='fMRI_prep', settings=None, imaging_data=None):
     """
