@@ -15,16 +15,8 @@ from .anatomical import t1w_preprocessing
 from .fieldmap import se_pair_workflow
 from .epi import sbref_workflow, correction_workflow
 
-def fmri_preprocess_multiple(subject_list, plugin_settings, settings=None):
-    for subject in subject_list:
-        for session in subject_list[subject]:
-            imaging_data = subject_list[subject][session]
-            workflow = fmri_preprocess_single(imaging_data=imaging_data, settings=settings)
-            workflow.base_dir = settings['work_dir']
-            workflow.run(**plugin_settings)
-            return
 
-def fmri_preprocess_single(name='fMRI_prep', settings=None, imaging_data=None):
+def fmri_preprocess_single(name='fMRI_prep', settings=None):
     """
     The main fmri preprocessing workflow.
     """
@@ -51,12 +43,6 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None, imaging_data=None):
     sbref_wf = sbref_workflow(settings=settings)
     unwarp_wf = correction_workflow(settings=settings)
 
-    for key in imaging_data.keys():
-        setattr(inputnode.inputs, key, imaging_data[key])
-
-    # create_parameters_node = pe.Node(niu.Function(
-    #     input_names=["fieldmaps", "fieldmaps_meta"], output_names=["parameters_file"],
-    #     function=create_encoding_file), name="Create_Parameters", updatehash=True)
 
     ########################################## Connecting Workflow pe.Nodes ##
 

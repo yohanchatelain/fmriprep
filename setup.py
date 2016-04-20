@@ -3,12 +3,13 @@
 # @Author: oesteban
 # @Date:   2015-11-19 16:44:27
 # @Last Modified by:   oesteban
-# @Last Modified time: 2016-03-10 15:07:21
+# @Last Modified time: 2016-04-20 14:34:36
 """ fmriprep setup script """
 import os
 import sys
 
-__version__ = '0.0.1'
+from fmriprep import __version__, __email__, __url__, __packagename__, __license__
+
 
 REQ_LINKS = []
 with open('requirements.txt', 'r') as rfile:
@@ -28,13 +29,14 @@ def main():
     from setuptools import setup
 
     setup(
-        name='fmriprep',
+        name=__packagename__,
         version=__version__,
         description='',
-        author_email='crn.poldracklab@gmail.com',
-        url='https://github.com/poldracklab/preprocessing-workflow',
-        download_url='',
-        license='3-clause BSD',
+        author_email=__email__,
+        url=__url__,
+        download_url='https://pypi.python.org/packages/source/f/fmriprep/'
+                     'fmriprep-%s.tar.gz' % __version__,
+        license=__license__,
         entry_points={'console_scripts': ['fmriprep=fmriprep.run_workflow:main',]},
         packages=['fmriprep', 'fmriprep.workflows', 'fmriprep.viz'],
         package_data={'fmriprep': ['data/*.nii.gz']},
