@@ -49,7 +49,8 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
     workflow.connect([
         (inputnode, t1w_preproc, [('t1', 'inputnode.t1'),
                                   ('sbref', 'inputnode.sbref')]),
-        (inputnode, sepair_wf, [('fieldmaps', 'inputnode.fieldmaps')]),
+        (inputnode, sepair_wf, [('fieldmaps', 'inputnode.fieldmaps'),
+                                ('fieldmaps_meta', 'inputnode.fieldmaps_meta')]),
         (inputnode, unwarp_wf, [('epi', 'inputnode.epi'),
                                 ('sbref', 'inputnode.sbref')]),
         (inputnode, sbref_wf, [('sbref', 'inputnode.sbref')]),
@@ -64,7 +65,7 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
                                ('outputnode.fmap_unmasked', 'inputnode.fmap_unmasked')]),
         (t1w_preproc, unwarp_wf, [('outputnode.wm_seg', 'inputnode.wm_seg')]),
         (sepair_wf, unwarp_wf, [('outputnode.fmap_unmasked', 'inputnode.fmap_unmasked')]),
-        (sbref_wf, unwarp_wf, [('outputnode.sbref_brain', 'inputnode.sbref_brain'),
+        (sbref_wf, unwarp_wf, [('outputnode.sbref_brain_corrected', 'inputnode.sbref_brain'),
                                ('outputnode.sbref_unwarped', 'inputnode.sbref_unwarped'),
                                ('outputnode.sbref_fmap', 'inputnode.sbref_fmap'),
                                ('outputnode.mag2sbref_matrix', 'inputnode.mag2sbref_matrix')])
