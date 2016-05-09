@@ -12,13 +12,22 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
-import os
+from fmriprep import __version__
+
+# Hack for readthedocs
+# http://blog.rtwilson.com/how-to-make-your-sphinx-documentation-compile-with-readthedocs-when-youre-using-numpy-and-scipy/
+import mock
+MOCK_MODULES = ['numpy', 'scipy', 'nitime', 'matplotlib', 'matplotlib.pyplot', 'scipy.interpolate']
+for mod_name in MOCK_MODULES:
+    try:
+        __import__(mod_name)
+    except ImportError:
+        sys.modules[mod_name] = mock.Mock()
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('../../fmriprep'))
 
 # -- General configuration ------------------------------------------------
 
@@ -115,7 +124,7 @@ todo_include_todos = False
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
