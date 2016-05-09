@@ -3,8 +3,8 @@ FMRIPREP: A Robust Preprocessing Pipeline for fMRI Data
 
 This pipeline is developed by the Poldrack lab at Stanford University (https://poldracklab.stanford.edu/) for use at the Center for Reproducible Neuroscience (http://reproducibility.stanford.edu/), as well as for open-source software distribution.
 
-.. image:: https://circleci.com/gh/poldracklab/fmriprep/tree/master.svg?style=svg
-  :target: https://circleci.com/gh/poldracklab/fmriprep/tree/master
+.. image:: https://circleci.com/gh/poldracklab/preprocessing-workflow/tree/master.svg?style=svg
+  :target: https://circleci.com/gh/poldracklab/preprocessing-workflow/tree/master
   
 .. image:: https://readthedocs.org/projects/preprocessing-workflow/badge/?version=latest
   :target: http://preprocessing-workflow.readthedocs.io/en/latest/?badge=latest
