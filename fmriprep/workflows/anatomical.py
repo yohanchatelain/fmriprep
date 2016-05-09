@@ -49,7 +49,8 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):  # pylint: disab
         (inputnode, flt_wmseg_sbref, [('sbref', 'reference')]),
         (inu_n4, t1_seg, [('output_image', 'in_files')]),
         (t1_seg, flt_wmseg_sbref, [('tissue_class_map', 'in_file')]),
-        (flt_wmseg_sbref, outputnode, [('out_file', 'wm_seg')])
+        (flt_wmseg_sbref, outputnode, [('out_file', 'wm_seg')]),
+        (inu_n4, outputnode, [('output_image', 'bias_corrected_t1')])
     ])
 
     return workflow
