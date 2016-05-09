@@ -39,8 +39,7 @@ RUN source activate crnenv && \
     pip install --upgrade numpy && \
     cd preprocessing-workflow && \
     pip install -e . && \
-    python -c "from matplotlib import font_manager" && \
-    python -c "from mriqc.data import get_brainweb_1mm_normal; get_brainweb_1mm_normal()"
+    python -c "from matplotlib import font_manager"
 
 WORKDIR /root/
 ADD build/files/run_* /usr/bin/
