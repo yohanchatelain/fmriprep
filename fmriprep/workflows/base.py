@@ -35,8 +35,11 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
 
     workflow = pe.Workflow(name=name)
     inputnode = pe.Node(niu.IdentityInterface(
-        fields=['fieldmaps', 'fieldmaps_meta', 'epi', 'epi_meta', 'sbref', 'sbref_meta',
-                't1']), name='inputnode')
+        fields=['fieldmaps', 'fieldmaps_meta', 'epi', 'epi_meta', 'sbref',
+                'sbref_meta', 't1']), name='inputnode')
+    outputnode = pe.Node(niu.IdentityInterface(
+        fields=['fieldmap', 'corrected_sbref', 'fmap_mag', 'fmap_mag_brain',
+                't1', 'stripped_epi', 'corrected_epi_mean', 't1_brain']))
 
     t1w_preproc = t1w_preprocessing(settings=settings)
     sepair_wf = se_pair_workflow(settings=settings)
@@ -44,7 +47,7 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
     unwarp_wf = correction_workflow(settings=settings)
 
 
-    ########################################## Connecting Workflow pe.Nodes ##
+    #  Connecting Workflow pe.Nodes
 
     workflow.connect([
         (inputnode, t1w_preproc, [('t1', 'inputnode.t1'),
@@ -68,7 +71,16 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
         (sbref_wf, unwarp_wf, [('outputnode.sbref_brain_corrected', 'inputnode.sbref_brain'),
                                ('outputnode.sbref_unwarped', 'inputnode.sbref_unwarped'),
                                ('outputnode.sbref_fmap', 'inputnode.sbref_fmap'),
-                               ('outputnode.mag2sbref_matrix', 'inputnode.mag2sbref_matrix')])
+                               ('outputnode.mag2sbref_matrix', 'inputnode.mag2sbref_matrix')]),
+        (sbref_wf, outputnode, [('outputnode.sbref_fmap', 'fieldmap'),
+                                ('outputnode.sbref_unwarped', 'corrected_sbref')]),
+        (sepair_wf, outputnode, [('outputnode.out_topup', 'fmap_mag'),
+                                 ('outputnode.mag_brain', 'fmap_mag_brain')]),
+        (t1w_preproc, outputnode, [('outputnode.bias_corrected_t1', 't1')]),
+        (unwarp_wf, outputnode, [('outputnode.stripped_epi', 'stripped_epi'),
+                                 ('outputnode.corrected_epi_mean', 'corrected_epi_mean),
+                                 ('outputnode.t1_brain', 't1_brain')
+        ])
     ])
 
     return workflow
