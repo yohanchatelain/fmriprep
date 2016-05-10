@@ -29,7 +29,10 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):  # pylint: disab
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['t1', 'sbref', 'sbref_brain_corrected', 'sbref_fmap',
                 'sbref_unwarped']), name='inputnode')
-    outputnode = pe.Node(niu.IdentityInterface(fields=['wm_seg']), name='outputnode')
+    outputnode = pe.Node(
+         niu.IdentityInterface(fields=['wm_seg', 'bias_corrected_t1']), 
+         name='outputnode'
+    )
 
 
     # T1 Bias Field Correction
