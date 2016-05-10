@@ -78,7 +78,7 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
                                  ('outputnode.mag_brain', 'fmap_mag_brain')]),
         (t1w_preproc, outputnode, [('outputnode.bias_corrected_t1', 't1')]),
         (unwarp_wf, outputnode, [('outputnode.stripped_epi', 'stripped_epi'),
-                                 ('outputnode.corrected_epi_mean', 'corrected_epi_mean),
+                                 ('outputnode.corrected_epi_mean', 'corrected_epi_mean'),
                                  ('outputnode.t1_brain', 't1_brain')
         ])
     ])
