@@ -39,7 +39,7 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
                 'sbref_meta', 't1']), name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['fieldmap', 'corrected_sbref', 'fmap_mag', 'fmap_mag_brain',
-                't1', 'stripped_epi', 'corrected_epi_mean', 't1_brain']),
+                't1', 'stripped_epi', 'corrected_epi_mean', 'sbref_brain']),
         name='outputnode'
     )
 
