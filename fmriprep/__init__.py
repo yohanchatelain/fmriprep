@@ -9,7 +9,7 @@ the Center for Reproducible Neuroscience (http://reproducibility.stanford.edu/),
 as well as for open-source software distribution.
 """
 
-from .workflows.base import fmri_preprocess
+from workflows.base import fmri_preprocess
 
 
 __author__ = 'The CRN developers'
