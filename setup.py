@@ -3,12 +3,13 @@
 # @Author: oesteban
 # @Date:   2015-11-19 16:44:27
 # @Last Modified by:   oesteban
-# @Last Modified time: 2016-05-11 13:41:58
+# @Last Modified time: 2016-05-11 14:32:37
 """ fmriprep setup script """
 import os
 import sys
 
-from fmriprep import __version__, __email__, __url__, __packagename__, __license__
+from fmriprep import (__version__, __email__, __url__, __packagename__, __license__,
+                      __description__, __longdesc__)
 
 
 REQ_LINKS = []
@@ -31,7 +32,8 @@ def main():
     setup(
         name=__packagename__,
         version=__version__,
-        description='',
+        description=__description__,
+        long_description=__longdesc__,
         author_email=__email__,
         url=__url__,
         download_url='https://pypi.python.org/packages/source/f/fmriprep/'
@@ -49,6 +51,7 @@ def main():
             'Topic :: Scientific/Engineering :: Biomedical Imaging',
             'License :: OSI Approved :: 3-clause BSD License',
             'Programming Language :: Python :: 2.7',
+            'Programming Language :: Python :: 3.5'
         ],
     )
 
