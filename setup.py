@@ -9,7 +9,7 @@ import os
 import sys
 
 from fmriprep import (__version__, __email__, __url__, __packagename__, __license__,
-                      __description__, __longdesc__)
+                      __description__, __longdesc__, __maintainer__, __author__)
 
 
 REQ_LINKS = []
@@ -34,7 +34,11 @@ def main():
         version=__version__,
         description=__description__,
         long_description=__longdesc__,
-        author_email=__email__,
+        author=__author__,
+        author_email='cmoodie@stanford.edu',
+        email=__email__,
+        maintainer=__maintainer__,
+        maintainer_email=__email__,
         url=__url__,
         download_url='https://pypi.python.org/packages/source/f/fmriprep/'
                      'fmriprep-%s.tar.gz' % __version__,
