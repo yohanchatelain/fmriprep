@@ -3,7 +3,7 @@
 # @Author: oesteban
 # @Date:   2015-11-19 16:44:27
 # @Last Modified by:   oesteban
-# @Last Modified time: 2016-05-11 13:30:15
+# @Last Modified time: 2016-05-11 14:32:37
 """ fmriprep setup script """
 import os
 import sys
@@ -41,7 +41,7 @@ def main():
         license=__license__,
         entry_points={'console_scripts': ['fmriprep=fmriprep.run_workflow:main',]},
         packages=['fmriprep', 'fmriprep.workflows', 'fmriprep.viz'],
-        package_data={'fmriprep': ['data/*.nii.gz']},
+        # package_data={'fmriprep': ['data/*']},
         install_requires=REQUIREMENTS,
         dependency_links=REQ_LINKS,
         zip_safe=False,
