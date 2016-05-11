@@ -19,7 +19,7 @@ __copyright__ = 'Copyright 2016, Center for Reproducible Neuroscience, Stanford 
 __credits__ = ['Craig Moodie', 'Ross Blair', 'Oscar Esteban', 'Chris F. Gorgolewski',
                'Russell A. Poldrack']
 __license__ = '3-clause BSD'
-__maintainer__ = 'Oscar Esteban'
+__maintainer__ = 'Ross Blair'
 __email__ = 'crn.poldracklab@gmail.com'
 __status__ = 'Prototype'
 __url__ = 'https://github.com/poldracklab/preprocessing-workflow'
