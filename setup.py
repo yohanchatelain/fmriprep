@@ -3,7 +3,7 @@
 # @Author: oesteban
 # @Date:   2015-11-19 16:44:27
 # @Last Modified by:   oesteban
-# @Last Modified time: 2016-05-11 12:02:32
+# @Last Modified time: 2016-05-11 13:30:15
 """ fmriprep setup script """
 import os
 import sys
@@ -51,6 +51,7 @@ def main():
             'Topic :: Scientific/Engineering :: Biomedical Imaging',
             'License :: OSI Approved :: 3-clause BSD License',
             'Programming Language :: Python :: 2.7',
+            'Programming Language :: Python :: 3.5'
         ],
     )
 
