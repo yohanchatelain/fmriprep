@@ -3,12 +3,13 @@
 # @Author: oesteban
 # @Date:   2015-11-19 16:44:27
 # @Last Modified by:   oesteban
-# @Last Modified time: 2016-04-20 14:34:36
+# @Last Modified time: 2016-05-11 12:02:32
 """ fmriprep setup script """
 import os
 import sys
 
-from fmriprep import __version__, __email__, __url__, __packagename__, __license__
+from fmriprep import (__version__, __email__, __url__, __packagename__, __license__,
+                      __description__, __longdesc__)
 
 
 REQ_LINKS = []
@@ -31,7 +32,8 @@ def main():
     setup(
         name=__packagename__,
         version=__version__,
-        description='',
+        description=__description__,
+        long_description=__longdesc__,
         author_email=__email__,
         url=__url__,
         download_url='https://pypi.python.org/packages/source/f/fmriprep/'
