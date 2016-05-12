@@ -20,8 +20,6 @@ https://github.com/poldracklab/preprocessing-workflow/issues.
 
 Authors
 -------
-.. include:: AUTHORS
 
 License
 -------
-.. include:: LICENSE.txt
