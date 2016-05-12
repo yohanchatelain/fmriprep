@@ -11,7 +11,7 @@ as well as for open-source software distribution.
 
 from .workflows.base import fmri_preprocess
 
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 
 
 __author__ = 'The CRN developers'
