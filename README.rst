@@ -21,5 +21,9 @@ https://github.com/poldracklab/preprocessing-workflow/issues.
 Authors
 -------
 
+The authors of preprocessing-workflow can be found `here <AUTHORS>`_.
+
 License
 -------
+
+Preprocessing-workflow is licensed under the Revised BSD Licence. The license can be found `here <LICENSE>`_.
