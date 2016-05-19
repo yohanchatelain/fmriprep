@@ -43,7 +43,10 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
                 'stripped_epi_mask', 'stripped_t1', 't1_segmentation']),
         name='outputnode'
     )
-    datasink = pe.Node(interface=niu.io.DataSink(), name="datasink")
+    datasink = pe.Node(
+        interface=niu.io.DataSink(base_directory=settings['output_dir']),
+        name="datasink"
+    )
 
     t1w_preproc = t1w_preprocessing(settings=settings)
     sepair_wf = se_pair_workflow(settings=settings)
