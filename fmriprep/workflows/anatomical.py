@@ -49,7 +49,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):  # pylint: disab
     )
 
     t1_skull_strip = pe.Node(
-        fsl.BET(mask=True, functional=True, frac=0.6), name="sbref_bet")
+        fsl.BET(mask=True, functional=True, frac=0.6), name="t1_skull_Strip")
     '''
     t1_skull_strip = Node(ants.segmentation.BrainExtraction(), 
                           name = "Ants_T1_Brain_Extraction")
@@ -99,15 +99,15 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):  # pylint: disab
         (inputnode, inu_n4, [('t1', 'input_image')]),
         (inputnode, flt_wmseg_sbref, [('sbref', 'reference')]),
         (inu_n4, t1_seg, [('output_image', 'in_files')]),
-        (inu_n4, t1_skull_strip, [('output_image', 'anatomical_image')]),
+        (inu_n4, t1_skull_strip, [('output_image', 'out_file')]),
         (inu_n4, t1_2_mni, [('output_image', 'moving_image')]),
         (t1_seg, flt_wmseg_sbref, [('tissue_class_map', 'in_file')]),
         (flt_wmseg_sbref, outputnode, [('out_file', 'wm_seg')]),
         (flt_wmseg_sbref, invert_wmseg_sbref, [('out_matrix_file', 'in_file')]),
-        (invert_wmseg, outputnode, [('out_file', 'sbref_2_t1_transform')]),
+        (invert_wmseg_sbref, outputnode, [('out_file', 'sbref_2_t1_transform')]),
         (inu_n4, outputnode, [('output_image', 'bias_corrected_t1')]),
         (t1_skull_strip, outputnode, [('out_file', 'stripped_t1')]),
-        (t1_seg, outputnode, ['tissue_class_map', 't1_segmentation']),
+        (t1_seg, outputnode, [('tissue_class_map', 't1_segmentation')]),
         (t1_2_mni, outputnode, [('forward_transforms', 't1_2_mni_forward_transform')]),
         (t1_2_mni, outputnode, [('reverse_transforms', 't1_2_mni_reverse_transform')])
     ])
