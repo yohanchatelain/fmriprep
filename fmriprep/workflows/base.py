@@ -107,21 +107,21 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
             ('outputnode.stripped_epi', 'stripped_epi'),
             ('outputnode.corrected_epi_mean', 'corrected_epi_mean')
         ]),
-        (t1w_preproc, datasink, [(
+        (t1w_preproc, datasink, [
             ('outputnode.t1_segmentation', 't1_segmentation'),
             ('outputnode.bias_corrected_t1', 't1'),
             ('outputnode.stripped_t1', 'stripped_t1'),
             ('outputnode.sbref_2_t1_transform', 'sbref_2_t1_transform'),
             ('outputnode.t1_2_mni_forward_transform', 't1_2_mni_forward_transform'),
             ('outputnode.t1_2_mni_reverse_transform', 't1_2_mni_reverse_transform')
-        )]),
-        (unwarp_wf, datasink, [(
+        ]),
+        (unwarp_wf, datasink, [
             ('outputnode.stripped_epi_mask', 'stripped_epi_mask'),
             #  this could use a better name, its the 
             #  unwarped epi in sbref space
             ('outputnode.merged_epi', 'merged_epi'),
             ('outputnode.epi_motion_params', 'epi_motion_params')
-        )])
+        ])
     ])
 
     return workflow

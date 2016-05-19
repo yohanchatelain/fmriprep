@@ -33,7 +33,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):  # pylint: disab
                 'sbref_unwarped']), name='inputnode')
     outputnode = pe.Node(
          niu.IdentityInterface(
-            fields=['wm_seg', 'bias_corrected_t1', 'striped_t1', 
+            fields=['wm_seg', 'bias_corrected_t1', 'stripped_t1', 
                     't1_2_mni_forward_transform', 't1_2_mni_reverse_transform',
                     'sbref_2_t1_transform', 't1_segmentation']
          ), 
