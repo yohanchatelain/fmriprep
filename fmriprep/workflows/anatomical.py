@@ -31,8 +31,9 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):  # pylint: disab
                 'sbref_unwarped']), name='inputnode')
     outputnode = pe.Node(
          niu.IdentityInterface(
-            fields=['wm_seg', 'bias_corrected_t1', 'skull_striped_t1', 
-                    't1_2_mni_forward_transform', 't1_2_mni_reverse_transform']
+            fields=['wm_seg', 'bias_corrected_t1', 'striped_t1', 
+                    't1_2_mni_forward_transform', 't1_2_mni_reverse_transform',
+                    'sbref_2_t1_transform', 't1_segmentation']
          ), 
          name='outputnode'
     )
@@ -45,12 +46,16 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):  # pylint: disab
         name="Bias_Field_Correction"
     )
 
+    t1_skull_strip = pe.Node(
+        fsl.BET(mask=True, functional=True, frac=0.6), name="sbref_bet")
+    '''
     t1_skull_strip = Node(ants.segmentation.BrainExtraction(), 
                           name = "Ants_T1_Brain_Extraction")
     t1_skull_strip.inputs.dimension = 3
     t1_skull_strip.inputs.brain_template = "/home/cmoodie/Oasis_MICCAI2012-Multi-Atlas-Challenge-Data/T_template0.nii.gz"
     t1_skull_strip.inputs.brain_probability_mask = "/home/cmoodie/Oasis_MICCAI2012-Multi-Atlas-Challenge-Data/T_template0_BrainCerebellumProbabilityMask.nii.gz"
     t1_skull_strip.inputs.extraction_registration_mask = "/home/cmoodie/Oasis_MICCAI2012-Multi-Atlas-Challenge-Data/T_template0_BrainCerebellumRegistrationMask.nii.gz"
+    '''
 
     # fast -o fast_test -N -v
     # ../Preprocessing_test_workflow/_subject_id_S2529LVY1263171/Bias_Field_Correction/sub-S2529LVY1263171_run-1_T1w_corrected.nii.gz
@@ -59,6 +64,11 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):  # pylint: disab
     # Affine transform of T1 segmentation into SBRref space
     flt_wmseg_sbref = pe.Node(fsl.FLIRT(dof=6, bins=640, cost_func='mutualinfo'),
                               name="WMSeg_2_SBRef_Brain_Affine_Transform")
+
+    invert_wmseg_sbref = pe.Node(
+        fsl.ConvertXFM(invert_xfm = True),
+        name="invert_wmseg_sbref"
+    )
 
     t1_2_mni = Node(ants.Registration(), name = "T1_2_MNI_Registration")
     t1_2_mni.inputs.fixed_image = "/share/sw/free/fsl/5.0.7/fsl/data/standard/MNI152_T1_2mm_brain.nii.gz"
@@ -91,8 +101,11 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):  # pylint: disab
         (inu_n4, t1_2_mni, [('output_image', 'moving_image')]),
         (t1_seg, flt_wmseg_sbref, [('tissue_class_map', 'in_file')]),
         (flt_wmseg_sbref, outputnode, [('out_file', 'wm_seg')]),
+        (flr_wmseg_sbref, invert_wmseg_sbref, [('out_matrix_file', 'in_file')]),
+        (invert_wmseg, outputnode, [('out_file', 'sbref_2_t1_transform')]),
         (inu_n4, outputnode, [('output_image', 'bias_corrected_t1')]),
-        (t1_skull_strip, outputnode, [('out_file', 'skull_stripped_t1')]),
+        (t1_skull_strip, outputnode, [('out_file', 'stripped_t1')]),
+        (t1_seg, outputnode, ['tissue_class_map', 't1_segmentation']),
         (t1_2_mni, outputnode, [('forward_transforms', 't1_2_mni_forward_transform')]),
         (t1_2_mni, outputnode, [('reverse_transforms', 't1_2_mni_reverse_transform')]
     ])
