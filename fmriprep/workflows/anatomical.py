@@ -30,14 +30,27 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):  # pylint: disab
         fields=['t1', 'sbref', 'sbref_brain_corrected', 'sbref_fmap',
                 'sbref_unwarped']), name='inputnode')
     outputnode = pe.Node(
-         niu.IdentityInterface(fields=['wm_seg', 'bias_corrected_t1']), 
+         niu.IdentityInterface(
+            fields=['wm_seg', 'bias_corrected_t1', 'skull_striped_t1', 
+                    't1_2_mni_forward_transform', 't1_2_mni_reverse_transform']
+         ), 
          name='outputnode'
     )
 
 
     # T1 Bias Field Correction
-    inu_n4 = pe.Node(ants.N4BiasFieldCorrection(
-        dimension=3, bspline_fitting_distance=300, shrink_factor=3), name="Bias_Field_Correction")
+    inu_n4 = pe.Node(
+        ants.N4BiasFieldCorrection(dimension=3, bspline_fitting_distance=300, 
+                                   shrink_factor=3), 
+        name="Bias_Field_Correction"
+    )
+
+    t1_skull_strip = Node(ants.segmentation.BrainExtraction(), 
+                          name = "Ants_T1_Brain_Extraction")
+    t1_skull_strip.inputs.dimension = 3
+    t1_skull_strip.inputs.brain_template = "/home/cmoodie/Oasis_MICCAI2012-Multi-Atlas-Challenge-Data/T_template0.nii.gz"
+    t1_skull_strip.inputs.brain_probability_mask = "/home/cmoodie/Oasis_MICCAI2012-Multi-Atlas-Challenge-Data/T_template0_BrainCerebellumProbabilityMask.nii.gz"
+    t1_skull_strip.inputs.extraction_registration_mask = "/home/cmoodie/Oasis_MICCAI2012-Multi-Atlas-Challenge-Data/T_template0_BrainCerebellumRegistrationMask.nii.gz"
 
     # fast -o fast_test -N -v
     # ../Preprocessing_test_workflow/_subject_id_S2529LVY1263171/Bias_Field_Correction/sub-S2529LVY1263171_run-1_T1w_corrected.nii.gz
@@ -47,13 +60,41 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):  # pylint: disab
     flt_wmseg_sbref = pe.Node(fsl.FLIRT(dof=6, bins=640, cost_func='mutualinfo'),
                               name="WMSeg_2_SBRef_Brain_Affine_Transform")
 
+    t1_2_mni = Node(ants.Registration(), name = "T1_2_MNI_Registration")
+    t1_2_mni.inputs.fixed_image = "/share/sw/free/fsl/5.0.7/fsl/data/standard/MNI152_T1_2mm_brain.nii.gz"
+    t1_2_mni.inputs.metric = ['Mattes'] * 3 + [['Mattes', 'CC']]
+    t1_2_mni.inputs.metric_weight = [1] * 3 + [[0.5, 0.5]]
+    t1_2_mni.inputs.dimension = 3
+    t1_2_mni.inputs.write_composite_transform = True
+    t1_2_mni.inputs.radius_or_number_of_bins = [32] * 3 + [[32, 4]]
+    t1_2_mni.inputs.shrink_factors = [[6, 4, 2]] + [[3, 2, 1]]*2 + [[4, 2, 1]]
+    t1_2_mni.inputs.smoothing_sigmas = [[4, 2, 1]] * 3 + [[1, 0.5, 0]]
+    t1_2_mni.inputs.sigma_units = ['vox'] * 4
+    t1_2_mni.inputs.output_transform_prefix = "ANTS_T1_2_MNI"
+    t1_2_mni.inputs.transforms = ['Translation', 'Rigid', 'Affine', 'SyN']
+    t1_2_mni.inputs.transform_parameters = [(0.1,), (0.1,), (0.1,), (0.2, 3.0, 0.0)]
+    t1_2_mni.inputs.initial_moving_transform_com = True
+    t1_2_mni.inputs.number_of_iterations = ([[10, 10, 10]]*3 + [[1, 5, 3]])
+    t1_2_mni.inputs.convergence_threshold = [1.e-8] * 3 + [-0.01]
+    t1_2_mni.inputs.convergence_window_size = [20] * 3 + [5]
+    t1_2_mni.inputs.sampling_strategy = ['Regular'] * 3 + [[None, None]]
+    t1_2_mni.inputs.sampling_percentage = [0.3] * 3 + [[None, None]]
+    t1_2_mni.inputs.output_warped_image = True
+    t1_2_mni.inputs.use_histogram_matching = [False] * 3 + [True]
+    t1_2_mni.inputs.use_estimate_learning_rate_once = [True] * 4
+
     workflow.connect([
         (inputnode, inu_n4, [('t1', 'input_image')]),
         (inputnode, flt_wmseg_sbref, [('sbref', 'reference')]),
         (inu_n4, t1_seg, [('output_image', 'in_files')]),
+        (inu_n4, t1_skull_strip, [('output_image', 'anatomical_image')]),
+        (inu_n4, t1_2_mni, [('output_image', 'moving_image')]),
         (t1_seg, flt_wmseg_sbref, [('tissue_class_map', 'in_file')]),
         (flt_wmseg_sbref, outputnode, [('out_file', 'wm_seg')]),
-        (inu_n4, outputnode, [('output_image', 'bias_corrected_t1')])
+        (inu_n4, outputnode, [('output_image', 'bias_corrected_t1')]),
+        (t1_skull_strip, outputnode, [('out_file', 'skull_stripped_t1')]),
+        (t1_2_mni, outputnode, [('forward_transforms', 't1_2_mni_forward_transform')]),
+        (t1_2_mni, outputnode, [('reverse_transforms', 't1_2_mni_reverse_transform')]
     ])
 
     return workflow
