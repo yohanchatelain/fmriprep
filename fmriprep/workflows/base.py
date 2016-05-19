@@ -10,6 +10,7 @@ Created on Wed Dec  2 17:35:40 2015
 
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
+import nipype.interfaces.io as nio
 
 from .anatomical import t1w_preprocessing
 from .fieldmap import se_pair_workflow
@@ -44,7 +45,7 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
         name='outputnode'
     )
     datasink = pe.Node(
-        interface=niu.io.DataSink(base_directory=settings['output_dir']),
+        interface=nio.DataSink(base_directory=settings['output_dir']),
         name="datasink"
     )
 

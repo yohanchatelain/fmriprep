@@ -17,6 +17,8 @@ from nipype.interfaces import ants
 from nipype.interfaces import fsl
 from nipype.pipeline import engine as pe
 
+from ..utils.static_files import get_mni_template
+
 def t1w_preprocessing(name='t1w_preprocessing', settings=None):  # pylint: disable=R0914
     """T1w images preprocessing pipeline"""
 
@@ -70,8 +72,8 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):  # pylint: disab
         name="invert_wmseg_sbref"
     )
 
-    t1_2_mni = Node(ants.Registration(), name = "T1_2_MNI_Registration")
-    t1_2_mni.inputs.fixed_image = "/share/sw/free/fsl/5.0.7/fsl/data/standard/MNI152_T1_2mm_brain.nii.gz"
+    t1_2_mni = pe.Node(ants.Registration(), name = "T1_2_MNI_Registration")
+    t1_2_mni.inputs.fixed_image = op.join(get_mni_template(), 'MNI152_T1_2mm.nii.gz')
     t1_2_mni.inputs.metric = ['Mattes'] * 3 + [['Mattes', 'CC']]
     t1_2_mni.inputs.metric_weight = [1] * 3 + [[0.5, 0.5]]
     t1_2_mni.inputs.dimension = 3
@@ -101,7 +103,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):  # pylint: disab
         (inu_n4, t1_2_mni, [('output_image', 'moving_image')]),
         (t1_seg, flt_wmseg_sbref, [('tissue_class_map', 'in_file')]),
         (flt_wmseg_sbref, outputnode, [('out_file', 'wm_seg')]),
-        (flr_wmseg_sbref, invert_wmseg_sbref, [('out_matrix_file', 'in_file')]),
+        (flt_wmseg_sbref, invert_wmseg_sbref, [('out_matrix_file', 'in_file')]),
         (invert_wmseg, outputnode, [('out_file', 'sbref_2_t1_transform')]),
         (inu_n4, outputnode, [('output_image', 'bias_corrected_t1')]),
         (t1_skull_strip, outputnode, [('out_file', 'stripped_t1')]),
