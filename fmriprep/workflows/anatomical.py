@@ -12,9 +12,10 @@ import os
 import os.path as op
 import pkg_resources as pkgr
 
-from nipype.interfaces import utility as niu
 from nipype.interfaces import ants
 from nipype.interfaces import fsl
+from nipype.interfaces import io as nio
+from nipype.interfaces import utility as niu
 from nipype.pipeline import engine as pe
 
 from ..data import get_mni_template
@@ -73,30 +74,37 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):  # pylint: disab
     )
 
     t1_2_mni = pe.Node(ants.Registration(), name = "T1_2_MNI_Registration")
-    t1_2_mni.inputs.fixed_image = op.join(get_mni_template(), 'MNI152_T1_2mm.nii.gz')
-    t1_2_mni.inputs.metric = ['Mattes'] * 3 + [['Mattes', 'CC']]
-    t1_2_mni.inputs.metric_weight = [1] * 3 + [[0.5, 0.5]]
-    t1_2_mni.inputs.dimension = 3
-    t1_2_mni.inputs.write_composite_transform = False
-    t1_2_mni.inputs.radius_or_number_of_bins = [32] * 3 + [[32, 4]]
-    t1_2_mni.inputs.shrink_factors = [[6, 4, 2]] + [[3, 2, 1]]*2 + [[4, 2, 1]]
-    t1_2_mni.inputs.smoothing_sigmas = [[4, 2, 1]] * 3 + [[1, 0.5, 0]]
-    t1_2_mni.inputs.sigma_units = ['vox'] * 4
-    t1_2_mni.inputs.output_transform_prefix = "ANTS_T1_2_MNI"
-    t1_2_mni.inputs.transforms = ['Translation', 'Rigid', 'Affine', 'SyN']
-    t1_2_mni.inputs.transform_parameters = [(0.1,), (0.1,), (0.1,), (0.2, 3.0, 0.0)]
-    t1_2_mni.inputs.initial_moving_transform_com = True
-    t1_2_mni.inputs.number_of_iterations = ([[10, 10, 10]]*3 + [[1, 5, 3]])
-    t1_2_mni.inputs.convergence_threshold = [1.e-8] * 3 + [-0.01]
-    t1_2_mni.inputs.convergence_window_size = [20] * 3 + [5]
-    t1_2_mni.inputs.sampling_strategy = ['Regular'] * 3 + [[None, None]]
-    t1_2_mni.inputs.sampling_percentage = [0.3] * 3 + [[None, None]]
-    t1_2_mni.inputs.output_warped_image = True
-    t1_2_mni.inputs.use_histogram_matching = [False] * 3 + [True]
-    t1_2_mni.inputs.use_estimate_learning_rate_once = [True] * 4
-    t1_2_mni.inputs.collapse_output_transforms = False
+    t1_2_mni.inputs.fixed_image = op.join(get_mni_template(), 
+                                          'MNI152_T1_2mm.nii.gz')
+    t1_2_mni_params = pe.Node(nio.JSONFileGrabber(), name='t1_2_mni_params')
+    t1_2_mni_params.inputs.in_file = (
+        pkgr.resource_filename('fmriprep', 'data/registration_settings.json')
+    )
 
     workflow.connect([
+        (t1_2_mni_params, t1_2_mni, [
+            ('metric', 'metric'),
+            ('metric_weight', 'metric_weight'),
+            ('dimension', 'dimension'),
+            ('write_composite_transform', 'write_composite_transform'),
+            ('radius_or_number_of_bins', 'radius_or_number_of_bins'),
+            ('shrink_factors', 'shrink_factors'),
+            ('smoothing_sigmas', 'smoothing_sigmas'),
+            ('sigma_units', 'sigma_units'),
+            ('output_transform_prefix', 'output_transform_prefix'),
+            ('transforms', 'transforms'),
+            ('transform_parameters', 'transform_parameters'),
+            ('initial_moving_transform_com', 'initial_moving_transform_com'),
+            ('number_of_iterations', 'number_of_iterations'),
+            ('convergence_threshold', 'convergence_threshold'),
+            ('convergence_window_size', 'convergence_window_size'),
+            ('sampling_strategy', 'sampling_strategy'),
+            ('sampling_percentage', 'sampling_percentage'),
+            ('output_warped_image', 'output_warped_image'),
+            ('use_histogram_matching', 'use_histogram_matching'),
+            ('use_estimate_learning_rate_once', 'use_estimate_learning_rate_once'),
+            ('collapse_output_transforms', 'collapse_output_transforms')
+        ]),
         (inputnode, inu_n4, [('t1', 'input_image')]),
         (inputnode, flt_wmseg_sbref, [('sbref', 'reference')]),
         (inu_n4, t1_seg, [('output_image', 'in_files')]),
