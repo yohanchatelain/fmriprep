@@ -99,7 +99,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):  # pylint: disab
         (inputnode, inu_n4, [('t1', 'input_image')]),
         (inputnode, flt_wmseg_sbref, [('sbref', 'reference')]),
         (inu_n4, t1_seg, [('output_image', 'in_files')]),
-        (inu_n4, t1_skull_strip, [('output_image', 'out_file')]),
+        (inu_n4, t1_skull_strip, [('output_image', 'in_file')]),
         (inu_n4, t1_2_mni, [('output_image', 'moving_image')]),
         (t1_seg, flt_wmseg_sbref, [('tissue_class_map', 'in_file')]),
         (flt_wmseg_sbref, outputnode, [('out_file', 'wm_seg')]),
