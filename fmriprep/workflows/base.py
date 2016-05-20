@@ -46,7 +46,8 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
     )
     datasink = pe.Node(
         interface=nio.DataSink(base_directory=settings['output_dir']),
-        name="datasink"
+        name="datasink",
+        parameterization=False
     )
 
     t1w_preproc = t1w_preprocessing(settings=settings)
@@ -102,7 +103,10 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
             ('outputnode.out_topup', 'fmap_mag'),
             ('outputnode.mag_brain', 'fmap_mag_brain')
         ]),
-        (t1w_preproc, outputnode, [('outputnode.bias_corrected_t1', 't1')]),
+        (t1w_preproc, outputnode, [
+            ('outputnode.bias_corrected_t1', 't1'),
+            ('outputnode.stripped_t1', 'stripped_t1')
+        ]),
         (unwarp_wf, outputnode, [
             ('outputnode.stripped_epi', 'stripped_epi'),
             ('outputnode.corrected_epi_mean', 'corrected_epi_mean')
@@ -117,11 +121,12 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
         ]),
         (unwarp_wf, datasink, [
             ('outputnode.stripped_epi_mask', 'stripped_epi_mask'),
-            #  this could use a better name, its the 
+            #  this could use a better name, its the
             #  unwarped epi in sbref space
             ('outputnode.merged_epi', 'merged_epi'),
             ('outputnode.epi_motion_params', 'epi_motion_params')
         ])
     ])
+
 
     return workflow
