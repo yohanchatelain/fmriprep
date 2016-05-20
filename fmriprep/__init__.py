@@ -9,8 +9,6 @@ the Center for Reproducible Neuroscience (http://reproducibility.stanford.edu/),
 as well as for open-source software distribution.
 """
 
-from .workflows.base import fmri_preprocess
-
 __version__ = '0.0.3'
 
 
