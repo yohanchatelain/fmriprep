@@ -77,7 +77,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):  # pylint: disab
     t1_2_mni.inputs.metric = ['Mattes'] * 3 + [['Mattes', 'CC']]
     t1_2_mni.inputs.metric_weight = [1] * 3 + [[0.5, 0.5]]
     t1_2_mni.inputs.dimension = 3
-    t1_2_mni.inputs.write_composite_transform = True
+    t1_2_mni.inputs.write_composite_transform = False
     t1_2_mni.inputs.radius_or_number_of_bins = [32] * 3 + [[32, 4]]
     t1_2_mni.inputs.shrink_factors = [[6, 4, 2]] + [[3, 2, 1]]*2 + [[4, 2, 1]]
     t1_2_mni.inputs.smoothing_sigmas = [[4, 2, 1]] * 3 + [[1, 0.5, 0]]
@@ -94,6 +94,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):  # pylint: disab
     t1_2_mni.inputs.output_warped_image = True
     t1_2_mni.inputs.use_histogram_matching = [False] * 3 + [True]
     t1_2_mni.inputs.use_estimate_learning_rate_once = [True] * 4
+    t1_2_mni.inputs.collapse_output_transforms = False
 
     workflow.connect([
         (inputnode, inu_n4, [('t1', 'input_image')]),
