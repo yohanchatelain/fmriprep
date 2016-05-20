@@ -17,7 +17,7 @@ from nipype.interfaces import ants
 from nipype.interfaces import fsl
 from nipype.pipeline import engine as pe
 
-from ..utils import get_mni_template
+from ..data import get_mni_template
 
 def t1w_preprocessing(name='t1w_preprocessing', settings=None):  # pylint: disable=R0914
     """T1w images preprocessing pipeline"""
