@@ -34,7 +34,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):  # pylint: disab
                 'sbref_unwarped']), name='inputnode')
     outputnode = pe.Node(
          niu.IdentityInterface(
-            fields=['wm_seg', 'bias_corrected_t1', 'stripped_t1', 
+            fields=['wm_seg', 'bias_corrected_t1', 'stripped_t1', "t1_2_mni",
                     't1_2_mni_forward_transform', 't1_2_mni_reverse_transform',
                     'sbref_2_t1_transform', 't1_segmentation']
          ), 
@@ -117,8 +117,11 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):  # pylint: disab
         (inu_n4, outputnode, [('output_image', 'bias_corrected_t1')]),
         (t1_skull_strip, outputnode, [('out_file', 'stripped_t1')]),
         (t1_seg, outputnode, [('tissue_class_map', 't1_segmentation')]),
-        (t1_2_mni, outputnode, [('forward_transforms', 't1_2_mni_forward_transform')]),
-        (t1_2_mni, outputnode, [('reverse_transforms', 't1_2_mni_reverse_transform')])
+        (t1_2_mni, outputnode, [
+            ('warped_image', 't1_2_mni'),
+            ('forward_transforms', 't1_2_mni_forward_transform'),
+            ('reverse_transforms', 't1_2_mni_reverse_transform') 
+        ]),
     ])
 
     return workflow

@@ -41,7 +41,8 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['fieldmap', 'corrected_sbref', 'fmap_mag', 'fmap_mag_brain',
                 't1', 'stripped_epi', 'corrected_epi_mean', 'sbref_brain',
-                'stripped_epi_mask', 'stripped_t1', 't1_segmentation']),
+                'stripped_epi_mask', 'stripped_t1', 't1_segmentation',
+                't1_2_mni']),
         name='outputnode'
     )
     datasink = pe.Node(
@@ -105,7 +106,8 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
         ]),
         (t1w_preproc, outputnode, [
             ('outputnode.bias_corrected_t1', 't1'),
-            ('outputnode.stripped_t1', 'stripped_t1')
+            ('outputnode.stripped_t1', 'stripped_t1'),
+            ('outputnode.t1_2_mni', 't1_2_mni')
         ]),
         (unwarp_wf, outputnode, [
             ('outputnode.stripped_epi', 'stripped_epi'),
