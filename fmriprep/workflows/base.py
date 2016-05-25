@@ -42,7 +42,7 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
         fields=['fieldmap', 'corrected_sbref', 'fmap_mag', 'fmap_mag_brain',
                 't1', 'stripped_epi', 'corrected_epi_mean', 'sbref_brain',
                 'stripped_epi_mask', 'stripped_t1', 't1_segmentation',
-                egt1_2_mni', 't1_wm_seg']),
+                't1_2_mni', 't1_wm_seg']),
         name='outputnode'
     )
     datasink = pe.Node(
