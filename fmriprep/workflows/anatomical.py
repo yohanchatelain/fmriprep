@@ -87,8 +87,8 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         pkgr.resource_filename('fmriprep', 'data/registration_settings.json')
     )
 
-    t1_stripped_image = Node(
-        Function(
+    t1_stripped_image = pe.Node(
+        niu.Function(
             input_names=["in_file", "overlay_file", "out_file"],
             output_names=["out_file"],
             function=stripped_brain_overlay
@@ -98,7 +98,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     t1_stripped_image.inputs.out_file = "t1_stripped_overlay.png"
 
     datasink = pe.Node(
-        interface=nio.DataSink(base_directory=op.join(settings['output_dir'], "images"),
+        interface=nio.DataSink(base_directory=op.join(settings['output_dir'], "images")),
         name="datasink",
         parameterization=False
     )
@@ -146,9 +146,9 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             ('forward_transforms', 't1_2_mni_forward_transform'),
             ('reverse_transforms', 't1_2_mni_reverse_transform') 
         ]),
-        (inu_n4, t1_stripped_image, [('output_image'), ('in_file')]),
+        (inu_n4, t1_stripped_image, [('output_image', 'in_file')]),
         (t1_skull_strip, t1_stripped_image, [('BrainExtractionBrain', 'overlay_file')]),
-        (t1_stripped_image, datasink, [("out_file", "t1_stripped_overlay.png")])
+        (t1_stripped_image, datasink, [('out_file', 't1_stripped_overlay.png')])
     ])
 
     return workflow
