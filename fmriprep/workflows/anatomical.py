@@ -98,7 +98,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     t1_stripped_image.inputs.out_file = "t1_stripped_overlay.png"
 
     datasink = pe.Node(
-        interface=nio.DataSink(base_directory=op.join(settings['output_dir'], "images")),
+        interface=nio.DataSink(base_directory=op.join(settings['work_dir'], "images")),
         name="datasink",
         parameterization=False
     )
@@ -148,7 +148,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         ]),
         (inu_n4, t1_stripped_image, [('output_image', 'in_file')]),
         (t1_skull_strip, t1_stripped_image, [('BrainExtractionBrain', 'overlay_file')]),
-        (t1_stripped_image, datasink, [('out_file', 't1_stripped_overlay.png')])
+        (t1_stripped_image, datasink, [('out_file', '@t1_stripped_overlay')])
     ])
 
     return workflow
