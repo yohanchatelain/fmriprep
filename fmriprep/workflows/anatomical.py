@@ -18,7 +18,7 @@ from nipype.interfaces import io as nio
 from nipype.interfaces import utility as niu
 from nipype.pipeline import engine as pe
 
-from ..data import get_mni_template
+from ..data import get_ants_oasis_template, get_mni_template
 
 def t1w_preprocessing(name='t1w_preprocessing', settings=None):  # pylint: disable=R0914
     """T1w images preprocessing pipeline"""
@@ -34,7 +34,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):  # pylint: disab
                 'sbref_unwarped']), name='inputnode')
     outputnode = pe.Node(
          niu.IdentityInterface(
-            fields=['wm_seg', 'bias_corrected_t1', 'stripped_t1', 
+            fields=['wm_seg', 'bias_corrected_t1', 'stripped_t1', "t1_2_mni",
                     't1_2_mni_forward_transform', 't1_2_mni_reverse_transform',
                     'sbref_2_t1_transform', 't1_segmentation']
          ), 
@@ -49,16 +49,23 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):  # pylint: disab
         name="Bias_Field_Correction"
     )
 
+    '''
     t1_skull_strip = pe.Node(
         fsl.BET(mask=True, functional=True, frac=0.6), name="t1_skull_Strip")
     '''
-    t1_skull_strip = Node(ants.segmentation.BrainExtraction(), 
+    t1_skull_strip = pe.Node(ants.segmentation.BrainExtraction(), 
                           name = "Ants_T1_Brain_Extraction")
     t1_skull_strip.inputs.dimension = 3
-    t1_skull_strip.inputs.brain_template = "/home/cmoodie/Oasis_MICCAI2012-Multi-Atlas-Challenge-Data/T_template0.nii.gz"
-    t1_skull_strip.inputs.brain_probability_mask = "/home/cmoodie/Oasis_MICCAI2012-Multi-Atlas-Challenge-Data/T_template0_BrainCerebellumProbabilityMask.nii.gz"
-    t1_skull_strip.inputs.extraction_registration_mask = "/home/cmoodie/Oasis_MICCAI2012-Multi-Atlas-Challenge-Data/T_template0_BrainCerebellumRegistrationMask.nii.gz"
-    '''
+    t1_skull_strip.inputs.brain_template = op.join(get_ants_oasis_template(), 
+                                                   "T_template0.nii.gz")
+    t1_skull_strip.inputs.brain_probability_mask = op.join(
+        get_ants_oasis_template(),
+        "T_template0_BrainCerebellumProbabilityMask.nii.gz"
+    )
+    t1_skull_strip.inputs.extraction_registration_mask = op.join(
+        get_ants_oasis_template(),
+        "T_template0_BrainCerebellumRegistrationMask.nii.gz"
+    )
 
     # fast -o fast_test -N -v
     # ../Preprocessing_test_workflow/_subject_id_S2529LVY1263171/Bias_Field_Correction/sub-S2529LVY1263171_run-1_T1w_corrected.nii.gz
@@ -108,17 +115,20 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):  # pylint: disab
         (inputnode, inu_n4, [('t1', 'input_image')]),
         (inputnode, flt_wmseg_sbref, [('sbref', 'reference')]),
         (inu_n4, t1_seg, [('output_image', 'in_files')]),
-        (inu_n4, t1_skull_strip, [('output_image', 'in_file')]),
+        (inu_n4, t1_skull_strip, [('output_image', 'anatomical_image')]),
         (inu_n4, t1_2_mni, [('output_image', 'moving_image')]),
         (t1_seg, flt_wmseg_sbref, [('tissue_class_map', 'in_file')]),
         (flt_wmseg_sbref, outputnode, [('out_file', 'wm_seg')]),
         (flt_wmseg_sbref, invert_wmseg_sbref, [('out_matrix_file', 'in_file')]),
         (invert_wmseg_sbref, outputnode, [('out_file', 'sbref_2_t1_transform')]),
         (inu_n4, outputnode, [('output_image', 'bias_corrected_t1')]),
-        (t1_skull_strip, outputnode, [('out_file', 'stripped_t1')]),
+        (t1_skull_strip, outputnode, [('BrainExtractionBrain', 'stripped_t1')]),
         (t1_seg, outputnode, [('tissue_class_map', 't1_segmentation')]),
-        (t1_2_mni, outputnode, [('forward_transforms', 't1_2_mni_forward_transform')]),
-        (t1_2_mni, outputnode, [('reverse_transforms', 't1_2_mni_reverse_transform')])
+        (t1_2_mni, outputnode, [
+            ('warped_image', 't1_2_mni'),
+            ('forward_transforms', 't1_2_mni_forward_transform'),
+            ('reverse_transforms', 't1_2_mni_reverse_transform') 
+        ]),
     ])
 
     return workflow
