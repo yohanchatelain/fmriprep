@@ -144,8 +144,8 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             ('forward_transforms', 't1_2_mni_forward_transform'),
             ('reverse_transforms', 't1_2_mni_reverse_transform') 
         ]),
-        (inu_n4, t1_stripped_overlay, [('output_image', 'in_file')]),
-        (t1_skull_strip, t1_stripped_overlay, [('BrainExtractionBrain', 'overlay_file')]),
+        (inu_n4, t1_stripped_overlay, [('output_image', 'overlay_file')]),
+        (t1_skull_strip, t1_stripped_overlay, [('BrainExtractionMask', 'in_file')]),
         (t1_stripped_overlay, datasink, [('out_file', '@t1_stripped_overlay')])
     ])
 
