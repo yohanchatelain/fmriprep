@@ -93,7 +93,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         (t1_skull_strip, t1_seg, [('BrainExtractionBrain', 'in_files')]),
         (t1_seg, flt_wmseg_sbref, [('tissue_class_map', 'in_file')]),
         (inu_n4, t1_2_mni, [('output_image', 'moving_image')]),
-        (t1_skull_strip, t1_seg, [('BrainExtractionMask', 'moving_image_mask')]),
+        (t1_skull_strip, t1_2_mni, [('BrainExtractionMask', 'moving_image_mask')]),
         (flt_wmseg_sbref, invert_wmseg_sbref, [('out_matrix_file', 'in_file')]),
         (flt_wmseg_sbref, outputnode, [('out_file', 'wm_seg')]),
         (invert_wmseg_sbref, outputnode, [('out_file', 'sbref_2_t1_transform')]),
