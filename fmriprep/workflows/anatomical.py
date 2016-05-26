@@ -156,7 +156,9 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             ('use_histogram_matching', 'use_histogram_matching'),
             ('use_estimate_learning_rate_once',
              'use_estimate_learning_rate_once'),
-            ('collapse_output_transforms', 'collapse_output_transforms')
+            ('collapse_output_transforms', 'collapse_output_transforms'),
+            ('winsorize_lower_quantile', 'winsorize_lower_quantile'),
+            ('winsorize_upper_quantile', 'winsorize_upper_quantile'),
         ])
     ])
 
