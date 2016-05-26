@@ -78,8 +78,9 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     )
 
     t1_2_mni = pe.Node(ants.Registration(), name="T1_2_MNI_Registration")
-    t1_2_mni.inputs.fixed_image = op.join(get_mni_template(),
-                                          'MNI152_T1_2mm.nii.gz')
+    t1_2_mni.inputs.fixed_image = op.join(get_mni_template(), 'MNI152_T1_2mm.nii.gz')
+    t1_2_mni.inputs.fixed_image_mask = op.join(
+        get_mni_template(), 'MNI152_T1_2mm_brain_mask.nii.gz')
     t1_2_mni_params = pe.Node(nio.JSONFileGrabber(), name='t1_2_mni_params')
     t1_2_mni_params.inputs.in_file = (
         pkgr.resource_filename('fmriprep', 'data/registration_settings.json')
@@ -92,6 +93,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         (t1_skull_strip, t1_seg, [('BrainExtractionBrain', 'in_files')]),
         (t1_seg, flt_wmseg_sbref, [('tissue_class_map', 'in_file')]),
         (inu_n4, t1_2_mni, [('output_image', 'moving_image')]),
+        (t1_skull_strip, t1_2_mni, [('BrainExtractionMask', 'moving_image_mask')]),
         (flt_wmseg_sbref, invert_wmseg_sbref, [('out_matrix_file', 'in_file')]),
         (flt_wmseg_sbref, outputnode, [('out_file', 'wm_seg')]),
         (invert_wmseg_sbref, outputnode, [('out_file', 'sbref_2_t1_transform')]),
@@ -154,7 +156,9 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             ('use_histogram_matching', 'use_histogram_matching'),
             ('use_estimate_learning_rate_once',
              'use_estimate_learning_rate_once'),
-            ('collapse_output_transforms', 'collapse_output_transforms')
+            ('collapse_output_transforms', 'collapse_output_transforms'),
+            ('winsorize_lower_quantile', 'winsorize_lower_quantile'),
+            ('winsorize_upper_quantile', 'winsorize_upper_quantile'),
         ])
     ])
 
