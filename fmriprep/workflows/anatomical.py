@@ -74,8 +74,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
                               name="WMSeg_2_SBRef_Brain_Affine_Transform")
 
     invert_wmseg_sbref = pe.Node(
-        fsl.ConvertXFM(invert_xfm=True),
-        name="invert_wmseg_sbref"
+        fsl.ConvertXFM(invert_xfm=True), name="invert_wmseg_sbref"
     )
 
     t1_2_mni = pe.Node(ants.Registration(), name="T1_2_MNI_Registration")
@@ -86,6 +85,28 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         pkgr.resource_filename('fmriprep', 'data/registration_settings.json')
     )
 
+    workflow.connect([
+        (inputnode, flt_wmseg_sbref, [('sbref', 'reference')]),
+        (inputnode, inu_n4, [('t1', 'input_image')]),
+        (inu_n4, t1_skull_strip, [('output_image', 'anatomical_image')]),
+        (t1_skull_strip, t1_seg, [('BrainExtractionBrain', 'in_files')]),
+        (t1_seg, flt_wmseg_sbref, [('tissue_class_map', 'in_file')]),
+        (inu_n4, t1_2_mni, [('output_image', 'moving_image')]),
+        (flt_wmseg_sbref, invert_wmseg_sbref, [('out_matrix_file', 'in_file')]),
+        (flt_wmseg_sbref, outputnode, [('out_file', 'wm_seg')]),
+        (invert_wmseg_sbref, outputnode, [('out_file', 'sbref_2_t1_transform')]),
+        (inu_n4, outputnode, [('output_image', 'bias_corrected_t1')]),
+        (t1_seg, outputnode, [('tissue_class_map', 't1_segmentation')]),
+        (t1_2_mni, outputnode, [
+            ('warped_image', 't1_2_mni'),
+            ('forward_transforms', 't1_2_mni_forward_transform'),
+            ('reverse_transforms', 't1_2_mni_reverse_transform')
+        ]),
+        (t1_skull_strip, outputnode, [
+            ('BrainExtractionBrain', 'stripped_t1')]),
+    ])
+
+    # Connect reporting nodes
     t1_stripped_overlay = pe.Node(
         niu.Function(
             input_names=["in_file", "overlay_file", "out_file"],
@@ -103,6 +124,13 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         parameterization=False
     )
 
+    workflow.connect([
+        (inu_n4, t1_stripped_overlay, [('output_image', 'overlay_file')]),
+        (t1_skull_strip, t1_stripped_overlay, [('BrainExtractionMask', 'in_file')]),
+        (t1_stripped_overlay, datasink, [('out_file', '@t1_stripped_overlay')]),
+    ])
+
+    # ANTs inputs connected here for clarity
     workflow.connect([
         (t1_2_mni_params, t1_2_mni, [
             ('metric', 'metric'),
@@ -127,31 +155,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             ('use_estimate_learning_rate_once',
              'use_estimate_learning_rate_once'),
             ('collapse_output_transforms', 'collapse_output_transforms')
-        ]),
-        (inputnode, inu_n4, [('t1', 'input_image')]),
-        (inputnode, flt_wmseg_sbref, [('sbref', 'reference')]),
-        (t1_seg, flt_wmseg_sbref, [('tissue_class_map', 'in_file')]),
-        (inu_n4, t1_seg, [('output_image', 'in_files')]),
-        (inu_n4, t1_skull_strip, [('output_image', 'anatomical_image')]),
-        (inu_n4, t1_2_mni, [('output_image', 'moving_image')]),
-        (flt_wmseg_sbref, invert_wmseg_sbref,
-         [('out_matrix_file', 'in_file')]),
-        (flt_wmseg_sbref, outputnode, [('out_file', 'wm_seg')]),
-        (invert_wmseg_sbref, outputnode,
-         [('out_file', 'sbref_2_t1_transform')]),
-        (inu_n4, outputnode, [('output_image', 'bias_corrected_t1')]),
-        (t1_skull_strip, outputnode, [
-         ('BrainExtractionBrain', 'stripped_t1')]),
-        (t1_seg, outputnode, [('tissue_class_map', 't1_segmentation')]),
-        (t1_2_mni, outputnode, [
-            ('warped_image', 't1_2_mni'),
-            ('forward_transforms', 't1_2_mni_forward_transform'),
-            ('reverse_transforms', 't1_2_mni_reverse_transform')
-        ]),
-        (inu_n4, t1_stripped_overlay, [('output_image', 'overlay_file')]),
-        (t1_skull_strip, t1_stripped_overlay,
-         [('BrainExtractionMask', 'in_file')]),
-        (t1_stripped_overlay, datasink, [('out_file', '@t1_stripped_overlay')])
+        ])
     ])
 
     return workflow
