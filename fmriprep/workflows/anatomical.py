@@ -23,7 +23,7 @@ from ..viz import stripped_brain_overlay
 
 
 #  pylint: disable=R0914
-def t1w_preprocessing(name='t1w_preprocessing', settings=None):    
+def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     """T1w images preprocessing pipeline"""
 
     if settings is None:
@@ -36,26 +36,25 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         fields=['t1', 'sbref', 'sbref_brain_corrected', 'sbref_fmap',
                 'sbref_unwarped']), name='inputnode')
     outputnode = pe.Node(
-         niu.IdentityInterface(
+        niu.IdentityInterface(
             fields=['wm_seg', 'bias_corrected_t1', 'stripped_t1', "t1_2_mni",
                     't1_2_mni_forward_transform', 't1_2_mni_reverse_transform',
                     'sbref_2_t1_transform', 't1_segmentation']
-         ), 
-         name='outputnode'
+        ),
+        name='outputnode'
     )
-
 
     #  T1 Bias Field Correction
     inu_n4 = pe.Node(
-        ants.N4BiasFieldCorrection(dimension=3, bspline_fitting_distance=300, 
-                                   shrink_factor=3), 
+        ants.N4BiasFieldCorrection(dimension=3, bspline_fitting_distance=300,
+                                   shrink_factor=3),
         name="Bias_Field_Correction"
     )
 
-    t1_skull_strip = pe.Node(ants.segmentation.BrainExtraction(), 
-                          name = "Ants_T1_Brain_Extraction")
+    t1_skull_strip = pe.Node(ants.segmentation.BrainExtraction(),
+                             name="Ants_T1_Brain_Extraction")
     t1_skull_strip.inputs.dimension = 3
-    t1_skull_strip.inputs.brain_template = op.join(get_ants_oasis_template(), 
+    t1_skull_strip.inputs.brain_template = op.join(get_ants_oasis_template(),
                                                    "T_template0.nii.gz")
     t1_skull_strip.inputs.brain_probability_mask = op.join(
         get_ants_oasis_template(),
@@ -75,18 +74,39 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
                               name="WMSeg_2_SBRef_Brain_Affine_Transform")
 
     invert_wmseg_sbref = pe.Node(
-        fsl.ConvertXFM(invert_xfm = True),
-        name="invert_wmseg_sbref"
+        fsl.ConvertXFM(invert_xfm=True), name="invert_wmseg_sbref"
     )
 
-    t1_2_mni = pe.Node(ants.Registration(), name = "T1_2_MNI_Registration")
-    t1_2_mni.inputs.fixed_image = op.join(get_mni_template(), 
+    t1_2_mni = pe.Node(ants.Registration(), name="T1_2_MNI_Registration")
+    t1_2_mni.inputs.fixed_image = op.join(get_mni_template(),
                                           'MNI152_T1_2mm.nii.gz')
     t1_2_mni_params = pe.Node(nio.JSONFileGrabber(), name='t1_2_mni_params')
     t1_2_mni_params.inputs.in_file = (
         pkgr.resource_filename('fmriprep', 'data/registration_settings.json')
     )
 
+    workflow.connect([
+        (inputnode, flt_wmseg_sbref, [('sbref', 'reference')]),
+        (inputnode, inu_n4, [('t1', 'input_image')]),
+        (inu_n4, t1_skull_strip, [('output_image', 'anatomical_image')]),
+        (t1_skull_strip, t1_seg, [('BrainExtractionBrain', 'in_files')]),
+        (t1_seg, flt_wmseg_sbref, [('tissue_class_map', 'in_file')]),
+        (inu_n4, t1_2_mni, [('output_image', 'moving_image')]),
+        (flt_wmseg_sbref, invert_wmseg_sbref, [('out_matrix_file', 'in_file')]),
+        (flt_wmseg_sbref, outputnode, [('out_file', 'wm_seg')]),
+        (invert_wmseg_sbref, outputnode, [('out_file', 'sbref_2_t1_transform')]),
+        (inu_n4, outputnode, [('output_image', 'bias_corrected_t1')]),
+        (t1_seg, outputnode, [('tissue_class_map', 't1_segmentation')]),
+        (t1_2_mni, outputnode, [
+            ('warped_image', 't1_2_mni'),
+            ('forward_transforms', 't1_2_mni_forward_transform'),
+            ('reverse_transforms', 't1_2_mni_reverse_transform')
+        ]),
+        (t1_skull_strip, outputnode, [
+            ('BrainExtractionBrain', 'stripped_t1')]),
+    ])
+
+    # Connect reporting nodes
     t1_stripped_overlay = pe.Node(
         niu.Function(
             input_names=["in_file", "overlay_file", "out_file"],
@@ -98,11 +118,19 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     t1_stripped_overlay.inputs.out_file = "t1_stripped_overlay.png"
 
     datasink = pe.Node(
-        interface=nio.DataSink(base_directory=op.join(settings['work_dir'], "images")),
+        interface=nio.DataSink(
+            base_directory=op.join(settings['work_dir'], "images")),
         name="datasink",
         parameterization=False
     )
 
+    workflow.connect([
+        (inu_n4, t1_stripped_overlay, [('output_image', 'overlay_file')]),
+        (t1_skull_strip, t1_stripped_overlay, [('BrainExtractionMask', 'in_file')]),
+        (t1_stripped_overlay, datasink, [('out_file', '@t1_stripped_overlay')]),
+    ])
+
+    # ANTs inputs connected here for clarity
     workflow.connect([
         (t1_2_mni_params, t1_2_mni, [
             ('metric', 'metric'),
@@ -124,29 +152,10 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             ('sampling_percentage', 'sampling_percentage'),
             ('output_warped_image', 'output_warped_image'),
             ('use_histogram_matching', 'use_histogram_matching'),
-            ('use_estimate_learning_rate_once', 'use_estimate_learning_rate_once'),
+            ('use_estimate_learning_rate_once',
+             'use_estimate_learning_rate_once'),
             ('collapse_output_transforms', 'collapse_output_transforms')
-        ]),
-        (inputnode, inu_n4, [('t1', 'input_image')]),
-        (inputnode, flt_wmseg_sbref, [('sbref', 'reference')]),
-        (t1_seg, flt_wmseg_sbref, [('tissue_class_map', 'in_file')]),
-        (inu_n4, t1_seg, [('output_image', 'in_files')]),
-        (inu_n4, t1_skull_strip, [('output_image', 'anatomical_image')]),
-        (inu_n4, t1_2_mni, [('output_image', 'moving_image')]),
-        (flt_wmseg_sbref, invert_wmseg_sbref, [('out_matrix_file', 'in_file')]),
-        (flt_wmseg_sbref, outputnode, [('out_file', 'wm_seg')]),
-        (invert_wmseg_sbref, outputnode, [('out_file', 'sbref_2_t1_transform')]),
-        (inu_n4, outputnode, [('output_image', 'bias_corrected_t1')]),
-        (t1_skull_strip, outputnode, [('BrainExtractionBrain', 'stripped_t1')]),
-        (t1_seg, outputnode, [('tissue_class_map', 't1_segmentation')]),
-        (t1_2_mni, outputnode, [
-            ('warped_image', 't1_2_mni'),
-            ('forward_transforms', 't1_2_mni_forward_transform'),
-            ('reverse_transforms', 't1_2_mni_reverse_transform') 
-        ]),
-        (inu_n4, t1_stripped_overlay, [('output_image', 'overlay_file')]),
-        (t1_skull_strip, t1_stripped_overlay, [('BrainExtractionMask', 'in_file')]),
-        (t1_stripped_overlay, datasink, [('out_file', '@t1_stripped_overlay')])
+        ])
     ])
 
     return workflow
