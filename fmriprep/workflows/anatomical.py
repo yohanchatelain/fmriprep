@@ -50,11 +50,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     arw = mri_reorient_wf()
 
     #  T1 Bias Field Correction
-    inu_n4 = pe.Node(
-        ants.N4BiasFieldCorrection(dimension=3, bspline_fitting_distance=300,
-                                   shrink_factor=3),
-        name="Bias_Field_Correction"
-    )
+    inu_n4 = pe.Node(ants.N4BiasFieldCorrection(dimension=3), name="Bias_Field_Correction")
 
     t1_skull_strip = pe.Node(ants.segmentation.BrainExtraction(
         dimension=3, use_floatingpoint_precision=1,
