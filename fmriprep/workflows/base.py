@@ -85,10 +85,11 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
             ('outputnode.out_topup', 'inputnode.in_topup'),
             ('outputnode.fmap_unmasked', 'inputnode.fmap_unmasked')
         ]),
-        (t1w_preproc, unwarp_wf, [('outputnode.wm_seg', 'inputnode.wm_seg')]),
+        (t1w_preproc, unwarp_wf, [('outputnode.wm_seg', 'inputnode.wm_seg'),
+                                  ('outputnode.t1_brain', 'inputnode.t1_brain')]),
         #(t1w_preproc, sbref_wf, [
         #    ('outputnode.bias_corrected_t1', 'inputnode.t1'),
-        #    ('outputnode.stripped_t1', 'inputnode.stripped_t1')
+        #    ('outputnode.t1_brain', 'inputnode.t1_brain')
         #]),
         (sepair_wf, unwarp_wf, [
             ('outputnode.fmap_unmasked', 'inputnode.fmap_unmasked')
@@ -110,7 +111,7 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
         ]),
         (t1w_preproc, outputnode, [
             ('outputnode.bias_corrected_t1', 't1'),
-            ('outputnode.stripped_t1', 'stripped_t1'),
+            ('outputnode.t1_brain', 'stripped_t1'),
             ('outputnode.t1_segmentation', 't1_segmentation'),
             ('outputnode.wm_seg', 't1_wm_seg'),
             ('outputnode.t1_2_mni', 't1_2_mni')
@@ -122,7 +123,7 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
         (t1w_preproc, datasink, [
             ('outputnode.t1_segmentation', 't1_segmentation'),
             ('outputnode.bias_corrected_t1', 't1'),
-            ('outputnode.stripped_t1', 'stripped_t1'),
+            ('outputnode.t1_brain', 't1_brain'),
             ('outputnode.sbref_2_t1_transform', 'sbref_2_t1_transform'),
             ('outputnode.t1_2_mni_forward_transform', 't1_2_mni_forward_transform'),
             ('outputnode.t1_2_mni_reverse_transform', 't1_2_mni_reverse_transform')

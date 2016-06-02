@@ -39,7 +39,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
                 'sbref_unwarped']), name='inputnode')
     outputnode = pe.Node(
         niu.IdentityInterface(
-            fields=['wm_seg', 'bias_corrected_t1', 'stripped_t1', "t1_2_mni",
+            fields=['wm_seg', 'bias_corrected_t1', 't1_brain', "t1_2_mni",
                     't1_2_mni_forward_transform', 't1_2_mni_reverse_transform',
                     'sbref_2_t1_transform', 't1_segmentation']
         ),
@@ -102,7 +102,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             ('reverse_transforms', 't1_2_mni_reverse_transform')
         ]),
         (asw, outputnode, [
-            ('outputnode.out_file', 'stripped_t1')]),
+            ('outputnode.out_file', 't1_brain')]),
     ])
 
     # Connect reporting nodes
