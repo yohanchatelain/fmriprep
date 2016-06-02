@@ -122,7 +122,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
 
     # The T1-to-MNI will be plotted using the segmentation. That's why we transform it first
     seg_2_mni = pe.Node(ants.ApplyTransforms(
-        dimension=3, default_value=0, interpolation='NearestNeighbor'), name='xfm')
+        dimension=3, default_value=0, interpolation='NearestNeighbor'), name='Seg-2-MNI-warp')
 
     t1_2_mni_overlay = pe.Node(niu.Function(
         input_names=["in_file", "overlay_file", "out_file"], output_names=["out_file"],
@@ -143,9 +143,9 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         (t1_skull_strip, t1_stripped_overlay, [('BrainExtractionMask', 'in_file')]),
         (t1_stripped_overlay, datasink, [('out_file', '@t1_stripped_overlay')]),
         (t1_seg, seg_2_mni, [('tissue_class_map', 'input_image')]),
-        (t1_2_mni, seg_2_mni, [('forward_transforms', 'forward_transforms'),
-                               ('forward_invert_flags', 'forward_invert_flags')]),
-        (seg_2_mni, t1_2_mni_overlay, [('warped_image', 'in_file')])
+        (t1_2_mni, seg_2_mni, [('forward_transforms', 'transforms'),
+                               ('forward_invert_flags', 'invert_transform_flags')]),
+        (seg_2_mni, t1_2_mni_overlay, [('output_image', 'in_file')])
     ])
 
     # ANTs inputs connected here for clarity
