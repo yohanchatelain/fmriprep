@@ -18,7 +18,7 @@ from nipype.interfaces import io as nio
 from nipype.interfaces import utility as niu
 from nipype.pipeline import engine as pe
 
-from mriqc.workflows.anatomical import mri_reorient_wf
+from mriqc.workflows.anatomical import mri_reorient_wf, skullstrip_wf
 
 from ..data import get_ants_oasis_template_ras, get_mni_template
 from ..viz import stripped_brain_overlay, anatomical_overlay
@@ -49,25 +49,16 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     # Reorient T1
     arw = mri_reorient_wf()
 
-    #  T1 Bias Field Correction
+    # T1 Bias Field Correction
     inu_n4 = pe.Node(ants.N4BiasFieldCorrection(dimension=3), name="Bias_Field_Correction")
 
-    t1_skull_strip = pe.Node(ants.segmentation.BrainExtraction(
-        dimension=3, use_floatingpoint_precision=1,
-        debug=settings['debug']), name="Ants_T1_Brain_Extraction")
-    t1_skull_strip.inputs.brain_template = op.join(get_ants_oasis_template_ras(),
-                                                   "T_template0.nii.gz")
-    t1_skull_strip.inputs.brain_probability_mask = op.join(
-        get_ants_oasis_template_ras(),
-        "T_template0_BrainCerebellumProbabilityMask.nii.gz"
-    )
-    t1_skull_strip.inputs.extraction_registration_mask = op.join(
-        get_ants_oasis_template_ras(),
-        "T_template0_BrainCerebellumRegistrationMask.nii.gz"
-    )
+    # 2. Skull-stripping
+    if not settings['skull_strip_ants']:
+        asw = skullstrip_wf()
+    else:
+        asw = skullstrip_ants(settings=settings)
 
     # fast -o fast_test -N -v
-    # ../Preprocessing_test_workflow/_subject_id_S2529LVY1263171/Bias_Field_Correction/sub-S2529LVY1263171_run-1_T1w_corrected.nii.gz
     t1_seg = pe.Node(fsl.FAST(no_bias=True), name="T1_Segmentation")
 
     # Affine transform of T1 segmentation into SBRref space
@@ -95,11 +86,11 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         (inputnode, arw, [('t1', 'inputnode.in_file')]),
         (inputnode, flt_wmseg_sbref, [('sbref', 'reference')]),
         (arw, inu_n4, [('outputnode.out_file', 'input_image')]),
-        (inu_n4, t1_skull_strip, [('output_image', 'anatomical_image')]),
-        (t1_skull_strip, t1_seg, [('BrainExtractionBrain', 'in_files')]),
+        (inu_n4, asw, [('output_image', 'inputnode.in_file')]),
+        (asw, t1_seg, [('outputnode.out_file', 'in_files')]),
         (t1_seg, flt_wmseg_sbref, [('tissue_class_map', 'in_file')]),
         (inu_n4, t1_2_mni, [('output_image', 'moving_image')]),
-        (t1_skull_strip, t1_2_mni, [('BrainExtractionMask', 'moving_image_mask')]),
+        (asw, t1_2_mni, [('outputnode.out_mask', 'moving_image_mask')]),
         (flt_wmseg_sbref, invert_wmseg_sbref, [('out_matrix_file', 'in_file')]),
         (flt_wmseg_sbref, outputnode, [('out_file', 'wm_seg')]),
         (invert_wmseg_sbref, outputnode, [('out_file', 'sbref_2_t1_transform')]),
@@ -110,8 +101,8 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             ('forward_transforms', 't1_2_mni_forward_transform'),
             ('reverse_transforms', 't1_2_mni_reverse_transform')
         ]),
-        (t1_skull_strip, outputnode, [
-            ('BrainExtractionBrain', 'stripped_t1')]),
+        (asw, outputnode, [
+            ('outputnode.out_file', 'stripped_t1')]),
     ])
 
     # Connect reporting nodes
@@ -140,7 +131,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
 
     workflow.connect([
         (inu_n4, t1_stripped_overlay, [('output_image', 'overlay_file')]),
-        (t1_skull_strip, t1_stripped_overlay, [('BrainExtractionMask', 'in_file')]),
+        (asw, t1_stripped_overlay, [('outputnode.out_mask', 'in_file')]),
         (t1_stripped_overlay, datasink, [('out_file', '@t1_stripped_overlay')]),
         (t1_seg, seg_2_mni, [('tissue_class_map', 'input_image')]),
         (t1_2_mni, seg_2_mni, [('forward_transforms', 'transforms'),
@@ -176,6 +167,40 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             ('winsorize_lower_quantile', 'winsorize_lower_quantile'),
             ('winsorize_upper_quantile', 'winsorize_upper_quantile'),
         ])
+    ])
+
+    return workflow
+
+
+def skullstrip_ants(name='ANTsBrainExtraction', settings=None):
+    if settings is None:
+        settings = {'debug': False}
+
+    workflow = pe.Workflow(name=name)
+
+    inputnode = pe.Node(niu.IdentityInterface(fields=['in_file']), name='inputnode')
+    outputnode = pe.Node(niu.IdentityInterface(
+        fields=['out_file', 'out_mask']), name='outputnode')
+
+
+    t1_skull_strip = pe.Node(ants.segmentation.BrainExtraction(
+        dimension=3, use_floatingpoint_precision=1,
+        debug=settings['debug']), name="Ants_T1_Brain_Extraction")
+    t1_skull_strip.inputs.brain_template = op.join(get_ants_oasis_template_ras(),
+                                                   "T_template0.nii.gz")
+    t1_skull_strip.inputs.brain_probability_mask = op.join(
+        get_ants_oasis_template_ras(),
+        "T_template0_BrainCerebellumProbabilityMask.nii.gz"
+    )
+    t1_skull_strip.inputs.extraction_registration_mask = op.join(
+        get_ants_oasis_template_ras(),
+        "T_template0_BrainCerebellumRegistrationMask.nii.gz"
+    )
+
+    workflow.connect([
+        (inputnode, t1_skull_strip, [('in_field', 'anatomical_image')]),
+        (t1_skull_strip, outputnode, [('BrainExtractionMask', 'out_mask'),
+                                      ('BrainExtractionBrain', 'out_file')])
     ])
 
     return workflow
