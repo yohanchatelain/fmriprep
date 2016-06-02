@@ -73,11 +73,7 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
             ('sbref', 'inputnode.sbref')
         ]),
         (inputnode, sbref_wf, [('sbref', 'inputnode.sbref')]),
-        (sbref_wf, t1w_preproc, [
-            ('outputnode.sbref_brain_corrected', 'inputnode.sbref_brain_corrected'),
-            ('outputnode.sbref_fmap', 'inputnode.sbref_fmap'),
-            ('outputnode.sbref_unwarped', 'inputnode.sbref_unwarped')
-        ]),
+        (t1w_preproc, sbref_wf, [('outputnode.t1_seg', 'inputnode.t1_seg')]),
         (sepair_wf, sbref_wf, [
             ('outputnode.fmap_scaled', 'inputnode.fmap_scaled'),
             ('outputnode.mag_brain', 'inputnode.mag_brain'),
@@ -85,8 +81,7 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
             ('outputnode.out_topup', 'inputnode.in_topup'),
             ('outputnode.fmap_unmasked', 'inputnode.fmap_unmasked')
         ]),
-        (t1w_preproc, unwarp_wf, [('outputnode.wm_seg', 'inputnode.wm_seg'),
-                                  ('outputnode.t1_brain', 'inputnode.t1_brain')]),
+        (t1w_preproc, unwarp_wf, [('outputnode.t1_brain', 'inputnode.t1_brain')]),
         #(t1w_preproc, sbref_wf, [
         #    ('outputnode.bias_corrected_t1', 'inputnode.t1'),
         #    ('outputnode.t1_brain', 'inputnode.t1_brain')
@@ -98,12 +93,14 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
             ('outputnode.sbref_brain_corrected', 'inputnode.sbref_brain'),
             ('outputnode.sbref_unwarped', 'inputnode.sbref_unwarped'),
             ('outputnode.sbref_fmap', 'inputnode.sbref_fmap'),
-            ('outputnode.mag2sbref_matrix', 'inputnode.mag2sbref_matrix')
+            ('outputnode.mag2sbref_matrix', 'inputnode.mag2sbref_matrix'),
+            ('outputnode.wm_seg', 'inputnode.wm_seg'),
         ]),
         (sbref_wf, outputnode, [
             ('outputnode.sbref_fmap', 'fieldmap'),
             ('outputnode.sbref_brain', 'sbref_brain'),
-            ('outputnode.sbref_unwarped', 'corrected_sbref')
+            ('outputnode.sbref_unwarped', 'corrected_sbref'),
+            ('outputnode.sbref_2_t1_transform', 'sbref_2_t1_transform'),
         ]),
         (sepair_wf, outputnode, [
             ('outputnode.out_topup', 'fmap_mag'),
@@ -111,9 +108,9 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
         ]),
         (t1w_preproc, outputnode, [
             ('outputnode.bias_corrected_t1', 't1'),
-            ('outputnode.t1_brain', 'stripped_t1'),
+            ('outputnode.t1_brain', 't1_brain'),
             ('outputnode.t1_segmentation', 't1_segmentation'),
-            ('outputnode.wm_seg', 't1_wm_seg'),
+            ('outputnode.t1_seg', 't1_wm_seg'),
             ('outputnode.t1_2_mni', 't1_2_mni')
         ]),
         (unwarp_wf, outputnode, [
@@ -124,7 +121,6 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
             ('outputnode.t1_segmentation', 't1_segmentation'),
             ('outputnode.bias_corrected_t1', 't1'),
             ('outputnode.t1_brain', 't1_brain'),
-            ('outputnode.sbref_2_t1_transform', 'sbref_2_t1_transform'),
             ('outputnode.t1_2_mni_forward_transform', 't1_2_mni_forward_transform'),
             ('outputnode.t1_2_mni_reverse_transform', 't1_2_mni_reverse_transform')
         ]),
