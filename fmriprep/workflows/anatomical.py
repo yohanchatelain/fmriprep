@@ -21,7 +21,7 @@ from nipype.pipeline import engine as pe
 from mriqc.workflows.anatomical import mri_reorient_wf, skullstrip_wf
 
 from ..data import get_ants_oasis_template_ras, get_mni_template
-from ..viz import stripped_brain_overlay
+from ..viz import stripped_brain_overlay, anatomical_overlay
 
 
 #  pylint: disable=R0914
@@ -70,9 +70,9 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     )
 
     t1_2_mni = pe.Node(ants.Registration(), name="T1_2_MNI_Registration")
-    t1_2_mni.inputs.fixed_image = op.join(get_mni_template(), 'MNI152_T1_2mm.nii.gz')
+    t1_2_mni.inputs.fixed_image = op.join(get_mni_template(), 'MNI152_T1_1mm.nii.gz')
     t1_2_mni.inputs.fixed_image_mask = op.join(
-        get_mni_template(), 'MNI152_T1_2mm_brain_mask.nii.gz')
+        get_mni_template(), 'MNI152_T1_1mm_brain_mask.nii.gz')
 
     # Hack to avoid re-running ANTs all the times
     grabber_interface = nio.JSONFileGrabber()
@@ -106,15 +106,21 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     ])
 
     # Connect reporting nodes
-    t1_stripped_overlay = pe.Node(
-        niu.Function(
-            input_names=["in_file", "overlay_file", "out_file"],
-            output_names=["out_file"],
-            function=stripped_brain_overlay
-        ),
-        name="T1_SkullStrip"
-    )
+    t1_stripped_overlay = pe.Node(niu.Function(
+        input_names=["in_file", "overlay_file", "out_file"], output_names=["out_file"],
+        function=stripped_brain_overlay), name="PNG_T1_SkullStrip")
     t1_stripped_overlay.inputs.out_file = "t1_stripped_overlay.png"
+
+    # The T1-to-MNI will be plotted using the segmentation. That's why we transform it first
+    seg_2_mni = pe.Node(ants.ApplyTransforms(
+        dimension=3, default_value=0, interpolation='NearestNeighbor'), name='T1-2-MNI-warp')
+    seg_2_mni.inputs.reference_image = op.join(get_mni_template(), 'MNI152_T1_1mm.nii.gz')
+
+    t1_2_mni_overlay = pe.Node(niu.Function(
+        input_names=["in_file", "overlay_file", "out_file"], output_names=["out_file"],
+        function=stripped_brain_overlay), name="PNG_T1-to-MNI")
+    t1_2_mni_overlay.inputs.out_file = "t1_to_mni_overlay.png"
+    t1_2_mni_overlay.inputs.overlay_file = op.join(get_mni_template(), 'MNI152_T1_1mm.nii.gz')
 
     datasink = pe.Node(
         interface=nio.DataSink(
@@ -127,6 +133,12 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         (inu_n4, t1_stripped_overlay, [('output_image', 'overlay_file')]),
         (asw, t1_stripped_overlay, [('outputnode.out_mask', 'in_file')]),
         (t1_stripped_overlay, datasink, [('out_file', '@t1_stripped_overlay')]),
+        (t1_seg, seg_2_mni, [('tissue_class_map', 'input_image')]),
+        (t1_2_mni, seg_2_mni, [('forward_transforms', 'transforms'),
+                               ('forward_invert_flags', 'invert_transform_flags')]),
+        (seg_2_mni, t1_2_mni_overlay, [('output_image', 'in_file')]),
+        (t1_2_mni_overlay, datasink, [('out_file', '@t1_2_mni_overlay')]),
+
     ])
 
     # ANTs inputs connected here for clarity
