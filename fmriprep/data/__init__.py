@@ -4,4 +4,4 @@
 # vi: set ft=python sts=4 ts=4 sw=4 et:
 """ Data fetchers module """
 
-from .getters import get_mni_template, get_ants_oasis_template
+from .getters import get_mni_template, get_ants_oasis_template, get_ants_oasis_template_ras

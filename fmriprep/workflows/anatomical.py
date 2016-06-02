@@ -18,7 +18,9 @@ from nipype.interfaces import io as nio
 from nipype.interfaces import utility as niu
 from nipype.pipeline import engine as pe
 
-from ..data import get_ants_oasis_template, get_mni_template
+from mriqc.workflows.anatomical import mri_reorient_wf
+
+from ..data import get_ants_oasis_template_ras, get_mni_template
 from ..viz import stripped_brain_overlay
 
 
@@ -44,24 +46,23 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         name='outputnode'
     )
 
-    #  T1 Bias Field Correction
-    inu_n4 = pe.Node(
-        ants.N4BiasFieldCorrection(dimension=3, bspline_fitting_distance=300,
-                                   shrink_factor=3),
-        name="Bias_Field_Correction"
-    )
+    # Reorient T1
+    arw = mri_reorient_wf()
 
-    t1_skull_strip = pe.Node(ants.segmentation.BrainExtraction(),
-                             name="Ants_T1_Brain_Extraction")
-    t1_skull_strip.inputs.dimension = 3
-    t1_skull_strip.inputs.brain_template = op.join(get_ants_oasis_template(),
+    #  T1 Bias Field Correction
+    inu_n4 = pe.Node(ants.N4BiasFieldCorrection(dimension=3), name="Bias_Field_Correction")
+
+    t1_skull_strip = pe.Node(ants.segmentation.BrainExtraction(
+        dimension=3, use_floatingpoint_precision=1,
+        debug=settings['debug']), name="Ants_T1_Brain_Extraction")
+    t1_skull_strip.inputs.brain_template = op.join(get_ants_oasis_template_ras(),
                                                    "T_template0.nii.gz")
     t1_skull_strip.inputs.brain_probability_mask = op.join(
-        get_ants_oasis_template(),
+        get_ants_oasis_template_ras(),
         "T_template0_BrainCerebellumProbabilityMask.nii.gz"
     )
     t1_skull_strip.inputs.extraction_registration_mask = op.join(
-        get_ants_oasis_template(),
+        get_ants_oasis_template_ras(),
         "T_template0_BrainCerebellumRegistrationMask.nii.gz"
     )
 
@@ -81,14 +82,19 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     t1_2_mni.inputs.fixed_image = op.join(get_mni_template(), 'MNI152_T1_2mm.nii.gz')
     t1_2_mni.inputs.fixed_image_mask = op.join(
         get_mni_template(), 'MNI152_T1_2mm_brain_mask.nii.gz')
-    t1_2_mni_params = pe.Node(nio.JSONFileGrabber(), name='t1_2_mni_params')
+
+    # Hack to avoid re-running ANTs all the times
+    grabber_interface = nio.JSONFileGrabber()
+    setattr(grabber_interface, '_always_run', False)
+    t1_2_mni_params = pe.Node(grabber_interface, name='t1_2_mni_params')
     t1_2_mni_params.inputs.in_file = (
         pkgr.resource_filename('fmriprep', 'data/registration_settings.json')
     )
 
     workflow.connect([
+        (inputnode, arw, [('t1', 'inputnode.in_file')]),
         (inputnode, flt_wmseg_sbref, [('sbref', 'reference')]),
-        (inputnode, inu_n4, [('t1', 'input_image')]),
+        (arw, inu_n4, [('outputnode.out_file', 'input_image')]),
         (inu_n4, t1_skull_strip, [('output_image', 'anatomical_image')]),
         (t1_skull_strip, t1_seg, [('BrainExtractionBrain', 'in_files')]),
         (t1_seg, flt_wmseg_sbref, [('tissue_class_map', 'in_file')]),
