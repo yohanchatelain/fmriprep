@@ -57,8 +57,8 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     )
 
     t1_skull_strip = pe.Node(ants.segmentation.BrainExtraction(
-        dimension=3, use_floatingpoint_precision=1), name="Ants_T1_Brain_Extraction")
-    t1_skull_strip.inputs.dimension = 3
+        dimension=3, use_floatingpoint_precision=1,
+        debug=settings['debug']), name="Ants_T1_Brain_Extraction")
     t1_skull_strip.inputs.brain_template = op.join(get_ants_oasis_template_ras(),
                                                    "T_template0.nii.gz")
     t1_skull_strip.inputs.brain_probability_mask = op.join(
