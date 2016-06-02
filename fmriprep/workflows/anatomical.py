@@ -52,9 +52,8 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     inu_n4 = pe.Node(ants.N4BiasFieldCorrection(dimension=3), name="Bias_Field_Correction")
 
     # 3. Skull-stripping
-    if not settings.get('skull_strip_ants', False):
-        asw = skullstrip_wf()
-    else:
+    asw = skullstrip_wf()
+    if settings.get('skull_strip_ants', False):
         asw = skullstrip_ants(settings=settings)
 
     # 4. Segmentation
