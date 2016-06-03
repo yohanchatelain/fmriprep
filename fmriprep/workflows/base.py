@@ -14,7 +14,7 @@ import nipype.interfaces.io as nio
 
 from .anatomical import t1w_preprocessing
 from .fieldmap import se_pair_workflow, fieldmap_to_phasediff
-from .epi import sbref_workflow, correction_workflow
+from .epi import sbref_workflow, correction_workflow, sbref_t1_registration
 
 
 def fmri_preprocess_single(name='fMRI_prep', settings=None):
@@ -58,6 +58,7 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
     fmap2phdiff.inputs.inputnode.unwarp_direction = 'x'
 
     sbref_wf = sbref_workflow(settings=settings)
+    sbref_t1 = sbref_t1_registration(settings=settings)
     unwarp_wf = correction_workflow(settings=settings)
 
 
@@ -74,9 +75,15 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
 #        (t1w_preproc, sbref_wf, [('outputnode.t1_seg', 'inputnode.t1_seg')]),
         (sepair_wf, sbref_wf, [
             ('outputnode.mag_brain', 'inputnode.fmap_ref_brain'),
+            ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
             ('outputnode.fmap_fieldcoef', 'inputnode.fmap_fieldcoef'),
             ('outputnode.fmap_movpar', 'inputnode.fmap_movpar')
         ]),
+        (sbref_wf, sbref_t1, [
+            ('outputnode.sbref_unwarped', 'inputnode.sbref_brain')]),
+        (t1w_preproc, sbref_t1, [
+            ('outputnode.t1_brain', 'inputnode.t1_brain'),
+            ('outputnode.t1_seg', 'inputnode.t1_seg')])
 #        (sepair_wf, fmap2phdiff, [
 #            ('outputnode.out_field', 'inputnode.fieldmap'),
 #            ('outputnode.fmap_mask', 'inputnode.fmap_mask')
