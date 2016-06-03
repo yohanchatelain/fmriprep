@@ -53,7 +53,10 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
 
     t1w_preproc = t1w_preprocessing(settings=settings)
     sepair_wf = se_pair_workflow(settings=settings)
-    fmap2phdiff = fieldmap_to_phasediff(settings=settings)
+    fmap2phdiff = fieldmap_to_phasediff()
+    fmap2phdiff.inputs.inputnode.dwell_time = 0.07
+    fmap2phdiff.inputs.inputnode.unwarp_direction = 'x'
+
     sbref_wf = sbref_workflow(settings=settings)
     unwarp_wf = correction_workflow(settings=settings)
 
@@ -134,6 +137,5 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
             ('outputnode.epi_motion_params', 'epi_motion_params')
         ])
     ])
-
 
     return workflow
