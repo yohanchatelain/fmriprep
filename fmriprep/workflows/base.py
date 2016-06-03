@@ -66,76 +66,76 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
     workflow.connect([
         (inputnode, t1w_preproc, [('t1', 'inputnode.t1')]),
         (inputnode, sepair_wf, [('fieldmaps', 'inputnode.fieldmaps')]),
-        (inputnode, unwarp_wf, [
-            ('epi', 'inputnode.epi'),
-            ('sbref', 'inputnode.sbref')
-        ]),
         (inputnode, sbref_wf, [('sbref', 'inputnode.sbref')]),
-        (t1w_preproc, sbref_wf, [('outputnode.t1_seg', 'inputnode.t1_seg')]),
-        (sepair_wf, fmap2phdiff, [
-            ('outputnode.out_field', 'inputnode.fieldmap'),
-            ('outputnode.fmap_mask', 'inputnode.fmap_mask')
-        ]),
+#        (inputnode, unwarp_wf, [
+#            ('epi', 'inputnode.epi'),
+#            ('sbref', 'inputnode.sbref')
+#        ]),
+#        (t1w_preproc, sbref_wf, [('outputnode.t1_seg', 'inputnode.t1_seg')]),
         (sepair_wf, sbref_wf, [
-            ('outputnode.mag_brain', 'inputnode.mag_brain'),
-            ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
-            ('outputnode.out_topup', 'inputnode.in_topup')
+            ('outputnode.mag_brain', 'inputnode.fmap_ref_brain'),
+            ('outputnode.fmap_fieldcoef', 'inputnode.fmap_fieldcoef'),
+            ('outputnode.fmap_movpar', 'inputnode.fmap_movpar')
         ]),
-        (fmap2phdiff, sbref_wf, [
-            ('outputnode.fmap_rads', 'inputnode.fmap_scaled'),
-            ('outputnode.fmap_unmasked', 'inputnode.fmap_unmasked')
-        ]),
-        (t1w_preproc, unwarp_wf, [('outputnode.t1_brain', 'inputnode.t1_brain')]),
-
-        #(t1w_preproc, sbref_wf, [
-        #    ('outputnode.bias_corrected_t1', 'inputnode.t1'),
-        #    ('outputnode.t1_brain', 'inputnode.t1_brain')
-        #]),
-        (fmap2phdiff, unwarp_wf, [
-            ('outputnode.fmap_unmasked', 'inputnode.fmap_unmasked')
-        ]),
-        (sbref_wf, unwarp_wf, [
-            ('outputnode.sbref_brain_corrected', 'inputnode.sbref_brain'),
-            ('outputnode.sbref_unwarped', 'inputnode.sbref_unwarped'),
-            ('outputnode.sbref_fmap', 'inputnode.sbref_fmap'),
-            ('outputnode.mag2sbref_matrix', 'inputnode.mag2sbref_matrix'),
-            ('outputnode.wm_seg', 'inputnode.wm_seg'),
-        ]),
-        (sbref_wf, outputnode, [
-            ('outputnode.sbref_fmap', 'fieldmap'),
-            ('outputnode.sbref_brain', 'sbref_brain'),
-            ('outputnode.sbref_unwarped', 'corrected_sbref'),
-            ('outputnode.sbref_2_t1_transform', 'sbref_2_t1_transform'),
-        ]),
-        (sepair_wf, outputnode, [
-            ('outputnode.out_topup', 'fmap_mag'),
-            ('outputnode.mag_brain', 'fmap_mag_brain')
-        ]),
-        (t1w_preproc, outputnode, [
-            ('outputnode.bias_corrected_t1', 't1'),
-            ('outputnode.t1_brain', 't1_brain'),
-            ('outputnode.t1_segmentation', 't1_segmentation'),
-            ('outputnode.t1_seg', 't1_wm_seg'),
-            ('outputnode.t1_2_mni', 't1_2_mni')
-        ]),
-        (unwarp_wf, outputnode, [
-            ('outputnode.stripped_epi', 'stripped_epi'),
-            ('outputnode.corrected_epi_mean', 'corrected_epi_mean')
-        ]),
-        (t1w_preproc, datasink, [
-            ('outputnode.t1_segmentation', 't1_segmentation'),
-            ('outputnode.bias_corrected_t1', 't1'),
-            ('outputnode.t1_brain', 't1_brain'),
-            ('outputnode.t1_2_mni_forward_transform', 't1_2_mni_forward_transform'),
-            ('outputnode.t1_2_mni_reverse_transform', 't1_2_mni_reverse_transform')
-        ]),
-        (unwarp_wf, datasink, [
-            ('outputnode.stripped_epi_mask', 'stripped_epi_mask'),
-            #  this could use a better name, its the
-            #  unwarped epi in sbref space
-            ('outputnode.merged_epi', 'merged_epi'),
-            ('outputnode.epi_motion_params', 'epi_motion_params')
-        ])
+#        (sepair_wf, fmap2phdiff, [
+#            ('outputnode.out_field', 'inputnode.fieldmap'),
+#            ('outputnode.fmap_mask', 'inputnode.fmap_mask')
+#        ]),
+#        (fmap2phdiff, sbref_wf, [
+#            ('outputnode.fmap_rads', 'inputnode.fmap_scaled'),
+#            ('outputnode.fmap_unmasked', 'inputnode.fmap_unmasked')
+#        ]),
+#        (t1w_preproc, unwarp_wf, [('outputnode.t1_brain', 'inputnode.t1_brain')]),
+#
+#        #(t1w_preproc, sbref_wf, [
+#        #    ('outputnode.bias_corrected_t1', 'inputnode.t1'),
+#        #    ('outputnode.t1_brain', 'inputnode.t1_brain')
+#        #]),
+#        (fmap2phdiff, unwarp_wf, [
+#            ('outputnode.fmap_unmasked', 'inputnode.fmap_unmasked')
+#        ]),
+#        (sbref_wf, unwarp_wf, [
+#            ('outputnode.sbref_brain_corrected', 'inputnode.sbref_brain'),
+#            ('outputnode.sbref_unwarped', 'inputnode.sbref_unwarped'),
+#            ('outputnode.sbref_fmap', 'inputnode.sbref_fmap'),
+#            ('outputnode.mag2sbref_matrix', 'inputnode.mag2sbref_matrix'),
+#            ('outputnode.wm_seg', 'inputnode.wm_seg'),
+#        ]),
+#        (sbref_wf, outputnode, [
+#            ('outputnode.sbref_fmap', 'fieldmap'),
+#            ('outputnode.sbref_brain', 'sbref_brain'),
+#            ('outputnode.sbref_unwarped', 'corrected_sbref'),
+#            ('outputnode.sbref_2_t1_transform', 'sbref_2_t1_transform'),
+#        ]),
+#        (sepair_wf, outputnode, [
+#            ('outputnode.out_topup', 'fmap_mag'),
+#            ('outputnode.mag_brain', 'fmap_mag_brain')
+#        ]),
+#        (t1w_preproc, outputnode, [
+#            ('outputnode.bias_corrected_t1', 't1'),
+#            ('outputnode.t1_brain', 't1_brain'),
+#            ('outputnode.t1_segmentation', 't1_segmentation'),
+#            ('outputnode.t1_seg', 't1_wm_seg'),
+#            ('outputnode.t1_2_mni', 't1_2_mni')
+#        ]),
+#        (unwarp_wf, outputnode, [
+#            ('outputnode.stripped_epi', 'stripped_epi'),
+#            ('outputnode.corrected_epi_mean', 'corrected_epi_mean')
+#        ]),
+#        (t1w_preproc, datasink, [
+#            ('outputnode.t1_segmentation', 't1_segmentation'),
+#            ('outputnode.bias_corrected_t1', 't1'),
+#            ('outputnode.t1_brain', 't1_brain'),
+#            ('outputnode.t1_2_mni_forward_transform', 't1_2_mni_forward_transform'),
+#            ('outputnode.t1_2_mni_reverse_transform', 't1_2_mni_reverse_transform')
+#        ]),
+#        (unwarp_wf, datasink, [
+#            ('outputnode.stripped_epi_mask', 'stripped_epi_mask'),
+#            #  this could use a better name, its the
+#            #  unwarped epi in sbref space
+#            ('outputnode.merged_epi', 'merged_epi'),
+#            ('outputnode.epi_motion_params', 'epi_motion_params')
+#        ])
     ])
 
     return workflow
