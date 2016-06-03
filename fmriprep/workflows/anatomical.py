@@ -33,17 +33,11 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
 
     workflow = pe.Workflow(name=name)
 
-    inputnode = pe.Node(niu.IdentityInterface(
-        fields=['t1', 'sbref', 'sbref_brain_corrected', 'sbref_fmap',
-                'sbref_unwarped']), name='inputnode')
-    outputnode = pe.Node(
-        niu.IdentityInterface(
-            fields=['t1_seg', 'bias_corrected_t1', 't1_brain', "t1_2_mni",
-                    't1_2_mni_forward_transform', 't1_2_mni_reverse_transform',
-                    'sbref_2_t1_transform', 't1_segmentation']
-        ),
-        name='outputnode'
-    )
+    inputnode = pe.Node(niu.IdentityInterface(fields=['t1']), name='inputnode')
+    outputnode = pe.Node(niu.IdentityInterface(
+        fields=['t1_seg', 'bias_corrected_t1', 't1_brain', "t1_2_mni",
+                't1_2_mni_forward_transform', 't1_2_mni_reverse_transform',
+                't1_segmentation']), name='outputnode')
 
     # 1. Reorient T1
     arw = mri_reorient_wf()
