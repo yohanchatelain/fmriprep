@@ -14,7 +14,8 @@ import nipype.interfaces.io as nio
 
 from .anatomical import t1w_preprocessing
 from .fieldmap import se_pair_workflow, fieldmap_to_phasediff
-from .epi import sbref_workflow, correction_workflow, sbref_t1_registration
+from .sbref import sbref_workflow, sbref_t1_registration
+from .epi import correction_workflow
 
 
 def fmri_preprocess_single(name='fMRI_prep', settings=None):
