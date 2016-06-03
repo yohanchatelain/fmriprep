@@ -79,7 +79,7 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
             ('outputnode.sbref_unwarped', 'inputnode.sbref_unwarped')
         ]),
         (sepair_wf, sbref_wf, [
-            ('outputnode.fmap_scaled', 'inputnode.fmap_scaled'),
+            ('outputnode.fmap_rads', 'inputnode.fmap_scaled'),
             ('outputnode.mag_brain', 'inputnode.mag_brain'),
             ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
             ('outputnode.out_topup', 'inputnode.in_topup'),
