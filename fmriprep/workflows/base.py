@@ -15,7 +15,7 @@ import nipype.interfaces.io as nio
 from .anatomical import t1w_preprocessing
 from .fieldmap import se_pair_workflow, fieldmap_to_phasediff
 from .sbref import sbref_workflow, sbref_t1_registration
-from .epi import correction_workflow
+from .epi import epi_unwarp
 
 
 def fmri_preprocess_single(name='fMRI_prep', settings=None):
@@ -60,7 +60,7 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
 
     sbref_wf = sbref_workflow(settings=settings)
     sbref_t1 = sbref_t1_registration(settings=settings)
-    unwarp_wf = correction_workflow(settings=settings)
+    unwarp_wf = epi_unwarp(settings=settings)
 
 
     #  Connecting Workflow pe.Nodes
@@ -69,10 +69,8 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
         (inputnode, t1w_preproc, [('t1', 'inputnode.t1')]),
         (inputnode, sepair_wf, [('fieldmaps', 'inputnode.fieldmaps')]),
         (inputnode, sbref_wf, [('sbref', 'inputnode.sbref')]),
-#        (inputnode, unwarp_wf, [
-#            ('epi', 'inputnode.epi'),
-#            ('sbref', 'inputnode.sbref')
-#        ]),
+        (inputnode, unwarp_wf, [('epi', 'inputnode.epi')]),
+
 #        (t1w_preproc, sbref_wf, [('outputnode.t1_seg', 'inputnode.t1_seg')]),
         (sepair_wf, sbref_wf, [
             ('outputnode.mag_brain', 'inputnode.fmap_ref_brain'),
@@ -84,7 +82,13 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
             ('outputnode.sbref_unwarped', 'inputnode.sbref_brain')]),
         (t1w_preproc, sbref_t1, [
             ('outputnode.t1_brain', 'inputnode.t1_brain'),
-            ('outputnode.t1_seg', 'inputnode.t1_seg')])
+            ('outputnode.t1_seg', 'inputnode.t1_seg')]),
+        (sbref_wf, unwarp_wf, [
+            ('outputnode.sbref_unwarped', 'inputnode.sbref_brain')]),
+        (sepair_wf, unwarp_wf, [
+            ('outputnode.fmap_fieldcoef', 'inputnode.fmap_fieldcoef'),
+            ('outputnode.fmap_movpar', 'inputnode.fmap_movpar')
+        ]),
 #        (sepair_wf, fmap2phdiff, [
 #            ('outputnode.out_field', 'inputnode.fieldmap'),
 #            ('outputnode.fmap_mask', 'inputnode.fmap_mask')

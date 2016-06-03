@@ -5,3 +5,4 @@
 from .base import fmri_preprocess_single
 from .anatomical import t1w_preprocessing
 from .sbref import sbref_workflow, sbref_t1_registration
+from .epi import correction_workflow
