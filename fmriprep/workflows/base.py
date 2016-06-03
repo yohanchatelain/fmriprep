@@ -13,7 +13,7 @@ from nipype.interfaces import utility as niu
 import nipype.interfaces.io as nio
 
 from .anatomical import t1w_preprocessing
-from .fieldmap import se_pair_workflow
+from .fieldmap import se_pair_workflow, fieldmap_to_phasediff
 from .epi import sbref_workflow, correction_workflow
 
 
@@ -53,6 +53,7 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
 
     t1w_preproc = t1w_preprocessing(settings=settings)
     sepair_wf = se_pair_workflow(settings=settings)
+    fmap2phdiff = fieldmap_to_phasediff(settings=settings)
     sbref_wf = sbref_workflow(settings=settings)
     unwarp_wf = correction_workflow(settings=settings)
 
@@ -60,14 +61,9 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
     #  Connecting Workflow pe.Nodes
 
     workflow.connect([
-        (inputnode, t1w_preproc, [
-            ('t1', 'inputnode.t1'),
-            ('sbref', 'inputnode.sbref')
-        ]),
-        (inputnode, sepair_wf, [
-            ('fieldmaps', 'inputnode.fieldmaps'),
-            ('fieldmaps_meta', 'inputnode.fieldmaps_meta')
-        ]),
+        (inputnode, t1w_preproc, [('t1', 'inputnode.t1'),
+                                  ('sbref', 'inputnode.sbref')]),
+        (inputnode, sepair_wf, [('fieldmaps', 'inputnode.fieldmaps')]),
         (inputnode, unwarp_wf, [
             ('epi', 'inputnode.epi'),
             ('sbref', 'inputnode.sbref')
@@ -78,19 +74,27 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
             ('outputnode.sbref_fmap', 'inputnode.sbref_fmap'),
             ('outputnode.sbref_unwarped', 'inputnode.sbref_unwarped')
         ]),
+        (sepair_wf, fmap2phdiff, [
+            ('outputnode.out_field', 'inputnode.fieldmap'),
+            ('outputnode.fmap_mask', 'inputnode.fmap_mask')
+        ]),
         (sepair_wf, sbref_wf, [
-            ('outputnode.fmap_scaled', 'inputnode.fmap_scaled'),
             ('outputnode.mag_brain', 'inputnode.mag_brain'),
             ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
-            ('outputnode.out_topup', 'inputnode.in_topup'),
+            ('outputnode.out_topup', 'inputnode.in_topup')
+        ]),
+
+        (fmap2phdiff, sbref_wf, [
+            ('outputnode.fmap_rads', 'inputnode.fmap_scaled'),
             ('outputnode.fmap_unmasked', 'inputnode.fmap_unmasked')
         ]),
+
         (t1w_preproc, unwarp_wf, [('outputnode.wm_seg', 'inputnode.wm_seg')]),
         #(t1w_preproc, sbref_wf, [
         #    ('outputnode.bias_corrected_t1', 'inputnode.t1'),
         #    ('outputnode.stripped_t1', 'inputnode.stripped_t1')
         #]),
-        (sepair_wf, unwarp_wf, [
+        (fmap2phdiff, unwarp_wf, [
             ('outputnode.fmap_unmasked', 'inputnode.fmap_unmasked')
         ]),
         (sbref_wf, unwarp_wf, [
