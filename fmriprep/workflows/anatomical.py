@@ -29,47 +29,32 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     """T1w images preprocessing pipeline"""
 
     if settings is None:
-        settings = {}
-    dwell_time = settings['epi'].get('dwell_time', 0.000700012460221792)
+        raise RuntimeError('Workflow settings are missing')
 
     workflow = pe.Workflow(name=name)
 
-    inputnode = pe.Node(niu.IdentityInterface(
-        fields=['t1', 'sbref', 'sbref_brain_corrected', 'sbref_fmap',
-                'sbref_unwarped']), name='inputnode')
-    outputnode = pe.Node(
-        niu.IdentityInterface(
-            fields=['wm_seg', 'bias_corrected_t1', 'stripped_t1', "t1_2_mni",
-                    't1_2_mni_forward_transform', 't1_2_mni_reverse_transform',
-                    'sbref_2_t1_transform', 't1_segmentation']
-        ),
-        name='outputnode'
-    )
+    inputnode = pe.Node(niu.IdentityInterface(fields=['t1']), name='inputnode')
+    outputnode = pe.Node(niu.IdentityInterface(
+        fields=['t1_seg', 'bias_corrected_t1', 't1_brain', "t1_2_mni",
+                't1_2_mni_forward_transform', 't1_2_mni_reverse_transform',
+                't1_segmentation']), name='outputnode')
 
-    # Reorient T1
+    # 1. Reorient T1
     arw = mri_reorient_wf()
 
-    # T1 Bias Field Correction
+    # 2. T1 Bias Field Correction
     inu_n4 = pe.Node(ants.N4BiasFieldCorrection(dimension=3), name="Bias_Field_Correction")
 
-    # 2. Skull-stripping
-    if not settings['skull_strip_ants']:
-        asw = skullstrip_wf()
-    else:
+    # 3. Skull-stripping
+    asw = skullstrip_wf()
+    if settings.get('skull_strip_ants', False):
         asw = skullstrip_ants(settings=settings)
 
-    # fast -o fast_test -N -v
+    # 4. Segmentation
     t1_seg = pe.Node(fsl.FAST(no_bias=True), name="T1_Segmentation")
 
-    # Affine transform of T1 segmentation into SBRref space
-    flt_wmseg_sbref = pe.Node(fsl.FLIRT(dof=6, bins=640, cost_func='mutualinfo'),
-                              name="WMSeg_2_SBRef_Brain_Affine_Transform")
-
-    invert_wmseg_sbref = pe.Node(
-        fsl.ConvertXFM(invert_xfm=True), name="invert_wmseg_sbref"
-    )
-
-    t1_2_mni = pe.Node(ants.Registration(), name="T1_2_MNI_Registration")
+    # 5. T1w to MNI registration
+    t1_2_mni = pe.Node(ants.Registration(float=True), name="T1_2_MNI_Registration")
     t1_2_mni.inputs.fixed_image = op.join(get_mni_template(), 'MNI152_T1_1mm.nii.gz')
     t1_2_mni.inputs.fixed_image_mask = op.join(
         get_mni_template(), 'MNI152_T1_1mm_brain_mask.nii.gz')
@@ -84,16 +69,12 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
 
     workflow.connect([
         (inputnode, arw, [('t1', 'inputnode.in_file')]),
-        (inputnode, flt_wmseg_sbref, [('sbref', 'reference')]),
         (arw, inu_n4, [('outputnode.out_file', 'input_image')]),
         (inu_n4, asw, [('output_image', 'inputnode.in_file')]),
         (asw, t1_seg, [('outputnode.out_file', 'in_files')]),
-        (t1_seg, flt_wmseg_sbref, [('tissue_class_map', 'in_file')]),
         (inu_n4, t1_2_mni, [('output_image', 'moving_image')]),
         (asw, t1_2_mni, [('outputnode.out_mask', 'moving_image_mask')]),
-        (flt_wmseg_sbref, invert_wmseg_sbref, [('out_matrix_file', 'in_file')]),
-        (flt_wmseg_sbref, outputnode, [('out_file', 'wm_seg')]),
-        (invert_wmseg_sbref, outputnode, [('out_file', 'sbref_2_t1_transform')]),
+        (t1_seg, outputnode, [('tissue_class_map', 't1_seg')]),
         (inu_n4, outputnode, [('output_image', 'bias_corrected_t1')]),
         (t1_seg, outputnode, [('tissue_class_map', 't1_segmentation')]),
         (t1_2_mni, outputnode, [
@@ -102,7 +83,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             ('reverse_transforms', 't1_2_mni_reverse_transform')
         ]),
         (asw, outputnode, [
-            ('outputnode.out_file', 'stripped_t1')]),
+            ('outputnode.out_file', 't1_brain')]),
     ])
 
     # Connect reporting nodes
@@ -113,12 +94,12 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
 
     # The T1-to-MNI will be plotted using the segmentation. That's why we transform it first
     seg_2_mni = pe.Node(ants.ApplyTransforms(
-        dimension=3, default_value=0, interpolation='NearestNeighbor'), name='T1-2-MNI-warp')
+        dimension=3, default_value=0, interpolation='NearestNeighbor'), name='T1_2_MNI_warp')
     seg_2_mni.inputs.reference_image = op.join(get_mni_template(), 'MNI152_T1_1mm.nii.gz')
 
     t1_2_mni_overlay = pe.Node(niu.Function(
         input_names=["in_file", "overlay_file", "out_file"], output_names=["out_file"],
-        function=stripped_brain_overlay), name="PNG_T1-to-MNI")
+        function=stripped_brain_overlay), name="PNG_T1_to_MNI")
     t1_2_mni_overlay.inputs.out_file = "t1_to_mni_overlay.png"
     t1_2_mni_overlay.inputs.overlay_file = op.join(get_mni_template(), 'MNI152_T1_1mm.nii.gz')
 
