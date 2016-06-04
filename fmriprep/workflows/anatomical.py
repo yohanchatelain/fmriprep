@@ -94,12 +94,12 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
 
     # The T1-to-MNI will be plotted using the segmentation. That's why we transform it first
     seg_2_mni = pe.Node(ants.ApplyTransforms(
-        dimension=3, default_value=0, interpolation='NearestNeighbor'), name='T1-2-MNI-warp')
+        dimension=3, default_value=0, interpolation='NearestNeighbor'), name='T1_2_MNI_warp')
     seg_2_mni.inputs.reference_image = op.join(get_mni_template(), 'MNI152_T1_1mm.nii.gz')
 
     t1_2_mni_overlay = pe.Node(niu.Function(
         input_names=["in_file", "overlay_file", "out_file"], output_names=["out_file"],
-        function=stripped_brain_overlay), name="PNG_T1-to-MNI")
+        function=stripped_brain_overlay), name="PNG_T1_to_MNI")
     t1_2_mni_overlay.inputs.out_file = "t1_to_mni_overlay.png"
     t1_2_mni_overlay.inputs.overlay_file = op.join(get_mni_template(), 'MNI152_T1_1mm.nii.gz')
 
