@@ -13,7 +13,8 @@ from nipype.interfaces import utility as niu
 import nipype.interfaces.io as nio
 
 from .anatomical import t1w_preprocessing
-from .fieldmap import se_pair_workflow, fieldmap_to_phasediff
+from fmriprep.workflows.fieldmap.se_pair_workflow import se_pair_workflow
+from fmriprep.workflows.fieldmap.fieldmap_to_phasediff import fieldmap_to_phasediff
 from .sbref import sbref_workflow, sbref_t1_registration
 from .epi import epi_unwarp
 
