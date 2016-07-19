@@ -20,8 +20,8 @@ from nipype.pipeline import engine as pe
 
 from mriqc.workflows.anatomical import mri_reorient_wf, skullstrip_wf
 
-from ..data import get_ants_oasis_template_ras, get_mni_template
-from ..viz import stripped_brain_overlay, anatomical_overlay
+from fmriprep.data import get_ants_oasis_template_ras, get_mni_template
+from fmriprep.viz import stripped_brain_overlay, anatomical_overlay
 
 
 #  pylint: disable=R0914
