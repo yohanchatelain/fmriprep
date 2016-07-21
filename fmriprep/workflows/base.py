@@ -15,7 +15,7 @@ import nipype.interfaces.io as nio
 from .anatomical import t1w_preprocessing
 from .fieldmap import se_pair_workflow, fieldmap_to_phasediff
 from .sbref import sbref_workflow, sbref_t1_registration
-from .epi import epi_unwarp
+from .epi import epi_hmc, epi_unwarp
 
 
 def fmri_preprocess_single(name='fMRI_prep', settings=None):
@@ -61,6 +61,7 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
     sbref_wf = sbref_workflow(settings=settings)
     sbref_t1 = sbref_t1_registration(settings=settings)
     unwarp_wf = epi_unwarp(settings=settings)
+    epi_hmc_wf = epi_hmc(settings=settings)
 
 
     #  Connecting Workflow pe.Nodes
@@ -70,6 +71,7 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
         (inputnode, sepair_wf, [('fieldmaps', 'inputnode.fieldmaps')]),
         (inputnode, sbref_wf, [('sbref', 'inputnode.sbref')]),
         (inputnode, unwarp_wf, [('epi', 'inputnode.epi')]),
+        (inputnode, epi_hmc_wf, [('epi', 'inputnode.epi')]
 
 #        (t1w_preproc, sbref_wf, [('outputnode.t1_seg', 'inputnode.t1_seg')]),
         (sepair_wf, sbref_wf, [
@@ -85,6 +87,10 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
             ('outputnode.t1_seg', 'inputnode.t1_seg')]),
         (sbref_wf, unwarp_wf, [
             ('outputnode.sbref_unwarped', 'inputnode.sbref_brain')]),
+        (sbref_wf, epi_hmc_wf, [
+            ('outputnode.sbref_unwarped', 'inputnode.sbref_brain')]),
+        (epi_hmc_wf, unwarp_wf, [
+            ('outputnode.epi_brain', 'inputnode.epi_brain')]),
         (sepair_wf, unwarp_wf, [
             ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
             ('outputnode.fmap_fieldcoef', 'inputnode.fmap_fieldcoef'),
