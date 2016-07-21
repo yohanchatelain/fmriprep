@@ -15,6 +15,7 @@ import nipype.interfaces.io as nio
 from .anatomical import t1w_preprocessing
 from fmriprep.workflows.fieldmap.se_pair_workflow import se_pair_workflow
 from fmriprep.workflows.fieldmap.fieldmap_to_phasediff import fieldmap_to_phasediff
+from fmriprep.workflows.fieldmap.decider import FieldmapDecider
 from fmriprep.workflows.sbref import sbref_workflow
 from fmriprep.workflows import sbref
 from .epi import epi_unwarp, epi_unwarp
@@ -54,11 +55,13 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
         parameterization=False
     )
 
+    try:
+        fmap_wf = FieldmapDecider(settings)
+    except NotImplementedError:
+        fmap_wf = None
+
     t1w_preproc = t1w_preprocessing(settings=settings)
-    sepair_wf = se_pair_workflow(settings=settings)
-    fmap2phdiff = fieldmap_to_phasediff()
-    fmap2phdiff.inputs.inputnode.dwell_time = 0.07
-    fmap2phdiff.inputs.inputnode.unwarp_direction = 'x'
+    #  sepair_wf = se_pair_workflow(settings=settings)
 
     sbref_wf = sbref_workflow(settings=settings)
     sbref_t1 = sbref.sbref_t1_registration(settings=settings)
@@ -73,7 +76,7 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
         (inputnode, sepair_wf, [('fieldmaps', 'inputnode.fieldmaps')]),
         (inputnode, sbref_wf, [('sbref', 'inputnode.sbref')]),
         (inputnode, unwarp_wf, [('epi', 'inputnode.epi')]),
-        (inputnode, epi_hmc_wf, [('epi', 'inputnode.epi')]
+        (inputnode, epi_hmc_wf, [('epi', 'inputnode.epi')]),
 
         (sepair_wf, sbref_wf, [
             ('outputnode.mag_brain', 'inputnode.fmap_ref_brain'),
