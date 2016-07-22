@@ -59,49 +59,47 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
     except NotImplementedError:
         fmap_wf = None
 
-    print("!!!!!!!!!!!!!")
-    print(fmap_wf)
-
     t1w_preproc = t1w_preprocessing(settings=settings)
-    sepair_wf = se_pair_workflow(settings=settings)
 
-    sbref_wf = sbref_workflow(settings=settings)
-    sbref_t1 = sbref.sbref_t1_registration(settings=settings)
-    unwarp_wf = epi_unwarp(settings=settings)
     epi_hmc_wf = epi_hmc(subject_data, settings=settings)
 
-
     #  Connecting Workflow pe.Nodes
-
     workflow.connect([
         (inputnode, t1w_preproc, [('t1', 'inputnode.t1')]),
-        (inputnode, sepair_wf, [('fieldmaps', 'inputnode.fieldmaps')]),
-        (inputnode, sbref_wf, [('sbref', 'inputnode.sbref')]),
-        (inputnode, unwarp_wf, [('epi', 'inputnode.epi')]),
         (inputnode, epi_hmc_wf, [('epi', 'inputnode.epi')]),
-
-        (sepair_wf, sbref_wf, [
-            ('outputnode.mag_brain', 'inputnode.fmap_ref_brain'),
-            ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
-            ('outputnode.fmap_fieldcoef', 'inputnode.fmap_fieldcoef'),
-            ('outputnode.fmap_movpar', 'inputnode.fmap_movpar')
-        ]),
-        (sbref_wf, sbref_t1, [
-            ('outputnode.sbref_unwarped', 'inputnode.sbref_brain')]),
-        (t1w_preproc, sbref_t1, [
-            ('outputnode.t1_brain', 'inputnode.t1_brain'),
-            ('outputnode.t1_seg', 'inputnode.t1_seg')]),
-        (sbref_wf, unwarp_wf, [
-            ('outputnode.sbref_unwarped', 'inputnode.sbref_brain')]),
-        (sbref_wf, epi_hmc_wf, [
-            ('outputnode.sbref_unwarped', 'inputnode.sbref_brain')]),
-        (epi_hmc_wf, unwarp_wf, [
-            ('outputnode.epi_brain', 'inputnode.epi_brain')]),
-        (sepair_wf, unwarp_wf, [
-            ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
-            ('outputnode.fmap_fieldcoef', 'inputnode.fmap_fieldcoef'),
-            ('outputnode.fmap_movpar', 'inputnode.fmap_movpar')
-        ]),
     ])
+
+    if fmap_wf:
+        sbref_wf = sbref_workflow(settings=settings)
+        sbref_t1 = sbref.sbref_t1_registration(settings=settings)
+        unwarp_wf = epi_unwarp(settings=settings)
+        sepair_wf = se_pair_workflow(settings=settings)
+        workflow.connect([
+            (inputnode, sepair_wf, [('fieldmaps', 'inputnode.fieldmaps')]),
+            (inputnode, sbref_wf, [('sbref', 'inputnode.sbref')]),
+            (inputnode, unwarp_wf, [('epi', 'inputnode.epi')]),
+            (sepair_wf, sbref_wf, [
+                ('outputnode.mag_brain', 'inputnode.fmap_ref_brain'),
+                ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
+                ('outputnode.fmap_fieldcoef', 'inputnode.fmap_fieldcoef'),
+                ('outputnode.fmap_movpar', 'inputnode.fmap_movpar')
+            ]),      
+            (sbref_wf, sbref_t1, [
+                ('outputnode.sbref_unwarped', 'inputnode.sbref_brain')]),
+            (t1w_preproc, sbref_t1, [
+                ('outputnode.t1_brain', 'inputnode.t1_brain'),
+                ('outputnode.t1_seg', 'inputnode.t1_seg')]),       
+            (sbref_wf, unwarp_wf, [
+                ('outputnode.sbref_unwarped', 'inputnode.sbref_brain')]),
+            (sbref_wf, epi_hmc_wf, [
+                ('outputnode.sbref_unwarped', 'inputnode.sbref_brain')]),
+            (epi_hmc_wf, unwarp_wf, [
+                ('outputnode.epi_brain', 'inputnode.epi_brain')]),
+            (sepair_wf, unwarp_wf, [
+                ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
+                ('outputnode.fmap_fieldcoef', 'inputnode.fmap_fieldcoef'),
+                ('outputnode.fmap_movpar', 'inputnode.fmap_movpar')
+            ]),
+        ])
 
     return workflow
