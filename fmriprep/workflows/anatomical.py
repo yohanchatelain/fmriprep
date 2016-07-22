@@ -181,7 +181,7 @@ def skullstrip_ants(name='ANTsBrainExtraction', settings=None):
     )
 
     workflow.connect([
-        (inputnode, t1_skull_strip, [('in_field', 'anatomical_image')]),
+        (inputnode, t1_skull_strip, [('in_file', 'anatomical_image')]),
         (t1_skull_strip, outputnode, [('BrainExtractionMask', 'out_mask'),
                                       ('BrainExtractionBrain', 'out_file')])
     ])
