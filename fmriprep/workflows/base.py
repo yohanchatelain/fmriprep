@@ -15,13 +15,13 @@ import nipype.interfaces.io as nio
 from .anatomical import t1w_preprocessing
 from fmriprep.workflows.fieldmap.se_pair_workflow import se_pair_workflow
 from fmriprep.workflows.fieldmap.fieldmap_to_phasediff import fieldmap_to_phasediff
-from fmriprep.workflows.fieldmap.decider import FieldmapDecider
+from fmriprep.workflows.fieldmap.decider import fieldmap_decider
 from fmriprep.workflows.sbref import sbref_workflow
 from fmriprep.workflows import sbref
-from .epi import epi_unwarp, epi_unwarp
+from .epi import epi_unwarp, epi_hmc
 
 
-def fmri_preprocess_single(name='fMRI_prep', settings=None):
+def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
     """
     The main fmri preprocessing workflow.
     """
@@ -36,7 +36,6 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
     if 'dwell_time' not in settings['epi'].keys():
         # pull from effective echo spacing
         settings['epi']['dwell_time'] = 0.000700012460221792
-
 
     workflow = pe.Workflow(name=name)
     inputnode = pe.Node(niu.IdentityInterface(
@@ -56,17 +55,20 @@ def fmri_preprocess_single(name='fMRI_prep', settings=None):
     )
 
     try:
-        fmap_wf = FieldmapDecider(settings)
+        fmap_wf = fieldmap_decider(subject_data, settings)
     except NotImplementedError:
         fmap_wf = None
 
+    print("!!!!!!!!!!!!!")
+    print(fmap_wf)
+
     t1w_preproc = t1w_preprocessing(settings=settings)
-    #  sepair_wf = se_pair_workflow(settings=settings)
+    sepair_wf = se_pair_workflow(settings=settings)
 
     sbref_wf = sbref_workflow(settings=settings)
     sbref_t1 = sbref.sbref_t1_registration(settings=settings)
     unwarp_wf = epi_unwarp(settings=settings)
-    epi_hmc_wf = epi_hmc(settings=settings)
+    epi_hmc_wf = epi_hmc(subject_data, settings=settings)
 
 
     #  Connecting Workflow pe.Nodes
