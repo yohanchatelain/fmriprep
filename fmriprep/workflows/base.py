@@ -12,13 +12,13 @@ from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 import nipype.interfaces.io as nio
 
-from .anatomical import t1w_preprocessing
+from fmriprep.workflows.anatomical import t1w_preprocessing
 from fmriprep.workflows.fieldmap.se_pair_workflow import se_pair_workflow
 from fmriprep.workflows.fieldmap.fieldmap_to_phasediff import fieldmap_to_phasediff
 from fmriprep.workflows.fieldmap.decider import fieldmap_decider
 from fmriprep.workflows.sbref import sbref_workflow
 from fmriprep.workflows import sbref
-from .epi import epi_unwarp, epi_hmc
+from fmriprep.workflows.epi import epi_unwarp, epi_hmc
 
 
 def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):

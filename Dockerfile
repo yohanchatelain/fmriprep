@@ -38,6 +38,7 @@ ADD . preprocessing-workflow/
 RUN source activate crnenv && \
     pip install --upgrade numpy && \
     cd preprocessing-workflow && \
+    pip install mock && \
     pip install -e . && \
     python -c "from matplotlib import font_manager"
 

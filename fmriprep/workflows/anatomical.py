@@ -18,7 +18,8 @@ from nipype.interfaces import io as nio
 from nipype.interfaces import utility as niu
 from nipype.pipeline import engine as pe
 
-from mriqc.workflows.anatomical import mri_reorient_wf, skullstrip_wf
+from niworkflows.anat.skullstrip import afni_wf as skullstrip_wf
+from niworkflows.common import reorient as mri_reorient_wf
 
 from fmriprep.data import get_ants_oasis_template_ras, get_mni_template
 from fmriprep.viz import stripped_brain_overlay, anatomical_overlay
