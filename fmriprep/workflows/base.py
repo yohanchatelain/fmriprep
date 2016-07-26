@@ -71,11 +71,12 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
 
     if fmap_wf:
         sbref_wf = sbref_workflow(settings=settings)
+        sbref_wf.inputs.inputnode.hmc_mats = []  # FIXME: plug MCFLIRT output here
         sbref_t1 = sbref.sbref_t1_registration(settings=settings)
         unwarp_wf = epi_unwarp(settings=settings)
         sepair_wf = se_pair_workflow(settings=settings)
         workflow.connect([
-            (inputnode, sepair_wf, [('fieldmaps', 'inputnode.fieldmaps')]),
+            (inputnode, sepair_wf, [('fieldmaps', 'inputnode.input_images')]),
             (inputnode, sbref_wf, [('sbref', 'inputnode.sbref')]),
             (inputnode, unwarp_wf, [('epi', 'inputnode.epi')]),
             (sepair_wf, sbref_wf, [
