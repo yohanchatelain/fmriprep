@@ -81,14 +81,13 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
             (sepair_wf, sbref_wf, [
                 ('outputnode.mag_brain', 'inputnode.fmap_ref_brain'),
                 ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
-                ('outputnode.fmap_fieldcoef', 'inputnode.fmap_fieldcoef'),
-                ('outputnode.fmap_movpar', 'inputnode.fmap_movpar')
-            ]),      
+                ('outputnode.fieldmap', 'inputnode.fieldmap')
+            ]),
             (sbref_wf, sbref_t1, [
                 ('outputnode.sbref_unwarped', 'inputnode.sbref_brain')]),
             (t1w_preproc, sbref_t1, [
                 ('outputnode.t1_brain', 'inputnode.t1_brain'),
-                ('outputnode.t1_seg', 'inputnode.t1_seg')]),       
+                ('outputnode.t1_seg', 'inputnode.t1_seg')]),
             (sbref_wf, unwarp_wf, [
                 ('outputnode.sbref_unwarped', 'inputnode.sbref_brain')]),
             (sbref_wf, epi_hmc_wf, [
@@ -97,9 +96,37 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
                 ('outputnode.epi_brain', 'inputnode.epi_brain')]),
             (sepair_wf, unwarp_wf, [
                 ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
-                ('outputnode.fmap_fieldcoef', 'inputnode.fmap_fieldcoef'),
-                ('outputnode.fmap_movpar', 'inputnode.fmap_movpar')
+                ('outputnode.fieldmap', 'inputnode.fieldmap')
             ]),
         ])
 
     return workflow
+
+def mcflirt2topup(in_files, in_mats, out_movpar=None):
+    """
+    Converts a list of matrices from MCFLIRT to the movpar input
+    of TOPUP (a row per file with 6 parameters - 3 translations and 3 rotations
+    in this particular order).
+
+    """
+
+    import os.path as op
+    import numpy as np
+    from nipype.interfaces.base import isdefined
+
+    params = np.zeros(len(in_files), 6)
+
+    if isdefined(in_mats):
+        if len(in_mats) != len(in_files):
+            raise RuntimeError('Number of input matrices and files do not match')
+        else:
+            raise NotImplementedError
+
+    if out_movpar is None:
+        fname, fext = op.splitext(op.basename(in_mats[0]))
+        if fext == '.gz':
+            fname, _ = op.splitext(fname)
+        out_movpar = op.abspath('./%s_movpar.txt' % fname)
+
+    np.savetxt(out_movpar, params)
+    return out_movpar
