@@ -101,32 +101,3 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
         ])
 
     return workflow
-
-def mcflirt2topup(in_files, in_mats, out_movpar=None):
-    """
-    Converts a list of matrices from MCFLIRT to the movpar input
-    of TOPUP (a row per file with 6 parameters - 3 translations and 3 rotations
-    in this particular order).
-
-    """
-
-    import os.path as op
-    import numpy as np
-    from nipype.interfaces.base import isdefined
-
-    params = np.zeros(len(in_files), 6)
-
-    if isdefined(in_mats):
-        if len(in_mats) != len(in_files):
-            raise RuntimeError('Number of input matrices and files do not match')
-        else:
-            raise NotImplementedError
-
-    if out_movpar is None:
-        fname, fext = op.splitext(op.basename(in_mats[0]))
-        if fext == '.gz':
-            fname, _ = op.splitext(fname)
-        out_movpar = op.abspath('./%s_movpar.txt' % fname)
-
-    np.savetxt(out_movpar, params)
-    return out_movpar
