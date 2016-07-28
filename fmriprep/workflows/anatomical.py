@@ -106,7 +106,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
 
     datasink = pe.Node(
         interface=nio.DataSink(
-            base_directory=op.join(settings['work_dir'], "images")),
+            base_directory=op.join(settings['output_dir'], "images")),
         name="datasink",
         parameterization=False
     )
@@ -120,7 +120,6 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
                                ('forward_invert_flags', 'invert_transform_flags')]),
         (seg_2_mni, t1_2_mni_overlay, [('output_image', 'in_file')]),
         (t1_2_mni_overlay, datasink, [('out_file', '@t1_2_mni_overlay')]),
-
     ])
 
     # ANTs inputs connected here for clarity

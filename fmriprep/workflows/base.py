@@ -18,7 +18,9 @@ from fmriprep.workflows.fieldmap.fieldmap_to_phasediff import fieldmap_to_phased
 from fmriprep.workflows.fieldmap.decider import fieldmap_decider
 from fmriprep.workflows.sbref import sbref_workflow
 from fmriprep.workflows import sbref
-from fmriprep.workflows.epi import epi_unwarp, epi_hmc
+from fmriprep.workflows.epi import (epi_unwarp, epi_hmc, 
+    epi_mean_t1_registration, epi_mni_transformation)
+
 
 
 def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
@@ -62,6 +64,7 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
     t1w_preproc = t1w_preprocessing(settings=settings)
 
     epi_hmc_wf = epi_hmc(subject_data, settings=settings)
+    epi_mni_trans_wf = epi_mni_transformation(settings=settings)
 
     #  Connecting Workflow pe.Nodes
     workflow.connect([
@@ -69,6 +72,19 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
         (inputnode, epi_hmc_wf, [('epi', 'inputnode.epi')]),
     ])
 
+    if subject_data['sbref'] == []:
+        epi_2_t1 = epi_mean_t1_registration(settings=settings)
+        workflow.connect([
+            (epi_hmc_wf, epi_2_t1, [('epi_brain', 'epi')]),
+            (t1w_preproc, epi_2_t1, [('t1_brain', 't1_brain'),
+                                     ('t1_seg', 't1_seg')]),
+            (epi_2_t1, epi_mni_trans_wf, [('mat_epi_to_t1', 'mat_epi_to_t1')]),
+            (epi_hmc_wf, epi_mni_trans_wf, [('epi_brain', 'epi')]),
+            (t1w_preproc, epi_mni_trans_wf, [('t1_brain', 't1'),
+                                             ('t1_2_mni_forward_transform', 
+                                              't1_2_mni_forward_transform')])
+        ])
+        
     if fmap_wf:
         sbref_wf = sbref_workflow(settings=settings)
         sbref_t1 = sbref.sbref_t1_registration(settings=settings)
