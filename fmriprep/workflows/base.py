@@ -75,14 +75,14 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
     if subject_data['sbref'] == []:
         epi_2_t1 = epi_mean_t1_registration(settings=settings)
         workflow.connect([
-            (epi_hmc_wf, epi_2_t1, [('epi_brain', 'epi')]),
-            (t1w_preproc, epi_2_t1, [('t1_brain', 't1_brain'),
-                                     ('t1_seg', 't1_seg')]),
-            (epi_2_t1, epi_mni_trans_wf, [('mat_epi_to_t1', 'mat_epi_to_t1')]),
-            (epi_hmc_wf, epi_mni_trans_wf, [('epi_brain', 'epi')]),
-            (t1w_preproc, epi_mni_trans_wf, [('t1_brain', 't1'),
-                                             ('t1_2_mni_forward_transform', 
-                                              't1_2_mni_forward_transform')])
+            (epi_hmc_wf, epi_2_t1, [('outputnode.epi_brain', 'inputnode.epi')]),
+            (t1w_preproc, epi_2_t1, [('outputnode.t1_brain', 'inputnode.t1_brain'),
+                                     ('outputnode.t1_seg', 'inputnode.t1_seg')]),
+            (epi_2_t1, epi_mni_trans_wf, [('outputnode.mat_epi_to_t1', 'inputnode.mat_epi_to_t1')]),
+            (epi_hmc_wf, epi_mni_trans_wf, [('outputnode.epi_brain', 'inputnode.epi')]),
+            (t1w_preproc, epi_mni_trans_wf, [('outputnode.t1_brain', 'inputnode.t1'),
+                                             ('outputnode.t1_2_mni_forward_transform', 
+                                              'inputnode.t1_2_mni_forward_transform')])
         ])
         
     if fmap_wf:
