@@ -39,14 +39,17 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
 
     workflow = pe.Workflow(name=name)
     inputnode = pe.Node(niu.IdentityInterface(
-        fields=['fieldmaps', 'fieldmaps_meta', 'epi', 'epi_meta', 'sbref',
+        fields=['fieldmaps', 'fieldmaps_meta', 'epi_meta', 'sbref',
                 'sbref_meta', 't1']), name='inputnode')
 
     # Set inputs: epi is iterable over the available runs
     for key in subject_data.keys():
         if key != 'epi':
             setattr(inputnode.inputs, key, subject_data[key])
-    inputnode.iterables = [('epi', subject_data['epi'])]
+
+    inputfmri = pe.Node(niu.IdentityInterface(
+        fields=['epi']), name='inputfmri')
+    inputfmri.iterables = [('epi', subject_data['epi'])]
 
 
     outputnode = pe.Node(niu.IdentityInterface(
@@ -74,7 +77,7 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
     #  Connecting Workflow pe.Nodes
     workflow.connect([
         (inputnode, t1w_preproc, [('t1', 'inputnode.t1')]),
-        (inputnode, epi_hmc_wf, [('epi', 'inputnode.epi')]),
+        (inputfmri, epi_hmc_wf, [('epi', 'inputnode.epi')]),
     ])
 
     if not sbref_present:
