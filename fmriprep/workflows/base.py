@@ -43,9 +43,10 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
                 'sbref_meta', 't1']), name='inputnode')
 
     # Set inputs: epi is iterable over the available runs
+    for key in subject_data.keys():
+        if key != 'epi':
+            setattr(inputnode.inputs, key, subject_data[key])
     inputnode.iterables = [('epi', subject_data['epi'])]
-    for key in subject_data.keys().remove('epi'):
-        setattr(inputnode, key, subject_data[key])
 
 
     outputnode = pe.Node(niu.IdentityInterface(
