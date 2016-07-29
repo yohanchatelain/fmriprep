@@ -39,8 +39,19 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
 
     workflow = pe.Workflow(name=name)
     inputnode = pe.Node(niu.IdentityInterface(
-        fields=['fieldmaps', 'fieldmaps_meta', 'epi', 'epi_meta', 'sbref',
+        fields=['fieldmaps', 'fieldmaps_meta', 'epi_meta', 'sbref',
                 'sbref_meta', 't1']), name='inputnode')
+
+    # Set inputs: epi is iterable over the available runs
+    for key in subject_data.keys():
+        if key != 'epi':
+            setattr(inputnode.inputs, key, subject_data[key])
+
+    inputfmri = pe.Node(niu.IdentityInterface(
+        fields=['epi']), name='inputfmri')
+    inputfmri.iterables = [('epi', subject_data['epi'])]
+
+
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['fieldmap', 'corrected_sbref', 'fmap_mag', 'fmap_mag_brain',
                 't1', 'stripped_epi', 'corrected_epi_mean', 'sbref_brain',
@@ -60,23 +71,24 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
         fmap_wf = None
 
     t1w_preproc = t1w_preprocessing(settings=settings)
-    epi_hmc_wf = epi_hmc(subject_data, settings=settings, sbref_present=sbref_present)
-    epi_mni_trans_wf = epi_mni_transformation(subject_data, settings=settings)
+    epi_hmc_wf = epi_hmc(settings=settings, sbref_present=sbref_present)
+    epi_mni_trans_wf = epi_mni_transformation(settings=settings)
 
     #  Connecting Workflow pe.Nodes
     workflow.connect([
         (inputnode, t1w_preproc, [('t1', 'inputnode.t1')]),
-        (inputnode, epi_hmc_wf, [('epi', 'inputnode.epi')]),
+        (inputfmri, epi_hmc_wf, [('epi', 'inputnode.epi')]),
     ])
 
     if not sbref_present:
-        epi_2_t1 = epi_mean_t1_registration(subject_data, settings=settings)
+        epi_2_t1 = epi_mean_t1_registration(settings=settings)
         workflow.connect([
             (epi_hmc_wf, epi_2_t1, [('outputnode.epi_brain', 'inputnode.epi')]),
             (t1w_preproc, epi_2_t1, [('outputnode.t1_brain', 'inputnode.t1_brain'),
                                      ('outputnode.t1_seg', 'inputnode.t1_seg')]),
             (epi_2_t1, epi_mni_trans_wf, [('outputnode.mat_epi_to_t1', 'inputnode.mat_epi_to_t1')]),
-            (epi_hmc_wf, epi_mni_trans_wf, [('outputnode.epi_brain', 'inputnode.epi')]),
+            (epi_hmc_wf, epi_mni_trans_wf, [('outputnode.epi_brain', 'inputnode.epi'),
+                                            ('outputnode.xforms', 'inputnode.hmc_xforms')]),
             (t1w_preproc, epi_mni_trans_wf, [('outputnode.t1_brain', 'inputnode.t1'),
                                              ('outputnode.t1_2_mni_forward_transform',
                                               'inputnode.t1_2_mni_forward_transform')])
