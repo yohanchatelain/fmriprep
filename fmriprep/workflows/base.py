@@ -60,8 +60,8 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
         fmap_wf = None
 
     t1w_preproc = t1w_preprocessing(settings=settings)
-    epi_hmc_wf = epi_hmc(settings=settings, sbref_present=sbref_present)
-    epi_mni_trans_wf = epi_mni_transformation(settings=settings)
+    epi_hmc_wf = epi_hmc(subject_data, settings=settings, sbref_present=sbref_present)
+    epi_mni_trans_wf = epi_mni_transformation(subject_data, settings=settings)
 
     #  Connecting Workflow pe.Nodes
     workflow.connect([
@@ -70,7 +70,7 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
     ])
 
     if not sbref_present:
-        epi_2_t1 = epi_mean_t1_registration(settings=settings)
+        epi_2_t1 = epi_mean_t1_registration(subject_data, settings=settings)
         workflow.connect([
             (epi_hmc_wf, epi_2_t1, [('outputnode.epi_brain', 'inputnode.epi')]),
             (t1w_preproc, epi_2_t1, [('outputnode.t1_brain', 'inputnode.t1_brain'),
