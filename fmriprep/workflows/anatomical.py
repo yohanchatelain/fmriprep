@@ -72,7 +72,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     t1_2_mni_params = pe.Node(grabber_interface, name='t1_2_mni_params')
     t1_2_mni_params.inputs.in_file = (
         pkgr.resource_filename('fmriprep', 'data/{}.json'.format(
-            settings.get('ants_t1-mni_settings', 't1-mni_registration')))
+            settings.get('ants_t1-mni_settings', 't1-mni_registration2')))
     )
 
     workflow.connect([
