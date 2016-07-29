@@ -3,7 +3,7 @@
 # @Author: oesteban
 # @Date:   2015-11-19 16:44:27
 # @Last Modified by:   oesteban
-# @Last Modified time: 2016-07-29 16:31:28
+# @Last Modified time: 2016-07-29 16:38:19
 """ fmriprep setup script """
 import os
 import sys
@@ -50,6 +50,7 @@ def main():
                   'fmriprep.utils',
                   'fmriprep.viz',
                   'fmriprep.workflows',
+                  'fmriprep.workflows.fieldmap',
         ],
         package_data={'fmriprep': ['data/*.json']},
         install_requires=REQUIREMENTS,
