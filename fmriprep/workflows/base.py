@@ -78,6 +78,7 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
     workflow.connect([
         (inputnode, t1w_preproc, [('t1', 'inputnode.t1')]),
         (inputfmri, epi_hmc_wf, [('epi', 'inputnode.epi')]),
+        (inputfmri, epi_mni_trans_wf, [('epi', 'inputnode.epi')]),
     ])
 
     if not sbref_present:
@@ -87,8 +88,9 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
             (t1w_preproc, epi_2_t1, [('outputnode.t1_brain', 'inputnode.t1_brain'),
                                      ('outputnode.t1_seg', 'inputnode.t1_seg')]),
             (epi_2_t1, epi_mni_trans_wf, [('outputnode.mat_epi_to_t1', 'inputnode.mat_epi_to_t1')]),
-            (epi_hmc_wf, epi_mni_trans_wf, [('outputnode.epi_brain', 'inputnode.epi'),
-                                            ('outputnode.xforms', 'inputnode.hmc_xforms')]),
+
+            (epi_hmc_wf, epi_mni_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms'),
+                                            ('outputnode.epi_mask', 'inputnode.epi_mask')]),
             (t1w_preproc, epi_mni_trans_wf, [('outputnode.t1_brain', 'inputnode.t1'),
                                              ('outputnode.t1_2_mni_forward_transform',
                                               'inputnode.t1_2_mni_forward_transform')])
