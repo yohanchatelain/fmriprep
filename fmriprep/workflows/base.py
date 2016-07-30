@@ -84,7 +84,8 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
     if not sbref_present:
         epi_2_t1 = epi_mean_t1_registration(settings=settings)
         workflow.connect([
-            (epi_hmc_wf, epi_2_t1, [('outputnode.epi_brain', 'inputnode.epi')]),
+            (inputfmri, epi_2_t1, [('epi', 'inputnode.epi')]),
+            (epi_hmc_wf, epi_2_t1, [('outputnode.epi_mean', 'inputnode.epi_mean')]),
             (t1w_preproc, epi_2_t1, [('outputnode.t1_brain', 'inputnode.t1_brain'),
                                      ('outputnode.t1_seg', 'inputnode.t1_seg')]),
             (epi_2_t1, epi_mni_trans_wf, [('outputnode.mat_epi_to_t1', 'inputnode.mat_epi_to_t1')]),
