@@ -59,11 +59,6 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
                 't1_2_mni', 't1_wm_seg']),
         name='outputnode'
     )
-    datasink = pe.Node(
-        interface=nio.DataSink(base_directory=settings['output_dir']),
-        name="datasink",
-        parameterization=False
-    )
 
     try:
         fmap_wf = fieldmap_decider(subject_data, settings)
