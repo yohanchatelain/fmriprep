@@ -1,5 +1,8 @@
-Release 0.0.2
+Release 0.1.1
 =============
+
+* [ENH] Works on ds005 (datasets without fieldmap nor sbref)
+* [ENH] Outputs start to follow BIDS-derivatives (WIP)
 
 Release 0.0.1
 =============
