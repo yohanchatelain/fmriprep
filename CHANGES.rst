@@ -1,6 +1,7 @@
 Release 0.1.1
 =============
 
+* [ENH] Fixed bug using non-RAS EPI
 * [ENH] Works on ds005 (datasets without fieldmap nor sbref)
 * [ENH] Outputs start to follow BIDS-derivatives (WIP)
 
