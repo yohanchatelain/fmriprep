@@ -22,6 +22,7 @@ from nipype.pipeline import engine as pe
 from niworkflows.anat.skullstrip import afni_wf as skullstrip_wf
 from niworkflows.common import reorient as mri_reorient_wf
 
+from fmriprep.interfaces import DerivativesDataSink
 from fmriprep.data import get_ants_oasis_template_ras, get_mni_template_ras
 from fmriprep.viz import stripped_brain_overlay, anatomical_overlay
 
@@ -127,6 +128,26 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
                                ('forward_invert_flags', 'invert_transform_flags')]),
         (seg_2_mni, t1_2_mni_overlay, [('output_image', 'in_file')]),
         (t1_2_mni_overlay, datasink, [('out_file', '@t1_2_mni_overlay')]),
+    ])
+
+    # Write corrected file in the designated output dir
+    ds_t1_bias = pe.Node(
+        DerivativesDataSink(base_directory=settings['output_dir'],
+            suffix='inu'), name='DerivT1_inu')
+    ds_t1_seg = pe.Node(
+        DerivativesDataSink(base_directory=settings['output_dir'],
+            suffix='inu_seg'), name='DerivT1_seg')
+    ds_mask = pe.Node(
+        DerivativesDataSink(base_directory=settings['output_dir'],
+            suffix='bmask'), name='DerivT1_mask')
+
+    workflow.connect([
+        (inputnode, ds_t1_bias, [('t1', 'source_file')]),
+        (inputnode, ds_t1_seg, [('t1', 'source_file')]),
+        (inputnode, ds_mask, [('t1', 'source_file')]),
+        (asw, ds_t1_bias, [('outputnode.out_file', 'in_file')]),
+        (t1_seg, ds_t1_seg, [('tissue_class_map', 'in_file')]),
+        (asw, ds_mask, [('outputnode.out_mask', 'in_file')])
     ])
 
     # ANTs inputs connected here for clarity
