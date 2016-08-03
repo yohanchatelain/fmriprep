@@ -54,7 +54,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         asw = skullstrip_ants(settings=settings)
 
     # 4. Segmentation
-    t1_seg = pe.Node(fsl.FAST(no_bias=True), name='T1_Segmentation')
+    t1_seg = pe.Node(fsl.FAST(no_bias=True, probability_maps=True), name='T1_Segmentation')
 
     # 5. T1w to MNI registration
     t1_2_mni = pe.Node(ants.Registration(), name='T1_2_MNI_Registration')
@@ -206,7 +206,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         (asw, ds_mask, [('outputnode.out_mask', 'in_file')]),
         (t1_2_mni, ds_t1_mni, [('warped_image', 'in_file')]),
         (bmask_mni, ds_bmask_mni, [('output_image', 'in_file')]),
-        (tpms_mni, ds_bmask_mni, [('output_image', 'in_file')])
+        (tpms_mni, ds_tpms_mni, [('output_image', 'in_file')])
 
     ])
 
