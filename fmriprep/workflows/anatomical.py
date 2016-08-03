@@ -76,6 +76,15 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             settings.get('ants_t1-mni_settings', 't1-mni_registration2')))
     )
 
+    # Resampe the brain mask and the tissue probability maps into mni space
+    bmask_mni = pe.Node(ants.ApplyTransforms(
+        dimension=3, default_value=0, interpolation='NearestNeighbor'), name='brain_mni_warp')
+    bmask_mni.inputs.reference_image = op.join(get_mni_template_ras(), 'MNI152_T1_1mm.nii.gz')
+    tpms_mni = pe.MapNode(ants.ApplyTransforms(dimension=3, default_value=0, interpolation='Linear'),
+                          iterfield=['input_image'], name='tpms_mni_warp')
+    tpms_mni.inputs.reference_image = op.join(get_mni_template_ras(), 'MNI152_T1_1mm.nii.gz')
+
+
     workflow.connect([
         (inputnode, arw, [('t1', 'in_file')]),
         (arw, inu_n4, [('out_file', 'input_image')]),
@@ -91,6 +100,12 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             ('forward_transforms', 't1_2_mni_forward_transform'),
             ('reverse_transforms', 't1_2_mni_reverse_transform')
         ]),
+        (asw, bmask_mni, [('outputnode.out_mask', 'input_image')]),
+        (t1_2_mni, bmask_mni, [('forward_transforms', 'transforms'),
+                               ('forward_invert_flags', 'invert_transform_flags')]),
+        (t1_seg, tpms_mni, [('probability_maps', 'input_image')]),
+        (t1_2_mni, tpms_mni, [('forward_transforms', 'transforms'),
+                               ('forward_invert_flags', 'invert_transform_flags')]),
         (asw, outputnode, [
             ('outputnode.out_file', 't1_brain')]),
     ])
@@ -148,6 +163,13 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         DerivativesDataSink(base_directory=settings['output_dir'],
             suffix='mni_affine'), name='DerivT1w_MNI_affine')
 
+    ds_bmask_mni = pe.Node(
+        DerivativesDataSink(base_directory=settings['output_dir'],
+            suffix='bmask_mni'), name='DerivT1_Mask_MNI')
+    ds_tpms_mni = pe.Node(
+        DerivativesDataSink(base_directory=settings['output_dir'],
+            suffix='tpm_mni'), name='DerivT1_TPMs_MNI')
+
     if settings.get('debug', False):
         workflow.connect([
             (t1_2_mni, ds_t1_mni_aff, [('forward_transforms', 'in_file')])
@@ -177,10 +199,15 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         (inputnode, ds_mask, [('t1', 'source_file')]),
         (inputnode, ds_t1_mni, [('t1', 'source_file')]),
         (inputnode, ds_t1_mni_aff, [('t1', 'source_file')]),
+        (inputnode, ds_bmask_mni, [('t1', 'source_file')]),
+        (inputnode, ds_tpms_mni, [('t1', 'source_file')]),
         (asw, ds_t1_bias, [('outputnode.out_file', 'in_file')]),
         (t1_seg, ds_t1_seg, [('tissue_class_map', 'in_file')]),
         (asw, ds_mask, [('outputnode.out_mask', 'in_file')]),
-        (t1_2_mni, ds_t1_mni, [('warped_image', 'in_file')])
+        (t1_2_mni, ds_t1_mni, [('warped_image', 'in_file')]),
+        (bmask_mni, ds_bmask_mni, [('output_image', 'in_file')]),
+        (tpms_mni, ds_bmask_mni, [('output_image', 'in_file')])
+
     ])
 
     # ANTs inputs connected here for clarity
