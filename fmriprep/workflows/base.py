@@ -10,6 +10,8 @@ Created on Wed Dec  2 17:35:40 2015
 
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
+from nipype.interfaces import fsl
+from nipype.interfaces import freesurfer as fs
 import nipype.interfaces.io as nio
 
 from fmriprep.workflows.anatomical import t1w_preprocessing
@@ -59,16 +61,17 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
                 't1_2_mni', 't1_wm_seg']),
         name='outputnode'
     )
-    datasink = pe.Node(
-        interface=nio.DataSink(base_directory=settings['output_dir']),
-        name="datasink",
-        parameterization=False
-    )
 
     try:
         fmap_wf = fieldmap_decider(subject_data, settings)
     except NotImplementedError:
         fmap_wf = None
+
+    # Reorient EPI to RAS
+    split = pe.Node(fsl.Split(dimension='t'), name='SplitEPI')
+    orient = pe.MapNode(fs.MRIConvert(out_type='niigz', out_orientation='RAS'),
+                        iterfield=['in_file'], name='ReorientEPI')
+    merge = pe.Node(fsl.Merge(dimension='t'), name='MergeEPI')
 
     t1w_preproc = t1w_preprocessing(settings=settings)
     epi_hmc_wf = epi_hmc(settings=settings, sbref_present=sbref_present)
@@ -76,19 +79,30 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
 
     #  Connecting Workflow pe.Nodes
     workflow.connect([
+        (inputfmri, split, [('epi', 'in_file')]),
+        (split, orient, [('out_files', 'in_file')]),
+        (orient, merge, [('out_file', 'in_files')]),
+
         (inputnode, t1w_preproc, [('t1', 'inputnode.t1')]),
+        (merge, epi_hmc_wf, [('merged_file', 'inputnode.epi_ras')]),
+        (merge, epi_mni_trans_wf, [('merged_file', 'inputnode.epi_ras')]),
+
+        # These are necessary sources for the DerivativesDataSink
         (inputfmri, epi_hmc_wf, [('epi', 'inputnode.epi')]),
+        (inputfmri, epi_mni_trans_wf, [('epi', 'inputnode.epi')])
     ])
 
     if not sbref_present:
         epi_2_t1 = epi_mean_t1_registration(settings=settings)
         workflow.connect([
-            (epi_hmc_wf, epi_2_t1, [('outputnode.epi_brain', 'inputnode.epi')]),
+            (inputfmri, epi_2_t1, [('epi', 'inputnode.epi')]),
+            (epi_hmc_wf, epi_2_t1, [('outputnode.epi_mean', 'inputnode.epi_mean')]),
             (t1w_preproc, epi_2_t1, [('outputnode.t1_brain', 'inputnode.t1_brain'),
                                      ('outputnode.t1_seg', 'inputnode.t1_seg')]),
             (epi_2_t1, epi_mni_trans_wf, [('outputnode.mat_epi_to_t1', 'inputnode.mat_epi_to_t1')]),
-            (epi_hmc_wf, epi_mni_trans_wf, [('outputnode.epi_brain', 'inputnode.epi'),
-                                            ('outputnode.xforms', 'inputnode.hmc_xforms')]),
+
+            (epi_hmc_wf, epi_mni_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms'),
+                                            ('outputnode.epi_mask', 'inputnode.epi_mask')]),
             (t1w_preproc, epi_mni_trans_wf, [('outputnode.t1_brain', 'inputnode.t1'),
                                              ('outputnode.t1_2_mni_forward_transform',
                                               'inputnode.t1_2_mni_forward_transform')])
