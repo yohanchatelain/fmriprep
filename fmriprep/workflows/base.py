@@ -23,8 +23,6 @@ from fmriprep.workflows import sbref
 from fmriprep.workflows.epi import (epi_unwarp, epi_hmc,
     epi_mean_t1_registration, epi_mni_transformation)
 
-from pprint import pprint as pp
-
 def fmri_preprocess_single(layout, subject_id, name='fMRI_prep', settings=None):
     """
     The main fmri preprocessing workflow.
@@ -44,8 +42,6 @@ def fmri_preprocess_single(layout, subject_id, name='fMRI_prep', settings=None):
         fields=['fieldmaps', 'fieldmaps_meta', 'epi_meta', 'sbref',
                 'sbref_meta', 't1']), name='inputnode')
 
-    print(subject_id)
-    pp(layout.get())
     setattr(inputnode, 'sbref', [x.filename for x in layout.get(type='sbref', subject=subject_id)])
     setattr(inputnode, ' t1', [x.filename for x in layout.get(type='T1w', subject=subject_id)][0])
     setattr(inputnode, 'fieldmaps', [x.filename for x in layout.get(fieldmap='.*', subject=subject_id)])
