@@ -23,7 +23,7 @@ from fmriprep.workflows import sbref
 from fmriprep.workflows.epi import (epi_unwarp, epi_hmc,
     epi_mean_t1_registration, epi_mni_transformation)
 
-
+from pprint import pprint as pp
 
 def fmri_preprocess_single(layout, subject_id, name='fMRI_prep', settings=None):
     """
@@ -44,14 +44,16 @@ def fmri_preprocess_single(layout, subject_id, name='fMRI_prep', settings=None):
         fields=['fieldmaps', 'fieldmaps_meta', 'epi_meta', 'sbref',
                 'sbref_meta', 't1']), name='inputnode')
 
-    setattr(inputnode.inputs, 'sbref', [x.filename for x in layout.get(type='sbref', subject=subject_id)])
-    setattr(inputnode.inputs, ' t1', [x.filename for x in layout.get(type='T1w', subject=subject_id)])
-    setattr(inputnode.inputs, 'fieldmaps', [x.filename for x in layout.get(fieldmap='.*', subject=subject_id)])
+    print(subject_id)
+    pp(layout.get())
+    setattr(inputnode, 'sbref', [x.filename for x in layout.get(type='sbref', subject=subject_id)])
+    setattr(inputnode, ' t1', [x.filename for x in layout.get(type='T1w', subject=subject_id)][0])
+    setattr(inputnode, 'fieldmaps', [x.filename for x in layout.get(fieldmap='.*', subject=subject_id)])
 
 
+    epi_files = [x.filename for x in layout.get(type='bold', subject=subject_id)]
     inputfmri = pe.Node(niu.IdentityInterface(
         fields=['epi']), name='inputfmri')
-    epi_files = [x.filename for x in layout.get(type='bold', subject=subject_id)]
     inputfmri.iterables = [('epi', epi_files)]
 
 
@@ -64,7 +66,7 @@ def fmri_preprocess_single(layout, subject_id, name='fMRI_prep', settings=None):
     )
 
     try:
-        fmap_wf = fieldmap_decider(getattr(inputnode.inputs, 'fieldmaps'), settings)
+        fmap_wf = fieldmap_decider(getattr(inputnode, 'fieldmaps'), settings)
     except NotImplementedError:
         fmap_wf = None
 
@@ -117,7 +119,7 @@ def fmri_preprocess_single(layout, subject_id, name='fMRI_prep', settings=None):
         workflow.connect([
             (inputnode, sepair_wf, [('fieldmaps', 'inputnode.fieldmaps')]),
             (inputnode, sbref_wf, [('sbref', 'inputnode.sbref')]),
-            (inputnode, unwarp_wf, [('epi', 'inputnode.epi')]),
+            (inputfmri, unwarp_wf, [('epi', 'inputnode.epi')]),
             (sepair_wf, sbref_wf, [
                 ('outputnode.mag_brain', 'inputnode.fmap_ref_brain'),
                 ('outputnode.fmap_mask', 'inputnode.fmap_mask'),

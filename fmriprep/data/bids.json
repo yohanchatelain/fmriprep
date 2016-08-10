@@ -2,7 +2,7 @@
     "entities": [
         {
             "name": "subject",
-            "pattern": "(sub-\\d+)",
+            "pattern": "(sub-\\w+)",
             "directory": "{{root}}/{subject}"
         },
         {
