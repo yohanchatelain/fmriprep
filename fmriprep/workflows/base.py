@@ -37,16 +37,16 @@ def fmri_preprocess_single(layout, subject_id, name='fMRI_prep', settings=None):
         if settings.get(key) is None:
             settings[key] = {}
 
-    sbref_present = len(layout.get(target='sbref', subject=subject_id) > 0
+    sbref_present = len(layout.get(target='sbref', subject=subject_id)) > 0
 
     workflow = pe.Workflow(name=name)
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['fieldmaps', 'fieldmaps_meta', 'epi_meta', 'sbref',
                 'sbref_meta', 't1']), name='inputnode')
 
-    inputnode.inputs['sbref'] = [x.filename for x in layout.get(type='sbref', subject=subject_id)]
-    inputnode.inputs['t1'] = [x.filename for x in layout.get(type='T1w', subject=subject_id)]
-    inputnode.inputs['fieldmaps'] = [x.filename for x in layout.get(fieldmap='.*', subject=subject_id)
+    setattr(inputnode.inputs, 'sbref', [x.filename for x in layout.get(type='sbref', subject=subject_id)])
+    setattr(inputnode.inputs, ' t1', [x.filename for x in layout.get(type='T1w', subject=subject_id)])
+    setattr(inputnode.inputs, 'fieldmaps', [x.filename for x in layout.get(fieldmap='.*', subject=subject_id)])
 
 
     inputfmri = pe.Node(niu.IdentityInterface(
@@ -64,7 +64,7 @@ def fmri_preprocess_single(layout, subject_id, name='fMRI_prep', settings=None):
     )
 
     try:
-        fmap_wf = fieldmap_decider(inputnode.inputs['fieldmaps'], settings)
+        fmap_wf = fieldmap_decider(getattr(inputnode.inputs, 'fieldmaps'), settings)
     except NotImplementedError:
         fmap_wf = None
 
