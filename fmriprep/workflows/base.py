@@ -23,7 +23,7 @@ from fmriprep.workflows import sbref
 from fmriprep.workflows.epi import (epi_unwarp, epi_hmc,
     epi_mean_t1_registration, epi_mni_transformation)
 
-def fmri_preprocess_single(layout, subject_id, name='fMRI_prep', settings=None):
+def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
     """
     The main fmri preprocessing workflow.
     """
@@ -42,15 +42,8 @@ def fmri_preprocess_single(layout, subject_id, name='fMRI_prep', settings=None):
         fields=['fieldmaps', 'fieldmaps_meta', 'epi_meta', 'sbref',
                 'sbref_meta', 't1']), name='inputnode')
 
-    setattr(inputnode, 'sbref', [x.filename for x in layout.get(type='sbref', subject=subject_id)])
-    setattr(inputnode, ' t1', [x.filename for x in layout.get(type='T1w', subject=subject_id)][0])
-    setattr(inputnode, 'fieldmaps', [x.filename for x in layout.get(fieldmap='.*', subject=subject_id)])
-
-
-    epi_files = [x.filename for x in layout.get(type='bold', subject=subject_id)]
-    inputfmri = pe.Node(niu.IdentityInterface(
-        fields=['epi']), name='inputfmri')
-    inputfmri.iterables = [('epi', epi_files)]
+    for key in subject_data.keys():
+        setattr(inputnode.inputs, key, subject_data[key])
 
 
     outputnode = pe.Node(niu.IdentityInterface(

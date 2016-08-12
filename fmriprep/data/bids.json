@@ -22,11 +22,11 @@
         },
         {
             "name": "task",
-            "pattern": "task-(.*?)-"
+            "pattern": "task-(.*?)(?:_+)"
         },
         {
             "name": "acquisition",
-            "pattern": "acq-(.*?)-"
+            "pattern": "acq-(.*?)(?:_+)"
         },
         {
             "name": "bval",
@@ -37,12 +37,16 @@
             "pattern": "(.*\\.bvec)$"
         },
         {
+            "name": "ext",
+            "pattern": "(\\.\\w+\\.\\w+|\\.\\w+)"
+        },
+        {
             "name": "fieldmap",
             "pattern": "(phasediff|magnitude[0-9]*|phase[0-9]+|fieldmap|epi)\\.nii"
         },
         {
-            "name": "func",
-            "pattern": "bold\\.nii"
+            "name": "modality",
+            "pattern": "\/(func|anat|fmap|dwi)\/"
         }
     ]
 }
