@@ -39,6 +39,10 @@
         {
             "name": "fieldmap",
             "pattern": "(phasediff|magnitude[0-9]*|phase[0-9]+|fieldmap|epi)\\.nii"
+        },
+        {
+            "name": "func",
+            "pattern": "bold\\.nii"
         }
     ]
 }
