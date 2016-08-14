@@ -25,7 +25,7 @@ from fmriprep.workflows.epi import (
 
 
 
-def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
+def fmriprep_single(subject_data, name='fMRI_prep', settings=None):
     """
     The main fmri preprocessing workflow.
     """
