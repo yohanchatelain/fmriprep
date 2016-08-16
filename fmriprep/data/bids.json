@@ -38,7 +38,7 @@
         },
         {
             "name": "ext",
-            "pattern": "(\\.\\w+\\.\\w+|\\.\\w+)"
+            "pattern": "(\\.\\w+\\.\\w+|\\.\\w+)$"
         },
         {
             "name": "fieldmap",
