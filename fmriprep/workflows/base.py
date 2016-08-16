@@ -17,13 +17,13 @@ import nipype.interfaces.io as nio
 from fmriprep.workflows.anatomical import t1w_preprocessing
 from fmriprep.workflows.fieldmap.se_pair_workflow import se_pair_workflow
 from fmriprep.workflows.fieldmap.fieldmap_to_phasediff import fieldmap_to_phasediff
-from fmriprep.workflows.fieldmap.decider import fieldmap_decider
+from fmriprep.workflows.fieldmap.base import fieldmap_decider
 from fmriprep.workflows.sbref import sbref_workflow
 from fmriprep.workflows import sbref
-from fmriprep.workflows.epi import (epi_unwarp, epi_hmc,
-    epi_mean_t1_registration, epi_mni_transformation)
+from fmriprep.workflows.epi import (
+    epi_unwarp, epi_hmc, epi_mean_t1_registration, epi_mni_transformation)
 
-def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
+def fmriprep_single(subject_data, name='fMRI_prep', settings=None):
     """
     The main fmri preprocessing workflow.
     """
@@ -106,18 +106,18 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
 
     if fmap_wf:
         sbref_wf = sbref_workflow(settings=settings)
+        sbref_wf.inputs.inputnode.hmc_mats = []  # FIXME: plug MCFLIRT output here
         sbref_t1 = sbref.sbref_t1_registration(settings=settings)
         unwarp_wf = epi_unwarp(settings=settings)
         sepair_wf = se_pair_workflow(settings=settings)
         workflow.connect([
-            (inputnode, sepair_wf, [('fieldmaps', 'inputnode.fieldmaps')]),
+            (inputnode, sepair_wf, [('fieldmaps', 'inputnode.input_images')]),
             (inputnode, sbref_wf, [('sbref', 'inputnode.sbref')]),
             (inputfmri, unwarp_wf, [('func', 'inputnode.epi')]),
             (sepair_wf, sbref_wf, [
                 ('outputnode.mag_brain', 'inputnode.fmap_ref_brain'),
                 ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
-                ('outputnode.fmap_fieldcoef', 'inputnode.fmap_fieldcoef'),
-                ('outputnode.fmap_movpar', 'inputnode.fmap_movpar')
+                ('outputnode.fieldmap', 'inputnode.fieldmap')
             ]),
             (sbref_wf, sbref_t1, [
                 ('outputnode.sbref_unwarped', 'inputnode.sbref_brain')]),
@@ -132,8 +132,7 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
                 ('outputnode.epi_brain', 'inputnode.epi_brain')]),
             (sepair_wf, unwarp_wf, [
                 ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
-                ('outputnode.fmap_fieldcoef', 'inputnode.fmap_fieldcoef'),
-                ('outputnode.fmap_movpar', 'inputnode.fmap_movpar')
+                ('outputnode.fieldmap', 'inputnode.fieldmap')
             ]),
         ])
 
