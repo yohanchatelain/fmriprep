@@ -45,7 +45,6 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
     for key in subject_data.keys():
         setattr(inputnode.inputs, key, subject_data[key])
 
-
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['fieldmap', 'corrected_sbref', 'fmap_mag', 'fmap_mag_brain',
                 't1', 'stripped_epi', 'corrected_epi_mean', 'sbref_brain',
