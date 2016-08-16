@@ -35,15 +35,20 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
         if settings.get(key) is None:
             settings[key] = {}
 
-    sbref_present = len(layout.get(target='sbref', subject=subject_id)) > 0
 
     workflow = pe.Workflow(name=name)
     inputnode = pe.Node(niu.IdentityInterface(
-        fields=['fieldmaps', 'fieldmaps_meta', 'epi_meta', 'sbref',
-                'sbref_meta', 't1']), name='inputnode')
+        fields=['fieldmaps', 't1', 'func', 'sbref']), name='inputnode')
 
     for key in subject_data.keys():
-        setattr(inputnode.inputs, key, subject_data[key])
+        if key != 'func':
+            setattr(inputnode.inputs, key, subject_data[key])
+
+    inputfmri = pe.Node(niu.IdentityInterface(
+                        fields=['func']), name='inputfmri')
+    inputfmri.iterables = [('func', subject_data['func'])]
+
+    sbref_present = len(subject_data['sbref']) > 0
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['fieldmap', 'corrected_sbref', 'fmap_mag', 'fmap_mag_brain',
@@ -54,7 +59,7 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
     )
 
     try:
-        fmap_wf = fieldmap_decider(getattr(inputnode, 'fieldmaps'), settings)
+        fmap_wf = fieldmap_decider(getattr(inputnode.inputs, 'fieldmaps'), settings)
     except NotImplementedError:
         fmap_wf = None
 
@@ -70,7 +75,7 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
 
     #  Connecting Workflow pe.Nodes
     workflow.connect([
-        (inputfmri, split, [('epi', 'in_file')]),
+        (inputfmri, split, [('func', 'in_file')]),
         (split, orient, [('out_files', 'in_file')]),
         (orient, merge, [('out_file', 'in_files')]),
 
@@ -79,14 +84,14 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
         (merge, epi_mni_trans_wf, [('merged_file', 'inputnode.epi_ras')]),
 
         # These are necessary sources for the DerivativesDataSink
-        (inputfmri, epi_hmc_wf, [('epi', 'inputnode.epi')]),
-        (inputfmri, epi_mni_trans_wf, [('epi', 'inputnode.epi')])
+        (inputfmri, epi_hmc_wf, [('func', 'inputnode.epi')]),
+        (inputfmri, epi_mni_trans_wf, [('func', 'inputnode.epi')])
     ])
 
     if not sbref_present:
         epi_2_t1 = epi_mean_t1_registration(settings=settings)
         workflow.connect([
-            (inputfmri, epi_2_t1, [('epi', 'inputnode.epi')]),
+            (inputfmri, epi_2_t1, [('func', 'inputnode.epi')]),
             (epi_hmc_wf, epi_2_t1, [('outputnode.epi_mean', 'inputnode.epi_mean')]),
             (t1w_preproc, epi_2_t1, [('outputnode.t1_brain', 'inputnode.t1_brain'),
                                      ('outputnode.t1_seg', 'inputnode.t1_seg')]),
@@ -107,7 +112,7 @@ def fmri_preprocess_single(subject_data, name='fMRI_prep', settings=None):
         workflow.connect([
             (inputnode, sepair_wf, [('fieldmaps', 'inputnode.fieldmaps')]),
             (inputnode, sbref_wf, [('sbref', 'inputnode.sbref')]),
-            (inputfmri, unwarp_wf, [('epi', 'inputnode.epi')]),
+            (inputfmri, unwarp_wf, [('func', 'inputnode.epi')]),
             (sepair_wf, sbref_wf, [
                 ('outputnode.mag_brain', 'inputnode.fmap_ref_brain'),
                 ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
