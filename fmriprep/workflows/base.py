@@ -16,10 +16,11 @@ from nipype.interfaces import io as nio
 
 from fmriprep.interfaces import BIDSDataGrabber
 from fmriprep.workflows.anatomical import t1w_preprocessing
-from fmriprep.workflows.sbref import sbref_workflow, sbref_t1_registration
+from fmriprep.workflows.sbref import sbref_preprocess, sbref_t1_registration
 from fmriprep.workflows.fieldmap import phase_diff_and_magnitudes
 from fmriprep.workflows.epi import (
-    epi_unwarp, epi_hmc, epi_mean_t1_registration, epi_mni_transformation)
+    epi_unwarp, epi_hmc, epi_sbref_registration,
+    epi_mean_t1_registration, epi_mni_transformation)
 
 def fmriprep_single(subject_list, name='fMRI_prep', settings=None):
     """
@@ -28,10 +29,6 @@ def fmriprep_single(subject_list, name='fMRI_prep', settings=None):
 
     if settings is None:
         settings = {}
-
-    for key in ['fsl', 'skull_strip', 'epi', 'connectivity']:
-        if settings.get(key) is None:
-            settings[key] = {}
 
     workflow = pe.Workflow(name=name)
 
@@ -49,10 +46,16 @@ def fmriprep_single(subject_list, name='fMRI_prep', settings=None):
     fmap_est = phase_diff_and_magnitudes()
 
     # Correct SBRef
-    sbref_pre = sbref_workflow(settings=settings)
+    sbref_pre = sbref_preprocess(settings=settings)
 
     # Register SBRef and MNI
     sbref_t1 = sbref_t1_registration(settings=settings)
+
+    # HMC on the EPI
+    hmcwf = epi_hmc(settings=settings)
+
+    # EPI to SBRef
+    epi2sbref = epi_sbref_registration()
 
     workflow.connect([
         (inputnode, bidssrc, [('subject_id', 'subject_id')]),
@@ -65,7 +68,10 @@ def fmriprep_single(subject_list, name='fMRI_prep', settings=None):
         (sbref_pre, sbref_t1, [('outputnode.sbref_unwarped', 'inputnode.sbref_brain')]),
         (t1w_pre, sbref_t1, [
             ('outputnode.t1_brain', 'inputnode.t1_brain'),
-            ('outputnode.t1_seg', 'inputnode.t1_seg')])
+            ('outputnode.t1_seg', 'inputnode.t1_seg')]),
+        (bidssrc, hmcwf, [(('func', _first), 'inputnode.epi')]),
+        (sbref_pre, epi2sbref, [('outputnode.sbref_unwarped', 'inputnode.sbref_brain')]),
+        (hmcwf, epi2sbref, [('outputnode.epi_brain', 'inputnode.epi_brain')])
     ])
 
 
@@ -169,3 +175,8 @@ def fmriprep_single(subject_list, name='fMRI_prep', settings=None):
     #     ])
 
     return workflow
+
+def _first(inlist):
+    if isinstance(inlist, (list, tuple)):
+        inlist = _first(inlist[0])
+    return inlist
