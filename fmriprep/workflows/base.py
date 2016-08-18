@@ -12,16 +12,12 @@ from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 from nipype.interfaces import fsl
 from nipype.interfaces import freesurfer as fs
-import nipype.interfaces.io as nio
+from nipype.interfaces import io as nio
 
 from fmriprep.interfaces import BIDSDataGrabber
 from fmriprep.workflows.anatomical import t1w_preprocessing
+from fmriprep.workflows.sbref import sbref_workflow, sbref_t1_registration
 from fmriprep.workflows.fieldmap import phase_diff_and_magnitudes
-
-from fmriprep.workflows.fieldmap.se_pair_workflow import se_pair_workflow
-from fmriprep.workflows.fieldmap.base import fieldmap_decider
-from fmriprep.workflows.sbref import sbref_workflow
-from fmriprep.workflows import sbref
 from fmriprep.workflows.epi import (
     epi_unwarp, epi_hmc, epi_mean_t1_registration, epi_mni_transformation)
 
@@ -47,20 +43,29 @@ def fmriprep_single(subject_list, name='fMRI_prep', settings=None):
                       name='BIDSDatasource')
 
     # Preprocessing of T1w
-    # t1w_preproc = t1w_preprocessing(settings=settings)
+    t1w_pre = t1w_preprocessing(settings=settings)
 
     # Estimate fieldmap
     fmap_est = phase_diff_and_magnitudes()
+
+    # Correct SBRef
     sbref_pre = sbref_workflow(settings=settings)
+
+    # Register SBRef and MNI
+    sbref_t1 = sbref_t1_registration(settings=settings)
 
     workflow.connect([
         (inputnode, bidssrc, [('subject_id', 'subject_id')]),
-        # (bidssrc, t1w_preproc, [('t1w', 'inputnode.t1w')]),
+        (bidssrc, t1w_pre, [('t1w', 'inputnode.t1w')]),
         (bidssrc, fmap_est, [('fmap', 'inputnode.input_images')]),
         (bidssrc, sbref_pre, [('sbref', 'inputnode.sbref')]),
         (fmap_est, sbref_pre, [('outputnode.fmap', 'inputnode.fmap'),
                                ('outputnode.fmap_ref', 'inputnode.fmap_ref'),
-                               ('outputnode.fmap_mask', 'inputnode.fmap_mask')])
+                               ('outputnode.fmap_mask', 'inputnode.fmap_mask')]),
+        (sbref_pre, sbref_t1, [('outputnode.sbref_unwarped', 'inputnode.sbref_brain')]),
+        (t1w_pre, sbref_t1, [
+            ('outputnode.t1_brain', 'inputnode.t1_brain'),
+            ('outputnode.t1_seg', 'inputnode.t1_seg')])
     ])
 
 
