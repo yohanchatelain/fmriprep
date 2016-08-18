@@ -47,15 +47,20 @@ def fmriprep_single(subject_list, name='fMRI_prep', settings=None):
                       name='BIDSDatasource')
 
     # Preprocessing of T1w
-    t1w_preproc = t1w_preprocessing(settings=settings)
+    # t1w_preproc = t1w_preprocessing(settings=settings)
 
     # Estimate fieldmap
     fmap_est = phase_diff_and_magnitudes()
+    sbref_pre = sbref_workflow(settings=settings)
 
     workflow.connect([
         (inputnode, bidssrc, [('subject_id', 'subject_id')]),
-        (bidssrc, t1w_preproc, [('t1w', 'inputnode.t1w')]),
-        (bidssrc, fmap_est, [('t1w', 'inputnode.input_images')])
+        # (bidssrc, t1w_preproc, [('t1w', 'inputnode.t1w')]),
+        (bidssrc, fmap_est, [('fmap', 'inputnode.input_images')]),
+        (bidssrc, sbref_pre, [('sbref', 'inputnode.sbref')]),
+        (fmap_est, sbref_pre, [('outputnode.fmap', 'inputnode.fmap'),
+                               ('outputnode.fmap_ref', 'inputnode.fmap_ref'),
+                               ('outputnode.fmap_mask', 'inputnode.fmap_mask')])
     ])
 
 
