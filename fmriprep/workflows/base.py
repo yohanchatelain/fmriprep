@@ -15,7 +15,7 @@ from nipype.interfaces import freesurfer as fs
 import nipype.interfaces.io as nio
 
 from fmriprep.workflows.anatomical import t1w_preprocessing
-from fmriprep.workflows.fieldmap.se_pair_workflow import se_pair_workflow
+from fmriprep.workflows.fieldmap.se_fmap_workflow import se_fmap_workflow
 from fmriprep.workflows.fieldmap.fieldmap_to_phasediff import fieldmap_to_phasediff
 from fmriprep.workflows.fieldmap.base import fieldmap_decider
 from fmriprep.workflows.sbref import sbref_workflow
@@ -109,7 +109,7 @@ def fmriprep_single(subject_data, name='fMRI_prep', settings=None):
         sbref_wf.inputs.inputnode.hmc_mats = []  # FIXME: plug MCFLIRT output here
         sbref_t1 = sbref.sbref_t1_registration(settings=settings)
         unwarp_wf = epi_unwarp(settings=settings)
-        sepair_wf = se_pair_workflow(settings=settings)
+        sepair_wf = se_fmap_workflow(settings=settings)
         workflow.connect([
             (inputnode, sepair_wf, [('fieldmaps', 'inputnode.input_images')]),
             (inputnode, sbref_wf, [('sbref', 'inputnode.sbref')]),
