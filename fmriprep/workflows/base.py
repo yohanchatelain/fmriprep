@@ -79,12 +79,7 @@ def fmriprep_single(subject_list, name='fMRI_prep', settings=None):
         (bidssrc, epiunwarp_wf, [(('func', _first), 'inputnode.epi')]),
         (fmap_est, epiunwarp_wf, [('outputnode.fmap', 'inputnode.fmap'),
                                   ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
-                                  ('outputnode.fmap_ref', 'inputnode.fmap_ref')]),
-
-        (epi_hmc_wf, epiunwarp_wf, [
-            ('outputnode.epi_brain', 'inputnode.epi_brain')]),
-
-
+                                  ('outputnode.fmap_ref', 'inputnode.fmap_ref')])
     ])
 
 
