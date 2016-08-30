@@ -22,7 +22,7 @@ from fmriprep.workflows.epi import (
     epi_unwarp, epi_hmc, epi_sbref_registration,
     epi_mean_t1_registration, epi_mni_transformation)
 
-def fmriprep_single(subject_list, name='fMRI_prep', settings=None):
+def wf_ds054_type(subject_list, name='fMRI_prep', settings=None):
     """
     The main fmri preprocessing workflow.
     """
@@ -81,7 +81,69 @@ def fmriprep_single(subject_list, name='fMRI_prep', settings=None):
                                   ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
                                   ('outputnode.fmap_ref', 'inputnode.fmap_ref')])
     ])
+    return workflow
 
+
+def wf_ds05_type(subject_list, name='fMRI_prep', settings=None):
+    """
+    The main fmri preprocessing workflow.
+    """
+
+    if settings is None:
+        settings = {}
+
+    workflow = pe.Workflow(name=name)
+
+    inputnode = pe.Node(niu.IdentityInterface(fields=['subject_id']),
+                        name='inputnode')
+    inputnode.iterables = [('subject_id', subject_list)]
+
+    bidssrc = pe.Node(BIDSDataGrabber(bids_root=settings['bids_root']),
+                      name='BIDSDatasource')
+
+    # Preprocessing of T1w (includes registration to MNI)
+    t1w_pre = t1w_preprocessing(settings=settings)
+
+    # Estimate fieldmap
+    fmap_est = phase_diff_and_magnitudes()
+
+    # Correct SBRef
+    sbref_pre = sbref_preprocess(settings=settings)
+
+    # Register SBRef to T1
+    sbref_t1 = sbref_t1_registration(settings=settings)
+
+    # HMC on the EPI
+    hmcwf = epi_hmc(settings=settings)
+
+    # EPI to SBRef
+    epi2sbref = epi_sbref_registration()
+
+    # EPI unwarp
+    epiunwarp_wf = epi_unwarp(settings=settings)
+
+    workflow.connect([
+        (inputnode, bidssrc, [('subject_id', 'subject_id')]),
+        (bidssrc, t1w_pre, [('t1w', 'inputnode.t1w')]),
+        (bidssrc, fmap_est, [('fmap', 'inputnode.input_images')]),
+        (bidssrc, sbref_pre, [('sbref', 'inputnode.sbref')]),
+        (fmap_est, sbref_pre, [('outputnode.fmap', 'inputnode.fmap'),
+                               ('outputnode.fmap_ref', 'inputnode.fmap_ref'),
+                               ('outputnode.fmap_mask', 'inputnode.fmap_mask')]),
+        (sbref_pre, sbref_t1, [('outputnode.sbref_unwarped', 'inputnode.sbref_brain')]),
+        (t1w_pre, sbref_t1, [
+            ('outputnode.t1_brain', 'inputnode.t1_brain'),
+            ('outputnode.t1_seg', 'inputnode.t1_seg')]),
+        (bidssrc, hmcwf, [(('func', _first), 'inputnode.epi')]),
+        (sbref_pre, epi2sbref, [('outputnode.sbref_unwarped', 'inputnode.sbref_brain')]),
+        (hmcwf, epi2sbref, [('outputnode.epi_brain', 'inputnode.epi_brain')]),
+
+        (bidssrc, epiunwarp_wf, [(('func', _first), 'inputnode.epi')]),
+        (fmap_est, epiunwarp_wf, [('outputnode.fmap', 'inputnode.fmap'),
+                                  ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
+                                  ('outputnode.fmap_ref', 'inputnode.fmap_ref')])
+    ])
+    return workflow
 
     # inputnode = pe.Node(niu.IdentityInterface(
     #     fields=['fieldmaps', 't1', 'func', 'sbref']), name='inputnode')
@@ -180,7 +242,6 @@ def fmriprep_single(subject_list, name='fMRI_prep', settings=None):
     #         ]),
     #     ])
 
-    return workflow
 
 def _first(inlist):
     if isinstance(inlist, (list, tuple)):
