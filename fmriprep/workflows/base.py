@@ -136,6 +136,7 @@ def wf_ds005_type(subject_list, name='fMRI_prep', settings=None):
         (hmcwf, epi_2_t1, [('outputnode.epi_mean', 'inputnode.epi_mean')]),
         (t1w_pre, epi_2_t1, [('outputnode.t1_brain', 'inputnode.t1_brain'),
                              ('outputnode.t1_seg', 'inputnode.t1_seg')]),
+        (bidssrc, epi_mni_trans_wf, [(('func', _first), 'inputnode.epi')]),
         (epi_2_t1, epi_mni_trans_wf, [('outputnode.mat_epi_to_t1', 'inputnode.mat_epi_to_t1')]),
         (hmcwf, epi_mni_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms'),
                                    ('outputnode.epi_mask', 'inputnode.epi_mask')]),
