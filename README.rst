@@ -8,8 +8,8 @@ as well as for open-source software distribution.
 .. image:: https://circleci.com/gh/poldracklab/fmriprep/tree/master.svg?style=shield
   :target: https://circleci.com/gh/poldracklab/fmriprep/tree/master
 
-.. image:: https://readthedocs.org/projects/preprocessing-workflow/badge/?version=latest
-  :target: http://preprocessing-workflow.readthedocs.io/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/fmriprep/badge/?version=latest
+  :target: http://fmriprep.readthedocs.io/en/latest/?badge=latest
   :alt: Documentation Status
 
 .. image:: https://img.shields.io/pypi/v/fmriprep.svg
