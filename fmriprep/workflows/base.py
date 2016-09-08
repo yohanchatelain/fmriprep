@@ -23,7 +23,7 @@ from fmriprep.workflows.epi import (
     epi_mean_t1_registration, epi_mni_transformation)
 
 def base_workflow_enumerator(subject_list, settings):
-    workflow = pe.Workflow(name='workflow_enumberator')
+    workflow = pe.Workflow(name='workflow_enumerator')
 
     workflow_generator = pe.MapNode(
         name='workflow_generator,
@@ -33,7 +33,7 @@ def base_workflow_enumerator(subject_list, settings):
     )
     workflow.subject_id = subject_list
     workflow.settings = settings
-    workflow_generator.run()
+    return workflow_generator
 
 def base_workflow_generator(subject_id, settings):
     subject_data = collect_bids_data(settings.bids_root, subject_id)
