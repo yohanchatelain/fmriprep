@@ -26,7 +26,7 @@ def base_workflow_enumerator(subject_list, settings):
     workflow = pe.Workflow(name='workflow_enumerator')
 
     workflow_generator = pe.MapNode(
-        name='workflow_generator,
+        name='workflow_generator',
         interface=Function(input_names=['subject_id', 'settings']),
         function=base_workflow_generator,
         iterfield=['subject_id']
@@ -37,7 +37,6 @@ def base_workflow_enumerator(subject_list, settings):
 
 def base_workflow_generator(subject_id, settings):
     subject_data = collect_bids_data(settings.bids_root, subject_id)
-    if has_t1 and has_sbref and has_gre_phasediff and not fieldmap_ and not spiral_echo_:
     if (subject_data['t1w'] != [] and subject_data['sbref'] != [] and 
             fieldmap_type(subject_data) == 'gre'):
         wf_ds054(subject_data).run()
