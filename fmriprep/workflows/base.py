@@ -7,6 +7,7 @@ Created on Wed Dec  2 17:35:40 2015
 
 @author: craigmoodie
 """
+import sys
 
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
@@ -15,6 +16,7 @@ from nipype.interfaces import freesurfer as fs
 from nipype.interfaces import io as nio
 
 from fmriprep.interfaces import BIDSDataGrabber
+from fmriprep.utils.misc import collect_bids_data
 from fmriprep.workflows.anatomical import t1w_preprocessing
 from fmriprep.workflows.sbref import sbref_preprocess, sbref_t1_registration
 from fmriprep.workflows.fieldmap import phase_diff_and_magnitudes
@@ -23,28 +25,35 @@ from fmriprep.workflows.epi import (
     epi_mean_t1_registration, epi_mni_transformation)
 
 def base_workflow_enumerator(subject_list, settings):
+    #workflow_generator = pe.MapNode(
+    #    name='workflow_generator',
+    #    interface=niu.Function(input_names=['subject_id', 'settings'],
+    #                           output_names=['generated_workflow']),
+    #    function=base_workflow_generator,
+    #    iterfield=['subject_id']
+    #)
     workflow = pe.Workflow(name='workflow_enumerator')
+    generated_list = []
+    for subject in subject_list:
+        generated_workflow = base_workflow_generator(subject, settings)
+        if generated_workflow:
+            generated_workflow.write_graph(graph2use='exec')
+            generated_list.append(generated_workflow)
+            sys.exit()
+    workflow.add_nodes(generated_list)
 
-    workflow_generator = pe.MapNode(
-        name='workflow_generator',
-        interface=Function(input_names=['subject_id', 'settings']),
-        function=base_workflow_generator,
-        iterfield=['subject_id']
-    )
-    workflow.subject_id = subject_list
-    workflow.settings = settings
-    return workflow_generator
+    return workflow
 
 def base_workflow_generator(subject_id, settings):
-    subject_data = collect_bids_data(settings.bids_root, subject_id)
-    if (subject_data['t1w'] != [] and subject_data['sbref'] != [] and 
-            fieldmap_type(subject_data) == 'gre'):
-        wf_ds054(subject_data).run()
-    if (subject_data['t1w'] != [] and subject_data['sbref'] == [] and 
-            fieldmap_type(subject_data) == None):
-        wf_ds005(subject_data).run()
+    subject_data = collect_bids_data(settings['bids_root'], subject_id)
+    print(subject_data)
+    if (subject_data['t1w'] == [] and subject_data['sbref'] != []):
+        return wf_ds054_type(subject_data, settings)
+    if (subject_data['t1w'] != [] and subject_data['sbref'] == []):
+        return wf_ds005_type(subject_data, settings)
+    return None
 
-def wf_ds054_type(subject_data, name='fMRI_prep', settings=None):
+def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
     """
     The main fmri preprocessing workflow, for the ds054-type of data:
 
@@ -65,7 +74,7 @@ def wf_ds054_type(subject_data, name='fMRI_prep', settings=None):
     #                    name='inputnode')
     #  inputnode.iterables = [('subject_id', subject_list)]
 
-    bidssrc = pe.Node(BIDSDataGrabber(bids_root=settings['bids_root']), 
+    bidssrc = pe.Node(BIDSDataGrabber(subject_data=subject_data), 
                       subject_id=subject_id, name='BIDSDatasource')
 
     # Preprocessing of T1w (includes registration to MNI)
@@ -82,7 +91,7 @@ def wf_ds054_type(subject_data, name='fMRI_prep', settings=None):
 
     # HMC on the EPI
     hmcwf = epi_hmc(settings=settings)
-    hmcwf.iterables = ('inputnode.epi', bidssrc.func)
+    hmcwf.inputs = ('epi', bidssrc.func)
 
     # EPI to SBRef
     epi2sbref = epi_sbref_registration()
@@ -92,7 +101,7 @@ def wf_ds054_type(subject_data, name='fMRI_prep', settings=None):
     epiunwarp_wf.iterables = ('inputnode.epi', bidssrc.func)
 
     workflow.connect([
-        (inputnode, bidssrc, [('subject_id', 'subject_id')]),
+        #  (inputnode, bidssrc, [('subject_id', 'subject_id')]),
         (bidssrc, t1w_pre, [('t1w', 'inputnode.t1w')]),
         (bidssrc, fmap_est, [('fmap', 'inputnode.input_images')]),
         (bidssrc, sbref_pre, [('sbref', 'inputnode.sbref')]),
@@ -103,11 +112,11 @@ def wf_ds054_type(subject_data, name='fMRI_prep', settings=None):
         (t1w_pre, sbref_t1, [
             ('outputnode.t1_brain', 'inputnode.t1_brain'),
             ('outputnode.t1_seg', 'inputnode.t1_seg')]),
-        #  (bidssrc, hmcwf, [(('func', _first), 'inputnode.epi')]),
         (sbref_pre, epi2sbref, [('outputnode.sbref_unwarped', 'inputnode.sbref_brain')]),
         (hmcwf, epi2sbref, [('outputnode.epi_brain', 'inputnode.epi_brain')]),
 
         #  (bidssrc, epiunwarp_wf, [(('func', _first), 'inputnode.epi')]),
+        (hmcwf, epiunwarp_wf, [('inputnode.epi', 'inputnode.epi')]),
         (fmap_est, epiunwarp_wf, [('outputnode.fmap', 'inputnode.fmap'),
                                   ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
                                   ('outputnode.fmap_ref', 'inputnode.fmap_ref')])
@@ -115,7 +124,7 @@ def wf_ds054_type(subject_data, name='fMRI_prep', settings=None):
     return workflow
 
 
-def wf_ds005_type(subject_data, name='fMRI_prep', settings=None):
+def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
     """
     The main fmri preprocessing workflow, for the ds005-type of data:
 
@@ -132,11 +141,11 @@ def wf_ds005_type(subject_data, name='fMRI_prep', settings=None):
 
     workflow = pe.Workflow(name=name)
 
-    inputnode = pe.Node(niu.IdentityInterface(fields=['subject_id']),
-                        name='inputnode')
-    inputnode.iterables = [('subject_id', subject_list)]
+    #  inputnode = pe.Node(niu.IdentityInterface(fields=['subject_id']),
+    #                      name='inputnode')
+    #  inputnode.iterables = [('subject_id', subject_list)]
 
-    bidssrc = pe.Node(BIDSDataGrabber(bids_root=settings['bids_root']),
+    bidssrc = pe.Node(BIDSDataGrabber(subject_data=subject_data),
                       name='BIDSDatasource')
 
     # Preprocessing of T1w (includes registration to MNI)
@@ -144,27 +153,23 @@ def wf_ds005_type(subject_data, name='fMRI_prep', settings=None):
 
     # HMC on the EPI
     hmcwf = epi_hmc(settings=settings)
-    hmcwf.iterables('inputnode.epi', bidssrc.func)
+    hmcwf.get_node('inputnode').iterables = ('epi', subject_data['func'])
 
     # mean EPI registration to T1w
     epi_2_t1 = epi_mean_t1_registration(settings=settings)
-    epi_2_t1.iterables('inputnode.epi', bidssrc.func)
 
     # Apply transforms in 1 shot
     epi_mni_trans_wf = epi_mni_transformation(settings=settings)
-    epi_mni_trans_wf.iterables('inputnode.epi', bidssrc.func)
 
 
     workflow.connect([
-        (inputnode, bidssrc, [('subject_id', 'subject_id')]),
         (bidssrc, t1w_pre, [('t1w', 'inputnode.t1w')]),
-        #  (bidssrc, hmcwf, [(('func', _first), 'inputnode.epi')]),
-        #  (bidssrc, epi_2_t1, [(('func', _first), 'inputnode.epi')]),
+        (hmcwf, epi_2_t1, [('inputnode.epi', 'inputnode.epi')]),
 
         (hmcwf, epi_2_t1, [('outputnode.epi_mean', 'inputnode.epi_mean')]),
         (t1w_pre, epi_2_t1, [('outputnode.t1_brain', 'inputnode.t1_brain'),
                              ('outputnode.t1_seg', 'inputnode.t1_seg')]),
-        #  (bidssrc, epi_mni_trans_wf, [(('func', _first), 'inputnode.epi')]),
+        (hmcwf, epi_mni_trans_wf, [('inputnode.epi', 'inputnode.epi')]),
         (epi_2_t1, epi_mni_trans_wf, [('outputnode.mat_epi_to_t1', 'inputnode.mat_epi_to_t1')]),
         (hmcwf, epi_mni_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms'),
                                    ('outputnode.epi_mask', 'inputnode.epi_mask')]),
@@ -173,6 +178,7 @@ def wf_ds005_type(subject_data, name='fMRI_prep', settings=None):
                                       'inputnode.t1_2_mni_forward_transform')])
 
     ])
+
     return workflow
 
 def _first(inlist):
