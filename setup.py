@@ -8,9 +8,6 @@
 import os
 import sys
 
-from fmriprep.info import (__version__, __author__, __copyright__, __credits__,
-    __license__, __maintainer__, __email__, __status__, __url__,
-    __packagename__, __description__, __longdesc__)
 
 def main():
     """ Install entry-point """
@@ -22,7 +19,7 @@ def main():
     # Read vars from info file
     module_file =os.path.join(this_path, 'fmriprep', 'info.py')
     with open(module_file) as fvars:
-        exec(compile(fvars.read(), module_file, 'exec'))
+       exec(compile(fvars.read(), module_file, 'exec'))
 
     REQ_LINKS = []
     with open('requirements.txt', 'r') as rfile:
