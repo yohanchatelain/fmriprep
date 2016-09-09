@@ -7,8 +7,6 @@ Created on Wed Dec  2 17:35:40 2015
 
 @author: craigmoodie
 """
-import sys
-
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 from nipype.interfaces import fsl
@@ -25,21 +23,12 @@ from fmriprep.workflows.epi import (
     epi_mean_t1_registration, epi_mni_transformation)
 
 def base_workflow_enumerator(subject_list, settings):
-    #workflow_generator = pe.MapNode(
-    #    name='workflow_generator',
-    #    interface=niu.Function(input_names=['subject_id', 'settings'],
-    #                           output_names=['generated_workflow']),
-    #    function=base_workflow_generator,
-    #    iterfield=['subject_id']
-    #)
     workflow = pe.Workflow(name='workflow_enumerator')
     generated_list = []
     for subject in subject_list:
         generated_workflow = base_workflow_generator(subject, settings)
         if generated_workflow:
-            generated_workflow.write_graph(graph2use='exec')
             generated_list.append(generated_workflow)
-            sys.exit()
     workflow.add_nodes(generated_list)
 
     return workflow
