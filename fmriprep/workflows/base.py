@@ -35,8 +35,7 @@ def base_workflow_enumerator(subject_list, settings):
 
 def base_workflow_generator(subject_id, settings):
     subject_data = collect_bids_data(settings['bids_root'], subject_id)
-    print(subject_data)
-    if (subject_data['t1w'] == [] and subject_data['sbref'] != []):
+    if (subject_data['t1w'] != [] and subject_data['sbref'] != []):
         return wf_ds054_type(subject_data, settings)
     if (subject_data['t1w'] != [] and subject_data['sbref'] == []):
         return wf_ds005_type(subject_data, settings)
@@ -63,8 +62,7 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
     #                    name='inputnode')
     #  inputnode.iterables = [('subject_id', subject_list)]
 
-    bidssrc = pe.Node(BIDSDataGrabber(subject_data=subject_data), 
-                      subject_id=subject_id, name='BIDSDatasource')
+    bidssrc = pe.Node(BIDSDataGrabber(subject_data=subject_data), name='BIDSDatasource')
 
     # Preprocessing of T1w (includes registration to MNI)
     t1w_pre = t1w_preprocessing(settings=settings)
@@ -80,17 +78,15 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
 
     # HMC on the EPI
     hmcwf = epi_hmc(settings=settings)
-    hmcwf.inputs = ('epi', bidssrc.func)
+    hmcwf.get_node('inputnode').iterables = ('epi', subject_data['func'])
 
     # EPI to SBRef
     epi2sbref = epi_sbref_registration()
 
     # EPI unwarp
     epiunwarp_wf = epi_unwarp(settings=settings)
-    epiunwarp_wf.iterables = ('inputnode.epi', bidssrc.func)
 
     workflow.connect([
-        #  (inputnode, bidssrc, [('subject_id', 'subject_id')]),
         (bidssrc, t1w_pre, [('t1w', 'inputnode.t1w')]),
         (bidssrc, fmap_est, [('fmap', 'inputnode.input_images')]),
         (bidssrc, sbref_pre, [('sbref', 'inputnode.sbref')]),
@@ -104,7 +100,6 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
         (sbref_pre, epi2sbref, [('outputnode.sbref_unwarped', 'inputnode.sbref_brain')]),
         (hmcwf, epi2sbref, [('outputnode.epi_brain', 'inputnode.epi_brain')]),
 
-        #  (bidssrc, epiunwarp_wf, [(('func', _first), 'inputnode.epi')]),
         (hmcwf, epiunwarp_wf, [('inputnode.epi', 'inputnode.epi')]),
         (fmap_est, epiunwarp_wf, [('outputnode.fmap', 'inputnode.fmap'),
                                   ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
