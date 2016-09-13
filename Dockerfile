@@ -50,7 +50,7 @@ RUN pip install -r requirements.txt
 
 COPY . fmriprep/
 RUN cd fmriprep && \
-    pip install -e .
+    pip install -e .[all]
 
 WORKDIR /root/
 COPY build/files/run_* /usr/bin/
