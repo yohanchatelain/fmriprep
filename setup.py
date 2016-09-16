@@ -2,14 +2,12 @@
 # -*- coding: utf-8 -*-
 # @Author: oesteban
 # @Date:   2015-11-19 16:44:27
-# @Last Modified by:   oesteban
-# @Last Modified time: 2016-09-13 11:36:06
 """ fmriprep setup script """
-from io import open
 
 
 def main():
     """ Install entry-point """
+    from io import open
     from os import path as op
     from glob import glob
     from inspect import getfile, currentframe
@@ -39,14 +37,13 @@ def main():
         url=ldict['__url__'],
         license=ldict['__license__'],
         classifiers=ldict['CLASSIFIERS'],
+        download_url=ldict['DOWNLOAD_URL'],
         # Dependencies handling
         setup_requires=[],
         install_requires=ldict['REQUIRES'],
         tests_require=ldict['TESTS_REQUIRES'],
         extras_require=ldict['EXTRA_REQUIRES'],
         dependency_links=ldict['LINKS_REQUIRES'],
-        download_url='https://pypi.python.org/packages/source/f/fmriprep/'
-                     'fmriprep-%s.tar.gz' % ldict['__version__'],
         package_data={'fmriprep': ['data/*.json']},
         entry_points={'console_scripts': ['fmriprep=fmriprep.run_workflow:main',]},
         packages=find_packages(),
