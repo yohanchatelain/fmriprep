@@ -111,9 +111,14 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     ])
 
     # Connect reporting nodes
-    t1_stripped_overlay = pe.Node(niu.Function(
-        input_names=['in_file', 'overlay_file', 'out_file'], output_names=['out_file'],
-        function=stripped_brain_overlay), name='PNG_T1_SkullStrip')
+    t1_stripped_overlay = pe.Node(
+        niu.Function(
+            input_names=['in_file', 'overlay_file', 'out_file'],
+            output_names=['out_file'],
+            function=stripped_brain_overlay
+        ),
+        name='PNG_T1_SkullStrip'
+    )
     t1_stripped_overlay.inputs.out_file = 't1_stripped_overlay.png'
 
     # The T1-to-MNI will be plotted using the segmentation. That's why we transform it first
