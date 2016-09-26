@@ -145,7 +145,6 @@ def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
     # Apply transforms in 1 shot
     epi_mni_trans_wf = epi_mni_transformation(settings=settings)
 
-
     workflow.connect([
         (bidssrc, t1w_pre, [('t1w', 'inputnode.t1w')]),
         (hmcwf, epi_2_t1, [('inputnode.epi', 'inputnode.epi')]),
