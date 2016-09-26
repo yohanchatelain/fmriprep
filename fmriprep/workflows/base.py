@@ -8,16 +8,13 @@ Created on Wed Dec  2 17:35:40 2015
 @author: craigmoodie
 """
 from nipype.pipeline import engine as pe
-from nipype.interfaces import utility as niu
-from nipype.interfaces import fsl
-from nipype.interfaces import freesurfer as fs
-from nipype.interfaces import io as nio
 
 from fmriprep.interfaces import BIDSDataGrabber
 from fmriprep.utils.misc import collect_bids_data
 from fmriprep.workflows.anatomical import t1w_preprocessing
 from fmriprep.workflows.sbref import sbref_preprocess, sbref_t1_registration
 from fmriprep.workflows.fieldmap import phase_diff_and_magnitudes
+from fmriprep.workflows import confounds
 from fmriprep.workflows.epi import (
     epi_unwarp, epi_hmc, epi_sbref_registration,
     epi_mean_t1_registration, epi_mni_transformation)
@@ -86,6 +83,9 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
     # EPI unwarp
     epiunwarp_wf = epi_unwarp(settings=settings)
 
+    # get confounds
+    confounds_wf = confounds.discover_wf(settings=settings)
+
     workflow.connect([
         (bidssrc, t1w_pre, [('t1w', 'inputnode.t1w')]),
         (bidssrc, fmap_est, [('fmap', 'inputnode.input_images')]),
@@ -142,6 +142,9 @@ def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
     # mean EPI registration to T1w
     epi_2_t1 = epi_mean_t1_registration(settings=settings)
 
+    # get confounds
+    confounds_wf = confounds.discover_wf(settings=settings)
+
     # Apply transforms in 1 shot
     epi_mni_trans_wf = epi_mni_transformation(settings=settings)
 
@@ -159,7 +162,6 @@ def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
         (t1w_pre, epi_mni_trans_wf, [('outputnode.t1_brain', 'inputnode.t1'),
                                      ('outputnode.t1_2_mni_forward_transform',
                                       'inputnode.t1_2_mni_forward_transform')])
-
     ])
 
     return workflow
