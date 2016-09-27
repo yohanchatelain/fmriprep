@@ -84,7 +84,7 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
     epiunwarp_wf = epi_unwarp(settings=settings)
 
     # get confounds
-    confounds_wf = confounds.discover_wf(settings=settings)
+    confounds_wf = confounds.discover_wf()
 
     workflow.connect([
         (bidssrc, t1w_pre, [('t1w', 'inputnode.t1w')]),
@@ -99,6 +99,10 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
             ('outputnode.t1_seg', 'inputnode.t1_seg')]),
         (sbref_pre, epi2sbref, [('outputnode.sbref_unwarped', 'inputnode.sbref_brain')]),
         (hmcwf, epi2sbref, [('outputnode.epi_brain', 'inputnode.epi_brain')]),
+
+        (t1w_pre, confounds_wf, [('outputnode.t1_seg', 'inputnode.t1_seg')]),
+        (hmcwf, confounds_wf, [('outputnode.movpar_file', 'inputnode.movpar_file'),
+                               ('outputnode.epi_brain', 'inputnode.fmri_file')]),
 
         (hmcwf, epiunwarp_wf, [('inputnode.epi', 'inputnode.epi')]),
         (fmap_est, epiunwarp_wf, [('outputnode.fmap', 'inputnode.fmap'),
@@ -143,7 +147,7 @@ def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
     epi_2_t1 = epi_mean_t1_registration(settings=settings)
 
     # get confounds
-    confounds_wf = confounds.discover_wf(settings=settings)
+    confounds_wf = confounds.discover_wf()
 
     # Apply transforms in 1 shot
     epi_mni_trans_wf = epi_mni_transformation(settings=settings)
@@ -155,6 +159,11 @@ def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
         (hmcwf, epi_2_t1, [('outputnode.epi_mean', 'inputnode.epi_mean')]),
         (t1w_pre, epi_2_t1, [('outputnode.t1_brain', 'inputnode.t1_brain'),
                              ('outputnode.t1_seg', 'inputnode.t1_seg')]),
+
+        (t1w_pre, confounds_wf, [('outputnode.t1_seg', 'inputnode.t1_seg')]),
+        (hmcwf, confounds_wf, [('outputnode.movpar_file', 'inputnode.movpar_file'),
+                               ('outputnode.epi_brain', 'inputnode.fmri_file')]),
+
         (hmcwf, epi_mni_trans_wf, [('inputnode.epi', 'inputnode.epi')]),
         (epi_2_t1, epi_mni_trans_wf, [('outputnode.mat_epi_to_t1', 'inputnode.mat_epi_to_t1')]),
         (hmcwf, epi_mni_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms'),
