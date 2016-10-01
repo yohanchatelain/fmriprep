@@ -107,7 +107,8 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
         (hmcwf, epiunwarp_wf, [('inputnode.epi', 'inputnode.epi')]),
         (fmap_est, epiunwarp_wf, [('outputnode.fmap', 'inputnode.fmap'),
                                   ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
-                                  ('outputnode.fmap_ref', 'inputnode.fmap_ref')])
+                                  ('outputnode.fmap_ref', 'inputnode.fmap_ref')]),
+        (epiunwarp_wf, confounds_wf, [('outputnode.epi_mask', 'inputnode.epi_mask')])
     ])
     return workflow
 
