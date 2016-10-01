@@ -84,7 +84,7 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
     epiunwarp_wf = epi_unwarp(settings=settings)
 
     # get confounds
-    confounds_wf = confounds.discover_wf()
+    confounds_wf = confounds.discover_wf(settings)
 
     workflow.connect([
         (bidssrc, t1w_pre, [('t1w', 'inputnode.t1w')]),
@@ -148,7 +148,7 @@ def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
     epi_2_t1 = epi_mean_t1_registration(settings=settings)
 
     # get confounds
-    confounds_wf = confounds.discover_wf()
+    confounds_wf = confounds.discover_wf(settings)
 
     # Apply transforms in 1 shot
     epi_mni_trans_wf = epi_mni_transformation(settings=settings)
