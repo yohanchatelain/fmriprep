@@ -20,10 +20,11 @@ from nipype.interfaces import utility as niu
 from nipype.pipeline import engine as pe
 
 from niworkflows.anat.skullstrip import afni_wf as skullstrip_wf
+from niworkflows.anat.mni import RobustMNINormalization
 from niworkflows.common import reorient as mri_reorient_wf
 
 from fmriprep.interfaces import DerivativesDataSink, IntraModalMerge
-from fmriprep.data import get_ants_oasis_template_ras, get_mni_template
+from niworkflows.data import get_mni_template
 from fmriprep.viz import stripped_brain_overlay, anatomical_overlay
 
 
@@ -59,21 +60,10 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     # 4. Segmentation
     t1_seg = pe.Node(fsl.FAST(no_bias=True, probability_maps=True), name='Segmentation')
 
-    # 5. T1w to MNI registration
-    t1_2_mni = pe.Node(ants.Registration(), name='T1_2_MNI_Registration')
-    t1_2_mni.inputs.num_threads = settings.get('ants_threads', 8)
-    t1_2_mni.inputs.fixed_image = op.join(get_mni_template(), 'MNI152_T1_1mm.nii.gz')
-    t1_2_mni.inputs.fixed_image_mask = op.join(
-        get_mni_template(), 'MNI152_T1_1mm_brain_mask.nii.gz')
-
-    # Hack to avoid re-running ANTs all the times
-    grabber_interface = nio.JSONFileGrabber()
-    setattr(grabber_interface, '_always_run', False)
-    t1_2_mni_params = pe.Node(grabber_interface, name='t1_2_mni_params')
-    t1_2_mni_params.inputs.in_file = (
-        pkgr.resource_filename('fmriprep', 'data/{}.json'.format(
-            settings.get('ants_t1-mni_settings', 't1-mni_registration2')))
-    )
+    # 5. Spatial normalization (T1w to MNI registration)
+    t1_2_mni = pe.Node(RobustMNINormalization(
+        num_threads=settings.get('ants_threads', 6), testing=settings.get('debug', False)),
+        name='T1_2_MNI_Registration')
 
     # Resampe the brain mask and the tissue probability maps into mni space
     bmask_mni = pe.Node(ants.ApplyTransforms(
@@ -91,7 +81,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         (inu_n4, asw, [('output_image', 'inputnode.in_file')]),
         (asw, t1_seg, [('outputnode.out_file', 'in_files')]),
         (inu_n4, t1_2_mni, [('output_image', 'moving_image')]),
-        (asw, t1_2_mni, [('outputnode.out_mask', 'moving_image_mask')]),
+        (asw, t1_2_mni, [('outputnode.out_mask', 'moving_mask')]),
         (t1_seg, outputnode, [('tissue_class_map', 't1_seg')]),
         (inu_n4, outputnode, [('output_image', 'bias_corrected_t1')]),
         (t1_seg, outputnode, [('tissue_class_map', 't1_segmentation')]),
@@ -105,7 +95,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
                                ('forward_invert_flags', 'invert_transform_flags')]),
         (t1_seg, tpms_mni, [('probability_maps', 'input_image')]),
         (t1_2_mni, tpms_mni, [('forward_transforms', 'transforms'),
-                               ('forward_invert_flags', 'invert_transform_flags')]),
+                              ('forward_invert_flags', 'invert_transform_flags')]),
         (asw, outputnode, [
             ('outputnode.out_file', 't1_brain')]),
     ])
@@ -209,41 +199,11 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         (tpms_mni, ds_tpms_mni, [('output_image', 'in_file')])
 
     ])
-
-    # ANTs inputs connected here for clarity
-    workflow.connect([
-        (t1_2_mni_params, t1_2_mni, [
-            ('metric', 'metric'),
-            ('metric_weight', 'metric_weight'),
-            ('dimension', 'dimension'),
-            ('write_composite_transform', 'write_composite_transform'),
-            ('radius_or_number_of_bins', 'radius_or_number_of_bins'),
-            ('shrink_factors', 'shrink_factors'),
-            ('smoothing_sigmas', 'smoothing_sigmas'),
-            ('sigma_units', 'sigma_units'),
-            ('output_transform_prefix', 'output_transform_prefix'),
-            ('transforms', 'transforms'),
-            ('transform_parameters', 'transform_parameters'),
-            ('initial_moving_transform_com', 'initial_moving_transform_com'),
-            ('number_of_iterations', 'number_of_iterations'),
-            ('convergence_threshold', 'convergence_threshold'),
-            ('convergence_window_size', 'convergence_window_size'),
-            ('sampling_strategy', 'sampling_strategy'),
-            ('sampling_percentage', 'sampling_percentage'),
-            ('output_warped_image', 'output_warped_image'),
-            ('use_histogram_matching', 'use_histogram_matching'),
-            ('use_estimate_learning_rate_once',
-             'use_estimate_learning_rate_once'),
-            ('collapse_output_transforms', 'collapse_output_transforms'),
-            ('winsorize_lower_quantile', 'winsorize_lower_quantile'),
-            ('winsorize_upper_quantile', 'winsorize_upper_quantile'),
-        ])
-    ])
-
     return workflow
 
 
 def skullstrip_ants(name='ANTsBrainExtraction', settings=None):
+    from niworkflows.data import get_ants_oasis_template_ras
     if settings is None:
         settings = {'debug': False}
 
