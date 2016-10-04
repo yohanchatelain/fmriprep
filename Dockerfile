@@ -33,7 +33,7 @@
 FROM oesteban/crn_nipype:freesurfer
 
 RUN mkdir -p /opt/c3d && \
-    curl -sSL "https://2a353b13e8d2d9ac21ce543b7064482f771ce658.googledrive.com/host/0BxI12kyv2olZVFhUcGVpYWF3R3c/c3d.tar.gz" \
+    curl -sSL "https://files.osf.io/v1/resources/fvuh8/providers/osfstorage/57f341d6594d9001f591bac2" \
     | tar -xzC /opt/c3d --strip-components 1
 ENV C3DPATH /opt/c3d
 ENV PATH $C3DPATH:$PATH
@@ -42,7 +42,7 @@ RUN rm -rf /usr/local/miniconda/lib/python*/site-packages/nipype* && \
     pip install -e git+https://github.com/nipy/nipype.git@master#egg=nipype && \
     pip install mock && \
     python -c "from matplotlib import font_manager"
-    
+
 
 WORKDIR /root/src
 COPY requirements.txt requirements.txt
