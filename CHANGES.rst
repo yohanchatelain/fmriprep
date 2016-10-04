@@ -1,7 +1,6 @@
 Release 0.1.2
 =============
 
-=======
 * [FIX] Downloads from OSF, remove data downloader (now in niworkflows)
 * [FIX] pybids was missing in the install_requires
 * [DEP] Deprecated -S/--subject-id tag
