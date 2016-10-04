@@ -1,6 +1,8 @@
 Release 0.1.2
 =============
 
+* [FIX] pybids was missing in the install_requires
+* [DEP] Deprecated -S/--subject-id tag
 * [ENH] Accept subjects with several T1w images (#114)
 * [ENH] Documentation updates (#130, #131)
 * [TST] Re-enabled CircleCI tests on one subject from ds054 of OpenfMRI
