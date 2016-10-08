@@ -149,6 +149,7 @@ def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
 
     # get confounds
     confounds_wf = confounds.discover_wf(settings)
+    confounds_wf.get_node('inputnode').iterables = ('epi_transform', 'identity')
 
     # Apply transforms in 1 shot
     epi_mni_trans_wf = epi_mni_transformation(settings=settings)
