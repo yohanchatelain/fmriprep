@@ -135,7 +135,8 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
 
     datasink = pe.Node(
         interface=nio.DataSink(
-            base_directory=op.join(settings['output_dir'], 'images')),
+            base_directory=op.join(settings['output_dir'], 'images')
+        ),
         name='datasink',
         parameterization=False
     )
