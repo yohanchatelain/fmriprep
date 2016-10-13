@@ -65,7 +65,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         num_threads=settings.get('ants_threads', 6), testing=settings.get('debug', False)),
         name='T1_2_MNI_Registration')
 
-    # Resamp;e the brain mask and the tissue probability maps into mni space
+    # Resample the brain mask and the tissue probability maps into mni space
     bmask_mni = pe.Node(ants.ApplyTransforms(
         dimension=3, default_value=0, interpolation='NearestNeighbor'), name='brain_mni_warp')
     bmask_mni.inputs.reference_image = op.join(get_mni_template(), 'MNI152_T1_1mm.nii.gz')
