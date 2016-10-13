@@ -7,6 +7,8 @@ Created on Wed Dec  2 17:35:40 2015
 
 @author: craigmoodie
 """
+from copy import deepcopy
+
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 from nipype.interfaces import fsl
@@ -26,7 +28,9 @@ def base_workflow_enumerator(subject_list, settings):
     workflow = pe.Workflow(name='workflow_enumerator')
     generated_list = []
     for subject in subject_list:
-        generated_workflow = base_workflow_generator(subject, settings)
+        wf_settings = settings.deepcopy(settings)
+        wf_settings['output_dir'] = wf_settings['output_dir'].join(subject)
+        generated_workflow = base_workflow_generator(subject, wf_settings)
         if generated_workflow:
             generated_list.append(generated_workflow)
     workflow.add_nodes(generated_list)
