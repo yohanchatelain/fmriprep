@@ -65,7 +65,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         num_threads=settings.get('ants_threads', 6), testing=settings.get('debug', False)),
         name='T1_2_MNI_Registration')
 
-    # Resampe the brain mask and the tissue probability maps into mni space
+    # Resamp;e the brain mask and the tissue probability maps into mni space
     bmask_mni = pe.Node(ants.ApplyTransforms(
         dimension=3, default_value=0, interpolation='NearestNeighbor'), name='brain_mni_warp')
     bmask_mni.inputs.reference_image = op.join(get_mni_template(), 'MNI152_T1_1mm.nii.gz')
@@ -109,7 +109,18 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         ),
         name='PNG_T1_SkullStrip'
     )
-    t1_stripped_overlay.inputs.out_file = 't1_stripped_overlay.png'
+    t1_stripped_overlay.inputs.out_file = 't1_stripped_overlay.svg'
+
+    #  t1 segmentation mapped onto t1 before registration into mni space
+    t1_seg_native = pe.Node(
+        niu.Function(
+            input_names=['in_file', 'overlay_file', 'out_file'],
+            output_names=['out_file'],
+            function=stripped_brain_overlay
+        ),
+        name='T1SegNative'
+    )
+    t1_seg_native.inputs.out_file = 't1_seg_native.svg'
 
     #  The T1-to-MNI will be plotted using the segmentation.
     #  That's why we transform it first
@@ -127,9 +138,9 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             output_names=['out_file'],
             function=stripped_brain_overlay
         ),
-        name='PNG_T1_to_MNI'
+        name='T1ToMNI'
     )
-    t1_2_mni_overlay.inputs.out_file = 't1_to_mni_overlay.png'
+    t1_2_mni_overlay.inputs.out_file = 't1_to_mni_overlay.svg'
     t1_2_mni_overlay.inputs.overlay_file = op.join(get_mni_template(),
                                                    'MNI152_T1_1mm.nii.gz')
 
@@ -150,6 +161,9 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
                                ('forward_invert_flags', 'invert_transform_flags')]),
         (seg_2_mni, t1_2_mni_overlay, [('output_image', 'in_file')]),
         (t1_2_mni_overlay, datasink, [('out_file', '@t1_2_mni_overlay')]),
+        (t1_seg, t1_seg_native, [('tissue_class_map', 'in_file')]),
+        (inu_n4, t1_seg_native, [('output_image', 'overlay_file')]),
+        (t1_seg_native, datasink, [('out_file', '@t1_seg_native')])
     ])
 
     # Write corrected file in the designated output dir
