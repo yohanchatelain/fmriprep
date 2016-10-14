@@ -28,9 +28,7 @@ def base_workflow_enumerator(subject_list, settings):
     workflow = pe.Workflow(name='workflow_enumerator')
     generated_list = []
     for subject in subject_list:
-        wf_settings = settings.deepcopy(settings)
-        wf_settings['output_dir'] = wf_settings['output_dir'].join(subject)
-        generated_workflow = base_workflow_generator(subject, wf_settings)
+        generated_workflow = base_workflow_generator(subject, settings)
         if generated_workflow:
             generated_list.append(generated_workflow)
     workflow.add_nodes(generated_list)
