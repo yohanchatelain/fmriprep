@@ -21,6 +21,7 @@ from fmriprep.workflows import confounds
 from fmriprep.workflows.epi import (
     epi_unwarp, epi_hmc, epi_sbref_registration,
     epi_mean_t1_registration, epi_mni_transformation)
+from fmriprep.utils.constants import NO_TRANSFORM
 
 def base_workflow_enumerator(subject_list, settings):
     workflow = pe.Workflow(name='workflow_enumerator')
@@ -154,15 +155,7 @@ def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
 
     # get confounds
     confounds_wf = confounds.discover_wf(settings)
-
-    # create identity transform
-    itk_formatter = pe.Node(
-        c3.C3dAffineTool(
-            fsl2ras=True,
-            itk_transform=True,
-            transform_file=os.path.join(os.path.dirname(__file__),
-                                        '../data/identitytransform.txt')),
-        name='ITKFormatter')
+    confounds_wf.get_node('inputnode').inputs.epi_transform = confounds.NO_TRANSFORM
 
     # Apply transforms in 1 shot
     epi_mni_trans_wf = epi_mni_transformation(settings=settings)
@@ -181,9 +174,6 @@ def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
                                ('outputnode.epi_mean', 'inputnode.reference_image'),
                                ('outputnode.epi_mask', 'inputnode.epi_mask')]),
         (epi_2_t1, confounds_wf, [('outputnode.mat_t1_to_epi', 'inputnode.t1_transform')]),
-        (hmcwf, itk_formatter, [('outputnode.epi_brain', 'source_file'),
-                                ('outputnode.epi_brain', 'reference_file')]),
-        (itk_formatter, confounds_wf, [('itk_transform', 'inputnode.epi_transform')]),
 
         (hmcwf, epi_mni_trans_wf, [('inputnode.epi', 'inputnode.epi')]),
         (epi_2_t1, epi_mni_trans_wf, [('outputnode.mat_epi_to_t1', 'inputnode.mat_epi_to_t1')]),
