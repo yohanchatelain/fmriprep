@@ -41,7 +41,6 @@ ENV PATH $C3DPATH:$PATH
 RUN rm -rf /usr/local/miniconda/lib/python*/site-packages/nipype* && \
     pip install -e git+https://github.com/nipy/nipype.git@master#egg=nipype && \
     pip install mock && \
-    pip install pandas && \
     python -c "from matplotlib import font_manager"
 
 
