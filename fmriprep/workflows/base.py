@@ -8,10 +8,12 @@ Created on Wed Dec  2 17:35:40 2015
 @author: craigmoodie
 """
 from nipype.pipeline import engine as pe
+from nipype.interfaces.utility import Merge
 
 from fmriprep.interfaces import BIDSDataGrabber
 from fmriprep.utils.misc import collect_bids_data
 from fmriprep.workflows import confounds
+
 from fmriprep.workflows.anatomical import t1w_preprocessing
 from fmriprep.workflows.sbref import sbref_preprocess, sbref_t1_registration
 from fmriprep.workflows.fieldmap import phase_diff_and_magnitudes
@@ -85,6 +87,10 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
 
     # get confounds
     confounds_wf = confounds.discover_wf(settings)
+    confounds_wf.get_node('inputnode').inputs.t1_transform_flags = [False, True]
+
+    # create list of transforms to resample t1 -> sbref -> epi
+    t1_to_epi_transforms = pe.Node(Merge(2), name='T1ToEPITransforms')
 
     workflow.connect([
         (bidssrc, t1w_pre, [('t1w', 'inputnode.t1w')]),
@@ -104,13 +110,16 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
                                   ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
                                   ('outputnode.fmap_ref', 'inputnode.fmap_ref')]),
 
-        (hmcwf, confounds_wf, [('outputnode.movpar_file', 'inputnode.movpar_file')]),
+        (sbref_t1, t1_to_epi_transforms, [(('outputnode.itk_t1_to_sbr'), 'in1')]),
+        (epi2sbref, t1_to_epi_transforms, [(('outputnode.out_itk'), 'in2')]),
+
+        (t1_to_epi_transforms, confounds_wf, [('out', 'inputnode.t1_transform')]),
+
+        (hmcwf, confounds_wf, [('outputnode.movpar_file', 'inputnode.movpar_file'),
+                               ('outputnode.epi_mean', 'inputnode.reference_image')]),
         (epiunwarp_wf, confounds_wf, [('outputnode.epi_mask', 'inputnode.epi_mask'),
                                       ('outputnode.epi_unwarp', 'inputnode.fmri_file')]),
-        (epi2sbref, confounds_wf, [('outputnode.out_itk', 'inputnode.epi_transform')]),
         (t1w_pre, confounds_wf, [('outputnode.t1_seg', 'inputnode.t1_seg')]),
-        (sbref_t1, confounds_wf, [('outputnode.itk_t1_to_sbr', 'inputnode.t1_transform')]),
-        (sbref_pre, confounds_wf, [('outputnode.sbref_unwarped', 'inputnode.reference_image')])
     ])
     return workflow
 
@@ -151,7 +160,6 @@ def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
 
     # get confounds
     confounds_wf = confounds.discover_wf(settings)
-    confounds_wf.get_node('inputnode').inputs.epi_transform = confounds.NO_TRANSFORM
 
     # Apply transforms in 1 shot
     epi_mni_trans_wf = epi_mni_transformation(settings=settings)
