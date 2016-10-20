@@ -7,21 +7,17 @@ Created on Wed Dec  2 17:35:40 2015
 
 @author: craigmoodie
 """
-import os
-
 from nipype.pipeline import engine as pe
-from nipype.interfaces import c3
 
 from fmriprep.interfaces import BIDSDataGrabber
 from fmriprep.utils.misc import collect_bids_data
+from fmriprep.workflows import confounds
 from fmriprep.workflows.anatomical import t1w_preprocessing
 from fmriprep.workflows.sbref import sbref_preprocess, sbref_t1_registration
 from fmriprep.workflows.fieldmap import phase_diff_and_magnitudes
-from fmriprep.workflows import confounds
 from fmriprep.workflows.epi import (
     epi_unwarp, epi_hmc, epi_sbref_registration,
     epi_mean_t1_registration, epi_mni_transformation)
-from fmriprep.utils.constants import NO_TRANSFORM
 
 def base_workflow_enumerator(subject_list, settings):
     workflow = pe.Workflow(name='workflow_enumerator')
