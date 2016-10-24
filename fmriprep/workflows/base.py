@@ -7,6 +7,8 @@ Created on Wed Dec  2 17:35:40 2015
 
 @author: craigmoodie
 """
+from copy import deepcopy
+
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 from nipype.interfaces import fsl
@@ -68,7 +70,7 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
     t1w_pre = t1w_preprocessing(settings=settings)
 
     # Estimate fieldmap
-    fmap_est = phase_diff_and_magnitudes()
+    fmap_est = phase_diff_and_magnitudes(settings)
 
     # Correct SBRef
     sbref_pre = sbref_preprocess(settings=settings)
@@ -81,7 +83,7 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
     hmcwf.get_node('inputnode').iterables = ('epi', subject_data['func'])
 
     # EPI to SBRef
-    epi2sbref = epi_sbref_registration()
+    epi2sbref = epi_sbref_registration(settings)
 
     # EPI unwarp
     epiunwarp_wf = epi_unwarp(settings=settings)
@@ -97,9 +99,10 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
         (t1w_pre, sbref_t1, [
             ('outputnode.t1_brain', 'inputnode.t1_brain'),
             ('outputnode.t1_seg', 'inputnode.t1_seg')]),
-        (sbref_pre, epi2sbref, [('outputnode.sbref_unwarped', 'inputnode.sbref_brain')]),
+        (sbref_pre, epi2sbref, [('outputnode.sbref_unwarped', 'inputnode.sbref_brain'),
+                                ('outputnode.sbref_unwarped_mask', 'inputnode.sbref_brain_mask')]),
         (hmcwf, epi2sbref, [('outputnode.epi_brain', 'inputnode.epi_brain')]),
-
+        (hmcwf, epi2sbref, [('inputnode.epi', 'inputnode.epi')]),
         (hmcwf, epiunwarp_wf, [('inputnode.epi', 'inputnode.epi')]),
         (fmap_est, epiunwarp_wf, [('outputnode.fmap', 'inputnode.fmap'),
                                   ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
@@ -145,11 +148,9 @@ def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
     # Apply transforms in 1 shot
     epi_mni_trans_wf = epi_mni_transformation(settings=settings)
 
-
     workflow.connect([
         (bidssrc, t1w_pre, [('t1w', 'inputnode.t1w')]),
         (hmcwf, epi_2_t1, [('inputnode.epi', 'inputnode.epi')]),
-
         (hmcwf, epi_2_t1, [('outputnode.epi_mean', 'inputnode.epi_mean')]),
         (t1w_pre, epi_2_t1, [('outputnode.t1_brain', 'inputnode.t1_brain'),
                              ('outputnode.t1_seg', 'inputnode.t1_seg')]),
