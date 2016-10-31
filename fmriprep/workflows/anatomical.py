@@ -113,7 +113,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     t1_stripped_overlay.inputs.out_file = 't1_stripped_overlay.svg'
 
     t1_stripped_overlay_ds = pe.Node(
-        ImageDataSink(base_directory=op.join(settings['output_dir'], 'images')),
+        ImageDataSink(base_directory=settings['output_dir']),
         name='T1StrippedOverlayDS'
     )
 
@@ -129,7 +129,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     t1_seg_native.inputs.out_file = 't1_seg_native.svg'
 
     t1_seg_native_ds = pe.Node(
-        ImageDataSink(base_directory=op.join(settings['output_dir'], 'images')),
+        ImageDataSink(base_directory=settings['output_dir']),
         name='T1SegNativeDS'
     )
 
@@ -156,7 +156,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
                                                    'MNI152_T1_1mm.nii.gz')
 
     t1_2_mni_overlay_ds = pe.Node(
-        ImageDataSink(base_directory=op.join(settings['output_dir'], 'images')),
+        ImageDataSink(base_directory=settings['output_dir']),
         name='T12MNIOverlayDS'
     )
     t1_2_mni_overlay_ds.inputs.overlay_file = op.join(get_mni_template(),
