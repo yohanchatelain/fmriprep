@@ -92,6 +92,7 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
         (bidssrc, t1w_pre, [('t1w', 'inputnode.t1w')]),
         (bidssrc, fmap_est, [('fmap', 'inputnode.input_images')]),
         (bidssrc, sbref_pre, [('sbref', 'inputnode.sbref')]),
+        (bidssrc, sbref_t1, [('sbref', 'inputnode.sbref')]),
         (fmap_est, sbref_pre, [('outputnode.fmap', 'inputnode.fmap'),
                                ('outputnode.fmap_ref', 'inputnode.fmap_ref'),
                                ('outputnode.fmap_mask', 'inputnode.fmap_mask')]),
