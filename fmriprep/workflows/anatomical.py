@@ -144,7 +144,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         name='T1_2_MNI_warp'
     )
     seg_2_mni.inputs.reference_image = op.join(get_mni_icbm152_nlin_asym_09c(),
-                                               'MNI152_T1_1mm.nii.gz')
+                                               'T1_1mm.nii.gz')
 
     t1_2_mni_overlay = pe.Node(
         niu.Function(
@@ -156,14 +156,14 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     )
     t1_2_mni_overlay.inputs.out_file = 't1_to_mni_overlay.svg'
     t1_2_mni_overlay.inputs.overlay_file = op.join(get_mni_icbm152_nlin_asym_09c(),
-                                                   'MNI152_T1_1mm.nii.gz')
+                                                   'T1_1mm.nii.gz')
 
     t1_2_mni_overlay_ds = pe.Node(
         ImageDataSink(base_directory=settings['output_dir']),
         name='T12MNIOverlayDS'
     )
     t1_2_mni_overlay_ds.inputs.overlay_file = op.join(get_mni_icbm152_nlin_asym_09c(),
-                                                   'MNI152_T1_1mm.nii.gz')
+                                                   'T1_1mm.nii.gz')
 
     datasink = pe.Node(
         interface=nio.DataSink(
