@@ -10,7 +10,7 @@ Created on Wed Dec  2 17:35:40 2015
 from copy import deepcopy
 
 from nipype.pipeline import engine as pe
-from nipype.interfaces.utility import Merge
+from nipype.interfaces import fsl
 
 from fmriprep.interfaces import BIDSDataGrabber
 from fmriprep.utils.misc import collect_bids_data
@@ -92,7 +92,7 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
     confounds_wf.get_node('inputnode').inputs.t1_transform_flags = [False, True]
 
     # create list of transforms to resample t1 -> sbref -> epi
-    t1_to_epi_transforms = pe.Node(Merge(2), name='T1ToEPITransforms')
+    t1_to_epi_transforms = pe.Node(fsl.ConvertXFM(concat_xfm=True), name='T1ToEPITransforms')
 
     workflow.connect([
         (bidssrc, t1w_pre, [('t1w', 'inputnode.t1w')]),
@@ -114,10 +114,10 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
                                   ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
                                   ('outputnode.fmap_ref', 'inputnode.fmap_ref')]),
 
-        (sbref_t1, t1_to_epi_transforms, [(('outputnode.itk_t1_to_sbr'), 'in1')]),
-        (epi2sbref, t1_to_epi_transforms, [(('outputnode.out_itk'), 'in2')]),
+        (sbref_t1, t1_to_epi_transforms, [(('outputnode.mat_t1_to_sbr'), 'in_file')]),
+        (epi2sbref, t1_to_epi_transforms, [('outputnode.out_mat_inv', 'in_file2')]),
 
-        (t1_to_epi_transforms, confounds_wf, [('out', 'inputnode.t1_transform')]),
+        (t1_to_epi_transforms, confounds_wf, [('out_file', 'inputnode.t1_transform')]),
 
         (hmcwf, confounds_wf, [('outputnode.movpar_file', 'inputnode.movpar_file'),
                                ('outputnode.epi_mean', 'inputnode.reference_image')]),
