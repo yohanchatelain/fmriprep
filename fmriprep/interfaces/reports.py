@@ -14,5 +14,5 @@ class ANTSRPT(ants.ANTS):
     input_spec = ANTSInputSpecRPT
     output_spec = ANTSOutputSpecRPT
 
-    def _generate_report():
-        return
+    def _generate_report(self):
+        raise NotImplementedError
