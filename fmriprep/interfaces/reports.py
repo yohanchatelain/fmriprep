@@ -2,6 +2,8 @@ from nipype.interfaces.base import File, traits
 from nipype.interfaces import ants, fsl
 
 
+
+
 class ANTSInputSpecRPT(ants.ANTSInputSpec):
     generate_report = traits.Bool(
         desc="Set to true to enable report generation for node"
@@ -16,6 +18,11 @@ class ANTSRPT(ants.ANTS):
 
     def _generate_report(self):
         raise NotImplementedError
+
+    def _run_interface(self, runtime):
+        runtime = super(ANTSRPT, self)._run_interface(runtime)
+        if self.inputs.generate_report:
+            self._generate_report()
 
 
 class FASTInputSpecRPT(fsl.FASTInputSpec):
