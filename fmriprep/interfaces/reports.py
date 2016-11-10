@@ -1,7 +1,8 @@
-from nipype.interfaces.base import File, traits, BaseInterface
 from nipype.interfaces import ants, fsl
+from nipype.interfaces.base import File, traits, BaseInterface
 
-class ReportCapableInterface(BaseInterface):
+
+class ReportCapableInterface(object):
     # constants
     ERROR_REPORT = 'error'
     SUCCESS_REPORT = 'success'
@@ -9,11 +10,12 @@ class ReportCapableInterface(BaseInterface):
     def run(self, **inputs):
         ''' delegates to base interface run method, then attempts to generate reports '''
         try:
-            result = super(self, BaseInterface).run()
-            self._conditionally_generate_report(self.SUCCESS_REPORT)
-            # command line interfaces might not raise an exception, check return_code
+            result = super(self, ReportCapableInterface).run()
+            #  command line interfaces might not raise an exception, check return_code
             if result.runtime.return_code != None and result.runtime.return_code != 0:
                 self._conditionally_generate_report(self.ERROR_REPORT)
+            else:
+                self._conditionally_generate_report(self.SUCCESS_REPORT)
         except:
             self._conditionally_generate_report(self.ERROR_REPORT)
             raise
@@ -26,9 +28,9 @@ class ReportCapableInterface(BaseInterface):
             return
 
         if flag == self.SUCCESS_REPORT:
-            self._generate_report(self)
+            self._generate_report()
         elif flag == self.ERROR_REPORT:
-            self._generate_error_report
+            self._generate_error_report()
         else:
             raise ValueError("Cannot generate report with flag {}. "
                              "Use constants SUCCESS_REPORT and ERROR_REPORT."
