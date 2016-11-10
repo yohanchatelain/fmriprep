@@ -63,11 +63,6 @@ class ANTSRPT(ReportCapableInterface, ants.ANTS):
     def _generate_report(self):
         raise NotImplementedError
 
-    def _run_interface(self, runtime):
-        runtime = super(ANTSRPT, self)._run_interface(runtime)
-        if self.inputs.generate_report:
-            self._generate_report()
-
 
 class FASTInputSpecRPT(fsl.FASTInputSpec):
     generate_report = traits.Bool(
