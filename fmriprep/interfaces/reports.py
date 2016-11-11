@@ -1,6 +1,9 @@
+import os
+import uuid
 import jinja2
 from pkg_resources import resource_filename as pkgrf
 
+import nibabel as nb
 from nilearn.plotting import plot_img
 from nipype.interfaces import ants, fsl
 from nipype.interfaces.base import File, traits
@@ -67,7 +70,7 @@ class RegistrationRPT(ReportCapableInterface, ants.Registration):
         #  self.input_spec.fixed_image
         #  self.output_spec.warped_image
         with open(output_spec.html_report, 'w') as fp:
-
+            pass
 
 class FASTInputSpecRPT(fsl.preprocess.FASTInputSpec):
     generate_report = traits.Bool(
@@ -97,8 +100,51 @@ class BETRPT(ReportCapableInterface, fsl.BET):
     input_spec = BETInputSpecRPT
     output_spec = BETOutputSpecRPT
 
+    def _overlay_file_name(self):
+        ''' returns an overlay, in this order of preference: mask_file, outline_file,
+        out_file '''
+        file_name = self.outputs.mask_file or self.outputs.outline_file or self.outputs.out_file
+        if not file_name:
+            raise ValueError()
+
+    def _prepare_3d_svg(self, filename):
+        ''' filename contains a nifti. If it's 4d, use the first volume.
+        returns tuple (image data as svg, image file name)'''
+        image = nb.load(self.inputs.in_file).get_data()[:, :, :, 0] ###
+        image_file = svg_file_name(filename)
+
+        plot_img(image, output_file=image_file)
+
+        with open(image_file, 'r') as file_obj:
+            image_svg = file_obj.readlines()
+
+        return image_svg
+
+    def _generate_overlay_3d_report(self, base_file_name, overlay_file_name):
+        ''' generates a report showing three orthogonal slices of an arbitrary
+        volume of base_file_name, with overlay_file_name overlaid '''
+        base_image = self._prepare_3d_svg(base_file_name)
+        overlay_image = self._prepare_3d_svg(overlay_file_name)
+
+        searchpath = pkgrf('fmriprep', '/')
+        env = jinja2.Environment(
+            loader=jinja2.FileSystemLoader(searchpath=searchpath),
+            trim_blocks=True, lstrip_blocks=True
+        )
+        report_tpl = env.get_template('viz/overlay_3d_report.tpl')
+        report_render = report_tpl.render(
+            unique_string=uuid.uuid4(),
+            base_image_image=base_image,
+            overlay_image=overlay_image
+        )
+
+        with open(os.path.join(self.out_dir, self.out_filename), 'w') as handle:
+            handle.write(report_render)
+
     def _generate_report(self):
-        raise NotImplementedError
+        ''' generates a report showing three orthogonal slices of an arbitrary
+        volume of in_file, with the resulting binary brain mask overlaid '''
+        self._generate_overlay_3d_report(self.inputs.in_file, self._overlay_file_name())
 
 
 class FLIRTInputSpecRPT(fsl.preprocess.FLIRTInputSpec):
@@ -142,4 +188,7 @@ class FLIRTRPT(ReportCapableInterface, fsl.FLIRT):
             fp.write(report_render)
         return report_render
 
-
+def svg_file_name(filename):
+    ''' strips the extension from the string (assuming it's a file name), if it
+    exists, and uses .svg instead '''
+    return os.path.splitext(filename)[0] + '.svg'
