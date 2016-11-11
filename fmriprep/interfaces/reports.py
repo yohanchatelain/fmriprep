@@ -3,7 +3,6 @@ import uuid
 import jinja2
 from pkg_resources import resource_filename as pkgrf
 
-import nibabel as nb
 from nilearn.plotting import plot_img
 from nipype.interfaces import ants, fsl
 from nipype.interfaces.base import File, traits
@@ -16,10 +15,11 @@ class ReportCapableInterface(object):
 
     def run(self, **inputs):
         ''' delegates to base interface run method, then attempts to generate reports '''
+        self.html_report = os.path.join(os.getcwd(), 'report.html')
         try:
-            result = super(self, ReportCapableInterface).run()
+            result = super(ReportCapableInterface, self).run(inputs)
             #  command line interfaces might not raise an exception, check return_code
-            if result.runtime.return_code != None and result.runtime.return_code != 0:
+            if result.runtime.returncode and result.runtime.returncode != 0:
                 self._conditionally_generate_report(self.ERROR_REPORT)
             else:
                 self._conditionally_generate_report(self.SUCCESS_REPORT)
@@ -27,11 +27,17 @@ class ReportCapableInterface(object):
             self._conditionally_generate_report(self.ERROR_REPORT)
             raise
 
+    def _list_outputs(self):
+        outputs = super(ReportCapableInterface, self)._list_outputs()
+        outputs['html_report'] = self.html_report
+        return outputs
+
     def _conditionally_generate_report(self, flag):
         ''' Do nothing if generate_report is not True.
         Otherwise delegate to a report generating method  '''
+
         # don't do anything unless the generate_report boolean is set to True
-        if self.inputs.generate_report != None or not self.inputs.generate_report:
+        if not self.inputs.generate_report:
             return
 
         if flag == self.SUCCESS_REPORT:
@@ -51,7 +57,6 @@ class ReportCapableInterface(object):
         ''' Saves an html snippet '''
         # as of now we think this will be the same for every interface
         raise NotImplementedError
-
 
 
 class RegistrationInputSpecRPT(ants.registration.RegistrationInputSpec):
@@ -103,24 +108,25 @@ class BETRPT(ReportCapableInterface, fsl.BET):
     def _overlay_file_name(self):
         ''' returns an overlay, in this order of preference: mask_file, outline_file,
         out_file '''
-        file_name = self.outputs.mask_file or self.outputs.outline_file or self.outputs.out_file
+        outputs = self.aggregate_outputs()
+        file_name = outputs.mask_file or outputs.outline_file or outputs.out_file
         if not file_name:
             raise ValueError()
+        return file_name
 
-    def _prepare_3d_svg(self, filename):
-        ''' filename contains a nifti. If it's 4d, use the first volume.
-        returns tuple (image data as svg, image file name)'''
-        image = nb.load(self.inputs.in_file).get_data()[:, :, :, 0] ###
-        image_file = svg_file_name(filename)
+    def _prepare_3d_svg(self, nifti_file):
+        ''' If nifti_file is  4d, use the first volume.
+        returns svg file name '''
+        svg_file = svg_file_name(nifti_file)
 
-        plot_img(image, output_file=image_file)
+        plot_img(nifti_file, output_file=svg_file)
 
-        with open(image_file, 'r') as file_obj:
+        with open(svg_file, 'r') as file_obj:
             image_svg = file_obj.readlines()
 
         return image_svg
 
-    def _generate_overlay_3d_report(self, base_file_name, overlay_file_name):
+    def _generate_overlay_3d_report(self, base_file_name, overlay_file_name, report_file_name):
         ''' generates a report showing three orthogonal slices of an arbitrary
         volume of base_file_name, with overlay_file_name overlaid '''
         base_image = self._prepare_3d_svg(base_file_name)
@@ -138,14 +144,14 @@ class BETRPT(ReportCapableInterface, fsl.BET):
             overlay_image=overlay_image
         )
 
-        with open(os.path.join(self.out_dir, self.out_filename), 'w') as handle:
+        with open(report_file_name, 'w') as handle:
             handle.write(report_render)
 
     def _generate_report(self):
         ''' generates a report showing three orthogonal slices of an arbitrary
         volume of in_file, with the resulting binary brain mask overlaid '''
-        self._generate_overlay_3d_report(self.inputs.in_file, self._overlay_file_name())
-
+        self._generate_overlay_3d_report(self.inputs.in_file, self._overlay_file_name(),
+                                         self.html_report)
 
 class FLIRTInputSpecRPT(fsl.preprocess.FLIRTInputSpec):
     generate_report = traits.Bool(
