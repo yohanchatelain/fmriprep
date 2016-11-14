@@ -109,11 +109,13 @@ class BETRPT(ReportCapableInterface, fsl.BET):
 
     def _overlay_file_name(self):
         ''' returns an overlay, in this order of preference: mask_file, outline_file,
-        out_file '''
-        outputs = self.aggregate_outputs()
-        file_name = outputs.mask_file or outputs.outline_file or outputs.out_file
-        return file_name
+        out_file, and the name of the output'''
+        outputs = self.aggregate_outputs().get()
 
+        for output_name in ['mask_file', 'outline_file', 'out_file']:
+            if output_name:
+                return outputs[output_name], output_name
+        return None, None
 
     def _pick_output_file(self):
         for _, file_name in self.aggregate_outputs().get().items():
@@ -126,12 +128,15 @@ class BETRPT(ReportCapableInterface, fsl.BET):
         ''' generates a report showing three orthogonal slices of an arbitrary
         volume of in_file, with the resulting binary brain mask overlaid '''
 
-        overlay_file_name = self._overlay_file_name()
+        overlay_file_name, overlay_label = self._overlay_file_name()
         if overlay_file_name:
-            generate_overlay_3d_report(self.inputs.in_file, overlay_file_name,
-                                       self.html_report)
+            generate_overlay_3d_report(self.inputs.in_file, overlay_file_name, self.html_report,
+                                       "BET: " + overlay_label + " over the input (anatomical)",
+                                       self.inputs, self.aggregate_outputs())
         else: # just print an output (no overlay)
-            generate_3d_report(self._pick_output_file(), self.html_report)
+            file_name = self._pick_output_file()
+            generate_3d_report(file_name, self.html_report, "BET: " + file_name, self.inputs,
+                               self.aggregate_outputs())
 
     def _generate_error_report(self):
         pass
@@ -218,19 +223,20 @@ def prepare_3d_svg(nifti_file):
 
     return image_svg
 
-def generate_overlay_3d_report(base_file_name, overlay_file_name, report_file_name):
+def generate_overlay_3d_report(base_file_name, overlay_file_name, report_file_name, title, inputs, outputs):
     ''' generates a report showing three orthogonal slices of an arbitrary
     volume of base_file_name, with overlay_file_name overlaid '''
     base_image = prepare_3d_svg(base_file_name)
+    overlay_image = prepare_3d_svg(overlay_file_name)
 
     save_html(template='overlay_3d_report.tpl', report_file_name=report_file_name,
               unique_string='bet' + str(uuid.uuid4()), base_image=base_image,
-              overlay_image=overlay_image)
+              overlay_image=overlay_image, title=title, inputs=inputs, outputs=outputs)
 
-
-def generate_3d_report(file_name, report_file_name):
+def generate_3d_report(file_name, report_file_name, title, inputs, outputs):
     ''' generates a basic 3d report given an image '''
-    image = prepare_3d_svg(file_name, cut_coords=())
+    image = prepare_3d_svg(file_name)
 
-    save_html(template='basic_3d_report.tpl', report_file_name=report_file_name,
-              unique_string=uuid.uuid4(), base_image=image)
+    save_html(template='overlay_3d_report.tpl', report_file_name=report_file_name,
+              unique_string=uuid.uuid4(), base_image=image, title=title, inputs=inputs,
+              outputs=outputs)
