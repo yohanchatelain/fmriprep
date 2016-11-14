@@ -3,10 +3,11 @@ import uuid
 import jinja2
 from pkg_resources import resource_filename as pkgrf
 
+import nibabel as nb
 from nilearn.plotting import plot_img
 from nipype.interfaces import ants, fsl
 from nipype.interfaces.base import File, traits
-
+from nipype.utils import filemanip
 
 class ReportCapableInterface(object):
     # constants
@@ -113,36 +114,6 @@ class BETRPT(ReportCapableInterface, fsl.BET):
         file_name = outputs.mask_file or outputs.outline_file or outputs.out_file
         return file_name
 
-    def _prepare_3d_svg(self, nifti_file):
-        ''' If nifti_file is  4d, use the first volume.
-        returns svg file name '''
-        svg_file = svg_file_name(nifti_file)
-
-        plot_img(nifti_file, output_file=svg_file)
-
-        with open(svg_file, 'r') as file_obj:
-            image_svg = file_obj.readlines()
-
-        image_svg = image_svg[4:] # strip out extra DOCTYPE, etc headers
-        image_svg = ''.join(image_svg) # straight up giant string
-
-        return image_svg
-
-    def _generate_overlay_3d_report(self, base_file_name, overlay_file_name, report_file_name):
-        ''' generates a report showing three orthogonal slices of an arbitrary
-        volume of base_file_name, with overlay_file_name overlaid '''
-        base_image = self._prepare_3d_svg(base_file_name)
-        overlay_image = self._prepare_3d_svg(overlay_file_name)
-
-        save_html(template='overlay_3d_report.tpl', report_file_name=report_file_name,
-                  unique_string='bet' + str(uuid.uuid4()), base_image=base_image, overlay_image=overlay_image)
-
-    def _generate_3d_report(self, file_name, report_file_name):
-        ''' generates a basic 3d report given an image '''
-        image = self._prepare_3d_svg(file_name)
-
-        save_html(template='basic_3d_report.tpl', report_file_name=report_file_name,
-                  unique_string=uuid.uuid4(), base_image=image)
 
     def _pick_output_file(self):
         for _, file_name in self.aggregate_outputs().get().items():
@@ -154,12 +125,13 @@ class BETRPT(ReportCapableInterface, fsl.BET):
     def _generate_report(self):
         ''' generates a report showing three orthogonal slices of an arbitrary
         volume of in_file, with the resulting binary brain mask overlaid '''
+
         overlay_file_name = self._overlay_file_name()
         if overlay_file_name:
-            self._generate_overlay_3d_report(self.inputs.in_file, overlay_file_name,
-                                             self.html_report)
+            generate_overlay_3d_report(self.inputs.in_file, overlay_file_name,
+                                       self.html_report)
         else: # just print an output (no overlay)
-            self._generate_3d_report(self._pick_output_file(), self.html_report)
+            generate_3d_report(self._pick_output_file(), self.html_report)
 
     def _generate_error_report(self):
         pass
@@ -208,7 +180,8 @@ class FLIRTRPT(ReportCapableInterface, fsl.FLIRT):
 def svg_file_name(filename):
     ''' strips the extension from the string (assuming it's a file name), if it
     exists, and uses .svg instead '''
-    return os.path.splitext(filename)[0] + '.svg'
+    path, base_name, ext = filemanip.split_filename(filename)
+    return base_name + '.svg'
 
 def save_html(template, report_file_name, unique_string, **kwargs):
     ''' save an actual html file with name report_file_name. unique_string is
@@ -225,3 +198,39 @@ def save_html(template, report_file_name, unique_string, **kwargs):
 
     with open(report_file_name, 'w') as handle:
         handle.write(report_render)
+
+def prepare_3d_svg(nifti_file):
+    ''' If nifti_file is 4d, use the first volume.
+    returns svg file name '''
+
+    # specify cut coordinates to ensure uniformity
+    xyz_lens = nb.load(nifti_file).header['dim'][1:4]
+    xyz_coords = [coord / 2 for coord in xyz_lens]
+
+    svg_file = svg_file_name(nifti_file)
+
+    plot_img(nifti_file, output_file=svg_file, cut_coords=xyz_coords)
+
+    with open(svg_file, 'r') as file_obj:
+        image_svg = file_obj.readlines()
+    image_svg = image_svg[4:] # strip out extra DOCTYPE, etc headers
+    image_svg = ''.join(image_svg) # straight up giant string
+
+    return image_svg
+
+def generate_overlay_3d_report(base_file_name, overlay_file_name, report_file_name):
+    ''' generates a report showing three orthogonal slices of an arbitrary
+    volume of base_file_name, with overlay_file_name overlaid '''
+    base_image = prepare_3d_svg(base_file_name)
+
+    save_html(template='overlay_3d_report.tpl', report_file_name=report_file_name,
+              unique_string='bet' + str(uuid.uuid4()), base_image=base_image,
+              overlay_image=overlay_image)
+
+
+def generate_3d_report(file_name, report_file_name):
+    ''' generates a basic 3d report given an image '''
+    image = prepare_3d_svg(file_name, cut_coords=())
+
+    save_html(template='basic_3d_report.tpl', report_file_name=report_file_name,
+              unique_string=uuid.uuid4(), base_image=image)
