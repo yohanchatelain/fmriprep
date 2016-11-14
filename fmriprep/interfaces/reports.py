@@ -4,7 +4,7 @@ import jinja2
 from pkg_resources import resource_filename as pkgrf
 
 import nibabel as nb
-from nilearn.plotting import plot_img
+from nilearn import plotting
 from nipype.interfaces import ants, fsl
 from nipype.interfaces.base import File, traits
 from nipype.utils import filemanip
@@ -159,8 +159,8 @@ class FLIRTRPT(ReportCapableInterface, fsl.FLIRT):
         out = self.output_spec.out_file
         out_image_name = '{}.svg'.format(out)
 
-        plot_img(ref, output_file=ref_image_name)
-        plot_img(out, output_file=out_image_name)
+        plotting.plot_img(ref, output_file=ref_image_name)
+        plotting.plot_img(out, output_file=out_image_name)
         
         with open(ref_image_name, 'r') as ref_fp:
             reference_image = ref_fp.readlines()
@@ -204,17 +204,12 @@ def save_html(template, report_file_name, unique_string, **kwargs):
     with open(report_file_name, 'w') as handle:
         handle.write(report_render)
 
-def prepare_3d_svg(nifti_file):
+def prepare_3d_svg(nifti_file, **kwargs):
     ''' If nifti_file is 4d, use the first volume.
     returns svg file name '''
-
-    # specify cut coordinates to ensure uniformity
-    xyz_lens = nb.load(nifti_file).header['dim'][1:4]
-    xyz_coords = [coord / 2 for coord in xyz_lens]
-
     svg_file = svg_file_name(nifti_file)
 
-    plot_img(nifti_file, output_file=svg_file, cut_coords=xyz_coords)
+    plotting.plot_img(nifti_file, output_file=svg_file, **kwargs)
 
     with open(svg_file, 'r') as file_obj:
         image_svg = file_obj.readlines()
@@ -226,8 +221,10 @@ def prepare_3d_svg(nifti_file):
 def generate_overlay_3d_report(base_file_name, overlay_file_name, report_file_name, title, inputs, outputs):
     ''' generates a report showing three orthogonal slices of an arbitrary
     volume of base_file_name, with overlay_file_name overlaid '''
-    base_image = prepare_3d_svg(base_file_name)
-    overlay_image = prepare_3d_svg(overlay_file_name)
+    cut_coords = plotting.find_xyz_cut_coords(overlay_file_name)
+
+    base_image = prepare_3d_svg(base_file_name, cut_coords=cut_coords, cmap="gray")
+    overlay_image = prepare_3d_svg(overlay_file_name, cut_coords=cut_coords)
 
     save_html(template='overlay_3d_report.tpl', report_file_name=report_file_name,
               unique_string='bet' + str(uuid.uuid4()), base_image=base_image,
