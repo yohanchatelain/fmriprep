@@ -130,13 +130,35 @@ class BETRPT(ReportCapableInterface, fsl.BET):
 
         overlay_file_name, overlay_label = self._overlay_file_name()
         if overlay_file_name:
-            generate_overlay_3d_report(self.inputs.in_file, overlay_file_name, self.html_report,
-                                       "BET: " + overlay_label + " over the input (anatomical)",
-                                       self.inputs, self.aggregate_outputs())
+            cut_coords = plotting.find_xyz_cut_coords(overlay_file_name)
+
+            base_image = plotting.plot_anat(self.inputs.in_file, cut_coords=cut_coords, cmap="gray")
+            overlay_image = plotting.plot_img(overlay_file_name, cut_coords=cut_coords)
+
+            save_html(template='overlay_3d_report.tpl',
+                      report_file_name=self.html_report,
+                      unique_string='bet' + str(uuid.uuid4()),
+                      base_image=as_svg(base_image),
+                      overlay_image=as_svg(overlay_image),
+                      inputs=self.inputs,
+                      outputs=self.aggregate_outputs(),
+                      title="BET: " + overlay_label + " over the input (anatomical)")
+
+            base_image.close()
+            overlay_image.close()
         else: # just print an output (no overlay)
             file_name = self._pick_output_file()
-            generate_3d_report(file_name, self.html_report, "BET: " + file_name, self.inputs,
-                               self.aggregate_outputs())
+            image = plotting.plot_img(file_name)
+
+            save_html(template='overlay_3d_report.tpl',
+                      report_file_name=self.html_report,
+                      unique_string='bet' + str(uuid.uuid4()),
+                      base_image=as_svg(image),
+                      title="BET: " + file_name,
+                      inputs=inputs,
+                      outputs=outputs)
+
+            image.close()
 
     def _generate_error_report(self):
         pass
@@ -182,12 +204,6 @@ class FLIRTRPT(ReportCapableInterface, fsl.FLIRT):
             fp.write(report_render)
         return report_render
 
-def svg_file_name(filename):
-    ''' strips the extension from the string (assuming it's a file name), if it
-    exists, and uses .svg instead '''
-    path, base_name, ext = filemanip.split_filename(filename)
-    return base_name + '.svg'
-
 def save_html(template, report_file_name, unique_string, **kwargs):
     ''' save an actual html file with name report_file_name. unique_string is
     used to uniquely identify the html/css/js/etc generated for this report '''
@@ -204,36 +220,16 @@ def save_html(template, report_file_name, unique_string, **kwargs):
     with open(report_file_name, 'w') as handle:
         handle.write(report_render)
 
-def prepare_3d_svg(nifti_file, **kwargs):
-    ''' If nifti_file is 4d, use the first volume.
-    returns svg file name '''
-    svg_file = svg_file_name(nifti_file)
+def as_svg(image, **kwargs):
+    ''' takes an image as created by nilearn.plotting and returns a blob svg '''
+    filename = 'temp.svg'
 
-    plotting.plot_img(nifti_file, output_file=svg_file, **kwargs)
+    image.savefig(filename)
 
-    with open(svg_file, 'r') as file_obj:
+    with open(filename, 'r') as file_obj:
         image_svg = file_obj.readlines()
     image_svg = image_svg[4:] # strip out extra DOCTYPE, etc headers
     image_svg = ''.join(image_svg) # straight up giant string
 
     return image_svg
 
-def generate_overlay_3d_report(base_file_name, overlay_file_name, report_file_name, title, inputs, outputs):
-    ''' generates a report showing three orthogonal slices of an arbitrary
-    volume of base_file_name, with overlay_file_name overlaid '''
-    cut_coords = plotting.find_xyz_cut_coords(overlay_file_name)
-
-    base_image = prepare_3d_svg(base_file_name, cut_coords=cut_coords, cmap="gray")
-    overlay_image = prepare_3d_svg(overlay_file_name, cut_coords=cut_coords)
-
-    save_html(template='overlay_3d_report.tpl', report_file_name=report_file_name,
-              unique_string='bet' + str(uuid.uuid4()), base_image=base_image,
-              overlay_image=overlay_image, title=title, inputs=inputs, outputs=outputs)
-
-def generate_3d_report(file_name, report_file_name, title, inputs, outputs):
-    ''' generates a basic 3d report given an image '''
-    image = prepare_3d_svg(file_name)
-
-    save_html(template='overlay_3d_report.tpl', report_file_name=report_file_name,
-              unique_string=uuid.uuid4(), base_image=image, title=title, inputs=inputs,
-              outputs=outputs)
