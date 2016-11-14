@@ -124,7 +124,7 @@ class BETRPT(ReportCapableInterface, fsl.BET):
             image_svg = file_obj.readlines()
 
         image_svg = image_svg[4:] # strip out extra DOCTYPE, etc headers
-        image_svg = ''.join(image_svg).replace('\n', ' ') # straight up giant string, no newlines
+        image_svg = ''.join(image_svg) # straight up giant string
 
         return image_svg
 
