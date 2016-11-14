@@ -4,18 +4,19 @@ import jinja2
 from pkg_resources import resource_filename as pkgrf
 
 import nibabel as nb
-from nilearn.plotting import plot_img
+from nilearn import plotting
 from nipype.interfaces import ants, fsl
 from nipype.interfaces.base import File, traits
-
+from nipype.utils import filemanip
 
 class ReportCapableInterface(object):
     # constants
     ERROR_REPORT = 'error'
     SUCCESS_REPORT = 'success'
 
-    def run(self, **inputs):
+    def run(self):
         ''' delegates to base interface run method, then attempts to generate reports '''
+        self.html_report = os.path.join(os.getcwd(), 'report.html')
         try:
             result = super(ReportCapableInterface, self).run()
             #  command line interfaces might not raise an exception, check return_code
@@ -30,11 +31,18 @@ class ReportCapableInterface(object):
             self._conditionally_generate_report(self.ERROR_REPORT)
             raise
 
+    def _list_outputs(self):
+        outputs = super(ReportCapableInterface, self)._list_outputs()
+        if self.inputs.generate_report:
+            outputs['html_report'] = self.html_report
+        return outputs
+
     def _conditionally_generate_report(self, flag):
         ''' Do nothing if generate_report is not True.
         Otherwise delegate to a report generating method  '''
+
         # don't do anything unless the generate_report boolean is set to True
-        if self.inputs.generate_report != None or not self.inputs.generate_report:
+        if not self.inputs.generate_report:
             return
 
         if flag == self.SUCCESS_REPORT:
@@ -54,7 +62,6 @@ class ReportCapableInterface(object):
         ''' Saves an html snippet '''
         # as of now we think this will be the same for every interface
         raise NotImplementedError
-
 
 
 class RegistrationInputSpecRPT(ants.registration.RegistrationInputSpec):
@@ -105,50 +112,73 @@ class BETRPT(ReportCapableInterface, fsl.BET):
 
     def _overlay_file_name(self):
         ''' returns an overlay, in this order of preference: mask_file, outline_file,
-        out_file '''
-        file_name = self.outputs.mask_file or self.outputs.outline_file or self.outputs.out_file
-        if not file_name:
-            raise ValueError()
+        out_file, and the name of the output'''
+        outputs = self.aggregate_outputs().get()
 
-    def _prepare_3d_svg(self, filename):
-        ''' filename contains a nifti. If it's 4d, use the first volume.
-        returns tuple (image data as svg, image file name)'''
-        image = nb.load(self.inputs.in_file).get_data()[:, :, :, 0] ###
-        image_file = svg_file_name(filename)
+        for output_name in ['mask_file', 'outline_file', 'out_file']:
+            if output_name:
+                return outputs[output_name], output_name
+        return None, None
 
-        plot_img(image, output_file=image_file)
-
-        with open(image_file, 'r') as file_obj:
-            image_svg = file_obj.readlines()
-
-        return image_svg
-
-    def _generate_overlay_3d_report(self, base_file_name, overlay_file_name):
-        ''' generates a report showing three orthogonal slices of an arbitrary
-        volume of base_file_name, with overlay_file_name overlaid '''
-        base_image = self._prepare_3d_svg(base_file_name)
-        overlay_image = self._prepare_3d_svg(overlay_file_name)
-
-        searchpath = pkgrf('fmriprep', '/')
-        env = jinja2.Environment(
-            loader=jinja2.FileSystemLoader(searchpath=searchpath),
-            trim_blocks=True, lstrip_blocks=True
-        )
-        report_tpl = env.get_template('viz/overlay_3d_report.tpl')
-        report_render = report_tpl.render(
-            unique_string=uuid.uuid4(),
-            base_image_image=base_image,
-            overlay_image=overlay_image
-        )
-
-        with open(os.path.join(self.out_dir, self.out_filename), 'w') as handle:
-            handle.write(report_render)
+    def _pick_output_file(self):
+        for _, file_name in self.aggregate_outputs().get().items():
+            if file_name and file_name.find('.nii') != -1: # rough check for nifti format
+                return file_name
+        raise Warning('Could not find outputs for BET; cannot generate report. Inputs are {} and'
+                      ' outputs are {}.'.format(self.inputs, self.aggregate_outputs()))
 
     def _generate_report(self):
         ''' generates a report showing three orthogonal slices of an arbitrary
         volume of in_file, with the resulting binary brain mask overlaid '''
-        self._generate_overlay_3d_report(self.inputs.in_file, self._overlay_file_name())
 
+        try:
+            # most of the time just do simple semi-transparent overlay of brain mask over input
+            image = plotting.plot_roi(self.aggregate_outputs().mask_file,
+                                      bg_img=self.inputs.in_file, alpha=0.5)
+            save_html(template='overlay_3d_report.tpl',
+                      report_file_name=self.html_report,
+                      unique_string='bet' + str(uuid.uuid4()),
+                      base_image=as_svg(image),
+                      title="BET: brain mask over anatomical input",
+                      inputs=self.inputs,
+                      outputs=self.aggregate_outputs())
+            image.close()
+        except: # inc ase of weird outputs
+            overlay_file_name, overlay_label = self._overlay_file_name()
+            if overlay_file_name:
+                cut_coords = plotting.find_xyz_cut_coords(overlay_file_name)
+
+                base_image = plotting.plot_anat(self.inputs.in_file, cut_coords=cut_coords,
+                                                cmap="gray")
+                overlay_image = plotting.plot_img(overlay_file_name, cut_coords=cut_coords,
+                                                  black_bg=True)
+
+                save_html(template='overlay_3d_report.tpl',
+                          report_file_name=self.html_report,
+                          unique_string='bet' + str(uuid.uuid4()),
+                          base_image=as_svg(base_image),
+                          overlay_image=as_svg(overlay_image),
+                          inputs=self.inputs,
+                          outputs=self.aggregate_outputs(),
+                          title="BET: " + overlay_label + " over the input (anatomical)")
+
+                base_image.close()
+                overlay_image.close()
+            else: # just print an output (no overlay)
+                file_name = self._pick_output_file()
+                image = plotting.plot_img(file_name)
+
+                save_html(template='overlay_3d_report.tpl',
+                          report_file_name=self.html_report,
+                          unique_string='bet' + str(uuid.uuid4()),
+                          base_image=as_svg(image),
+                          title="BET: " + file_name,
+                          inputs=self.inputs,
+                          outputs=self.aggregate_outputs())
+                image.close()
+
+    def _generate_error_report(self):
+        pass
 
 class FLIRTInputSpecRPT(fsl.preprocess.FLIRTInputSpec):
     generate_report = traits.Bool(
@@ -168,8 +198,8 @@ class FLIRTRPT(ReportCapableInterface, fsl.FLIRT):
         out = self.output_spec.out_file
         out_image_name = '{}.svg'.format(out)
 
-        plot_img(ref, output_file=ref_image_name)
-        plot_img(out, output_file=out_image_name)
+        plotting.plot_img(ref, output_file=ref_image_name)
+        plotting.plot_img(out, output_file=out_image_name)
         
         with open(ref_image_name, 'r') as ref_fp:
             reference_image = ref_fp.readlines()
@@ -191,7 +221,32 @@ class FLIRTRPT(ReportCapableInterface, fsl.FLIRT):
             fp.write(report_render)
         return report_render
 
-def svg_file_name(filename):
-    ''' strips the extension from the string (assuming it's a file name), if it
-    exists, and uses .svg instead '''
-    return os.path.splitext(filename)[0] + '.svg'
+def save_html(template, report_file_name, unique_string, **kwargs):
+    ''' save an actual html file with name report_file_name. unique_string is
+    used to uniquely identify the html/css/js/etc generated for this report '''
+
+    searchpath = pkgrf('fmriprep', '/')
+    env = jinja2.Environment(
+        loader=jinja2.FileSystemLoader(searchpath=searchpath),
+        trim_blocks=True, lstrip_blocks=True
+    )
+    report_tpl = env.get_template('viz/' + template)
+    kwargs['unique_string'] = unique_string
+    report_render = report_tpl.render(kwargs)
+
+    with open(report_file_name, 'w') as handle:
+        handle.write(report_render)
+
+def as_svg(image, **kwargs):
+    ''' takes an image as created by nilearn.plotting and returns a blob svg '''
+    filename = 'temp.svg'
+
+    image.savefig(filename)
+
+    with open(filename, 'r') as file_obj:
+        image_svg = file_obj.readlines()
+    image_svg = image_svg[4:] # strip out extra DOCTYPE, etc headers
+    image_svg = ''.join(image_svg) # straight up giant string
+
+    return image_svg
+
