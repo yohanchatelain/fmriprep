@@ -123,6 +123,9 @@ class BETRPT(ReportCapableInterface, fsl.BET):
         with open(svg_file, 'r') as file_obj:
             image_svg = file_obj.readlines()
 
+        image_svg = image_svg[4:] # strip out extra DOCTYPE, etc headers
+        image_svg = ''.join(image_svg).replace('\n', ' ') # straight up giant string, no newlines
+
         return image_svg
 
     def _generate_overlay_3d_report(self, base_file_name, overlay_file_name, report_file_name):
@@ -132,7 +135,7 @@ class BETRPT(ReportCapableInterface, fsl.BET):
         overlay_image = self._prepare_3d_svg(overlay_file_name)
 
         save_html(template='overlay_3d_report.tpl', report_file_name=report_file_name,
-                  unique_string=uuid.uuid4(), base_image=base_image, overlay_image=overlay_image)
+                  unique_string='bet' + str(uuid.uuid4()), base_image=base_image, overlay_image=overlay_image)
 
     def _generate_3d_report(self, file_name, report_file_name):
         ''' generates a basic 3d report given an image '''
