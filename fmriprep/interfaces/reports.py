@@ -128,37 +128,51 @@ class BETRPT(ReportCapableInterface, fsl.BET):
         ''' generates a report showing three orthogonal slices of an arbitrary
         volume of in_file, with the resulting binary brain mask overlaid '''
 
-        overlay_file_name, overlay_label = self._overlay_file_name()
-        if overlay_file_name:
-            cut_coords = plotting.find_xyz_cut_coords(overlay_file_name)
-
-            base_image = plotting.plot_anat(self.inputs.in_file, cut_coords=cut_coords, cmap="gray")
-            overlay_image = plotting.plot_img(overlay_file_name, cut_coords=cut_coords)
-
-            save_html(template='overlay_3d_report.tpl',
-                      report_file_name=self.html_report,
-                      unique_string='bet' + str(uuid.uuid4()),
-                      base_image=as_svg(base_image),
-                      overlay_image=as_svg(overlay_image),
-                      inputs=self.inputs,
-                      outputs=self.aggregate_outputs(),
-                      title="BET: " + overlay_label + " over the input (anatomical)")
-
-            base_image.close()
-            overlay_image.close()
-        else: # just print an output (no overlay)
-            file_name = self._pick_output_file()
-            image = plotting.plot_img(file_name)
-
+        try:
+            # most of the time just do simple semi-transparent overlay of brain mask over input
+            image = plotting.plot_roi(self.aggregate_outputs().mask_file,
+                                      bg_img=self.inputs.in_file, alpha=0.5)
             save_html(template='overlay_3d_report.tpl',
                       report_file_name=self.html_report,
                       unique_string='bet' + str(uuid.uuid4()),
                       base_image=as_svg(image),
-                      title="BET: " + file_name,
-                      inputs=inputs,
-                      outputs=outputs)
-
+                      title="BET: brain mask over anatomical input",
+                      inputs=self.inputs,
+                      outputs=self.aggregate_outputs())
             image.close()
+        except: # inc ase of weird outputs
+            overlay_file_name, overlay_label = self._overlay_file_name()
+            if overlay_file_name:
+                cut_coords = plotting.find_xyz_cut_coords(overlay_file_name)
+
+                base_image = plotting.plot_anat(self.inputs.in_file, cut_coords=cut_coords,
+                                                cmap="gray")
+                overlay_image = plotting.plot_img(overlay_file_name, cut_coords=cut_coords,
+                                                  black_bg=True)
+
+                save_html(template='overlay_3d_report.tpl',
+                          report_file_name=self.html_report,
+                          unique_string='bet' + str(uuid.uuid4()),
+                          base_image=as_svg(base_image),
+                          overlay_image=as_svg(overlay_image),
+                          inputs=self.inputs,
+                          outputs=self.aggregate_outputs(),
+                          title="BET: " + overlay_label + " over the input (anatomical)")
+
+                base_image.close()
+                overlay_image.close()
+            else: # just print an output (no overlay)
+                file_name = self._pick_output_file()
+                image = plotting.plot_img(file_name)
+
+                save_html(template='overlay_3d_report.tpl',
+                          report_file_name=self.html_report,
+                          unique_string='bet' + str(uuid.uuid4()),
+                          base_image=as_svg(image),
+                          title="BET: " + file_name,
+                          inputs=self.inputs,
+                          outputs=self.aggregate_outputs())
+                image.close()
 
     def _generate_error_report(self):
         pass
