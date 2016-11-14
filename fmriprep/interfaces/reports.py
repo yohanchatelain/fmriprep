@@ -2,6 +2,7 @@ import os
 import uuid
 import jinja2
 from pkg_resources import resource_filename as pkgrf
+from abc import abstractmethod
 
 import nibabel as nb
 from nilearn import plotting
@@ -24,6 +25,7 @@ class ReportCapableInterface(object):
                 self._conditionally_generate_report(self.ERROR_REPORT)
             else:
                 self._conditionally_generate_report(self.SUCCESS_REPORT)
+            return result
         except:
             self._conditionally_generate_report(self.ERROR_REPORT)
             raise
@@ -51,14 +53,14 @@ class ReportCapableInterface(object):
                              "Use constants SUCCESS_REPORT and ERROR_REPORT."
                              .format(flag))
 
+    @abstractmethod
     def _generate_report(self):
         ''' Saves an html snippet '''
-        raise NotImplementedError
 
+    @abstractmethod
     def _generate_error_report(self):
         ''' Saves an html snippet '''
         # as of now we think this will be the same for every interface
-        raise NotImplementedError
 
 
 class RegistrationInputSpecRPT(ants.registration.RegistrationInputSpec):
@@ -140,7 +142,7 @@ class BETRPT(ReportCapableInterface, fsl.BET):
                       inputs=self.inputs,
                       outputs=self.aggregate_outputs())
             image.close()
-        except: # inc ase of weird outputs
+        except: # in case of weird outputs
             overlay_file_name, overlay_label = self._overlay_file_name()
             if overlay_file_name:
                 cut_coords = plotting.find_xyz_cut_coords(overlay_file_name)
@@ -190,33 +192,30 @@ class FLIRTRPT(ReportCapableInterface, fsl.FLIRT):
     output_spec = FLIRTOutputSpecRPT
 
     def _generate_report(self):
-        ref = self.input_spec.reference
+        ref = self.inputs.reference
         ref_image_name = '{}.svg'.format(ref)
-        out = self.output_spec.out_file
+        out = self.inputs.out_file
         out_image_name = '{}.svg'.format(out)
 
         plotting.plot_img(ref, output_file=ref_image_name)
         plotting.plot_img(out, output_file=out_image_name)
-        
-        with open(ref_image_name, 'r') as ref_fp:
-            reference_image = ref_fp.readlines()
-        with open(output_image_name, 'r') as out_fp:
-            output_image = out_fp.readlines()
 
-        searchpath = pkgrf('fmriprep', '/')
-        env = jinja2.Environment(
-            loader=jinja2.FileSystemLoader(searchpath=searchpath),
-            trim_blocks=True, lstrip_blocks=True
-        )
-        report_tpl = env.get_template('viz/flirt_report.tpl')
-        report_render = report_tpl.render(
-            reference_image_image=reference_imagem,
-            output_image=output_image
-        )
+        with open(ref_image_name, 'r') as file_obj:
+            ref_image = file_obj.readlines()
+    
+        with open(out_image_name, 'r') as file_obj:
+            out_image = file_obj.readlines()
 
-        with open(os.path.join(self.out_dir, self.out_filename), 'w') as fp:
-            fp.write(report_render)
-        return report_render
+        save_html(
+            template='overlay_3d_report.tpl',
+            report_file_name=self.html_report,
+            unique_string='flirt' + str(uuid.uuid4()),
+            base_image=ref_image,
+            overlay_image=out_image,
+            inputs=self.inputs,
+            outputs=self.aggregate_outputs(),
+            title="FLIRT: Overlay of registered image on top of reference file"
+        )
 
 def save_html(template, report_file_name, unique_string, **kwargs):
     ''' save an actual html file with name report_file_name. unique_string is
