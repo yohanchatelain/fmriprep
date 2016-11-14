@@ -20,13 +20,10 @@ class ReportCapableInterface(object):
         try:
             result = super(ReportCapableInterface, self).run()
             #  command line interfaces might not raise an exception, check return_code
-            #  Error produced by if statement:
-            #  AttributeError: 'Bunch' object has no attribute 'return_code'
-            #  if result.runtime.return_code != None and result.runtime.return_code != 0:
-            #      self._conditionally_generate_report(self.ERROR_REPORT)
-            #  else:
-            self._conditionally_generate_report(self.SUCCESS_REPORT)
-            return result
+            if result.runtime.returncode and result.runtime.returncode != 0:
+                self._conditionally_generate_report(self.ERROR_REPORT)
+            else:
+                self._conditionally_generate_report(self.SUCCESS_REPORT)
         except:
             self._conditionally_generate_report(self.ERROR_REPORT)
             raise
