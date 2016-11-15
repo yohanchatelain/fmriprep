@@ -19,13 +19,13 @@ class ReportCapableInterface(object):
         ''' delegates to base interface run method, then attempts to generate reports '''
         self.html_report = os.path.join(os.getcwd(), 'report.html')
         try:
-            result = super(ReportCapableInterface, self)._run_interface(runtime)
+            runtime = super(ReportCapableInterface, self)._run_interface(runtime)
             #  command line interfaces might not raise an exception, check return_code
-            if result.runtime.returncode and result.runtime.returncode != 0:
+            if runtime.returncode and runtime.returncode != 0:
                 self._conditionally_generate_report(self.ERROR_REPORT)
             else:
                 self._conditionally_generate_report(self.SUCCESS_REPORT)
-            return result
+            return runtime
         except:
             self._conditionally_generate_report(self.ERROR_REPORT)
             raise
