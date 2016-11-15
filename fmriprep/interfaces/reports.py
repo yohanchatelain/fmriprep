@@ -145,10 +145,10 @@ class BETRPT(ReportCapableInterface, fsl.BET):
             if overlay_file_name:
                 cut_coords = plotting.find_xyz_cut_coords(overlay_file_name)
 
-                base_image = plotting.plot_anat(self.inputs.in_file, cut_coords=cut_coords,
-                                                cmap="gray")
-                overlay_image = plotting.plot_img(overlay_file_name, cut_coords=cut_coords,
-                                                  black_bg=True)
+                background_params = { 'anat_img': self.inputs.in_file, 'cut_coords': cut_coords, 'cmap': "gray"}
+                base_image = plotting.plot_anat(**background_params)
+                overlay_image = plotting.plot_anat(**background_params)
+                overlay_image.add_contours(overlay_file_name, filled=True, colors='b', levels=[0.5], alpha=1)
 
                 save_html(template='overlay_3d_report.tpl',
                           report_file_name=self.html_report,
