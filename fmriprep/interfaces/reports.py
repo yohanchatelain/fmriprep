@@ -1,6 +1,6 @@
 import uuid
 
-from nilearn import plotting
+from nilearn import plotting, image as nlimage
 from nipype.interfaces import ants, fsl
 from nipype.interfaces.base import File, traits
 
@@ -92,10 +92,16 @@ class BETRPT(report.ReportCapableInterface, fsl.BET):
                                alpha=1)
             return image
 
+        def _3d_in_file():
+            ''' if self.inputs.in_file is 3d, return it.
+            if 4d, pick an arbitrary volume and return that '''
+            in_file = nlimage.concat_imgs(self.inputs.in_file) # result is always "4d"
+            return nlimage.index_img(in_file, 0)
+
         try:
             # most of the time just do simple semi-transparent overlay of brain mask over input
             plot_params = {'roi_img': self.aggregate_outputs().mask_file,
-                           'bg_img': self.inputs.in_file,
+                           'bg_img': _3d_in_file(),
                            'alpha': 0.6,
                            'cut_coords': 3}
             svgs = _xyz_svgs(plotting.plot_roi, plot_params)
@@ -109,7 +115,7 @@ class BETRPT(report.ReportCapableInterface, fsl.BET):
         except TypeError: # in case of weird outputs
             overlay_file_name, overlay_label = self._overlay_file_name()
             if overlay_file_name:
-                background_params = {'anat_img': self.inputs.in_file,
+                background_params = {'anat_img': _3d_in_file(),
                                      'cut_coords': 3,
                                      'cmap': 'gray'}
                 base_svgs = _xyz_svgs(plotting.plot_anat, background_params)
