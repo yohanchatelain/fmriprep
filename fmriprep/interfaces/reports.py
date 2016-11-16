@@ -177,3 +177,12 @@ class FLIRTRPT(report.ReportCapableInterface, fsl.FLIRT):
             outputs=self.aggregate_outputs(),
             title="FLIRT: Overlay of registered image on top of reference file"
         )
+
+class ApplyXFMInputSpecRPT(fsl.preprocessing.ApplyXFMInputSpec):
+    generate_report = traits.Bool(
+        desc="Set to true to enable report generation for node"
+    )
+
+class ApplyXFMRPT(FLIRTRPT):
+    ''' ApplyXFM is a wrapper around FLIRT. ApplyXFMRPT is a wrapper around FLIRTRPT.'''
+    input_spec = ApplyXFMInputSpecRPT
