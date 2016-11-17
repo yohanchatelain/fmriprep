@@ -205,9 +205,11 @@ class FLIRTRPT(ReportCapableInterface, fsl.FLIRT):
 
         with open(ref_image_name, 'r') as file_obj:
             ref_image = file_obj.readlines()
+            ref_image = ''.join(ref_image[4:])
     
         with open(out_image_name, 'r') as file_obj:
             out_image = file_obj.readlines()
+            out_image = ''.join(out_image[4:])
 
         save_html(
             template='overlay_3d_report.tpl',
