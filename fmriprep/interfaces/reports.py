@@ -1,5 +1,3 @@
-import uuid
-
 from nilearn import plotting, image as nlimage
 from nipype.interfaces import ants, fsl
 from nipype.interfaces.base import File, traits
@@ -107,7 +105,7 @@ class BETRPT(report.ReportCapableInterface, fsl.BET):
             svgs = _xyz_svgs(plotting.plot_roi, plot_params)
             report.save_html(template='overlay_3d_report.tpl',
                              report_file_name=self.html_report,
-                             unique_string='bet' + str(uuid.uuid4()),
+                             interface_prefix='bet',
                              base_image=svgs,
                              title="BET: brain mask over anatomical input",
                              inputs=self.inputs,
@@ -123,7 +121,7 @@ class BETRPT(report.ReportCapableInterface, fsl.BET):
 
                 report.save_html(template='overlay_3d_report.tpl',
                                  report_file_name=self.html_report,
-                                 unique_string='bet' + str(uuid.uuid4()),
+                                 interface_prefix='bet',
                                  base_image=base_svgs,
                                  overlay_image=overlay_svgs,
                                  inputs=self.inputs,
@@ -136,7 +134,7 @@ class BETRPT(report.ReportCapableInterface, fsl.BET):
 
                 report.save_html(template='overlay_3d_report.tpl',
                                  report_file_name=self.html_report,
-                                 unique_string='bet' + str(uuid.uuid4()),
+                                 interface_prefix='bet',
                                  base_image=report.as_svg(image),
                                  title="BET: " + file_name,
                                  inputs=self.inputs,
@@ -176,7 +174,7 @@ class FLIRTRPT(report.ReportCapableInterface, fsl.FLIRT):
         report.save_html(
             template='overlay_3d_report.tpl',
             report_file_name=self.html_report,
-            unique_string='flirt' + str(uuid.uuid4()),
+            interface_prefix='flirt',
             base_image=ref_image,
             overlay_image=out_image,
             inputs=self.inputs,
