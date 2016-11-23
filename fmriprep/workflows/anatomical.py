@@ -22,7 +22,7 @@ from nipype.pipeline import engine as pe
 from niworkflows.anat.mni import RobustMNINormalization
 from niworkflows.anat.skullstrip import afni_wf as skullstrip_wf
 from niworkflows.common import reorient as mri_reorient_wf
-from niworkflows.data import get_mni_template
+from niworkflows.data import get_mni_icbm152_nlin_asym_09c
 
 from fmriprep.interfaces import (DerivativesDataSink, IntraModalMerge,
     ImageDataSink)
@@ -67,12 +67,15 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         name='T1_2_MNI_Registration')
 
     # Resample the brain mask and the tissue probability maps into mni space
-    bmask_mni = pe.Node(ants.ApplyTransforms(
-        dimension=3, default_value=0, interpolation='NearestNeighbor'), name='brain_mni_warp')
-    bmask_mni.inputs.reference_image = op.join(get_mni_template(), 'MNI152_T1_1mm.nii.gz')
+    bmask_mni = pe.Node(
+        ants.ApplyTransforms(dimension=3, default_value=0,
+                             interpolation='NearestNeighbor'),
+        name='brain_mni_warp'
+    )
+    bmask_mni.inputs.reference_image = op.join(get_mni_icbm152_nlin_asym_09c(), '1mm_T1.nii.gz')
     tpms_mni = pe.MapNode(ants.ApplyTransforms(dimension=3, default_value=0, interpolation='Linear'),
                           iterfield=['input_image'], name='tpms_mni_warp')
-    tpms_mni.inputs.reference_image = op.join(get_mni_template(), 'MNI152_T1_1mm.nii.gz')
+    tpms_mni.inputs.reference_image = op.join(get_mni_icbm152_nlin_asym_09c(), '1mm_T1.nii.gz')
 
 
     workflow.connect([
@@ -140,8 +143,8 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
                              interpolation='NearestNeighbor'),
         name='T1_2_MNI_warp'
     )
-    seg_2_mni.inputs.reference_image = op.join(get_mni_template(),
-                                               'MNI152_T1_1mm.nii.gz')
+    seg_2_mni.inputs.reference_image = op.join(get_mni_icbm152_nlin_asym_09c(),
+                                               '1mm_T1.nii.gz')
 
     t1_2_mni_overlay = pe.Node(
         niu.Function(
@@ -152,15 +155,15 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         name='T1ToMNI'
     )
     t1_2_mni_overlay.inputs.out_file = 't1_to_mni_overlay.svg'
-    t1_2_mni_overlay.inputs.overlay_file = op.join(get_mni_template(),
-                                                   'MNI152_T1_1mm.nii.gz')
+    t1_2_mni_overlay.inputs.overlay_file = op.join(get_mni_icbm152_nlin_asym_09c(),
+                                                   '1mm_T1.nii.gz')
 
     t1_2_mni_overlay_ds = pe.Node(
         ImageDataSink(base_directory=settings['output_dir']),
         name='T12MNIOverlayDS'
     )
-    t1_2_mni_overlay_ds.inputs.overlay_file = op.join(get_mni_template(),
-                                                   'MNI152_T1_1mm.nii.gz')
+    t1_2_mni_overlay_ds.inputs.overlay_file = op.join(get_mni_icbm152_nlin_asym_09c(),
+                                                   '1mm_T1.nii.gz')
 
     datasink = pe.Node(
         interface=nio.DataSink(
