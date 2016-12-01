@@ -39,7 +39,7 @@ ENV C3DPATH /opt/c3d
 ENV PATH $C3DPATH:$PATH
 
 RUN rm -rf /usr/local/miniconda/lib/python*/site-packages/nipype* && \
-    pip install -e git+https://github.com/nipy/nipype.git@master#egg=nipype && \
+    pip install -e git+https://github.com/nipy/nipype.git@8ddca5a03fcad26887c862dc23c82ef23f2ee506#egg=nipype-8ddc && \
     pip install -e git+https://github.com/poldracklab/niworkflows.git@0d8f5584d456ebe2505d644e04a8a5f859e78b1b#egg=niworkflows && \
     conda install -y mock && \
     conda install -y pandas && \
