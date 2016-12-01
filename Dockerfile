@@ -40,6 +40,7 @@ ENV PATH $C3DPATH:$PATH
 
 RUN rm -rf /usr/local/miniconda/lib/python*/site-packages/nipype* && \
     pip install -e git+https://github.com/nipy/nipype.git@master#egg=nipype && \
+    pip install -e git+https://github.com/poldracklab/niworkflows.git@0d8f5584d456ebe2505d644e04a8a5f859e78b1b#egg=niworkflows && \
     conda install -y mock && \
     conda install -y pandas && \
     python -c "from matplotlib import font_manager"
