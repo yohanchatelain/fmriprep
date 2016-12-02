@@ -39,19 +39,19 @@ ENV C3DPATH /opt/c3d
 ENV PATH $C3DPATH:$PATH
 
 RUN rm -rf /usr/local/miniconda/lib/python*/site-packages/nipype* && \
-    pip install -e git+https://github.com/nipy/nipype.git@master#egg=nipype && \
-    pip install mock && \
-    pip install pandas && \
+    conda install -y mock && \
+    conda install -y pandas && \
     python -c "from matplotlib import font_manager"
 
+RUN pip install -e git+https://github.com/nipy/nipype.git@8ddca5a03fcad26887c862dc23c82ef23f2ee506#egg=nipype
+RUN pip install -e git+https://github.com/poldracklab/niworkflows.git@264284a008a610d78de62c1d18181b775fc20f15#egg=niworkflows
 
 WORKDIR /root/src
-COPY requirements.txt requirements.txt
-RUN pip install -r requirements.txt
 
 COPY . fmriprep/
 RUN cd fmriprep && \
     pip install -e .[all]
+    #  python setup.py develop && \
 
 WORKDIR /root/
 COPY build/files/run_* /usr/bin/
