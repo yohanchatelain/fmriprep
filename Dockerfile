@@ -43,7 +43,8 @@ RUN rm -rf /usr/local/miniconda/lib/python*/site-packages/nipype* && \
     conda install -y pandas && \
     python -c "from matplotlib import font_manager"
 
-RUN pip install --process-dependency-links -e git+https://github.com/poldracklab/niworkflows.git@0d8f5584d456ebe2505d644e04a8a5f859e78b1b#egg=niworkflows
+RUN pip install -e git+https://github.com/nipy/nipype.git@8ddca5a03fcad26887c862dc23c82ef23f2ee506#egg=nipype
+RUN pip install -e git+https://github.com/poldracklab/niworkflows.git@264284a008a610d78de62c1d18181b775fc20f15#egg=niworkflows
 
 WORKDIR /root/src
 
