@@ -17,9 +17,10 @@ from nipype.interfaces import io as nio
 from nipype.interfaces import utility as niu
 from nipype.pipeline import engine as pe
 
-from niworkflows.anat.mni import RobustMNINormalization
+from niworkflows.interfaces.registration import RobustMNINormalizationRPT
 from niworkflows.anat.skullstrip import afni_wf as skullstrip_wf
 from niworkflows.data import get_mni_icbm152_nlin_asym_09c
+from niworkflows.interfaces.masks import BrainExtractionRPT
 
 from fmriprep.interfaces import (DerivativesDataSink, IntraModalMerge,
                                  ImageDataSink)
@@ -63,7 +64,8 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
 
     # 5. Spatial normalization (T1w to MNI registration)
     t1_2_mni = pe.Node(
-        RobustMNINormalization(
+        RobustMNINormalizationRPT(
+            generate_report=True,
             num_threads=settings.get('ants_threads', 6),
             testing=settings.get('debug', False)
         ),
@@ -299,9 +301,10 @@ def skullstrip_ants(name='ANTsBrainExtraction', settings=None):
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['out_file', 'out_mask']), name='outputnode')
 
-    t1_skull_strip = pe.Node(ants.segmentation.BrainExtraction(
+    t1_skull_strip = pe.Node(BrainExtractionRPT(
         dimension=3, use_floatingpoint_precision=1,
-        debug=settings['debug']), name='Ants_T1_Brain_Extraction')
+        debug=settings['debug'], generate_report=True),
+        name='Ants_T1_Brain_Extraction')
     t1_skull_strip.inputs.brain_template = op.join(
         get_ants_oasis_template_ras(),
         'T_template0.nii.gz'

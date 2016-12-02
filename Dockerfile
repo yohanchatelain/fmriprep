@@ -57,5 +57,12 @@ WORKDIR /root/
 COPY build/files/run_* /usr/bin/
 RUN chmod +x /usr/bin/run_*
 
+RUN mkdir /niworkflows_data
+ENV CRN_SHARED_DATA /niworkflows_data
+
+RUN python -c 'from niworkflows.data.getters import get_mni_template_ras; get_mni_template_ras()' && \
+    python -c 'from niworkflows.data.getters import get_mni_icbm152_nlin_asym_09c; get_mni_icbm152_nlin_asym_09c()' && \
+    python -c 'from niworkflows.data.getters import get_ants_oasis_template_ras; get_ants_oasis_template_ras()'
+
 ENTRYPOINT ["/usr/bin/run_fmriprep"]
 CMD ["--help"]
