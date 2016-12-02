@@ -39,7 +39,6 @@ ENV C3DPATH /opt/c3d
 ENV PATH $C3DPATH:$PATH
 
 RUN rm -rf /usr/local/miniconda/lib/python*/site-packages/nipype* && \
-    pip install -e git+https://github.com/incf/pybids.git@158dac2062dc6b5a4ab2f92090108eedc3387575#egg=pybids-158d && \
     conda install -y mock && \
     conda install -y pandas && \
     python -c "from matplotlib import font_manager"
