@@ -47,8 +47,6 @@ RUN rm -rf /usr/local/miniconda/lib/python*/site-packages/nipype* && \
 RUN pip install --process-dependency-links -e git+https://github.com/poldracklab/niworkflows.git@0d8f5584d456ebe2505d644e04a8a5f859e78b1b#egg=niworkflows
 
 WORKDIR /root/src
-COPY requirements.txt requirements.txt
-RUN pip install -r requirements.txt
 
 COPY . fmriprep/
 RUN cd fmriprep && \
