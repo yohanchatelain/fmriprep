@@ -24,6 +24,7 @@ from niworkflows.interfaces.masks import BrainExtractionRPT
 
 from fmriprep.interfaces import (DerivativesDataSink, IntraModalMerge,
                                  ImageDataSink)
+from fmriprep.interfaces.utils import reorient
 from fmriprep.viz import stripped_brain_overlay
 
 
@@ -46,7 +47,9 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     t1wmrg = pe.Node(IntraModalMerge(), name='MergeT1s')
 
     # 1. Reorient T1
-    arw = pe.Node(fs.MRIConvert(out_type='niigz', out_orientation='LAS'),
+    arw = pe.Node(niu.Function(input_names=['in_file'],
+                               output_names=['out_file'],
+                               function=reorient),
                   name='Reorient')
 
     # 2. T1 Bias Field Correction
@@ -304,7 +307,7 @@ def skullstrip_ants(name='ANTsBrainExtraction', settings=None):
 
     t1_skull_strip = pe.Node(BrainExtractionRPT(
         dimension=3, use_floatingpoint_precision=1,
-        debug=settings['debug'], generate_report=True),
+        debug=settings['debug'], generate_report=True, args="-k"),
         name='Ants_T1_Brain_Extraction')
     t1_skull_strip.inputs.brain_template = op.join(
         get_ants_oasis_template_ras(),
