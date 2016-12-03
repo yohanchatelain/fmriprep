@@ -307,7 +307,7 @@ def skullstrip_ants(name='ANTsBrainExtraction', settings=None):
 
     t1_skull_strip = pe.Node(BrainExtractionRPT(
         dimension=3, use_floatingpoint_precision=1,
-        debug=settings['debug'], generate_report=True, args="-k"),
+        debug=settings['debug'], generate_report=True),
         name='Ants_T1_Brain_Extraction')
     t1_skull_strip.inputs.brain_template = op.join(
         get_ants_oasis_template_ras(),
