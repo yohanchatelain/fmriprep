@@ -67,7 +67,8 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         RobustMNINormalizationRPT(
             generate_report=True,
             num_threads=settings.get('ants_threads', 6),
-            testing=settings.get('debug', False)
+            testing=settings.get('debug', False),
+            template='mni_icbm152_nlin_asym_09c'
         ),
         name='T1_2_MNI_Registration'
     )
