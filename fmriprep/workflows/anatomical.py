@@ -60,7 +60,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         asw = skullstrip_ants(settings=settings)
 
     # 4. Segmentation
-    t1_seg = pe.Node(FASTRPT(generate_report=True,
+    t1_seg = pe.Node(FASTRPT(generate_report=True, segments=True,
                              no_bias=True, probability_maps=True),
                      name='Segmentation')
 
