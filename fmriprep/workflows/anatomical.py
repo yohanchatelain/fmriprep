@@ -21,6 +21,7 @@ from niworkflows.interfaces.registration import RobustMNINormalizationRPT
 from niworkflows.anat.skullstrip import afni_wf as skullstrip_wf
 from niworkflows.data import get_mni_icbm152_nlin_asym_09c
 from niworkflows.interfaces.masks import BrainExtractionRPT
+from niworkflows.interfaces.segmentation import FASTRPT
 
 from fmriprep.interfaces import (DerivativesDataSink, IntraModalMerge,
                                  ImageDataSink)
@@ -59,7 +60,8 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         asw = skullstrip_ants(settings=settings)
 
     # 4. Segmentation
-    t1_seg = pe.Node(fsl.FAST(no_bias=True, probability_maps=True),
+    t1_seg = pe.Node(FASTRPT(generate_report=True,
+                             no_bias=True, probability_maps=True),
                      name='Segmentation')
 
     # 5. Spatial normalization (T1w to MNI registration)
