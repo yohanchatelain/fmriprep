@@ -219,32 +219,32 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     )
     ds_t1_seg = pe.Node(
         DerivativesDataSink(base_directory=settings['output_dir'],
-                            suffix='inu_seg'),
+                            suffix='dtissue'),
         name='DerivT1_seg'
     )
     ds_mask = pe.Node(
         DerivativesDataSink(base_directory=settings['output_dir'],
-                            suffix='bmask'),
+                            suffix='brainmask'),
         name='DerivT1_mask'
     )
     ds_t1_mni = pe.Node(
         DerivativesDataSink(base_directory=settings['output_dir'],
-                            suffix='mni'),
+                            suffix='space-MNI152NLin2009cAsym_preproc'),
         name='DerivT1w_MNI'
     )
     ds_t1_mni_aff = pe.Node(
         DerivativesDataSink(base_directory=settings['output_dir'],
-                            suffix='mni_affine'),
+                            suffix='target-MNI152nNLin2009cAsym_affine'),
         name='DerivT1w_MNI_affine'
     )
     ds_bmask_mni = pe.Node(
         DerivativesDataSink(base_directory=settings['output_dir'],
-                            suffix='bmask_mni'),
+                            suffix='space-MNI152NLin2009cAsym_brainmask'),
         name='DerivT1_Mask_MNI'
     )
     ds_tpms_mni = pe.Node(
         DerivativesDataSink(base_directory=settings['output_dir'],
-                            suffix='tpm_mni'),
+                            suffix='target-MNI152NLin2009cAsym_probtissue'),
         name='DerivT1_TPMs_MNI'
     )
 
@@ -255,7 +255,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     else:
         ds_t1_mni_warp = pe.Node(
             DerivativesDataSink(base_directory=settings['output_dir'],
-                                suffix='mni_warp'), name='DerivT1w_MNI_warp')
+                                suffix='mni_warp'), name='target-MNI152NLin2009cAsym_warp')
 
         def _get_aff(inlist):
             return inlist[:-1]
