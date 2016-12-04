@@ -123,7 +123,10 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
         (t1_to_epi_transforms, confounds_wf, [('out_file', 'inputnode.t1_transform')]),
 
         (hmcwf, confounds_wf, [('outputnode.movpar_file', 'inputnode.movpar_file'),
-                               ('outputnode.epi_mean', 'inputnode.reference_image')]),
+                               ('outputnode.epi_mean', 'inputnode.reference_image'),
+                               ('outputnode.motion_confounds_file',
+                                'inputnode.motion_confounds_file'),
+                               ('inputnode.epi', 'inputnode.source_file')]),
         (epiunwarp_wf, confounds_wf, [('outputnode.epi_mask', 'inputnode.epi_mask'),
                                       ('outputnode.epi_unwarp', 'inputnode.fmri_file')]),
         (t1w_pre, confounds_wf, [('outputnode.t1_seg', 'inputnode.t1_seg')]),
@@ -174,6 +177,7 @@ def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
 
     workflow.connect([
         (bidssrc, t1w_pre, [('t1w', 'inputnode.t1w')]),
+        (bidssrc, epi_2_t1, [('t1w', 'inputnode.t1w')]),
         (hmcwf, epi_2_t1, [('inputnode.epi', 'inputnode.epi')]),
         (hmcwf, epi_2_t1, [('outputnode.epi_mean', 'inputnode.epi_mean')]),
         (t1w_pre, epi_2_t1, [('outputnode.t1_brain', 'inputnode.t1_brain'),
@@ -183,8 +187,10 @@ def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
         (hmcwf, confounds_wf, [('outputnode.movpar_file', 'inputnode.movpar_file'),
                                ('outputnode.epi_brain', 'inputnode.fmri_file'),
                                ('outputnode.epi_mean', 'inputnode.reference_image'),
-                               ('outputnode.epi_mask', 'inputnode.epi_mask')]),
+                               ('outputnode.epi_mask', 'inputnode.epi_mask'),
+                               ('outputnode.motion_confounds_file', 'inputnode.motion_confounds_file')]),
         (epi_2_t1, confounds_wf, [('outputnode.mat_t1_to_epi', 'inputnode.t1_transform')]),
+        (hmcwf, confounds_wf, [('inputnode.epi', 'inputnode.source_file')]),
 
         (hmcwf, epi_mni_trans_wf, [('inputnode.epi', 'inputnode.epi')]),
         (epi_2_t1, epi_mni_trans_wf, [('outputnode.itk_epi_to_t1', 'inputnode.itk_epi_to_t1')]),
