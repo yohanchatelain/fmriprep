@@ -281,7 +281,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         (inputnode, ds_t1_mni_aff, [('t1w', 'source_file')]),
         (inputnode, ds_bmask_mni, [('t1w', 'source_file')]),
         (inputnode, ds_tpms_mni, [('t1w', 'source_file')]),
-        (asw, ds_t1_bias, [('outputnode.out_file', 'in_file')]),
+        (inu_n4, ds_t1_bias, [('output_image', 'in_file')]),
         (t1_seg, ds_t1_seg, [('tissue_class_map', 'in_file')]),
         (asw, ds_mask, [('outputnode.out_mask', 'in_file')]),
         (t1_2_mni, ds_t1_mni, [('warped_image', 'in_file')]),
