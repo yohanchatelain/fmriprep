@@ -38,9 +38,16 @@ RUN mkdir -p /opt/c3d && \
 ENV C3DPATH /opt/c3d
 ENV PATH $C3DPATH:$PATH
 
-RUN rm -rf /usr/local/miniconda/lib/python*/site-packages/nipype* && \
-    conda install -y mock && \
-    conda install -y pandas && \
+RUN rm -rf /usr/local/miniconda && curl -sSLO https://repo.continuum.io/miniconda/Miniconda3-4.2.12-Linux-x86_64.sh && \
+    bash Miniconda3-4.2.12-Linux-x86_64.sh -b -p /usr/local/miniconda && \
+    rm Miniconda3-4.2.12-Linux-x86_64.sh
+ENV PATH=/usr/local/miniconda/bin:$PATH \
+	LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
+
+# Create conda environment
+RUN conda config --add channels conda-forge && \
+    conda install -y numpy scipy matplotlib pandas lxml libxslt nose mock && \
     python -c "from matplotlib import font_manager"
 
 RUN pip install -e git+https://github.com/nipy/nipype.git@8ddca5a03fcad26887c862dc23c82ef23f2ee506#egg=nipype
