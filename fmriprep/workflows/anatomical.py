@@ -68,7 +68,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     t1_2_mni = pe.Node(
         RobustMNINormalizationRPT(
             generate_report=True,
-            num_threads=settings['ants_threads'],
+            num_threads=settings['ants_nthreads'],
             testing=settings.get('debug', False),
             template='mni_icbm152_nlin_asym_09c'
         ),
@@ -76,7 +76,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     )
     # should not be necesssary byt does not hurt - make sure the multiproc
     # scheduler knows the resource limits
-    t1_2_mni.interface.num_threads = settings['ants_threads']
+    t1_2_mni.interface.num_threads = settings['ants_nthreads']
 
     # Resample the brain mask and the tissue probability maps into mni space
     bmask_mni = pe.Node(
