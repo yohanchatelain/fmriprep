@@ -110,6 +110,7 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
         (sbref_pre, epi2sbref, [('outputnode.sbref_unwarped', 'inputnode.sbref_brain'),
                                 ('outputnode.sbref_unwarped_mask', 'inputnode.sbref_brain_mask')]),
         (hmcwf, epi2sbref, [('outputnode.epi_brain', 'inputnode.epi_brain')]),
+        (hmcwf, epi2sbref, [('outputnode.epi_mean', 'inputnode.epi_mean')]),
         (hmcwf, epi2sbref, [('inputnode.epi', 'inputnode.epi')]),
         (hmcwf, epiunwarp_wf, [('inputnode.epi', 'inputnode.epi')]),
         (fmap_est, epiunwarp_wf, [('outputnode.fmap', 'inputnode.fmap'),
@@ -192,7 +193,7 @@ def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
         (hmcwf, confounds_wf, [('inputnode.epi', 'inputnode.source_file')]),
 
         (hmcwf, epi_mni_trans_wf, [('inputnode.epi', 'inputnode.epi')]),
-        (epi_2_t1, epi_mni_trans_wf, [('outputnode.mat_epi_to_t1', 'inputnode.mat_epi_to_t1')]),
+        (epi_2_t1, epi_mni_trans_wf, [('outputnode.itk_epi_to_t1', 'inputnode.itk_epi_to_t1')]),
         (hmcwf, epi_mni_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms'),
                                    ('outputnode.epi_mask', 'inputnode.epi_mask')]),
         (t1w_pre, epi_mni_trans_wf, [('outputnode.t1_brain', 'inputnode.t1'),
