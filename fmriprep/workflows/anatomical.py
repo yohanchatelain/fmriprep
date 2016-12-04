@@ -216,39 +216,40 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     # Write corrected file in the designated output dir
     ds_t1_bias = pe.Node(
         DerivativesDataSink(base_directory=settings['output_dir'],
-                            suffix='inu'),
+                            suffix='preproc'),
         name='DerivT1_inu'
     )
     ds_t1_seg = pe.Node(
         DerivativesDataSink(base_directory=settings['output_dir'],
-                            suffix='inu_seg'),
+                            suffix='dtissue'),
         name='DerivT1_seg'
     )
     ds_mask = pe.Node(
         DerivativesDataSink(base_directory=settings['output_dir'],
-                            suffix='bmask'),
+                            suffix='brainmask'),
         name='DerivT1_mask'
     )
     ds_t1_mni = pe.Node(
         DerivativesDataSink(base_directory=settings['output_dir'],
-                            suffix='mni'),
+                            suffix='space-MNI152NLin2009cAsym_preproc'),
         name='DerivT1w_MNI'
     )
     ds_t1_mni_aff = pe.Node(
         DerivativesDataSink(base_directory=settings['output_dir'],
-                            suffix='mni_affine'),
+                            suffix='target-MNI152NLin2009cAsym_affine'),
         name='DerivT1w_MNI_affine'
     )
     ds_bmask_mni = pe.Node(
         DerivativesDataSink(base_directory=settings['output_dir'],
-                            suffix='bmask_mni'),
+                            suffix='space-MNI152NLin2009cAsym_brainmask'),
         name='DerivT1_Mask_MNI'
     )
     ds_tpms_mni = pe.Node(
         DerivativesDataSink(base_directory=settings['output_dir'],
-                            suffix='tpm_mni'),
+                            suffix='space-MNI152NLin2009cAsym_class-{extra_value}_probtissue'),
         name='DerivT1_TPMs_MNI'
     )
+    ds_tpms_mni.inputs.extra_values = ['CSF', 'GM', 'WM']
 
     if settings.get('debug', False):
         workflow.connect([
@@ -257,7 +258,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     else:
         ds_t1_mni_warp = pe.Node(
             DerivativesDataSink(base_directory=settings['output_dir'],
-                                suffix='mni_warp'), name='DerivT1w_MNI_warp')
+                                suffix='target-MNI152NLin2009cAsym_warp'), name='mni_warp')
 
         def _get_aff(inlist):
             return inlist[:-1]
