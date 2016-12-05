@@ -11,7 +11,6 @@ Originally coded by Craig Moodie. Refactored by the CRN Developers.
 import os.path as op
 
 from nipype.interfaces import ants
-from nipype.interfaces import freesurfer as fs
 from nipype.interfaces import fsl
 from nipype.interfaces import io as nio
 from nipype.interfaces import utility as niu
