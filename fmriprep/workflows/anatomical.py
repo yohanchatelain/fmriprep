@@ -11,7 +11,6 @@ Originally coded by Craig Moodie. Refactored by the CRN Developers.
 import os.path as op
 
 from nipype.interfaces import ants
-from nipype.interfaces import freesurfer as fs
 from nipype.interfaces import fsl
 from nipype.interfaces import io as nio
 from nipype.interfaces import utility as niu
@@ -25,6 +24,7 @@ from niworkflows.interfaces.segmentation import FASTRPT
 
 from fmriprep.interfaces import (DerivativesDataSink, IntraModalMerge,
                                  ImageDataSink)
+from fmriprep.interfaces.utils import reorient
 from fmriprep.viz import stripped_brain_overlay
 
 
@@ -47,7 +47,9 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     t1wmrg = pe.Node(IntraModalMerge(), name='MergeT1s')
 
     # 1. Reorient T1
-    arw = pe.Node(fs.MRIConvert(out_type='niigz', out_orientation='LAS'),
+    arw = pe.Node(niu.Function(input_names=['in_file'],
+                               output_names=['out_file'],
+                               function=reorient),
                   name='Reorient')
 
     # 2. T1 Bias Field Correction
