@@ -51,7 +51,7 @@ RUN conda config --add channels conda-forge && \
     python -c "from matplotlib import font_manager"
 
 RUN pip install -e git+https://github.com/nipy/nipype.git@17e31abfd0a6a6b64c8c84586916bd463608e4b9#egg=nipype
-RUN pip install -e git+https://github.com/poldracklab/niworkflows.git@8641d43a074f140191d6a652cdd44ffcda051ba4#egg=niworkflows
+RUN pip install -e git+https://github.com/poldracklab/niworkflows.git@788d969855ce6de3b0c2a2956807185065ed6200#egg=niworkflows
 
 RUN mkdir /niworkflows_data
 ENV CRN_SHARED_DATA /niworkflows_data
