@@ -97,6 +97,11 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     tpms_mni.inputs.reference_image = op.join(get_mni_icbm152_nlin_asym_09c(),
                                               '1mm_T1.nii.gz')
 
+    ds_report = pe.Node(nio.DataSink(), name="DS_REPORT")
+    ds_report.inputs.base_directory = op.join(settings['output_dir'],
+                                              'reports')
+
+
     workflow.connect([
         (inputnode, t1wmrg, [('t1w', 'in_files')]),
         (t1wmrg, arw, [('out_avg', 'in_file')]),
@@ -121,6 +126,8 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         (t1_2_mni, tpms_mni, [('forward_transforms', 'transforms'),
                               ('forward_invert_flags', 'invert_transform_flags')]),
         (asw, outputnode, [('outputnode.out_file', 't1_brain')]),
+        (t1_seg, ds_report, [('out_report', 't1w_preprocessing.t1_seg')]),
+        (t1_2_mni, ds_report, [('out_report', 't1w_preprocessing.t1_2_mni')])
     ])
 
     # Connect reporting nodes
@@ -333,8 +340,12 @@ def skullstrip_ants(name='ANTsBrainExtraction', settings=None):
         'T_template0_BrainCerebellumRegistrationMask.nii.gz'
     )
 
+    ds_report = pe.Node(nio.DataSink(), name="DS_REPORT")
+    ds_report.inputs.base_directory = op.join(settings['output_dir'],
+                                              'reports')
     workflow.connect([
         (inputnode, t1_skull_strip, [('in_file', 'anatomical_image')]),
+        (t1_skull_strip, ds_report, [('out_report', 'skullstrip_ants.t1_skull_strip')]),
         (t1_skull_strip, outputnode, [('BrainExtractionMask', 'out_mask'),
                                       ('BrainExtractionBrain', 'out_file')])
     ])
