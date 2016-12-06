@@ -38,20 +38,34 @@ RUN mkdir -p /opt/c3d && \
 ENV C3DPATH /opt/c3d
 ENV PATH $C3DPATH:$PATH
 
-RUN rm -rf /usr/local/miniconda/lib/python*/site-packages/nipype* && \
-    pip install -e git+https://github.com/nipy/nipype.git@master#egg=nipype && \
-    pip install mock && \
-    pip install pandas && \
+RUN rm -rf /usr/local/miniconda && curl -sSLO https://repo.continuum.io/miniconda/Miniconda3-4.2.12-Linux-x86_64.sh && \
+    bash Miniconda3-4.2.12-Linux-x86_64.sh -b -p /usr/local/miniconda && \
+    rm Miniconda3-4.2.12-Linux-x86_64.sh
+ENV PATH=/usr/local/miniconda/bin:$PATH \
+	LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
+
+# Create conda environment
+RUN conda config --add channels conda-forge && \
+    conda install -y numpy scipy matplotlib pandas lxml libxslt nose mock && \
     python -c "from matplotlib import font_manager"
 
+RUN pip install -e git+https://github.com/nipy/nipype.git@17e31abfd0a6a6b64c8c84586916bd463608e4b9#egg=nipype
+RUN pip install -e git+https://github.com/poldracklab/niworkflows.git@788d969855ce6de3b0c2a2956807185065ed6200#egg=niworkflows
+
+RUN mkdir /niworkflows_data
+ENV CRN_SHARED_DATA /niworkflows_data
+
+RUN python -c 'from niworkflows.data.getters import get_mni_template_ras; get_mni_template_ras()' && \
+    python -c 'from niworkflows.data.getters import get_mni_icbm152_nlin_asym_09c; get_mni_icbm152_nlin_asym_09c()' && \
+    python -c 'from niworkflows.data.getters import get_ants_oasis_template_ras; get_ants_oasis_template_ras()'
 
 WORKDIR /root/src
-COPY requirements.txt requirements.txt
-RUN pip install -r requirements.txt
 
 COPY . fmriprep/
 RUN cd fmriprep && \
     pip install -e .[all]
+    #  python setup.py develop && \
 
 WORKDIR /root/
 COPY build/files/run_* /usr/bin/
