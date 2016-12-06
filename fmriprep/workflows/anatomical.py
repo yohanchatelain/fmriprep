@@ -109,6 +109,12 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         name='DS_T1_2_MNI_Report'
     )
 
+    ds_t1_ss_report = pe.Node(
+        DerivativesDataSink(base_directory=settings['output_dir'],
+                            suffix='t1_skull_strip', out_path_base='reports'),
+        name='DS_Report'
+    )
+
     workflow.connect([
         (inputnode, t1wmrg, [('t1w', 'in_files')]),
         (t1wmrg, arw, [('out_avg', 'in_file')]),
@@ -140,6 +146,11 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         (t1_2_mni, ds_t1_2_mni_report, [('out_report', 'in_file')])
     ])
 
+    if settings.get('skull_strip_ants', False):
+        workflow.connect([
+            (inputnode, ds_t1_skull_strip_report, [('t1w', 'source_file')]),
+            (asw, ds_t1_skull_strip_report, [('out_report', 'in_file')])
+        ])
     # Connect reporting nodes
     t1_stripped_overlay = pe.Node(
         niu.Function(
@@ -208,6 +219,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         name='datasink',
         parameterization=False
     )
+
 
     workflow.connect([
         (inu_n4, t1_stripped_overlay, [('output_image', 'overlay_file')]),
@@ -325,7 +337,7 @@ def skullstrip_ants(name='ANTsBrainExtraction', settings=None):
     inputnode = pe.Node(niu.IdentityInterface(fields=['in_file', 'source_file']),
                         name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['out_file', 'out_mask']), name='outputnode')
+        fields=['out_file', 'out_mask', 'out_report']), name='outputnode')
 
     t1_skull_strip = pe.Node(BrainExtractionRPT(
         dimension=3, use_floatingpoint_precision=1,
@@ -350,18 +362,12 @@ def skullstrip_ants(name='ANTsBrainExtraction', settings=None):
         'T_template0_BrainCerebellumRegistrationMask.nii.gz'
     )
 
-    ds_report = pe.Node(
-        DerivativesDataSink(base_directory=settings['output_dir'],
-                            suffix='t1_skull_strip', out_path_base='reports'),
-        name='DS_Report'
-    )
 
     workflow.connect([
         (inputnode, t1_skull_strip, [('in_file', 'anatomical_image')]),
-        (inputnode, ds_report, [('source_file', 'source_file')]),
-        (t1_skull_strip, ds_report, [('out_report', 'in_file')]),
         (t1_skull_strip, outputnode, [('BrainExtractionMask', 'out_mask'),
-                                      ('BrainExtractionBrain', 'out_file')])
+                                      ('BrainExtractionBrain', 'out_file'),
+                                      ('out_report', 'out_report')])
     ])
 
     return workflow
