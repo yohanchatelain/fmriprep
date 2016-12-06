@@ -39,6 +39,9 @@ def base_workflow_generator(subject_id, settings):
 
     settings["biggest_epi_file_size_gb"] = get_biggest_epi_file_size_gb(subject_data['func'])
 
+    if subject_data['t1w'] == []:
+        raise Exception("No T1w images found for participant %s. All workflows require T1w images."%subject_id)
+
     if subject_data['sbref'] != [] or settings['workflow_type'] == "ds054":
         return wf_ds054_type(subject_data, settings, name=subject_id)
     elif subject_data['sbref'] == [] or settings['workflow_type'] == "ds005":
