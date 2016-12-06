@@ -109,12 +109,6 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         name='DS_T1_2_MNI_Report'
     )
 
-    ds_t1_ss_report = pe.Node(
-        DerivativesDataSink(base_directory=settings['output_dir'],
-                            suffix='t1_skull_strip', out_path_base='reports'),
-        name='DS_Report'
-    )
-
     workflow.connect([
         (inputnode, t1wmrg, [('t1w', 'in_files')]),
         (t1wmrg, arw, [('out_avg', 'in_file')]),
@@ -147,10 +141,16 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     ])
 
     if settings.get('skull_strip_ants', False):
+        ds_t1_skull_strip_report = pe.Node(
+            DerivativesDataSink(base_directory=settings['output_dir'],
+                                suffix='t1_skull_strip', out_path_base='reports'),
+            name='DS_Report'
+        )
         workflow.connect([
             (inputnode, ds_t1_skull_strip_report, [('t1w', 'source_file')]),
-            (asw, ds_t1_skull_strip_report, [('out_report', 'in_file')])
+            (asw, ds_t1_skull_strip_report, [('outputnode.out_report', 'in_file')])
         ])
+
     # Connect reporting nodes
     t1_stripped_overlay = pe.Node(
         niu.Function(
