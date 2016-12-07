@@ -43,9 +43,9 @@ def base_workflow_generator(subject_id, task_id, settings):
     if subject_data['t1w'] == []:
         raise Exception("No T1w images found for participant %s. All workflows require T1w images."%subject_id)
 
-    if subject_data['sbref'] != [] or settings['workflow_type'] == "ds054":
+    if (subject_data['sbref'] != [] and settings['workflow_type'] == "auto") or settings['workflow_type'] == "ds054":
         return wf_ds054_type(subject_data, settings, name=subject_id)
-    elif subject_data['sbref'] == [] or settings['workflow_type'] == "ds005":
+    elif (subject_data['sbref'] == [] and settings['workflow_type'] == "auto") or settings['workflow_type'] == "ds005":
         return wf_ds005_type(subject_data, settings, name=subject_id)
     else:
         raise Exception("Could not figure out what kind of workflow to run for this dataset.")
