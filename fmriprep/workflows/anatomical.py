@@ -114,7 +114,6 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         (t1wmrg, arw, [('out_avg', 'in_file')]),
         (arw, inu_n4, [('out_file', 'input_image')]),
         (inu_n4, asw, [('output_image', 'inputnode.in_file')]),
-        (inputnode, asw, [('t1w', 'inputnode.source_file')]),
         (asw, t1_seg, [('outputnode.out_file', 'in_files')]),
         (inu_n4, t1_2_mni, [('output_image', 'moving_image')]),
         (asw, t1_2_mni, [('outputnode.out_mask', 'moving_mask')]),
