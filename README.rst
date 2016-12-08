@@ -73,7 +73,7 @@ Example: ::
 Support and communication
 -------------------------
 
-The documentation of this project is found here: http://preprocessing-workflow.readthedocs.org/en/latest/.
+The documentation of this project is found here: http://fmriprep.readthedocs.org/en/latest/.
 
 If you have a problem or would like to ask a question about how to use ``fmriprep``,
 please submit a question to NeuroStars.org with an ``fmriprep`` tag.
@@ -88,7 +88,7 @@ Please add *[fmriprep]* to the subject line when posting on the mailing list.
 
 
 All bugs, concerns and enhancement requests for this software can be submitted here:
-https://github.com/poldracklab/preprocessing-workflow/issues.
+https://github.com/poldracklab/fmriprep/issues.
 
 
 Acknowledgements
@@ -96,7 +96,7 @@ Acknowledgements
 
 Please acknowledge this work mentioning explicitly the name of this software (fmriprep)
 and the version, along with the link to the GitHub repository
-(https://github.com/poldracklab/preprocessing-workflow).
+(https://github.com/poldracklab/fmriprep).
 
 
 License information
