@@ -14,7 +14,6 @@
 
 import os
 import sys
-from fmriprep import __version__
 
 # Hack for readthedocs
 # http://blog.rtwilson.com/how-to-make-your-sphinx-documentation-compile-with-readthedocs-when-youre-using-numpy-and-scipy/
