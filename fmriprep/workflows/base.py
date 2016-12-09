@@ -118,9 +118,10 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
             ('outputnode.t1_seg', 'inputnode.t1_seg')]),
         (sbref_pre, epi2sbref, [('outputnode.sbref_unwarped', 'inputnode.sbref_brain'),
                                 ('outputnode.sbref_unwarped_mask', 'inputnode.sbref_brain_mask')]),
-        (hmcwf, epi2sbref, [('outputnode.epi_mask', 'inputnode.epi_mask')]),
-        (hmcwf, epi2sbref, [('outputnode.epi_mean', 'inputnode.epi_mean')]),
-        (hmcwf, epi2sbref, [('inputnode.epi', 'inputnode.epi')]),
+        (hmcwf, epi2sbref, [('outputnode.epi_mask', 'inputnode.epi_mask'),
+                            ('outputnode.epi_mean', 'inputnode.epi_mean'),
+                            ('outputnode.epi_hmc', 'inputnode.epi_hmc')
+                            ('inputnode.epi', 'inputnode.epi')]),
         (hmcwf, epiunwarp_wf, [('inputnode.epi', 'inputnode.epi')]),
         (fmap_est, epiunwarp_wf, [('outputnode.fmap', 'inputnode.fmap'),
                                   ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
@@ -196,7 +197,7 @@ def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
 
         (t1w_pre, confounds_wf, [('outputnode.t1_seg', 'inputnode.t1_seg')]),
         (hmcwf, confounds_wf, [('outputnode.movpar_file', 'inputnode.movpar_file'),
-                               ('outputnode.epi_brain', 'inputnode.fmri_file'),
+                               ('outputnode.epi_hmc', 'inputnode.fmri_file'),
                                ('outputnode.epi_mean', 'inputnode.reference_image'),
                                ('outputnode.epi_mask', 'inputnode.epi_mask'),
                                ('outputnode.motion_confounds_file', 'inputnode.motion_confounds_file')]),
