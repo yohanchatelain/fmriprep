@@ -188,7 +188,7 @@ def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
     workflow.connect([
         (bidssrc, t1w_pre, [('t1w', 'inputnode.t1w')]),
         (bidssrc, epi_2_t1, [('t1w', 'inputnode.t1w')]),
-        (hmcwf, epi_2_t1, [('inputnode.epi', 'inputnode.epi'),
+        (hmcwf, epi_2_t1, [('inputnode.epi', 'inputnode.epi_name_source'),
                            ('outputnode.epi_mean', 'inputnode.epi_mean'),
                            ('outputnode.epi_mask', 'inputnode.epi_mask')]),
         (t1w_pre, epi_2_t1, [('outputnode.bias_corrected_t1', 'inputnode.bias_corrected_t1'),
