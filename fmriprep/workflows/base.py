@@ -114,7 +114,7 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
                                ('outputnode.fmap_mask', 'inputnode.fmap_mask')]),
         (sbref_pre, sbref_t1, [('outputnode.sbref_unwarped', 'inputnode.sbref')]),
         (t1w_pre, sbref_t1, [
-            ('outputnode.t1_brain', 'inputnode.t1_brain'),
+            ('outputnode.bias_corrected_t1', 'inputnode.t1'),
             ('outputnode.t1_seg', 'inputnode.t1_seg')]),
         (sbref_pre, epi2sbref, [('outputnode.sbref_unwarped', 'inputnode.sbref'),
                                 ('outputnode.sbref_unwarped_mask', 'inputnode.sbref_mask')]),
@@ -208,7 +208,7 @@ def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
         (epi_2_t1, epi_mni_trans_wf, [('outputnode.itk_epi_to_t1', 'inputnode.itk_epi_to_t1')]),
         (hmcwf, epi_mni_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms'),
                                    ('outputnode.epi_mask', 'inputnode.epi_mask')]),
-        (t1w_pre, epi_mni_trans_wf, [('outputnode.t1_brain', 'inputnode.t1'),
+        (t1w_pre, epi_mni_trans_wf, [('outputnode.bias_corrected_t1', 'inputnode.t1'),
                                      ('outputnode.t1_2_mni_forward_transform',
                                       'inputnode.t1_2_mni_forward_transform')])
     ])
