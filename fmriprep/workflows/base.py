@@ -120,8 +120,8 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
                                 ('outputnode.sbref_unwarped_mask', 'inputnode.sbref_mask')]),
         (hmcwf, epi2sbref, [('outputnode.epi_mask', 'inputnode.epi_mask'),
                             ('outputnode.epi_mean', 'inputnode.epi_mean'),
-                            ('outputnode.epi_hmc', 'inputnode.epi_hmc')
-                            ('inputnode.epi', 'inputnode.epi')]),
+                            ('outputnode.epi_hmc', 'inputnode.epi'),
+                            ('inputnode.epi', 'inputnode.epi_name_source')]),
         (hmcwf, epiunwarp_wf, [('inputnode.epi', 'inputnode.epi')]),
         (fmap_est, epiunwarp_wf, [('outputnode.fmap', 'inputnode.fmap'),
                                   ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
