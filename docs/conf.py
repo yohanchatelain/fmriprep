@@ -14,7 +14,7 @@
 
 import os
 import sys
-from fmriprep import __version__
+from fmriprep.workflows.base import wf_ds005_type
 
 # Hack for readthedocs
 # http://blog.rtwilson.com/how-to-make-your-sphinx-documentation-compile-with-readthedocs-when-youre-using-numpy-and-scipy/
@@ -30,6 +30,7 @@ for mod_name in MOCK_MODULES:
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('../../fmriprep'))
+sys.path.append(os.path.abspath('sphinxext'))
 
 # -- General configuration ------------------------------------------------
 
@@ -46,6 +47,7 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
+    'sphinx.ext.graphviz' # for auto-generating workflow imgs
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -243,7 +245,8 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'fMRIprep.tex', u'fMRIprep Documentation',
-     u'Craig A. Moodie, Krzysztof J. Gorgolewski, Oscar Esteban, Ross Blair.', 'manual'),
+     u'Craig A. Moodie, Krzysztof J. Gorgolewski, Oscar Esteban, Ross Blair, Shoshana Berleant.',
+     'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -306,3 +309,8 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
+
+# Auto-create DAG pngs
+
+workflow = wf_ds005_type({'func': 'fake data'}, {'ants_nthreads': 1, 'output_dir': 'x', 'biggest_epi_file_size_gb': 1, 'skip_native': True})
+workflow.write_graph(graph2use="orig", dotfilename="ds005.dot", simple_form=True)
