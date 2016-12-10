@@ -138,7 +138,7 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
                                ('inputnode.epi', 'inputnode.source_file')]),
         (epiunwarp_wf, confounds_wf, [('outputnode.epi_mask', 'inputnode.epi_mask'),
                                       ('outputnode.epi_unwarp', 'inputnode.fmri_file')]),
-        (t1w_pre, confounds_wf, [('outputnode.t1_seg', 'inputnode.t1_seg')]),
+        (t1w_pre, confounds_wf, [('outputnode.t1_tpms', 'inputnode.t1_tpms')]),
     ])
     return workflow
 
@@ -192,7 +192,7 @@ def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
         (t1w_pre, epi_2_t1, [('outputnode.t1_brain', 'inputnode.t1_brain'),
                              ('outputnode.t1_seg', 'inputnode.t1_seg')]),
 
-        (t1w_pre, confounds_wf, [('outputnode.t1_seg', 'inputnode.t1_seg')]),
+        (t1w_pre, confounds_wf, [('outputnode.t1_tpms', 'inputnode.t1_tpms')]),
         (hmcwf, confounds_wf, [('outputnode.movpar_file', 'inputnode.movpar_file'),
                                ('outputnode.epi_brain', 'inputnode.fmri_file'),
                                ('outputnode.epi_mean', 'inputnode.reference_image'),
