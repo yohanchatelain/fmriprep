@@ -18,7 +18,11 @@ Example: ::
 
     fmriprep data/bids_root/ out/ participant -w work/
 
-More information can be found on the `ds005`_ page.
+Command-Line Arguments
+~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: args.txt
+   :literal:
 
 Debugging
 =========
