@@ -51,7 +51,7 @@ For example: ::
 $ singularity exec ~/poldracklab_fmriprep_latest-2016-12-04-5b74ad9a4c4d.img /usr/bin/run_fmriprep --participant_label sub-387 --nthreads 1 -w $WORK/lonestar/work --ants-nthreads 16 --skull--strip-ants /work/04168/berleant/lonestar/ $WORK/lonestar/output participant
 
 Manually Prepared Environment
-============================
+=============================
 
 First, make sure you would rather do this than use `Docker`_ or `Singularity`_.
 

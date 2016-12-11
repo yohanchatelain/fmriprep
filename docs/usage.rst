@@ -1,15 +1,6 @@
 Usage
 -----
 
-Workflow graph:
-
-.. graphviz:: ds005.dot
-
-end of graph
-
-::
-
-
 Execution and the BIDS format
 =============================
 

@@ -15,6 +15,7 @@
 import os
 import sys
 from fmriprep.workflows.base import wf_ds005_type
+from nipype.pipeline.engine import Workflow
 
 # Hack for readthedocs
 # http://blog.rtwilson.com/how-to-make-your-sphinx-documentation-compile-with-readthedocs-when-youre-using-numpy-and-scipy/
@@ -312,5 +313,12 @@ intersphinx_mapping = {'https://docs.python.org/': None}
 
 # Auto-create DAG pngs
 
-workflow = wf_ds005_type({'func': 'fake data'}, {'ants_nthreads': 1, 'output_dir': 'x', 'biggest_epi_file_size_gb': 1, 'skip_native': True})
-workflow.write_graph(graph2use="orig", dotfilename="ds005.dot", simple_form=True)
+ds005_wf = wf_ds005_type({'func': 'fake data'}, {'ants_nthreads': 1, 'output_dir': 'x', 'biggest_epi_file_size_gb': 1, 'skip_native': True})
+
+sub_wfs = {name.split('.')[0] for name in ds005_wf.list_node_names()} # get only first-level nodes/workflows
+ds005_workflows = {name: ds005_wf.get_node(name) for name in sub_wfs}
+ds005_workflows['ds005'] = ds005_wf
+
+for name, workflow in ds005_workflows.items():
+    if isinstance(workflow, Workflow):
+        workflow.write_graph(graph2use="orig", dotfilename=name + '.dot', simple_form=True)
