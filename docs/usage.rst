@@ -11,11 +11,15 @@ Imaging Data Structure) <http://bids.neuroimaging.io/>`_ format.
 This can be easily checked online using the
 `BIDS Validator <http://incf.github.io/bids-validator/>`_.
 
-The command line interface follows the
+
+The exact command to run ``fmriprep`` depends on the `Installation`_ method.
+The common parts of the command follow the
 `BIDS-Apps <https://github.com/BIDS-Apps>`_ definition.
 Example: ::
 
     fmriprep data/bids_root/ out/ participant -w work/
+
+More information can be found on the `ds005`_ page.
 
 Support and communication
 =========================
