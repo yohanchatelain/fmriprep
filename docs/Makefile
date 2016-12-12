@@ -52,6 +52,7 @@ help:
 clean:
 	rm -rf $(BUILDDIR)/*
 	rm -f *.dot*
+	rm -f args.txt
 
 .PHONY: html
 html:
