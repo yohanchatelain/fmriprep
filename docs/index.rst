@@ -6,6 +6,7 @@
 Welcome to fmriprep's documentation!
 ====================================
 
+.. include:: links.rst
 .. include:: ../README.rst
 .. include:: authors.rst
 

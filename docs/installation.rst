@@ -1,3 +1,5 @@
+.. include:: links.rst
+
 ------------
 Installation
 ------------
@@ -66,7 +68,7 @@ If you have your data on hand, you are ready to run fmriprep: ::
 External Dependencies
 ~~~~~~~~~~~~~~~~~~~~~
 
-``fmriprep`` is implemented using ``nipype``, but it requires some other neuroimaging
+``fmriprep`` is implemented using nipype_, but it requires some other neuroimaging
 software tools: `FSL <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/>`_,
 `ANTs <http://stnava.github.io/ANTs/>`_, `AFNI <https://afni.nimh.nih.gov/>`_,
 `FreeSurfer <https://surfer.nmr.mgh.harvard.edu/>`_,

@@ -34,7 +34,7 @@ Connectome Project analysis pipelines
 (https://github.com/Washington-University/Pipelines) and, as such, the
 backbone of this pipeline is a python reimplementation of the HCP
 GenericfMRIVolumeProcessingPipeline.sh script. However, a major difference is
-that this pipeline is executed using a `nipype`_ workflow framework. This allows
+that this pipeline is executed using a nipype_ workflow framework. This allows
 for each call to a software module or binary to be controlled within the
 workflows, which removes the need for manual curation at every stage, while
 still providing all the output and error information that would be necessary

@@ -1,3 +1,5 @@
+.. include:: links.rst
+
 Usage
 -----
 
@@ -28,7 +30,7 @@ Debugging
 =========
 
 Logs and crashfiles are outputted into the `<output dir>/logs` directory.
-Information on how to customize and understand these files can be found on the `nipype`_ site.
+Information on how to customize and understand these files can be found on the nipype_ site.
 
 Support and communication
 =========================
