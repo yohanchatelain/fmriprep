@@ -39,7 +39,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['t1w']), name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['t1_seg', 'bias_corrected_t1', 't1_brain', 't1_2_mni',
+        fields=['t1_seg', 'bias_corrected_t1', 't1_brain', 't1_mask', 't1_2_mni',
                 't1_2_mni_forward_transform', 't1_2_mni_reverse_transform']),
         name='outputnode')
 
@@ -131,7 +131,8 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         (t1_seg, tpms_mni, [('probability_maps', 'input_image')]),
         (t1_2_mni, tpms_mni, [('forward_transforms', 'transforms'),
                               ('forward_invert_flags', 'invert_transform_flags')]),
-        (asw, outputnode, [('outputnode.out_file', 't1_brain')]),
+        (asw, outputnode, [('outputnode.out_file', 't1_brain'),
+                           ('outputnode.out_mask', 't1_mask')]),
         (inputnode, ds_t1_seg_report, [('t1w', 'source_file')]),
         (t1_seg, ds_t1_seg_report, [('out_report', 'in_file')]),
         (inputnode, ds_t1_2_mni_report, [('t1w', 'source_file')]),
