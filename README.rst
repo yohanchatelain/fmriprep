@@ -1,3 +1,5 @@
+.. include:: links.rst
+
 fmriprep: A Robust Preprocessing Pipeline for fMRI Data
 =======================================================
 
@@ -57,7 +59,7 @@ This tool allows you to easily do the following:
 
 More information and documentation can be found here:
 
-https://fmriprep.readthedocs.io./
+https://fmriprep.readthedocs.io/
 
 
 Principles
