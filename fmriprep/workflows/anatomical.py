@@ -53,8 +53,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
                   name='Reorient')
 
     # 2. T1 Bias Field Correction
-    inu_n4 = pe.Node(ants.N4BiasFieldCorrection(dimension=3),
-                     name='CorrectINU')
+    # Bias field correction is handled in skull strip workflows.
 
     # 3. Skull-stripping
     asw = skullstrip_wf()
@@ -112,13 +111,12 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     workflow.connect([
         (inputnode, t1wmrg, [('t1w', 'in_files')]),
         (t1wmrg, arw, [('out_avg', 'in_file')]),
-        (arw, inu_n4, [('out_file', 'input_image')]),
-        (inu_n4, asw, [('output_image', 'inputnode.in_file')]),
+        (arw, asw, [('out_file', 'inputnode.in_file')]),
         (asw, t1_seg, [('outputnode.out_file', 'in_files')]),
-        (inu_n4, t1_2_mni, [('output_image', 'moving_image')]),
+        (asw, t1_2_mni, [('outputnode.bias_corrected', 'moving_image')]),
         (asw, t1_2_mni, [('outputnode.out_mask', 'moving_mask')]),
         (t1_seg, outputnode, [('tissue_class_map', 't1_seg')]),
-        (inu_n4, outputnode, [('output_image', 'bias_corrected_t1')]),
+        (asw, outputnode, [('outputnode.bias_corrected', 'bias_corrected_t1')]),
         (t1_seg, outputnode, [('tissue_class_map', 't1_segmentation')]),
         (t1_2_mni, outputnode, [
             ('warped_image', 't1_2_mni'),
@@ -150,38 +148,6 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             (asw, ds_t1_skull_strip_report, [('outputnode.out_report', 'in_file')])
         ])
 
-    # Connect reporting nodes
-    t1_stripped_overlay = pe.Node(
-        niu.Function(
-            input_names=['in_file', 'overlay_file', 'out_file'],
-            output_names=['out_file'],
-            function=stripped_brain_overlay
-        ),
-        name='PNG_T1_SkullStrip'
-    )
-    t1_stripped_overlay.inputs.out_file = 't1_stripped_overlay.svg'
-
-    t1_stripped_overlay_ds = pe.Node(
-        ImageDataSink(base_directory=settings['output_dir']),
-        name='T1StrippedOverlayDS'
-    )
-
-    #  t1 segmentation mapped onto t1 before registration into mni space
-    t1_seg_native = pe.Node(
-        niu.Function(
-            input_names=['in_file', 'overlay_file', 'out_file'],
-            output_names=['out_file'],
-            function=stripped_brain_overlay
-        ),
-        name='T1SegNative'
-    )
-    t1_seg_native.inputs.out_file = 't1_seg_native.svg'
-
-    t1_seg_native_ds = pe.Node(
-        ImageDataSink(base_directory=settings['output_dir']),
-        name='T1SegNativeDS'
-    )
-
     #  The T1-to-MNI will be plotted using the segmentation.
     #  That's why we transform it first
     seg_2_mni = pe.Node(
@@ -192,58 +158,10 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     seg_2_mni.inputs.reference_image = op.join(get_mni_icbm152_nlin_asym_09c(),
                                                '1mm_T1.nii.gz')
 
-    t1_2_mni_overlay = pe.Node(
-        niu.Function(
-            input_names=['in_file', 'overlay_file', 'out_file'],
-            output_names=['out_file'],
-            function=stripped_brain_overlay
-        ),
-        name='T1ToMNI'
-    )
-    t1_2_mni_overlay.inputs.out_file = 't1_to_mni_overlay.svg'
-    t1_2_mni_overlay.inputs.overlay_file = op.join(get_mni_icbm152_nlin_asym_09c(),
-                                                   '1mm_T1.nii.gz')
-
-    t1_2_mni_overlay_ds = pe.Node(
-        ImageDataSink(base_directory=settings['output_dir']),
-        name='T12MNIOverlayDS'
-    )
-    t1_2_mni_overlay_ds.inputs.overlay_file = op.join(get_mni_icbm152_nlin_asym_09c(),
-                                                      '1mm_T1.nii.gz')
-
-    datasink = pe.Node(
-        interface=nio.DataSink(
-            base_directory=op.join(settings['output_dir'], 'images')
-        ),
-        name='datasink',
-        parameterization=False
-    )
-
-
     workflow.connect([
-        (inu_n4, t1_stripped_overlay, [('output_image', 'overlay_file')]),
-        (asw, t1_stripped_overlay, [('outputnode.out_mask', 'in_file')]),
-        (t1_stripped_overlay, t1_stripped_overlay_ds, [('out_file', 'in_file')]),
-        (inu_n4, t1_stripped_overlay_ds, [('output_image', 'base_file')]),
-        (asw, t1_stripped_overlay_ds, [('outputnode.out_mask', 'overlay_file')]),
-        (inputnode, t1_stripped_overlay_ds, [('t1w', 'origin_file')]),
-
         (t1_seg, seg_2_mni, [('tissue_class_map', 'input_image')]),
         (t1_2_mni, seg_2_mni, [('forward_transforms', 'transforms'),
                                ('forward_invert_flags', 'invert_transform_flags')]),
-
-        (seg_2_mni, t1_2_mni_overlay, [('output_image', 'in_file')]),
-        (t1_2_mni_overlay, datasink, [('out_file', '@t1_2_mni_overlay')]),
-        (seg_2_mni, t1_2_mni_overlay_ds, [('output_image', 'base_file')]),
-        (t1_2_mni_overlay, t1_2_mni_overlay_ds, [('out_file', 'in_file')]),
-        (inputnode, t1_2_mni_overlay_ds, [('t1w', 'origin_file')]),
-
-        (t1_seg, t1_seg_native, [('tissue_class_map', 'in_file')]),
-        (inu_n4, t1_seg_native, [('output_image', 'overlay_file')]),
-        (t1_seg, t1_seg_native_ds, [('tissue_class_map', 'base_file')]),
-        (inu_n4, t1_seg_native_ds, [('output_image', 'overlay_file')]),
-        (inputnode, t1_seg_native_ds, [('t1w', 'origin_file')]),
-        (t1_seg_native, t1_seg_native_ds, [('out_file', 'in_file')])
     ])
 
     # Write corrected file in the designated output dir
@@ -315,7 +233,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         (inputnode, ds_t1_mni_aff, [('t1w', 'source_file')]),
         (inputnode, ds_bmask_mni, [('t1w', 'source_file')]),
         (inputnode, ds_tpms_mni, [('t1w', 'source_file')]),
-        (inu_n4, ds_t1_bias, [('output_image', 'in_file')]),
+        (asw, ds_t1_bias, [('outputnode.bias_corrected', 'in_file')]),
         (t1_seg, ds_t1_seg, [('tissue_class_map', 'in_file')]),
         (asw, ds_mask, [('outputnode.out_mask', 'in_file')]),
         (t1_2_mni, ds_t1_mni, [('warped_image', 'in_file')]),
@@ -336,12 +254,12 @@ def skullstrip_ants(name='ANTsBrainExtraction', settings=None):
     inputnode = pe.Node(niu.IdentityInterface(fields=['in_file', 'source_file']),
                         name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['out_file', 'out_mask', 'out_report']), name='outputnode')
+        fields=['bias_corrected', 'out_file', 'out_mask', 'out_report']), name='outputnode')
 
     t1_skull_strip = pe.Node(BrainExtractionRPT(
         dimension=3, use_floatingpoint_precision=1,
         debug=settings['debug'], generate_report=True,
-        num_threads=settings['ants_nthreads']),
+        num_threads=settings['ants_nthreads'], keep_temporary_files=1),
         name='Ants_T1_Brain_Extraction')
 
     # should not be necesssary byt does not hurt - make sure the multiproc
@@ -366,6 +284,7 @@ def skullstrip_ants(name='ANTsBrainExtraction', settings=None):
         (inputnode, t1_skull_strip, [('in_file', 'anatomical_image')]),
         (t1_skull_strip, outputnode, [('BrainExtractionMask', 'out_mask'),
                                       ('BrainExtractionBrain', 'out_file'),
+                                      ('N4Corrected0', 'bias_corrected'),
                                       ('out_report', 'out_report')])
     ])
 
