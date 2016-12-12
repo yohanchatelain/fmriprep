@@ -76,7 +76,7 @@ Acknowledgements
 
 Please acknowledge this work mentioning explicitly the name of this software (fmriprep)
 and the version, along with the link to the GitHub repository
-(https://github.com/poldracklab/preprocessing-workflow).
+(https://github.com/poldracklab/fmriprep).
 
 
 License information
