@@ -8,8 +8,8 @@ Execution and the BIDS format
 
 The ``fmriprep`` workflow takes as principal input the path of the dataset
 that is to be processed.
-The only requirement to the input dataset is that it has a valid `BIDS (Brain
-Imaging Data Structure) <http://bids.neuroimaging.io/>`_ format.
+The only requirement to the input dataset is that it has a valid BIDS_ (Brain
+Imaging Data Structure) format.
 This can be easily checked online using the
 `BIDS Validator <http://incf.github.io/bids-validator/>`_.
 
