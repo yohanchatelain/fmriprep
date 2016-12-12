@@ -66,7 +66,7 @@ $ fmriprep data/dir work/dir --participant_label sub-num participant
 External Dependencies
 ~~~~~~~~~~~~~~~~~~~~~
 
-``fMRIprep`` is implemented using ``nipype``, but it requires some other neuroimaging
+``fmriprep`` is implemented using ``nipype``, but it requires some other neuroimaging
 software tools: `FSL <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/>`_,
 `ANTs <http://stnava.github.io/ANTs/>`_, `AFNI <https://afni.nimh.nih.gov/>`_,
 `FreeSurfer <https://surfer.nmr.mgh.harvard.edu/>`_,
