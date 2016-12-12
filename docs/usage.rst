@@ -21,7 +21,7 @@ Example: ::
     fmriprep data/bids_root/ out/ participant -w work/
 
 Command-Line Arguments
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 
 .. include:: args.txt
    :literal:
