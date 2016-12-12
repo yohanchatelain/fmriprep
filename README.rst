@@ -34,7 +34,7 @@ Connectome Project analysis pipelines
 (https://github.com/Washington-University/Pipelines) and, as such, the
 backbone of this pipeline is a python reimplementation of the HCP
 GenericfMRIVolumeProcessingPipeline.sh script. However, a major difference is
-that this pipeline is executed using a Nipype workflow framework. This allows
+that this pipeline is executed using a `nipype`_ workflow framework. This allows
 for each call to a software module or binary to be controlled within the
 workflows, which removes the need for manual curation at every stage, while
 still providing all the output and error information that would be necessary
@@ -69,7 +69,7 @@ Principles
 ``fmriprep`` is built around three principles:
 
 1. **Robustness** - the pipeline adapts the preprocessing steps depending on the input dataset and should provide results as good as possible independently of scanner make, scanning parameters or presence of additional correction scans (such as fieldmaps)
-2. **Ease of use** - thanks to dependance on the BIDS standard manual parameter input is reduced to a minimum allow the pipelien to run in an automatic fashion.
+2. **Ease of use** - thanks to dependance on the BIDS standard manual parameter input is reduced to a minimum allow the pipeline to run in an automatic fashion.
 3. **"Glass box"** philosophy - automation should not mean that one should not visually inspect the results or understand the methods. Thus ``fmriprep`` provides for each subject visual reports detailing the accuracy of the most importatnt processing steps. This combined with the documentation can help researchers to understand the process and decide which subjects should be kept for the group level analysis.
 
 Acknowledgements
