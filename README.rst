@@ -51,12 +51,9 @@ This tool allows you to easily do the following:
 - Take fMRI data from raw to full preprocessed form.
 - Implement tools from different software packages.
 - Achieve optimal data processing quality by using the best tools available.
-- Generate preprocessing quality reports, with which the user can easily
-identify outliers.
-- Receive verbose output concerning the stage of pre-processing for each
-subject, including meaningful errors.
-- Automate and parallelize processing steps, which provides a significant
-speed-up from typical linear, manual processing.
+- Generate preprocessing quality reports, with which the user can easily identify outliers.
+- Receive verbose output concerning the stage of pre-processing for each subject, including meaningful errors.
+- Automate and parallelize processing steps, which provides a significant speed-up from typical linear, manual processing.
 
 More information and documentation can be found here:
 
