@@ -7,7 +7,6 @@ Welcome to fMRIprep's documentation!
 ====================================
 
 .. include:: ../README.rst
-
 .. include:: authors.rst
 
 
@@ -17,9 +16,7 @@ Contents
 .. toctree::
    :maxdepth: 2
 
-   about
    installation
-   dependencies
    usage
    ds005
 

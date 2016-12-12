@@ -17,8 +17,8 @@ as well as for open-source software distribution.
   :alt: Latest Version
 
 
-About
------
+About 1
+-------
 
 ``fMRIprep`` is a functional magnetic resonance imaging (fMRI) data pre-processing pipeline.
 It performs basic processing steps (coregistration, normalization, unwarping, 
@@ -30,65 +30,45 @@ running a variety of group level analyses (task based or resting state fMRI, gra
 2. **Ease of use** - thanks to dependance on the BIDS standard manual parameter input is reduced to a minimum allow the pipelien to run in an automatic fashion.
 3. **"Glass box"** philosophy - automation should not mean that one should not visually inspect the results or understand the methods. Thus ``fMRIprep`` provides for each subject visual reports detailing the accuracy of the most importatnt processing steps. This combined with the documentation can help researchers to understand the process and decide which subjects should be kept for the group level analysis.
 
+About 2
+-------
 
-External Dependencies
----------------------
+``fmriprep`` is a functional magnetic resonance image preprecessing pipeline
+that is designed to provide an easily accessible, state-of-the-art interface
+that is robust to differences in scan acquisition protocols and that requires
+minimal user input, while providing easily interpretable and comprehensive
+error and output reporting. This open-source neuroimaging data processing tool
+is being developed as a part of the MRI image analysis and reproducibility
+platform offered by the CRN. This pipeline is heavily influenced by the Human
+Connectome Project analysis pipelines
+(https://github.com/Washington-University/Pipelines) and, as such, the
+backbone of this pipeline is a python reimplementation of the HCP
+GenericfMRIVolumeProcessingPipeline.sh script. However, a major difference is
+that this pipeline is executed using a Nipype workflow framework. This allows
+for each call to a software module or binary to be controlled within the
+workflows, which removes the need for manual curation at every stage, while
+still providing all the output and error information that would be necessary
+for debugging and interpretation purposes. The fmriprep pipeline primarily
+utilizes FSL tools, but also utilizes ANTs tools at several stages such as
+skull stripping and template registration. This pipeline was designed to
+provide the best software implementation for each state of preprocessing, and
+will be updated as newer and better neuroimaging software become available.
 
-``fMRIprep`` is implemented using ``nipype``, but it requires some other neuroimaging
-software tools: `FSL <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/>`_,
-`ANTs <http://stnava.github.io/ANTs/>`_, `AFNI <https://afni.nimh.nih.gov/>`_,
-`FreeSurfer <https://surfer.nmr.mgh.harvard.edu/>`_,
-`C3D <https://sourceforge.net/projects/c3d/>`_.
+This tool allows you to easily do the following:
 
-These tools must be installed and their binaries available in the
-system's ``$PATH``.
+- Take fMRI data from raw to full preprocessed form.
+- Implement tools from different software packages.
+- Achieve optimal data processing quality by using the best tools available.
+- Generate preprocessing quality reports, with which the user can easily
+identify outliers.
+- Receive verbose output concerning the stage of pre-processing for each
+subject, including meaningful errors.
+- Automate and parallelize processing steps, which provides a significant
+speed-up from typical linear, manual processing.
 
+More information and documentation can be found here:
 
-Installation
-------------
-
-The ``fMRIprep`` is packaged and available through the PyPi repository.
-Therefore, the easiest way to install the tool is: ::
-
-    pip install fmriprep
-
-
-Execution and the BIDS format
------------------------------
-
-The ``fmriprep`` workflow takes as principal input the path of the dataset
-that is to be processed.
-The only requirement to the input dataset is that it has a valid `BIDS (Brain
-Imaging Data Structure) <http://bids.neuroimaging.io/>`_ format.
-This can be easily checked online using the
-`BIDS Validator <http://incf.github.io/bids-validator/>`_.
-
-The command line interface follows the
-`BIDS-Apps <https://github.com/BIDS-Apps>`_ definition.
-Example: ::
-
-    fmriprep data/bids_root/ out/ participant -w work/
-
-
-Support and communication
--------------------------
-
-The documentation of this project is found here: http://preprocessing-workflow.readthedocs.org/en/latest/.
-
-If you have a problem or would like to ask a question about how to use ``fmriprep``,
-please submit a question to NeuroStars.org with an ``fmriprep`` tag.
-NeuroStars.org is a platform similar to StackOverflow but dedicated to neuroinformatics.
-
-All previous ``fmriprep`` questions are available here:
-http://neurostars.org/t/fmriprep/
-
-To participate in the ``fmriprep`` development-related discussions please use the
-following mailing list: http://mail.python.org/mailman/listinfo/neuroimaging
-Please add *[fmriprep]* to the subject line when posting on the mailing list.
-
-
-All bugs, concerns and enhancement requests for this software can be submitted here:
-https://github.com/poldracklab/preprocessing-workflow/issues.
+https://fmriprep.readthedocs.io./
 
 
 Acknowledgements
