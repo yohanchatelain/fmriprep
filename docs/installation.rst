@@ -24,7 +24,7 @@ Download the latest docker image. You will need an active internet connection an
 
 Now, assuming you have data, you can run fmriprep. ::
 
-    $ docker run --rm -v filepath/to/data/dir:/data:ro -v filepath/to/output/dir:/out -w /scratch poldracklab/fmriprep:latest /data /out/out participant -w /out/work/
+    $ docker run --rm -v filepath/to/data/dir:/data:ro -v filepath/to/output/dir:/out -w /scratch poldracklab/fmriprep:latest /data /out/out participant
 
 For example: ::
 
@@ -46,11 +46,12 @@ Use `docker2singularity <https://github.com/singularityware/docker2singularity>`
 
 On a computer with `Singularity <https://github.com/singularityware/singularity>`_ installed and the data to be prepped, run fmriprep. ::
 
-    $ singularity exec path/to/singularity/image.img /usr/bin/run_fmriprep --participant_label label -w path/to/work/dir path/to/data/dir path/to/output/dir participant
+    $ singularity exec path/to/singularity/image.img /usr/bin/run_fmriprep --participant_label label  path/to/data/dir path/to/output/dir participant
 
 For example: ::
 
-    $ singularity exec ~/poldracklab_fmriprep_latest-2016-12-04-5b74ad9a4c4d.img /usr/bin/run_fmriprep --participant_label sub-387 --nthreads 1 -w $WORK/lonestar/work --ants-nthreads 16 --skull--strip-ants /work/04168/berleant/lonestar/ $WORK/lonestar/output participant
+    $ singularity exec ~/poldracklab_fmriprep_latest-2016-12-04-5b74ad9a4c4d.img /usr/bin/run_fmriprep --participant_label sub-387 --nthreads 1 -w $WORK/lonestar/work --ants-nthreads 16 --skull--strip-ants /work/04168/asdf/lonestar/ $WORK/lonestar/output participant
+
 
 Manually Prepared Environment
 =============================
@@ -63,7 +64,7 @@ Make sure all of fmriprep's `External Dependencies`_ are installed. If you have 
 
 If you have your data on hand, you are ready to run fmriprep: ::
 
-    $ fmriprep data/dir work/dir --participant_label sub-num participant
+    $ fmriprep data/dir output/dir --participant_label sub-num participant
 
 External Dependencies
 ~~~~~~~~~~~~~~~~~~~~~
