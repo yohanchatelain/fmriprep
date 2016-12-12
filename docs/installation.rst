@@ -14,7 +14,7 @@ First, make sure command-line Docker is installed. If you don't receive any outp
 
     $ which docker
 
-Start the Docker daemon. You may need to use `sudo`. ::
+Start the Docker daemon. You may need to use ``sudo``. ::
 
     $ dockerd
 
