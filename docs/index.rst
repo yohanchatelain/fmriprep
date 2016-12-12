@@ -17,11 +17,11 @@ Contents
 .. toctree::
    :maxdepth: 2
 
-   installation
-   usage
-   dependencies
    about
-
+   installation
+   dependencies
+   usage
+   ds005
 
 
 Indices and tables

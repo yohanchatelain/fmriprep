@@ -25,10 +25,6 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-# This Dockerfile is to be built for testing purposes inside CircleCI,
-# not for distribution within Docker hub.
-# For that purpose, the Dockerfile is found in build/Dockerfile.
 
 FROM oesteban/crn_nipype:freesurfer
 
