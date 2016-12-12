@@ -13,7 +13,7 @@ Imaging Data Structure) format.
 This can be easily checked online using the
 `BIDS Validator <http://incf.github.io/bids-validator/>`_.
 
-The exact command to run ``fmriprep`` depends on the `Installation`_ method.
+The exact command to run ``fmriprep`` depends on the Installation_ method.
 The common parts of the command follow the
 `BIDS-Apps <https://github.com/BIDS-Apps>`_ definition.
 Example: ::
@@ -38,7 +38,7 @@ Support and communication
 The documentation of this project is found here: http://fmriprep.readthedocs.org/en/latest/.
 
 If you have a problem or would like to ask a question about how to use ``fmriprep``,
-please submit a question to `NeuroStars.org`_ with an ``fmriprep`` tag.
+please submit a question to `NeuroStars.org <neurostars.org>`_ with an ``fmriprep`` tag.
 NeuroStars.org is a platform similar to StackOverflow but dedicated to neuroinformatics.
 
 All previous ``fmriprep`` questions are available here:
