@@ -17,29 +17,15 @@ as well as for open-source software distribution.
   :alt: Latest Version
 
 
-About 1
--------
+About
+-----
 
 ``fMRIprep`` is a functional magnetic resonance imaging (fMRI) data pre-processing pipeline.
 It performs basic processing steps (coregistration, normalization, unwarping, 
 noise component extraction, segmentation, skullstripping etc.) providing outputs that make
 running a variety of group level analyses (task based or resting state fMRI, graph theory measures, surface or volume, etc.) easy.
-``fMRIrep`` is build around three principles:
 
-1. **Robustness** - the pipeline adapts the preprocessing steps depending on the input dataset and should provide results as good as possible independently of scanner make, scanning parameters or presence of additional correction scans (such as fieldmaps)
-2. **Ease of use** - thanks to dependance on the BIDS standard manual parameter input is reduced to a minimum allow the pipelien to run in an automatic fashion.
-3. **"Glass box"** philosophy - automation should not mean that one should not visually inspect the results or understand the methods. Thus ``fMRIprep`` provides for each subject visual reports detailing the accuracy of the most importatnt processing steps. This combined with the documentation can help researchers to understand the process and decide which subjects should be kept for the group level analysis.
-
-About 2
--------
-
-``fmriprep`` is a functional magnetic resonance image preprecessing pipeline
-that is designed to provide an easily accessible, state-of-the-art interface
-that is robust to differences in scan acquisition protocols and that requires
-minimal user input, while providing easily interpretable and comprehensive
-error and output reporting. This open-source neuroimaging data processing tool
-is being developed as a part of the MRI image analysis and reproducibility
-platform offered by the CRN. This pipeline is heavily influenced by the Human
+This pipeline is heavily influenced by the Human
 Connectome Project analysis pipelines
 (https://github.com/Washington-University/Pipelines) and, as such, the
 backbone of this pipeline is a python reimplementation of the HCP
@@ -48,7 +34,9 @@ that this pipeline is executed using a Nipype workflow framework. This allows
 for each call to a software module or binary to be controlled within the
 workflows, which removes the need for manual curation at every stage, while
 still providing all the output and error information that would be necessary
-for debugging and interpretation purposes. The fmriprep pipeline primarily
+for debugging and interpretation purposes.
+
+The fmriprep pipeline primarily
 utilizes FSL tools, but also utilizes ANTs tools at several stages such as
 skull stripping and template registration. This pipeline was designed to
 provide the best software implementation for each state of preprocessing, and
@@ -70,6 +58,14 @@ More information and documentation can be found here:
 
 https://fmriprep.readthedocs.io./
 
+Principles
+----------
+
+``fMRIprep`` is build around three principles:
+
+1. **Robustness** - the pipeline adapts the preprocessing steps depending on the input dataset and should provide results as good as possible independently of scanner make, scanning parameters or presence of additional correction scans (such as fieldmaps)
+2. **Ease of use** - thanks to dependance on the BIDS standard manual parameter input is reduced to a minimum allow the pipelien to run in an automatic fashion.
+3. **"Glass box"** philosophy - automation should not mean that one should not visually inspect the results or understand the methods. Thus ``fMRIprep`` provides for each subject visual reports detailing the accuracy of the most importatnt processing steps. This combined with the documentation can help researchers to understand the process and decide which subjects should be kept for the group level analysis.
 
 Acknowledgements
 ----------------
