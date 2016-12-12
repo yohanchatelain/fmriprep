@@ -4,11 +4,11 @@
 Installation
 ------------
 
-There are three ways to use fmriprep: `Docker`_, `Singularity`_, and `Manually Prepared Environment`_.
-Once you are ready to run fmriprep, see `Usage`_ for details.
+There are three ways to use fmriprep: in a `Docker Container`_, in a `Singularity Container`_, or in a `Manually Prepared Environment`_.
+Once you are ready to run fmriprep, see Usage_ for details.
 
-Docker
-======
+Docker Container
+================
 
 First, make sure command-line Docker is installed. If you don't receive any output from the following command, `install Docker <https://docs.docker.com/engine/installation/>`_. ::
 
@@ -31,8 +31,8 @@ For example: ::
     $ docker run --rm -v $HOME/fullds005:/data:ro -v $HOME/dockerout:/out  -w /scratch poldracklab/fmriprep:latest /data /out/out participant -w /out/work/ -t ds005
 
 
-Singularity
-===========
+Singularity Container
+=====================
 
 As above, make sure Docker is installed and the Docker daemon is running. ::
 
@@ -55,7 +55,7 @@ For example: ::
 Manually Prepared Environment
 =============================
 
-First, make sure you would rather do this than use `Docker`_ or `Singularity`_.
+First, make sure you would rather do this than use a `Docker Container`_ or a `Singularity Container`_.
 
 Make sure all of fmriprep's `External Dependencies`_ are installed. If you have pip installed, install fmriprep ::
 
