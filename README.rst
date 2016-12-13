@@ -22,7 +22,7 @@ as well as for open-source software distribution.
 About
 -----
 
-``fmriprep`` is a functional magnetic resonance imaging (fMRI) data pre-processing pipeline
+``fmriprep`` is a functional magnetic resonance imaging (fMRI) data preprocessing pipeline
 that is designed to provide an easily accessible, state-of-the-art interface
 that is robust to differences in scan acquisition protocols and that requires
 minimal user input, while providing easily interpretable and comprehensive
@@ -43,7 +43,7 @@ This tool allows you to easily do the following:
 - Implement tools from different software packages.
 - Achieve optimal data processing quality by using the best tools available.
 - Generate preprocessing quality reports, with which the user can easily identify outliers.
-- Receive verbose output concerning the stage of pre-processing for each subject, including meaningful errors.
+- Receive verbose output concerning the stage of preprocessing for each subject, including meaningful errors.
 - Automate and parallelize processing steps, which provides a significant speed-up from typical linear, manual processing.
 
 More information and documentation can be found here:
