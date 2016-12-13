@@ -31,17 +31,6 @@ It performs basic processing steps (coregistration, normalization, unwarping,
 noise component extraction, segmentation, skullstripping etc.) providing outputs that make
 running a variety of group level analyses (task based or resting state fMRI, graph theory measures, surface or volume, etc.) easy.
 
-This pipeline is heavily influenced by the Human
-Connectome Project analysis pipelines
-(https://github.com/Washington-University/Pipelines) and, as such, the
-backbone of this pipeline is a python reimplementation of the HCP
-GenericfMRIVolumeProcessingPipeline.sh script. However, a major difference is
-that this pipeline is executed using a nipype_ workflow framework. This allows
-for each call to a software module or binary to be controlled within the
-workflows, which removes the need for manual curation at every stage, while
-still providing all the output and error information that would be necessary
-for debugging and interpretation purposes.
-
 The fmriprep pipeline primarily
 utilizes FSL tools, but also utilizes ANTs tools at several stages such as
 skull stripping and template registration. This pipeline was designed to
