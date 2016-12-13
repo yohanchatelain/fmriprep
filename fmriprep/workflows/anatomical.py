@@ -39,9 +39,9 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['t1w']), name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['t1_seg', 'bias_corrected_t1', 't1_brain', 't1_mask', 't1_2_mni',
-                't1_2_mni_forward_transform', 't1_2_mni_reverse_transform']),
-        name='outputnode')
+        fields=['t1_seg', 't1_tpms', 'bias_corrected_t1', 't1_brain', 't1_mask',
+                't1_2_mni', 't1_2_mni_forward_transform',
+                't1_2_mni_reverse_transform']), name='outputnode')
 
     # 0. Align and merge if several T1w images are provided
     t1wmrg = pe.Node(IntraModalMerge(), name='MergeT1s')
@@ -119,6 +119,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         (asw, t1_2_mni, [('outputnode.out_mask', 'moving_mask')]),
         (t1_seg, outputnode, [('tissue_class_map', 't1_seg')]),
         (inu_n4, outputnode, [('output_image', 'bias_corrected_t1')]),
+        (t1_seg, outputnode, [('probability_maps', 't1_tpms')]),
         (t1_2_mni, outputnode, [
             ('warped_image', 't1_2_mni'),
             ('forward_transforms', 't1_2_mni_forward_transform'),

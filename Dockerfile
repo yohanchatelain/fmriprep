@@ -50,8 +50,9 @@ RUN conda config --add channels conda-forge && \
     conda install -y numpy scipy matplotlib pandas lxml libxslt nose mock && \
     python -c "from matplotlib import font_manager"
 
-RUN pip install -e git+https://github.com/nipy/nipype.git@17e31abfd0a6a6b64c8c84586916bd463608e4b9#egg=nipype
-RUN pip install -e git+https://github.com/poldracklab/niworkflows.git@93a1638299b8b8e06e7e386718bd7edfb5db8fee#egg=niworkflows
+
+RUN pip install -e git+https://github.com/nipy/nipype.git@7e6c3c9a6af0482e147ff5aebab6948a539b0a89#egg=nipype
+RUN pip install -e git+https://github.com/poldracklab/niworkflows.git@d158a569c4f8e80ab94ca6d375e283d0a293c7bd#egg=niworkflows
 
 RUN mkdir /niworkflows_data
 ENV CRN_SHARED_DATA /niworkflows_data
