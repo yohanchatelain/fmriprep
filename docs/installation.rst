@@ -5,24 +5,17 @@ Installation
 ------------
 
 There are three ways to use fmriprep: in a `Docker Container`_, in a `Singularity Container`_, or in a `Manually Prepared Environment`_.
+Using a container method is highly recommended.
 Once you are ready to run fmriprep, see Usage_ for details.
 
 Docker Container
 ================
 
-First, make sure command-line Docker is installed. If you don't receive any output from the following command, `install Docker <https://docs.docker.com/engine/installation/>`_. ::
+Make sure command-line `Docker is installed <https://docs.docker.com/engine/installation/>`_.
 
-    $ which docker
+See `External Dependencies`_ for more information (e.g., specific versions) on what is included in the fmriprep Docker image.
 
-Start the Docker daemon. You may need to use ``sudo``. ::
-
-    $ dockerd
-
-Download the latest docker image. You will need an active internet connection and some time. ::
-
-    $ docker pull poldracklab/fmriprep:latest
-
-Now, assuming you have data, you can run fmriprep. ::
+Now, assuming you have data, you can run fmriprep. You will need an active internet connection the first time. ::
 
     $ docker run --rm -v filepath/to/data/dir:/data:ro -v filepath/to/output/dir:/out -w /scratch poldracklab/fmriprep:latest /data /out/out participant
 
@@ -34,17 +27,17 @@ For example: ::
 Singularity Container
 =====================
 
-As above, make sure Docker is installed and the Docker daemon is running. ::
-
-    $ which docker
-    file/path/docker
-    $ dockerd
-
+For security reasons, many HPCs (e.g., TACC) do not allow Docker containers, but do allow `Singularity <https://github.com/singularityware/singularity>`_ containers.
+In this case, start with a machine (e.g., your personal computer) with Docker installed.
 Use `docker2singularity <https://github.com/singularityware/docker2singularity>`_ to create a singularity image. You will need an active internet connection and some time. ::
 
     $ docker run -v /var/run/docker.sock:/var/run/docker.sock -v D:\host\path\where\to\ouptut\singularity\image:/output --privileged -t --rm singularityware/docker2singularity poldracklab/fmriprep:latest
 
-On a computer with `Singularity <https://github.com/singularityware/singularity>`_ installed and the data to be prepped, run fmriprep. ::
+Transfer the resulting Singularity image to the HPC, for example, using ``scp``. ::
+
+    $ scp poldracklab_fmriprep_latest-*.img  user@hcpserver.edu:/path/to/downloads
+
+If the data to be preprocessed is also on the HPC, you are ready to run fmriprep. ::
 
     $ singularity exec path/to/singularity/image.img /usr/bin/run_fmriprep --participant_label label  path/to/data/dir path/to/output/dir participant
 
@@ -56,9 +49,15 @@ For example: ::
 Manually Prepared Environment
 =============================
 
-First, make sure you would rather do this than use a `Docker Container`_ or a `Singularity Container`_.
+.. note::
 
-Make sure all of fmriprep's `External Dependencies`_ are installed. If you have pip installed, install fmriprep ::
+   This method is not recommended! Make sure you would rather do this than use a `Docker Container`_ or a `Singularity Container`_.
+
+Make sure all of fmriprep's `External Dependencies`_ are installed.
+These tools must be installed and their binaries available in the
+system's ``$PATH``.
+
+If you have pip installed, install fmriprep ::
 
     $ pip install fmriprep
 
@@ -67,13 +66,13 @@ If you have your data on hand, you are ready to run fmriprep: ::
     $ fmriprep data/dir output/dir --participant_label sub-num participant
 
 External Dependencies
-~~~~~~~~~~~~~~~~~~~~~
+=====================
 
 ``fmriprep`` is implemented using nipype_, but it requires some other neuroimaging
-software tools: `FSL <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/>`_,
-`ANTs <http://stnava.github.io/ANTs/>`_, `AFNI <https://afni.nimh.nih.gov/>`_,
-`FreeSurfer <https://surfer.nmr.mgh.harvard.edu/>`_,
-`C3D <https://sourceforge.net/projects/c3d/>`_.
+software tools:
 
-These tools must be installed and their binaries available in the
-system's ``$PATH``.
+- `FSL <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/>`_
+- `ANTs <http://stnava.github.io/ANTs/>`_
+- `AFNI <https://afni.nimh.nih.gov/>`_
+- `FreeSurfer <https://surfer.nmr.mgh.harvard.edu/>`_
+- `C3D <https://sourceforge.net/projects/c3d/>`_
