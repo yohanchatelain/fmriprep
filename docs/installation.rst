@@ -71,8 +71,8 @@ External Dependencies
 ``fmriprep`` is implemented using nipype_, but it requires some other neuroimaging
 software tools:
 
-- `FSL <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/>`_
-- `ANTs <http://stnava.github.io/ANTs/>`_
-- `AFNI <https://afni.nimh.nih.gov/>`_
-- `FreeSurfer <https://surfer.nmr.mgh.harvard.edu/>`_
-- `C3D <https://sourceforge.net/projects/c3d/>`_
+- `FSL <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/>`_ (version 5.0)
+- `ANTs <http://stnava.github.io/ANTs/>`_ (version)
+- `AFNI <https://afni.nimh.nih.gov/>`_ (version Debian-16.2.07)
+- `FreeSurfer <https://surfer.nmr.mgh.harvard.edu/>`_ (version Linux-centos4_x86_64-stable-pub-v5.3.0-HCP)
+- `C3D <https://sourceforge.net/projects/c3d/>`_ (version 1.0.0)
