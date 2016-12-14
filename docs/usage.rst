@@ -23,6 +23,8 @@ Example: ::
 Command-Line Arguments
 ~~~~~~~~~~~~~~~~~~~~~~
 
+.. highlight:: none
+
 .. include:: args.txt
    :literal:
 
