@@ -31,6 +31,12 @@ It performs basic processing steps (coregistration, normalization, unwarping,
 noise component extraction, segmentation, skullstripping etc.) providing outputs that make
 running a variety of group level analyses (task based or resting state fMRI, graph theory measures, surface or volume, etc.) easy.
 
+.. note::
+
+   fmriprep performs minimal preprocessing.
+   Here we define 'minimal preprocessing'  as motion correction, field unwarping, normalization, field bias correction, and brain extraction.
+   See the ds005_ workflow for more details.
+
 The fmriprep pipeline primarily
 utilizes FSL tools, but also utilizes ANTs tools at several stages such as
 skull stripping and template registration. This pipeline was designed to
