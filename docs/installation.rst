@@ -39,11 +39,11 @@ Transfer the resulting Singularity image to the HPC, for example, using ``scp``.
 
 If the data to be preprocessed is also on the HPC, you are ready to run fmriprep. ::
 
-    $ singularity exec path/to/singularity/image.img /usr/bin/run_fmriprep --participant_label label  path/to/data/dir path/to/output/dir participant
+    $ singularity run path/to/singularity/image.img --participant_label label  path/to/data/dir path/to/output/dir participant
 
 For example: ::
 
-    $ singularity exec ~/poldracklab_fmriprep_latest-2016-12-04-5b74ad9a4c4d.img /usr/bin/run_fmriprep --participant_label sub-387 --nthreads 1 -w $WORK/lonestar/work --ants-nthreads 16 --skull--strip-ants /work/04168/asdf/lonestar/ $WORK/lonestar/output participant
+    $ singularity run ~/poldracklab_fmriprep_latest-2016-12-04-5b74ad9a4c4d.img --participant_label sub-387 --nthreads 1 -w $WORK/lonestar/work --ants-nthreads 16 --skull--strip-ants /work/04168/asdf/lonestar/ $WORK/lonestar/output participant
 
 
 Manually Prepared Environment
