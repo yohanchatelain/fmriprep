@@ -30,7 +30,7 @@ Debugging
 =========
 
 Logs and crashfiles are outputted into the ``<output dir>/logs`` directory.
-Information on how to customize and understand these files can be found on the nipype_ site.
+Information on how to customize and understand these files can be found on the `nipype debugging <http://nipype.readthedocs.io/en/latest/users/debug.html>`_ page.
 
 Support and communication
 =========================
