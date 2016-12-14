@@ -72,7 +72,7 @@ External Dependencies
 software tools:
 
 - `FSL <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/>`_ (version 5.0)
-- `ANTs <http://stnava.github.io/ANTs/>`_ (version)
+- `ANTs <http://stnava.github.io/ANTs/>`_ (version 2.1.0.Debian-Ubuntu_X64)
 - `AFNI <https://afni.nimh.nih.gov/>`_ (version Debian-16.2.07)
 - `FreeSurfer <https://surfer.nmr.mgh.harvard.edu/>`_ (version Linux-centos4_x86_64-stable-pub-v5.3.0-HCP)
 - `C3D <https://sourceforge.net/projects/c3d/>`_ (version 1.0.0)
