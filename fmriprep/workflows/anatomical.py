@@ -108,6 +108,15 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         name='DS_T1_2_MNI_Report'
     )
 
+    def fix_source_name(in_files):
+        import os
+        if isinstance(in_files, list):
+            subject_label = in_files[0].split(os.sep)[-1].split("_")[0].split("-")[-1]
+            base, _ = os.path.split(in_files[0])
+            return os.path.join(base, "sub-%s_T1w.nii.gz"%subject_label)
+        else:
+            return in_files
+
     workflow.connect([
         (inputnode, arw, [('t1w', 'in_file')]),
         (arw, inu_n4, [('out_file', 'input_image')]),
@@ -133,9 +142,9 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
                               ('forward_invert_flags', 'invert_transform_flags')]),
         (asw, outputnode, [('outputnode.out_file', 't1_brain'),
                            ('outputnode.out_mask', 't1_mask')]),
-        (inputnode, ds_t1_seg_report, [('t1w', 'source_file')]),
+        (inputnode, ds_t1_seg_report, [(('t1w', fix_source_name), 'source_file')]),
         (t1_seg, ds_t1_seg_report, [('out_report', 'in_file')]),
-        (inputnode, ds_t1_2_mni_report, [('t1w', 'source_file')]),
+        (inputnode, ds_t1_2_mni_report, [(('t1w', fix_source_name), 'source_file')]),
         (t1_2_mni, ds_t1_2_mni_report, [('out_report', 'in_file')])
     ])
 
@@ -212,13 +221,13 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         ])
 
     workflow.connect([
-        (inputnode, ds_t1_bias, [('t1w', 'source_file')]),
-        (inputnode, ds_t1_seg, [('t1w', 'source_file')]),
-        (inputnode, ds_mask, [('t1w', 'source_file')]),
-        (inputnode, ds_t1_mni, [('t1w', 'source_file')]),
-        (inputnode, ds_t1_mni_aff, [('t1w', 'source_file')]),
-        (inputnode, ds_bmask_mni, [('t1w', 'source_file')]),
-        (inputnode, ds_tpms_mni, [('t1w', 'source_file')]),
+        (inputnode, ds_t1_bias, [(('t1w', fix_source_name), 'source_file')]),
+        (inputnode, ds_t1_seg, [(('t1w', fix_source_name), 'source_file')]),
+        (inputnode, ds_mask, [(('t1w', fix_source_name), 'source_file')]),
+        (inputnode, ds_t1_mni, [(('t1w', fix_source_name), 'source_file')]),
+        (inputnode, ds_t1_mni_aff, [(('t1w', fix_source_name), 'source_file')]),
+        (inputnode, ds_bmask_mni, [(('t1w', fix_source_name), 'source_file')]),
+        (inputnode, ds_tpms_mni, [(('t1w', fix_source_name), 'source_file')]),
         (inu_n4, ds_t1_bias, [('output_image', 'in_file')]),
         (t1_seg, ds_t1_seg, [('tissue_class_map', 'in_file')]),
         (asw, ds_mask, [('outputnode.out_mask', 'in_file')]),
