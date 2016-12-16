@@ -110,6 +110,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
 
     def fix_source_name(in_files):
         import os
+        # in case there are multiple T1s we make up a generic source name
         if isinstance(in_files, list):
             subject_label = in_files[0].split(os.sep)[-1].split("_")[0].split("-")[-1]
             base, _ = os.path.split(in_files[0])
@@ -155,7 +156,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             name='DS_Report'
         )
         workflow.connect([
-            (inputnode, ds_t1_skull_strip_report, [('t1w', 'source_file')]),
+            (inputnode, ds_t1_skull_strip_report, [(('t1w', fix_source_name), 'source_file')]),
             (asw, ds_t1_skull_strip_report, [('outputnode.out_report', 'in_file')])
         ])
 
