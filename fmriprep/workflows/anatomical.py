@@ -22,8 +22,7 @@ from niworkflows.data import get_mni_icbm152_nlin_asym_09c
 from niworkflows.interfaces.masks import BrainExtractionRPT
 from niworkflows.interfaces.segmentation import FASTRPT
 
-from fmriprep.interfaces import (DerivativesDataSink, IntraModalMerge,
-                                 ImageDataSink)
+from fmriprep.interfaces import (DerivativesDataSink, IntraModalMerge)
 from fmriprep.interfaces.utils import reorient
 from fmriprep.viz import stripped_brain_overlay
 
