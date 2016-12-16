@@ -43,18 +43,18 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
                 't1_2_mni', 't1_2_mni_forward_transform',
                 't1_2_mni_reverse_transform']), name='outputnode')
 
-    # 0. Align and merge if several T1w images are provided
-    t1wmrg = pe.Node(IntraModalMerge(), name='MergeT1s')
-
     # 1. Reorient T1
-    arw = pe.Node(niu.Function(input_names=['in_file'],
-                               output_names=['out_file'],
-                               function=reorient),
-                  name='Reorient')
+    arw = pe.MapNode(niu.Function(input_names=['in_file'],
+                                  output_names=['out_file'],
+                                  function=reorient),
+                     name='Reorient', iterfield='in_file')
 
     # 2. T1 Bias Field Correction
-    inu_n4 = pe.Node(ants.N4BiasFieldCorrection(dimension=3),
-                     name='CorrectINU')
+    inu_n4 = pe.MapNode(ants.N4BiasFieldCorrection(dimension=3),
+                        name='CorrectINU', iterfield='input_image')
+
+    # 0. Align and merge if several T1w images are provided
+    t1wmrg = pe.Node(IntraModalMerge(), name='MergeT1s')
 
     # 3. Skull-stripping
     asw = skullstrip_wf()
@@ -110,10 +110,10 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     )
 
     workflow.connect([
-        (inputnode, t1wmrg, [('t1w', 'in_files')]),
-        (t1wmrg, arw, [('out_avg', 'in_file')]),
+        (inputnode, arw, [('t1w', 'in_file')]),
         (arw, inu_n4, [('out_file', 'input_image')]),
-        (inu_n4, asw, [('output_image', 'inputnode.in_file')]),
+        (inu_n4, t1wmrg, [('output_image', 'in_files')]),
+        (t1wmrg, asw, [('out_avg', 'inputnode.in_file')]),
         (asw, t1_seg, [('outputnode.out_file', 'in_files')]),
         (inu_n4, t1_2_mni, [('output_image', 'moving_image')]),
         (asw, t1_2_mni, [('outputnode.out_mask', 'moving_mask')]),
