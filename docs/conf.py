@@ -310,9 +310,23 @@ texinfo_documents = [
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
 
+def fake_set_up():
+    os.environ['FSLDIR'] = '' # dummy FSL dir
+    bbr_filename = 'etc/flirtsch/bbr.sch'
+    basedir = os.path.dirname(bbr_filename)
+    if not os.path.exists(basedir):
+        os.makedirs(basedir)
+    open(bbr_filename, 'w').close() # dummy existing file
+
+
 # Auto-create DAG pngs
 
-ds005_wf = wf_ds005_type({'func': 'fake data'}, {'ants_nthreads': 1, 'output_dir': 'x', 'biggest_epi_file_size_gb': 1, 'skip_native': True})
+fake_set_up()
+
+ds005_wf = wf_ds005_type({'func': 'fake data'}, {'ants_nthreads': 1,
+                                                 'output_dir': 'x',
+                                                 'biggest_epi_file_size_gb': 1,
+                                                 'skip_native': True})
 
 sub_wfs = {name.split('.')[0] for name in ds005_wf.list_node_names()} # get only first-level nodes/workflows
 ds005_workflows = {name: ds005_wf.get_node(name) for name in sub_wfs}
