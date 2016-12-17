@@ -24,8 +24,8 @@ from niworkflows.interfaces.segmentation import FASTRPT
 
 from fmriprep.interfaces import (DerivativesDataSink, IntraModalMerge)
 from fmriprep.interfaces.utils import reorient
+from fmriprep.utils.misc import fix_multi_T1w_source_name
 from fmriprep.viz import stripped_brain_overlay
-
 
 #  pylint: disable=R0914
 def t1w_preprocessing(name='t1w_preprocessing', settings=None):
@@ -133,9 +133,9 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
                               ('forward_invert_flags', 'invert_transform_flags')]),
         (asw, outputnode, [('outputnode.out_file', 't1_brain'),
                            ('outputnode.out_mask', 't1_mask')]),
-        (inputnode, ds_t1_seg_report, [('t1w', 'source_file')]),
+        (inputnode, ds_t1_seg_report, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
         (t1_seg, ds_t1_seg_report, [('out_report', 'in_file')]),
-        (inputnode, ds_t1_2_mni_report, [('t1w', 'source_file')]),
+        (inputnode, ds_t1_2_mni_report, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
         (t1_2_mni, ds_t1_2_mni_report, [('out_report', 'in_file')])
     ])
 
@@ -146,7 +146,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             name='DS_Report'
         )
         workflow.connect([
-            (inputnode, ds_t1_skull_strip_report, [('t1w', 'source_file')]),
+            (inputnode, ds_t1_skull_strip_report, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
             (asw, ds_t1_skull_strip_report, [('outputnode.out_report', 'in_file')])
         ])
 
@@ -204,7 +204,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             return inlist[-1]
 
         workflow.connect([
-            (inputnode, ds_t1_mni_warp, [('t1w', 'source_file')]),
+            (inputnode, ds_t1_mni_warp, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
             (t1_2_mni, ds_t1_mni_aff, [
                 (('forward_transforms', _get_aff), 'in_file')]),
             (t1_2_mni, ds_t1_mni_warp, [
@@ -212,13 +212,13 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         ])
 
     workflow.connect([
-        (inputnode, ds_t1_bias, [('t1w', 'source_file')]),
-        (inputnode, ds_t1_seg, [('t1w', 'source_file')]),
-        (inputnode, ds_mask, [('t1w', 'source_file')]),
-        (inputnode, ds_t1_mni, [('t1w', 'source_file')]),
-        (inputnode, ds_t1_mni_aff, [('t1w', 'source_file')]),
-        (inputnode, ds_bmask_mni, [('t1w', 'source_file')]),
-        (inputnode, ds_tpms_mni, [('t1w', 'source_file')]),
+        (inputnode, ds_t1_bias, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
+        (inputnode, ds_t1_seg, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
+        (inputnode, ds_mask, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
+        (inputnode, ds_t1_mni, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
+        (inputnode, ds_t1_mni_aff, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
+        (inputnode, ds_bmask_mni, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
+        (inputnode, ds_tpms_mni, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
         (inu_n4, ds_t1_bias, [('output_image', 'in_file')]),
         (t1_seg, ds_t1_seg, [('tissue_class_map', 'in_file')]),
         (asw, ds_mask, [('outputnode.out_mask', 'in_file')]),
