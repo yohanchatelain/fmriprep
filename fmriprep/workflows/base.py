@@ -194,8 +194,9 @@ def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
                            ('outputnode.epi_mean', 'inputnode.epi_mean'),
                            ('outputnode.epi_mask', 'inputnode.epi_mask')]),
         (t1w_pre, epi_2_t1, [('outputnode.bias_corrected_t1', 'inputnode.bias_corrected_t1'),
-                             ('outputnode.t1_seg', 'inputnode.t1_seg'),
-                             ('outputnode.t1_mask', 'inputnode.t1_mask')]),
+                             ('outputnode.t1_brain', 'inputnode.t1_brain'),
+                             ('outputnode.t1_mask', 'inputnode.t1_mask'),
+                             ('outputnode.t1_seg', 'inputnode.t1_seg')]),
 
         (t1w_pre, confounds_wf, [('outputnode.t1_tpms', 'inputnode.t1_tpms')]),
         (hmcwf, confounds_wf, [('outputnode.movpar_file', 'inputnode.movpar_file'),
