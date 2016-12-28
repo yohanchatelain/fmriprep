@@ -15,11 +15,11 @@ from fmriprep.utils.misc import collect_bids_data, get_biggest_epi_file_size_gb
 from fmriprep.workflows import confounds
 
 from fmriprep.workflows.anatomical import t1w_preprocessing
-from fmriprep.workflows.sbref import sbref_preprocess, sbref_t1_registration
+from fmriprep.workflows.sbref import sbref_preprocess
 from fmriprep.workflows.fieldmap import phase_diff_and_magnitudes
 from fmriprep.workflows.epi import (
     epi_unwarp, epi_hmc, epi_sbref_registration,
-    epi_mean_t1_registration, epi_mni_transformation)
+    ref_epi_t1_registration, epi_mni_transformation)
 
 
 def base_workflow_enumerator(subject_list, task_id, settings):
@@ -85,7 +85,8 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
     sbref_pre = sbref_preprocess(settings=settings)
 
     # Register SBRef to T1
-    sbref_t1 = sbref_t1_registration(settings=settings)
+    sbref_t1 = ref_epi_t1_registration(reportlet_suffix='sbref_t1_flt_bbr',
+                                       settings=settings)
 
     # HMC on the EPI
     hmcwf = epi_hmc(settings=settings)
@@ -108,14 +109,14 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
         (bidssrc, t1w_pre, [('t1w', 'inputnode.t1w')]),
         (bidssrc, fmap_est, [('fmap', 'inputnode.input_images')]),
         (bidssrc, sbref_pre, [('sbref', 'inputnode.sbref')]),
-        (bidssrc, sbref_t1, [('sbref', 'inputnode.sbref_name_source')]),
+        (bidssrc, sbref_t1, [('sbref', 'inputnode.name_source')]),
         (fmap_est, sbref_pre, [('outputnode.fmap', 'inputnode.fmap'),
                                ('outputnode.fmap_ref', 'inputnode.fmap_ref'),
                                ('outputnode.fmap_mask', 'inputnode.fmap_mask')]),
-        (sbref_pre, sbref_t1, [('outputnode.sbref_unwarped', 'inputnode.sbref'),
-                               ('outputnode.sbref_unwarped_mask', 'inputnode.sbref_mask')]),
+        (sbref_pre, sbref_t1, [('outputnode.sbref_unwarped', 'inputnode.ref_epi'),
+                               ('outputnode.sbref_unwarped_mask', 'inputnode.ref_epi_mask')]),
         (t1w_pre, sbref_t1, [
-            ('outputnode.bias_corrected_t1', 'inputnode.t1'),
+            ('outputnode.bias_corrected_t1', 'inputnode.bias_corrected_t1'),
             ('outputnode.t1_mask', 'inputnode.t1_mask'),
             ('outputnode.t1_brain', 'inputnode.t1_brain'),
             ('outputnode.t1_seg', 'inputnode.t1_seg')]),
@@ -130,7 +131,7 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
                                   ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
                                   ('outputnode.fmap_ref', 'inputnode.fmap_ref')]),
 
-        (sbref_t1, t1_to_epi_transforms, [(('outputnode.mat_t1_to_sbr'), 'in_file')]),
+        (sbref_t1, t1_to_epi_transforms, [(('outputnode.mat_t1_to_epi'), 'in_file')]),
         (epi2sbref, t1_to_epi_transforms, [('outputnode.out_mat_inv', 'in_file2')]),
 
         (t1_to_epi_transforms, confounds_wf, [('out_file', 'inputnode.t1_transform')]),
@@ -179,7 +180,8 @@ def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
     hmcwf.get_node('inputnode').iterables = ('epi', subject_data['func'])
 
     # mean EPI registration to T1w
-    epi_2_t1 = epi_mean_t1_registration(settings=settings)
+    epi_2_t1 = ref_epi_t1_registration(reportlet_suffix='flt_bbr',
+                                       settings=settings)
 
     # get confounds
     confounds_wf = confounds.discover_wf(settings)
@@ -191,9 +193,9 @@ def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
     workflow.connect([
         (bidssrc, t1w_pre, [('t1w', 'inputnode.t1w')]),
         (bidssrc, epi_2_t1, [('t1w', 'inputnode.t1w')]),
-        (hmcwf, epi_2_t1, [('inputnode.epi', 'inputnode.epi_name_source'),
-                           ('outputnode.epi_mean', 'inputnode.epi_mean'),
-                           ('outputnode.epi_mask', 'inputnode.epi_mask')]),
+        (hmcwf, epi_2_t1, [('inputnode.epi', 'inputnode.name_source'),
+                           ('outputnode.epi_mean', 'inputnode.ref_epi'),
+                           ('outputnode.epi_mask', 'inputnode.ref_epi_mask')]),
         (t1w_pre, epi_2_t1, [('outputnode.bias_corrected_t1', 'inputnode.bias_corrected_t1'),
                              ('outputnode.t1_brain', 'inputnode.t1_brain'),
                              ('outputnode.t1_mask', 'inputnode.t1_mask'),
