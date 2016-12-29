@@ -86,6 +86,7 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
 
     # Register SBRef to T1
     sbref_t1 = ref_epi_t1_registration(reportlet_suffix='sbref_t1_flt_bbr',
+                                       inv_ds_suffix='target-sbref_affine',
                                        settings=settings)
 
     # HMC on the EPI
@@ -109,7 +110,8 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
         (bidssrc, t1w_pre, [('t1w', 'inputnode.t1w')]),
         (bidssrc, fmap_est, [('fmap', 'inputnode.input_images')]),
         (bidssrc, sbref_pre, [('sbref', 'inputnode.sbref')]),
-        (bidssrc, sbref_t1, [('sbref', 'inputnode.name_source')]),
+        (bidssrc, sbref_t1, [('sbref', 'inputnode.name_source'),
+                             ('t1w', 'inputnode.t1w')]),
         (fmap_est, sbref_pre, [('outputnode.fmap', 'inputnode.fmap'),
                                ('outputnode.fmap_ref', 'inputnode.fmap_ref'),
                                ('outputnode.fmap_mask', 'inputnode.fmap_mask')]),
@@ -181,6 +183,7 @@ def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
 
     # mean EPI registration to T1w
     epi_2_t1 = ref_epi_t1_registration(reportlet_suffix='flt_bbr',
+                                       inv_ds_suffix='target-meanBOLD_affine',
                                        settings=settings)
 
     # get confounds
