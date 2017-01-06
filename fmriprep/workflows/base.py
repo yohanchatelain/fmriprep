@@ -7,6 +7,9 @@ Created on Wed Dec  2 17:35:40 2015
 
 @author: craigmoodie
 """
+import os
+from copy import deepcopy
+
 from nipype.pipeline import engine as pe
 from nipype.interfaces import fsl
 
@@ -29,6 +32,11 @@ def base_workflow_enumerator(subject_list, task_id, settings):
         generated_workflow = base_workflow_generator(subject, task_id=task_id,
                                                      settings=settings)
         if generated_workflow:
+            generated_workflow.config['execution']['crashdump_dir'] =(
+                os.path.join(settings['output_dir'], 'log', subject)
+            )
+            for node in generated_workflow._get_all_nodes():
+                node.config = deepcopy(generated_workflow.config)
             generated_list.append(generated_workflow)
     workflow.add_nodes(generated_list)
 
