@@ -23,6 +23,36 @@ For example: ::
 
     $ docker run --rm -v $HOME/fullds005:/data:ro -v $HOME/dockerout:/out  -w /scratch poldracklab/fmriprep:latest /data /out/out participant -w /out/work/ -t ds005
 
+Development environment
+-----------------------
+In order to test new code without rebuilding the Docker image, it is
+possible to mount working repositories as source directories within the
+container.
+In the docker container, Python sources are kept ``/root/src``: ::
+
+    /root/src
+    ├── fmriprep/
+    ├── nipype/
+    └── niworkflows/
+
+To patch in working repositories, for instance contained in
+``$HOME/projects/``, add the following arguments to your docker command: ::
+
+    -v $HOME/projects/fmriprep:/root/src/fmriprep:ro
+    -v $HOME/projects/niworkflows:/root/src/niworkflows:ro
+    -v $HOME/projects/nipype:/root/src/nipype:ro
+
+For example, ::
+
+    $ docker run --rm -v $HOME/fullds005:/data:ro -v $HOME/dockerout:/out \
+        -v $HOME/projects/fmriprep:/root/src/fmriprep:ro \
+        poldracklab/fmriprep:latest /data /out/out participant \
+        -w /out/work/ -t ds005
+
+
+In order to work directly in the container, use: ::
+
+    --entrypoint=bash
 
 Singularity Container
 =====================
