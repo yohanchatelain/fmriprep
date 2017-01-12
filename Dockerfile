@@ -96,6 +96,8 @@ RUN python -m compileall
 
 WORKDIR /root/src/fmriprep
 
+RUN chmod +x /usr/local/miniconda/bin/*
+
 ENTRYPOINT ["/usr/local/miniconda/bin/fmriprep"]
 
 ARG BUILD_DATE
