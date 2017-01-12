@@ -51,13 +51,14 @@ ENV PATH=/usr/local/miniconda/bin:$PATH \
 
 # Installing precomputed python packages
 RUN conda config --add channels intel
+ENV ACCEPT_INTEL_PYTHON_EULA=yes
 RUN conda install -y mkl=2017.0.1 \
-                     numpy=1.11.3 \
+                     numpy=1.11.2 \
                      scipy=0.18.1 \
-                     scikit-learn=0.18.1 \
+                     scikit-learn=0.17.1 \
                      matplotlib=1.5.3 \
-                     pandas=0.19.2 \
-                     lxml=3.7.2 \
+                     pandas=0.19.0 \
+                     libxml2=2.9.4 \
                      libxslt=1.1.29 \
                      traits=4.6.0 && \
     conda clean --all -y
