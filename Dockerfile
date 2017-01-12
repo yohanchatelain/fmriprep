@@ -52,6 +52,7 @@ ENV PATH=/usr/local/miniconda/bin:$PATH \
 # Installing precomputed python packages
 RUN conda config --add channels intel
 ENV ACCEPT_INTEL_PYTHON_EULA=yes
+RUN umask 000
 RUN conda install -y mkl=2017.0.1 \
                      numpy=1.11.2 \
                      scipy=0.18.1 \
@@ -60,8 +61,7 @@ RUN conda install -y mkl=2017.0.1 \
                      pandas=0.19.0 \
                      libxml2=2.9.4 \
                      libxslt=1.1.29 \
-                     traits=4.6.0 &&  \
-    chmod +x /usr/local/miniconda/bin/* && \
+                     traits=4.6.0 && \
     conda clean --all -y
 
 # Precaching fonts
@@ -95,10 +95,6 @@ RUN python -m compileall /root/src/fmriprep
 RUN python -m compileall
 
 WORKDIR /root/src/fmriprep
-
-# For some reason permissions in this folder are wrong, this happens only on
-# CircleCI
-RUN chmod +x /usr/local/miniconda/bin/*
 
 ENTRYPOINT ["/usr/local/miniconda/bin/fmriprep"]
 
