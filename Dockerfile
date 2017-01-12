@@ -23,6 +23,11 @@ ENV LD_LIBRARY_PATH=/usr/lib/fsl/5.0:$LD_LIBRARY_PATH
 ENV FSLTCLSH=/usr/bin/tclsh
 ENV FSLWISH=/usr/bin/wish
 ENV FSLOUTPUTTYPE=NIFTI_GZ
+ENV AFNI_MODELPATH=/usr/lib/afni/models
+ENV AFNI_IMSAVE_WARNINGS=NO
+ENV AFNI_TTATLAS_DATASET=/usr/share/afni/atlases
+ENV AFNI_PLUGINPATH=/usr/lib/afni/plugins
+ENV PATH=/usr/lib/afni/bin:$PATH
 
 # Installing and setting up ANTs
 RUN mkdir -p /opt/ants && \
