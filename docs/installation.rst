@@ -21,7 +21,7 @@ Now, assuming you have data, you can run fmriprep. You will need an active inter
 
 For example: ::
 
-    $ docker run --rm -v $HOME/fullds005:/data:ro -v $HOME/dockerout:/out  -w /scratch poldracklab/fmriprep:latest /data /out/out participant -w /out/work/ -t ds005
+    $ docker run --rm -v $HOME/fullds005:/data:ro -v $HOME/dockerout:/out  -w /scratch poldracklab/fmriprep:latest /data /out/out participant -w /out/work/ --ignore fieldmaps
 
 
 Singularity Container
