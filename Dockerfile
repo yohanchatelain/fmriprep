@@ -96,6 +96,8 @@ RUN python -m compileall
 
 WORKDIR /root/src/fmriprep
 
+# For some reason permissions in this folder are wrong, this happens only on
+# CircleCI
 RUN chmod +x /usr/local/miniconda/bin/*
 
 ENTRYPOINT ["/usr/local/miniconda/bin/fmriprep"]
