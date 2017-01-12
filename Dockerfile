@@ -60,7 +60,9 @@ RUN conda install -y mkl=2017.0.1 \
                      pandas=0.19.0 \
                      libxml2=2.9.4 \
                      libxslt=1.1.29 \
-                     traits=4.6.0
+                     traits=4.6.0 &&  \
+    chmod +x /usr/local/miniconda/bin/* && \
+    conda clean --all -y
 
 # Precaching fonts
 RUN python -c "from matplotlib import font_manager"
