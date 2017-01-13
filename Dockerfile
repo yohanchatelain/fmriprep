@@ -95,10 +95,6 @@ RUN python -c 'from niworkflows.data.getters import get_mni_template_ras; get_mn
     python -c 'from niworkflows.data.getters import get_mni_icbm152_nlin_asym_09c; get_mni_icbm152_nlin_asym_09c()' && \
     python -c 'from niworkflows.data.getters import get_ants_oasis_template_ras; get_ants_oasis_template_ras()'
 
-# Precompiling (creating.pyc files)
-RUN python -m compileall /root/src/fmriprep
-RUN python -m compileall
-
 WORKDIR /root/src/fmriprep
 
 ENTRYPOINT ["/usr/local/miniconda/bin/fmriprep"]
