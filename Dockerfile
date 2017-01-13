@@ -82,18 +82,18 @@ ADD requirements.txt requirements.txt
 RUN pip install -r requirements.txt && \
     rm -rf ~/.cache/pip
 
+# Installing FMRIPREP
+COPY . /root/src/fmriprep
+RUN cd /root/src/fmriprep && \
+    pip install -e .[all] && \
+    rm -rf ~/.cache/pip
+
 # Precaching atlases
 RUN mkdir /niworkflows_data
 ENV CRN_SHARED_DATA /niworkflows_data
 RUN python -c 'from niworkflows.data.getters import get_mni_template_ras; get_mni_template_ras()' && \
     python -c 'from niworkflows.data.getters import get_mni_icbm152_nlin_asym_09c; get_mni_icbm152_nlin_asym_09c()' && \
     python -c 'from niworkflows.data.getters import get_ants_oasis_template_ras; get_ants_oasis_template_ras()'
-
-# Installing FMRIPREP
-COPY . /root/src/fmriprep
-RUN cd /root/src/fmriprep && \
-    pip install -e .[all] && \
-    rm -rf ~/.cache/pip
 
 # Precompiling (creating.pyc files)
 RUN python -m compileall /root/src/fmriprep
