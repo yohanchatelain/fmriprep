@@ -18,15 +18,15 @@ See `External Dependencies`_ for more information (e.g., specific versions) on w
 Now, assuming you have data, you can run fmriprep. You will need an active internet connection the first time. ::
 
     $ docker run --rm -v filepath/to/data/dir:/data:ro \
-        -v filepath/to/output/dir:/out -w /scratch \
+        -v filepath/to/output/dir:/out \
         poldracklab/fmriprep:latest /data /out/out participant
 
 For example: ::
 
     $ docker run --rm -v $HOME/fullds005:/data:ro \
-        -v $HOME/dockerout:/out -w /scratch \
+        -v $HOME/dockerout:/out \
         poldracklab/fmriprep:latest /data /out/out participant \
-        -w /out/work/ --ignore fieldmaps
+        --ignore fieldmaps
 
 Singularity Container
 =====================
