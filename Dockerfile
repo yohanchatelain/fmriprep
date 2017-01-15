@@ -3,7 +3,7 @@ FROM ubuntu:xenial-20161213
 
 # Installing ubuntu packages (FSL, AFNI, git)
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl bzip2 ca-certificates xvfb wget && \
+    apt-get install -y --no-install-recommends curl bzip2 ca-certificates xvfb && \
     curl -sSL http://neuro.debian.net/lists/xenial.us-ca.full >> /etc/apt/sources.list.d/neurodebian.sources.list && \
     apt-key adv --recv-keys --keyserver hkp://pgp.mit.edu:80 0xA5D32F012649A5A9 && \
     apt-get update && \
@@ -30,7 +30,7 @@ ENV AFNI_PLUGINPATH=/usr/lib/afni/plugins
 ENV PATH=/usr/lib/afni/bin:$PATH
 
 # Installing freesurfer
-RUN wget -qO- ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/6.0.0-release-candidate/freesurfer-Linux-centos6_x86_64-stable-pub-v6.0.0.tar.gz | tar zxv -C /opt \
+RUN curl -sSL ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/6.0.0-release-candidate/freesurfer-Linux-centos6_x86_64-stable-pub-v6.0.0.tar.gz | tar zxv -C /opt \
     --exclude='freesurfer/trctrain' \
     --exclude='freesurfer/subjects/fsaverage_sym' \
     --exclude='freesurfer/subjects/fsaverage3' \
