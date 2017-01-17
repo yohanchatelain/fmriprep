@@ -337,7 +337,7 @@ for name, workflow in ds005_workflows.items():
         workflow.write_graph(graph2use="orig", dotfilename=name + '.dot', simple_form=True)
 
 # Create command line arguments
-print(os.path.curdir)
-print(os.path.exists(os.path.abspath(os.path.join('../../fmriprep', 'run_workflow.py'))))
-args = subprocess.Popen(os.path.abspath(os.path.join('../../fmriprep', 'run_workflow.py')),
+print(os.path.abspath(os.path.curdir))
+print(os.path.exists(os.path.abspath(os.path.join('fmriprep', 'run_workflow.py'))))
+args = subprocess.Popen(os.path.abspath(os.path.join('fmriprep', 'run_workflow.py')),
                  stdout=subprocess.PIPE).communicate()[0]
