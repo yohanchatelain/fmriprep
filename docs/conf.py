@@ -338,6 +338,6 @@ for name, workflow in ds005_workflows.items():
 
 # Create command line arguments
 print(os.path.abspath(os.path.curdir))
-print(os.path.exists(os.path.abspath(os.path.join('fmriprep', 'run_workflow.py'))))
-args = subprocess.Popen(os.path.abspath(os.path.join('fmriprep', 'run_workflow.py')),
+print(os.path.exists(os.path.abspath(os.path.join('../fmriprep', 'run_workflow.py'))))
+args = subprocess.Popen(os.path.abspath(os.path.join('../fmriprep', 'run_workflow.py')),
                  stdout=subprocess.PIPE).communicate()[0]
