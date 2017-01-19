@@ -29,6 +29,41 @@ ENV AFNI_TTATLAS_DATASET=/usr/share/afni/atlases
 ENV AFNI_PLUGINPATH=/usr/lib/afni/plugins
 ENV PATH=/usr/lib/afni/bin:$PATH
 
+# Installing freesurfer
+RUN curl -sSL ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/6.0.0-release-candidate/freesurfer-Linux-centos6_x86_64-stable-pub-v6.0.0.tar.gz | tar zxv -C /opt \
+    --exclude='freesurfer/trctrain' \
+    --exclude='freesurfer/subjects/fsaverage_sym' \
+    --exclude='freesurfer/subjects/fsaverage3' \
+    --exclude='freesurfer/subjects/fsaverage4' \
+    --exclude='freesurfer/subjects/fsaverage5' \
+    --exclude='freesurfer/subjects/fsaverage6' \
+    --exclude='freesurfer/subjects/cvs_avg35' \
+    --exclude='freesurfer/subjects/cvs_avg35_inMNI152' \
+    --exclude='freesurfer/subjects/bert' \
+    --exclude='freesurfer/subjects/V1_average' \
+    --exclude='freesurfer/average/mult-comp-cor' \
+    --exclude='freesurfer/lib/cuda' \
+    --exclude='freesurfer/lib/qt'
+
+ENV FSL_DIR=/usr/share/fsl/5.0
+ENV OS Linux
+ENV FS_OVERRIDE 0
+ENV FIX_VERTEX_AREA=
+ENV SUBJECTS_DIR /opt/freesurfer/subjects
+ENV FSF_OUTPUT_FORMAT nii.gz
+ENV MNI_DIR /opt/freesurfer/mni
+ENV LOCAL_DIR /opt/freesurfer/local
+ENV FREESURFER_HOME /opt/freesurfer
+ENV FSFAST_HOME /opt/freesurfer/fsfast
+ENV MINC_BIN_DIR /opt/freesurfer/mni/bin
+ENV MINC_LIB_DIR /opt/freesurfer/mni/lib
+ENV MNI_DATAPATH /opt/freesurfer/mni/data
+ENV FMRI_ANALYSIS_DIR /opt/freesurfer/fsfast
+ENV PERL5LIB /opt/freesurfer/mni/lib/perl5/5.8.5
+ENV MNI_PERL5LIB /opt/freesurfer/mni/lib/perl5/5.8.5
+ENV PATH /opt/freesurfer/bin:/opt/freesurfer/fsfast/bin:/opt/freesurfer/tktools:/opt/freesurfer/mni/bin:$PATH
+RUN echo "cHJpbnRmICJrcnp5c3p0b2YuZ29yZ29sZXdza2lAZ21haWwuY29tXG41MTcyXG4gKkN2dW12RVYzelRmZ1xuRlM1Si8yYzFhZ2c0RVxuIiA+IC9vcHQvZnJlZXN1cmZlci9saWNlbnNlLnR4dAo=" | base64 -d | sh
+
 # Installing and setting up ANTs
 RUN mkdir -p /opt/ants && \
     curl -sSL "https://github.com/stnava/ANTs/releases/download/v2.1.0/Linux_Ubuntu14.04.tar.bz2" \
@@ -82,22 +117,18 @@ ADD requirements.txt requirements.txt
 RUN pip install -r requirements.txt && \
     rm -rf ~/.cache/pip
 
-# Precaching atlases
-RUN mkdir /niworkflows_data
-ENV CRN_SHARED_DATA /niworkflows_data
-RUN python -c 'from niworkflows.data.getters import get_mni_template_ras; get_mni_template_ras()' && \
-    python -c 'from niworkflows.data.getters import get_mni_icbm152_nlin_asym_09c; get_mni_icbm152_nlin_asym_09c()' && \
-    python -c 'from niworkflows.data.getters import get_ants_oasis_template_ras; get_ants_oasis_template_ras()'
-
 # Installing FMRIPREP
 COPY . /root/src/fmriprep
 RUN cd /root/src/fmriprep && \
     pip install -e .[all] && \
     rm -rf ~/.cache/pip
 
-# Precompiling (creating.pyc files)
-RUN python -m compileall /root/src/fmriprep
-RUN python -m compileall
+# Precaching atlases
+RUN mkdir /niworkflows_data
+ENV CRN_SHARED_DATA /niworkflows_data
+RUN python -c 'from niworkflows.data.getters import get_mni_template_ras; get_mni_template_ras()' && \
+    python -c 'from niworkflows.data.getters import get_mni_icbm152_nlin_asym_09c; get_mni_icbm152_nlin_asym_09c()' && \
+    python -c 'from niworkflows.data.getters import get_ants_oasis_template_ras; get_ants_oasis_template_ras()'
 
 WORKDIR /root/src/fmriprep
 
