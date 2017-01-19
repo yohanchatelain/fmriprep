@@ -63,8 +63,8 @@ For example: ::
     $ singularity run ~/poldracklab_fmriprep_latest-2016-12-04-5b74ad9a4c4d.img \
         /work/04168/asdf/lonestar/ $WORK/lonestar/output \
         participant \
-        --participant_label sub-387 --nthreads 1 -w $WORK/lonestar/work \
-        --ants-nthreads 16 --skull--strip-ants
+        --participant_label sub-387 --nthreads 16 -w $WORK/lonestar/work \
+        --ants-nthreads 16
 
 
 Manually Prepared Environment
