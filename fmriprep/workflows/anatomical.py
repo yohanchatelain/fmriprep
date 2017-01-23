@@ -22,11 +22,10 @@ from niworkflows.data import get_mni_icbm152_nlin_asym_09c
 from niworkflows.interfaces.masks import BrainExtractionRPT
 from niworkflows.interfaces.segmentation import FASTRPT
 
-from fmriprep.interfaces import (DerivativesDataSink, IntraModalMerge,
-                                 ImageDataSink)
+from fmriprep.interfaces import (DerivativesDataSink, IntraModalMerge)
 from fmriprep.interfaces.utils import reorient
+from fmriprep.utils.misc import fix_multi_T1w_source_name
 from fmriprep.viz import stripped_brain_overlay
-
 
 #  pylint: disable=R0914
 def t1w_preprocessing(name='t1w_preprocessing', settings=None):
@@ -39,9 +38,9 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['t1w']), name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['t1_seg', 'bias_corrected_t1', 't1_brain', 't1_2_mni',
-                't1_2_mni_forward_transform', 't1_2_mni_reverse_transform',
-                't1_segmentation']), name='outputnode')
+        fields=['t1_seg', 't1_tpms', 'bias_corrected_t1', 't1_brain', 't1_mask',
+                't1_2_mni', 't1_2_mni_forward_transform',
+                't1_2_mni_reverse_transform']), name='outputnode')
 
     # 0. Align and merge if several T1w images are provided
     t1wmrg = pe.Node(IntraModalMerge(), name='MergeT1s')
@@ -117,7 +116,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         (asw, t1_2_mni, [('outputnode.out_mask', 'moving_mask')]),
         (t1_seg, outputnode, [('tissue_class_map', 't1_seg')]),
         (asw, outputnode, [('outputnode.bias_corrected', 'bias_corrected_t1')]),
-        (t1_seg, outputnode, [('tissue_class_map', 't1_segmentation')]),
+        (t1_seg, outputnode, [('probability_maps', 't1_tpms')]),
         (t1_2_mni, outputnode, [
             ('warped_image', 't1_2_mni'),
             ('forward_transforms', 't1_2_mni_forward_transform'),
@@ -130,10 +129,11 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         (t1_seg, tpms_mni, [('probability_maps', 'input_image')]),
         (t1_2_mni, tpms_mni, [('forward_transforms', 'transforms'),
                               ('forward_invert_flags', 'invert_transform_flags')]),
-        (asw, outputnode, [('outputnode.out_file', 't1_brain')]),
-        (inputnode, ds_t1_seg_report, [('t1w', 'source_file')]),
+        (asw, outputnode, [('outputnode.out_file', 't1_brain'),
+                           ('outputnode.out_mask', 't1_mask')]),
+        (inputnode, ds_t1_seg_report, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
         (t1_seg, ds_t1_seg_report, [('out_report', 'in_file')]),
-        (inputnode, ds_t1_2_mni_report, [('t1w', 'source_file')]),
+        (inputnode, ds_t1_2_mni_report, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
         (t1_2_mni, ds_t1_2_mni_report, [('out_report', 'in_file')])
     ])
 
@@ -144,25 +144,9 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             name='DS_Report'
         )
         workflow.connect([
-            (inputnode, ds_t1_skull_strip_report, [('t1w', 'source_file')]),
+            (inputnode, ds_t1_skull_strip_report, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
             (asw, ds_t1_skull_strip_report, [('outputnode.out_report', 'in_file')])
         ])
-
-    #  The T1-to-MNI will be plotted using the segmentation.
-    #  That's why we transform it first
-    seg_2_mni = pe.Node(
-        ants.ApplyTransforms(dimension=3, default_value=0,
-                             interpolation='NearestNeighbor'),
-        name='T1_2_MNI_warp'
-    )
-    seg_2_mni.inputs.reference_image = op.join(get_mni_icbm152_nlin_asym_09c(),
-                                               '1mm_T1.nii.gz')
-
-    workflow.connect([
-        (t1_seg, seg_2_mni, [('tissue_class_map', 'input_image')]),
-        (t1_2_mni, seg_2_mni, [('forward_transforms', 'transforms'),
-                               ('forward_invert_flags', 'invert_transform_flags')]),
-    ])
 
     # Write corrected file in the designated output dir
     ds_t1_bias = pe.Node(
@@ -218,7 +202,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             return inlist[-1]
 
         workflow.connect([
-            (inputnode, ds_t1_mni_warp, [('t1w', 'source_file')]),
+            (inputnode, ds_t1_mni_warp, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
             (t1_2_mni, ds_t1_mni_aff, [
                 (('forward_transforms', _get_aff), 'in_file')]),
             (t1_2_mni, ds_t1_mni_warp, [
@@ -226,14 +210,15 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         ])
 
     workflow.connect([
-        (inputnode, ds_t1_bias, [('t1w', 'source_file')]),
-        (inputnode, ds_t1_seg, [('t1w', 'source_file')]),
-        (inputnode, ds_mask, [('t1w', 'source_file')]),
-        (inputnode, ds_t1_mni, [('t1w', 'source_file')]),
-        (inputnode, ds_t1_mni_aff, [('t1w', 'source_file')]),
-        (inputnode, ds_bmask_mni, [('t1w', 'source_file')]),
-        (inputnode, ds_tpms_mni, [('t1w', 'source_file')]),
+        (inputnode, ds_t1_bias, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
+        (inputnode, ds_t1_seg, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
+        (inputnode, ds_mask, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
+        (inputnode, ds_t1_mni, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
+        (inputnode, ds_t1_mni_aff, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
+        (inputnode, ds_bmask_mni, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
+        (inputnode, ds_tpms_mni, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
         (asw, ds_t1_bias, [('outputnode.bias_corrected', 'in_file')]),
+        #  (inu_n4, ds_t1_bias, [('output_image', 'in_file')]),
         (t1_seg, ds_t1_seg, [('tissue_class_map', 'in_file')]),
         (asw, ds_mask, [('outputnode.out_mask', 'in_file')]),
         (t1_2_mni, ds_t1_mni, [('warped_image', 'in_file')]),
