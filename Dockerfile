@@ -30,7 +30,7 @@ ENV AFNI_PLUGINPATH=/usr/lib/afni/plugins
 ENV PATH=/usr/lib/afni/bin:$PATH
 
 # Installing freesurfer
-RUN curl -sSL ftp://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/6.0.0-release-candidate/freesurfer-Linux-centos6_x86_64-stable-pub-v6.0.0.tar.gz | tar zxv -C /opt \
+RUN curl -sSL https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/6.0.0-release-candidate/freesurfer-Linux-centos6_x86_64-stable-pub-v6.0.0.tar.gz | tar zxv -C /opt \
     --exclude='freesurfer/trctrain' \
     --exclude='freesurfer/subjects/fsaverage_sym' \
     --exclude='freesurfer/subjects/fsaverage3' \
