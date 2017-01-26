@@ -10,6 +10,8 @@ Originally coded by Craig Moodie. Refactored by the CRN Developers.
 """
 import os.path as op
 
+from multiprocessing import cpu_count
+
 from nipype.interfaces import ants
 from nipype.interfaces import freesurfer
 from nipype.interfaces import utility as niu
@@ -79,8 +81,9 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
 
     # 6. FreeSurfer reconstruction
     autorecon1 = pe.Node(
-        freesurfer.ReconAll(directive='autorecon1',
-                            args='-noskullstrip -parallel'),
+        freesurfer.ReconAll(
+            directive='autorecon1',
+            args='-noskullstrip -parallel -openmp {:d}'.format(cpu_count())),
         name='Reconstruction')
     autorecon1._interface._can_resume = False
     if 'FREESURFER_SUBJECTS' in os.environ:
@@ -108,7 +111,8 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         name='InjectSkullstrip')
 
     reconall = pe.Node(
-        freesurfer.ReconAll(args='-parallel'),
+        freesurfer.ReconAll(
+            args='-parallel -openmp {:d}'.format(cpu_count())),
         name='Reconstruction2')
 
     # Resample the brain mask and the tissue probability maps into mni space
