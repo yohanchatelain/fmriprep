@@ -11,6 +11,7 @@ Originally coded by Craig Moodie. Refactored by the CRN Developers.
 import os.path as op
 
 from nipype.interfaces import ants
+from nipype.interfaces import freesurfer
 from nipype.interfaces import utility as niu
 from nipype.pipeline import engine as pe
 
@@ -72,9 +73,43 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         ),
         name='T1_2_MNI_Registration'
     )
-    # should not be necesssary byt does not hurt - make sure the multiproc
+    # should not be necesssary but does not hurt - make sure the multiproc
     # scheduler knows the resource limits
     t1_2_mni.interface.num_threads = settings['ants_nthreads']
+
+    # 6. FreeSurfer reconstruction
+    autorecon1 = pe.Node(
+        freesurfer.ReconAll(directive='autorecon1',
+                            args='-noskullstrip -parallel'),
+        name='Reconstruction')
+    autorecon1._interface._can_resume = False
+    if 'FREESURFER_SUBJECTS' in os.environ:
+        autorecon1.inputs.subjects_dir = os.getenv('FREESURFER_SUBJECTS')
+
+    convert_asw = pe.Node(
+        freesurfer.MRIConvert(out_type='mgz'),
+        name='SkullstrippedMGZ')
+
+    def inject_skullstripped(subjects_dir, subject_id, skullstripped):
+        import os
+        from nipype.utils.filemanip import copyfile
+        mridir = os.path.join(subjects_dir, subject_id, 'mri')
+        bm_auto = os.path.join(mridir, 'brainmask.auto.mgz')
+        bm = os.path.join(mridir, 'brainmask.mgz')
+        copyfile(skullstripped, bm_auto)
+        copyfile(bm_auto, bm)
+        return subjects_dir, subject_id
+
+    injector = pe.Node(
+        niu.Function(
+            function=inject_skullstripped,
+            input_names=['subjects_dir', 'subject_id', 'skullstripped'],
+            output_names=['subjects_dir', 'subject_id']),
+        name='InjectSkullstrip')
+
+    reconall = pe.Node(
+        freesurfer.ReconAll(args='-parallel'),
+        name='Reconstruction2')
 
     # Resample the brain mask and the tissue probability maps into mni space
     bmask_mni = pe.Node(
@@ -127,6 +162,13 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         (t1_seg, tpms_mni, [('probability_maps', 'input_image')]),
         (t1_2_mni, tpms_mni, [('forward_transforms', 'transforms'),
                               ('forward_invert_flags', 'invert_transform_flags')]),
+        (inputnode, autorecon1, [('t1w', 'T1_files')]),
+        (autorecon1, injector, [('subjects_dir', 'subjects_dir'),
+                                ('subject_id', 'subject_id')]),
+        (asw, convert_asw, [('outputnode.out_file', 'in_file')]),
+        (convert_asw, injector, [('out_file', 'skullstripped')]),
+        (injector, reconall, [('subjects_dir', 'subjects_dir'),
+                              ('subject_id', 'subject_id')]),
         (asw, outputnode, [('outputnode.out_file', 't1_brain'),
                            ('outputnode.out_mask', 't1_mask')]),
         (inputnode, ds_t1_seg_report, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
