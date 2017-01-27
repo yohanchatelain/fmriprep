@@ -115,6 +115,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             ReconAllRPT(
                 args=' '.join(['-parallel',
                                '-openmp {:d}'.format(nthreads),
+                               '-noskullstrip',
                                '-noparcstats',
                                '-noparcstats2',
                                '-noparcstats3',
