@@ -10,8 +10,6 @@ Originally coded by Craig Moodie. Refactored by the CRN Developers.
 """
 import os.path as op
 
-from multiprocessing import cpu_count
-
 from nipype.interfaces import ants
 from nipype.interfaces import freesurfer
 from nipype.interfaces import utility as niu
@@ -21,7 +19,7 @@ from niworkflows.interfaces.registration import RobustMNINormalizationRPT
 from niworkflows.anat.skullstrip import afni_wf as skullstrip_wf
 from niworkflows.data import get_mni_icbm152_nlin_asym_09c
 from niworkflows.interfaces.masks import BrainExtractionRPT
-from niworkflows.interfaces.segmentation import FASTRPT
+from niworkflows.interfaces.segmentation import FASTRPT, ReconAllRPT
 
 from fmriprep.interfaces import (DerivativesDataSink, IntraModalMerge)
 from fmriprep.interfaces.utils import reorient
@@ -80,40 +78,56 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     t1_2_mni.interface.num_threads = settings['ants_nthreads']
 
     # 6. FreeSurfer reconstruction
-    autorecon1 = pe.Node(
-        freesurfer.ReconAll(
-            directive='autorecon1',
-            args='-noskullstrip -parallel -openmp {:d}'.format(cpu_count())),
-        name='Reconstruction')
-    autorecon1._interface._can_resume = False
-    if 'FREESURFER_SUBJECTS' in os.environ:
-        autorecon1.inputs.subjects_dir = os.getenv('FREESURFER_SUBJECTS')
+    if settings['freesurfer']:
+        nthreads = settings['nthreads']
+        autorecon1 = pe.Node(
+            freesurfer.ReconAll(
+                directive='autorecon1',
+                args='-noskullstrip -parallel -openmp {:d}'.format(nthreads)),
+            name='Reconstruction')
+        autorecon1.interface._can_resume = False
+        autorecon1.interface.num_threads = nthreads
+        if 'FREESURFER_SUBJECTS' in os.environ:
+            autorecon1.inputs.subjects_dir = os.getenv('FREESURFER_SUBJECTS')
 
-    convert_asw = pe.Node(
-        freesurfer.MRIConvert(out_type='mgz'),
-        name='SkullstrippedMGZ')
+        convert_asw = pe.Node(
+            freesurfer.MRIConvert(out_type='mgz'),
+            name='SkullstrippedMGZ')
 
-    def inject_skullstripped(subjects_dir, subject_id, skullstripped):
-        import os
-        from nipype.utils.filemanip import copyfile
-        mridir = os.path.join(subjects_dir, subject_id, 'mri')
-        bm_auto = os.path.join(mridir, 'brainmask.auto.mgz')
-        bm = os.path.join(mridir, 'brainmask.mgz')
-        copyfile(skullstripped, bm_auto)
-        copyfile(bm_auto, bm)
-        return subjects_dir, subject_id
+        def inject_skullstripped(subjects_dir, subject_id, skullstripped):
+            import os
+            from nipype.utils.filemanip import copyfile
+            mridir = os.path.join(subjects_dir, subject_id, 'mri')
+            bm_auto = os.path.join(mridir, 'brainmask.auto.mgz')
+            bm = os.path.join(mridir, 'brainmask.mgz')
+            copyfile(skullstripped, bm_auto)
+            copyfile(bm_auto, bm)
+            return subjects_dir, subject_id
 
-    injector = pe.Node(
-        niu.Function(
-            function=inject_skullstripped,
-            input_names=['subjects_dir', 'subject_id', 'skullstripped'],
-            output_names=['subjects_dir', 'subject_id']),
-        name='InjectSkullstrip')
+        injector = pe.Node(
+            niu.Function(
+                function=inject_skullstripped,
+                input_names=['subjects_dir', 'subject_id', 'skullstripped'],
+                output_names=['subjects_dir', 'subject_id']),
+            name='InjectSkullstrip')
 
-    reconall = pe.Node(
-        freesurfer.ReconAll(
-            args='-parallel -openmp {:d}'.format(cpu_count())),
-        name='Reconstruction2')
+        reconall = pe.Node(
+            ReconAllRPT(
+                args=' '.join(['-parallel',
+                               '-openmp {:d}'.format(nthreads),
+                               '-noparcstats',
+                               '-noparcstats2',
+                               '-noparcstats3',
+                               ]),
+                generate_report=True),
+            name='Reconstruction2')
+        reconall.interface.num_threads = nthreads
+
+        recon_report = pe.Node(
+            DerivativesDataSink(base_directory=settings['output_dir'],
+                                suffix='reconall', out_path_base='reports'),
+            name='ReconAll_Report'
+        )
 
     # Resample the brain mask and the tissue probability maps into mni space
     bmask_mni = pe.Node(
@@ -166,13 +180,6 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         (t1_seg, tpms_mni, [('probability_maps', 'input_image')]),
         (t1_2_mni, tpms_mni, [('forward_transforms', 'transforms'),
                               ('forward_invert_flags', 'invert_transform_flags')]),
-        (inputnode, autorecon1, [('t1w', 'T1_files')]),
-        (autorecon1, injector, [('subjects_dir', 'subjects_dir'),
-                                ('subject_id', 'subject_id')]),
-        (asw, convert_asw, [('outputnode.out_file', 'in_file')]),
-        (convert_asw, injector, [('out_file', 'skullstripped')]),
-        (injector, reconall, [('subjects_dir', 'subjects_dir'),
-                              ('subject_id', 'subject_id')]),
         (asw, outputnode, [('outputnode.out_file', 't1_brain'),
                            ('outputnode.out_mask', 't1_mask')]),
         (inputnode, ds_t1_seg_report, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
@@ -192,6 +199,18 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
                 (('t1w', fix_multi_T1w_source_name), 'source_file')]),
             (asw, ds_t1_skull_strip_report, [('outputnode.out_report', 'in_file')])
         ])
+
+    if settings['freesurfer']:
+        workflow.connect([
+            (inputnode, autorecon1, [('t1w', 'T1_files')]),
+            (autorecon1, injector, [('subjects_dir', 'subjects_dir'),
+                                    ('subject_id', 'subject_id')]),
+            (asw, convert_asw, [('outputnode.out_file', 'in_file')]),
+            (convert_asw, injector, [('out_file', 'skullstripped')]),
+            (injector, reconall, [('subjects_dir', 'subjects_dir'),
+                                  ('subject_id', 'subject_id')]),
+            (reconall, recon_report, [('out_report', 'in_file')]),
+            ])
 
     # Write corrected file in the designated output dir
     ds_t1_bias = pe.Node(
