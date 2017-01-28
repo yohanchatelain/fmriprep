@@ -1,33 +1,12 @@
 # Use Ubuntu 16.04 LTS
 FROM ubuntu:xenial-20161213
 
-# Installing ubuntu packages (FSL, AFNI, git)
+# Prepare environment
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl bzip2 ca-certificates xvfb && \
     curl -sSL http://neuro.debian.net/lists/xenial.us-ca.full >> /etc/apt/sources.list.d/neurodebian.sources.list && \
     apt-key adv --recv-keys --keyserver hkp://pgp.mit.edu:80 0xA5D32F012649A5A9 && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends \
-                    fsl-core=5.0.9-1~nd+1+nd16.04+1 \
-                    git=1:2.7.4-0ubuntu1 \
-                    afni=16.2.07~dfsg.1-2~nd16.04+1 \
-                    graphviz=2.38.0-12ubuntu2 && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-ENV FSLDIR=/usr/share/fsl/5.0
-ENV FSLOUTPUTTYPE=NIFTI_GZ
-ENV PATH=/usr/lib/fsl/5.0:$PATH
-ENV FSLMULTIFILEQUIT=TRUE
-ENV POSSUMDIR=/usr/share/fsl/5.0
-ENV LD_LIBRARY_PATH=/usr/lib/fsl/5.0:$LD_LIBRARY_PATH
-ENV FSLTCLSH=/usr/bin/tclsh
-ENV FSLWISH=/usr/bin/wish
-ENV FSLOUTPUTTYPE=NIFTI_GZ
-ENV AFNI_MODELPATH=/usr/lib/afni/models
-ENV AFNI_IMSAVE_WARNINGS=NO
-ENV AFNI_TTATLAS_DATASET=/usr/share/afni/atlases
-ENV AFNI_PLUGINPATH=/usr/lib/afni/plugins
-ENV PATH=/usr/lib/afni/bin:$PATH
+    apt-get update
 
 # Installing freesurfer
 RUN curl -sSL https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/6.0.0/freesurfer-Linux-centos6_x86_64-stable-pub-v6.0.0.tar.gz | tar zxv -C /opt \
@@ -50,6 +29,7 @@ ENV OS Linux
 ENV FS_OVERRIDE 0
 ENV FIX_VERTEX_AREA=
 ENV SUBJECTS_DIR /opt/freesurfer/subjects
+ENV FUNCTIONALS_DIR /opt/freesurfer/sessions
 ENV FSF_OUTPUT_FORMAT nii.gz
 ENV MNI_DIR /opt/freesurfer/mni
 ENV LOCAL_DIR /opt/freesurfer/local
@@ -63,6 +43,26 @@ ENV PERL5LIB /opt/freesurfer/mni/lib/perl5/5.8.5
 ENV MNI_PERL5LIB /opt/freesurfer/mni/lib/perl5/5.8.5
 ENV PATH /opt/freesurfer/bin:/opt/freesurfer/fsfast/bin:/opt/freesurfer/tktools:/opt/freesurfer/mni/bin:$PATH
 RUN echo "cHJpbnRmICJrcnp5c3p0b2YuZ29yZ29sZXdza2lAZ21haWwuY29tXG41MTcyXG4gKkN2dW12RVYzelRmZ1xuRlM1Si8yYzFhZ2c0RVxuIiA+IC9vcHQvZnJlZXN1cmZlci9saWNlbnNlLnR4dAo=" | base64 -d | sh
+
+# Installing Neurodebian packages (FSL, AFNI, git)
+RUN apt-get install -y --no-install-recommends \
+                    fsl-core=5.0.9-1~nd+1+nd16.04+1 \
+                    afni=16.2.07~dfsg.1-2~nd16.04+1
+
+ENV FSLDIR=/usr/share/fsl/5.0
+ENV FSLOUTPUTTYPE=NIFTI_GZ
+ENV PATH=/usr/lib/fsl/5.0:$PATH
+ENV FSLMULTIFILEQUIT=TRUE
+ENV POSSUMDIR=/usr/share/fsl/5.0
+ENV LD_LIBRARY_PATH=/usr/lib/fsl/5.0:$LD_LIBRARY_PATH
+ENV FSLTCLSH=/usr/bin/tclsh
+ENV FSLWISH=/usr/bin/wish
+ENV FSLOUTPUTTYPE=NIFTI_GZ
+ENV AFNI_MODELPATH=/usr/lib/afni/models
+ENV AFNI_IMSAVE_WARNINGS=NO
+ENV AFNI_TTATLAS_DATASET=/usr/share/afni/atlases
+ENV AFNI_PLUGINPATH=/usr/lib/afni/plugins
+ENV PATH=/usr/lib/afni/bin:$PATH
 
 # Installing and setting up ANTs
 RUN mkdir -p /opt/ants && \
@@ -106,6 +106,12 @@ RUN conda install -y mkl=2017.0.1 \
 
 # Precaching fonts
 RUN python -c "from matplotlib import font_manager"
+
+# Installing Ubuntu packages and cleaning up
+RUN apt-get install -y --no-install-recommends \
+                    git=1:2.7.4-0ubuntu1 \
+                    graphviz=2.38.0-12ubuntu2 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Unless otherwise specified each process should only use one thread - nipype
 # will handle parallelization
