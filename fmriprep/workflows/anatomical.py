@@ -210,6 +210,8 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             (convert_asw, injector, [('out_file', 'skullstripped')]),
             (injector, reconall, [('subjects_dir', 'subjects_dir'),
                                   ('subject_id', 'subject_id')]),
+            (inputnode, recon_report, [
+                (('t1w', fix_multi_T1w_source_name), 'source_file')]),
             (reconall, recon_report, [('out_report', 'in_file')]),
             ])
 
