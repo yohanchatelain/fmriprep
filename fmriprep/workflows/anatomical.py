@@ -101,8 +101,8 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             mridir = os.path.join(subjects_dir, subject_id, 'mri')
             bm_auto = os.path.join(mridir, 'brainmask.auto.mgz')
             bm = os.path.join(mridir, 'brainmask.mgz')
-            copyfile(skullstripped, bm_auto)
-            copyfile(bm_auto, bm)
+            copyfile(skullstripped, bm_auto, copy=True, use_hardlink=True)
+            copyfile(bm_auto, bm, copy=True, use_hardlink=True)
             return subjects_dir, subject_id
 
         injector = pe.Node(
