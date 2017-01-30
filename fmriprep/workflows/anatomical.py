@@ -83,7 +83,8 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         autorecon1 = pe.Node(
             freesurfer.ReconAll(
                 directive='autorecon1',
-                args='-noskullstrip -parallel -openmp {:d}'.format(nthreads)),
+                openmp=nthreads,
+                flags='-noskullstrip'),
             name='Reconstruction')
         autorecon1.interface._can_resume = False
         autorecon1.interface.num_threads = nthreads
@@ -113,13 +114,12 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
 
         reconall = pe.Node(
             ReconAllRPT(
-                args=' '.join(['-parallel',
-                               '-openmp {:d}'.format(nthreads),
-                               '-noskullstrip',
-                               '-noparcstats',
-                               '-noparcstats2',
-                               '-noparcstats3',
-                               ]),
+                openmp=nthreads,
+                flags=' '.join(['-noskullstrip',
+                                '-noparcstats',
+                                '-noparcstats2',
+                                '-noparcstats3',
+                                ]),
                 generate_report=True),
             name='Reconstruction2')
         reconall.interface.num_threads = nthreads
