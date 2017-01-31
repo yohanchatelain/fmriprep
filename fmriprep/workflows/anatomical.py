@@ -119,7 +119,11 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
                                 '-noparcstats',
                                 '-noparcstats2',
                                 '-noparcstats3',
+                                '-nosegstats',
+                                '-nowmparc',
+                                '-nobalabels',
                                 ]),
+                out_report='reconall.svg',
                 generate_report=True),
             name='Reconstruction2')
         reconall.interface.num_threads = nthreads
