@@ -91,17 +91,23 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         if 'FREESURFER_SUBJECTS' in os.environ:
             autorecon1.inputs.subjects_dir = os.getenv('FREESURFER_SUBJECTS')
 
-        convert_asw = pe.Node(
-            freesurfer.MRIConvert(out_type='mgz'),
-            name='SkullstrippedMGZ')
-
         def inject_skullstripped(subjects_dir, subject_id, skullstripped):
             import os
+            import nibabel as nib
+            from nilearn.image import resample_to_img, new_img_like
             from nipype.utils.filemanip import copyfile
             mridir = os.path.join(subjects_dir, subject_id, 'mri')
+            t1 = os.path.join(mridir, 'T1.mgz')
             bm_auto = os.path.join(mridir, 'brainmask.auto.mgz')
             bm = os.path.join(mridir, 'brainmask.mgz')
-            copyfile(skullstripped, bm_auto, copy=True, use_hardlink=True)
+
+            img = nib.load(t1)
+            mask = nib.load(skullstripped)
+            bmask = new_img_like(mask, mask.get_data() > 0)
+            resampled_mask = resample_to_img(bmask, img, 'nearest')
+            masked_image = new_img_like(img, img.get_data() * resampled_mask.get_data())
+            masked_image.to_filename(bm_auto)
+
             copyfile(bm_auto, bm, copy=True, use_hardlink=True)
             return subjects_dir, subject_id
 
@@ -210,8 +216,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             (inputnode, autorecon1, [('t1w', 'T1_files')]),
             (autorecon1, injector, [('subjects_dir', 'subjects_dir'),
                                     ('subject_id', 'subject_id')]),
-            (asw, convert_asw, [('outputnode.out_file', 'in_file')]),
-            (convert_asw, injector, [('out_file', 'skullstripped')]),
+            (asw, injector, [('outputnode.out_file', 'skullstripped')]),
             (injector, reconall, [('subjects_dir', 'subjects_dir'),
                                   ('subject_id', 'subject_id')]),
             (inputnode, recon_report, [
