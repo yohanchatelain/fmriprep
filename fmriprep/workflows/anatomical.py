@@ -122,12 +122,6 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             ReconAllRPT(
                 openmp=nthreads,
                 flags=' '.join(['-noskullstrip',
-                                '-noparcstats',
-                                '-noparcstats2',
-                                '-noparcstats3',
-                                '-nosegstats',
-                                '-nowmparc',
-                                '-nobalabels',
                                 ]),
                 out_report='reconall.svg',
                 generate_report=True),
