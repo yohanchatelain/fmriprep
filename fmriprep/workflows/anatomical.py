@@ -80,11 +80,41 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     # 6. FreeSurfer reconstruction
     if settings['freesurfer']:
         nthreads = settings['nthreads']
+
+        def detect_inputs(t1w_list, default_flags=''):
+            from nipype.utils.filemanip import filename_to_list
+            import nibabel as nib
+            t1w_list = filename_to_list(t1w_list)
+            t1w_ref = nib.load(t1w_list[0])
+            hires = max(t1w_ref.header.get_zooms()) < 1
+            t1w_outs = [t1w_list.pop(0)]
+            for t1w in t1w_list:
+                img = nib.load(t1w)
+                if all((img.shape == t1w_ref.shape,
+                        img.header.get_zooms() == t1w_ref.header.get_zooms())):
+                    t1w_outs.append(t1w_outs)
+
+            autorecon1_flags = [default_flags]
+            reconall_flags = [default_flags]
+            if hires:
+                autorecon1_flags.append('-hires')
+                reconall_flags.append('-hires')
+            return (t1w_outs, ' '.join(autorecon1_flags),
+                    ' '.join(reconall_flags))
+
+        recon_config = pe.Node(
+            niu.Function(
+                function=detect_inputs,
+                input_names=['t1w_list', 'default_flags'],
+                output_names=['t1w', 'autorecon1_flags', 'reconall_flags']),
+            name='ReconConfig',
+            run_without_submitting=True)
+        recon_config.inputs.default_flags = '-noskullstrip'
+
         autorecon1 = pe.Node(
             freesurfer.ReconAll(
                 directive='autorecon1',
-                openmp=nthreads,
-                flags='-noskullstrip'),
+                openmp=nthreads),
             name='Reconstruction')
         autorecon1.interface._can_resume = False
         autorecon1.interface.num_threads = nthreads
@@ -121,8 +151,6 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         reconall = pe.Node(
             ReconAllRPT(
                 openmp=nthreads,
-                flags=' '.join(['-noskullstrip',
-                                ]),
                 out_report='reconall.svg',
                 generate_report=True),
             name='Reconstruction2')
@@ -207,12 +235,15 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
 
     if settings['freesurfer']:
         workflow.connect([
-            (inputnode, autorecon1, [('t1w', 'T1_files')]),
+            (inputnode, recon_config, [('t1w', 't1w_list')]),
+            (recon_config, autorecon1, [('t1w', 'T1_files'),
+                                        ('autorecon1_flags', 'flags')]),
             (autorecon1, injector, [('subjects_dir', 'subjects_dir'),
                                     ('subject_id', 'subject_id')]),
             (asw, injector, [('outputnode.out_file', 'skullstripped')]),
             (injector, reconall, [('subjects_dir', 'subjects_dir'),
                                   ('subject_id', 'subject_id')]),
+            (recon_config, reconall, [('reconall_flags', 'flags')]),
             (inputnode, recon_report, [
                 (('t1w', fix_multi_T1w_source_name), 'source_file')]),
             (reconall, recon_report, [('out_report', 'in_file')]),
