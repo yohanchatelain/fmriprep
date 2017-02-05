@@ -78,6 +78,16 @@ RUN mkdir -p /opt/c3d && \
 ENV C3DPATH /opt/c3d/
 ENV PATH $C3DPATH/bin:$PATH
 
+# Installing WEBP tools
+RUN curl -sSLO "http://downloads.webmproject.org/releases/webp/libwebp-0.5.2-linux-x86-64.tar.gz" && \
+  tar -xf libwebp-0.5.2-linux-x86-64.tar.gz && cd libwebp-0.5.2-linux-x86-64/bin && \
+  mv cwebp /usr/local/bin/ && rm -rf libwebp-0.5.2-linux-x86-64
+
+# Installing SVGO
+RUN curl -sL https://deb.nodesource.com/setup_7.x | bash -
+RUN apt-get install -y nodejs
+RUN npm install -g svgo
+
 # Installing and setting up miniconda
 RUN curl -sSLO https://repo.continuum.io/miniconda/Miniconda3-4.2.12-Linux-x86_64.sh && \
     bash Miniconda3-4.2.12-Linux-x86_64.sh -b -p /usr/local/miniconda && \
@@ -117,6 +127,7 @@ ENV MKL_NUM_THREADS=1 \
     OMP_NUM_THREADS=1
 
 # Installing dev requirements (packages that are not in pypi)
+WORKDIR /root/
 ADD requirements.txt requirements.txt
 RUN pip install -r requirements.txt && \
     rm -rf ~/.cache/pip
