@@ -12,6 +12,7 @@ import os.path as op
 
 from nipype.interfaces import ants
 from nipype.interfaces import freesurfer
+from nipype.interfaces import io as nio
 from nipype.interfaces import utility as niu
 from nipype.pipeline import engine as pe
 
@@ -111,6 +112,20 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             run_without_submitting=True)
         recon_config.inputs.default_flags = '-noskullstrip'
 
+        def bidsinfo(in_file):
+            from fmriprep.interfaces.bids import BIDS_NAME
+            match = BIDS_NAME.search(in_file)
+            params = match.groupdict() if match is not None else {}
+            return tuple(map(params.get, ['subject_id', 'ses_id', 'task_id',
+                                          'acq_id', 'rec_id', 'run_id']))
+
+        bids_info = pe.Node(
+            niu.Function(function=bidsinfo, input_names=['in_file'],
+                         output_names=['subject_id', 'ses_id', 'task_id',
+                                       'acq_id', 'rec_id', 'run_id']),
+            name='BIDSInfo',
+            run_without_submitting=True)
+
         autorecon1 = pe.Node(
             freesurfer.ReconAll(
                 directive='autorecon1',
@@ -161,6 +176,25 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
                                 suffix='reconall', out_path_base='reports'),
             name='ReconAll_Report'
         )
+
+        def joiner(dirname, basename):
+            import os
+            return os.path.join(dirname, basename)
+
+        subject_dir = pe.Node(
+            niu.Function(
+                function=joiner,
+                input_names=['dirname', 'basename'],
+                output_names=['path']),
+            name='SubjectDir',
+            run_without_submitting=True)
+
+        subject_out = pe.Node(
+            nio.DataSink(
+                base_directory=settings['bids_root'],
+                container='derivatives'),
+            name='FSSubjOut',
+            run_without_submitting=True)
 
     # Resample the brain mask and the tissue probability maps into mni space
     bmask_mni = pe.Node(
@@ -236,8 +270,10 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     if settings['freesurfer']:
         workflow.connect([
             (inputnode, recon_config, [('t1w', 't1w_list')]),
+            (inputnode, bids_info, [('t1w', 'in_file')]),
             (recon_config, autorecon1, [('t1w', 'T1_files'),
                                         ('autorecon1_flags', 'flags')]),
+            (bids_info, autorecon1, [('subject_id', 'subject_id')]),
             (autorecon1, injector, [('subjects_dir', 'subjects_dir'),
                                     ('subject_id', 'subject_id')]),
             (asw, injector, [('outputnode.out_file', 'skullstripped')]),
@@ -247,6 +283,9 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             (inputnode, recon_report, [
                 (('t1w', fix_multi_T1w_source_name), 'source_file')]),
             (reconall, recon_report, [('out_report', 'in_file')]),
+            (reconall, subject_dir, [('subjects_dir', 'dirname'),
+                                     ('subject_id', 'basename')]),
+            (subject_dir, subject_out, [('path', 'freesurfer')]),
             ])
 
     # Write corrected file in the designated output dir
