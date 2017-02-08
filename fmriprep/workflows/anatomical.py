@@ -193,7 +193,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
 
         subject_out = pe.Node(
             nio.DataSink(
-                base_directory=settings['bids_root'],
+                base_directory=settings['output_dir'],
                 container='derivatives'),
             name='FSSubjOut',
             run_without_submitting=True)
