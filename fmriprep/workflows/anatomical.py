@@ -35,7 +35,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
 
     workflow = pe.Workflow(name=name)
 
-    inputnode = pe.Node(niu.IdentityInterface(fields=['t1w', 'subjects_dir']), name='inputnode')
+    inputnode = pe.Node(niu.IdentityInterface(fields=['t1w', 't2w', 'subjects_dir']), name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['t1_seg', 't1_tpms', 'bias_corrected_t1', 't1_brain', 't1_mask',
                 't1_2_mni', 't1_2_mni_forward_transform',
@@ -81,10 +81,12 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     if settings['freesurfer']:
         nthreads = settings['nthreads']
 
-        def detect_inputs(t1w_list, default_flags=''):
+        def detect_inputs(t1w_list, t2w_list=[], default_flags=''):
+            from nipype.interfaces.base import isdefined
             from nipype.utils.filemanip import filename_to_list
             import nibabel as nib
             t1w_list = filename_to_list(t1w_list)
+            t2w_list = filename_to_list(t2w_list) if isdefined(t2w_list) else []
             t1w_ref = nib.load(t1w_list[0])
             hires = max(t1w_ref.header.get_zooms()) < 1
             t1w_outs = [t1w_list.pop(0)]
@@ -94,18 +96,25 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
                         img.header.get_zooms() == t1w_ref.header.get_zooms())):
                     t1w_outs.append(t1w)
 
+            t2w = None
+            if t2w_list and max(nib.load(t2w_list[0]).header.get_zooms()) < 1.2:
+                t2w = t2w_list[0]
+
             autorecon1_flags = [default_flags]
             reconall_flags = [default_flags]
             if hires:
                 autorecon1_flags.append('-hires')
                 reconall_flags.append('-hires')
+            if t2w is not None:
+                autorecon1_flags.append('-T2 {}'.format(t2w))
+                reconall_flags.append('-T2pial')
             return (t1w_outs, ' '.join(autorecon1_flags),
                     ' '.join(reconall_flags))
 
         recon_config = pe.Node(
             niu.Function(
                 function=detect_inputs,
-                input_names=['t1w_list', 'default_flags'],
+                input_names=['t1w_list', 't2w_list', 'default_flags'],
                 output_names=['t1w', 'autorecon1_flags', 'reconall_flags']),
             name='ReconConfig',
             run_without_submitting=True)
@@ -252,7 +261,8 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
 
     if settings['freesurfer']:
         workflow.connect([
-            (inputnode, recon_config, [('t1w', 't1w_list')]),
+            (inputnode, recon_config, [('t1w', 't1w_list'),
+                                       ('t2w', 't2w_list')]),
             (inputnode, bids_info, [(('t1w', fix_multi_T1w_source_name), 'in_file')]),
             (inputnode, autorecon1, [('subjects_dir', 'subjects_dir')]),
             (recon_config, autorecon1, [('t1w', 'T1_files'),
