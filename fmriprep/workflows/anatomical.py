@@ -82,6 +82,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         nthreads = settings['nthreads']
 
         def detect_inputs(t1w_list, t2w_list=[], default_flags=''):
+            import os
             from nipype.interfaces.base import isdefined
             from nipype.utils.filemanip import filename_to_list
             from nipype.interfaces.traits_extension import Undefined
@@ -103,14 +104,19 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
 
             flags = [default_flags]
             if hires:
-                flags.append('-hires')
-            return (t1w_outs, t2w, isdefined(t2w), ' '.join(flags))
+                expert = 'mris_inflate -n 50\n'
+                expert_file = os.path.abspath('expert.opts')
+                with open(expert_file, 'w') as fobj:
+                    fobj.write(expert)
+                # https://surfer.nmr.mgh.harvard.edu/fswiki/SubmillimeterRecon
+                flags.extend(('-hires', '-expert {}'.format(expert_file)))
+            return (t1w_outs, t2w, isdefined(t2w), expert_file, ' '.join(flags))
 
         recon_config = pe.Node(
             niu.Function(
                 function=detect_inputs,
                 input_names=['t1w_list', 't2w_list', 'default_flags'],
-                output_names=['t1w', 't2w', 'use_T2', 'flags']),
+                output_names=['t1w', 't2w', 'use_T2', 'expert', 'flags']),
             name='ReconConfig',
             run_without_submitting=True)
         recon_config.inputs.default_flags = '-noskullstrip'
