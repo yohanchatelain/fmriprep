@@ -7,8 +7,10 @@ Workflows
 Basic workflow (no fieldmaps)
 =============================
 
-``fmriprep``'s basic pipeline is used on datasets for which there are only t1ws and at least one functional (EPI) file, but no SBRefs or fieldmaps.
-To force using this pipeline on datasets that do include fieldmaps and SBRefs use the `--ignore fieldmaps` flag.
+``fmriprep``'s basic pipeline is used on datasets for which there are only t1ws
+and at least one functional (EPI) file, but no SBRefs or fieldmaps.
+To force using this pipeline on datasets that do include fieldmaps and SBRefs
+use the ``--ignore fieldmaps`` flag.
 
 What It Does
 ------------
@@ -20,7 +22,7 @@ High-level view of the basic pipeline:
 BIDSDatasource
 ~~~~~~~~~~~~~~
 
-This node reads the BIDS_-formatted t1 data.
+This node reads the BIDS_-formatted T1 data.
 
 t1w_preprocessing
 ~~~~~~~~~~~~~~~~~
@@ -28,7 +30,7 @@ t1w_preprocessing
 .. image:: t1w_preprocessing.dot.png
     :scale: 100%
 
-The t1w_preprocessing sub-workflow finds the skull stripping mask and the
+The ``t1w_preprocessing`` sub-workflow finds the skull stripping mask and the
 white matter/gray matter/cerebrospinal fluid segments and finds a non-linear
 warp to the MNI space.
 
@@ -46,6 +48,14 @@ warp to the MNI space.
     :scale: 100%
 
     Animation showing T1 to MNI normalization (ANTs)
+
+Additionally, FreeSurfer surfaces are reconstructed from T1-weighted structural
+image(s), using the ANTs-extracted brain mask.
+This feature may be disabled with the ``--no-freesurfer`` flag.
+
+.. figure:: _static/reconall.svg
+
+    Surface reconstruction (FreeSurfer)
 
 EPI_HMC
 ~~~~~~~
@@ -138,6 +148,9 @@ Derivatives related to EPI files are in the ``func`` subfolder:
 - ``*bold_preproc.nii.gz`` Motion-corrected (using MCFLIRT) EPI file.
 - ``*bold_space-MNI152NLin2009cAsym_preproc.nii.gz`` Same as above, but in MNI space
 - ``*bold_target-T1w_affine.txt`` The ITK-formatted affine to transform the EPI into T1w space (the inverse of ``anat/*T1w_target-meanBOLD_affine.txt``)
+
+If FreeSurfer reconstruction is performed, the reconstructed subject is placed in
+``derivatives/freesurfer/sub-{subj_id}``.
 
 Images
 ------
