@@ -7,6 +7,8 @@ Created on Wed Dec  2 17:35:40 2015
 
 @author: craigmoodie
 """
+from __future__ import print_function, division, absolute_import, unicode_literals
+
 import os
 from copy import deepcopy
 from time import strftime
