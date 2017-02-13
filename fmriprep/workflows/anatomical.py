@@ -134,8 +134,6 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             name='Reconstruction')
         autorecon1.interface._can_resume = False
         autorecon1.interface.num_threads = nthreads
-        if 'FREESURFER_SUBJECTS' in os.environ:
-            autorecon1.inputs.subjects_dir = os.getenv('FREESURFER_SUBJECTS')
 
         def inject_skullstripped(subjects_dir, subject_id, skullstripped):
             import os
@@ -197,6 +195,9 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
                 container='derivatives'),
             name='FSSubjOut',
             run_without_submitting=True)
+        # Copy fsaverage subject into derivatives/freesurfer
+        setattr(subject_out.inputs, 'freesurfer.@fsaverage',
+                '/opt/freesurfer/subjects/fsaverage')
 
     # Resample the brain mask and the tissue probability maps into mni space
     bmask_mni = pe.Node(
@@ -287,7 +288,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             (reconall, recon_report, [('out_report', 'in_file')]),
             (reconall, subject_dir, [('subjects_dir', 'dirname'),
                                      ('subject_id', 'basename')]),
-            (subject_dir, subject_out, [('path', 'freesurfer')]),
+            (subject_dir, subject_out, [('path', 'freesurfer.@subj')]),
             ])
 
     # Write corrected file in the designated output dir
