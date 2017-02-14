@@ -39,7 +39,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['t1_seg', 't1_tpms', 'bias_corrected_t1', 't1_brain', 't1_mask',
                 't1_2_mni', 't1_2_mni_forward_transform',
-                't1_2_mni_reverse_transform']), name='outputnode')
+                't1_2_mni_reverse_transform', 'subject_id']), name='outputnode')
 
     # 0. Align and merge if several T1w images are provided
     t1wmrg = pe.Node(IntraModalMerge(), name='MergeT1s')
@@ -278,6 +278,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             (inputnode, recon_report, [
                 (('t1w', fix_multi_T1w_source_name), 'source_file')]),
             (reconall, recon_report, [('out_report', 'in_file')]),
+            (reconall, outputnode, [('subject_id', 'subject_id')]),
             ])
 
     # Write corrected file in the designated output dir
