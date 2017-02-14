@@ -12,7 +12,6 @@ import os.path as op
 
 from nipype.interfaces import ants
 from nipype.interfaces import freesurfer
-from nipype.interfaces import io as nio
 from nipype.interfaces import utility as niu
 from nipype.pipeline import engine as pe
 
@@ -36,7 +35,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
 
     workflow = pe.Workflow(name=name)
 
-    inputnode = pe.Node(niu.IdentityInterface(fields=['t1w']), name='inputnode')
+    inputnode = pe.Node(niu.IdentityInterface(fields=['t1w', 'subjects_dir']), name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['t1_seg', 't1_tpms', 'bias_corrected_t1', 't1_brain', 't1_mask',
                 't1_2_mni', 't1_2_mni_forward_transform',
@@ -177,28 +176,6 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             name='ReconAll_Report'
         )
 
-        def joiner(dirname, basename):
-            import os
-            return os.path.join(dirname, basename)
-
-        subject_dir = pe.Node(
-            niu.Function(
-                function=joiner,
-                input_names=['dirname', 'basename'],
-                output_names=['path']),
-            name='SubjectDir',
-            run_without_submitting=True)
-
-        subject_out = pe.Node(
-            nio.DataSink(
-                base_directory=settings['output_dir'],
-                container='derivatives'),
-            name='FSSubjOut',
-            run_without_submitting=True)
-        # Copy fsaverage subject into derivatives/freesurfer
-        setattr(subject_out.inputs, 'freesurfer.@fsaverage',
-                '/opt/freesurfer/subjects/fsaverage')
-
     # Resample the brain mask and the tissue probability maps into mni space
     bmask_mni = pe.Node(
         ants.ApplyTransforms(dimension=3, default_value=0,
@@ -274,6 +251,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         workflow.connect([
             (inputnode, recon_config, [('t1w', 't1w_list')]),
             (inputnode, bids_info, [('t1w', 'in_file')]),
+            (inputnode, autorecon1, [('subjects_dir', 'subjects_dir')]),
             (recon_config, autorecon1, [('t1w', 'T1_files'),
                                         ('autorecon1_flags', 'flags')]),
             (bids_info, autorecon1, [('subject_id', 'subject_id')]),
@@ -286,9 +264,6 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             (inputnode, recon_report, [
                 (('t1w', fix_multi_T1w_source_name), 'source_file')]),
             (reconall, recon_report, [('out_report', 'in_file')]),
-            (reconall, subject_dir, [('subjects_dir', 'dirname'),
-                                     ('subject_id', 'basename')]),
-            (subject_dir, subject_out, [('path', 'freesurfer.@subj')]),
             ])
 
     # Write corrected file in the designated output dir
