@@ -144,14 +144,17 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             bm_auto = os.path.join(mridir, 'brainmask.auto.mgz')
             bm = os.path.join(mridir, 'brainmask.mgz')
 
-            img = nib.load(t1)
-            mask = nib.load(skullstripped)
-            bmask = new_img_like(mask, mask.get_data() > 0)
-            resampled_mask = resample_to_img(bmask, img, 'nearest')
-            masked_image = new_img_like(img, img.get_data() * resampled_mask.get_data())
-            masked_image.to_filename(bm_auto)
+            if not os.path.exists(bm_auto):
+                img = nib.load(t1)
+                mask = nib.load(skullstripped)
+                bmask = new_img_like(mask, mask.get_data() > 0)
+                resampled_mask = resample_to_img(bmask, img, 'nearest')
+                masked_image = new_img_like(img, img.get_data() * resampled_mask.get_data())
+                masked_image.to_filename(bm_auto)
 
-            copyfile(bm_auto, bm, copy=True, use_hardlink=True)
+            if not os.path.exists(bm):
+                copyfile(bm_auto, bm, copy=True, use_hardlink=True)
+
             return subjects_dir, subject_id
 
         injector = pe.Node(
