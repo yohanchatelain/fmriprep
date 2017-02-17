@@ -15,8 +15,9 @@ from time import strftime
 
 from nipype.pipeline import engine as pe
 from nipype.interfaces import fsl
+from nipype.interfaces import utility as niu
 
-from fmriprep.interfaces import BIDSDataGrabber
+from fmriprep.interfaces import BIDSDataGrabber, BIDSFreeSurferDir
 from fmriprep.utils.misc import collect_bids_data, get_biggest_epi_file_size_gb
 from fmriprep.workflows import confounds
 
@@ -30,6 +31,12 @@ from fmriprep.workflows.epi import (
 
 def base_workflow_enumerator(subject_list, task_id, settings):
     workflow = pe.Workflow(name='workflow_enumerator')
+
+    if settings['freesurfer']:
+        fsdir = pe.Node(BIDSFreeSurferDir(), name='BIDSFreesurfer')
+        fsdir.inputs.freesurfer_home = os.getenv('FREESURFER_HOME')
+        fsdir.inputs.derivatives = os.path.join(settings['output_dir'], 'derivatives')
+
     generated_list = []
     for subject in subject_list:
         generated_workflow = base_workflow_generator(subject, task_id=task_id,
@@ -41,8 +48,11 @@ def base_workflow_enumerator(subject_list, task_id, settings):
             )
             for node in generated_workflow._get_all_nodes():
                 node.config = deepcopy(generated_workflow.config)
-            generated_list.append(generated_workflow)
-    workflow.add_nodes(generated_list)
+            if settings['freesurfer']:
+                workflow.connect(fsdir, 'subjects_dir',
+                                 generated_workflow, 'inputnode.subjects_dir')
+            else:
+                workflow.add_nodes([generated_workflow])
 
     return workflow
 
@@ -81,6 +91,8 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
 
     workflow = pe.Workflow(name=name)
 
+    inputnode = pe.Node(niu.IdentityInterface(fields=['subjects_dir']),
+                        name='inputnode')
     #  inputnode = pe.Node(niu.IdentityInterface(fields=['subject_id']),
     #                    name='inputnode')
     #  inputnode.iterables = [('subject_id', subject_list)]
@@ -159,6 +171,12 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
                                       ('outputnode.epi_unwarp', 'inputnode.fmri_file')]),
         (t1w_pre, confounds_wf, [('outputnode.t1_tpms', 'inputnode.t1_tpms')]),
     ])
+
+    if settings['freesurfer']:
+        workflow.connect([
+            (inputnode, t1w_pre, [('subjects_dir', 'inputnode.subjects_dir')]),
+            ])
+
     return workflow
 
 
@@ -179,6 +197,8 @@ def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
 
     workflow = pe.Workflow(name=name)
 
+    inputnode = pe.Node(niu.IdentityInterface(fields=['subjects_dir']),
+                        name='inputnode')
     #  inputnode = pe.Node(niu.IdentityInterface(fields=['subject_id']),
     #                      name='inputnode')
     #  inputnode.iterables = [('subject_id', subject_list)]
@@ -234,6 +254,11 @@ def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
                                      ('outputnode.t1_2_mni_forward_transform',
                                       'inputnode.t1_2_mni_forward_transform')])
     ])
+
+    if settings['freesurfer']:
+        workflow.connect([
+            (inputnode, t1w_pre, [('subjects_dir', 'inputnode.subjects_dir')]),
+            ])
 
     return workflow
 
