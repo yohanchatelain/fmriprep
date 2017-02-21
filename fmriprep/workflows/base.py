@@ -11,6 +11,7 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 
 import os
 from copy import deepcopy
+from time import strftime
 
 from nipype.pipeline import engine as pe
 from nipype.interfaces import fsl
@@ -42,7 +43,7 @@ def base_workflow_enumerator(subject_list, task_id, settings, run_uuid):
                                                      settings=settings)
         if generated_workflow:
             generated_workflow.config['execution']['crashdump_dir'] = (
-                os.path.join(settings['output_dir'], 'log', subject, run_uuid)
+                os.path.join(settings['output_dir'], 'sub-' + subject, 'log', run_uuid)
             )
             for node in generated_workflow._get_all_nodes():
                 node.config = deepcopy(generated_workflow.config)
