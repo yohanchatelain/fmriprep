@@ -244,10 +244,11 @@ def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
         (epi_2_t1, confounds_wf, [('outputnode.mat_t1_to_epi', 'inputnode.t1_transform')]),
         (hmcwf, confounds_wf, [('inputnode.epi', 'inputnode.source_file')]),
 
-        (hmcwf, epi_mni_trans_wf, [('inputnode.epi', 'inputnode.epi')]),
         (epi_2_t1, epi_mni_trans_wf, [('outputnode.itk_epi_to_t1', 'inputnode.itk_epi_to_t1')]),
-        (hmcwf, epi_mni_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms'),
-                                   ('outputnode.epi_mask', 'inputnode.epi_mask')]),
+        (hmcwf, epi_mni_trans_wf, [('inputnode.epi', 'inputnode.name_source'),
+                                   ('outputnode.xforms', 'inputnode.hmc_xforms'),
+                                   ('outputnode.epi_mask', 'inputnode.epi_mask'),
+                                   ('outputnode.epi_split', 'inputnode.epi_split')]),
         (t1w_pre, epi_mni_trans_wf, [('outputnode.bias_corrected_t1', 'inputnode.t1'),
                                      ('outputnode.t1_2_mni_forward_transform',
                                       'inputnode.t1_2_mni_forward_transform')])

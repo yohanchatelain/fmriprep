@@ -65,7 +65,9 @@ EPI_HMC
     :scale: 100%
 
 The EPI_HMC sub-workflow collects BIDS_-formatted EPI files, performs head
-motion correction, and skullstripping.
+motion correction, and skullstripping. FSL MCFLIRT is used to estimate motion
+transformations and ANTs is used to apply them using Lanczos interpolation. Nilearn
+is used to perform skullstripping of the mean EPI image.
 
 .. figure:: _static/brainextraction.svg
     :scale: 100%
