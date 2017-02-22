@@ -137,7 +137,6 @@ Derivatives related to t1w files are in the ``anat`` subfolder:
 - ``*T1w_dtissue.nii.gz`` Tissue class map derived using FAST.
 - ``*T1w_preproc.nii.gz`` Bias field corrected t1w file, using ANTS' N4BiasFieldCorrection
 - ``*T1w_space-MNI152NLin2009cAsym_preproc.nii.gz`` Same as above, but in MNI space
-- ``*T1w_target-meanBOLD_affine.txt`` The ITK-formatted affine to transform T1w into the EPI space, created by FSL and converted by C3DAffineTool
 - ``*T1w_target-MNI152NLin2009cAsym_affine.mat`` The affine matrix to transform T1w into MNI space
 - ``*T1w_space-MNI152NLin2009cAsym_class-CSF_probtissue.nii.gz``
 - ``*T1w_space-MNI152NLin2009cAsym_class-GM_probtissue.nii.gz``
@@ -146,12 +145,11 @@ Derivatives related to t1w files are in the ``anat`` subfolder:
 
 Derivatives related to EPI files are in the ``func`` subfolder:
 
-- ``*bold_brainmask.nii.gz`` Brain mask for EPI files, calculated by BET on the average EPI volume, post-motion correction
+- ``*bold_space-T1w_brainmask.nii.gz`` Brain mask for EPI files, calculated by nilearn on the average EPI volume, post-motion correction, in T1w space
 - ``*bold_space-MNI152NLin2009cAsym_brainmask.nii.gz`` Same as above, but in MNI space
 - ``*bold_confounds.tsv`` A tab-separated value file with one column per calculated confound and one row per timepoint/volume
-- ``*bold_preproc.nii.gz`` Motion-corrected (using MCFLIRT) EPI file.
+- ``*bold_space-T1w_preproc.nii.gz`` Motion-corrected (using MCFLIRT for estimation and ANTs for interpolation) EPI file in T1w space
 - ``*bold_space-MNI152NLin2009cAsym_preproc.nii.gz`` Same as above, but in MNI space
-- ``*bold_target-T1w_affine.txt`` The ITK-formatted affine to transform the EPI into T1w space (the inverse of ``anat/*T1w_target-meanBOLD_affine.txt``)
 
 If FreeSurfer reconstruction is performed, the reconstructed subject is placed in
 ``<output dir>/freesurfer/sub-<subject_label>/``.
