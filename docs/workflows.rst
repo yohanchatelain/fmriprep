@@ -111,20 +111,21 @@ segmentation, the ConfoundDiscoverer sub-workflow calculates potential
 confounds per volume.
 
 Calculated confounds include the mean global signal, mean tissue class signal,
-tCompCor, aCompCor, Frawise Displacement, 6 motion parameters and DVARS.
+tCompCor, aCompCor, Framewise Displacement, 6 motion parameters and DVARS.
 
 
 Reports
 -------
 
-``fmriprep`` outputs summary reports and reportlets (reports of individual steps in the process).
-These reports provide visuals to make visual inspection of the results easy.
+``fmriprep`` outputs summary reports, outputted to ``<output dir>/fmriprep/sub-<subject_label>.html``.
+These reports provide a quick way to make visual inspection of the results easy.
+Each report is self contained and thus can be easily shared with collaborators (for example via email).
 `View a sample report. <_static/sample_report.html>`_
 
 Derivatives
 -----------
 
-There are additional files, called "Derivatives", outputted to ``<output dir>/derivatives``.
+There are additional files, called "Derivatives", outputted to ``<output dir>/fmriprep/sub-<subject_label>/``.
 See the BIDS_ spec for more information.
 
 Derivatives related to t1w files are in the ``anat`` subfolder:
@@ -151,10 +152,5 @@ Derivatives related to EPI files are in the ``func`` subfolder:
 - ``*bold_target-T1w_affine.txt`` The ITK-formatted affine to transform the EPI into T1w space (the inverse of ``anat/*T1w_target-meanBOLD_affine.txt``)
 
 If FreeSurfer reconstruction is performed, the reconstructed subject is placed in
-``derivatives/freesurfer/sub-{subj_id}``.
+``<output dir>/freesurfer/sub-<subject_label>/``.
 
-Images
-------
-
-The ``images`` subfolder of the output directory contains images (e.g., ``.svg``, ``.png``) produced by `fmriprep`.
-Each image is accompanied by a ``.json`` file that contains metadata about how the image was produced.
