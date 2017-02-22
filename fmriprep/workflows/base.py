@@ -11,7 +11,6 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 
 import os
 from copy import deepcopy
-from time import strftime
 
 from nipype.pipeline import engine as pe
 from nipype.interfaces import fsl
@@ -29,22 +28,21 @@ from fmriprep.workflows.epi import (
     ref_epi_t1_registration, epi_mni_transformation)
 
 
-def base_workflow_enumerator(subject_list, task_id, settings):
+def base_workflow_enumerator(subject_list, task_id, settings, run_uuid):
     workflow = pe.Workflow(name='workflow_enumerator')
 
     if settings['freesurfer']:
         fsdir = pe.Node(BIDSFreeSurferDir(), name='BIDSFreesurfer')
         fsdir.inputs.freesurfer_home = os.getenv('FREESURFER_HOME')
-        fsdir.inputs.derivatives = os.path.join(settings['output_dir'], 'derivatives')
+        fsdir.inputs.derivatives = os.path.join(settings['output_dir'])
 
     generated_list = []
     for subject in subject_list:
         generated_workflow = base_workflow_generator(subject, task_id=task_id,
                                                      settings=settings)
         if generated_workflow:
-            cur_time = strftime('%Y%m%d-%H%M%S')
             generated_workflow.config['execution']['crashdump_dir'] = (
-                os.path.join(settings['output_dir'], 'log', subject, cur_time)
+                os.path.join(settings['output_dir'], "fmriprep", "sub-" + subject, 'log', subject, run_uuid)
             )
             for node in generated_workflow._get_all_nodes():
                 node.config = deepcopy(generated_workflow.config)
