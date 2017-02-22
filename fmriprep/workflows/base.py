@@ -35,7 +35,7 @@ def base_workflow_enumerator(subject_list, task_id, settings, run_uuid):
     if settings['freesurfer']:
         fsdir = pe.Node(BIDSFreeSurferDir(), name='BIDSFreesurfer')
         fsdir.inputs.freesurfer_home = os.getenv('FREESURFER_HOME')
-        fsdir.inputs.derivatives = os.path.join(settings['output_dir'], 'derivatives')
+        fsdir.inputs.derivatives = os.path.join(settings['output_dir'])
 
     generated_list = []
     for subject in subject_list:
@@ -43,7 +43,7 @@ def base_workflow_enumerator(subject_list, task_id, settings, run_uuid):
                                                      settings=settings)
         if generated_workflow:
             generated_workflow.config['execution']['crashdump_dir'] = (
-                os.path.join(settings['output_dir'], 'sub-' + subject, 'log', run_uuid)
+                os.path.join(settings['output_dir'], "fmriprep", "sub-" + subject, 'log', run_uuid)
             )
             for node in generated_workflow._get_all_nodes():
                 node.config = deepcopy(generated_workflow.config)

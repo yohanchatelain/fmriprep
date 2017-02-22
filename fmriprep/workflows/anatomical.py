@@ -174,8 +174,8 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         reconall.interface.num_threads = nthreads
 
         recon_report = pe.Node(
-            DerivativesDataSink(base_directory=settings['output_dir'],
-                                suffix='reconall', out_path_base='reports'),
+            DerivativesDataSink(base_directory=settings['reportlets_dir'],
+                                suffix='reconall'),
             name='ReconAll_Report'
         )
 
@@ -197,14 +197,14 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
                                               '1mm_T1.nii.gz')
 
     ds_t1_seg_report = pe.Node(
-        DerivativesDataSink(base_directory=settings['output_dir'],
-                            suffix='t1_seg', out_path_base='reports'),
+        DerivativesDataSink(base_directory=settings['reportlets_dir'],
+                            suffix='t1_seg'),
         name='DS_T1_Seg_Report'
     )
 
     ds_t1_2_mni_report = pe.Node(
-        DerivativesDataSink(base_directory=settings['output_dir'],
-                            suffix='t1_2_mni', out_path_base='reports'),
+        DerivativesDataSink(base_directory=settings['reportlets_dir'],
+                            suffix='t1_2_mni'),
         name='DS_T1_2_MNI_Report'
     )
 
@@ -240,8 +240,8 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
 
     if settings.get('skull_strip_ants', False):
         ds_t1_skull_strip_report = pe.Node(
-            DerivativesDataSink(base_directory=settings['output_dir'],
-                                suffix='t1_skull_strip', out_path_base='reports'),
+            DerivativesDataSink(base_directory=settings['reportlets_dir'],
+                                suffix='t1_skull_strip'),
             name='DS_Report'
         )
         workflow.connect([
