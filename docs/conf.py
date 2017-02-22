@@ -326,6 +326,7 @@ fake_set_up()
 ds005_wf = wf_ds005_type({'func': 'fake data'}, {'ants_nthreads': 1,
                                                  'nthreads': 1,
                                                  'output_dir': 'x',
+                                                 'reportlets_dir': 'x',
                                                  'biggest_epi_file_size_gb': 1,
                                                  'skip_native': True,
                                                  'freesurfer': True})
