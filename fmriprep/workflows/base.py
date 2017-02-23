@@ -68,12 +68,12 @@ def base_workflow_generator(subject_id, task_id, settings):
     if all((subject_data['fmap'] != [],
             subject_data['sbref'] != [],
             "fieldmaps" not in settings['ignore'])):
-        return wf_ds054_type(subject_data, settings, name=subject_id)
+        return basic_fmap_sbref_wf(subject_data, settings, name=subject_id)
     else:
-        return wf_ds005_type(subject_data, settings, name=subject_id)
+        return basic_wf(subject_data, settings, name=subject_id)
 
 
-def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
+def basic_fmap_sbref_wf(subject_data, settings, name='fMRI_prep'):
     """
     The main fmri preprocessing workflow, for the ds054-type of data:
 
@@ -179,7 +179,7 @@ def wf_ds054_type(subject_data, settings, name='fMRI_prep'):
     return workflow
 
 
-def wf_ds005_type(subject_data, settings, name='fMRI_prep'):
+def basic_wf(subject_data, settings, name='fMRI_prep'):
     """
     The main fmri preprocessing workflow, for the ds005-type of data:
 
