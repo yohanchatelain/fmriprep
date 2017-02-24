@@ -176,7 +176,8 @@ def basic_fmap_sbref_wf(subject_data, settings, name='fMRI_prep'):
         workflow.connect([
             (inputnode, t1w_pre, [('subjects_dir', 'inputnode.subjects_dir')]),
             (inputnode, sbref_t1, [('subjects_dir', 'inputnode.subjects_dir')]),
-            (t1w_pre, sbref_t1, [('outputnode.subject_id', 'inputnode.subject_id')]),
+            (t1w_pre, sbref_t1, [('outputnode.subject_id', 'inputnode.subject_id'),
+                                 ('outputnode.fs_2_t1_transform', 'inputnode.fs_2_t1_transform')]),
             ])
 
     return workflow
@@ -263,7 +264,8 @@ def basic_wf(subject_data, settings, name='fMRI_prep'):
         workflow.connect([
             (inputnode, t1w_pre, [('subjects_dir', 'inputnode.subjects_dir')]),
             (inputnode, epi_2_t1, [('subjects_dir', 'inputnode.subjects_dir')]),
-            (t1w_pre, epi_2_t1, [('outputnode.subject_id', 'inputnode.subject_id')]),
+            (t1w_pre, epi_2_t1, [('outputnode.subject_id', 'inputnode.subject_id'),
+                                 ('outputnode.fs_2_t1_transform', 'inputnode.fs_2_t1_transform')]),
             ])
 
     return workflow
