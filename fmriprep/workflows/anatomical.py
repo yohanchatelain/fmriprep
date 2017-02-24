@@ -39,7 +39,8 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['t1_seg', 't1_tpms', 'bias_corrected_t1', 't1_brain', 't1_mask',
                 't1_2_mni', 't1_2_mni_forward_transform',
-                't1_2_mni_reverse_transform', 'subject_id']), name='outputnode')
+                't1_2_mni_reverse_transform', 'subject_id',
+                'fs_2_t1_transform']), name='outputnode')
 
     # 0. Align and merge if several T1w images are provided
     t1wmrg = pe.Node(IntraModalMerge(), name='MergeT1s')
@@ -180,6 +181,25 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             name='Reconstruction2')
         reconall.interface.num_threads = nthreads
 
+        def fs_raw_xfm(t1w, subjects_dir, subject_id):
+            import os
+            import numpy as np
+            import nibabel as nb
+            t1mgz = os.path.join(subjects_dir, subject_id, 'mri', 'T1.mgz')
+            out_file = os.path.abspath('transform.mat')
+            t1w_affine = nb.load(t1w).affine
+            t1mgz_affine = nb.load(t1mgz).affine
+            xfm = np.linalg.pinv(t1mgz_affine).dot(t1w_affine)  # T1.mgz -> T1w
+            np.savetxt(out_file, xfm)
+            return out_file
+
+        fs_transform = pe.Node(
+            niu.Function(
+                function=fs_raw_xfm,
+                input_names=['t1w', 'subjects_dir', 'subject_id'],
+                output_names=['out_file']),
+            name='FreeSurferTransform')
+
         recon_report = pe.Node(
             DerivativesDataSink(base_directory=settings['reportlets_dir'],
                                 suffix='reconall'),
@@ -275,10 +295,14 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             (injector, reconall, [('subjects_dir', 'subjects_dir'),
                                   ('subject_id', 'subject_id')]),
             (recon_config, reconall, [('use_T2', 'use_T2')]),
+            (inputnode, fs_transform, [('t1w', 't1w')]),
+            (autorecon1, fs_transform, [('subjects_dir', 'subjects_dir'),
+                                        ('subject_id', 'subject_id')]),
             (inputnode, recon_report, [
                 (('t1w', fix_multi_T1w_source_name), 'source_file')]),
             (reconall, recon_report, [('out_report', 'in_file')]),
             (reconall, outputnode, [('subject_id', 'subject_id')]),
+            (fs_transform, outputnode, [('out_file', 'fs_2_t1_transform')]),
             ])
 
     # Write corrected file in the designated output dir
