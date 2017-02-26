@@ -182,6 +182,13 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         reconall.interface.num_threads = nthreads
 
         def fs_raw_xfm(t1w, subjects_dir, subject_id):
+            """ The affine matrix of an image describes the mapping from matrix
+            index (i, j, k) to mm along (x, y, z) space.
+
+            To map from (i, j, k) in FreeSurfer-conformed T1 space (T1.mgz) to
+            (i, j, k) in the raw T1w (bids/sub-{subj_id}/anat/) space, we
+            first apply the T1.mgz affine and then the inverse T1w affine.
+            """
             import os
             import numpy as np
             import nibabel as nb
@@ -189,7 +196,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             out_file = os.path.abspath('transform.mat')
             t1w_affine = nb.load(t1w).affine
             t1mgz_affine = nb.load(t1mgz).affine
-            xfm = np.linalg.pinv(t1mgz_affine).dot(t1w_affine)  # T1.mgz -> T1w
+            xfm = t1mgz_affine.dot(np.linalg.pinv(t1w_affine))
             np.savetxt(out_file, xfm)
             return out_file
 
