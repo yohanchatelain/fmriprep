@@ -196,7 +196,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             out_file = os.path.abspath('transform.mat')
             t1w_affine = nb.load(t1w).affine
             t1mgz_affine = nb.load(t1mgz).affine
-            xfm = t1mgz_affine.dot(np.linalg.pinv(t1w_affine))
+            xfm = np.linalg.pinv(t1w_affine).dot(t1mgz_affine)
             np.savetxt(out_file, xfm)
             return out_file
 
