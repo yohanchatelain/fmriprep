@@ -302,10 +302,10 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             (injector, reconall, [('subjects_dir', 'subjects_dir'),
                                   ('subject_id', 'subject_id')]),
             (recon_config, reconall, [('use_T2', 'use_T2')]),
-            (inputnode, fs_transform, [('t1w', 't1w')]),
+            (t1wmrg, fs_transform, [('out_avg', 't1w')]),
             (autorecon1, fs_transform, [('subjects_dir', 'subjects_dir'),
                                         ('subject_id', 'subject_id')]),
-            (inputnode, recon_report, [
+            (recon_config, recon_report, [
                 (('t1w', fix_multi_T1w_source_name), 'source_file')]),
             (reconall, recon_report, [('out_report', 'in_file')]),
             (reconall, outputnode, [('subject_id', 'subject_id')]),
