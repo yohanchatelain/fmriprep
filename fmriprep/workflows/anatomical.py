@@ -84,6 +84,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         def detect_inputs(t1w_list, t2w_list=[], default_flags=''):
             from nipype.interfaces.base import isdefined
             from nipype.utils.filemanip import filename_to_list
+            from nipype.interfaces.traits_extension import Undefined
             import nibabel as nib
             t1w_list = filename_to_list(t1w_list)
             t2w_list = filename_to_list(t2w_list) if isdefined(t2w_list) else []
@@ -96,26 +97,20 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
                         img.header.get_zooms() == t1w_ref.header.get_zooms())):
                     t1w_outs.append(t1w)
 
-            t2w = None
+            t2w = Undefined
             if t2w_list and max(nib.load(t2w_list[0]).header.get_zooms()) < 1.2:
                 t2w = t2w_list[0]
 
-            autorecon1_flags = [default_flags]
-            reconall_flags = [default_flags]
+            flags = [default_flags]
             if hires:
-                autorecon1_flags.append('-hires')
-                reconall_flags.append('-hires')
-            if t2w is not None:
-                autorecon1_flags.append('-T2 {}'.format(t2w))
-                reconall_flags.append('-T2pial')
-            return (t1w_outs, ' '.join(autorecon1_flags),
-                    ' '.join(reconall_flags))
+                flags.append('-hires')
+            return (t1w_outs, t2w, isdefined(t2w), ' '.join(flags))
 
         recon_config = pe.Node(
             niu.Function(
                 function=detect_inputs,
                 input_names=['t1w_list', 't2w_list', 'default_flags'],
-                output_names=['t1w', 'autorecon1_flags', 'reconall_flags']),
+                output_names=['t1w', 't2w', 'use_T2', 'flags']),
             name='ReconConfig',
             run_without_submitting=True)
         recon_config.inputs.default_flags = '-noskullstrip'
@@ -266,14 +261,16 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             (inputnode, bids_info, [(('t1w', fix_multi_T1w_source_name), 'in_file')]),
             (inputnode, autorecon1, [('subjects_dir', 'subjects_dir')]),
             (recon_config, autorecon1, [('t1w', 'T1_files'),
-                                        ('autorecon1_flags', 'flags')]),
+                                        ('t2w', 'T2_file'),
+                                        ('flags', 'flags')]),
             (bids_info, autorecon1, [('subject_id', 'subject_id')]),
             (autorecon1, injector, [('subjects_dir', 'subjects_dir'),
                                     ('subject_id', 'subject_id')]),
             (asw, injector, [('outputnode.out_file', 'skullstripped')]),
             (injector, reconall, [('subjects_dir', 'subjects_dir'),
                                   ('subject_id', 'subject_id')]),
-            (recon_config, reconall, [('reconall_flags', 'flags')]),
+            (recon_config, reconall, [('use_T2', 'use_T2'),
+                                      ('flags', 'flags')]),
             (inputnode, recon_report, [
                 (('t1w', fix_multi_T1w_source_name), 'source_file')]),
             (reconall, recon_report, [('out_report', 'in_file')]),
