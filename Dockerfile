@@ -133,7 +133,7 @@ RUN pip install -r requirements.txt && \
 # Installing FMRIPREP
 COPY . /root/src/fmriprep
 RUN cd /root/src/fmriprep && \
-    pip install -e .[all] && \
+    pip install .[all] && \
     rm -rf ~/.cache/pip
 
 # Precaching atlases
