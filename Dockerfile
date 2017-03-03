@@ -1,11 +1,15 @@
 # Use Ubuntu 16.04 LTS
 FROM ubuntu:xenial-20161213
 
+# Pre-cache neurodebian key
+COPY docker/files/neurodebian.gpg /root/.neurodebian.gpg
+
 # Prepare environment
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl bzip2 ca-certificates xvfb && \
     curl -sSL http://neuro.debian.net/lists/xenial.us-ca.full >> /etc/apt/sources.list.d/neurodebian.sources.list && \
-    apt-key adv --recv-keys --keyserver hkp://pgp.mit.edu:80 0xA5D32F012649A5A9 && \
+    apt-key add /root/.neurodebian.gpg && \
+    (apt-key adv --refresh-keys --keyserver hkp://ha.pool.sks-keyservers.net 0xA5D32F012649A5A9 || true) && \
     apt-get update
 
 # Installing freesurfer
