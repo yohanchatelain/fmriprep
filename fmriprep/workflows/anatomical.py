@@ -269,15 +269,14 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             (recon_config, autorecon1, [('t1w', 'T1_files'),
                                         ('t2w', 'T2_file'),
                                         ('hires', 'hires'),
-                                        ('expert', 'expert')]),
+                                        ('expert', 'expert')]), # First run only (recon-all saves)
             (bids_info, autorecon1, [('subject_id', 'subject_id')]),
             (autorecon1, injector, [('subjects_dir', 'subjects_dir'),
                                     ('subject_id', 'subject_id')]),
             (asw, injector, [('outputnode.out_file', 'skullstripped')]),
             (injector, reconall, [('subjects_dir', 'subjects_dir'),
                                   ('subject_id', 'subject_id')]),
-            (recon_config, reconall, [('use_T2', 'use_T2'),
-                                      ('expert', 'expert')]),
+            (recon_config, reconall, [('use_T2', 'use_T2')]),
             (inputnode, recon_report, [
                 (('t1w', fix_multi_T1w_source_name), 'source_file')]),
             (reconall, recon_report, [('out_report', 'in_file')]),
