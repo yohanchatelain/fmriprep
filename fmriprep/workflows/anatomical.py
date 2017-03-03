@@ -90,7 +90,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             t1w_list = filename_to_list(t1w_list)
             t2w_list = filename_to_list(t2w_list) if isdefined(t2w_list) else []
             t1w_ref = nib.load(t1w_list[0])
-            hires = max(t1w_ref.header.get_zooms()) < 1
+            hires = round(max(t1w_ref.header.get_zooms()), 1) < 1
             t1w_outs = [t1w_list.pop(0)]
             for t1w in t1w_list:
                 img = nib.load(t1w)
