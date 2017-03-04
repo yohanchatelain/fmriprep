@@ -102,20 +102,15 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             if t2w_list and max(nib.load(t2w_list[0]).header.get_zooms()) < 1.2:
                 t2w = t2w_list[0]
 
-            expert_file = Undefined
-            if hires:
-                # https://surfer.nmr.mgh.harvard.edu/fswiki/SubmillimeterRecon
-                expert = 'mris_inflate -n 50\n'
-                expert_file = os.path.abspath('expert.opts')
-                with open(expert_file, 'w') as fobj:
-                    fobj.write(expert)
-            return (t1w_outs, t2w, isdefined(t2w), hires, expert_file)
+            # https://surfer.nmr.mgh.harvard.edu/fswiki/SubmillimeterRecon
+            mris_inflate = '-n 50' if hires else Undefined
+            return (t1w_outs, t2w, isdefined(t2w), hires, mris_inflate)
 
         recon_config = pe.Node(
             niu.Function(
                 function=detect_inputs,
                 input_names=['t1w_list', 't2w_list'],
-                output_names=['t1w', 't2w', 'use_T2', 'hires', 'expert']),
+                output_names=['t1w', 't2w', 'use_T2', 'hires', 'mris_inflate']),
             name='ReconConfig',
             run_without_submitting=True)
 
@@ -269,7 +264,8 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             (recon_config, autorecon1, [('t1w', 'T1_files'),
                                         ('t2w', 'T2_file'),
                                         ('hires', 'hires'),
-                                        ('expert', 'expert')]), # First run only (recon-all saves)
+                                        # First run only (recon-all saves expert options)
+                                        ('mris_inflate', 'mris_inflate')]),
             (bids_info, autorecon1, [('subject_id', 'subject_id')]),
             (autorecon1, injector, [('subjects_dir', 'subjects_dir'),
                                     ('subject_id', 'subject_id')]),
