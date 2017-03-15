@@ -108,7 +108,7 @@ def basic_fmap_sbref_wf(subject_data, settings, name='fMRI_prep'):
     sbref_pre = sbref_preprocess(settings=settings)
 
     # Register SBRef to T1
-    sbref_t1 = ref_epi_t1_registration(reportlet_suffix='sbref_t1_flt_bbr',
+    sbref_t1 = ref_epi_t1_registration(reportlet_suffix='sbref_t1_bbr',
                                        inv_ds_suffix='target-sbref_affine',
                                        settings=settings)
 
@@ -217,7 +217,7 @@ def basic_wf(subject_data, settings, name='fMRI_prep'):
     hmcwf.get_node('inputnode').iterables = ('epi', subject_data['func'])
 
     # mean EPI registration to T1w
-    epi_2_t1 = ref_epi_t1_registration(reportlet_suffix='flt_bbr',
+    epi_2_t1 = ref_epi_t1_registration(reportlet_suffix='bbr',
                                        inv_ds_suffix='target-meanBOLD_affine',
                                        settings=settings)
 
