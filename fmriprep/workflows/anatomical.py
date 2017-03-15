@@ -181,30 +181,9 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             name='Reconstruction2')
         reconall.interface.num_threads = nthreads
 
-        def fs_raw_xfm(t1w, subjects_dir, subject_id):
-            """ The affine matrix of an image describes the mapping from matrix
-            index (i, j, k) to mm along (x, y, z) space.
-
-            To map from (i, j, k) in FreeSurfer-conformed T1 space (T1.mgz) to
-            (i, j, k) in the raw T1w (bids/sub-{subj_id}/anat/) space, we
-            first apply the T1.mgz affine and then the inverse T1w affine.
-            """
-            import os
-            import numpy as np
-            import nibabel as nb
-            t1mgz = os.path.join(subjects_dir, subject_id, 'mri', 'T1.mgz')
-            out_file = os.path.abspath('transform.mat')
-            t1w_affine = nb.load(t1w).affine
-            t1mgz_affine = nb.load(t1mgz).affine
-            xfm = np.linalg.pinv(t1w_affine).dot(t1mgz_affine)
-            np.savetxt(out_file, xfm)
-            return out_file
-
         fs_transform = pe.Node(
-            niu.Function(
-                function=fs_raw_xfm,
-                input_names=['t1w', 'subjects_dir', 'subject_id'],
-                output_names=['out_file']),
+            freesurfer.utils.Tkregister2(fsl_out='freesurfer2subT1.mat',
+                                         reg_header=True),
             name='FreeSurferTransform')
 
         recon_report = pe.Node(
@@ -302,14 +281,13 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             (injector, reconall, [('subjects_dir', 'subjects_dir'),
                                   ('subject_id', 'subject_id')]),
             (recon_config, reconall, [('use_T2', 'use_T2')]),
-            (t1wmrg, fs_transform, [('out_avg', 't1w')]),
-            (autorecon1, fs_transform, [('subjects_dir', 'subjects_dir'),
-                                        ('subject_id', 'subject_id')]),
+            (t1wmrg, fs_transform, [('out_avg', 'target_image')]),
+            (autorecon1, fs_transform, [('T1', 'moving_image')]),
             (recon_config, recon_report, [
                 (('t1w', fix_multi_T1w_source_name), 'source_file')]),
             (reconall, recon_report, [('out_report', 'in_file')]),
             (reconall, outputnode, [('subject_id', 'subject_id')]),
-            (fs_transform, outputnode, [('out_file', 'fs_2_t1_transform')]),
+            (fs_transform, outputnode, [('fsl_file', 'fs_2_t1_transform')]),
             ])
 
     # Write corrected file in the designated output dir
