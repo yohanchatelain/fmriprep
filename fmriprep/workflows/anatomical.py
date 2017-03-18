@@ -188,14 +188,14 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
 
     # Resample the brain mask and the tissue probability maps into mni space
     bmask_mni = pe.Node(
-        ants.ApplyTransforms(dimension=3, default_value=0,
+        ants.ApplyTransforms(dimension=3, default_value=0, float=True,
                              interpolation='NearestNeighbor'),
         name='brain_mni_warp'
     )
     bmask_mni.inputs.reference_image = op.join(get_mni_icbm152_nlin_asym_09c(),
                                                '1mm_T1.nii.gz')
     tpms_mni = pe.MapNode(
-        ants.ApplyTransforms(dimension=3, default_value=0,
+        ants.ApplyTransforms(dimension=3, default_value=0, float=True,
                              interpolation='Linear'),
         iterfield=['input_image'],
         name='tpms_mni_warp'
