@@ -1,5 +1,27 @@
-Release 0.1.2
-=============
+.. include:: links.rst
+
+----------
+What's new
+----------
+
+0.3.0 (upcoming)
+================
+
+* [ENH] Added preliminary support for reconstruction of cortical surfaces using FreeSurfer
+* [ENH] Switched to bbregister for BOLD to T1 coregistration
+* [ENH] Switched to sinc interpolation of preprocessed BOLD and T1w outputs
+* [ENH] Preprocessed BOLD volumes are now saved in the T1w space instead of mean BOLD
+* [FIX] Fixed a bug with MCFLIRT interpolation inducing slow drift
+* [ENH] All files are now saved in Float32 instead of Float64 to save space
+
+0.2.0 (13th of January 2017)
+============================
+
+* Initial public release
+
+
+0.1.2 (3rd of October 2016)
+===========================
 
 * [FIX] Downloads from OSF, remove data downloader (now in niworkflows)
 * [FIX] pybids was missing in the install_requires
@@ -11,8 +33,8 @@ Release 0.1.2
 * [ENH] CLI is now BIDS-Apps compliant (#123)
 
 
-Release 0.1.1
-=============
+0.1.1 (30th of July 2016)
+=========================
 
 * [ENH] Grabbit integration (#113)
 * [ENH] More outputs in MNI space (#99)
@@ -22,8 +44,8 @@ Release 0.1.1
 * [ENH] Outputs start to follow BIDS-derivatives (WIP)
 
 
-Release 0.0.1
-=============
+0.0.1
+=====
 
 * [ENH] Added Docker images
 * [DOC] Added base code for automatic publication to RTD.
