@@ -4,8 +4,8 @@
 What's new
 ----------
 
-0.3.0 (upcoming)
-================
+0.3.0 (20th of March 2017)
+==========================
 
 * [FIX] Affine and warp MNI transforms are now applied in the correct order
 * [ENH] Added preliminary support for reconstruction of cortical surfaces using FreeSurfer
