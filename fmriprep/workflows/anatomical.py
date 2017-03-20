@@ -32,7 +32,9 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
 
     workflow = pe.Workflow(name=name)
 
-    inputnode = pe.Node(niu.IdentityInterface(fields=['t1w', 't2w', 'subjects_dir']), name='inputnode')
+    inputnode = pe.Node(
+        niu.IdentityInterface(fields=['t1w', 't2w', 'subjects_dir']),
+        name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['t1_seg', 't1_tpms', 'bias_corrected_t1', 't1_brain', 't1_mask',
                 't1_2_mni', 't1_2_mni_forward_transform',
@@ -80,7 +82,6 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
         nthreads = settings['nthreads']
 
         def detect_inputs(t1w_list, t2w_list=[], hires_enabled=True):
-            import os
             from nipype.interfaces.base import isdefined
             from nipype.utils.filemanip import filename_to_list
             from nipype.interfaces.traits_extension import Undefined
@@ -135,7 +136,7 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
                 flags='-noskullstrip',
                 openmp=nthreads,
                 parallel=True),
-            name='Reconstruction')
+            name='AutoRecon1')
         autorecon1.interface._can_resume = False
         autorecon1.interface.num_threads = nthreads
 
@@ -176,7 +177,7 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
                 parallel=True,
                 out_report='reconall.svg',
                 generate_report=True),
-            name='Reconstruction2')
+            name='ReconAll')
         reconall.interface.num_threads = nthreads
 
         fs_transform = pe.Node(
