@@ -190,6 +190,73 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
             name='ReconAll_Report'
         )
 
+        def getsurfs(subjects_dir, subject_id, hemi, surfaces):
+            import os
+            fmt = os.path.join(subjects_dir, subject_id, 'surf',
+                               hemi + '.{}').format
+            return list(map(fmt, surfaces))
+
+        surf_getter = pe.Node(
+            niu.Function(
+                function=getsurfs,
+                input_names=['subjects_dir', 'subject_id', 'hemi', 'surfaces'],
+                output_names=['surfaces']), name='surf_getter')
+        surf_getter.iterables = [('hemi', ['lh', 'rh'])]
+        surf_getter.inputs.surfaces = ['smoothwm', 'pial']
+
+        def averageSurfaces(surfaces, avgname=None):
+            import os
+            import numpy as np
+            from nibabel.freesurfer.io import read_geometry, write_geometry
+
+            hemi = os.path.basename(surfaces[0])[:2]
+            if avgname is None:
+                avgname = 'avgsurf'
+            out_file = '{}.{}'.format(hemi, avgname)
+
+            coords1, faces1, volume_info1 = read_geometry(surfaces[0],
+                                                          read_metadata=True)
+            coords2, faces2, volume_info2 = read_geometry(surfaces[1],
+                                                          read_metadata=True)
+            null = np.array([])
+            if not all((np.array_equal(faces1, faces2),
+                        np.array_equal(volume_info1.get('head', null),
+                                       volume_info2.get('head', null)),
+                        volume_info1.get('valid', '') ==
+                        volume_info2.get('valid', ''),
+                        np.array_equal(volume_info1.get('volume', null),
+                                       volume_info2.get('volume', null)),
+                        np.array_equal(volume_info1.get('voxelsize', null),
+                                       volume_info2.get('voxelsize', null)),
+                        np.array_equal(volume_info1.get('xras', null),
+                                       volume_info2.get('xras', null)),
+                        np.array_equal(volume_info1.get('yras', null),
+                                       volume_info2.get('yras', null)),
+                        np.array_equal(volume_info1.get('zras', null),
+                                       volume_info2.get('zras', null)),
+                        np.array_equal(volume_info1.get('cras', null),
+                                       volume_info2.get('cras', null)),
+                        )):
+                raise ValueError("Incompatible surfaces")
+            volume_info = volume_info1.copy()
+            volume_info['filename'] = out_file
+            out_file = os.path.abspath(out_file)
+            write_geometry(out_file, (coords1 + coords2) / 2, faces1,
+                           volume_info=volume_info1)
+            return out_file
+
+        midthickness = pe.Node(
+            niu.Function(
+                function=averageSurfaces,
+                input_names=['surfaces', 'avgname'],
+                output_names=['out_file']), name='Midthickness')
+        midthickness.inputs.avgname = 'midthickness'
+
+        surface_list = pe.Node(niu.Merge(2), name='SurfaceList')
+
+        gifticonv = pe.MapNode(freesurfer.MRIsConvert(out_datatype='gii'),
+                               iterfield='in_file', name='GiftiSurfaces')
+
     # Resample the brain mask and the tissue probability maps into mni space
     bmask_mni = pe.Node(
         ants.ApplyTransforms(dimension=3, default_value=0, float=True,
@@ -283,6 +350,12 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
             (reconall, recon_report, [('out_report', 'in_file')]),
             (reconall, outputnode, [('subject_id', 'subject_id')]),
             (fs_transform, outputnode, [('fsl_file', 'fs_2_t1_transform')]),
+            (reconall, surf_getter, [('subjects_dir', 'subjects_dir'),
+                                     ('subject_id', 'subject_id')]),
+            (surf_getter, midthickness, [('surfaces', 'surfaces')]),
+            (surf_getter, surface_list, [('surfaces', 'in1')]),
+            (midthickness, surface_list, [('out_file', 'in2')]),
+            (surface_list, gifticonv, [('out', 'in_file')]),
             ])
 
     # Write corrected file in the designated output dir
