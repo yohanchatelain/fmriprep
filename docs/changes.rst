@@ -7,6 +7,7 @@ What's new
 0.3.0 (upcoming)
 ================
 
+* [FIX] Affine and warp MNI transforms are now applied in the correct order
 * [ENH] Added preliminary support for reconstruction of cortical surfaces using FreeSurfer
 * [ENH] Switched to bbregister for BOLD to T1 coregistration
 * [ENH] Switched to sinc interpolation of preprocessed BOLD and T1w outputs
