@@ -205,6 +205,33 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
         gifticonv = pe.MapNode(freesurfer.MRIsConvert(out_datatype='gii'),
                                iterfield='in_file', name='GiftiSurfaces')
 
+        def normalize_giftis(in_files):
+            import os
+            import re
+            from nipype.utils.filemanip import copyfile
+            in_files = sum(in_files, [])
+            in_format = re.compile(r'(?P<LR>[lr])h.(?P<surf>.+)_converted.gii')
+            out_files = []
+            for in_file in in_files:
+                name = os.path.basename(in_file)
+                info = in_format.match(name).groupdict()
+                info['LR'] = info['LR'].upper()
+                out_file = os.path.abspath(
+                    '{surf}.{LR}.surf.gii'.format(**info))
+                copyfile(in_file, out_file)
+                out_files.append(os.path.abspath(out_file))
+            return out_files
+
+        normalize = pe.JoinNode(
+            niu.Function(
+                function=normalize_giftis,
+                input_names=['in_files'],
+                output_names=['normalized']),
+            joinsource='FSDir',
+            joinfield='in_files',
+            name='NormalizeSurfNames'
+            )
+
     # Resample the brain mask and the tissue probability maps into mni space
     bmask_mni = pe.Node(
         ants.ApplyTransforms(dimension=3, default_value=0, float=True,
@@ -306,6 +333,7 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
                                          ('inflated', 'in3')]),
             (midthickness, surface_list, [('out_file', 'in4')]),
             (surface_list, gifticonv, [('out', 'in_file')]),
+            (gifticonv, normalize, [('converted', 'in_files')]),
             ])
 
     # Write corrected file in the designated output dir
