@@ -196,7 +196,8 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
         surf_getter.iterables = [('hemi', ['lh', 'rh'])]
 
         midthickness = pe.Node(
-            freesurfer.MRIsExpand(thickness=True, distance=0.5),
+            freesurfer.MRIsExpand(thickness=True, distance=0.5,
+                                  out_name='midthickness'),
             name='MidThickness')
 
         surface_list = pe.Node(niu.Merge(4), name='SurfaceList')
