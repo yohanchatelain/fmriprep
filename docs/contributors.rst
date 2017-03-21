@@ -23,11 +23,12 @@ Patching working repositories
 In order to test new code without rebuilding the Docker image, it is
 possible to mount working repositories as source directories within the
 container.
-In the docker container, the following Python sources are kept in
+In the docker container, the all Python packages are installed in
 ``/usr/local/miniconda/lib/python3.6/site-packages``.
 
-To patch in working repositories, for instance contained in
-``$HOME/projects/``, add the following arguments to your docker command: ::
+To patch in working repositories of FMRIPREP or its dependencies, for instance
+contained in ``$HOME/projects/``, add the following arguments to your docker
+command: ::
 
     -v $HOME/projects/fmriprep/fmriprep:/usr/local/miniconda/lib/python3.6/site-packages/fmriprep:ro
     -v $HOME/projects/niworkflows/niworkflows:/usr/local/miniconda/lib/python3.6/site-packages/niworkflows:ro
@@ -49,7 +50,7 @@ omit the fmriprep arguments: ::
 
 Patching containers can be achieved in Singularity by using the PYTHONPATH variable: ::
 
-   $ PYTHONPATH="$HOME/projects/fmriprep/fmriprep" singularity run fmriprep.img \
+   $ PYTHONPATH="$HOME/projects/fmriprep" singularity run fmriprep.img \
         /scratch/dataset /scratch/out participant -w /out/work/
 
 
