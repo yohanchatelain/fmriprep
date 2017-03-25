@@ -42,7 +42,7 @@ def get_parser():
     # optional arguments
     parser.add_argument('-v', '--version', action='version', version=verstr)
 
-    g_bids = parser.add_argument_group('arguments for filtering BIDS queries')
+    g_bids = parser.add_argument_group('Options for filtering BIDS queries')
     g_bids.add_argument('--participant_label', action='store', nargs='+',
                         help='one or more participant identifiers (the sub- prefix can be '
                              'removed)')
@@ -53,7 +53,7 @@ def get_parser():
     g_bids.add_argument('-t', '--task-id', action='store',
                         help='select a specific task to be processed')
 
-    g_perfm = parser.add_argument_group('handling performance')
+    g_perfm = parser.add_argument_group('Options to handle performance')
     g_perfm.add_argument('--debug', action='store_true', default=False,
                          help='run debug version of workflow')
     g_perfm.add_argument('--nthreads', action='store', default=0, type=int,
@@ -63,7 +63,7 @@ def get_parser():
     g_perfm.add_argument('--use-plugin', action='store', default=None,
                          help='nipype plugin configuration file')
 
-    g_conf = parser.add_argument_group('workflow configuration')
+    g_conf = parser.add_argument_group('Workflow configuration')
     g_conf.add_argument(
         '--ignore', required=False, action='store', choices=['fieldmaps'], nargs="+", default=[],
         help='do not run specific modules of the workflow (not recommended)')
@@ -71,7 +71,7 @@ def get_parser():
                         help="don't output timeseries in native space")
 
     #  ANTs options
-    g_ants = parser.add_argument_group('specific settings for ANTs registrations')
+    g_ants = parser.add_argument_group('Specific options for ANTs registrations')
     g_ants.add_argument('--ants-nthreads', action='store', type=int, default=0,
                         help='number of threads that will be set in ANTs processes')
     g_ants.add_argument('--skull-strip-ants', dest="skull_strip_ants", action='store_true',
@@ -81,12 +81,12 @@ def get_parser():
     g_ants.set_defaults(skull_strip_ants=True)
 
     # FreeSurfer options
-    g_fs = parser.add_argument_group('settings for FreeSurfer preprocessing')
+    g_fs = parser.add_argument_group('Specific options for FreeSurfer preprocessing')
     g_fs.add_argument('--no-freesurfer', action='store_false', dest='freesurfer',
                       help='disable FreeSurfer preprocessing')
 
-    g_other = parser.add_argument_group('other options')
-    g_other.add_argument('-w', '--work-dir', action='store', default=op.join(os.getcwd(), 'work'),
+    g_other = parser.add_argument_group('Other options')
+    g_other.add_argument('-w', '--work-dir', action='store', default='work',
                          help='path where intermediate results should be stored')
     g_other.add_argument(
         '--reports-only', action='store_true', default=False,
