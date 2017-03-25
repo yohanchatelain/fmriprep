@@ -125,7 +125,7 @@ def create_workflow(opts):
         'ignore': opts.ignore,
         'skip_native': opts.skip_native,
         'freesurfer': opts.freesurfer,
-        'reportlets_dir': op.join(op.abspath(opts.work_dir), 'reportlets')
+        'reportlets_dir': op.join(op.abspath(opts.work_dir), 'reportlets'),
     }
 
     # set up logger
@@ -172,6 +172,8 @@ def create_workflow(opts):
     if subject_list is None or not subject_list:
         subject_list = [op.basename(subdir)[4:] for subdir in glob.glob(
             op.join(settings['bids_root'], 'sub-*'))]
+    else:
+        subject_list = [sub[4:] if sub.startswith('sub-') else sub for sub in subject_list]
 
     logger.info('Subject list: %s', ', '.join(subject_list))
 
