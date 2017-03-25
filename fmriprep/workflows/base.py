@@ -72,7 +72,7 @@ def base_workflow_generator(subject_id, task_id, settings):
 
     if all((subject_data['fmap'] != [],
             subject_data['sbref'] != [],
-            "fieldmaps" not in settings['ignore'])):
+            "sbref" not in settings['ignore'])):
         return basic_fmap_sbref_wf(subject_data, settings, name=subject_id)
     else:
         return basic_wf(subject_data, settings, name=subject_id)
@@ -116,6 +116,7 @@ def basic_fmap_sbref_wf(subject_data, settings, name='fMRI_prep'):
     fmap_est = fmap_estimator(subject_data, settings=settings)
     if fmap_est is None:
         # Fallback to non-fieldmap workflow
+        settings['ignore'].append('fieldmaps')
         return basic_wf(subject_data, settings=settings)
 
     # Correct SBRef
@@ -200,11 +201,9 @@ def basic_wf(subject_data, settings, name='fMRI_prep'):
     """
     The main fmri preprocessing workflow, for the ds005-type of data:
 
-      * [x] Has at least one T1w and at least one bold file (minimal reqs.)
-      * [ ] No SBRefs
-      * [ ] No GRE-phasediff images, including the corresponding magnitude images.
-      * [ ] No SE-fieldmap images
-      * [ ] No Spiral Echo fieldmap
+      * Has at least one T1w and at least one bold file (minimal reqs.)
+      * No SBRefs
+      * May have fieldmaps
 
     """
 
@@ -215,12 +214,12 @@ def basic_wf(subject_data, settings, name='fMRI_prep'):
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['subjects_dir']),
                         name='inputnode')
-    #  inputnode = pe.Node(niu.IdentityInterface(fields=['subject_id']),
-    #                      name='inputnode')
-    #  inputnode.iterables = [('subject_id', subject_list)]
-
     bidssrc = pe.Node(BIDSDataGrabber(subject_data=subject_data),
                       name='BIDSDatasource')
+
+    fmap_est = None
+    if 'fieldmap' not in settings['ignore']:
+        fmap_est = fmap_estimator(subject_data, settings=settings)
 
     # Preprocessing of T1w (includes registration to MNI)
     t1w_pre = t1w_preprocessing(settings=settings)
