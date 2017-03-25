@@ -113,10 +113,13 @@ def basic_fmap_sbref_wf(subject_data, settings, name='fMRI_prep'):
     t1w_pre = t1w_preprocessing(settings=settings)
 
     # Estimate fieldmap
-    fmap_est = fmap_estimator(subject_data, settings=settings)
+    fmap_est = None
+    if 'fieldmap' not in settings['ignore']:
+        fmap_est = fmap_estimator(subject_data, settings=settings)
+
     if fmap_est is None:
         # Fallback to non-fieldmap workflow
-        settings['ignore'].append('fieldmaps')
+        settings['ignore'].append('fieldmap')
         return basic_wf(subject_data, settings=settings)
 
     # Correct SBRef
