@@ -95,7 +95,7 @@ EPIMNITransformation
     :scale: 100%
 
 The EPIMNITransformation sub-workflow uses the transform from
-`ref_epi_t1_registration`_ and a T1-to-MNI transform from `t1w_preprocessing`_ to
+`EPIMeanNormalization`_ and a T1-to-MNI transform from `t1w_preprocessing`_ to
 map the EPI image to standardized MNI space.
 It also maps the t1w-based mask to MNI space.
 
@@ -229,3 +229,12 @@ A FreeSurfer subjects directory is created in ``<output dir>/freesurfer``.
 
 A copy of the ``fsaverage`` subject distributed with the running version of
 FreeSurfer is copied into this subjects directory.
+
+
+Susceptibility Distortion Correction (SDC)
+==========================================
+
+.. automodule:: fmriprep.workflows.fieldmap
+    :members:
+    :undoc-members:
+    :show-inheritance:

@@ -3,7 +3,7 @@
 # @Author: oesteban
 # @Date:   2015-11-19 16:44:27
 # @Last Modified by:   oesteban
-# @Last Modified time: 2016-10-05 15:03:18
+# @Last Modified time: 2017-03-22 18:14:01
 """
 fMRI preprocessing workflow
 =====
@@ -20,9 +20,9 @@ from argparse import RawTextHelpFormatter
 from multiprocessing import cpu_count
 from time import strftime
 
-def main():
+def get_parser():
+    from fmriprep.info import __version__
     """Entry point"""
-    from fmriprep import __version__
     parser = ArgumentParser(description='fMRI Preprocessing workflow',
                             formatter_class=RawTextHelpFormatter)
 
@@ -84,7 +84,10 @@ def main():
     g_fs.add_argument('--no-freesurfer', action='store_false', dest='freesurfer',
                       help='disable FreeSurfer preprocessing')
 
-    opts = parser.parse_args()
+    return parser
+
+def main():
+    opts = get_parser().parse_args()
     create_workflow(opts)
 
 
@@ -110,6 +113,7 @@ def create_workflow(opts):
         'skip_native': opts.skip_native,
         'freesurfer': opts.freesurfer,
         'reportlets_dir': op.join(op.abspath(opts.work_dir), 'reportlets'),
+        'cache_dir': op.join(op.abspath(opts.work_dir), 'cache')
     }
 
     # set up logger
@@ -125,6 +129,7 @@ def create_workflow(opts):
     # Using make_folder to prevent https://github.com/poldracklab/mriqc/issues/111
     make_folder(settings['output_dir'])
     make_folder(settings['work_dir'])
+    make_folder(settings['cache_dir'])
 
     if opts.reports_only:
         run_reports(settings['output_dir'])
