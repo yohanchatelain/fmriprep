@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Author: oesteban
-# @Date:   2015-11-19 16:44:27
-# @Last Modified by:   oesteban
-# @Last Modified time: 2016-10-05 15:03:18
+
 """
 fMRI preprocessing workflow
 =====
@@ -20,75 +17,94 @@ from argparse import RawTextHelpFormatter
 from multiprocessing import cpu_count
 from time import strftime
 
-def main():
-    """Entry point"""
-    from fmriprep import __version__
-    parser = ArgumentParser(description='fMRI Preprocessing workflow',
+def get_parser():
+    """Build parser object"""
+
+    from fmriprep.info import __version__
+    verstr = 'fmriprep v{}'.format(__version__)
+
+    parser = ArgumentParser(description='FMRIPREP: fMRI PREProcessing workflows',
                             formatter_class=RawTextHelpFormatter)
 
     # Arguments as specified by BIDS-Apps
     # required, positional arguments
     # IMPORTANT: they must go directly with the parser object
-    parser.add_argument('bids_dir', action='store', default=os.getcwd())
+    parser.add_argument('bids_dir', action='store',
+                        help='the root folder of a BIDS valid dataset (sub-XXXXX folders should '
+                             'be found at the top level in this folder).')
     parser.add_argument('output_dir', action='store',
-                        default=op.join(os.getcwd(), 'out'))
-    parser.add_argument('analysis_level', choices=['participant'])
+                        help='the output path for the outcomes of preprocessing and visual '
+                             'reports')
+    parser.add_argument('analysis_level', choices=['participant'],
+                        help='processing stage to be run, only "participant" in the case of '
+                             'FMRPREP (see BIDS-Apps specification).')
 
     # optional arguments
-    parser.add_argument('--participant_label', action='store', nargs='+')
-    parser.add_argument('-v', '--version', action='version',
-                        version='fmriprep v{}'.format(__version__))
+    parser.add_argument('-v', '--version', action='version', version=verstr)
 
-    # Other options
-    g_input = parser.add_argument_group('fMRIprep specific arguments')
-    g_input.add_argument('-s', '--session-id', action='store', default='single_session')
-    g_input.add_argument('-r', '--run-id', action='store', default='single_run')
-    g_input.add_argument('--task-id', help='limit the analysis only ot one task', action='store')
-    g_input.add_argument('-d', '--data-type', action='store', choices=['anat', 'func'])
-    g_input.add_argument('--debug', action='store_true', default=False,
+    g_bids = parser.add_argument_group('Options for filtering BIDS queries')
+    g_bids.add_argument('--participant_label', action='store', nargs='+',
+                        help='one or more participant identifiers (the sub- prefix can be '
+                             'removed)')
+    g_bids.add_argument('-s', '--session-id', action='store', default='single_session',
+                        help='select a specific session to be processed')
+    g_bids.add_argument('-r', '--run-id', action='store', default='single_run',
+                        help='select a specific run to be processed')
+    g_bids.add_argument('-t', '--task-id', action='store',
+                        help='select a specific task to be processed')
+
+    g_perfm = parser.add_argument_group('Options to handle performance')
+    g_perfm.add_argument('--debug', action='store_true', default=False,
                          help='run debug version of workflow')
-    g_input.add_argument('--nthreads', action='store', default=0,
-                         type=int, help='number of threads')
-    g_input.add_argument('--mem_mb', action='store', default=0,
-                         type=int, help='try to limit the total amount of requested memory for all workflows to this number')
-    g_input.add_argument('--write-graph', action='store_true', default=False,
-                         help='Write workflow graph.')
-    g_input.add_argument('--use-plugin', action='store', default=None,
+    g_perfm.add_argument('--nthreads', action='store', default=0, type=int,
+                         help='number of threads')
+    g_perfm.add_argument('--mem_mb', action='store', default=0, type=int,
+                         help='upper bound memory limit for FMRIPREP processes')
+    g_perfm.add_argument('--use-plugin', action='store', default=None,
                          help='nipype plugin configuration file')
-    g_input.add_argument('-w', '--work-dir', action='store',
-                         default=op.join(os.getcwd(), 'work'))
-    g_input.add_argument('--ignore', required=False,
-                         action='store', choices=['fieldmaps'],
-                         nargs="+", default=[],
-                         help='In case the dataset includes fieldmaps but you chose not to take advantage of them.')
-    g_input.add_argument('--reports-only', action='store_true', default=False,
-                         help="only generate reports, don't run workflows. This will only rerun report aggregation, not reportlet generation for specific nodes.")
-    g_input.add_argument('--skip-native', action='store_true',
-                         default=False,
-                         help="don't output timeseries in native space")
+
+    g_conf = parser.add_argument_group('Workflow configuration')
+    g_conf.add_argument(
+        '--ignore', required=False, action='store', choices=['fieldmaps'], nargs="+", default=[],
+        help='do not run specific modules of the workflow (not recommended)')
+    g_conf.add_argument('--skip-native', action='store_true', default=False,
+                        help="don't output timeseries in native space")
 
     #  ANTs options
-    g_ants = parser.add_argument_group('specific settings for ANTs registrations')
+    g_ants = parser.add_argument_group('Specific options for ANTs registrations')
     g_ants.add_argument('--ants-nthreads', action='store', type=int, default=0,
                         help='number of threads that will be set in ANTs processes')
-    g_ants.add_argument('--skull-strip-ants', dest="skull_strip_ants",
-                        action='store_true',
+    g_ants.add_argument('--skull-strip-ants', dest="skull_strip_ants", action='store_true',
                         help='use ANTs-based skull-stripping (default, slow))')
-    g_ants.add_argument('--no-skull-strip-ants', dest="skull_strip_ants",
-                        action='store_false',
+    g_ants.add_argument('--no-skull-strip-ants', dest="skull_strip_ants", action='store_false',
                         help="don't use ANTs-based skull-stripping (use  AFNI instead, fast)")
     g_ants.set_defaults(skull_strip_ants=True)
 
     # FreeSurfer options
-    g_fs = parser.add_argument_group('settings for FreeSurfer preprocessing')
+    g_fs = parser.add_argument_group('Specific options for FreeSurfer preprocessing')
     g_fs.add_argument('--no-freesurfer', action='store_false', dest='freesurfer',
                       help='disable FreeSurfer preprocessing')
 
-    opts = parser.parse_args()
+    g_other = parser.add_argument_group('Other options')
+    g_other.add_argument('-w', '--work-dir', action='store', default='work',
+                         help='path where intermediate results should be stored')
+    g_other.add_argument(
+        '--reports-only', action='store_true', default=False,
+        help='only generate reports, don\'t run workflows. This will only rerun report '
+             'aggregation, not reportlet generation for specific nodes.')
+    g_other.add_argument('--write-graph', action='store_true', default=False,
+                         help='Write workflow graph.')
+
+    return parser
+
+def main():
+    """Entry point"""
+    opts = get_parser().parse_args()
     create_workflow(opts)
 
 
 def create_workflow(opts):
+    """Build workflow"""
     import logging
     from fmriprep.utils import make_folder
     from fmriprep.viz.reports import run_reports
@@ -156,6 +172,8 @@ def create_workflow(opts):
     if subject_list is None or not subject_list:
         subject_list = [op.basename(subdir)[4:] for subdir in glob.glob(
             op.join(settings['bids_root'], 'sub-*'))]
+    else:
+        subject_list = [sub[4:] if sub.startswith('sub-') else sub for sub in subject_list]
 
     logger.info('Subject list: %s', ', '.join(subject_list))
 
