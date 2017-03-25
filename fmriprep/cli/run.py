@@ -66,7 +66,7 @@ def get_parser():
     g_conf = parser.add_argument_group('Workflow configuration')
     g_conf.add_argument(
         '--ignore', required=False, action='store', nargs="+", default=[],
-        choices=['fieldmap', 'sbref']
+        choices=['fieldmap', 'sbref'],
         help='do not run specific modules of the workflow (not recommended)')
     g_conf.add_argument('--skip-native', action='store_true', default=False,
                         help="don't output timeseries in native space")
