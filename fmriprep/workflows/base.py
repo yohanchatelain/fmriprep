@@ -23,7 +23,7 @@ from fmriprep.workflows import confounds
 
 from fmriprep.workflows.anatomical import t1w_preprocessing
 from fmriprep.workflows.sbref import sbref_preprocess
-from fmriprep.workflows.fieldmap import phase_diff_and_magnitudes
+
 from fmriprep.workflows.epi import (
     epi_unwarp, epi_hmc, epi_sbref_registration,
     ref_epi_t1_registration, epi_mni_transformation)
@@ -84,11 +84,17 @@ def basic_fmap_sbref_wf(subject_data, settings, name='fMRI_prep'):
 
       * [x] Has at least one T1w and at least one bold file (minimal reqs.)
       * [x] Has one or more SBRefs
-      * [x] Has one or more GRE-phasediff images, including the corresponding magnitude images.
-      * [ ] No SE-fieldmap images
-      * [ ] No Spiral Echo fieldmap
+      * [x] Has fieldmaps in one of the following options:
+        * [x] Phase-difference: one or more GRE-phasediff images, including
+              the corresponding magnitude images.
+        * [x] "Natural" fieldmaps: spiral field-mapping sequences
+        * [x] "PEPolar": :abbr:`PE (phase-encoding)` varying *Polar*ity images
 
     """
+
+    # Import specific workflows here, so we don't brake everything with one
+    # unused workflow.
+    from fmriprep.workflows.fieldmap import fmap_estimator
 
     if settings is None:
         settings = {}
@@ -107,7 +113,10 @@ def basic_fmap_sbref_wf(subject_data, settings, name='fMRI_prep'):
     t1w_pre = t1w_preprocessing(settings=settings)
 
     # Estimate fieldmap
-    fmap_est = phase_diff_and_magnitudes(settings)
+    fmap_est = fmap_estimator(subject_data, settings=settings)
+    if fmap_est is None:
+        # Fallback to non-fieldmap workflow
+        return basic_wf(subject_data, settings=settings)
 
     # Correct SBRef
     sbref_pre = sbref_preprocess(settings=settings)
@@ -137,7 +146,6 @@ def basic_fmap_sbref_wf(subject_data, settings, name='fMRI_prep'):
     workflow.connect([
         (bidssrc, t1w_pre, [('t1w', 'inputnode.t1w'),
                             ('t2w', 'inputnode.t2w')]),
-        (bidssrc, fmap_est, [('fmap', 'inputnode.input_images')]),
         (bidssrc, sbref_pre, [('sbref', 'inputnode.sbref')]),
         (bidssrc, sbref_t1, [('sbref', 'inputnode.name_source'),
                              ('t1w', 'inputnode.t1w')]),
