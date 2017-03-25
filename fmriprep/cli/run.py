@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Author: oesteban
-# @Date:   2015-11-19 16:44:27
-# @Last Modified by:   oesteban
-# @Last Modified time: 2017-03-22 18:14:01
+
 """
 fMRI preprocessing workflow
 =====
@@ -112,8 +109,7 @@ def create_workflow(opts):
         'ignore': opts.ignore,
         'skip_native': opts.skip_native,
         'freesurfer': opts.freesurfer,
-        'reportlets_dir': op.join(op.abspath(opts.work_dir), 'reportlets'),
-        'cache_dir': op.join(op.abspath(opts.work_dir), 'cache')
+        'reportlets_dir': op.join(op.abspath(opts.work_dir), 'reportlets')
     }
 
     # set up logger
@@ -129,7 +125,6 @@ def create_workflow(opts):
     # Using make_folder to prevent https://github.com/poldracklab/mriqc/issues/111
     make_folder(settings['output_dir'])
     make_folder(settings['work_dir'])
-    make_folder(settings['cache_dir'])
 
     if opts.reports_only:
         run_reports(settings['output_dir'])
