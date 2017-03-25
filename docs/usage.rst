@@ -26,6 +26,8 @@ Command-Line Arguments
 .. argparse::
    :ref: fmriprep.cli.run.get_parser
    :prog: fmriprep
+   :nodefault:
+   :nodefaultconst:
 
 
 Debugging
