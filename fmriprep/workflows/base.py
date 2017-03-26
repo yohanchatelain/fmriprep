@@ -32,7 +32,7 @@ from fmriprep.workflows.epi import (
 def base_workflow_enumerator(subject_list, task_id, settings, run_uuid):
     workflow = pe.Workflow(name='workflow_enumerator')
 
-    if settings['freesurfer']:
+    if settings.get('freesurfer', False):
         fsdir = pe.Node(BIDSFreeSurferDir(), name='BIDSFreesurfer')
         fsdir.inputs.freesurfer_home = os.getenv('FREESURFER_HOME')
         fsdir.inputs.derivatives = os.path.join(settings['output_dir'])
@@ -46,7 +46,7 @@ def base_workflow_enumerator(subject_list, task_id, settings, run_uuid):
             )
             for node in generated_workflow._get_all_nodes():
                 node.config = deepcopy(generated_workflow.config)
-            if settings['freesurfer']:
+            if settings.get('freesurfer', False):
                 workflow.connect(fsdir, 'subjects_dir',
                                  generated_workflow, 'inputnode.subjects_dir')
             else:
@@ -72,7 +72,7 @@ def base_workflow_generator(subject_id, task_id, settings):
 
     if all((subject_data['fmap'] != [],
             subject_data['sbref'] != [],
-            "sbref" not in settings['ignore'])):
+            "sbref" not in settings.get('ignore', []))):
         return basic_fmap_sbref_wf(subject_data, settings, name=subject_id)
     else:
         return basic_wf(subject_data, settings, name=subject_id)
@@ -110,7 +110,7 @@ def basic_fmap_sbref_wf(subject_data, settings, name='fMRI_prep'):
 
     # Estimate fieldmap
     fmap_est = None
-    if 'fieldmap' not in settings['ignore']:
+    if 'fieldmap' not in settings.get('ignore', []):
         # Import specific workflows here, so we don't brake everything with one
         # unused workflow.
         from fmriprep.workflows.fieldmap import fmap_estimator
@@ -118,7 +118,7 @@ def basic_fmap_sbref_wf(subject_data, settings, name='fMRI_prep'):
 
     if fmap_est is None:
         # Fallback to non-fieldmap workflow
-        settings['ignore'].append('fieldmap')
+        settings['ignore'] = settings.get('ignore', []) + ['fieldmap']
         return basic_wf(subject_data, settings=settings)
 
     # Correct SBRef
@@ -188,7 +188,7 @@ def basic_fmap_sbref_wf(subject_data, settings, name='fMRI_prep'):
         (t1w_pre, confounds_wf, [('outputnode.t1_tpms', 'inputnode.t1_tpms')]),
     ])
 
-    if settings['freesurfer']:
+    if settings.get('freesurfer', False):
         workflow.connect([
             (inputnode, t1w_pre, [('subjects_dir', 'inputnode.subjects_dir')]),
             (inputnode, sbref_t1, [('subjects_dir', 'inputnode.subjects_dir')]),
@@ -220,7 +220,7 @@ def basic_wf(subject_data, settings, name='fMRI_prep'):
                       name='BIDSDatasource')
 
     fmap_est = None
-    if 'fieldmap' not in settings['ignore']:
+    if 'fieldmap' not in settings.get('ignore', []):
         # Import specific workflows here, so we don't brake everything with one
         # unused workflow.
         from fmriprep.workflows.fieldmap import fmap_estimator, sdc_unwarp
@@ -295,7 +295,7 @@ def basic_wf(subject_data, settings, name='fMRI_prep'):
                                         ('outputnode.out_mask', 'inputnode.epi_mask')])
         ])
 
-    if settings['freesurfer']:
+    if settings.get('freesurfer', False):
         workflow.connect([
             (inputnode, t1w_pre, [('subjects_dir', 'inputnode.subjects_dir')]),
             (inputnode, epi_2_t1, [('subjects_dir', 'inputnode.subjects_dir')]),
