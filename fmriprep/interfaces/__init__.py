@@ -6,3 +6,4 @@ from fmriprep.interfaces.bids import ReadSidecarJSON, DerivativesDataSink, \
     BIDSDataGrabber, BIDSFreeSurferDir
 from fmriprep.interfaces.images import ImageDataSink
 from fmriprep.interfaces.utils import FormatHMCParam, IntraModalMerge
+from fmriprep.interfaces.epi import SelectReference
