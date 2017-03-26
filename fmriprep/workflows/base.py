@@ -223,8 +223,9 @@ def basic_wf(subject_data, settings, name='fMRI_prep'):
     if 'fieldmap' not in settings['ignore']:
         # Import specific workflows here, so we don't brake everything with one
         # unused workflow.
-        from fmriprep.workflows.fieldmap import fmap_estimator
+        from fmriprep.workflows.fieldmap import fmap_estimator, sdc_unwarp
         fmap_est = fmap_estimator(subject_data, settings=settings)
+        unwarp = sdc_unwarp(settings=settings)
 
     # Preprocessing of T1w (includes registration to MNI)
     t1w_pre = t1w_preprocessing(settings=settings)
@@ -249,33 +250,50 @@ def basic_wf(subject_data, settings, name='fMRI_prep'):
         (bidssrc, t1w_pre, [('t1w', 'inputnode.t1w'),
                             ('t2w', 'inputnode.t2w')]),
         (bidssrc, epi_2_t1, [('t1w', 'inputnode.t1w')]),
-        (hmcwf, epi_2_t1, [('inputnode.epi', 'inputnode.name_source'),
-                           ('outputnode.epi_mean', 'inputnode.ref_epi'),
-                           ('outputnode.xforms', 'inputnode.hmc_xforms'),
-                           ('outputnode.epi_mask', 'inputnode.ref_epi_mask'),
-                           ('outputnode.epi_split', 'inputnode.epi_split')]),
         (t1w_pre, epi_2_t1, [('outputnode.bias_corrected_t1', 'inputnode.bias_corrected_t1'),
                              ('outputnode.t1_brain', 'inputnode.t1_brain'),
                              ('outputnode.t1_mask', 'inputnode.t1_mask'),
                              ('outputnode.t1_seg', 'inputnode.t1_seg')]),
-
         (t1w_pre, confounds_wf, [('outputnode.t1_tpms', 'inputnode.t1_tpms')]),
+        (epi_2_t1, confounds_wf, [('outputnode.epi_t1', 'inputnode.fmri_file'),
+                                  ('outputnode.epi_mask_t1', 'inputnode.epi_mask')]),
+        (epi_2_t1, epi_mni_trans_wf, [('outputnode.itk_epi_to_t1', 'inputnode.itk_epi_to_t1')]),
+        (t1w_pre, epi_mni_trans_wf, [('outputnode.bias_corrected_t1', 'inputnode.t1'),
+                                     ('outputnode.t1_2_mni_forward_transform',
+                                      'inputnode.t1_2_mni_forward_transform')]),
+        (hmcwf, epi_2_t1, [('inputnode.epi', 'inputnode.name_source'),
+                           ('outputnode.epi_split', 'inputnode.epi_split')]),
         (hmcwf, confounds_wf, [
             ('outputnode.movpar_file', 'inputnode.movpar_file'),
             ('outputnode.motion_confounds_file', 'inputnode.motion_confounds_file'),
             ('inputnode.epi', 'inputnode.source_file')]),
-        (epi_2_t1, confounds_wf, [('outputnode.epi_t1', 'inputnode.fmri_file'),
-                                  ('outputnode.epi_mask_t1', 'inputnode.epi_mask')]),
-
-        (epi_2_t1, epi_mni_trans_wf, [('outputnode.itk_epi_to_t1', 'inputnode.itk_epi_to_t1')]),
         (hmcwf, epi_mni_trans_wf, [('inputnode.epi', 'inputnode.name_source'),
-                                   ('outputnode.xforms', 'inputnode.hmc_xforms'),
-                                   ('outputnode.epi_mask', 'inputnode.epi_mask'),
                                    ('outputnode.epi_split', 'inputnode.epi_split')]),
-        (t1w_pre, epi_mni_trans_wf, [('outputnode.bias_corrected_t1', 'inputnode.t1'),
-                                     ('outputnode.t1_2_mni_forward_transform',
-                                      'inputnode.t1_2_mni_forward_transform')])
     ])
+
+    if fmap_est is None:
+        workflow.connect([
+            (hmcwf, epi_2_t1, [('outputnode.epi_mean', 'inputnode.ref_epi'),
+                               ('outputnode.xforms', 'inputnode.hmc_xforms'),
+                               ('outputnode.epi_mask', 'inputnode.ref_epi_mask')]),
+            (hmcwf, epi_mni_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms'),
+                                       ('outputnode.epi_mask', 'inputnode.epi_mask')]),
+        ])
+    else:
+        workflow.connect([
+            (hmcwf, unwarp, [('inputnode.epi', 'inputnode.name_source'),
+                             ('outputnode.epi_split', 'inputnode.in_split'),
+                             ('outputnode.epi_mean', 'inputnode.in_reference'),
+                             ('outputnode.xforms', 'inputnode.xforms')]),
+            (fmap_est, unwarp, [('outputnode.fmap', 'inputnode.fmap'),
+                                ('outputnode.fmap_ref', 'inputnode.fmap_ref'),
+                                ('outputnode.fmap_mask', 'inputnode.fmap_mask')]),
+            (unwarp, epi_2_t1, [('outputnode.out_reference', 'inputnode.ref_epi'),
+                                ('outputnode.out_warps', 'inputnode.hmc_xforms'),
+                                ('outputnode.out_mask', 'inputnode.ref_epi_mask')]),
+            (unwarp, epi_mni_trans_wf, [('outputnode.out_warps', 'inputnode.hmc_xforms'),
+                                        ('outputnode.out_mask', 'inputnode.epi_mask')])
+        ])
 
     if settings['freesurfer']:
         workflow.connect([
@@ -283,7 +301,7 @@ def basic_wf(subject_data, settings, name='fMRI_prep'):
             (inputnode, epi_2_t1, [('subjects_dir', 'inputnode.subjects_dir')]),
             (t1w_pre, epi_2_t1, [('outputnode.subject_id', 'inputnode.subject_id'),
                                  ('outputnode.fs_2_t1_transform', 'inputnode.fs_2_t1_transform')]),
-            ])
+        ])
 
     return workflow
 
