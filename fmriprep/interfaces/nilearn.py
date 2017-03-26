@@ -142,8 +142,8 @@ class Mean(BaseInterface):
         return self._results
 
     def _run_interface(self, runtime):
-        self._results['out_file'] = genfname(in_files[0], suffix='avg')
-        mean_img(in_files, njobs=self.inputs.njobs).to_filename(
+        self._results['out_file'] = genfname(self.inputs.in_files[0], suffix='avg')
+        mean_img(self.inputs.in_files, n_jobs=self.inputs.njobs).to_filename(
             self._results['out_file'])
         return runtime
 

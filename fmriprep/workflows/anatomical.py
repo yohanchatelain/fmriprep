@@ -22,7 +22,7 @@ from niworkflows.interfaces.masks import BrainExtractionRPT
 from niworkflows.interfaces.segmentation import FASTRPT, ReconAllRPT
 
 from fmriprep.interfaces import (DerivativesDataSink, IntraModalMerge)
-from fmriprep.interfaces.utils import reorient
+from fmriprep.interfaces.images import reorient
 from fmriprep.utils.misc import fix_multi_T1w_source_name
 
 
