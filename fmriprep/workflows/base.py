@@ -92,10 +92,6 @@ def basic_fmap_sbref_wf(subject_data, settings, name='fMRI_prep'):
 
     """
 
-    # Import specific workflows here, so we don't brake everything with one
-    # unused workflow.
-    from fmriprep.workflows.fieldmap import fmap_estimator
-
     if settings is None:
         settings = {}
 
@@ -115,6 +111,9 @@ def basic_fmap_sbref_wf(subject_data, settings, name='fMRI_prep'):
     # Estimate fieldmap
     fmap_est = None
     if 'fieldmap' not in settings['ignore']:
+        # Import specific workflows here, so we don't brake everything with one
+        # unused workflow.
+        from fmriprep.workflows.fieldmap import fmap_estimator
         fmap_est = fmap_estimator(subject_data, settings=settings)
 
     if fmap_est is None:
@@ -222,6 +221,9 @@ def basic_wf(subject_data, settings, name='fMRI_prep'):
 
     fmap_est = None
     if 'fieldmap' not in settings['ignore']:
+        # Import specific workflows here, so we don't brake everything with one
+        # unused workflow.
+        from fmriprep.workflows.fieldmap import fmap_estimator
         fmap_est = fmap_estimator(subject_data, settings=settings)
 
     # Preprocessing of T1w (includes registration to MNI)
