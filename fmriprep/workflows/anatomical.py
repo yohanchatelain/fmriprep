@@ -13,7 +13,6 @@ import os.path as op
 from nipype.interfaces import ants
 from nipype.interfaces import freesurfer
 from nipype.interfaces import utility as niu
-from nipype.interfaces import io as nio
 from nipype.pipeline import engine as pe
 
 from niworkflows.interfaces.registration import RobustMNINormalizationRPT
@@ -192,12 +191,10 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
             name='ReconAll_Report'
         )
 
-        surf_getter = pe.Node(nio.FreeSurferSource(), name='FSDir')
-        surf_getter.iterables = [('hemi', ['lh', 'rh'])]
-
-        midthickness = pe.Node(
+        midthickness = pe.MapNode(
             freesurfer.MRIsExpand(thickness=True, distance=0.5,
                                   out_name='midthickness'),
+            iterfield='in_file',
             name='MidThickness')
 
         surface_list = pe.Node(niu.Merge(4), name='SurfaceList')
@@ -205,31 +202,26 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
         gifticonv = pe.MapNode(freesurfer.MRIsConvert(out_datatype='gii'),
                                iterfield='in_file', name='GiftiSurfaces')
 
-        def normalize_giftis(in_files):
+        def normalize_giftis(in_file):
             import os
             import re
             from nipype.utils.filemanip import copyfile
-            in_files = sum(in_files, [])
             in_format = re.compile(r'(?P<LR>[lr])h.(?P<surf>.+)_converted.gii')
-            out_files = []
-            for in_file in in_files:
-                name = os.path.basename(in_file)
-                info = in_format.match(name).groupdict()
-                info['LR'] = info['LR'].upper()
-                out_file = os.path.abspath(
-                    '{surf}.{LR}.surf.gii'.format(**info))
-                copyfile(in_file, out_file)
-                out_files.append(os.path.abspath(out_file))
-            return out_files
+            name = os.path.basename(in_file)
+            info = in_format.match(name).groupdict()
+            info['LR'] = info['LR'].upper()
+            out_file = os.path.abspath(
+                '{surf}.{LR}.surf.gii'.format(**info))
+            copyfile(in_file, out_file)
+            return out_file
 
-        normalize = pe.JoinNode(
+        normalize = pe.MapNode(
             niu.Function(
                 function=normalize_giftis,
-                input_names=['in_files'],
+                input_names=['in_file'],
                 output_names=['normalized']),
-            joinsource='FSDir',
-            joinfield='in_files',
-            name='NormalizeSurfNames'
+            iterfield='in_file',
+            name='NormalizedGiftiSurfaces'
             )
 
     # Resample the brain mask and the tissue probability maps into mni space
@@ -325,15 +317,13 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
             (reconall, recon_report, [('out_report', 'in_file')]),
             (reconall, outputnode, [('subject_id', 'subject_id')]),
             (fs_transform, outputnode, [('fsl_file', 'fs_2_t1_transform')]),
-            (reconall, surf_getter, [('subjects_dir', 'subjects_dir'),
-                                     ('subject_id', 'subject_id')]),
-            (surf_getter, midthickness, [('smoothwm', 'in_file')]),
-            (surf_getter, surface_list, [('smoothwm', 'in1'),
-                                         ('pial', 'in2'),
-                                         ('inflated', 'in3')]),
+            (reconall, midthickness, [('smoothwm', 'in_file')]),
+            (reconall, surface_list, [('smoothwm', 'in1'),
+                                      ('pial', 'in2'),
+                                      ('inflated', 'in3')]),
             (midthickness, surface_list, [('out_file', 'in4')]),
             (surface_list, gifticonv, [('out', 'in_file')]),
-            (gifticonv, normalize, [('converted', 'in_files')]),
+            (gifticonv, normalize, [('converted', 'in_file')]),
             ])
 
     # Write corrected file in the designated output dir
