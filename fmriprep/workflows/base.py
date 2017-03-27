@@ -25,7 +25,7 @@ from fmriprep.workflows.anatomical import t1w_preprocessing
 from fmriprep.workflows.sbref import sbref_preprocess
 
 from fmriprep.workflows.epi import (
-    epi_unwarp, epi_hmc, epi_sbref_registration,
+    epi_hmc, epi_sbref_registration, epi_preproc_report,
     ref_epi_t1_registration, epi_mni_transformation)
 
 
@@ -293,6 +293,20 @@ def basic_wf(subject_data, settings, name='fMRI_prep'):
                                 ('outputnode.out_mask', 'inputnode.ref_epi_mask')]),
             (unwarp, epi_mni_trans_wf, [('outputnode.out_warps', 'inputnode.hmc_xforms'),
                                         ('outputnode.out_mask', 'inputnode.epi_mask')])
+        ])
+
+        # Report on EPI correction
+        epireport = epi_preproc_report(settings=settings)
+        workflow.connect([
+            (hmcwf, epireport, [
+                ('outputnode.epi_mean', 'inputnode.in_pre'),
+                ('inputnode.epi', 'inputnode.name_source')]),
+            (unwarp, epireport, [
+                ('outputnode.out_reference', 'inputnode.in_post')]),
+            (t1w_pre, epireport, [
+                ('outputnode.t1_tpms', 'inputnode.in_tpms'),]),
+            (epi_2_t1, epireport, [
+                ('outputnode.itk_t1_to_epi', 'inputnode.in_xfm')]),
         ])
 
     if settings.get('freesurfer', False):
