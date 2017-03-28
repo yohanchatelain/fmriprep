@@ -321,7 +321,7 @@ def bold_preprocessing(name, metadata, settings):
         (epi_2_t1, epi_mni_trans_wf, [('outputnode.itk_epi_to_t1', 'inputnode.itk_epi_to_t1')]),
         (hmcwf, epi_mni_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms'),
                                    ('outputnode.epi_mask', 'inputnode.epi_mask'),
-                                   ('outputnode.out_epi', 'inputnode.epi_split')]),
+                                   ('outputnode.out_epi', 'inputnode.in_epi')]),
         (inputnode, epi_mni_trans_wf, [('epi', 'inputnode.name_source'),
                                        ('bias_corrected_t1', 'inputnode.t1'),
                                        ('t1_2_mni_forward_transform', 'inputnode.t1_2_mni_forward_transform')])
