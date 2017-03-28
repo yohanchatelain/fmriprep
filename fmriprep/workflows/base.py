@@ -293,7 +293,8 @@ def bold_preprocessing(name, metadata, settings):
     confounds_wf.get_node('inputnode').inputs.t1_transform_flags = [False]
 
     # Apply transforms in 1 shot
-    epi_mni_trans_wf = epi_mni_transformation(settings=settings)
+    epi_mni_trans_wf = epi_mni_transformation(settings=settings,
+                                              realigned_input=realigned_input)
 
     workflow.connect([
         (inputnode, hmcwf, [('epi', 'inputnode.epi')]),
