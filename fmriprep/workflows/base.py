@@ -171,8 +171,6 @@ def basic_fmap_sbref_wf(subject_data, settings, name='fMRI_prep'):
 
         (hmcwf, confounds_wf, [('outputnode.movpar_file', 'inputnode.movpar_file'),
                                ('outputnode.epi_mean', 'inputnode.reference_image'),
-                               ('outputnode.motion_confounds_file',
-                                'inputnode.motion_confounds_file'),
                                ('inputnode.epi', 'inputnode.source_file')]),
         (epiunwarp_wf, confounds_wf, [('outputnode.epi_mask', 'inputnode.epi_mask'),
                                       ('outputnode.epi_unwarp', 'inputnode.fmri_file')]),
@@ -313,8 +311,7 @@ def bold_preprocessing(name, metadata, settings):
         (inputnode, confounds_wf, [('t1_tpms', 'inputnode.t1_tpms'),
                                    ('epi', 'inputnode.source_file')]),
         (hmcwf, confounds_wf, [
-            ('outputnode.movpar_file', 'inputnode.movpar_file'),
-            ('outputnode.motion_confounds_file', 'inputnode.motion_confounds_file')]),
+            ('outputnode.movpar_file', 'inputnode.movpar_file')]),
         (epi_2_t1, confounds_wf, [('outputnode.epi_t1', 'inputnode.fmri_file'),
                                   ('outputnode.epi_mask_t1', 'inputnode.epi_mask')]),
 
