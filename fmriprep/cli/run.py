@@ -65,8 +65,10 @@ def get_parser():
 
     g_conf = parser.add_argument_group('Workflow configuration')
     g_conf.add_argument(
-        '--ignore', required=False, action='store', choices=['fieldmaps'], nargs="+", default=[],
-        help='do not run specific modules of the workflow (not recommended)')
+        '--ignore', required=False, action='store', choices=['fieldmaps',
+                                                             'slicetiming'], nargs="+", default=[],
+        help='ignore selected aspects of the input dataset to disable related'
+             'parts of the workflow')
     g_conf.add_argument('--skip-native', action='store_true', default=False,
                         help="don't output timeseries in native space")
 
