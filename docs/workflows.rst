@@ -61,8 +61,12 @@ EPI_HMC
 .. image:: EPI_HMC.dot.png
     :scale: 100%
 
-The EPI_HMC sub-workflow collects BIDS_-formatted EPI files, performs head
-motion correction, and skullstripping. FSL MCFLIRT is used to estimate motion
+The EPI_HMC sub-workflow collects BIDS_-formatted EPI files, performs slice time
+correction (if ``SliceTiming`` field is present in the input dataset metadata), head
+motion correction, and skullstripping. Slice time correction is performed
+using AFNI 3dTShift. All slices are realigned in time to the middle of each
+TR. Slice time correction can be disabled with ``--ignore slicetiming`` command
+ line argument. FSL MCFLIRT is used to estimate motion
 transformations and ANTs is used to apply them using Lanczos interpolation. Nilearn
 is used to perform skullstripping of the mean EPI image.
 
