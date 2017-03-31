@@ -55,7 +55,7 @@ warp to the MNI space.
 .. figure:: _static/segmentation.svg
     :scale: 100%
 
-    Segmentation (FAST).
+    Tissue segmentation (FAST).
 
 .. figure:: _static/T1MNINormalization.svg
     :scale: 100%
@@ -132,6 +132,7 @@ bold_preprocessing
                                      'skull_strip_ants': True,
                                      'skip_native': False,
                                      'debug': False})
+
 Preprocessing of BOLD files is splict into multiple sub workflows decribed below.
 
 epi_hmc
@@ -274,7 +275,7 @@ Derivatives
 -----------
 
 There are additional files, called "Derivatives", outputted to ``<output dir>/fmriprep/sub-<subject_label>/``.
-See the BIDS_ spec for more information.
+See the `BIDS Derivatives`_ spec for more information.
 
 Derivatives related to t1w files are in the ``anat`` subfolder:
 
