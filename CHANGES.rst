@@ -1,5 +1,5 @@
 Next release
-===========
+============
 
 * [ENH] Added optional slice time correction (#415)
 * [ENH] Removed redundant motion parameter conversion step using avscale (#415)
