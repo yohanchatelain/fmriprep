@@ -325,14 +325,16 @@ def fake_set_up():
 
 fake_set_up()
 
-ds005_wf = basic_wf({'func': ['sub-testing_task-testing_acq-testing_bold.nii.gz']}, {'ants_nthreads': 1,
-                                            'nthreads': 1,
-                                            'output_dir': 'x',
-                                            'reportlets_dir': 'x',
-                                            'biggest_epi_file_size_gb': 1,
-                                            'skip_native': True,
-                                            'freesurfer': True,
-                                             'bids_root': 'x'})
+ds005_wf = basic_wf({'func': ['sub-testing_task-testing_acq-testing_bold.nii.gz']},
+                    {'ants_nthreads': 1,
+                     'nthreads': 1,
+                     'output_dir': 'x',
+                     'reportlets_dir': 'x',
+                     'biggest_epi_file_size_gb': 1,
+                     'skip_native': True,
+                     'freesurfer': True,
+                     'ignore': [],
+                     'bids_root': 'x'})
 
 sub_wfs = {name.split('.')[0] for name in ds005_wf.list_node_names()} # get only first-level nodes/workflows
 ds005_workflows = {name: ds005_wf.get_node(name) for name in sub_wfs}
