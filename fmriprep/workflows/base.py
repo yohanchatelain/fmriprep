@@ -226,7 +226,7 @@ def basic_wf(subject_data, settings, name='fMRI_prep'):
             ])
 
     for bold_file in subject_data['func']:
-        name = os.path.split(bold_file)[-1].replace(".", "_").replace(" ", "")
+        name = os.path.split(bold_file)[-1].replace(".", "_").replace(" ", "").replace("-", "_")
 
         # For doc building purposes
         print(bold_file)
