@@ -1,36 +1,47 @@
 .. include:: links.rst
 
-=========
-Workflows
-=========
+===========================
+Processing pipeline details
+===========================
 
-Basic workflow (no fieldmaps)
-=============================
+``fmriprep`` adapts its pipeline depending on what data and metadata is
+available is used as the input. For example slice time correction will be
+only perfomed if ``SliceTiming`` metadata field is not set in the input dataset.
 
-``fmriprep``'s basic pipeline is used on datasets for which there are only t1ws
-and at least one functional (EPI) file, but no SBRefs or fieldmaps.
-To force using this pipeline on datasets that do include fieldmaps and SBRefs
-use the ``--ignore fieldmaps`` flag.
+High-level view of the pipeline:
 
-Several steps are added or modified if `Surface preprocessing`_ is enabled.
+.. workflow::
+    :graph2use: orig
+    :simple_form: yes
 
-What It Does
-------------
-High-level view of the basic pipeline:
-
-.. image:: ds005.dot.png
-    :scale: 100%
-
-BIDSDatasource
-~~~~~~~~~~~~~~
-
-This node reads the BIDS_-formatted T1 data.
+    from fmriprep.workflows.base import basic_wf
+    wf = basic_wf({'func': ['bold_preprocessing']},
+                           settings={'ants_nthreads': 1,
+                                     'nthreads': 1,
+                                     'freesurfer': True,
+                                     'reportlets_dir': '.',
+                                     'output_dir': '.',
+                                     'bids_root': '.',
+                                     'biggest_epi_file_size_gb': 3,
+                                     'skull_strip_ants': True,
+                                     'skip_native': False,
+                                     'debug': False})
 
 t1w_preprocessing
-~~~~~~~~~~~~~~~~~
+-----------------
 
-.. image:: t1w_preprocessing.dot.png
-    :scale: 100%
+.. workflow::
+    :graph2use: colored
+    :simple_form: yes
+
+    from fmriprep.workflows.anatomical import t1w_preprocessing
+    wf = t1w_preprocessing(settings={'ants_nthreads': 1,
+                                     'nthreads': 1,
+                                     'freesurfer': True,
+                                     'reportlets_dir': '.',
+                                     'output_dir': '.',
+                                     'skull_strip_ants': True,
+                                     'debug': False})
 
 The ``t1w_preprocessing`` sub-workflow finds the skull stripping mask and the
 white matter/gray matter/cerebrospinal fluid segments and finds a non-linear
@@ -51,22 +62,106 @@ warp to the MNI space.
 
     Animation showing T1 to MNI normalization (ANTs)
 
-If enabled, FreeSurfer surfaces are reconstructed from T1-weighted structural
-image(s), using the ANTs-extracted brain mask.
-See Reconstruction_ for details.
+Surface preprocessing
+~~~~~~~~~~~~~~~~~~~~~
 
-EPI_HMC
+``fmriprep`` uses FreeSurfer_ to reconstruct surfaces from T1/T2-weighted
+structural images.
+If enabled, several steps in the ``fmriprep`` pipeline are added or replaced.
+All surface preprocessing may be disabled with the ``--no-freesurfer`` flag.
+
+If FreeSurfer reconstruction is performed, the reconstructed subject is placed in
+``<output dir>/freesurfer/sub-<subject_label>/`` (see `FreeSurfer Derivatives`_).
+
+Surface reconstruction is performed in three phases.
+The first phase initializes the subject with T1- and T2-weighted (if available)
+structural images and performs basic reconstruction (``autorecon1``) with the
+exception of skull-stripping.
+For example, a subject with only one session with T1 and T2-weighted images
+would be processed by the following command::
+
+    $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
+        -i <bids-root>/sub-<subject_label>/anat/sub-<subject_label>_T1w.nii.gz \
+        -T2 <bids-root>/sub-<subject_label>/anat/sub-<subject_label>_T2w.nii.gz \
+        -autorecon1 \
+        -noskullstrip
+
+The second phase imports the brainmask calculated in the t1w_preprocessing_
+sub-workflow.
+The final phase resumes reconstruction, using the T2-weighted image to assist
+in finding the pial surface, if available::
+
+    $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
+        -all -T2pial
+
+Reconstructed white and pial surfaces are included in the report.
+
+.. figure:: _static/reconall.svg
+    :scale: 100%
+
+    Surface reconstruction (FreeSurfer)
+
+If T1-weighted voxel sizes are less 1mm in all dimensions (rounding to nearest
+.1mm), `submillimeter reconstruction`_ is used.
+
+In order to bypass reconstruction in ``fmriprep``, place existing reconstructed
+subjects in ``<output dir>/freesurfer`` prior to the run.
+``fmriprep`` will perform any missing ``recon-all`` steps, but will not perform
+any steps whose outputs already exist.
+
+
+bold_preprocessing
+------------------
+
+.. workflow::
+    :graph2use: orig
+    :simple_form: yes
+
+    from fmriprep.workflows.epi import bold_preprocessing
+    wf = bold_preprocessing("bold_preprocessing",
+                            metadata={"RepetitionTime": 2.0,
+                           "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]},
+                 settings={'ants_nthreads': 1,
+                           'ignore':[],
+                                     'nthreads': 1,
+                                     'freesurfer': True,
+                                     'reportlets_dir': '.',
+                                     'output_dir': '.',
+                                     'bids_root': '.',
+                                     'biggest_epi_file_size_gb': 3,
+                                     'skull_strip_ants': True,
+                                     'skip_native': False,
+                                     'debug': False})
+Preprocessing of BOLD files is splict into multiple sub workflows decribed below.
+
+epi_hmc
 ~~~~~~~
 
-.. image:: EPI_HMC.dot.png
-    :scale: 100%
+.. workflow::
+    :graph2use: colored
+    :simple_form: yes
+
+    from fmriprep.workflows.epi import epi_hmc
+    wf = epi_hmc(metadata={"RepetitionTime": 2.0,
+                           "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]},
+                 settings={'ants_nthreads': 1,
+                           'ignore':[],
+                                     'nthreads': 1,
+                                     'freesurfer': True,
+                                     'reportlets_dir': '.',
+                                     'output_dir': '.',
+                                     'bids_root': '.',
+                                     'biggest_epi_file_size_gb': 3,
+                                     'skull_strip_ants': True,
+                                     'skip_native': False,
+                                     'debug': False})
 
 The EPI_HMC sub-workflow collects BIDS_-formatted EPI files, performs slice time
 correction (if ``SliceTiming`` field is present in the input dataset metadata), head
 motion correction, and skullstripping. Slice time correction is performed
 using AFNI 3dTShift. All slices are realigned in time to the middle of each
 TR. Slice time correction can be disabled with ``--ignore slicetiming`` command
- line argument. FSL MCFLIRT is used to estimate motion
+line argument. FSL MCFLIRT is used to estimate motion
 transformations and ANTs is used to apply them using Lanczos interpolation. Nilearn
 is used to perform skullstripping of the mean EPI image.
 
@@ -78,27 +173,59 @@ is used to perform skullstripping of the mean EPI image.
 ref_epi_t1_registration
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-.. image:: ref_epi_t1_registration.dot.png
-    :scale: 100%
+.. workflow::
+    :graph2use: colored
+    :simple_form: yes
 
-The ref_epi_t1_registration sub-workflow uses FSL FLIRT with the BBR cost
-function to find the transform that maps the EPI space into the T1-space.
+    from fmriprep.workflows.epi import ref_epi_t1_registration
+    wf = ref_epi_t1_registration("test",
+                 settings={'ants_nthreads': 1,
+                           'ignore':[],
+                                     'nthreads': 1,
+                                     'freesurfer': True,
+                                     'reportlets_dir': '.',
+                                     'output_dir': '.',
+                                     'bids_root': '.',
+                                     'biggest_epi_file_size_gb': 3,
+                                     'skull_strip_ants': True,
+                                     'skip_native': False,
+                                     'debug': False})
+
+The mean EPI image of each run is aligned by the ``bbregister`` routine to the
+reconstructed subject using
+the gray/white matter boundary (FreeSurfer's ``?h.white`` surfaces).
 
 .. figure:: _static/EPIT1Normalization.svg
     :scale: 100%
 
-    Animation showing EPI to T1 registration (FSL FLIRT with BBR)
+    Animation showing EPI to T1 registration (FreeSurfer bbregister)
 
-If surface processing is enabled, ``bbregister`` is used instead.
-See `Boundary-based Registration (BBR)`_ for details.
+If FreeSurfer processing is disabled, FLIRT is performed with the BBR cost
+function, using the FAST segmentation to establish the gray/white matter
+boundary.
 
-EPIMNITransformation
-~~~~~~~~~~~~~~~~~~~~
+epi_mni_transformation
+~~~~~~~~~~~~~~~~~~~~~~
 
-.. image:: EPIMNITransformation.dot.png
-    :scale: 100%
+.. workflow::
+    :graph2use: colored
+    :simple_form: yes
 
-The EPIMNITransformation sub-workflow uses the transform from
+    from fmriprep.workflows.epi import epi_mni_transformation
+    wf = epi_mni_transformation("epi_mni_transformation",
+                 settings={'ants_nthreads': 1,
+                           'ignore':[],
+                                     'nthreads': 1,
+                                     'freesurfer': True,
+                                     'reportlets_dir': '.',
+                                     'output_dir': '.',
+                                     'bids_root': '.',
+                                     'biggest_epi_file_size_gb': 3,
+                                     'skull_strip_ants': True,
+                                     'skip_native': False,
+                                     'debug': False})
+
+The epi_mni_transformation sub-workflow uses the transform from
 `ref_epi_t1_registration`_ and a T1-to-MNI transform from `t1w_preprocessing`_ to
 map the EPI image to standardized MNI space.
 It also maps the t1w-based mask to MNI space.
@@ -106,14 +233,29 @@ It also maps the t1w-based mask to MNI space.
 Transforms are concatenated and applied all at once, with one interpolation
 step, so as little information is lost as possible.
 
-ConfoundDiscoverer
-~~~~~~~~~~~~~~~~~~
+discover_wf
+~~~~~~~~~~~
 
-.. image:: ConfoundDiscoverer.dot.png
-    :scale: 100%
+.. workflow::
+    :graph2use: colored
+    :simple_form: yes
+
+    from fmriprep.workflows.confounds import discover_wf
+    wf = discover_wf(name="discover_wf",
+                 settings={'ants_nthreads': 1,
+                           'ignore':[],
+                                     'nthreads': 1,
+                                     'freesurfer': True,
+                                     'reportlets_dir': '.',
+                                     'output_dir': '.',
+                                     'bids_root': '.',
+                                     'biggest_epi_file_size_gb': 3,
+                                     'skull_strip_ants': True,
+                                     'skip_native': False,
+                                     'debug': False})
 
 Given a motion-corrected fMRI, a brain mask, MCFLIRT movement parameters and a
-segmentation, the ConfoundDiscoverer sub-workflow calculates potential
+segmentation, the discover_wf sub-workflow calculates potential
 confounds per volume.
 
 Calculated confounds include the mean global signal, mean tissue class signal,
@@ -154,64 +296,6 @@ Derivatives related to EPI files are in the ``func`` subfolder:
 - ``*bold_space-T1w_preproc.nii.gz`` Motion-corrected (using MCFLIRT for estimation and ANTs for interpolation) EPI file in T1w space
 - ``*bold_space-MNI152NLin2009cAsym_preproc.nii.gz`` Same as above, but in MNI space
 
-
-Surface preprocessing
-=====================
-
-``fmriprep`` uses FreeSurfer_ to reconstruct surfaces from T1/T2-weighted
-structural images.
-If enabled, several steps in the ``fmriprep`` pipeline are added or replaced.
-All surface preprocessing may be disabled with the ``--no-freesurfer`` flag.
-
-Reconstruction
---------------
-If FreeSurfer reconstruction is performed, the reconstructed subject is placed in
-``<output dir>/freesurfer/sub-<subject_label>/`` (see `FreeSurfer Derivatives`_).
-
-Surface reconstruction is performed in three phases.
-The first phase initializes the subject with T1- and T2-weighted (if available)
-structural images and performs basic reconstruction (``autorecon1``) with the
-exception of skull-stripping.
-For example, a subject with only one session with T1 and T2-weighted images
-would be processed by the following command::
-
-    $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
-        -i <bids-root>/sub-<subject_label>/anat/sub-<subject_label>_T1w.nii.gz \
-        -T2 <bids-root>/sub-<subject_label>/anat/sub-<subject_label>_T2w.nii.gz \
-        -autorecon1 \
-        -noskullstrip
-
-The second phase imports the brainmask calculated in the t1w_preprocessing_
-sub-workflow.
-The final phase resumes reconstruction, using the T2-weighted image to assist
-in finding the pial surface, if available::
-
-    $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
-        -all -T2pial
-
-Reconstructed white and pial surfaces are included in the report.
-
-.. figure:: _static/reconall.svg
-    :scale: 100%
-
-    Surface reconstruction (FreeSurfer)
-
-If T1-weighted voxel sizes are less 1mm in all dimensions (rounding to nearest
-.1mm), `submillimeter reconstruction`_ is used.
-
-In order to bypass reconstruction in ``fmriprep``, place existing reconstructed
-subjects in ``<output dir>/freesurfer`` prior to the run.
-``fmriprep`` will perform any missing ``recon-all`` steps, but will not perform
-any steps whose outputs already exist.
-
-Boundary-based Registration (BBR)
----------------------------------
-The mean EPI image of each run is aligned to the reconstructed subject using
-the gray/white matter boundary (FreeSurfer's ``?h.white`` surfaces).
-
-If FreeSurfer processing is disabled, FLIRT is performed with the BBR cost
-function, using the FAST segmentation to establish the gray/white matter
-boundary.
 
 FreeSurfer Derivatives
 ----------------------
