@@ -228,8 +228,8 @@ def basic_wf(subject_data, settings, name='fMRI_prep'):
     for bold_file in subject_data['func']:
         name = os.path.split(bold_file)[-1].replace(".", "_")
 
-        print(bold_file)
-        if bold_file.startswith('fake'):
+        # For doc building purposes
+        if bold_file == 'fake file':
             metadata = {"RepetitionTime": 2.0,
                         "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]}
         else:
