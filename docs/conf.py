@@ -325,7 +325,7 @@ def fake_set_up():
 
 fake_set_up()
 
-ds005_wf = basic_wf({'func': ['fake data']}, {'ants_nthreads': 1,
+ds005_wf = basic_wf({'func': ['sub-testing_task-testing_acq-testing_bold.nii.gz']}, {'ants_nthreads': 1,
                                             'nthreads': 1,
                                             'output_dir': 'x',
                                             'reportlets_dir': 'x',
