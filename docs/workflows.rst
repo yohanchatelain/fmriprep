@@ -27,8 +27,8 @@ High-level view of the pipeline:
                                      'skip_native': False,
                                      'debug': False})
 
-t1w_preprocessing
------------------
+T1w/T2w preprocessing
+---------------------
 
 .. workflow::
     :graph2use: colored
@@ -110,7 +110,7 @@ subjects in ``<output dir>/freesurfer`` prior to the run.
 any steps whose outputs already exist.
 
 
-bold_preprocessing
+BOLD preprocessing
 ------------------
 
 .. workflow::
@@ -234,8 +234,8 @@ It also maps the t1w-based mask to MNI space.
 Transforms are concatenated and applied all at once, with one interpolation
 step, so as little information is lost as possible.
 
-discover_wf
-~~~~~~~~~~~
+Confounds estimation
+~~~~~~~~~~~~~~~~~~~~
 
 .. workflow::
     :graph2use: colored
@@ -256,7 +256,7 @@ discover_wf
                                      'debug': False})
 
 Given a motion-corrected fMRI, a brain mask, MCFLIRT movement parameters and a
-segmentation, the discover_wf sub-workflow calculates potential
+segmentation, the `discover_wf` sub-workflow calculates potential
 confounds per volume.
 
 Calculated confounds include the mean global signal, mean tissue class signal,
@@ -266,7 +266,7 @@ tCompCor, aCompCor, Framewise Displacement, 6 motion parameters and DVARS.
 Reports
 -------
 
-``fmriprep`` outputs summary reports, outputted to ``<output dir>/fmriprep/sub-<subject_label>.html``.
+FMRIPREP outputs summary reports, outputted to ``<output dir>/fmriprep/sub-<subject_label>.html``.
 These reports provide a quick way to make visual inspection of the results easy.
 Each report is self contained and thus can be easily shared with collaborators (for example via email).
 `View a sample report. <_static/sample_report.html>`_
