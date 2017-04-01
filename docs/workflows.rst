@@ -86,7 +86,7 @@ would be processed by the following command::
         -autorecon1 \
         -noskullstrip
 
-The second phase imports the brainmask calculated in the t1w_preprocessing_
+The second phase imports the brainmask calculated in the `T1w/T2w preprocessing`_
 sub-workflow.
 The final phase resumes reconstruction, using the T2-weighted image to assist
 in finding the pial surface, if available::
@@ -227,7 +227,7 @@ epi_mni_transformation
                                      'debug': False})
 
 The epi_mni_transformation sub-workflow uses the transform from
-`ref_epi_t1_registration`_ and a T1-to-MNI transform from `t1w_preprocessing`_ to
+`ref_epi_t1_registration`_ and a T1-to-MNI transform from `T1w/T2w preprocessing`_ to
 map the EPI image to standardized MNI space.
 It also maps the t1w-based mask to MNI space.
 
