@@ -3,6 +3,7 @@ Next release
 
 * [ENH] Added optional slice time correction (#415)
 * [ENH] Removed redundant motion parameter conversion step using avscale (#415)
+* [ENH] FreeSurfer submillimeter reconstruction may be disabled with ``--no-submm-recon`` (#422)
 
 0.3.1 (24th of March 2017)
 ==========================
