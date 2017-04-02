@@ -26,7 +26,8 @@ High-level view of the pipeline:
                                      'biggest_epi_file_size_gb': 3,
                                      'skull_strip_ants': True,
                                      'skip_native': False,
-                                     'debug': False})
+                                     'debug': False,
+                                     'hires': True})
 
 T1w/T2w preprocessing
 ---------------------
@@ -43,7 +44,8 @@ T1w/T2w preprocessing
                                      'reportlets_dir': '.',
                                      'output_dir': '.',
                                      'skull_strip_ants': True,
-                                     'debug': False})
+                                     'debug': False,
+                                     'hires': True})
 
 This sub-workflow finds the skull stripping mask and the
 white matter/gray matter/cerebrospinal fluid segments and finds a non-linear
