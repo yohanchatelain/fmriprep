@@ -56,7 +56,7 @@ warp to the MNI space.
 .. figure:: _static/segmentation.svg
     :scale: 100%
 
-    Tissue segmentation (FAST).
+    Brain tissue segmentation (FAST).
 
 .. figure:: _static/T1MNINormalization.svg
     :scale: 100%
