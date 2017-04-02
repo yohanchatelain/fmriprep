@@ -226,8 +226,14 @@ def basic_wf(subject_data, settings, name='fMRI_prep'):
             ])
 
     for bold_file in subject_data['func']:
-        name = os.path.split(bold_file)[-1].replace(".", "_")
-        metadata = layout.get_metadata(bold_file)
+        name = os.path.split(bold_file)[-1].replace(".", "_").replace(" ", "").replace("-", "_")
+
+        # For doc building purposes
+        if bold_file == 'sub-testing_task-testing_acq-testing_bold.nii.gz':
+            metadata = {"RepetitionTime": 2.0,
+                        "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]}
+        else:
+            metadata = layout.get_metadata(bold_file)
         bold_pre = bold_preprocessing(name=name, metadata=metadata,
                                       settings=settings)
         bold_pre.get_node('inputnode').inputs.epi = bold_file

@@ -27,11 +27,8 @@ from fmriprep.utils.misc import fix_multi_T1w_source_name
 
 
 #  pylint: disable=R0914
-def t1w_preprocessing(name='t1w_preprocessing', settings=None):
+def t1w_preprocessing(settings, name='t1w_preprocessing'):
     """T1w images preprocessing pipeline"""
-
-    if settings is None:
-        raise RuntimeError('Workflow settings are missing')
 
     workflow = pe.Workflow(name=name)
 
