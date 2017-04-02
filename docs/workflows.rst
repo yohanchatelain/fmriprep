@@ -5,8 +5,9 @@ Processing pipeline details
 ===========================
 
 ``fmriprep`` adapts its pipeline depending on what data and metadata is
-available is used as the input. For example slice time correction will be
-only perfomed if ``SliceTiming`` metadata field is not set in the input dataset.
+available is used as the input. For example, slice timing correction will be
+performed only if the ``SliceTiming`` metadata field is found for the input
+dataset.
 
 High-level view of the pipeline:
 
