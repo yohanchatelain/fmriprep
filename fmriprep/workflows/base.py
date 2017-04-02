@@ -11,7 +11,6 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 
 import os
 from copy import deepcopy
-from time import strftime
 
 from nipype.pipeline import engine as pe
 from nipype.interfaces import fsl
@@ -25,8 +24,10 @@ from fmriprep.workflows.anatomical import t1w_preprocessing
 from fmriprep.workflows.sbref import sbref_preprocess
 from fmriprep.workflows.fieldmap import phase_diff_and_magnitudes
 from fmriprep.workflows.epi import (
-    epi_unwarp, epi_hmc, epi_sbref_registration,
-    ref_epi_t1_registration, epi_mni_transformation)
+    epi_unwarp, epi_hmc, epi_sbref_registration, bold_preprocessing,
+    ref_epi_t1_registration)
+
+from bids.grabbids import BIDSLayout
 
 
 def base_workflow_enumerator(subject_list, task_id, settings, run_uuid):
@@ -169,8 +170,6 @@ def basic_fmap_sbref_wf(subject_data, settings, name='fMRI_prep'):
 
         (hmcwf, confounds_wf, [('outputnode.movpar_file', 'inputnode.movpar_file'),
                                ('outputnode.epi_mean', 'inputnode.reference_image'),
-                               ('outputnode.motion_confounds_file',
-                                'inputnode.motion_confounds_file'),
                                ('inputnode.epi', 'inputnode.source_file')]),
         (epiunwarp_wf, confounds_wf, [('outputnode.epi_mask', 'inputnode.epi_mask'),
                                       ('outputnode.epi_unwarp', 'inputnode.fmri_file')]),
@@ -205,11 +204,10 @@ def basic_wf(subject_data, settings, name='fMRI_prep'):
 
     workflow = pe.Workflow(name=name)
 
+    layout = BIDSLayout(settings["bids_root"])
+
     inputnode = pe.Node(niu.IdentityInterface(fields=['subjects_dir']),
                         name='inputnode')
-    #  inputnode = pe.Node(niu.IdentityInterface(fields=['subject_id']),
-    #                      name='inputnode')
-    #  inputnode.iterables = [('subject_id', subject_list)]
 
     bidssrc = pe.Node(BIDSDataGrabber(subject_data=subject_data),
                       name='BIDSDatasource')
@@ -217,60 +215,41 @@ def basic_wf(subject_data, settings, name='fMRI_prep'):
     # Preprocessing of T1w (includes registration to MNI)
     t1w_pre = t1w_preprocessing(settings=settings)
 
-    # HMC on the EPI
-    hmcwf = epi_hmc(settings=settings)
-    hmcwf.get_node('inputnode').iterables = ('epi', subject_data['func'])
-
-    # mean EPI registration to T1w
-    epi_2_t1 = ref_epi_t1_registration(reportlet_suffix='bbr',
-                                       inv_ds_suffix='target-meanBOLD_affine',
-                                       settings=settings)
-
-    # get confounds
-    confounds_wf = confounds.discover_wf(settings)
-    confounds_wf.get_node('inputnode').inputs.t1_transform_flags = [False]
-
-    # Apply transforms in 1 shot
-    epi_mni_trans_wf = epi_mni_transformation(settings=settings)
-
     workflow.connect([
         (bidssrc, t1w_pre, [('t1w', 'inputnode.t1w'),
-                            ('t2w', 'inputnode.t2w')]),
-        (bidssrc, epi_2_t1, [('t1w', 'inputnode.t1w')]),
-        (hmcwf, epi_2_t1, [('inputnode.epi', 'inputnode.name_source'),
-                           ('outputnode.epi_mean', 'inputnode.ref_epi'),
-                           ('outputnode.xforms', 'inputnode.hmc_xforms'),
-                           ('outputnode.epi_mask', 'inputnode.ref_epi_mask'),
-                           ('outputnode.epi_split', 'inputnode.epi_split')]),
-        (t1w_pre, epi_2_t1, [('outputnode.bias_corrected_t1', 'inputnode.bias_corrected_t1'),
-                             ('outputnode.t1_brain', 'inputnode.t1_brain'),
-                             ('outputnode.t1_mask', 'inputnode.t1_mask'),
-                             ('outputnode.t1_seg', 'inputnode.t1_seg')]),
-
-        (t1w_pre, confounds_wf, [('outputnode.t1_tpms', 'inputnode.t1_tpms')]),
-        (hmcwf, confounds_wf, [
-            ('outputnode.movpar_file', 'inputnode.movpar_file'),
-            ('outputnode.motion_confounds_file', 'inputnode.motion_confounds_file'),
-            ('inputnode.epi', 'inputnode.source_file')]),
-        (epi_2_t1, confounds_wf, [('outputnode.epi_t1', 'inputnode.fmri_file'),
-                                  ('outputnode.epi_mask_t1', 'inputnode.epi_mask')]),
-
-        (epi_2_t1, epi_mni_trans_wf, [('outputnode.itk_epi_to_t1', 'inputnode.itk_epi_to_t1')]),
-        (hmcwf, epi_mni_trans_wf, [('inputnode.epi', 'inputnode.name_source'),
-                                   ('outputnode.xforms', 'inputnode.hmc_xforms'),
-                                   ('outputnode.epi_mask', 'inputnode.epi_mask'),
-                                   ('outputnode.epi_split', 'inputnode.epi_split')]),
-        (t1w_pre, epi_mni_trans_wf, [('outputnode.bias_corrected_t1', 'inputnode.t1'),
-                                     ('outputnode.t1_2_mni_forward_transform',
-                                      'inputnode.t1_2_mni_forward_transform')])
+                            ('t2w', 'inputnode.t2w')])
     ])
 
     if settings['freesurfer']:
         workflow.connect([
             (inputnode, t1w_pre, [('subjects_dir', 'inputnode.subjects_dir')]),
-            (inputnode, epi_2_t1, [('subjects_dir', 'inputnode.subjects_dir')]),
-            (t1w_pre, epi_2_t1, [('outputnode.subject_id', 'inputnode.subject_id'),
-                                 ('outputnode.fs_2_t1_transform', 'inputnode.fs_2_t1_transform')]),
+            ])
+
+    for bold_file in subject_data['func']:
+        name = os.path.split(bold_file)[-1].replace(".", "_")
+        metadata = layout.get_metadata(bold_file)
+        bold_pre = bold_preprocessing(name=name, metadata=metadata,
+                                      settings=settings)
+        bold_pre.get_node('inputnode').inputs.epi = bold_file
+
+        workflow.connect([
+            (bidssrc, bold_pre, [('t1w', 'inputnode.t1w')]),
+            (t1w_pre, bold_pre,
+             [('outputnode.bias_corrected_t1', 'inputnode.bias_corrected_t1'),
+              ('outputnode.t1_brain', 'inputnode.t1_brain'),
+              ('outputnode.t1_mask', 'inputnode.t1_mask'),
+              ('outputnode.t1_seg', 'inputnode.t1_seg'),
+              ('outputnode.t1_tpms', 'inputnode.t1_tpms'),
+              ('outputnode.t1_2_mni_forward_transform', 'inputnode.t1_2_mni_forward_transform')])
+        ])
+
+        if settings['freesurfer']:
+            workflow.connect([
+                (inputnode, bold_pre,
+                 [('subjects_dir', 'inputnode.subjects_dir')]),
+                (t1w_pre, bold_pre,
+                 [('outputnode.subject_id', 'inputnode.subject_id'),
+                  ('outputnode.fs_2_t1_transform', 'inputnode.fs_2_t1_transform')]),
             ])
 
     return workflow
