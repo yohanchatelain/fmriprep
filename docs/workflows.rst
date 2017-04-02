@@ -5,8 +5,9 @@ Processing pipeline details
 ===========================
 
 ``fmriprep`` adapts its pipeline depending on what data and metadata is
-available is used as the input. For example slice time correction will be
-only perfomed if ``SliceTiming`` metadata field is not set in the input dataset.
+available is used as the input. For example, slice timing correction will be
+performed only if the ``SliceTiming`` metadata field is found for the input
+dataset.
 
 High-level view of the pipeline:
 
@@ -25,10 +26,12 @@ High-level view of the pipeline:
                                      'biggest_epi_file_size_gb': 3,
                                      'skull_strip_ants': True,
                                      'skip_native': False,
-                                     'debug': False})
+                                     'debug': False,
+                                     'hires': True})
 
 T1w/T2w preprocessing
 ---------------------
+:mod:`fmriprep.workflows.anatomical.t1w_preprocessing`
 
 .. workflow::
     :graph2use: colored
@@ -41,9 +44,10 @@ T1w/T2w preprocessing
                                      'reportlets_dir': '.',
                                      'output_dir': '.',
                                      'skull_strip_ants': True,
-                                     'debug': False})
+                                     'debug': False,
+                                     'hires': True})
 
-The ``t1w_preprocessing`` sub-workflow finds the skull stripping mask and the
+This sub-workflow finds the skull stripping mask and the
 white matter/gray matter/cerebrospinal fluid segments and finds a non-linear
 warp to the MNI space.
 
@@ -55,17 +59,17 @@ warp to the MNI space.
 .. figure:: _static/segmentation.svg
     :scale: 100%
 
-    Tissue segmentation (FAST).
+    Brain tissue segmentation (FAST).
 
 .. figure:: _static/T1MNINormalization.svg
     :scale: 100%
 
-    Animation showing T1 to MNI normalization (ANTs)
+    Animation showing T1w to MNI normalization (ANTs)
 
 Surface preprocessing
 ~~~~~~~~~~~~~~~~~~~~~
 
-``fmriprep`` uses FreeSurfer_ to reconstruct surfaces from T1/T2-weighted
+``fmriprep`` uses FreeSurfer_ to reconstruct surfaces from T1w/T2w
 structural images.
 If enabled, several steps in the ``fmriprep`` pipeline are added or replaced.
 All surface preprocessing may be disabled with the ``--no-freesurfer`` flag.
@@ -74,10 +78,10 @@ If FreeSurfer reconstruction is performed, the reconstructed subject is placed i
 ``<output dir>/freesurfer/sub-<subject_label>/`` (see `FreeSurfer Derivatives`_).
 
 Surface reconstruction is performed in three phases.
-The first phase initializes the subject with T1- and T2-weighted (if available)
+The first phase initializes the subject with T1w and T2w (if available)
 structural images and performs basic reconstruction (``autorecon1``) with the
 exception of skull-stripping.
-For example, a subject with only one session with T1 and T2-weighted images
+For example, a subject with only one session with T1w and T2w images
 would be processed by the following command::
 
     $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
@@ -88,7 +92,7 @@ would be processed by the following command::
 
 The second phase imports the brainmask calculated in the `T1w/T2w preprocessing`_
 sub-workflow.
-The final phase resumes reconstruction, using the T2-weighted image to assist
+The final phase resumes reconstruction, using the T2w image to assist
 in finding the pial surface, if available::
 
     $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
@@ -101,7 +105,7 @@ Reconstructed white and pial surfaces are included in the report.
 
     Surface reconstruction (FreeSurfer)
 
-If T1-weighted voxel sizes are less 1mm in all dimensions (rounding to nearest
+If T1w voxel sizes are less 1mm in all dimensions (rounding to nearest
 .1mm), `submillimeter reconstruction`_ is used.
 
 In order to bypass reconstruction in ``fmriprep``, place existing reconstructed
@@ -112,6 +116,7 @@ any steps whose outputs already exist.
 
 BOLD preprocessing
 ------------------
+:mod:`fmriprep.workflows.epi.bold_preprocessing`
 
 .. workflow::
     :graph2use: orig
@@ -133,10 +138,13 @@ BOLD preprocessing
                                      'skip_native': False,
                                      'debug': False})
 
-Preprocessing of BOLD files is splict into multiple sub workflows decribed below.
+Preprocessing of BOLD files is split into multiple sub-workflows decribed below.
 
-epi_hmc
-~~~~~~~
+.. epi_hmc :
+
+Head-motion and slice time correction
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:mod:`fmriprep.workflows.epi.epi_hmc`
 
 .. workflow::
     :graph2use: colored
@@ -171,8 +179,9 @@ is used to perform skullstripping of the mean EPI image.
 
     Brain extraction (nilearn).
 
-ref_epi_t1_registration
+EPI to T1w registration
 ~~~~~~~~~~~~~~~~~~~~~~~
+:mod:`fmriprep.workflows.epi.ref_epi_t1_registration`
 
 .. workflow::
     :graph2use: colored
@@ -199,14 +208,15 @@ the gray/white matter boundary (FreeSurfer's ``?h.white`` surfaces).
 .. figure:: _static/EPIT1Normalization.svg
     :scale: 100%
 
-    Animation showing EPI to T1 registration (FreeSurfer bbregister)
+    Animation showing EPI to T1w registration (FreeSurfer bbregister)
 
 If FreeSurfer processing is disabled, FLIRT is performed with the BBR cost
 function, using the FAST segmentation to establish the gray/white matter
 boundary.
 
-epi_mni_transformation
-~~~~~~~~~~~~~~~~~~~~~~
+EPI to MNI transformation
+~~~~~~~~~~~~~~~~~~~~~~~~~
+:mod:`fmriprep.workflows.epi.epi_mni_transformation`
 
 .. workflow::
     :graph2use: colored
@@ -227,15 +237,16 @@ epi_mni_transformation
                                      'debug': False})
 
 The epi_mni_transformation sub-workflow uses the transform from
-`ref_epi_t1_registration`_ and a T1-to-MNI transform from `T1w/T2w preprocessing`_ to
+`EPI to T1w registration`_ and a T1w-to-MNI transform from `T1w/T2w preprocessing`_ to
 map the EPI image to standardized MNI space.
-It also maps the t1w-based mask to MNI space.
+It also maps the T1w-based mask to MNI space.
 
 Transforms are concatenated and applied all at once, with one interpolation
 step, so as little information is lost as possible.
 
 Confounds estimation
 ~~~~~~~~~~~~~~~~~~~~
+:mod:`fmriprep.workflows.confounds.discover_wf`
 
 .. workflow::
     :graph2use: colored
