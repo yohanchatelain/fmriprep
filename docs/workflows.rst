@@ -30,6 +30,7 @@ High-level view of the pipeline:
 
 T1w/T2w preprocessing
 ---------------------
+:mod:`fmriprep.workflows.anatomical.t1w_preprocessing`
 
 .. workflow::
     :graph2use: colored
@@ -44,7 +45,7 @@ T1w/T2w preprocessing
                                      'skull_strip_ants': True,
                                      'debug': False})
 
-The ``t1w_preprocessing`` sub-workflow finds the skull stripping mask and the
+This sub-workflow finds the skull stripping mask and the
 white matter/gray matter/cerebrospinal fluid segments and finds a non-linear
 warp to the MNI space.
 
@@ -113,6 +114,7 @@ any steps whose outputs already exist.
 
 BOLD preprocessing
 ------------------
+:mod:`fmriprep.workflows.epi.bold_preprocessing`
 
 .. workflow::
     :graph2use: orig
@@ -136,8 +138,11 @@ BOLD preprocessing
 
 Preprocessing of BOLD files is split into multiple sub-workflows decribed below.
 
-epi_hmc
-~~~~~~~
+.. epi_hmc :
+
+Head-motion and slice time correction
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:mod:`fmriprep.workflows.epi.epi_hmc`
 
 .. workflow::
     :graph2use: colored
@@ -172,8 +177,9 @@ is used to perform skullstripping of the mean EPI image.
 
     Brain extraction (nilearn).
 
-ref_epi_t1_registration
+EPI to T1w registration
 ~~~~~~~~~~~~~~~~~~~~~~~
+:mod:`fmriprep.workflows.epi.ref_epi_t1_registration`
 
 .. workflow::
     :graph2use: colored
@@ -206,8 +212,9 @@ If FreeSurfer processing is disabled, FLIRT is performed with the BBR cost
 function, using the FAST segmentation to establish the gray/white matter
 boundary.
 
-epi_mni_transformation
-~~~~~~~~~~~~~~~~~~~~~~
+EPI to MNI transformation
+~~~~~~~~~~~~~~~~~~~~~~~~~
+:mod:`fmriprep.workflows.epi.epi_mni_transformation`
 
 .. workflow::
     :graph2use: colored
@@ -228,7 +235,7 @@ epi_mni_transformation
                                      'debug': False})
 
 The epi_mni_transformation sub-workflow uses the transform from
-`ref_epi_t1_registration`_ and a T1w-to-MNI transform from `T1w/T2w preprocessing`_ to
+`EPI to T1w registration`_ and a T1w-to-MNI transform from `T1w/T2w preprocessing`_ to
 map the EPI image to standardized MNI space.
 It also maps the T1w-based mask to MNI space.
 
@@ -237,6 +244,7 @@ step, so as little information is lost as possible.
 
 Confounds estimation
 ~~~~~~~~~~~~~~~~~~~~
+:mod:`fmriprep.workflows.confounds.discover_wf`
 
 .. workflow::
     :graph2use: colored
