@@ -1,3 +1,9 @@
+Next release
+============
+
+* [ENH] Switch bbregister init from `fsl` to `coreg` (FreeSurfer native)
+* [ENH] bbregister now uses `bold` instead of `t2` contrast type
+
 0.3.1 (24th of March 2017)
 ==========================
 
