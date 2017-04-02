@@ -134,7 +134,7 @@ BOLD preprocessing
                                      'skip_native': False,
                                      'debug': False})
 
-Preprocessing of BOLD files is splict into multiple sub workflows decribed below.
+Preprocessing of BOLD files is split into multiple sub-workflows decribed below.
 
 epi_hmc
 ~~~~~~~
