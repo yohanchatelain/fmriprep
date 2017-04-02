@@ -86,6 +86,8 @@ def get_parser():
     g_fs = parser.add_argument_group('Specific options for FreeSurfer preprocessing')
     g_fs.add_argument('--no-freesurfer', action='store_false', dest='freesurfer',
                       help='disable FreeSurfer preprocessing')
+    g_fs.add_argument('--no-submm-recon', action='store_false', dest='hires',
+                      help='disable sub-millimeter (hires) reconstruction')
 
     g_other = parser.add_argument_group('Other options')
     g_other.add_argument('-w', '--work-dir', action='store', default='work',
@@ -127,6 +129,7 @@ def create_workflow(opts):
         'ignore': opts.ignore,
         'skip_native': opts.skip_native,
         'freesurfer': opts.freesurfer,
+        'hires': opts.hires,
         'reportlets_dir': op.join(op.abspath(opts.work_dir), 'reportlets'),
     }
 
