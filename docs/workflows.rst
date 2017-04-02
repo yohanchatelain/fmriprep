@@ -61,12 +61,12 @@ warp to the MNI space.
 .. figure:: _static/T1MNINormalization.svg
     :scale: 100%
 
-    Animation showing T1 to MNI normalization (ANTs)
+    Animation showing T1w to MNI normalization (ANTs)
 
 Surface preprocessing
 ~~~~~~~~~~~~~~~~~~~~~
 
-``fmriprep`` uses FreeSurfer_ to reconstruct surfaces from T1/T2-weighted
+``fmriprep`` uses FreeSurfer_ to reconstruct surfaces from T1w/T2w
 structural images.
 If enabled, several steps in the ``fmriprep`` pipeline are added or replaced.
 All surface preprocessing may be disabled with the ``--no-freesurfer`` flag.
@@ -75,10 +75,10 @@ If FreeSurfer reconstruction is performed, the reconstructed subject is placed i
 ``<output dir>/freesurfer/sub-<subject_label>/`` (see `FreeSurfer Derivatives`_).
 
 Surface reconstruction is performed in three phases.
-The first phase initializes the subject with T1- and T2-weighted (if available)
+The first phase initializes the subject with T1w and T2w (if available)
 structural images and performs basic reconstruction (``autorecon1``) with the
 exception of skull-stripping.
-For example, a subject with only one session with T1 and T2-weighted images
+For example, a subject with only one session with T1w and T2w images
 would be processed by the following command::
 
     $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
@@ -89,7 +89,7 @@ would be processed by the following command::
 
 The second phase imports the brainmask calculated in the `T1w/T2w preprocessing`_
 sub-workflow.
-The final phase resumes reconstruction, using the T2-weighted image to assist
+The final phase resumes reconstruction, using the T2w image to assist
 in finding the pial surface, if available::
 
     $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
@@ -102,7 +102,7 @@ Reconstructed white and pial surfaces are included in the report.
 
     Surface reconstruction (FreeSurfer)
 
-If T1-weighted voxel sizes are less 1mm in all dimensions (rounding to nearest
+If T1w voxel sizes are less 1mm in all dimensions (rounding to nearest
 .1mm), `submillimeter reconstruction`_ is used.
 
 In order to bypass reconstruction in ``fmriprep``, place existing reconstructed
@@ -200,7 +200,7 @@ the gray/white matter boundary (FreeSurfer's ``?h.white`` surfaces).
 .. figure:: _static/EPIT1Normalization.svg
     :scale: 100%
 
-    Animation showing EPI to T1 registration (FreeSurfer bbregister)
+    Animation showing EPI to T1w registration (FreeSurfer bbregister)
 
 If FreeSurfer processing is disabled, FLIRT is performed with the BBR cost
 function, using the FAST segmentation to establish the gray/white matter
@@ -228,9 +228,9 @@ epi_mni_transformation
                                      'debug': False})
 
 The epi_mni_transformation sub-workflow uses the transform from
-`ref_epi_t1_registration`_ and a T1-to-MNI transform from `T1w/T2w preprocessing`_ to
+`ref_epi_t1_registration`_ and a T1w-to-MNI transform from `T1w/T2w preprocessing`_ to
 map the EPI image to standardized MNI space.
-It also maps the t1w-based mask to MNI space.
+It also maps the T1w-based mask to MNI space.
 
 Transforms are concatenated and applied all at once, with one interpolation
 step, so as little information is lost as possible.
