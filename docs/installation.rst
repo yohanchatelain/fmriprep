@@ -107,3 +107,4 @@ software tools:
 - `ANTs <http://stnava.github.io/ANTs/>`_ (version 2.1.0.Debian-Ubuntu_X64)
 - `AFNI <https://afni.nimh.nih.gov/>`_ (version Debian-16.2.07)
 - `C3D <https://sourceforge.net/projects/c3d/>`_ (version 1.0.0)
+- `FreeSurfer <https://surfer.nmr.mgh.harvard.edu/>`_ (version 6.0.0)
