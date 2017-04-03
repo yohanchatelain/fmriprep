@@ -147,8 +147,6 @@ def create_workflow(opts):
     make_folder(settings['output_dir'])
     make_folder(settings['work_dir'])
 
-
-
     # nipype plugin configuration
     plugin_settings = {'plugin': 'Linear'}
     if opts.use_plugin is not None:
@@ -179,14 +177,13 @@ def create_workflow(opts):
         subject_list = [sub[4:] if sub.startswith('sub-') else sub for sub in subject_list]
 
     logger.info('Subject list: %s', ', '.join(subject_list))
-    
-    report_errors = 0
+
     if opts.reports_only:
         for subject_label in subject_list:
-            report_errors += run_reports(settings['reportlets_dir'],
-                                         settings['output_dir'],
-                                         subject_label, run_uuid=run_uuid)
-            sys.exit()
+            run_reports(settings['reportlets_dir'],
+                        settings['output_dir'],
+                        subject_label, run_uuid=run_uuid)
+        sys.exit()
 
     # Build main workflow and run
     preproc_wf = base_workflow_enumerator(subject_list, task_id=opts.task_id,
@@ -205,6 +202,7 @@ def create_workflow(opts):
         preproc_wf.write_graph(graph2use="colored", format='svg',
                                simple_form=True)
 
+    report_errors = 0
     for subject_label in subject_list:
         report_errors += run_reports(settings['reportlets_dir'],
                                      settings['output_dir'],
