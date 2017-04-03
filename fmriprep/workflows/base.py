@@ -24,7 +24,7 @@ from fmriprep.workflows.anatomical import t1w_preprocessing
 from fmriprep.workflows.sbref import sbref_preprocess
 
 from fmriprep.workflows.epi import (
-    epi_unwarp, epi_hmc, epi_sbref_registration, bold_preprocessing,
+    epi_hmc, epi_sbref_registration, bold_preprocessing,
     ref_epi_t1_registration)
 
 from bids.grabbids import BIDSLayout
