@@ -187,28 +187,28 @@ def create_workflow(opts):
                                          settings['output_dir'],
                                          subject_label, run_uuid=run_uuid)
             sys.exit()
-    else:
-        # Build main workflow and run
-        preproc_wf = base_workflow_enumerator(subject_list, task_id=opts.task_id,
-                                              settings=settings, run_uuid=run_uuid)
-        preproc_wf.base_dir = settings['work_dir']
-    
-        try:
-            preproc_wf.run(**plugin_settings)
-        except RuntimeError as e:
-            if "Workflow did not execute cleanly" in str(e):
-                errno = 1
-            else:
-                raise(e)
-    
-        if opts.write_graph:
-            preproc_wf.write_graph(graph2use="colored", format='svg',
-                                   simple_form=True)
 
-        for subject_label in subject_list:
-            report_errors += run_reports(settings['reportlets_dir'],
-                                         settings['output_dir'],
-                                         subject_label, run_uuid=run_uuid)
+    # Build main workflow and run
+    preproc_wf = base_workflow_enumerator(subject_list, task_id=opts.task_id,
+                                          settings=settings, run_uuid=run_uuid)
+    preproc_wf.base_dir = settings['work_dir']
+
+    try:
+        preproc_wf.run(**plugin_settings)
+    except RuntimeError as e:
+        if "Workflow did not execute cleanly" in str(e):
+            errno = 1
+        else:
+            raise(e)
+
+    if opts.write_graph:
+        preproc_wf.write_graph(graph2use="colored", format='svg',
+                               simple_form=True)
+
+    for subject_label in subject_list:
+        report_errors += run_reports(settings['reportlets_dir'],
+                                     settings['output_dir'],
+                                     subject_label, run_uuid=run_uuid)
     if errno == 1:
         assert(report_errors > 0)
 
