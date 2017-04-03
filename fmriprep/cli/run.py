@@ -66,8 +66,10 @@ def get_parser():
     g_conf = parser.add_argument_group('Workflow configuration')
     g_conf.add_argument(
         '--ignore', required=False, action='store', nargs="+", default=[],
-        choices=['fieldmap', 'sbref'],
-        help='do not run specific modules of the workflow (not recommended)')
+        choices=['fieldmap', 'sbref', 'slicetiming'],
+        help='ignore selected aspects of the input dataset to disable corresponding '
+             'parts of the workflow')
+
     g_conf.add_argument('--skip-native', action='store_true', default=False,
                         help="don't output timeseries in native space")
 
@@ -85,6 +87,8 @@ def get_parser():
     g_fs = parser.add_argument_group('Specific options for FreeSurfer preprocessing')
     g_fs.add_argument('--no-freesurfer', action='store_false', dest='freesurfer',
                       help='disable FreeSurfer preprocessing')
+    g_fs.add_argument('--no-submm-recon', action='store_false', dest='hires',
+                      help='disable sub-millimeter (hires) reconstruction')
 
     g_other = parser.add_argument_group('Other options')
     g_other.add_argument('-w', '--work-dir', action='store', default='work',
@@ -126,6 +130,7 @@ def create_workflow(opts):
         'ignore': opts.ignore,
         'skip_native': opts.skip_native,
         'freesurfer': opts.freesurfer,
+        'hires': opts.hires,
         'reportlets_dir': op.join(op.abspath(opts.work_dir), 'reportlets'),
     }
 

@@ -27,11 +27,8 @@ from fmriprep.utils.misc import fix_multi_T1w_source_name
 
 
 #  pylint: disable=R0914
-def t1w_preprocessing(name='t1w_preprocessing', settings=None):
+def t1w_preprocessing(settings, name='t1w_preprocessing'):
     """T1w images preprocessing pipeline"""
-
-    if settings is None:
-        raise RuntimeError('Workflow settings are missing')
 
     workflow = pe.Workflow(name=name)
 
@@ -82,7 +79,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
     if settings['freesurfer']:
         nthreads = settings['nthreads']
 
-        def detect_inputs(t1w_list, t2w_list=[]):
+        def detect_inputs(t1w_list, t2w_list=[], hires_enabled=True):
             import os
             from nipype.interfaces.base import isdefined
             from nipype.utils.filemanip import filename_to_list
@@ -93,7 +90,7 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
             t1w_ref = nib.load(t1w_list[0])
             # Use high resolution preprocessing if voxel size < 1.0mm
             # Tolerance of 0.05mm requires that rounds down to 0.9mm or lower
-            hires = max(t1w_ref.header.get_zooms()) < 1 - 0.05
+            hires = hires_enabled and max(t1w_ref.header.get_zooms()) < 1 - 0.05
             t1w_outs = [t1w_list.pop(0)]
             for t1w in t1w_list:
                 img = nib.load(t1w)
@@ -112,10 +109,11 @@ def t1w_preprocessing(name='t1w_preprocessing', settings=None):
         recon_config = pe.Node(
             niu.Function(
                 function=detect_inputs,
-                input_names=['t1w_list', 't2w_list'],
+                input_names=['t1w_list', 't2w_list', 'hires_enabled'],
                 output_names=['t1w', 't2w', 'use_T2', 'hires', 'mris_inflate']),
             name='ReconConfig',
             run_without_submitting=True)
+        recon_config.inputs.hires_enabled = settings['hires']
 
         def bidsinfo(in_file):
             from fmriprep.interfaces.bids import BIDS_NAME

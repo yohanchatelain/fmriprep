@@ -11,7 +11,6 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 
 import os
 from copy import deepcopy
-from time import strftime
 
 from nipype.pipeline import engine as pe
 from nipype.interfaces import fsl
@@ -25,8 +24,10 @@ from fmriprep.workflows.anatomical import t1w_preprocessing
 from fmriprep.workflows.sbref import sbref_preprocess
 
 from fmriprep.workflows.epi import (
-    epi_hmc, epi_sbref_registration, epi_preproc_report,
-    ref_epi_t1_registration, epi_mni_transformation)
+    epi_unwarp, epi_hmc, epi_sbref_registration, bold_preprocessing,
+    ref_epi_t1_registration)
+
+from bids.grabbids import BIDSLayout
 
 
 def base_workflow_enumerator(subject_list, task_id, settings, run_uuid):
@@ -180,8 +181,6 @@ def basic_fmap_sbref_wf(subject_data, settings, name='fMRI_prep'):
 
         (hmcwf, confounds_wf, [('outputnode.movpar_file', 'inputnode.movpar_file'),
                                ('outputnode.epi_mean', 'inputnode.reference_image'),
-                               ('outputnode.motion_confounds_file',
-                                'inputnode.motion_confounds_file'),
                                ('inputnode.epi', 'inputnode.source_file')]),
         (epiunwarp_wf, confounds_wf, [('outputnode.epi_mask', 'inputnode.epi_mask'),
                                       ('outputnode.epi_unwarp', 'inputnode.fmri_file')]),
@@ -214,113 +213,44 @@ def basic_wf(subject_data, settings, name='fMRI_prep'):
 
     workflow = pe.Workflow(name=name)
 
+    layout = BIDSLayout(settings["bids_root"])
+
     inputnode = pe.Node(niu.IdentityInterface(fields=['subjects_dir']),
                         name='inputnode')
+
     bidssrc = pe.Node(BIDSDataGrabber(subject_data=subject_data),
                       name='BIDSDatasource')
-
-    fmap_est = None
-    if 'fieldmap' not in settings.get('ignore', []):
-        # Import specific workflows here, so we don't brake everything with one
-        # unused workflow.
-        from fmriprep.workflows.fieldmap import fmap_estimator, sdc_unwarp
-        fmap_est = fmap_estimator(subject_data, settings=settings)
-        unwarp = sdc_unwarp(settings=settings)
 
     # Preprocessing of T1w (includes registration to MNI)
     t1w_pre = t1w_preprocessing(settings=settings)
 
-    # HMC on the EPI
-    hmcwf = epi_hmc(settings=settings)
-    hmcwf.get_node('inputnode').iterables = ('epi', subject_data['func'])
-
-    # mean EPI registration to T1w
-    epi_2_t1 = ref_epi_t1_registration(reportlet_suffix='bbr',
-                                       inv_ds_suffix='target-meanBOLD_affine',
-                                       settings=settings)
-
-    # get confounds
-    confounds_wf = confounds.discover_wf(settings)
-    confounds_wf.get_node('inputnode').inputs.t1_transform_flags = [False]
-
-    # Apply transforms in 1 shot
-    epi_mni_trans_wf = epi_mni_transformation(settings=settings)
-
     workflow.connect([
         (bidssrc, t1w_pre, [('t1w', 'inputnode.t1w'),
                             ('t2w', 'inputnode.t2w')]),
-        (bidssrc, epi_2_t1, [('t1w', 'inputnode.t1w')]),
-        (t1w_pre, epi_2_t1, [('outputnode.bias_corrected_t1', 'inputnode.bias_corrected_t1'),
-                             ('outputnode.t1_brain', 'inputnode.t1_brain'),
-                             ('outputnode.t1_mask', 'inputnode.t1_mask'),
-                             ('outputnode.t1_seg', 'inputnode.t1_seg')]),
-        (t1w_pre, confounds_wf, [('outputnode.t1_tpms', 'inputnode.t1_tpms')]),
-        (epi_2_t1, confounds_wf, [('outputnode.epi_t1', 'inputnode.fmri_file'),
-                                  ('outputnode.epi_mask_t1', 'inputnode.epi_mask')]),
-        (epi_2_t1, epi_mni_trans_wf, [('outputnode.itk_epi_to_t1', 'inputnode.itk_epi_to_t1')]),
-        (t1w_pre, epi_mni_trans_wf, [('outputnode.bias_corrected_t1', 'inputnode.t1'),
-                                     ('outputnode.t1_2_mni_forward_transform',
-                                      'inputnode.t1_2_mni_forward_transform')]),
-        (hmcwf, epi_2_t1, [('inputnode.epi', 'inputnode.name_source'),
-                           ('outputnode.epi_split', 'inputnode.epi_split')]),
-        (hmcwf, confounds_wf, [
-            ('outputnode.movpar_file', 'inputnode.movpar_file'),
-            ('outputnode.motion_confounds_file', 'inputnode.motion_confounds_file'),
-            ('inputnode.epi', 'inputnode.source_file')]),
-        (hmcwf, epi_mni_trans_wf, [('inputnode.epi', 'inputnode.name_source'),
-                                   ('outputnode.epi_split', 'inputnode.epi_split')]),
     ])
 
-    if fmap_est is None:
+    for bold_file in subject_data['func']:
+        bold_pre = bold_preprocessing(bold_file, layout=layout,
+                                      settings=settings)
+
         workflow.connect([
-            (hmcwf, epi_2_t1, [('outputnode.epi_mean', 'inputnode.ref_epi'),
-                               ('outputnode.xforms', 'inputnode.hmc_xforms'),
-                               ('outputnode.epi_mask', 'inputnode.ref_epi_mask')]),
-            (hmcwf, epi_mni_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms'),
-                                       ('outputnode.epi_mask', 'inputnode.epi_mask')]),
-        ])
-    else:
-        workflow.connect([
-            (hmcwf, unwarp, [('inputnode.epi', 'inputnode.name_source'),
-                             ('outputnode.epi_split', 'inputnode.in_split'),
-                             ('outputnode.epi_mean', 'inputnode.in_reference'),
-                             ('outputnode.xforms', 'inputnode.xforms')]),
-            (fmap_est, unwarp, [('outputnode.fmap', 'inputnode.fmap'),
-                                ('outputnode.fmap_ref', 'inputnode.fmap_ref'),
-                                ('outputnode.fmap_mask', 'inputnode.fmap_mask')]),
-            (unwarp, epi_2_t1, [('outputnode.out_reference', 'inputnode.ref_epi'),
-                                ('outputnode.out_warps', 'inputnode.hmc_xforms'),
-                                ('outputnode.out_mask', 'inputnode.ref_epi_mask')]),
-            (unwarp, epi_mni_trans_wf, [('outputnode.out_warps', 'inputnode.hmc_xforms'),
-                                        ('outputnode.out_mask', 'inputnode.epi_mask')])
+            (bidssrc, bold_pre, [('t1w', 'inputnode.t1w')]),
+            (t1w_pre, bold_pre,
+             [('outputnode.bias_corrected_t1', 'inputnode.bias_corrected_t1'),
+              ('outputnode.t1_brain', 'inputnode.t1_brain'),
+              ('outputnode.t1_mask', 'inputnode.t1_mask'),
+              ('outputnode.t1_seg', 'inputnode.t1_seg'),
+              ('outputnode.t1_tpms', 'inputnode.t1_tpms'),
+              ('outputnode.t1_2_mni_forward_transform', 'inputnode.t1_2_mni_forward_transform')])
         ])
 
-        # Report on EPI correction
-        epireport = epi_preproc_report(settings=settings)
-        workflow.connect([
-            (hmcwf, epireport, [
-                ('outputnode.epi_mean', 'inputnode.in_pre'),
-                ('inputnode.epi', 'inputnode.name_source')]),
-            (unwarp, epireport, [
-                ('outputnode.out_reference', 'inputnode.in_post')]),
-            (t1w_pre, epireport, [
-                ('outputnode.t1_tpms', 'inputnode.in_tpms'),]),
-            (epi_2_t1, epireport, [
-                ('outputnode.itk_t1_to_epi', 'inputnode.in_xfm')]),
-        ])
-
-    if settings.get('freesurfer', False):
-        workflow.connect([
-            (inputnode, t1w_pre, [('subjects_dir', 'inputnode.subjects_dir')]),
-            (inputnode, epi_2_t1, [('subjects_dir', 'inputnode.subjects_dir')]),
-            (t1w_pre, epi_2_t1, [('outputnode.subject_id', 'inputnode.subject_id'),
-                                 ('outputnode.fs_2_t1_transform', 'inputnode.fs_2_t1_transform')]),
-        ])
+        if settings['freesurfer']:
+            workflow.connect([
+                (inputnode, bold_pre,
+                 [('subjects_dir', 'inputnode.subjects_dir')]),
+                (t1w_pre, bold_pre,
+                 [('outputnode.subject_id', 'inputnode.subject_id'),
+                  ('outputnode.fs_2_t1_transform', 'inputnode.fs_2_t1_transform')]),
+            ])
 
     return workflow
-
-
-def _first(inlist):
-    if isinstance(inlist, (list, tuple)):
-        inlist = _first(inlist[0])
-    return inlist
