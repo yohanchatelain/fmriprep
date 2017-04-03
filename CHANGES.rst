@@ -5,6 +5,7 @@ Next release
 * [ENH] Removed redundant motion parameter conversion step using avscale (#415)
 * [ENH] FreeSurfer submillimeter reconstruction may be disabled with ``--no-submm-recon`` (#422)
 * [ENH] Switch bbregister init from ``fsl`` to ``coreg`` (FreeSurfer native #423)
+* [ENH] Motion estimation now uses a smart reference image that takes advantage of T1 saturation (#421)
 
 0.3.1 (24th of March 2017)
 ==========================

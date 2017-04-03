@@ -142,8 +142,8 @@ Preprocessing of BOLD files is split into multiple sub-workflows decribed below.
 
 .. epi_hmc :
 
-Head-motion and slice time correction
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Head-motion estimation and slice time correction
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 :mod:`fmriprep.workflows.epi.epi_hmc`
 
 .. workflow::
@@ -165,14 +165,21 @@ Head-motion and slice time correction
                                      'skip_native': False,
                                      'debug': False})
 
-The EPI_HMC sub-workflow collects BIDS_-formatted EPI files, performs slice time
+This workflow performs slice time
 correction (if ``SliceTiming`` field is present in the input dataset metadata), head
-motion correction, and skullstripping. Slice time correction is performed
+motion estimation, and skullstripping.
+
+Slice time correction is performed
 using AFNI 3dTShift. All slices are realigned in time to the middle of each
 TR. Slice time correction can be disabled with ``--ignore slicetiming`` command
-line argument. FSL MCFLIRT is used to estimate motion
-transformations and ANTs is used to apply them using Lanczos interpolation. Nilearn
-is used to perform skullstripping of the mean EPI image.
+line argument.
+
+FSL MCFLIRT is used to estimate motion
+transformations using an automatically estimated reference scan. If T1-saturation effects
+("dummy scans" or non-steady state volumes) are detected they are used as reference due to
+their superior tissue contrast. Otherwise a median of motion corrected subset of volumes is used.
+
+Skullstripping of the reference image is performed using Nilearn.
 
 .. figure:: _static/brainextraction.svg
     :scale: 100%
@@ -201,7 +208,7 @@ EPI to T1w registration
                                      'skip_native': False,
                                      'debug': False})
 
-The mean EPI image of each run is aligned by the ``bbregister`` routine to the
+The reference EPI image of each run is aligned by the ``bbregister`` routine to the
 reconstructed subject using
 the gray/white matter boundary (FreeSurfer's ``?h.white`` surfaces).
 
@@ -236,12 +243,12 @@ EPI to MNI transformation
                                      'skip_native': False,
                                      'debug': False})
 
-The epi_mni_transformation sub-workflow uses the transform from
-`EPI to T1w registration`_ and a T1w-to-MNI transform from `T1w/T2w preprocessing`_ to
+This sub-workflow uses the transform from `Head-motion estimation and slice time correction`_,
+`EPI to T1w registration`_, and a T1w-to-MNI transform from `T1w/T2w preprocessing`_ to
 map the EPI image to standardized MNI space.
 It also maps the T1w-based mask to MNI space.
 
-Transforms are concatenated and applied all at once, with one interpolation
+Transforms are concatenated and applied all at once, with one interpolation (Lanczos)
 step, so as little information is lost as possible.
 
 Confounds estimation
