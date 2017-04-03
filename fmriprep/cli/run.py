@@ -183,9 +183,9 @@ def create_workflow(opts):
     report_errors = 0
     if opts.reports_only:
         for subject_label in subject_list:
-            run_reports(settings['reportlets_dir'],
-                        settings['output_dir'],
-                        subject_label, run_uuid=run_uuid)
+            report_errors += run_reports(settings['reportlets_dir'],
+                                         settings['output_dir'],
+                                         subject_label, run_uuid=run_uuid)
             sys.exit()
     else:
         # Build main workflow and run
