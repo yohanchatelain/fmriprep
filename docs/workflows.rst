@@ -175,7 +175,7 @@ TR. Slice time correction can be disabled with ``--ignore slicetiming`` command
 line argument.
 
 FSL MCFLIRT is used to estimate motion
-transformations using a automatically estimated reference scan. If T1-saturation effects
+transformations using an automatically estimated reference scan. If T1-saturation effects
 ("dummy scans" or non-steady state volumes) are detected they are used as reference due to
 their superior tissue contrast. Otherwise a median of motion corrected subset of volumes is used.
 
