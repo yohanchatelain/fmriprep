@@ -204,7 +204,7 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
         gifticonv = pe.MapNode(freesurfer.MRIsConvert(out_datatype='gii'),
                                iterfield='in_file', name='GiftiSurfaces')
 
-        def normalize_giftis(in_file):
+        def get_gifti_name(in_file):
             import os
             import re
             in_format = re.compile(r'(?P<LR>[lr])h.(?P<surf>.+)_converted.gii')
@@ -213,16 +213,16 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
             info['LR'] = info['LR'].upper()
             return '{surf}.{LR}.surf'.format(**info)
 
-        normalize = pe.MapNode(
+        name_surfs = pe.MapNode(
             niu.Function(
-                function=normalize_giftis,
+                function=get_gifti_name,
                 input_names=['in_file'],
                 output_names=['normalized']),
             iterfield='in_file',
-            name='NormalizedGiftiSurfaces'
+            name='NameSurfs'
             )
 
-        def finalize_surfs(in_file):
+        def normalize_surfs(in_file):
             """ Re-center GIFTI coordinates to fit align to native T1 space
 
             For midthickness surfaces, add MidThickness metadata
@@ -269,11 +269,11 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
 
         fix_surfs = pe.MapNode(
             niu.Function(
-                function=finalize_surfs,
+                function=normalize_surfs,
                 input_names=['in_file'],
                 output_names=['out_file']),
             iterfield='in_file',
-            name='fix_surfs')
+            name='FixSurfs')
 
         ds_surfs = pe.MapNode(
             DerivativesDataSink(base_directory=settings['output_dir']),
@@ -383,10 +383,10 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
                                       ('inflated', 'in3')]),
             (save_midthickness, surface_list, [('out_file', 'in4')]),
             (surface_list, gifticonv, [('out', 'in_file')]),
-            (gifticonv, normalize, [('converted', 'in_file')]),
+            (gifticonv, name_surfs, [('converted', 'in_file')]),
             (gifticonv, fix_surfs, [('converted', 'in_file')]),
             (inputnode, ds_surfs, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
-            (normalize, ds_surfs, [('normalized', 'suffix')]),
+            (name_surfs, ds_surfs, [('normalized', 'suffix')]),
             (fix_surfs, ds_surfs, [('out_file', 'in_file')]),
             ])
 
