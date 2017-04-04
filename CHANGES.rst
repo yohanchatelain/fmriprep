@@ -1,3 +1,8 @@
+Next release
+============
+
+* [ENH] Generate GrayWhite, Pial, MidThickness and inflated surfaces (#398)
+
 0.3.2 (7th of April 2017)
 =========================
 

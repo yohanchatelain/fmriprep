@@ -105,13 +105,21 @@ Reconstructed white and pial surfaces are included in the report.
 
     Surface reconstruction (FreeSurfer)
 
-If T1w voxel sizes are less 1mm in all dimensions (rounding to nearest
-.1mm), `submillimeter reconstruction`_ is used.
+If T1w voxel sizes are less than 1mm in all dimensions (rounding to nearest
+.1mm), `submillimeter reconstruction`_ is used, unless disabled with
+``--no-submm-recon``.
 
 In order to bypass reconstruction in ``fmriprep``, place existing reconstructed
 subjects in ``<output dir>/freesurfer`` prior to the run.
 ``fmriprep`` will perform any missing ``recon-all`` steps, but will not perform
 any steps whose outputs already exist.
+
+``lh.midthickness`` and ``rh.midthickness`` surfaces are created in the subject
+``surf/`` directory, corresponding to the surface half-way between the gray/white
+boundary and the pial surface.
+The ``smoothwm``, ``midthickness``, ``pial`` and ``inflated`` surfaces are also
+converted to GIFTI_ format and adjusted to be compatible with multiple software
+packages, including FreeSurfer and the `Connectome Workbench`_.
 
 
 BOLD preprocessing
@@ -301,6 +309,10 @@ Derivatives related to t1w files are in the ``anat`` subfolder:
 - ``*T1w_space-MNI152NLin2009cAsym_brainmask.nii.gz`` Same as above, but in MNI space.
 - ``*T1w_dtissue.nii.gz`` Tissue class map derived using FAST.
 - ``*T1w_preproc.nii.gz`` Bias field corrected t1w file, using ANTS' N4BiasFieldCorrection
+- ``*T1w_smoothwm.[LR].surf.gii`` Smoothed GrayWhite surfaces
+- ``*T1w_pial.[LR].surf.gii`` Pial surfaces
+- ``*T1w_midthickness.[LR].surf.gii`` MidThickness surfaces
+- ``*T1w_inflated.[LR].surf.gii`` FreeSurfer inflated surfaces for visualization
 - ``*T1w_space-MNI152NLin2009cAsym_preproc.nii.gz`` Same as above, but in MNI space
 - ``*T1w_space-MNI152NLin2009cAsym_class-CSF_probtissue.nii.gz``
 - ``*T1w_space-MNI152NLin2009cAsym_class-GM_probtissue.nii.gz``
