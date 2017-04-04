@@ -220,6 +220,40 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
             name='NormalizedGiftiSurfaces'
             )
 
+        def update_gii_coords(in_file):
+            """ Re-center GIFTI coordinates to fit align to native T1 space
+
+            Based on:
+            https://github.com/Washington-University/workbench/blob/1b79e56/src/Algorithms/AlgorithmSurfaceApplyAffine.cxx#L73-L91
+            and
+            https://github.com/Washington-University/Pipelines/blob/ae69b9a/PostFreeSurfer/scripts/FreeSurfer2CaretConvertAndRegisterNonlinear.sh#L147
+            """
+            import os
+            import numpy as np
+            import nibabel as nib
+            img = nib.load(in_file)
+            coords = img.darrays[0].data
+            md = img.darrays[0].metadata
+            cras_keys = ('VolGeomC_R', 'VolGeomC_A', 'VolGeomC_S')
+            ras = np.array([float(md[key]) for key in cras_keys])
+            # Apply C_RAS translation to coordinates
+            img.darrays[0].data = (coords + ras).astype(coords.dtype)
+            # Remove C_RAS translation from metadata to avoid double-dipping in FreeSurfer
+            for key in cras_keys:
+                md[key] = '0.000000'
+            img.darrays[0].meta = nib.gifti.GiftiMetaData.from_dict(md)
+            fname = os.path.basename(in_file)
+            img.to_filename(fname)
+            return os.path.abspath(fname)
+
+        recenter_surfs = pe.MapNode(
+            niu.Function(
+                function=update_gii_coords,
+                input_names=['in_file'],
+                output_names=['out_file']),
+            iterfield='in_file',
+            name='recenter_surfs')
+
         ds_surfs = pe.MapNode(
             DerivativesDataSink(base_directory=settings['output_dir']),
             iterfield=['in_file', 'suffix'],
@@ -326,9 +360,10 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
             (midthickness, surface_list, [('out_file', 'in4')]),
             (surface_list, gifticonv, [('out', 'in_file')]),
             (gifticonv, normalize, [('converted', 'in_file')]),
+            (gifticonv, recenter_surfs, [('converted', 'in_file')]),
             (inputnode, ds_surfs, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
-            (gifticonv, ds_surfs, [('converted', 'in_file')]),
             (normalize, ds_surfs, [('normalized', 'suffix')]),
+            (recenter_surfs, ds_surfs, [('out_file', 'in_file')]),
             ])
 
     # Write corrected file in the designated output dir
