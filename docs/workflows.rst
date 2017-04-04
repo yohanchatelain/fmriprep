@@ -13,7 +13,7 @@ High-level view of the basic pipeline (for single-band datasets, without
 slice-timing information and no fieldmap acquisitions):
 
 .. workflow::
-    :graph2use: orig
+    :graph2use: colored
     :simple_form: yes
 
     from fmriprep.workflows.base import basic_wf
