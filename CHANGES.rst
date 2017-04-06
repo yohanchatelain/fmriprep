@@ -1,6 +1,8 @@
 Next release
 ============
 
+With thanks to Asier Erramuzpe for contributions.
+
 * [ENH] Added optional slice time correction (#415)
 * [ENH] Removed redundant motion parameter conversion step using avscale (#415)
 * [ENH] FreeSurfer submillimeter reconstruction may be disabled with ``--no-submm-recon`` (#422)
