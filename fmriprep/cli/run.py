@@ -87,6 +87,8 @@ def get_parser():
     g_fmap = parser.add_argument_group('Specific options for handling fieldmaps')
     g_fmap.add_argument('--fmap-bspline', action='store_true', default=False,
                         help='fit a B-Spline field using least-squares (experimental)')
+    g_fmap.add_argument('--fmap-no-demean', action='store_false', default=True,
+                        help='do not remove median (within mask) from fieldmap')
 
     # FreeSurfer options
     g_fs = parser.add_argument_group('Specific options for FreeSurfer preprocessing')
@@ -138,6 +140,7 @@ def create_workflow(opts):
         'hires': opts.hires,
         'reportlets_dir': op.join(op.abspath(opts.work_dir), 'reportlets'),
         'fmap_bspline': opts.fmap_bspline,
+        'fmap_demean': opts.fmap_no_demean,
     }
 
     # set up logger
