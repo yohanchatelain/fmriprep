@@ -89,8 +89,8 @@ def get_parser():
                         help='fit a B-Spline field using least-squares (experimental)')
     g_fmap.add_argument('--fmap-no-demean', action='store_false', default=True,
                         help='do not remove median (within mask) from fieldmap')
-    g_fmap.add_argument('--fmap-los', action='store_true', default=False,
-                        help='compensate Low-Order Shiming (LOS) with 12 dof in EPI-to-T1'
+    g_fmap.add_argument('--fmap-los', action='store', default=6, choices=[6, 9, 12], type=int,
+                        help='compensate Low-Order Shiming (LOS) increasing the dof in EPI-to-T1'
                              ' registration')
 
     # FreeSurfer options
@@ -144,7 +144,7 @@ def create_workflow(opts):
         'reportlets_dir': op.join(op.abspath(opts.work_dir), 'reportlets'),
         'fmap_bspline': opts.fmap_bspline,
         'fmap_demean': opts.fmap_no_demean,
-        'epi2t1_dof': 12 if opts.fmap_los else 6,
+        'epi2t1_dof': opts.fmap_los,
     }
 
     # set up logger
