@@ -83,6 +83,11 @@ def get_parser():
                         help="don't use ANTs-based skull-stripping (use  AFNI instead, fast)")
     g_ants.set_defaults(skull_strip_ants=True)
 
+    # Fieldmap options
+    g_fmap = parser.add_argument_group('Specific options for handling fieldmaps')
+    g_fmap.add_argument('--fmap-bspline', action='store_true', default=False,
+                        help='fit a B-Spline field using least-squares (experimental)')
+
     # FreeSurfer options
     g_fs = parser.add_argument_group('Specific options for FreeSurfer preprocessing')
     g_fs.add_argument('--no-freesurfer', action='store_false', dest='freesurfer',
@@ -132,6 +137,7 @@ def create_workflow(opts):
         'freesurfer': opts.freesurfer,
         'hires': opts.hires,
         'reportlets_dir': op.join(op.abspath(opts.work_dir), 'reportlets'),
+        'fmap_bspline': opts.fmap_bspline,
     }
 
     # set up logger
