@@ -178,17 +178,21 @@ def create_workflow(opts):
 
     logger.info('Subject list: %s', ', '.join(subject_list))
 
+    # Build main workflow and run
+    preproc_wf = base_workflow_enumerator(subject_list, task_id=opts.task_id,
+                                          settings=settings, run_uuid=run_uuid)
+    preproc_wf.base_dir = settings['work_dir']
+
     if opts.reports_only:
+        if opts.write_graph:
+            preproc_wf.write_graph(graph2use="colored", format='svg',
+                                   simple_form=True)
+
         for subject_label in subject_list:
             run_reports(settings['reportlets_dir'],
                         settings['output_dir'],
                         subject_label, run_uuid=run_uuid)
         sys.exit()
-
-    # Build main workflow and run
-    preproc_wf = base_workflow_enumerator(subject_list, task_id=opts.task_id,
-                                          settings=settings, run_uuid=run_uuid)
-    preproc_wf.base_dir = settings['work_dir']
 
     try:
         preproc_wf.run(**plugin_settings)
