@@ -1,5 +1,5 @@
-Next release
-============
+0.3.2 (7th of April 2017)
+=========================
 
 With thanks to Asier Erramuzpe for contributions.
 
