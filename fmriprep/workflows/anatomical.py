@@ -15,6 +15,7 @@ import os.path as op
 from nipype.interfaces import ants
 from nipype.interfaces import freesurfer
 from nipype.interfaces import utility as niu
+from nipype.interfaces import io as nio
 from nipype.pipeline import engine as pe
 
 from niworkflows.interfaces.registration import RobustMNINormalizationRPT
@@ -34,7 +35,9 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
 
     workflow = pe.Workflow(name=name)
 
-    inputnode = pe.Node(niu.IdentityInterface(fields=['t1w', 't2w', 'subjects_dir']), name='inputnode')
+    inputnode = pe.Node(
+        niu.IdentityInterface(fields=['t1w', 't2w', 'subjects_dir']),
+        name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['t1_seg', 't1_tpms', 'bias_corrected_t1', 't1_brain', 't1_mask',
                 't1_2_mni', 't1_2_mni_forward_transform',
@@ -82,7 +85,6 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
         nthreads = settings['nthreads']
 
         def detect_inputs(t1w_list, t2w_list=[], hires_enabled=True):
-            import os
             from nipype.interfaces.base import isdefined
             from nipype.utils.filemanip import filename_to_list
             from nipype.interfaces.traits_extension import Undefined
@@ -137,7 +139,7 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
                 flags='-noskullstrip',
                 openmp=nthreads,
                 parallel=True),
-            name='Reconstruction')
+            name='AutoRecon1')
         autorecon1.interface._can_resume = False
         autorecon1.interface.num_threads = nthreads
 
@@ -178,18 +180,107 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
                 parallel=True,
                 out_report='reconall.svg',
                 generate_report=True),
-            name='Reconstruction2')
+            name='ReconAll')
         reconall.interface.num_threads = nthreads
 
         fs_transform = pe.Node(
-            freesurfer.utils.Tkregister2(fsl_out='freesurfer2subT1.mat',
-                                         reg_header=True),
+            freesurfer.Tkregister2(fsl_out='freesurfer2subT1.mat',
+                                   reg_header=True),
             name='FreeSurferTransform')
 
         recon_report = pe.Node(
             DerivativesDataSink(base_directory=settings['reportlets_dir'],
                                 suffix='reconall'),
             name='ReconAll_Report'
+        )
+
+        midthickness = pe.MapNode(
+            freesurfer.MRIsExpand(thickness=True, distance=0.5,
+                                  out_name='midthickness'),
+            iterfield='in_file',
+            name='MidThickness')
+
+        save_midthickness = pe.Node(nio.DataSink(parameterization=False),
+                                    name='SaveMidthickness')
+        surface_list = pe.Node(niu.Merge(4), name='SurfaceList')
+        gifticonv = pe.MapNode(freesurfer.MRIsConvert(out_datatype='gii'),
+                               iterfield='in_file', name='GiftiSurfaces')
+
+        def get_gifti_name(in_file):
+            import os
+            import re
+            in_format = re.compile(r'(?P<LR>[lr])h.(?P<surf>.+)_converted.gii')
+            name = os.path.basename(in_file)
+            info = in_format.match(name).groupdict()
+            info['LR'] = info['LR'].upper()
+            return '{surf}.{LR}.surf'.format(**info)
+
+        name_surfs = pe.MapNode(
+            niu.Function(
+                function=get_gifti_name,
+                input_names=['in_file'],
+                output_names=['normalized']),
+            iterfield='in_file',
+            name='NameSurfs'
+            )
+
+        def normalize_surfs(in_file):
+            """ Re-center GIFTI coordinates to fit align to native T1 space
+
+            For midthickness surfaces, add MidThickness metadata
+
+            Coordinate update based on:
+            https://github.com/Washington-University/workbench/blob/1b79e56/src/Algorithms/AlgorithmSurfaceApplyAffine.cxx#L73-L91
+            and
+            https://github.com/Washington-University/Pipelines/blob/ae69b9a/PostFreeSurfer/scripts/FreeSurfer2CaretConvertAndRegisterNonlinear.sh#L147
+            """
+            import os
+            import numpy as np
+            import nibabel as nib
+            img = nib.load(in_file)
+            pointset = img.get_arrays_from_intent('NIFTI_INTENT_POINTSET')[0]
+            coords = pointset.data
+            c_ras_keys = ('VolGeomC_R', 'VolGeomC_A', 'VolGeomC_S')
+            ras = np.array([float(pointset.metadata[key])
+                            for key in c_ras_keys])
+            # Apply C_RAS translation to coordinates
+            pointset.data = (coords + ras).astype(coords.dtype)
+
+            secondary = nib.gifti.GiftiNVPairs('AnatomicalStructureSecondary',
+                                               'MidThickness')
+            geom_type = nib.gifti.GiftiNVPairs('GeometricType', 'Anatomical')
+            has_ass = has_geo = False
+            for nvpair in pointset.meta.data:
+                # Remove C_RAS translation from metadata to avoid double-dipping in FreeSurfer
+                if nvpair.name in c_ras_keys:
+                    nvpair.value = '0.000000'
+                # Check for missing metadata
+                elif nvpair.name == secondary.name:
+                    has_ass = True
+                elif nvpair.name == geom_type.name:
+                    has_geo = True
+            fname = os.path.basename(in_file)
+            # Update metadata for MidThickness/graymid surfaces
+            if 'midthickness' in fname.lower() or 'graymid' in fname.lower():
+                if not has_ass:
+                    pointset.meta.data.insert(1, secondary)
+                if not has_geo:
+                    pointset.meta.data.insert(2, geom_type)
+            img.to_filename(fname)
+            return os.path.abspath(fname)
+
+        fix_surfs = pe.MapNode(
+            niu.Function(
+                function=normalize_surfs,
+                input_names=['in_file'],
+                output_names=['out_file']),
+            iterfield='in_file',
+            name='FixSurfs')
+
+        ds_surfs = pe.MapNode(
+            DerivativesDataSink(base_directory=settings['output_dir']),
+            iterfield=['in_file', 'suffix'],
+            name='DerivSurfs'
         )
 
     # Resample the brain mask and the tissue probability maps into mni space
@@ -285,6 +376,20 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
             (reconall, recon_report, [('out_report', 'in_file')]),
             (reconall, outputnode, [('subject_id', 'subject_id')]),
             (fs_transform, outputnode, [('fsl_file', 'fs_2_t1_transform')]),
+            (reconall, midthickness, [('smoothwm', 'in_file')]),
+            (reconall, save_midthickness, [('subjects_dir', 'base_directory'),
+                                           ('subject_id', 'container')]),
+            (midthickness, save_midthickness, [('out_file', 'surf.@graymid')]),
+            (reconall, surface_list, [('smoothwm', 'in1'),
+                                      ('pial', 'in2'),
+                                      ('inflated', 'in3')]),
+            (save_midthickness, surface_list, [('out_file', 'in4')]),
+            (surface_list, gifticonv, [('out', 'in_file')]),
+            (gifticonv, name_surfs, [('converted', 'in_file')]),
+            (gifticonv, fix_surfs, [('converted', 'in_file')]),
+            (inputnode, ds_surfs, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
+            (name_surfs, ds_surfs, [('normalized', 'suffix')]),
+            (fix_surfs, ds_surfs, [('out_file', 'in_file')]),
             ])
 
     # Write corrected file in the designated output dir

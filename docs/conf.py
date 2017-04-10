@@ -67,9 +67,10 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'fmriprep'
-author = u'Craig A. Moodie, Krzysztof J. Gorgolewski, Oscar Esteban, Ross Blair, Shoshana Berleant'
-copyright = u'2016, ' + author
+project = 'fmriprep'
+author = 'Craig A. Moodie, Krzysztof J. Gorgolewski, Oscar Esteban, ' \
+    'Ross Blair, Shoshana Berleant, Christopher J. Markiewicz'
+copyright = '2017, ' + author
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
