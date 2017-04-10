@@ -85,6 +85,8 @@ def get_parser():
 
     # Fieldmap options
     g_fmap = parser.add_argument_group('Specific options for handling fieldmaps')
+    g_fmap.add_argument('--use-fieldmap', action='store_true', default=False,
+                        help='explicitly enable fieldmap-based correction')
     g_fmap.add_argument('--fmap-bspline', action='store_true', default=False,
                         help='fit a B-Spline field using least-squares (experimental)')
     g_fmap.add_argument('--fmap-no-demean', action='store_false', default=True,
@@ -146,6 +148,10 @@ def create_workflow(opts):
         'fmap_demean': opts.fmap_no_demean,
         'epi2t1_dof': opts.fmap_los,
     }
+
+    # To be removed when fieldmaps are not experimental anymore
+    if not opts.use_fieldmap:
+        settings['ignore'].append('fieldmap')
 
     # set up logger
     logger = logging.getLogger('cli')
