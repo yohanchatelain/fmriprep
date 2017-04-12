@@ -263,6 +263,29 @@ It also maps the T1w-based mask to MNI space.
 Transforms are concatenated and applied all at once, with one interpolation (Lanczos)
 step, so as little information is lost as possible.
 
+EPI sampled to FreeSurfer surfaces
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:mod:`fmriprep.workflows.epi.epi_surf_sample`
+
+.. workflow::
+    :graph2use: colored
+    :simple_form: yes
+
+    from fmriprep.workflows.epi import epi_surf_sample
+    wf = epi_surf_sample("test",
+                         settings={'output_dir': '.',
+                                   'skip_native': False,
+                                   })
+
+If FreeSurfer processing is enabled, the motion-corrected functional series is sampled to the
+surface by averaging across the cortical ribbon.
+Specifically, at each vertex, the segment normal to the white-matter surface, extending to the pial
+surface, is sampled at 6 intervals and averaged.
+
+Surfaces are generated for the "subject native" surface, as well as transformed to the
+``fsaverage`` template space.
+All surface outputs are in GIFTI format.
+
 Confounds estimation
 ~~~~~~~~~~~~~~~~~~~~
 :mod:`fmriprep.workflows.confounds.discover_wf`
@@ -330,6 +353,8 @@ Derivatives related to EPI files are in the ``func`` subfolder:
 - ``*bold_confounds.tsv`` A tab-separated value file with one column per calculated confound and one row per timepoint/volume
 - ``*bold_space-T1w_preproc.nii.gz`` Motion-corrected (using MCFLIRT for estimation and ANTs for interpolation) EPI file in T1w space
 - ``*bold_space-MNI152NLin2009cAsym_preproc.nii.gz`` Same as above, but in MNI space
+- ``*bold_space-fsnative.[LR].func.gii`` Motion-corrected EPI file sampled to subject's "native" FreeSurfer surfaces
+- ``*bold_space-fsaverage.[LR].func.gii`` Same as above, but in FreeSurfer ``fsaverage`` template space
 
 
 FreeSurfer Derivatives
