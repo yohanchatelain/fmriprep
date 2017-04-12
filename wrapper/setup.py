@@ -1,50 +1,47 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Author: oesteban
-# @Date:   2015-11-19 16:44:27
-""" fmriprep setup script """
+""" fmriprep wrapper setup script """
+
+from setuptools import setup, find_packages
+from codecs import open
+from os import path as op
+import runpy
+
+long_description = """\
+This package is a basic wrapper for fMRIprep that generates the appropriate
+Docker commands, providing an intuitive interface to running the fMRIprep
+workflow in a Docker environment."""
 
 
 def main():
     """ Install entry-point """
-    from io import open
-    from os import path as op
-    from glob import glob
-    from inspect import getfile, currentframe
-    from setuptools import setup, find_packages
+    this_path = op.abspath(op.dirname(__file__))
+    info_path = op.join(op.dirname(this_path), 'fmriprep', 'info.py')
 
-    this_path = op.dirname(op.abspath(getfile(currentframe())))
-
-    # Python 3: use a locals dictionary
-    # http://stackoverflow.com/a/1463370/6820620
-    ldict = locals()
-    # Get version and release info, which is all stored in fmriprep/info.py
-    module_file = op.join(this_path, 'fmriprep', 'info.py')
-    with open(module_file) as infofile:
-        pythoncode = [line for line in infofile.readlines() if not line.strip().startswith('#')]
-        exec('\n'.join(pythoncode), globals(), ldict)
+    info = runpy.run_path(info_path)
 
     setup(
-        name=ldict['__packagename__'],
-        version=ldict['__version__'],
-        description=ldict['__description__'],
-        long_description=ldict['__longdesc__'],
-        author=ldict['__author__'],
-        author_email=ldict['__email__'],
-        maintainer=ldict['__maintainer__'],
-        maintainer_email=ldict['__email__'],
-        url=ldict['__url__'],
-        license=ldict['__license__'],
-        classifiers=ldict['CLASSIFIERS'],
-        download_url=ldict['DOWNLOAD_URL'],
+        name='{}-docker'.format(info['__packagename__']),
+        version=info['__version__'],
+        description=info['__description__'],
+        long_description=long_description,
+        author=info['__author__'],
+        author_email=info['__email__'],
+        maintainer=info['__maintainer__'],
+        maintainer_email=info['__email__'],
+        url=info['__url__'],
+        license=info['__license__'],
+        classifiers=info['CLASSIFIERS'],
+        download_url=info['WRAPPER_URL'],
         # Dependencies handling
         setup_requires=[],
-        install_requires=ldict['REQUIRES'],
-        tests_require=ldict['TESTS_REQUIRES'],
-        extras_require=ldict['EXTRA_REQUIRES'],
-        dependency_links=ldict['LINKS_REQUIRES'],
-        package_data={'fmriprep': ['data/*.json', 'viz/*.tpl', 'viz/*.json']},
-        entry_points={'console_scripts': ['fmriprep=fmriprep.cli.run:main',]},
+        install_requires=[],
+        tests_require=[],
+        extras_require={},
+        dependency_links=[],
+        package_data={},
+        py_modules=["fmriprep-docker"],
+        entry_points={'console_scripts': ['fmriprep-docker=fmriprep-docker:main',]},
         packages=find_packages(),
         zip_safe=False
     )
