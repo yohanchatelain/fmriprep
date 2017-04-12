@@ -70,7 +70,6 @@ def base_workflow_generator(subject_id, task_id, settings):
         raise Exception("No T1w images found for participant {}. "
                         "All workflows require T1w images.".format(subject_id))
 
-
     if all((subject_data['fmap'] != [],
             subject_data['sbref'] != [],
             "fieldmaps" not in settings['ignore'])):

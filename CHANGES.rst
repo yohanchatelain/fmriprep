@@ -3,6 +3,7 @@ Next release
 
 * [ENH] Generate GrayWhite, Pial, MidThickness and inflated surfaces (#398)
 * [ENH] Memory and performance improvements for calculating the EPI reference (#436)
+* [ENH] Sample functional series to subject and ``fsaverage`` surfaces (#391)
 
 0.3.2 (7th of April 2017)
 =========================
