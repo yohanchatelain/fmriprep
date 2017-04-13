@@ -110,7 +110,7 @@ def merge_help(wrapper_help, target_help):
     return '\n\n'.join(sections)
 
 
-def main(cmd, *argv):
+def main():
     parser = argparse.ArgumentParser(
         description='fMRI Preprocessing workflow',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -152,7 +152,7 @@ def main(cmd, *argv):
                        help='use scratch directory')
 
     # Capture additional arguments to pass inside container
-    opts, unknown_args = parser.parse_known_args(argv)
+    opts, unknown_args = parser.parse_known_args()
 
     # Stop if no docker / docker fails to run
     check = check_docker()
@@ -232,4 +232,4 @@ def main(cmd, *argv):
 
 
 if __name__ == '__main__':
-    sys.exit(main(*sys.argv))
+    sys.exit(main())
