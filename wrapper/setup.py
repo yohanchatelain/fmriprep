@@ -40,8 +40,8 @@ def main():
         extras_require={},
         dependency_links=[],
         package_data={},
-        py_modules=["fmriprep-docker"],
-        entry_points={'console_scripts': ['fmriprep-docker=fmriprep-docker:main',]},
+        py_modules=["fmriprep_docker"],
+        entry_points={'console_scripts': ['fmriprep-docker=fmriprep_docker:main',]},
         packages=find_packages(),
         zip_safe=False
     )
