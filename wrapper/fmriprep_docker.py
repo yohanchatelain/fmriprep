@@ -151,9 +151,8 @@ def main():
         add_help=False)
 
     # Standard FMRIPREP arguments
-    parser.add_argument('bids_dir', nargs='?', type=str, default=os.getcwd())
-    parser.add_argument('output_dir', nargs='?', type=str,
-                        default=os.path.join(os.getcwd(), 'out'))
+    parser.add_argument('bids_dir', nargs='?', type=str, default='')
+    parser.add_argument('output_dir', nargs='?', type=str, default='')
     parser.add_argument('analysis_level', nargs='?', choices=['participant'],
                         default='participant')
 
@@ -192,6 +191,10 @@ def main():
     # Capture additional arguments to pass inside container
     opts, unknown_args = parser.parse_known_args()
 
+    # Set help if no directories set
+    if (opts.bids_dir, opts.output_dir) == ('', ''):
+        opts.help = True
+
     # Stop if no docker / docker fails to run
     check = check_docker()
     if check < 1:
@@ -227,17 +230,22 @@ def main():
     # Patch working repositories into installed package directories
     for pkg in ('fmriprep', 'niworkflows', 'nipype'):
         repo_path = getattr(opts, 'patch_' + pkg)
-        pkg_path = os.path.join(PKG_PATH, pkg)
+        pkg_path = '{}/{}'.format(PKG_PATH, pkg)  # Always POSIX path
         if repo_path is not None:
             command.extend(['-v', '{}:{}:ro'.format(repo_path, pkg_path)])
+
+    main_args = []
+    if opts.bids_dir:
+        command.extend(['-v', ':'.join((opts.bids_dir, '/data', 'ro'))])
+        main_args.append('/data')
+    if opts.output_dir:
+        command.extend(['-v', ':'.join((opts.output_dir, '/out'))])
+        main_args.append('/out')
+    main_args.append(opts.analysis_level)
 
     if opts.work_dir:
         command.extend(['-v', ':'.join((opts.work_dir, '/scratch'))])
         unknown_args.extend(['-w', '/scratch'])
-
-    command.extend(['-v', ':'.join((opts.bids_dir, '/data', 'ro')),
-                    '-v', ':'.join((opts.output_dir, '/out')),
-                    ])
 
     if opts.shell:
         command.append('--entrypoint=bash')
@@ -258,7 +266,7 @@ def main():
         return ret.returncode
 
     if not opts.shell:
-        command.extend(['/data', '/out', opts.analysis_level])
+        command.extend(main_args)
         command.extend(unknown_args)
 
     print("RUNNING: " + ' '.join(command))
