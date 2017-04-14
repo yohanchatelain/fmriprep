@@ -6,7 +6,41 @@ import argparse
 import subprocess
 
 __version__ = '99.99.99'
+__packagename__ = 'fmriprep-docker'
+__author__ = 'The CRN developers'
+__copyright__ = 'Copyright 2017, Center for Reproducible Neuroscience, Stanford University'
+__credits__ = ['Craig Moodie', 'Ross Blair', 'Oscar Esteban', 'Chris Gorgolewski', 'Shoshana Berleant',
+               'Christopher J. Markiewicz', 'Russell A. Poldrack']
+__license__ = '3-clause BSD'
+__maintainer__ = 'Christopher J. Markiewicz'
+__email__ = 'crn.poldracklab@gmail.com'
+__url__ = 'https://github.com/poldracklab/fmriprep'
 __bugreports__ = 'https://github.com/poldracklab/fmriprep/issues'
+
+__description__ = """\
+fMRIprep is a functional magnetic resonance image pre-processing pipeline \
+that is designed to provide an easily accessible, state-of-the-art interface \
+that is robust to differences in scan acquisition protocols and that requires \
+minimal user input, while providing easily interpretable and comprehensive \
+error and output reporting."""
+__longdesc__ = """\
+This package is a basic wrapper for fMRIprep that generates the appropriate
+Docker commands, providing an intuitive interface to running the fMRIprep
+workflow in a Docker environment."""
+
+DOWNLOAD_URL = (
+    'https://pypi.python.org/packages/source/{name[0]}/{name}/{name}-{ver}.tar.gz'.format(
+        name=__packagename__, ver=__version__))
+
+CLASSIFIERS = [
+    'Development Status :: 3 - Alpha',
+    'Intended Audience :: Science/Research',
+    'License :: OSI Approved :: BSD License',
+    'Programming Language :: Python :: 3.5',
+    'Programming Language :: Python :: 3.6',
+]
+
+
 MISSING = """
 Image '{}' is missing
 Would you like to download? [Y/n] """

@@ -6,24 +6,18 @@ from setuptools import setup, find_packages
 from os import path as op
 import runpy
 
-long_description = """\
-This package is a basic wrapper for fMRIprep that generates the appropriate
-Docker commands, providing an intuitive interface to running the fMRIprep
-workflow in a Docker environment."""
-
 
 def main():
     """ Install entry-point """
     this_path = op.abspath(op.dirname(__file__))
-    info_path = op.join(op.dirname(this_path), 'fmriprep', 'info.py')
 
-    info = runpy.run_path(info_path)
+    info = runpy.run_path(op.join(this_path, 'fmriprep_docker.py'))
 
     setup(
-        name='{}-docker'.format(info['__packagename__']),
+        name=info['__packagename__'],
         version=info['__version__'],
         description=info['__description__'],
-        long_description=long_description,
+        long_description=info['__longdesc__'],
         author=info['__author__'],
         author_email=info['__email__'],
         maintainer=info['__maintainer__'],
@@ -31,7 +25,7 @@ def main():
         url=info['__url__'],
         license=info['__license__'],
         classifiers=info['CLASSIFIERS'],
-        download_url=info['WRAPPER_URL'],
+        download_url=info['DOWNLOAD_URL'],
         # Dependencies handling
         setup_requires=[],
         install_requires=[],
