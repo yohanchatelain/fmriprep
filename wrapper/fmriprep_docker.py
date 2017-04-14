@@ -5,7 +5,7 @@ import re
 import argparse
 import subprocess
 
-__version__ = 0.1
+__version__ = '99.99.99'
 __bugreports__ = 'https://github.com/poldracklab/fmriprep/issues'
 MISSING = """
 Image '{}' is missing
