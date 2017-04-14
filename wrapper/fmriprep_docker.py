@@ -101,8 +101,8 @@ def merge_help(wrapper_help, target_help):
 
     # Make sure we're not clobbering options we don't mean to
     overlap = set(w_flags).intersection(t_flags)
-    assert overlap == set('hv'), "Clobbering options: {}".format(
-        ', '.join(overlap - set('hv')))
+    assert overlap == set('hvw'), "Clobbering options: {}".format(
+        ', '.join(overlap - set('hvw')))
 
     sections = []
 
@@ -139,8 +139,8 @@ def merge_help(wrapper_help, target_help):
 
     sections.append(w_groups[2])
 
-    # All remaining sections, show target then wrapper
-    sections.extend(t_groups[3:] + w_groups[3:])
+    # All remaining sections, show target then wrapper (skipping duplicates)
+    sections.extend(t_groups[3:] + w_groups[5:])
     return '\n\n'.join(sections)
 
 
@@ -167,6 +167,12 @@ def main():
                         default='poldracklab/fmriprep:{}'.format(__version__),
                         help='image name')
 
+    g_wrap = parser.add_argument_group(
+        'Wrapper options',
+        'Standard options that require mapping files into the container')
+    g_wrap.add_argument('-w', '--work-dir', action='store',
+                        help='path where intermediate results should be stored')
+
     # Developer patch/shell options
     g_dev = parser.add_argument_group(
         'Developer options',
@@ -182,8 +188,6 @@ def main():
                        help='working nipype repository')
     g_dev.add_argument('--shell', action='store_true',
                        help='open shell in image instead of running FMRIPREP')
-    g_dev.add_argument('--scratch', metavar='PATH', type=os.path.abspath,
-                       help='use scratch directory')
 
     # Capture additional arguments to pass inside container
     opts, unknown_args = parser.parse_known_args()
@@ -227,9 +231,8 @@ def main():
         if repo_path is not None:
             command.extend(['-v', '{}:{}:ro'.format(repo_path, pkg_path)])
 
-    if opts.scratch:
-        command.extend(['-v', ':'.join((opts.scratch,
-                                        '/scratch'))])
+    if opts.work_dir:
+        command.extend(['-v', ':'.join((opts.work_dir, '/scratch'))])
         unknown_args.extend(['-w', '/scratch'])
 
     command.extend(['-v', ':'.join((opts.bids_dir, '/data', 'ro')),
