@@ -9,8 +9,8 @@ __version__ = '99.99.99'
 __packagename__ = 'fmriprep-docker'
 __author__ = 'The CRN developers'
 __copyright__ = 'Copyright 2017, Center for Reproducible Neuroscience, Stanford University'
-__credits__ = ['Craig Moodie', 'Ross Blair', 'Oscar Esteban', 'Chris Gorgolewski', 'Shoshana Berleant',
-               'Christopher J. Markiewicz', 'Russell A. Poldrack']
+__credits__ = ['Craig Moodie', 'Ross Blair', 'Oscar Esteban', 'Chris Gorgolewski',
+               'Shoshana Berleant', 'Christopher J. Markiewicz', 'Russell A. Poldrack']
 __license__ = '3-clause BSD'
 __maintainer__ = 'Christopher J. Markiewicz'
 __email__ = 'crn.poldracklab@gmail.com'
