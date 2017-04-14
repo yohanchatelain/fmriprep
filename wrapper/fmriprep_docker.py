@@ -164,7 +164,7 @@ def main():
 
     # Allow alternative images (semi-developer)
     parser.add_argument('-i', '--image', metavar='IMG', type=str,
-                        default='poldracklab/fmriprep:latest',
+                        default='poldracklab/fmriprep:{}'.format(__version__),
                         help='image name')
 
     # Developer patch/shell options
