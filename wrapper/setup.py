@@ -3,7 +3,6 @@
 """ fmriprep wrapper setup script """
 
 from setuptools import setup, find_packages
-from codecs import open
 from os import path as op
 import runpy
 
@@ -41,10 +40,11 @@ def main():
         dependency_links=[],
         package_data={},
         py_modules=["fmriprep_docker"],
-        entry_points={'console_scripts': ['fmriprep-docker=fmriprep_docker:main',]},
+        entry_points={'console_scripts': ['fmriprep-docker=fmriprep_docker:main']},
         packages=find_packages(),
         zip_safe=False
     )
+
 
 if __name__ == '__main__':
     main()
