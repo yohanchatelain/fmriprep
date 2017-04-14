@@ -199,6 +199,8 @@ def main():
                        help='working nipype repository')
     g_dev.add_argument('--shell', action='store_true',
                        help='open shell in image instead of running FMRIPREP')
+    g_dev.add_argument('--config', metavar='PATH', action='store',
+                       type=os.path.abspath, help='Use custom nipype.cfg file')
 
     # Capture additional arguments to pass inside container
     opts, unknown_args = parser.parse_known_args()
@@ -272,6 +274,10 @@ def main():
     if opts.work_dir:
         command.extend(['-v', ':'.join((opts.work_dir, '/scratch'))])
         unknown_args.extend(['-w', '/scratch'])
+
+    if opts.config:
+        command.extend(['-v', ':'.join((opts.config,
+                                        '/root/.nipype/nipype.cfg', 'ro'))])
 
     if opts.shell:
         command.append('--entrypoint=bash')
