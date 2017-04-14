@@ -74,6 +74,18 @@ def check_image(image):
     return bool(ret.stdout)
 
 
+def check_memory(image):
+    """Check total memory from within a docker container"""
+    ret = subprocess.run(['docker', 'run', '--rm', '--entrypoint=free',
+                          image, '-m'],
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.DEVNULL)
+    mem = [line.split()[1]
+           for line in ret.stdout.splitlines()
+           if line.startswith('Mem:')][0]
+    return int(mem)
+
+
 def merge_help(wrapper_help, target_help):
     # Matches all flags with up to one nested square bracket
     opt_re = re.compile(r'(\[--?[\w-]+(?:[^\[\]]+(?:\[[^\[\]]+\])?)?\])')
@@ -222,6 +234,20 @@ def main():
             except KeyboardInterrupt:
                 print()
                 return 1
+        if resp not in ('y', 'Y', ''):
+            return 0
+
+    # Warn on low memory allocation
+    mem_total = check_memory(opts.image)
+    if mem_total < 8000:
+        print('Warning: <8GB of RAM is available within your Docker '
+              'environment.\nSome parts of fMRIprep may fail to complete.')
+        resp = 'N'
+        try:
+            resp = input('Continue anyway? [y/N]')
+        except KeyboardInterrupt:
+            print()
+            return 1
         if resp not in ('y', 'Y', ''):
             return 0
 
