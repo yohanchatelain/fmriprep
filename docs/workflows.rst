@@ -28,7 +28,7 @@ slice-timing information and no fieldmap acquisitions):
                   'biggest_epi_file_size_gb': 3,
                   'skull_strip_ants': True,
                   'skip_native': False,
-                  'ignore': ['sbref', 'fieldmap', 'slicetiming'],
+                  'ignore': [],
                   'debug': False,
                   'hires': True}
     )
@@ -139,7 +139,7 @@ BOLD preprocessing
     wf = bold_preprocessing(
         "bold_preprocessing",
         settings={'ants_nthreads': 1,
-                  'ignore':['fieldmap'],
+                  'ignore':[],
                   'nthreads': 1,
                   'freesurfer': True,
                   'reportlets_dir': '.',

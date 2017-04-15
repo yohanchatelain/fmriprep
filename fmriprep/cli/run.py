@@ -91,7 +91,7 @@ def get_parser():
                         help='fit a B-Spline field using least-squares (experimental)')
     g_fmap.add_argument('--fmap-no-demean', action='store_false', default=True,
                         help='do not remove median (within mask) from fieldmap')
-    g_fmap.add_argument('--fmap-los', action='store', default=6, choices=[6, 9, 12], type=int,
+    g_fmap.add_argument('--fmap-los', action='store', default=9, choices=[6, 9, 12], type=int,
                         help='compensate Low-Order Shiming (LOS) increasing the dof in EPI-to-T1'
                              ' registration')
 

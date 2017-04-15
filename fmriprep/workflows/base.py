@@ -212,7 +212,11 @@ def basic_wf(subject_data, settings, name='fMRI_prep'):
 
     workflow = pe.Workflow(name=name)
 
-    layout = BIDSLayout(settings["bids_root"])
+    if subject_data['func'] == 'bold_preprocessing':
+        # for documentation purposes
+        layout = None
+    else:
+        layout = BIDSLayout(settings["bids_root"])
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['subjects_dir']),
                         name='inputnode')
