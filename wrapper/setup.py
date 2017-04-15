@@ -25,7 +25,6 @@ def main():
         url=info['__url__'],
         license=info['__license__'],
         classifiers=info['CLASSIFIERS'],
-        download_url=info['DOWNLOAD_URL'],
         # Dependencies handling
         setup_requires=[],
         install_requires=[],
