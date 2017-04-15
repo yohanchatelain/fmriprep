@@ -70,12 +70,7 @@ def base_workflow_generator(subject_id, task_id, settings):
         raise Exception("No T1w images found for participant {}. "
                         "All workflows require T1w images.".format(subject_id))
 
-    if all((subject_data['fmap'] != [],
-            subject_data['sbref'] != [],
-            "sbref" not in settings.get('ignore', []))):
-        return basic_fmap_sbref_wf(subject_data, settings, name=subject_id)
-    else:
-        return basic_wf(subject_data, settings, name=subject_id)
+    return basic_wf(subject_data, settings, name=subject_id)
 
 
 def basic_fmap_sbref_wf(subject_data, settings, name='fMRI_prep'):
