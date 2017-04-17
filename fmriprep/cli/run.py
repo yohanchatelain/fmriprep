@@ -73,8 +73,12 @@ def get_parser():
                         help='Degrees of freedom when registering BOLD to T1w images. '
                              '9 (rotation, translation, and scaling) is used by '
                              'default to compensate for field inhomogeneities.')
-    g_conf.add_argument('--skip-native', action='store_true', default=False,
-                        help="don't output timeseries in native space")
+    g_conf.add_argument(
+        '--output-space', required=False, action='store',
+        choices=['T1w', 'MNI152NLin2009cAsym',
+                 'fsnative', 'fsaverage', 'fsaverage6', 'fsaverage5'],
+        nargs='+', default=['MNI152NLin2009cAsym', 'fsaverage5'],
+        help='volume and surface spaces to resample functional series into')
 
     #  ANTs options
     g_ants = parser.add_argument_group('Specific options for ANTs registrations')
@@ -138,7 +142,7 @@ def create_workflow(opts):
         'output_dir': op.abspath(opts.output_dir),
         'work_dir': op.abspath(opts.work_dir),
         'ignore': opts.ignore,
-        'skip_native': opts.skip_native,
+        'output_spaces': opts.output_space,
         'freesurfer': opts.freesurfer,
         'hires': opts.hires,
         'reportlets_dir': op.join(op.abspath(opts.work_dir), 'reportlets'),

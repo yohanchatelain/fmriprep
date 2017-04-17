@@ -32,9 +32,12 @@ def base_workflow_enumerator(subject_list, task_id, settings, run_uuid):
     workflow = pe.Workflow(name='workflow_enumerator')
 
     if settings.get('freesurfer', False):
-        fsdir = pe.Node(BIDSFreeSurferDir(), name='BIDSFreesurfer')
-        fsdir.inputs.freesurfer_home = os.getenv('FREESURFER_HOME')
-        fsdir.inputs.derivatives = os.path.join(settings['output_dir'])
+        fsdir = pe.Node(
+            BIDSFreeSurferDir(
+                derivatives=settings['output_dir'],
+                freesurfer_home=os.getenv('FREESURFER_HOME'),
+                spaces=settings['output_spaces']),
+            name='BIDSFreesurfer')
 
     for subject in subject_list:
         generated_workflow = base_workflow_generator(subject, task_id=task_id,
