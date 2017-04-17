@@ -56,7 +56,8 @@ ENV PERL5LIB=$MINC_LIB_DIR/perl5/5.8.5 \
 RUN echo "cHJpbnRmICJrcnp5c3p0b2YuZ29yZ29sZXdza2lAZ21haWwuY29tXG41MTcyXG4gKkN2dW12RVYzelRmZ1xuRlM1Si8yYzFhZ2c0RVxuIiA+IC9vcHQvZnJlZXN1cmZlci9saWNlbnNlLnR4dAo=" | base64 -d | sh
 
 # Installing Neurodebian packages (FSL, AFNI, git)
-RUN apt-get install -y --no-install-recommends \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
                     fsl-core=5.0.9-1~nd+1+nd16.04+1 \
                     afni=16.2.07~dfsg.1-2~nd16.04+1
 
@@ -125,7 +126,8 @@ RUN conda install -y mkl=2017.0.1 mkl-service &&  \
 RUN python -c "from matplotlib import font_manager"
 
 # Installing Ubuntu packages and cleaning up
-RUN apt-get install -y --no-install-recommends \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
                     git=1:2.7.4-0ubuntu1 \
                     graphviz=2.38.0-12ubuntu2 && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
