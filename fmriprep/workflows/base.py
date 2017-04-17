@@ -21,11 +21,9 @@ from fmriprep.utils.misc import collect_bids_data, get_biggest_epi_file_size_gb
 from fmriprep.workflows import confounds
 
 from fmriprep.workflows.anatomical import t1w_preprocessing
-from fmriprep.workflows.sbref import sbref_preprocess
 
-from fmriprep.workflows.epi import (
-    epi_hmc, epi_sbref_registration, bold_preprocessing,
-    ref_epi_t1_registration)
+from fmriprep.workflows.epi import epi_hmc, bold_preprocessing, \
+    ref_epi_t1_registration
 
 from bids.grabbids import BIDSLayout
 
@@ -71,125 +69,6 @@ def base_workflow_generator(subject_id, task_id, settings):
                         "All workflows require T1w images.".format(subject_id))
 
     return basic_wf(subject_data, settings, name=subject_id)
-
-
-def basic_fmap_sbref_wf(subject_data, settings, name='fMRI_prep'):
-    """
-    The main fmri preprocessing workflow, for the ds054-type of data:
-
-      * [x] Has at least one T1w and at least one bold file (minimal reqs.)
-      * [x] Has one or more SBRefs
-      * [x] Has fieldmaps in one of the following options:
-        * [x] Phase-difference: one or more GRE-phasediff images, including
-              the corresponding magnitude images.
-        * [x] "Natural" fieldmaps: spiral field-mapping sequences
-        * [x] "PEPolar": :abbr:`PE (phase-encoding)` varying *Polar*ity images
-
-    """
-
-    if settings is None:
-        settings = {}
-
-    workflow = pe.Workflow(name=name)
-
-    inputnode = pe.Node(niu.IdentityInterface(fields=['subjects_dir']),
-                        name='inputnode')
-    #  inputnode = pe.Node(niu.IdentityInterface(fields=['subject_id']),
-    #                    name='inputnode')
-    #  inputnode.iterables = [('subject_id', subject_list)]
-
-    bidssrc = pe.Node(BIDSDataGrabber(subject_data=subject_data), name='BIDSDatasource')
-
-    # Preprocessing of T1w (includes registration to MNI)
-    t1w_pre = t1w_preprocessing(settings=settings)
-
-    # Estimate fieldmap
-    fmap_est = None
-    if 'fieldmap' not in settings.get('ignore', []):
-        # Import specific workflows here, so we don't brake everything with one
-        # unused workflow.
-        from fmriprep.workflows.fieldmap import fmap_estimator
-        fmap_est = fmap_estimator(subject_data, settings=settings)
-
-    if fmap_est is None:
-        # Fallback to non-fieldmap workflow
-        settings['ignore'] = settings.get('ignore', []) + ['fieldmap']
-        return basic_wf(subject_data, settings=settings)
-
-    # Correct SBRef
-    sbref_pre = sbref_preprocess(settings=settings)
-
-    # Register SBRef to T1
-    sbref_t1 = ref_epi_t1_registration(reportlet_suffix='sbref_t1_bbr',
-                                       inv_ds_suffix='target-sbref_affine',
-                                       settings=settings)
-
-    # HMC on the EPI
-    hmcwf = epi_hmc(settings=settings)
-    hmcwf.get_node('inputnode').iterables = ('epi', subject_data['func'])
-
-    # EPI to SBRef
-    epi2sbref = epi_sbref_registration(settings)
-
-    # EPI unwarp
-    epiunwarp_wf = epi_unwarp(settings=settings)
-
-    # get confounds
-    confounds_wf = confounds.discover_wf(settings)
-    confounds_wf.get_node('inputnode').inputs.t1_transform_flags = [False, True]
-
-    # create list of transforms to resample t1 -> sbref -> epi
-    t1_to_epi_transforms = pe.Node(fsl.ConvertXFM(concat_xfm=True), name='T1ToEPITransforms')
-
-    workflow.connect([
-        (bidssrc, t1w_pre, [('t1w', 'inputnode.t1w'),
-                            ('t2w', 'inputnode.t2w')]),
-        (bidssrc, sbref_pre, [('sbref', 'inputnode.sbref')]),
-        (bidssrc, sbref_t1, [('sbref', 'inputnode.name_source'),
-                             ('t1w', 'inputnode.t1w')]),
-        (fmap_est, sbref_pre, [('outputnode.fmap', 'inputnode.fmap'),
-                               ('outputnode.fmap_ref', 'inputnode.fmap_ref'),
-                               ('outputnode.fmap_mask', 'inputnode.fmap_mask')]),
-        (sbref_pre, sbref_t1, [('outputnode.sbref_unwarped', 'inputnode.ref_epi'),
-                               ('outputnode.sbref_unwarped_mask', 'inputnode.ref_epi_mask')]),
-        (t1w_pre, sbref_t1, [
-            ('outputnode.bias_corrected_t1', 'inputnode.bias_corrected_t1'),
-            ('outputnode.t1_mask', 'inputnode.t1_mask'),
-            ('outputnode.t1_brain', 'inputnode.t1_brain'),
-            ('outputnode.t1_seg', 'inputnode.t1_seg')]),
-        (sbref_pre, epi2sbref, [('outputnode.sbref_unwarped', 'inputnode.sbref'),
-                                ('outputnode.sbref_unwarped_mask', 'inputnode.sbref_mask')]),
-        (hmcwf, epi2sbref, [('outputnode.epi_mask', 'inputnode.epi_mask'),
-                            ('outputnode.epi_mean', 'inputnode.epi_mean'),
-                            ('outputnode.epi_hmc', 'inputnode.epi'),
-                            ('inputnode.epi', 'inputnode.epi_name_source')]),
-        (hmcwf, epiunwarp_wf, [('inputnode.epi', 'inputnode.epi')]),
-        (fmap_est, epiunwarp_wf, [('outputnode.fmap', 'inputnode.fmap'),
-                                  ('outputnode.fmap_mask', 'inputnode.fmap_mask'),
-                                  ('outputnode.fmap_ref', 'inputnode.fmap_ref')]),
-
-        (sbref_t1, t1_to_epi_transforms, [(('outputnode.mat_t1_to_epi'), 'in_file')]),
-        (epi2sbref, t1_to_epi_transforms, [('outputnode.out_mat_inv', 'in_file2')]),
-
-        (t1_to_epi_transforms, confounds_wf, [('out_file', 'inputnode.t1_transform')]),
-
-        (hmcwf, confounds_wf, [('outputnode.movpar_file', 'inputnode.movpar_file'),
-                               ('outputnode.epi_mean', 'inputnode.reference_image'),
-                               ('inputnode.epi', 'inputnode.source_file')]),
-        (epiunwarp_wf, confounds_wf, [('outputnode.epi_mask', 'inputnode.epi_mask'),
-                                      ('outputnode.epi_unwarp', 'inputnode.fmri_file')]),
-        (t1w_pre, confounds_wf, [('outputnode.t1_tpms', 'inputnode.t1_tpms')]),
-    ])
-
-    if settings.get('freesurfer', False):
-        workflow.connect([
-            (inputnode, t1w_pre, [('subjects_dir', 'inputnode.subjects_dir')]),
-            (inputnode, sbref_t1, [('subjects_dir', 'inputnode.subjects_dir')]),
-            (t1w_pre, sbref_t1, [('outputnode.subject_id', 'inputnode.subject_id'),
-                                 ('outputnode.fs_2_t1_transform', 'inputnode.fs_2_t1_transform')]),
-            ])
-
-    return workflow
 
 
 def basic_wf(subject_data, settings, name='fMRI_prep'):
