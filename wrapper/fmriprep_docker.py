@@ -80,9 +80,9 @@ def check_memory(image):
                           image, '-m'],
                          stdout=subprocess.PIPE,
                          stderr=subprocess.DEVNULL)
-    mem = [line.split()[1]
+    mem = [line.decode().split()[1]
            for line in ret.stdout.splitlines()
-           if line.startswith('Mem:')][0]
+           if line.startswith(b'Mem:')][0]
     return int(mem)
 
 
