@@ -116,35 +116,3 @@ class Merge(BaseInterface):
 
     def _list_outputs(self):
         return self._results
-
-
-class MeanInputSpec(BaseInterfaceInputSpec):
-    in_files = InputMultiPath(File(exists=True), mandatory=True, desc='input files')
-    njobs = traits.Int(1, nohash=True, usedefault=True, desc='number of jobs')
-
-class MeanOutputSpec(TraitedSpec):
-    out_file = File(exists=True, desc='reference image')
-
-class Mean(BaseInterface):
-    """
-    If ``reference`` is set, forwards it to the output. Computes the time-average of
-    ``in_files`` otherwise
-    """
-
-    input_spec = MeanInputSpec
-    output_spec = MeanOutputSpec
-
-    def __init__(self, **inputs):
-        self._results = {}
-        super(Mean, self).__init__(**inputs)
-
-    def _list_outputs(self):
-        return self._results
-
-    def _run_interface(self, runtime):
-        self._results['out_file'] = genfname(self.inputs.in_files[0], suffix='avg')
-        mean_img(self.inputs.in_files, n_jobs=self.inputs.njobs).to_filename(
-            self._results['out_file'])
-        return runtime
-
-

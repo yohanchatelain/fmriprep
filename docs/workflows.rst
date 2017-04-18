@@ -30,7 +30,8 @@ slice-timing information and no fieldmap acquisitions):
                   'skip_native': False,
                   'ignore': [],
                   'debug': False,
-                  'hires': True}
+                  'hires': True,
+                  'bold2t1w_dof': 9}
     )
 
 
@@ -160,7 +161,8 @@ BOLD preprocessing
                   'biggest_epi_file_size_gb': 3,
                   'skull_strip_ants': True,
                   'skip_native': False,
-                  'debug': False})
+                  'debug': False,
+                  'bold2t1w_dof': 9})
 
 Preprocessing of BOLD files is split into multiple sub-workflows decribed below.
 
@@ -210,6 +212,14 @@ Skullstripping of the reference image is performed using Nilearn.
 
     Brain extraction (nilearn).
 
+Susceptibility Distortion Correction (SDC)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: fmriprep.workflows.fieldmap
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 EPI to T1w registration
 ~~~~~~~~~~~~~~~~~~~~~~~
 :mod:`fmriprep.workflows.epi.ref_epi_t1_registration`
@@ -230,7 +240,8 @@ EPI to T1w registration
                                      'biggest_epi_file_size_gb': 3,
                                      'skull_strip_ants': True,
                                      'skip_native': False,
-                                     'debug': False})
+                                     'debug': False,
+                                     'bold2t1w_dof': 9})
 
 The reference EPI image of each run is aligned by the ``bbregister`` routine to the
 reconstructed subject using
@@ -390,11 +401,3 @@ A FreeSurfer subjects directory is created in ``<output dir>/freesurfer``.
 A copy of the ``fsaverage`` subject distributed with the running version of
 FreeSurfer is copied into this subjects directory.
 
-
-Susceptibility Distortion Correction (SDC)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. automodule:: fmriprep.workflows.fieldmap
-    :members:
-    :undoc-members:
-    :show-inheritance:

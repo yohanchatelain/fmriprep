@@ -86,7 +86,7 @@ def basic_wf(subject_data, settings, name='fMRI_prep'):
 
     workflow = pe.Workflow(name=name)
 
-    if subject_data['func'] == 'bold_preprocessing':
+    if subject_data['func'] == ['bold_preprocessing']:
         # for documentation purposes
         layout = None
     else:
