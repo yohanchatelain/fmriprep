@@ -102,6 +102,7 @@ def basic_wf(subject_data, settings, name='fMRI_prep'):
     t1w_pre = t1w_preprocessing(settings=settings)
 
     workflow.connect([
+        (inputnode, t1w_pre, [('subjects_dir', 'inputnode.subjects_dir')]),
         (bidssrc, t1w_pre, [('t1w', 'inputnode.t1w'),
                             ('t2w', 'inputnode.t2w')]),
     ])
