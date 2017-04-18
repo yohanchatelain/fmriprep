@@ -285,7 +285,7 @@ def surface_reconstruction(name='SurfaceReconstruction', settings=None):
 
     nthreads = settings['nthreads']
 
-    def detect_inputs(t1w_list, t2w_list, hires_enabled):
+    def detect_inputs(t1w_list, t2w_list=[], hires_enabled=True):
         from nipype.interfaces.base import isdefined
         from nipype.utils.filemanip import filename_to_list
         from nipype.interfaces.traits_extension import Undefined
