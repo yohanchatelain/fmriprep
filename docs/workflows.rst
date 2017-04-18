@@ -278,9 +278,11 @@ EPI to MNI transformation
                                      'skip_native': False,
                                      'debug': False})
 
-This sub-workflow uses the transform from `Head-motion estimation and slice time correction`_,
-`EPI to T1w registration`_, and a T1w-to-MNI transform from `T1w/T2w preprocessing`_ to
-map the EPI image to standardized MNI space.
+This sub-workflow uses the transform from
+`Head-motion estimation and slice time correction`_,
+`Susceptibility Distortion Correction (SDC)`_ (if fieldmaps are available),
+`EPI to T1w registration`_, and a T1w-to-MNI transform from
+`T1w/T2w preprocessing`_ to map the EPI image to standardized MNI space.
 It also maps the T1w-based mask to MNI space.
 
 Transforms are concatenated and applied all at once, with one interpolation (Lanczos)
@@ -300,7 +302,8 @@ EPI sampled to FreeSurfer surfaces
                                    'skip_native': False,
                                    })
 
-If FreeSurfer processing is enabled, the motion-corrected functional series is sampled to the
+If FreeSurfer processing is enabled, the motion-corrected functional series
+(after single shot resampling to T1w space) is sampled to the
 surface by averaging across the cortical ribbon.
 Specifically, at each vertex, the segment normal to the white-matter surface, extending to the pial
 surface, is sampled at 6 intervals and averaged.
