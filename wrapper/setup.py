@@ -27,7 +27,7 @@ def main():
         classifiers=info['CLASSIFIERS'],
         # Dependencies handling
         setup_requires=[],
-        install_requires=[],
+        install_requires=['future'],
         tests_require=[],
         extras_require={},
         dependency_links=[],

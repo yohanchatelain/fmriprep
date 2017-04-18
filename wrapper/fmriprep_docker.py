@@ -1,9 +1,14 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
+from __future__ import print_function, unicode_literals, division, absolute_import
+from builtins import int, map, input, zip
+from future import standard_library
 import sys
 import os
 import re
 import argparse
 import subprocess
+
+standard_library.install_aliases()
 
 __version__ = '99.99.99'
 __packagename__ = 'fmriprep-docker'
@@ -36,6 +41,7 @@ CLASSIFIERS = [
     'Development Status :: 3 - Alpha',
     'Intended Audience :: Science/Research',
     'License :: OSI Approved :: BSD License',
+    'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3.5',
     'Programming Language :: Python :: 3.6',
 ]
@@ -45,6 +51,34 @@ MISSING = """
 Image '{}' is missing
 Would you like to download? [Y/n] """
 PKG_PATH = '/usr/local/miniconda/lib/python3.6/site-packages'
+
+# Monkey-patch Py2 subprocess
+if not hasattr(subprocess, 'DEVNULL'):
+    subprocess.DEVNULL = -3
+
+if not hasattr(subprocess, 'run'):
+    # Reimplement minimal functionality for usage in this file
+    def _run(args, stdout=None, stderr=None):
+        from collections import namedtuple
+        result = namedtuple('CompletedProcess', 'stdout stderr returncode')
+
+        devnull = None
+        if subprocess.DEVNULL in (stdout, stderr):
+            devnull = open(os.devnull, 'r+')
+            if stdout == subprocess.DEVNULL:
+                stdout = devnull
+            if stderr == subprocess.DEVNULL:
+                stderr = devnull
+
+        proc = subprocess.Popen(args, stdout=stdout, stderr=stderr)
+        stdout, stderr = proc.communicate()
+        res = result(stdout, stderr, proc.returncode)
+
+        if devnull is not None:
+            devnull.close()
+
+        return res
+    subprocess.run = _run
 
 
 def check_docker():
@@ -60,8 +94,11 @@ def check_docker():
     try:
         ret = subprocess.run(['docker', 'version'], stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
-    except FileNotFoundError as e:
-        return -1
+    except OSError as e:
+        from errno import ENOENT
+        if e.errno == ENOENT:
+            return -1
+        raise e
     if ret.stderr.startswith(b"Cannot connect to the Docker daemon."):
         return 0
     return 1
@@ -96,8 +133,10 @@ def merge_help(wrapper_help, target_help):
     w_help = wrapper_help.rstrip().replace('\r', '')
     t_help = target_help.rstrip().replace('\r', '')
 
-    w_usage, *w_groups = w_help.split('\n\n')
-    t_usage, *t_groups = t_help.split('\n\n')
+    w_usage, w_details = w_help.split('\n\n', 1)
+    w_groups = w_details.split('\n\n')
+    t_usage, t_details = t_help.split('\n\n', 1)
+    t_groups = t_details.split('\n\n')
 
     w_posargs = w_usage.split('\n')[-1].lstrip()
     t_posargs = t_usage.split('\n')[-1].lstrip()
