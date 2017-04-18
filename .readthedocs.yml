@@ -6,5 +6,4 @@ formats:
 python:
     setup_py_install: true
     pip_install: false
-    version: 3.4
 
