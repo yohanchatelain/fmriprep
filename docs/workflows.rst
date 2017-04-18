@@ -73,6 +73,18 @@ warp to the MNI space.
 
 Surface preprocessing
 ~~~~~~~~~~~~~~~~~~~~~
+:mod:`fmriprep.workflows.anatomical.surface_reconstruction`
+
+.. workflow::
+    :graph2use: colored
+    :simple_form: yes
+
+    from fmriprep.workflows.anatomical import surface_reconstruction
+    wf = surface_reconstruction(settings={'nthreads': 1,
+                                          'freesurfer': True,
+                                          'reportlets_dir': '.',
+                                          'output_dir': '.',
+                                          'hires': True})
 
 ``fmriprep`` uses FreeSurfer_ to reconstruct surfaces from T1w/T2w
 structural images.
