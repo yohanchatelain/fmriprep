@@ -2,7 +2,7 @@ conda:
     file: docs/environment.yml
 formats:
     - none
-requirements_file: requirements.txt
+# requirements_file: requirements.txt - this option seems to be ignored by RTD
 python:
     setup_py_install: true
     pip_install: false
