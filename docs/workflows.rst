@@ -27,7 +27,8 @@ slice-timing information and no fieldmap acquisitions):
                   'bids_root': '.',
                   'biggest_epi_file_size_gb': 3,
                   'skull_strip_ants': True,
-                  'skip_native': False,
+                  'output_spaces': ['T1w', 'fsnative',
+                                    'MNI152NLin2009cAsym', 'fsaverage5'],
                   'ignore': [],
                   'debug': False,
                   'hires': True,
@@ -81,11 +82,14 @@ Surface preprocessing
     :simple_form: yes
 
     from fmriprep.workflows.anatomical import surface_reconstruction
-    wf = surface_reconstruction(settings={'nthreads': 1,
-                                          'freesurfer': True,
-                                          'reportlets_dir': '.',
-                                          'output_dir': '.',
-                                          'hires': True})
+    wf = surface_reconstruction(
+        settings={'nthreads': 1,
+                  'freesurfer': True,
+                  'reportlets_dir': '.',
+                  'output_dir': '.',
+                  'output_spaces': ['T1w', 'fsnative',
+                                    'MNI152NLin2009cAsym', 'fsaverage5'],
+                  'hires': True})
 
 ``fmriprep`` uses FreeSurfer_ to reconstruct surfaces from T1w/T2w
 structural images.
@@ -160,7 +164,8 @@ BOLD preprocessing
                   'bids_root': '.',
                   'biggest_epi_file_size_gb': 3,
                   'skull_strip_ants': True,
-                  'skip_native': False,
+                  'output_spaces': ['T1w', 'fsnative',
+                                    'MNI152NLin2009cAsym', 'fsaverage5'],
                   'debug': False,
                   'bold2t1w_dof': 9})
 
@@ -177,19 +182,21 @@ Head-motion estimation and slice time correction
     :simple_form: yes
 
     from fmriprep.workflows.epi import epi_hmc
-    wf = epi_hmc(metadata={"RepetitionTime": 2.0,
-                           "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]},
-                 settings={'ants_nthreads': 1,
-                           'ignore':[],
-                                     'nthreads': 1,
-                                     'freesurfer': True,
-                                     'reportlets_dir': '.',
-                                     'output_dir': '.',
-                                     'bids_root': '.',
-                                     'biggest_epi_file_size_gb': 3,
-                                     'skull_strip_ants': True,
-                                     'skip_native': False,
-                                     'debug': False})
+    wf = epi_hmc(
+        metadata={"RepetitionTime": 2.0,
+                  "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]},
+        settings={'ants_nthreads': 1,
+                  'ignore':[],
+                  'nthreads': 1,
+                  'freesurfer': True,
+                  'reportlets_dir': '.',
+                  'output_dir': '.',
+                  'bids_root': '.',
+                  'biggest_epi_file_size_gb': 3,
+                  'skull_strip_ants': True,
+                  'output_spaces': ['T1w', 'fsnative',
+                                    'MNI152NLin2009cAsym', 'fsaverage5'],
+                  'debug': False})
 
 This workflow performs slice time
 correction (if ``SliceTiming`` field is present in the input dataset metadata), head
@@ -229,19 +236,21 @@ EPI to T1w registration
     :simple_form: yes
 
     from fmriprep.workflows.epi import ref_epi_t1_registration
-    wf = ref_epi_t1_registration("test",
-                 settings={'ants_nthreads': 1,
-                           'ignore':[],
-                                     'nthreads': 1,
-                                     'freesurfer': True,
-                                     'reportlets_dir': '.',
-                                     'output_dir': '.',
-                                     'bids_root': '.',
-                                     'biggest_epi_file_size_gb': 3,
-                                     'skull_strip_ants': True,
-                                     'skip_native': False,
-                                     'debug': False,
-                                     'bold2t1w_dof': 9})
+    wf = ref_epi_t1_registration(
+        "ref_epi_t1_registration",
+        settings={'ants_nthreads': 1,
+                  'ignore':[],
+                  'nthreads': 1,
+                  'freesurfer': True,
+                  'reportlets_dir': '.',
+                  'output_dir': '.',
+                  'bids_root': '.',
+                  'biggest_epi_file_size_gb': 3,
+                  'skull_strip_ants': True,
+                  'output_spaces': ['T1w', 'fsnative',
+                                    'MNI152NLin2009cAsym', 'fsaverage5'],
+                  'debug': False,
+                  'bold2t1w_dof': 9})
 
 The reference EPI image of each run is aligned by the ``bbregister`` routine to the
 reconstructed subject using
@@ -265,18 +274,18 @@ EPI to MNI transformation
     :simple_form: yes
 
     from fmriprep.workflows.epi import epi_mni_transformation
-    wf = epi_mni_transformation("epi_mni_transformation",
-                 settings={'ants_nthreads': 1,
-                           'ignore':[],
-                                     'nthreads': 1,
-                                     'freesurfer': True,
-                                     'reportlets_dir': '.',
-                                     'output_dir': '.',
-                                     'bids_root': '.',
-                                     'biggest_epi_file_size_gb': 3,
-                                     'skull_strip_ants': True,
-                                     'skip_native': False,
-                                     'debug': False})
+    wf = epi_mni_transformation(
+        "epi_mni_transformation",
+        settings={'ants_nthreads': 1,
+                  'ignore':[],
+                  'nthreads': 1,
+                  'freesurfer': True,
+                  'reportlets_dir': '.',
+                  'output_dir': '.',
+                  'bids_root': '.',
+                  'biggest_epi_file_size_gb': 3,
+                  'skull_strip_ants': True,
+                  'debug': False})
 
 This sub-workflow uses the transform from
 `Head-motion estimation and slice time correction`_,
@@ -297,10 +306,12 @@ EPI sampled to FreeSurfer surfaces
     :simple_form: yes
 
     from fmriprep.workflows.epi import epi_surf_sample
-    wf = epi_surf_sample("test",
-                         settings={'output_dir': '.',
-                                   'skip_native': False,
-                                   })
+    wf = epi_surf_sample(
+        "epi_surf_sample",
+        settings={'output_dir': '.',
+                  'output_spaces': ['T1w', 'fsnative',
+                                    'MNI152NLin2009cAsym', 'fsaverage5'],
+                  })
 
 If FreeSurfer processing is enabled, the motion-corrected functional series
 (after single shot resampling to T1w space) is sampled to the
@@ -331,7 +342,6 @@ Confounds estimation
                                      'bids_root': '.',
                                      'biggest_epi_file_size_gb': 3,
                                      'skull_strip_ants': True,
-                                     'skip_native': False,
                                      'debug': False})
 
 Given a motion-corrected fMRI, a brain mask, MCFLIRT movement parameters and a
@@ -372,15 +382,20 @@ Derivatives related to t1w files are in the ``anat`` subfolder:
 - ``*T1w_space-MNI152NLin2009cAsym_class-WM_probtissue.nii.gz`` Probability tissue maps, transformed into MNI space
 - ``*T1w_target-MNI152NLin2009cAsym_warp.h5`` Composite (warp and affine) transform to transform t1w into MNI space
 
-Derivatives related to EPI files are in the ``func`` subfolder:
+Derivatives related to EPI files are in the ``func`` subfolder.
 
-- ``*bold_space-T1w_brainmask.nii.gz`` Brain mask for EPI files, calculated by nilearn on the average EPI volume, post-motion correction, in T1w space
-- ``*bold_space-MNI152NLin2009cAsym_brainmask.nii.gz`` Same as above, but in MNI space
 - ``*bold_confounds.tsv`` A tab-separated value file with one column per calculated confound and one row per timepoint/volume
-- ``*bold_space-T1w_preproc.nii.gz`` Motion-corrected (using MCFLIRT for estimation and ANTs for interpolation) EPI file in T1w space
-- ``*bold_space-MNI152NLin2009cAsym_preproc.nii.gz`` Same as above, but in MNI space
-- ``*bold_space-fsnative.[LR].func.gii`` Motion-corrected EPI file sampled to subject's "native" FreeSurfer surfaces
-- ``*bold_space-fsaverage.[LR].func.gii`` Same as above, but in FreeSurfer ``fsaverage`` template space
+
+Volumetric output spaces include ``T1w`` and ``MNI152NLin2009cAsym`` (default).
+
+- ``*bold_space-<space>_brainmask.nii.gz`` Brain mask for EPI files, calculated by nilearn on the average EPI volume, post-motion correction
+- ``*bold_space-<space>_preproc.nii.gz`` Motion-corrected (using MCFLIRT for estimation and ANTs for interpolation) EPI file
+
+Surface output spaces include ``fsnative`` (full density subject-specific mesh),
+``fsaverage`` and the down-sampled meshes ``fsaverage6`` (41k vertices) and
+``fsaverage5`` (10k vertices, default).
+
+- ``*bold_space-<space>.[LR].func.gii`` Motion-corrected EPI file sampled to surface ``<space>``
 
 
 FreeSurfer Derivatives
@@ -391,7 +406,7 @@ A FreeSurfer subjects directory is created in ``<output dir>/freesurfer``.
 ::
 
     freesurfer/
-        fsaverage/
+        fsaverage{,5,6}/
             mri/
             surf/
             ...
@@ -401,6 +416,7 @@ A FreeSurfer subjects directory is created in ``<output dir>/freesurfer``.
             ...
         ...
 
-A copy of the ``fsaverage`` subject distributed with the running version of
-FreeSurfer is copied into this subjects directory.
+Copies of the ``fsaverage`` subjects distributed with the running version of
+FreeSurfer are copied into this subjects directory, if any functional data are
+sampled to those subject spaces.
 
