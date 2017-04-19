@@ -382,15 +382,20 @@ Derivatives related to t1w files are in the ``anat`` subfolder:
 - ``*T1w_space-MNI152NLin2009cAsym_class-WM_probtissue.nii.gz`` Probability tissue maps, transformed into MNI space
 - ``*T1w_target-MNI152NLin2009cAsym_warp.h5`` Composite (warp and affine) transform to transform t1w into MNI space
 
-Derivatives related to EPI files are in the ``func`` subfolder:
+Derivatives related to EPI files are in the ``func`` subfolder.
 
-- ``*bold_space-T1w_brainmask.nii.gz`` Brain mask for EPI files, calculated by nilearn on the average EPI volume, post-motion correction, in T1w space
-- ``*bold_space-MNI152NLin2009cAsym_brainmask.nii.gz`` Same as above, but in MNI space
 - ``*bold_confounds.tsv`` A tab-separated value file with one column per calculated confound and one row per timepoint/volume
-- ``*bold_space-T1w_preproc.nii.gz`` Motion-corrected (using MCFLIRT for estimation and ANTs for interpolation) EPI file in T1w space
-- ``*bold_space-MNI152NLin2009cAsym_preproc.nii.gz`` Same as above, but in MNI space
-- ``*bold_space-fsnative.[LR].func.gii`` Motion-corrected EPI file sampled to subject's "native" FreeSurfer surfaces
-- ``*bold_space-fsaverage.[LR].func.gii`` Same as above, but in FreeSurfer ``fsaverage`` template space
+
+Volumetric output spaces include ``T1w`` and ``MNI152NLin2009cAsym`` (default).
+
+- ``*bold_space-<space>_brainmask.nii.gz`` Brain mask for EPI files, calculated by nilearn on the average EPI volume, post-motion correction
+- ``*bold_space-<space>_preproc.nii.gz`` Motion-corrected (using MCFLIRT for estimation and ANTs for interpolation) EPI file
+
+Surface output spaces include ``fsnative`` (full density subject-specific mesh),
+``fsaverage`` and the down-sampled meshes ``fsaverage6`` (41k vertices) and
+``fsaverage5`` (10k vertices, default).
+
+- ``*bold_space-<space>.[LR].func.gii`` Motion-corrected EPI file sampled to surface ``<space>``
 
 
 FreeSurfer Derivatives
@@ -401,7 +406,7 @@ A FreeSurfer subjects directory is created in ``<output dir>/freesurfer``.
 ::
 
     freesurfer/
-        fsaverage/
+        fsaverage{,5,6}/
             mri/
             surf/
             ...
@@ -411,6 +416,7 @@ A FreeSurfer subjects directory is created in ``<output dir>/freesurfer``.
             ...
         ...
 
-A copy of the ``fsaverage`` subject distributed with the running version of
-FreeSurfer is copied into this subjects directory.
+Copies of the ``fsaverage`` subjects distributed with the running version of
+FreeSurfer are copied into this subjects directory, if any functional data are
+sampled to those subject spaces.
 
