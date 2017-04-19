@@ -8,6 +8,7 @@ Next release
 * [ENH] Sample functional series to subject and ``fsaverage`` surfaces (#391)
 * [ENH] Output spaces for functional data may be selected with ``--output-space`` option (#447)
 * [DEP] ``--skip-native`` functionality replaced by ``--output-space`` (#447)
+* [ENH] ``fmriprep-docker`` wrapper script simplifies running in a Docker environment (#317)
 
 0.3.2 (7th of April 2017)
 =========================
