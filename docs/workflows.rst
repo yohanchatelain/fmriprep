@@ -146,14 +146,14 @@ packages, including FreeSurfer and the `Connectome Workbench`_.
 
 BOLD preprocessing
 ------------------
-:mod:`fmriprep.workflows.epi.bold_preprocessing`
+:mod:`fmriprep.workflows.epi.init_func_preproc_wf`
 
 .. workflow::
     :graph2use: orig
     :simple_form: yes
 
-    from fmriprep.workflows.epi import bold_preprocessing
-    wf = bold_preprocessing(
+    from fmriprep.workflows.epi import init_func_preproc_wf
+    wf = init_func_preproc_wf(
         "bold_preprocessing",
         settings={'ants_nthreads': 1,
                   'ignore':[],

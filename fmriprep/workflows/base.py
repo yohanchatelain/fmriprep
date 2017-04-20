@@ -22,7 +22,7 @@ from fmriprep.workflows import confounds
 
 from fmriprep.workflows.anatomical import init_anat_preproc_wf
 
-from fmriprep.workflows.epi import epi_hmc, bold_preprocessing, \
+from fmriprep.workflows.epi import epi_hmc, init_func_preproc_wf, \
     ref_epi_t1_registration
 
 from bids.grabbids import BIDSLayout
@@ -111,12 +111,12 @@ def basic_wf(subject_data, settings, name='basic_wf'):
     ])
 
     for bold_file in subject_data['func']:
-        bold_pre = bold_preprocessing(bold_file, layout=layout,
-                                      settings=settings)
+        func_preproc_wf = init_func_preproc_wf(bold_file, layout=layout,
+                                               settings=settings)
 
         workflow.connect([
-            (bidssrc, bold_pre, [('t1w', 'inputnode.t1w')]),
-            (anat_preproc_wf, bold_pre,
+            (bidssrc, func_preproc_wf, [('t1w', 'inputnode.t1w')]),
+            (anat_preproc_wf, func_preproc_wf,
              [('outputnode.bias_corrected_t1', 'inputnode.bias_corrected_t1'),
               ('outputnode.t1_brain', 'inputnode.t1_brain'),
               ('outputnode.t1_mask', 'inputnode.t1_mask'),
@@ -127,9 +127,9 @@ def basic_wf(subject_data, settings, name='basic_wf'):
 
         if settings['freesurfer']:
             workflow.connect([
-                (inputnode, bold_pre,
+                (inputnode, func_preproc_wf,
                  [('subjects_dir', 'inputnode.subjects_dir')]),
-                (anat_preproc_wf, bold_pre,
+                (anat_preproc_wf, func_preproc_wf,
                  [('outputnode.subject_id', 'inputnode.subject_id'),
                   ('outputnode.fs_2_t1_transform', 'inputnode.fs_2_t1_transform')]),
             ])
