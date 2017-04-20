@@ -298,15 +298,14 @@ step, so as little information is lost as possible.
 
 EPI sampled to FreeSurfer surfaces
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.epi.epi_surf_sample`
+:mod:`fmriprep.workflows.epi.init_epi_surf_wf`
 
 .. workflow::
     :graph2use: colored
     :simple_form: yes
 
-    from fmriprep.workflows.epi import epi_surf_sample
-    wf = epi_surf_sample(
-        "epi_surf_sample",
+    from fmriprep.workflows.epi import init_epi_surf_wf
+    wf = init_epi_surf_wf(
         settings={'output_dir': '.',
                   'output_spaces': ['T1w', 'fsnative',
                                     'MNI152NLin2009cAsym', 'fsaverage5'],
