@@ -13,12 +13,10 @@ import os
 from copy import deepcopy
 
 from nipype.pipeline import engine as pe
-from nipype.interfaces import fsl
 from nipype.interfaces import utility as niu
 
 from fmriprep.interfaces import BIDSDataGrabber, BIDSFreeSurferDir
 from fmriprep.utils.misc import collect_bids_data, get_biggest_epi_file_size_gb
-from fmriprep.workflows import confounds
 
 from fmriprep.workflows.anatomical import init_anat_preproc_wf
 
@@ -27,8 +25,8 @@ from fmriprep.workflows.epi import init_func_preproc_wf
 from bids.grabbids import BIDSLayout
 
 
-def base_workflow_enumerator(subject_list, task_id, settings, run_uuid):
-    workflow = pe.Workflow(name='base_workflow_enumerator')
+def init_fmriprep_wf(subject_list, task_id, settings, run_uuid):
+    workflow = pe.Workflow(name='fmriprep_wf')
 
     if settings.get('freesurfer', False):
         fsdir = pe.Node(
@@ -70,10 +68,10 @@ def base_workflow_generator(subject_id, task_id, settings):
         raise Exception("No T1w images found for participant {}. "
                         "All workflows require T1w images.".format(subject_id))
 
-    return basic_wf(subject_data, settings, name=subject_id)
+    return init_basic_wf(subject_data, settings, name=subject_id)
 
 
-def basic_wf(subject_data, settings, name='basic_wf'):
+def init_basic_wf(subject_data, settings, name='basic_wf'):
     """
     The main fmri preprocessing workflow, for the ds005-type of data:
 

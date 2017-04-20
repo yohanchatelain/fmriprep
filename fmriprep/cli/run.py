@@ -7,7 +7,6 @@ fMRI preprocessing workflow
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import os
 import os.path as op
 import glob
 import sys
@@ -16,6 +15,7 @@ from argparse import ArgumentParser
 from argparse import RawTextHelpFormatter
 from multiprocessing import cpu_count
 from time import strftime
+
 
 def get_parser():
     """Build parser object"""
@@ -116,6 +116,7 @@ def get_parser():
 
     return parser
 
+
 def main():
     """Entry point"""
     opts = get_parser().parse_args()
@@ -127,7 +128,7 @@ def create_workflow(opts):
     import logging
     from fmriprep.utils import make_folder
     from fmriprep.viz.reports import run_reports
-    from fmriprep.workflows.base import base_workflow_enumerator
+    from fmriprep.workflows.base import init_fmriprep_wf
 
     errno = 0
 
@@ -197,14 +198,14 @@ def create_workflow(opts):
     logger.info('Subject list: %s', ', '.join(subject_list))
 
     # Build main workflow and run
-    preproc_wf = base_workflow_enumerator(subject_list, task_id=opts.task_id,
-                                          settings=settings, run_uuid=run_uuid)
-    preproc_wf.base_dir = settings['work_dir']
+    fmriprep_wf = init_fmriprep_wf(subject_list, task_id=opts.task_id,
+                                   settings=settings, run_uuid=run_uuid)
+    fmriprep_wf.base_dir = settings['work_dir']
 
     if opts.reports_only:
         if opts.write_graph:
-            preproc_wf.write_graph(graph2use="colored", format='svg',
-                                   simple_form=True)
+            fmriprep_wf.write_graph(graph2use="colored", format='svg',
+                                    simple_form=True)
 
         for subject_label in subject_list:
             run_reports(settings['reportlets_dir'],
@@ -213,7 +214,7 @@ def create_workflow(opts):
         sys.exit()
 
     try:
-        preproc_wf.run(**plugin_settings)
+        fmriprep_wf.run(**plugin_settings)
     except RuntimeError as e:
         if "Workflow did not execute cleanly" in str(e):
             errno = 1
@@ -221,8 +222,8 @@ def create_workflow(opts):
             raise(e)
 
     if opts.write_graph:
-        preproc_wf.write_graph(graph2use="colored", format='svg',
-                               simple_form=True)
+        fmriprep_wf.write_graph(graph2use="colored", format='svg',
+                                simple_form=True)
 
     report_errors = 0
     for subject_label in subject_list:
@@ -233,6 +234,7 @@ def create_workflow(opts):
         assert(report_errors > 0)
 
     sys.exit(errno)
+
 
 if __name__ == '__main__':
     main()

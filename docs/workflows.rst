@@ -16,8 +16,8 @@ slice-timing information and no fieldmap acquisitions):
     :graph2use: colored
     :simple_form: yes
 
-    from fmriprep.workflows.base import basic_wf
-    wf = basic_wf(
+    from fmriprep.workflows.base import init_basic_wf
+    wf = init_basic_wf(
         {'func': ['bold_preprocessing']},
         settings={'ants_nthreads': 1,
                   'nthreads': 1,
