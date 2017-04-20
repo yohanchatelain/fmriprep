@@ -325,24 +325,25 @@ All surface outputs are in GIFTI format.
 
 Confounds estimation
 ~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.confounds.discover_wf`
+:mod:`fmriprep.workflows.confounds.init_discover_wf`
 
 .. workflow::
     :graph2use: colored
     :simple_form: yes
 
-    from fmriprep.workflows.confounds import discover_wf
-    wf = discover_wf(name="discover_wf",
-                 settings={'ants_nthreads': 1,
-                           'ignore':[],
-                                     'nthreads': 1,
-                                     'freesurfer': True,
-                                     'reportlets_dir': '.',
-                                     'output_dir': '.',
-                                     'bids_root': '.',
-                                     'biggest_epi_file_size_gb': 3,
-                                     'skull_strip_ants': True,
-                                     'debug': False})
+    from fmriprep.workflows.confounds import init_discover_wf
+    wf = init_discover_wf(
+        name="discover_wf",
+        settings={'ants_nthreads': 1,
+                  'ignore':[],
+                  'nthreads': 1,
+                  'freesurfer': True,
+                  'reportlets_dir': '.',
+                  'output_dir': '.',
+                  'bids_root': '.',
+                  'biggest_epi_file_size_gb': 3,
+                  'skull_strip_ants': True,
+                  'debug': False})
 
 Given a motion-corrected fMRI, a brain mask, MCFLIRT movement parameters and a
 segmentation, the `discover_wf` sub-workflow calculates potential
