@@ -175,14 +175,14 @@ Preprocessing of BOLD files is split into multiple sub-workflows decribed below.
 
 Head-motion estimation and slice time correction
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.epi.epi_hmc`
+:mod:`fmriprep.workflows.epi.init_epi_hmc_wf`
 
 .. workflow::
     :graph2use: colored
     :simple_form: yes
 
-    from fmriprep.workflows.epi import epi_hmc
-    wf = epi_hmc(
+    from fmriprep.workflows.epi import init_epi_hmc_wf
+    wf = init_epi_hmc_wf(
         metadata={"RepetitionTime": 2.0,
                   "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]},
         settings={'ants_nthreads': 1,
@@ -229,15 +229,14 @@ Susceptibility Distortion Correction (SDC)
 
 EPI to T1w registration
 ~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.epi.ref_epi_t1_registration`
+:mod:`fmriprep.workflows.epi.init_epi_reg_wf`
 
 .. workflow::
     :graph2use: colored
     :simple_form: yes
 
-    from fmriprep.workflows.epi import ref_epi_t1_registration
-    wf = ref_epi_t1_registration(
-        "ref_epi_t1_registration",
+    from fmriprep.workflows.epi import init_epi_reg_wf
+    wf = init_epi_reg_wf(
         settings={'ants_nthreads': 1,
                   'ignore':[],
                   'nthreads': 1,

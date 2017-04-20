@@ -22,8 +22,7 @@ from fmriprep.workflows import confounds
 
 from fmriprep.workflows.anatomical import init_anat_preproc_wf
 
-from fmriprep.workflows.epi import epi_hmc, init_func_preproc_wf, \
-    ref_epi_t1_registration
+from fmriprep.workflows.epi import init_func_preproc_wf
 
 from bids.grabbids import BIDSLayout
 
