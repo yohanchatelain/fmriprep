@@ -29,7 +29,7 @@ from bids.grabbids import BIDSLayout
 
 
 def base_workflow_enumerator(subject_list, task_id, settings, run_uuid):
-    workflow = pe.Workflow(name='workflow_enumerator')
+    workflow = pe.Workflow(name='base_workflow_enumerator')
 
     if settings.get('freesurfer', False):
         fsdir = pe.Node(
@@ -37,7 +37,7 @@ def base_workflow_enumerator(subject_list, task_id, settings, run_uuid):
                 derivatives=settings['output_dir'],
                 freesurfer_home=os.getenv('FREESURFER_HOME'),
                 spaces=settings['output_spaces']),
-            name='BIDSFreesurfer')
+            name='fsdir')
 
     for subject in subject_list:
         generated_workflow = base_workflow_generator(subject, task_id=task_id,
@@ -74,7 +74,7 @@ def base_workflow_generator(subject_id, task_id, settings):
     return basic_wf(subject_data, settings, name=subject_id)
 
 
-def basic_wf(subject_data, settings, name='fMRI_prep'):
+def basic_wf(subject_data, settings, name='basic_wf'):
     """
     The main fmri preprocessing workflow, for the ds005-type of data:
 
@@ -99,10 +99,10 @@ def basic_wf(subject_data, settings, name='fMRI_prep'):
                         name='inputnode')
 
     bidssrc = pe.Node(BIDSDataGrabber(subject_data=subject_data),
-                      name='BIDSDatasource')
+                      name='bidssrc')
 
     # Preprocessing of T1w (includes registration to MNI)
-    t1w_pre = t1w_preprocessing(settings=settings)
+    t1w_pre = t1w_preprocessing(name="t1w_pre", settings=settings)
 
     workflow.connect([
         (inputnode, t1w_pre, [('subjects_dir', 'inputnode.subjects_dir')]),
