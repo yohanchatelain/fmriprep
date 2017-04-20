@@ -1,5 +1,5 @@
-Next release
-============
+0.4.0 (20th of April 2017)
+==========================
 
 * [ENH] Added an option to choose the degrees of freedom used when doing BOLD to T1w coregistration (``--bold2t1w_dof``). Set default to 9 to account for field inhomogeneities and coils heating up (#448)
 * [ENH] Added support for phase difference and GE style fieldmaps (#448)
