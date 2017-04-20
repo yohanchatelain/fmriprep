@@ -20,7 +20,7 @@ from fmriprep.interfaces import BIDSDataGrabber, BIDSFreeSurferDir
 from fmriprep.utils.misc import collect_bids_data, get_biggest_epi_file_size_gb
 from fmriprep.workflows import confounds
 
-from fmriprep.workflows.anatomical import t1w_preprocessing
+from fmriprep.workflows.anatomical import init_anat_preproc_wf
 
 from fmriprep.workflows.epi import epi_hmc, bold_preprocessing, \
     ref_epi_t1_registration
@@ -102,12 +102,12 @@ def basic_wf(subject_data, settings, name='basic_wf'):
                       name='bidssrc')
 
     # Preprocessing of T1w (includes registration to MNI)
-    t1w_pre = t1w_preprocessing(name="t1w_pre", settings=settings)
+    anat_preproc_wf = init_anat_preproc_wf(name="anat_preproc_wf", settings=settings)
 
     workflow.connect([
-        (inputnode, t1w_pre, [('subjects_dir', 'inputnode.subjects_dir')]),
-        (bidssrc, t1w_pre, [('t1w', 'inputnode.t1w'),
-                            ('t2w', 'inputnode.t2w')]),
+        (inputnode, anat_preproc_wf, [('subjects_dir', 'inputnode.subjects_dir')]),
+        (bidssrc, anat_preproc_wf, [('t1w', 'inputnode.t1w'),
+                                    ('t2w', 'inputnode.t2w')]),
     ])
 
     for bold_file in subject_data['func']:
@@ -116,7 +116,7 @@ def basic_wf(subject_data, settings, name='basic_wf'):
 
         workflow.connect([
             (bidssrc, bold_pre, [('t1w', 'inputnode.t1w')]),
-            (t1w_pre, bold_pre,
+            (anat_preproc_wf, bold_pre,
              [('outputnode.bias_corrected_t1', 'inputnode.bias_corrected_t1'),
               ('outputnode.t1_brain', 'inputnode.t1_brain'),
               ('outputnode.t1_mask', 'inputnode.t1_mask'),
@@ -129,7 +129,7 @@ def basic_wf(subject_data, settings, name='basic_wf'):
             workflow.connect([
                 (inputnode, bold_pre,
                  [('subjects_dir', 'inputnode.subjects_dir')]),
-                (t1w_pre, bold_pre,
+                (anat_preproc_wf, bold_pre,
                  [('outputnode.subject_id', 'inputnode.subject_id'),
                   ('outputnode.fs_2_t1_transform', 'inputnode.fs_2_t1_transform')]),
             ])

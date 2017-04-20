@@ -38,21 +38,21 @@ slice-timing information and no fieldmap acquisitions):
 
 T1w/T2w preprocessing
 ---------------------
-:mod:`fmriprep.workflows.anatomical.t1w_preprocessing`
+:mod:`fmriprep.workflows.anatomical.init_anat_preproc_wf`
 
 .. workflow::
     :graph2use: colored
     :simple_form: yes
 
-    from fmriprep.workflows.anatomical import t1w_preprocessing
-    wf = t1w_preprocessing(settings={'ants_nthreads': 1,
-                                     'nthreads': 1,
-                                     'freesurfer': True,
-                                     'reportlets_dir': '.',
-                                     'output_dir': '.',
-                                     'skull_strip_ants': True,
-                                     'debug': False,
-                                     'hires': True})
+    from fmriprep.workflows.anatomical import init_anat_preproc_wf
+    wf = init_anat_preproc_wf(settings={'ants_nthreads': 1,
+                                        'nthreads': 1,
+                                        'freesurfer': True,
+                                        'reportlets_dir': '.',
+                                        'output_dir': '.',
+                                        'skull_strip_ants': True,
+                                        'debug': False,
+                                        'hires': True})
 
 This sub-workflow finds the skull stripping mask and the
 white matter/gray matter/cerebrospinal fluid segments and finds a non-linear
@@ -75,14 +75,14 @@ warp to the MNI space.
 
 Surface preprocessing
 ~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.anatomical.surface_reconstruction`
+:mod:`fmriprep.workflows.anatomical.init_surface_recon_wf`
 
 .. workflow::
     :graph2use: colored
     :simple_form: yes
 
-    from fmriprep.workflows.anatomical import surface_reconstruction
-    wf = surface_reconstruction(
+    from fmriprep.workflows.anatomical import init_surface_recon_wf
+    wf = init_surface_recon_wf(
         settings={'nthreads': 1,
                   'freesurfer': True,
                   'reportlets_dir': '.',

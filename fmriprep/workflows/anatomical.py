@@ -19,7 +19,7 @@ from nipype.interfaces import io as nio
 from nipype.pipeline import engine as pe
 
 from niworkflows.interfaces.registration import RobustMNINormalizationRPT
-from niworkflows.anat.skullstrip import afni_wf as skullstrip_wf
+from niworkflows.anat.skullstrip import afni_wf as init_skullstrip_afni_wf
 from niworkflows.data import get_mni_icbm152_nlin_asym_09c
 from niworkflows.interfaces.masks import BrainExtractionRPT
 from niworkflows.interfaces.segmentation import FASTRPT, ReconAllRPT
@@ -30,7 +30,7 @@ from fmriprep.utils.misc import fix_multi_T1w_source_name
 
 
 #  pylint: disable=R0914
-def t1w_preprocessing(settings, name='t1w_preprocessing'):
+def init_anat_preproc_wf(settings, name='anat_preproc_wf'):
     """T1w images preprocessing pipeline"""
 
     workflow = pe.Workflow(name=name)
@@ -57,9 +57,9 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
     # Bias field correction is handled in skull strip workflows.
 
     # 3. Skull-stripping
-    asw = skullstrip_wf(name='asw')
+    skullstrip_wf = init_skullstrip_afni_wf(name='skullstrip_afni_wf')
     if settings.get('skull_strip_ants', False):
-        asw = skullstrip_ants(name='asw', settings=settings)
+        skullstrip_wf = init_skullstrip_ants_wf(name='skullstrip_ants_wf', settings=settings)
 
     # 4. Segmentation
     t1_seg = pe.Node(FASTRPT(generate_report=True, segments=True,
@@ -82,8 +82,8 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
 
     # 6. FreeSurfer reconstruction
     if settings['freesurfer']:
-        surface_recon = surface_reconstruction(name='surface_recon',
-                                               settings=settings)
+        surface_recon_wf = init_surface_recon_wf(name='surface_recon_wf',
+                                                 settings=settings)
 
     # Resample the brain mask and the tissue probability maps into mni space
     bmask_mni = pe.Node(
@@ -117,24 +117,24 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
     workflow.connect([
         (inputnode, t1wmrg, [('t1w', 'in_files')]),
         (t1wmrg, arw, [('out_avg', 'in_file')]),
-        (arw, asw, [('out_file', 'inputnode.in_file')]),
-        (asw, t1_seg, [('outputnode.out_file', 'in_files')]),
-        (asw, t1_2_mni, [('outputnode.bias_corrected', 'moving_image')]),
-        (asw, t1_2_mni, [('outputnode.out_mask', 'moving_mask')]),
+        (arw, skullstrip_wf, [('out_file', 'inputnode.in_file')]),
+        (skullstrip_wf, t1_seg, [('outputnode.out_file', 'in_files')]),
+        (skullstrip_wf, t1_2_mni, [('outputnode.bias_corrected', 'moving_image')]),
+        (skullstrip_wf, t1_2_mni, [('outputnode.out_mask', 'moving_mask')]),
         (t1_seg, outputnode, [('tissue_class_map', 't1_seg')]),
-        (asw, outputnode, [('outputnode.bias_corrected', 'bias_corrected_t1')]),
+        (skullstrip_wf, outputnode, [('outputnode.bias_corrected', 'bias_corrected_t1')]),
         (t1_seg, outputnode, [('probability_maps', 't1_tpms')]),
         (t1_2_mni, outputnode, [
             ('warped_image', 't1_2_mni'),
             ('composite_transform', 't1_2_mni_forward_transform'),
             ('inverse_composite_transform', 't1_2_mni_reverse_transform')
         ]),
-        (asw, bmask_mni, [('outputnode.out_mask', 'input_image')]),
+        (skullstrip_wf, bmask_mni, [('outputnode.out_mask', 'input_image')]),
         (t1_2_mni, bmask_mni, [('composite_transform', 'transforms')]),
         (t1_seg, tpms_mni, [('probability_maps', 'input_image')]),
         (t1_2_mni, tpms_mni, [('composite_transform', 'transforms')]),
-        (asw, outputnode, [('outputnode.out_file', 't1_brain'),
-                           ('outputnode.out_mask', 't1_mask')]),
+        (skullstrip_wf, outputnode, [('outputnode.out_file', 't1_brain'),
+                                     ('outputnode.out_mask', 't1_mask')]),
         (inputnode, ds_t1_seg_report, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
         (t1_seg, ds_t1_seg_report, [('out_report', 'in_file')]),
         (inputnode, ds_t1_2_mni_report, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
@@ -150,19 +150,22 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
         workflow.connect([
             (inputnode, ds_t1_skull_strip_report, [
                 (('t1w', fix_multi_T1w_source_name), 'source_file')]),
-            (asw, ds_t1_skull_strip_report, [('outputnode.out_report', 'in_file')])
+            (skullstrip_wf, ds_t1_skull_strip_report, [('outputnode.out_report', 'in_file')])
         ])
 
     if settings['freesurfer']:
         workflow.connect([
-            (inputnode, surface_recon, [('t1w', 'inputnode.t1w'),
-                                        ('t2w', 'inputnode.t2w'),
-                                        ('subjects_dir', 'inputnode.subjects_dir')]),
-            (arw, surface_recon, [('out_file', 'inputnode.reoriented_t1')]),
-            (asw, surface_recon, [('outputnode.out_file', 'inputnode.skullstripped_t1')]),
-            (surface_recon, outputnode, [('outputnode.subjects_dir', 'subjects_dir'),
-                                         ('outputnode.subject_id', 'subject_id'),
-                                         ('outputnode.fs_2_t1_transform', 'fs_2_t1_transform')]),
+            (inputnode, surface_recon_wf, [
+                ('t1w', 'inputnode.t1w'),
+                ('t2w', 'inputnode.t2w'),
+                ('subjects_dir', 'inputnode.subjects_dir')]),
+            (arw, surface_recon_wf, [('out_file', 'inputnode.reoriented_t1')]),
+            (skullstrip_wf, surface_recon_wf, [
+                ('outputnode.out_file', 'inputnode.skullstripped_t1')]),
+            (surface_recon_wf, outputnode, [
+                ('outputnode.subjects_dir', 'subjects_dir'),
+                ('outputnode.subject_id', 'subject_id'),
+                ('outputnode.fs_2_t1_transform', 'fs_2_t1_transform')]),
             ])
 
     # Write corrected file in the designated output dir
@@ -215,10 +218,10 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
         (inputnode, ds_t1_mni, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
         (inputnode, ds_bmask_mni, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
         (inputnode, ds_tpms_mni, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
-        (asw, ds_t1_bias, [('outputnode.bias_corrected', 'in_file')]),
+        (skullstrip_wf, ds_t1_bias, [('outputnode.bias_corrected', 'in_file')]),
         #  (inu_n4, ds_t1_bias, [('output_image', 'in_file')]),
         (t1_seg, ds_t1_seg, [('tissue_class_map', 'in_file')]),
-        (asw, ds_mask, [('outputnode.out_mask', 'in_file')]),
+        (skullstrip_wf, ds_mask, [('outputnode.out_mask', 'in_file')]),
         (t1_2_mni, ds_t1_mni, [('warped_image', 'in_file')]),
         (bmask_mni, ds_bmask_mni, [('output_image', 'in_file')]),
         (tpms_mni, ds_tpms_mni, [('output_image', 'in_file')])
@@ -227,7 +230,7 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
     return workflow
 
 
-def skullstrip_ants(name='skullstrip_ants', settings=None):
+def init_skullstrip_ants_wf(name='skullstrip_ants_wf', settings=None):
     from niworkflows.data import get_ants_oasis_template_ras
     if settings is None:
         settings = {'debug': False}
@@ -273,7 +276,7 @@ def skullstrip_ants(name='skullstrip_ants', settings=None):
     return workflow
 
 
-def surface_reconstruction(name='surface_reconstruction', settings=None):
+def init_surface_recon_wf(name='surface_recon_wf', settings=None):
     if settings is None:
         settings = {'debug': False}
 
