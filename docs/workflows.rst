@@ -266,15 +266,14 @@ boundary.
 
 EPI to MNI transformation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.epi.epi_mni_transformation`
+:mod:`fmriprep.workflows.epi.init_epi_mni_trans_wf`
 
 .. workflow::
     :graph2use: colored
     :simple_form: yes
 
-    from fmriprep.workflows.epi import epi_mni_transformation
-    wf = epi_mni_transformation(
-        "epi_mni_transformation",
+    from fmriprep.workflows.epi import init_epi_mni_trans_wf
+    wf = init_epi_mni_trans_wf(
         settings={'ants_nthreads': 1,
                   'ignore':[],
                   'nthreads': 1,
