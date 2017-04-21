@@ -126,7 +126,6 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
         surface_recon_wf = init_surface_recon_wf(name='surface_recon_wf',
                                                  nthreads=nthreads,
                                                  hires=hires,
-                                                 reportlets_dir=reportlets_dir,
                                                  output_dir=output_dir)
 
         workflow.connect([
@@ -143,97 +142,42 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
                 ('outputnode.fs_2_t1_transform', 'fs_2_t1_transform')]),
             ])
 
-    # Reports
-    ds_t1_seg_report = pe.Node(
-        DerivativesDataSink(base_directory=reportlets_dir,
-                            suffix='t1_seg'),
-        name='ds_t1_seg_report'
-    )
-
-    ds_t1_2_mni_report = pe.Node(
-        DerivativesDataSink(base_directory=reportlets_dir,
-                            suffix='t1_2_mni'),
-        name='ds_t1_2_mni_report'
-    )
-
+    anat_reports_wf = init_anat_reports_wf(
+        reportlets_dir=reportlets_dir, skull_strip_ants=skull_strip_ants, freesurfer=freesurfer)
     workflow.connect([
-        (inputnode, ds_t1_seg_report, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
-        (t1_seg, ds_t1_seg_report, [('out_report', 'in_file')]),
-        (inputnode, ds_t1_2_mni_report, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
-        (t1_2_mni, ds_t1_2_mni_report, [('out_report', 'in_file')])
-    ])
-
-    if skull_strip_ants:
-        ds_t1_skull_strip_report = pe.Node(
-            DerivativesDataSink(base_directory=reportlets_dir,
-                                suffix='t1_skull_strip'),
-            name='ds_t1_skull_strip_report'
-        )
-        workflow.connect([
-            (inputnode, ds_t1_skull_strip_report, [
-                (('t1w', fix_multi_T1w_source_name), 'source_file')]),
-            (skullstrip_wf, ds_t1_skull_strip_report, [('outputnode.out_report', 'in_file')])
+        (inputnode, anat_reports_wf, [
+            (('t1w', fix_multi_T1w_source_name), 'inputnode.source_file')]),
+        (t1_seg, anat_reports_wf, [('out_report', 'inputnode.t1_seg_report')]),
+        (t1_2_mni, anat_reports_wf, [('out_report', 'inputnode.t1_2_mni_report')]),
         ])
 
-    # Derivatives
-    ds_t1_bias = pe.Node(
-        DerivativesDataSink(base_directory=output_dir,
-                            suffix='preproc'),
-        name='ds_t1_bias'
-    )
-    ds_t1_seg = pe.Node(
-        DerivativesDataSink(base_directory=output_dir,
-                            suffix='dtissue'),
-        name='ds_t1_seg'
-    )
-    ds_mask = pe.Node(
-        DerivativesDataSink(base_directory=output_dir,
-                            suffix='brainmask'),
-        name='ds_mask'
-    )
-    ds_t1_mni = pe.Node(
-        DerivativesDataSink(base_directory=output_dir,
-                            suffix='space-MNI152NLin2009cAsym_preproc'),
-        name='ds_t1_mni'
-    )
-    ds_bmask_mni = pe.Node(
-        DerivativesDataSink(base_directory=output_dir,
-                            suffix='space-MNI152NLin2009cAsym_brainmask'),
-        name='ds_bmask_mni'
-    )
-    ds_tpms_mni = pe.Node(
-        DerivativesDataSink(base_directory=output_dir,
-                            suffix='space-MNI152NLin2009cAsym_class-{extra_value}_probtissue'),
-        name='ds_tpms_mni'
-    )
-    ds_tpms_mni.inputs.extra_values = ['CSF', 'GM', 'WM']
+    if skull_strip_ants:
+        workflow.connect([
+            (skullstrip_wf, anat_reports_wf, [
+                ('outputnode.out_report', 'inputnode.t1_skull_strip_report')])
+        ])
+    if freesurfer:
+        workflow.connect([
+            (surface_recon_wf, anat_reports_wf, [
+                ('outputnode.out_report', 'inputnode.recon_report')])
+        ])
 
-    ds_t1_mni_warp = pe.Node(
-        DerivativesDataSink(base_directory=output_dir,
-                            suffix='target-MNI152NLin2009cAsym_warp'), name='ds_t1_mni_warp')
+    anat_derivatives_wf = init_anat_derivatives_wf(output_dir=output_dir)
 
     workflow.connect([
-        (inputnode, ds_t1_mni_warp, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
-        (t1_2_mni, ds_t1_mni_warp, [
-            ('composite_transform', 'in_file')])
+        (inputnode, anat_derivatives_wf, [
+            (('t1w', fix_multi_T1w_source_name), 'inputnode.source_file')]),
+        (outputnode, anat_derivatives_wf, [
+            ('bias_corrected_t1', 'inputnode.bias_corrected_t1'),
+            ('t1_mask', 'inputnode.t1_mask'),
+            ('t1_seg', 'inputnode.t1_seg'),
+            ('t1_2_mni_forward_transform', 'inputnode.t1_2_mni_forward_transform'),
+            ('t1_2_mni', 'inputnode.t1_2_mni'),
+            ]),
+        (bmask_mni, anat_derivatives_wf, [('output_image', 'inputnode.mni_mask')]),
+        (tpms_mni, anat_derivatives_wf, [('output_image', 'inputnode.mni_tpms')])
     ])
 
-    workflow.connect([
-        (inputnode, ds_t1_bias, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
-        (inputnode, ds_t1_seg, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
-        (inputnode, ds_mask, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
-        (inputnode, ds_t1_mni, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
-        (inputnode, ds_bmask_mni, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
-        (inputnode, ds_tpms_mni, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
-        (skullstrip_wf, ds_t1_bias, [('outputnode.bias_corrected', 'in_file')]),
-        #  (inu_n4, ds_t1_bias, [('output_image', 'in_file')]),
-        (t1_seg, ds_t1_seg, [('tissue_class_map', 'in_file')]),
-        (skullstrip_wf, ds_mask, [('outputnode.out_mask', 'in_file')]),
-        (t1_2_mni, ds_t1_mni, [('warped_image', 'in_file')]),
-        (bmask_mni, ds_bmask_mni, [('output_image', 'in_file')]),
-        (tpms_mni, ds_tpms_mni, [('output_image', 'in_file')])
-
-    ])
     return workflow
 
 
@@ -281,8 +225,7 @@ def init_skullstrip_ants_wf(debug, ants_nthreads, name='skullstrip_ants_wf'):
     return workflow
 
 
-def init_surface_recon_wf(nthreads, hires, reportlets_dir, output_dir,
-                          name='surface_recon_wf'):
+def init_surface_recon_wf(nthreads, hires, output_dir, name='surface_recon_wf'):
 
     workflow = pe.Workflow(name=name)
 
@@ -290,8 +233,10 @@ def init_surface_recon_wf(nthreads, hires, reportlets_dir, output_dir,
         niu.IdentityInterface(
             fields=['t1w', 't2w', 'reoriented_t1', 'skullstripped_t1', 'subjects_dir']),
         name='inputnode')
-    outputnode = pe.Node(niu.IdentityInterface(
-        fields=['subjects_dir', 'subject_id', 'fs_2_t1_transform']), name='outputnode')
+    outputnode = pe.Node(
+        niu.IdentityInterface(
+            fields=['subjects_dir', 'subject_id', 'fs_2_t1_transform', 'out_report']),
+        name='outputnode')
 
     def detect_inputs(t1w_list, t2w_list=[], hires_enabled=True):
         from nipype.interfaces.base import isdefined
@@ -390,19 +335,11 @@ def init_surface_recon_wf(nthreads, hires, reportlets_dir, output_dir,
     reconall.interface.num_threads = nthreads
 
     fs_transform = pe.Node(
-        fs.Tkregister2(fsl_out='freesurfer2subT1.mat',
-                               reg_header=True),
+        fs.Tkregister2(fsl_out='freesurfer2subT1.mat', reg_header=True),
         name='fs_transform')
 
-    recon_report = pe.Node(
-        DerivativesDataSink(base_directory=reportlets_dir,
-                            suffix='reconall'),
-        name='recon_report'
-    )
-
     midthickness = pe.MapNode(
-        fs.MRIsExpand(thickness=True, distance=0.5,
-                              out_name='midthickness'),
+        fs.MRIsExpand(thickness=True, distance=0.5, out_name='midthickness'),
         iterfield='in_file',
         name='midthickness')
 
@@ -496,7 +433,8 @@ def init_surface_recon_wf(nthreads, hires, reportlets_dir, output_dir,
         (injector, reconall, [('subjects_dir', 'subjects_dir'),
                               ('subject_id', 'subject_id')]),
         (reconall, outputnode, [('subjects_dir', 'subjects_dir'),
-                                ('subject_id', 'subject_id')]),
+                                ('subject_id', 'subject_id'),
+                                ('out_report', 'out_report')]),
         # Reconstruction phases
         (recon_config, autorecon1, [('t1w', 'T1_files'),
                                     ('t2w', 'T2_file'),
@@ -505,10 +443,6 @@ def init_surface_recon_wf(nthreads, hires, reportlets_dir, output_dir,
                                     ('mris_inflate', 'mris_inflate')]),
         (inputnode, injector, [('skullstripped_t1', 'skullstripped')]),
         (recon_config, reconall, [('use_T2', 'use_T2')]),
-        # Display surface contours on structural image
-        (recon_config, recon_report, [
-            (('t1w', fix_multi_T1w_source_name), 'source_file')]),
-        (reconall, recon_report, [('out_report', 'in_file')]),
         # Construct transform from FreeSurfer conformed image to FMRIPREP
         # reoriented image
         (inputnode, fs_transform, [('reoriented_t1', 'target_image')]),
@@ -531,5 +465,112 @@ def init_surface_recon_wf(nthreads, hires, reportlets_dir, output_dir,
         (name_surfs, ds_surfs, [('out', 'suffix')]),
         (fix_surfs, ds_surfs, [('out', 'in_file')]),
         ])
+
+    return workflow
+
+
+def init_anat_reports_wf(reportlets_dir, skull_strip_ants, freesurfer, name='anat_reports_wf'):
+    workflow = pe.Workflow(name=name)
+
+    inputnode = pe.Node(
+        niu.IdentityInterface(
+            fields=['source_file', 't1_seg_report', 't1_2_mni_report',
+                    't1_skull_strip_report', 'recon_report']),
+        name='inputnode')
+
+    ds_t1_seg_report = pe.Node(
+        DerivativesDataSink(base_directory=reportlets_dir, suffix='t1_seg'),
+        name='ds_t1_seg_report')
+
+    ds_t1_2_mni_report = pe.Node(
+        DerivativesDataSink(base_directory=reportlets_dir, suffix='t1_2_mni'),
+        name='ds_t1_2_mni_report')
+
+    ds_t1_skull_strip_report = pe.Node(
+        DerivativesDataSink(base_directory=reportlets_dir, suffix='t1_skull_strip'),
+        name='ds_t1_skull_strip_report')
+
+    ds_recon_report = pe.Node(
+        DerivativesDataSink(base_directory=reportlets_dir, suffix='reconall'),
+        name='ds_recon_report')
+
+    workflow.connect([
+        (inputnode, ds_t1_seg_report, [('source_file', 'source_file'),
+                                       ('t1_seg_report', 'in_file')]),
+        (inputnode, ds_t1_2_mni_report, [('source_file', 'source_file'),
+                                         ('t1_2_mni_report', 'in_file')])
+    ])
+
+    if skull_strip_ants:
+        workflow.connect([
+            (inputnode, ds_t1_skull_strip_report, [('source_file', 'source_file'),
+                                                   ('t1_skull_strip_report', 'in_file')])
+        ])
+    if freesurfer:
+        workflow.connect([
+            (inputnode, ds_recon_report, [('source_file', 'source_file'),
+                                          ('recon_report', 'in_file')])
+        ])
+
+    return workflow
+
+
+def init_anat_derivatives_wf(output_dir, name='anat_derivatives_wf'):
+    workflow = pe.Workflow(name=name)
+
+    inputnode = pe.Node(
+        niu.IdentityInterface(
+            fields=['source_file', 'bias_corrected_t1', 't1_mask', 't1_seg',
+                    't1_2_mni_forward_transform', 't1_2_mni', 'mni_mask',
+                    'mni_tpms']),
+        name='inputnode')
+
+    ds_t1_bias = pe.Node(
+        DerivativesDataSink(base_directory=output_dir, suffix='preproc'),
+        name='ds_t1_bias')
+
+    ds_t1_seg = pe.Node(
+        DerivativesDataSink(base_directory=output_dir, suffix='dtissue'),
+        name='ds_t1_seg')
+
+    ds_mask = pe.Node(
+        DerivativesDataSink(base_directory=output_dir, suffix='brainmask'),
+        name='ds_mask')
+
+    ds_t1_mni = pe.Node(
+        DerivativesDataSink(base_directory=output_dir, suffix='space-MNI152NLin2009cAsym_preproc'),
+        name='ds_t1_mni')
+
+    ds_bmask_mni = pe.Node(
+        DerivativesDataSink(base_directory=output_dir,
+                            suffix='space-MNI152NLin2009cAsym_brainmask'),
+        name='ds_bmask_mni')
+
+    ds_tpms_mni = pe.Node(
+        DerivativesDataSink(base_directory=output_dir,
+                            suffix='space-MNI152NLin2009cAsym_class-{extra_value}_probtissue'),
+        name='ds_tpms_mni')
+    ds_tpms_mni.inputs.extra_values = ['CSF', 'GM', 'WM']
+
+    ds_t1_mni_warp = pe.Node(
+        DerivativesDataSink(base_directory=output_dir, suffix='target-MNI152NLin2009cAsym_warp'),
+        name='ds_t1_mni_warp')
+
+    workflow.connect([
+        (inputnode, ds_t1_bias, [('source_file', 'source_file'),
+                                 ('bias_corrected_t1', 'in_file')]),
+        (inputnode, ds_mask, [('source_file', 'source_file'),
+                              ('t1_mask', 'in_file')]),
+        (inputnode, ds_t1_seg, [('source_file', 'source_file'),
+                                ('t1_seg', 'in_file')]),
+        (inputnode, ds_t1_mni_warp, [('source_file', 'source_file'),
+                                     ('t1_2_mni_forward_transform', 'in_file')]),
+        (inputnode, ds_t1_mni, [('source_file', 'source_file'),
+                                ('t1_2_mni', 'in_file')]),
+        (inputnode, ds_bmask_mni, [('source_file', 'source_file'),
+                                   ('mni_mask', 'in_file')]),
+        (inputnode, ds_tpms_mni, [('source_file', 'source_file'),
+                                  ('mni_tpms', 'in_file')])
+    ])
 
     return workflow

@@ -84,7 +84,6 @@ Surface preprocessing
 
     from fmriprep.workflows.anatomical import init_surface_recon_wf
     wf = init_surface_recon_wf(nthreads=1,
-                               reportlets_dir='.',
                                output_dir='.',
                                hires=True)
 
