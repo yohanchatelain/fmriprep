@@ -237,6 +237,7 @@ EPI to T1w registration
 
     from fmriprep.workflows.epi import init_epi_reg_wf
     wf = init_epi_reg_wf(
+        'reportlet_suffix',
         settings={'ants_nthreads': 1,
                   'ignore':[],
                   'nthreads': 1,
