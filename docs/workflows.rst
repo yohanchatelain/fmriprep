@@ -13,7 +13,7 @@ High-level view of the basic pipeline (for single-band datasets, without
 slice-timing information and no fieldmap acquisitions):
 
 .. workflow::
-    :graph2use: colored
+    :graph2use: orig
     :simple_form: yes
 
     from fmriprep.workflows.base import basic_wf
@@ -41,7 +41,7 @@ T1w/T2w preprocessing
 :mod:`fmriprep.workflows.anatomical.t1w_preprocessing`
 
 .. workflow::
-    :graph2use: colored
+    :graph2use: orig
     :simple_form: yes
 
     from fmriprep.workflows.anatomical import t1w_preprocessing
