@@ -16,8 +16,8 @@ slice-timing information and no fieldmap acquisitions):
     :graph2use: colored
     :simple_form: yes
 
-    from fmriprep.workflows.base import basic_wf
-    wf = basic_wf(
+    from fmriprep.workflows.base import init_basic_wf
+    wf = init_basic_wf(
         {'func': ['bold_preprocessing']},
         settings={'ants_nthreads': 1,
                   'nthreads': 1,
@@ -38,21 +38,21 @@ slice-timing information and no fieldmap acquisitions):
 
 T1w/T2w preprocessing
 ---------------------
-:mod:`fmriprep.workflows.anatomical.t1w_preprocessing`
+:mod:`fmriprep.workflows.anatomical.init_anat_preproc_wf`
 
 .. workflow::
     :graph2use: colored
     :simple_form: yes
 
-    from fmriprep.workflows.anatomical import t1w_preprocessing
-    wf = t1w_preprocessing(settings={'ants_nthreads': 1,
-                                     'nthreads': 1,
-                                     'freesurfer': True,
-                                     'reportlets_dir': '.',
-                                     'output_dir': '.',
-                                     'skull_strip_ants': True,
-                                     'debug': False,
-                                     'hires': True})
+    from fmriprep.workflows.anatomical import init_anat_preproc_wf
+    wf = init_anat_preproc_wf(settings={'ants_nthreads': 1,
+                                        'nthreads': 1,
+                                        'freesurfer': True,
+                                        'reportlets_dir': '.',
+                                        'output_dir': '.',
+                                        'skull_strip_ants': True,
+                                        'debug': False,
+                                        'hires': True})
 
 This sub-workflow finds the skull stripping mask and the
 white matter/gray matter/cerebrospinal fluid segments and finds a non-linear
@@ -75,14 +75,14 @@ warp to the MNI space.
 
 Surface preprocessing
 ~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.anatomical.surface_reconstruction`
+:mod:`fmriprep.workflows.anatomical.init_surface_recon_wf`
 
 .. workflow::
     :graph2use: colored
     :simple_form: yes
 
-    from fmriprep.workflows.anatomical import surface_reconstruction
-    wf = surface_reconstruction(
+    from fmriprep.workflows.anatomical import init_surface_recon_wf
+    wf = init_surface_recon_wf(
         settings={'nthreads': 1,
                   'freesurfer': True,
                   'reportlets_dir': '.',
@@ -146,14 +146,14 @@ packages, including FreeSurfer and the `Connectome Workbench`_.
 
 BOLD preprocessing
 ------------------
-:mod:`fmriprep.workflows.epi.bold_preprocessing`
+:mod:`fmriprep.workflows.epi.init_func_preproc_wf`
 
 .. workflow::
     :graph2use: orig
     :simple_form: yes
 
-    from fmriprep.workflows.epi import bold_preprocessing
-    wf = bold_preprocessing(
+    from fmriprep.workflows.epi import init_func_preproc_wf
+    wf = init_func_preproc_wf(
         "bold_preprocessing",
         settings={'ants_nthreads': 1,
                   'ignore':[],
@@ -175,14 +175,14 @@ Preprocessing of BOLD files is split into multiple sub-workflows decribed below.
 
 Head-motion estimation and slice time correction
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.epi.epi_hmc`
+:mod:`fmriprep.workflows.epi.init_epi_hmc_wf`
 
 .. workflow::
     :graph2use: colored
     :simple_form: yes
 
-    from fmriprep.workflows.epi import epi_hmc
-    wf = epi_hmc(
+    from fmriprep.workflows.epi import init_epi_hmc_wf
+    wf = init_epi_hmc_wf(
         metadata={"RepetitionTime": 2.0,
                   "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]},
         settings={'ants_nthreads': 1,
@@ -229,15 +229,15 @@ Susceptibility Distortion Correction (SDC)
 
 EPI to T1w registration
 ~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.epi.ref_epi_t1_registration`
+:mod:`fmriprep.workflows.epi.init_epi_reg_wf`
 
 .. workflow::
     :graph2use: colored
     :simple_form: yes
 
-    from fmriprep.workflows.epi import ref_epi_t1_registration
-    wf = ref_epi_t1_registration(
-        "ref_epi_t1_registration",
+    from fmriprep.workflows.epi import init_epi_reg_wf
+    wf = init_epi_reg_wf(
+        'reportlet_suffix',
         settings={'ants_nthreads': 1,
                   'ignore':[],
                   'nthreads': 1,
@@ -267,15 +267,14 @@ boundary.
 
 EPI to MNI transformation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.epi.epi_mni_transformation`
+:mod:`fmriprep.workflows.epi.init_epi_mni_trans_wf`
 
 .. workflow::
     :graph2use: colored
     :simple_form: yes
 
-    from fmriprep.workflows.epi import epi_mni_transformation
-    wf = epi_mni_transformation(
-        "epi_mni_transformation",
+    from fmriprep.workflows.epi import init_epi_mni_trans_wf
+    wf = init_epi_mni_trans_wf(
         settings={'ants_nthreads': 1,
                   'ignore':[],
                   'nthreads': 1,
@@ -299,15 +298,14 @@ step, so as little information is lost as possible.
 
 EPI sampled to FreeSurfer surfaces
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.epi.epi_surf_sample`
+:mod:`fmriprep.workflows.epi.init_epi_surf_wf`
 
 .. workflow::
     :graph2use: colored
     :simple_form: yes
 
-    from fmriprep.workflows.epi import epi_surf_sample
-    wf = epi_surf_sample(
-        "epi_surf_sample",
+    from fmriprep.workflows.epi import init_epi_surf_wf
+    wf = init_epi_surf_wf(
         settings={'output_dir': '.',
                   'output_spaces': ['T1w', 'fsnative',
                                     'MNI152NLin2009cAsym', 'fsaverage5'],
@@ -325,24 +323,25 @@ All surface outputs are in GIFTI format.
 
 Confounds estimation
 ~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.confounds.discover_wf`
+:mod:`fmriprep.workflows.confounds.init_discover_wf`
 
 .. workflow::
     :graph2use: colored
     :simple_form: yes
 
-    from fmriprep.workflows.confounds import discover_wf
-    wf = discover_wf(name="discover_wf",
-                 settings={'ants_nthreads': 1,
-                           'ignore':[],
-                                     'nthreads': 1,
-                                     'freesurfer': True,
-                                     'reportlets_dir': '.',
-                                     'output_dir': '.',
-                                     'bids_root': '.',
-                                     'biggest_epi_file_size_gb': 3,
-                                     'skull_strip_ants': True,
-                                     'debug': False})
+    from fmriprep.workflows.confounds import init_discover_wf
+    wf = init_discover_wf(
+        name="discover_wf",
+        settings={'ants_nthreads': 1,
+                  'ignore':[],
+                  'nthreads': 1,
+                  'freesurfer': True,
+                  'reportlets_dir': '.',
+                  'output_dir': '.',
+                  'bids_root': '.',
+                  'biggest_epi_file_size_gb': 3,
+                  'skull_strip_ants': True,
+                  'debug': False})
 
 Given a motion-corrected fMRI, a brain mask, MCFLIRT movement parameters and a
 segmentation, the `discover_wf` sub-workflow calculates potential
