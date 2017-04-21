@@ -19,7 +19,7 @@ from nipype.interfaces import io as nio
 from nipype.pipeline import engine as pe
 
 from niworkflows.interfaces.registration import RobustMNINormalizationRPT
-from niworkflows.anat.skullstrip import afni_wf as skullstrip_wf
+from niworkflows.anat.skullstrip import afni_wf as init_skullstrip_afni_wf
 from niworkflows.data import get_mni_icbm152_nlin_asym_09c
 from niworkflows.interfaces.masks import BrainExtractionRPT
 from niworkflows.interfaces.segmentation import FASTRPT, ReconAllRPT
@@ -30,7 +30,7 @@ from fmriprep.utils.misc import fix_multi_T1w_source_name
 
 
 #  pylint: disable=R0914
-def t1w_preprocessing(settings, name='t1w_preprocessing'):
+def init_anat_preproc_wf(settings, name='anat_preproc_wf'):
     """T1w images preprocessing pipeline"""
 
     workflow = pe.Workflow(name=name)
@@ -45,26 +45,26 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
                 'fs_2_t1_transform']), name='outputnode')
 
     # 0. Align and merge if several T1w images are provided
-    t1wmrg = pe.Node(IntraModalMerge(), name='MergeT1s')
+    t1wmrg = pe.Node(IntraModalMerge(), name='t1wmrg')
 
     # 1. Reorient T1
     arw = pe.Node(niu.Function(input_names=['in_file'],
                                output_names=['out_file'],
                                function=reorient),
-                  name='Reorient')
+                  name='arw')
 
     # 2. T1 Bias Field Correction
     # Bias field correction is handled in skull strip workflows.
 
     # 3. Skull-stripping
-    asw = skullstrip_wf()
+    skullstrip_wf = init_skullstrip_afni_wf(name='skullstrip_afni_wf')
     if settings.get('skull_strip_ants', False):
-        asw = skullstrip_ants(settings=settings)
+        skullstrip_wf = init_skullstrip_ants_wf(name='skullstrip_ants_wf', settings=settings)
 
     # 4. Segmentation
     t1_seg = pe.Node(FASTRPT(generate_report=True, segments=True,
                              no_bias=True, probability_maps=True),
-                     name='Segmentation')
+                     name='t1_seg')
 
     # 5. Spatial normalization (T1w to MNI registration)
     t1_2_mni = pe.Node(
@@ -74,7 +74,7 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
             testing=settings.get('debug', False),
             template='mni_icbm152_nlin_asym_09c'
         ),
-        name='T1_2_MNI_Registration'
+        name='t1_2_mni'
     )
     # should not be necesssary but does not hurt - make sure the multiproc
     # scheduler knows the resource limits
@@ -82,13 +82,14 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
 
     # 6. FreeSurfer reconstruction
     if settings['freesurfer']:
-        surface_recon = surface_reconstruction(settings=settings)
+        surface_recon_wf = init_surface_recon_wf(name='surface_recon_wf',
+                                                 settings=settings)
 
     # Resample the brain mask and the tissue probability maps into mni space
     bmask_mni = pe.Node(
         ants.ApplyTransforms(dimension=3, default_value=0, float=True,
                              interpolation='NearestNeighbor'),
-        name='brain_mni_warp'
+        name='bmask_mni'
     )
     bmask_mni.inputs.reference_image = op.join(get_mni_icbm152_nlin_asym_09c(),
                                                '1mm_T1.nii.gz')
@@ -96,7 +97,7 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
         ants.ApplyTransforms(dimension=3, default_value=0, float=True,
                              interpolation='Linear'),
         iterfield=['input_image'],
-        name='tpms_mni_warp'
+        name='tpms_mni'
     )
     tpms_mni.inputs.reference_image = op.join(get_mni_icbm152_nlin_asym_09c(),
                                               '1mm_T1.nii.gz')
@@ -104,36 +105,36 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
     ds_t1_seg_report = pe.Node(
         DerivativesDataSink(base_directory=settings['reportlets_dir'],
                             suffix='t1_seg'),
-        name='DS_T1_Seg_Report'
+        name='ds_t1_seg_report'
     )
 
     ds_t1_2_mni_report = pe.Node(
         DerivativesDataSink(base_directory=settings['reportlets_dir'],
                             suffix='t1_2_mni'),
-        name='DS_T1_2_MNI_Report'
+        name='ds_t1_2_mni_report'
     )
 
     workflow.connect([
         (inputnode, t1wmrg, [('t1w', 'in_files')]),
         (t1wmrg, arw, [('out_avg', 'in_file')]),
-        (arw, asw, [('out_file', 'inputnode.in_file')]),
-        (asw, t1_seg, [('outputnode.out_file', 'in_files')]),
-        (asw, t1_2_mni, [('outputnode.bias_corrected', 'moving_image')]),
-        (asw, t1_2_mni, [('outputnode.out_mask', 'moving_mask')]),
+        (arw, skullstrip_wf, [('out_file', 'inputnode.in_file')]),
+        (skullstrip_wf, t1_seg, [('outputnode.out_file', 'in_files')]),
+        (skullstrip_wf, t1_2_mni, [('outputnode.bias_corrected', 'moving_image')]),
+        (skullstrip_wf, t1_2_mni, [('outputnode.out_mask', 'moving_mask')]),
         (t1_seg, outputnode, [('tissue_class_map', 't1_seg')]),
-        (asw, outputnode, [('outputnode.bias_corrected', 'bias_corrected_t1')]),
+        (skullstrip_wf, outputnode, [('outputnode.bias_corrected', 'bias_corrected_t1')]),
         (t1_seg, outputnode, [('probability_maps', 't1_tpms')]),
         (t1_2_mni, outputnode, [
             ('warped_image', 't1_2_mni'),
             ('composite_transform', 't1_2_mni_forward_transform'),
             ('inverse_composite_transform', 't1_2_mni_reverse_transform')
         ]),
-        (asw, bmask_mni, [('outputnode.out_mask', 'input_image')]),
+        (skullstrip_wf, bmask_mni, [('outputnode.out_mask', 'input_image')]),
         (t1_2_mni, bmask_mni, [('composite_transform', 'transforms')]),
         (t1_seg, tpms_mni, [('probability_maps', 'input_image')]),
         (t1_2_mni, tpms_mni, [('composite_transform', 'transforms')]),
-        (asw, outputnode, [('outputnode.out_file', 't1_brain'),
-                           ('outputnode.out_mask', 't1_mask')]),
+        (skullstrip_wf, outputnode, [('outputnode.out_file', 't1_brain'),
+                                     ('outputnode.out_mask', 't1_mask')]),
         (inputnode, ds_t1_seg_report, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
         (t1_seg, ds_t1_seg_report, [('out_report', 'in_file')]),
         (inputnode, ds_t1_2_mni_report, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
@@ -144,62 +145,65 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
         ds_t1_skull_strip_report = pe.Node(
             DerivativesDataSink(base_directory=settings['reportlets_dir'],
                                 suffix='t1_skull_strip'),
-            name='DS_Report'
+            name='ds_t1_skull_strip_report'
         )
         workflow.connect([
             (inputnode, ds_t1_skull_strip_report, [
                 (('t1w', fix_multi_T1w_source_name), 'source_file')]),
-            (asw, ds_t1_skull_strip_report, [('outputnode.out_report', 'in_file')])
+            (skullstrip_wf, ds_t1_skull_strip_report, [('outputnode.out_report', 'in_file')])
         ])
 
     if settings['freesurfer']:
         workflow.connect([
-            (inputnode, surface_recon, [('t1w', 'inputnode.t1w'),
-                                        ('t2w', 'inputnode.t2w'),
-                                        ('subjects_dir', 'inputnode.subjects_dir')]),
-            (arw, surface_recon, [('out_file', 'inputnode.reoriented_t1')]),
-            (asw, surface_recon, [('outputnode.out_file', 'inputnode.skullstripped_t1')]),
-            (surface_recon, outputnode, [('outputnode.subjects_dir', 'subjects_dir'),
-                                         ('outputnode.subject_id', 'subject_id'),
-                                         ('outputnode.fs_2_t1_transform', 'fs_2_t1_transform')]),
+            (inputnode, surface_recon_wf, [
+                ('t1w', 'inputnode.t1w'),
+                ('t2w', 'inputnode.t2w'),
+                ('subjects_dir', 'inputnode.subjects_dir')]),
+            (arw, surface_recon_wf, [('out_file', 'inputnode.reoriented_t1')]),
+            (skullstrip_wf, surface_recon_wf, [
+                ('outputnode.out_file', 'inputnode.skullstripped_t1')]),
+            (surface_recon_wf, outputnode, [
+                ('outputnode.subjects_dir', 'subjects_dir'),
+                ('outputnode.subject_id', 'subject_id'),
+                ('outputnode.fs_2_t1_transform', 'fs_2_t1_transform')]),
             ])
 
     # Write corrected file in the designated output dir
     ds_t1_bias = pe.Node(
         DerivativesDataSink(base_directory=settings['output_dir'],
                             suffix='preproc'),
-        name='DerivT1_inu'
+        name='ds_t1_bias'
     )
     ds_t1_seg = pe.Node(
         DerivativesDataSink(base_directory=settings['output_dir'],
                             suffix='dtissue'),
-        name='DerivT1_seg'
+        name='ds_t1_seg'
     )
     ds_mask = pe.Node(
         DerivativesDataSink(base_directory=settings['output_dir'],
                             suffix='brainmask'),
-        name='DerivT1_mask'
+        name='ds_mask'
     )
     ds_t1_mni = pe.Node(
         DerivativesDataSink(base_directory=settings['output_dir'],
                             suffix='space-MNI152NLin2009cAsym_preproc'),
-        name='DerivT1w_MNI'
+        name='ds_t1_mni'
     )
     ds_bmask_mni = pe.Node(
         DerivativesDataSink(base_directory=settings['output_dir'],
                             suffix='space-MNI152NLin2009cAsym_brainmask'),
-        name='DerivT1_Mask_MNI'
+        name='ds_bmask_mni'
     )
     ds_tpms_mni = pe.Node(
         DerivativesDataSink(base_directory=settings['output_dir'],
                             suffix='space-MNI152NLin2009cAsym_class-{extra_value}_probtissue'),
-        name='DerivT1_TPMs_MNI'
+        name='ds_tpms_mni'
     )
     ds_tpms_mni.inputs.extra_values = ['CSF', 'GM', 'WM']
 
     ds_t1_mni_warp = pe.Node(
         DerivativesDataSink(base_directory=settings['output_dir'],
-                            suffix='target-MNI152NLin2009cAsym_warp'), name='mni_warp')
+                            suffix='target-MNI152NLin2009cAsym_warp'), name='ds_t1_mni_warp')
 
     workflow.connect([
         (inputnode, ds_t1_mni_warp, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
@@ -214,10 +218,10 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
         (inputnode, ds_t1_mni, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
         (inputnode, ds_bmask_mni, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
         (inputnode, ds_tpms_mni, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
-        (asw, ds_t1_bias, [('outputnode.bias_corrected', 'in_file')]),
+        (skullstrip_wf, ds_t1_bias, [('outputnode.bias_corrected', 'in_file')]),
         #  (inu_n4, ds_t1_bias, [('output_image', 'in_file')]),
         (t1_seg, ds_t1_seg, [('tissue_class_map', 'in_file')]),
-        (asw, ds_mask, [('outputnode.out_mask', 'in_file')]),
+        (skullstrip_wf, ds_mask, [('outputnode.out_mask', 'in_file')]),
         (t1_2_mni, ds_t1_mni, [('warped_image', 'in_file')]),
         (bmask_mni, ds_bmask_mni, [('output_image', 'in_file')]),
         (tpms_mni, ds_tpms_mni, [('output_image', 'in_file')])
@@ -226,7 +230,7 @@ def t1w_preprocessing(settings, name='t1w_preprocessing'):
     return workflow
 
 
-def skullstrip_ants(name='ANTsBrainExtraction', settings=None):
+def init_skullstrip_ants_wf(name='skullstrip_ants_wf', settings=None):
     from niworkflows.data import get_ants_oasis_template_ras
     if settings is None:
         settings = {'debug': False}
@@ -242,7 +246,7 @@ def skullstrip_ants(name='ANTsBrainExtraction', settings=None):
         dimension=3, use_floatingpoint_precision=1,
         debug=settings['debug'], generate_report=True,
         num_threads=settings['ants_nthreads'], keep_temporary_files=1),
-        name='Ants_T1_Brain_Extraction')
+        name='t1_skull_strip')
 
     # should not be necesssary byt does not hurt - make sure the multiproc
     # scheduler knows the resource limits
@@ -272,7 +276,7 @@ def skullstrip_ants(name='ANTsBrainExtraction', settings=None):
     return workflow
 
 
-def surface_reconstruction(name='SurfaceReconstruction', settings=None):
+def init_surface_recon_wf(name='surface_recon_wf', settings=None):
     if settings is None:
         settings = {'debug': False}
 
@@ -318,7 +322,7 @@ def surface_reconstruction(name='SurfaceReconstruction', settings=None):
             function=detect_inputs,
             input_names=['t1w_list', 't2w_list', 'hires_enabled'],
             output_names=['t1w', 't2w', 'use_T2', 'hires', 'mris_inflate']),
-        name='ReconConfig',
+        name='recon_config',
         run_without_submitting=True)
     recon_config.inputs.hires_enabled = settings['hires']
 
@@ -333,7 +337,7 @@ def surface_reconstruction(name='SurfaceReconstruction', settings=None):
         niu.Function(function=bidsinfo, input_names=['in_file'],
                      output_names=['subject_id', 'ses_id', 'task_id',
                                    'acq_id', 'rec_id', 'run_id']),
-        name='BIDSInfo',
+        name='bids_info',
         run_without_submitting=True)
 
     autorecon1 = pe.Node(
@@ -342,7 +346,7 @@ def surface_reconstruction(name='SurfaceReconstruction', settings=None):
             flags='-noskullstrip',
             openmp=nthreads,
             parallel=True),
-        name='AutoRecon1')
+        name='autorecon1')
     autorecon1.interface._can_resume = False
     autorecon1.interface.num_threads = nthreads
 
@@ -374,7 +378,7 @@ def surface_reconstruction(name='SurfaceReconstruction', settings=None):
             function=inject_skullstripped,
             input_names=['subjects_dir', 'subject_id', 'skullstripped'],
             output_names=['subjects_dir', 'subject_id']),
-        name='InjectSkullstrip')
+        name='injector')
 
     reconall = pe.Node(
         ReconAllRPT(
@@ -383,31 +387,31 @@ def surface_reconstruction(name='SurfaceReconstruction', settings=None):
             parallel=True,
             out_report='reconall.svg',
             generate_report=True),
-        name='ReconAll')
+        name='reconall')
     reconall.interface.num_threads = nthreads
 
     fs_transform = pe.Node(
         freesurfer.Tkregister2(fsl_out='freesurfer2subT1.mat',
                                reg_header=True),
-        name='FreeSurferTransform')
+        name='fs_transform')
 
     recon_report = pe.Node(
         DerivativesDataSink(base_directory=settings['reportlets_dir'],
                             suffix='reconall'),
-        name='ReconAll_Report'
+        name='recon_report'
     )
 
     midthickness = pe.MapNode(
         freesurfer.MRIsExpand(thickness=True, distance=0.5,
                               out_name='midthickness'),
         iterfield='in_file',
-        name='MidThickness')
+        name='midthickness')
 
     save_midthickness = pe.Node(nio.DataSink(parameterization=False),
-                                name='SaveMidthickness')
-    surface_list = pe.Node(niu.Merge(4), name='SurfaceList')
+                                name='save_midthickness')
+    surface_list = pe.Node(niu.Merge(4), name='surface_list')
     gifticonv = pe.MapNode(freesurfer.MRIsConvert(out_datatype='gii'),
-                           iterfield='in_file', name='GiftiSurfaces')
+                           iterfield='in_file', name='gifticonv')
 
     def get_gifti_name(in_file):
         import os
@@ -424,7 +428,7 @@ def surface_reconstruction(name='SurfaceReconstruction', settings=None):
             input_names=['in_file'],
             output_names=['normalized']),
         iterfield='in_file',
-        name='NameSurfs'
+        name='name_surfs'
         )
 
     def normalize_surfs(in_file):
@@ -478,12 +482,12 @@ def surface_reconstruction(name='SurfaceReconstruction', settings=None):
             input_names=['in_file'],
             output_names=['out_file']),
         iterfield='in_file',
-        name='FixSurfs')
+        name='fix_surfs')
 
     ds_surfs = pe.MapNode(
         DerivativesDataSink(base_directory=settings['output_dir']),
         iterfield=['in_file', 'suffix'],
-        name='DerivSurfs'
+        name='ds_surfs'
     )
 
     workflow.connect([
