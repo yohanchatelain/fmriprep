@@ -1,3 +1,8 @@
+0.4.1 (20th of April 2017)
+==========================
+
+* Hotfix release (dependencies and deployment system)
+
 0.4.0 (20th of April 2017)
 ==========================
 
