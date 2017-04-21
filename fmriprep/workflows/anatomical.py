@@ -47,10 +47,10 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
                 'fs_2_t1_transform']), name='outputnode')
 
     # 0. Align and merge if several T1w images are provided
-    t1wmrg = pe.Node(IntraModalMerge(), name='t1wmrg')
+    t1_merge = pe.Node(IntraModalMerge(), name='t1_merge')
 
     # 1. Reorient T1
-    arw = pe.Node(niu.Function(function=reorient), name='arw')
+    t1_conform = pe.Node(niu.Function(function=reorient), name='t1_conform')
 
     # 2. T1 Bias Field Correction
     # Bias field correction is handled in skull strip workflows.
@@ -99,9 +99,9 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
                                               '1mm_T1.nii.gz')
 
     workflow.connect([
-        (inputnode, t1wmrg, [('t1w', 'in_files')]),
-        (t1wmrg, arw, [('out_avg', 'in_file')]),
-        (arw, skullstrip_wf, [('out', 'inputnode.in_file')]),
+        (inputnode, t1_merge, [('t1w', 'in_files')]),
+        (t1_merge, t1_conform, [('out_avg', 'in_file')]),
+        (t1_conform, skullstrip_wf, [('out', 'inputnode.in_file')]),
         (skullstrip_wf, t1_seg, [('outputnode.out_file', 'in_files')]),
         (skullstrip_wf, t1_2_mni, [('outputnode.bias_corrected', 'moving_image')]),
         (skullstrip_wf, t1_2_mni, [('outputnode.out_mask', 'moving_mask')]),
@@ -133,7 +133,7 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
                 ('t1w', 'inputnode.t1w'),
                 ('t2w', 'inputnode.t2w'),
                 ('subjects_dir', 'inputnode.subjects_dir')]),
-            (arw, surface_recon_wf, [('out', 'inputnode.reoriented_t1')]),
+            (t1_conform, surface_recon_wf, [('out', 'inputnode.reoriented_t1')]),
             (skullstrip_wf, surface_recon_wf, [
                 ('outputnode.out_file', 'inputnode.skullstripped_t1')]),
             (surface_recon_wf, outputnode, [
