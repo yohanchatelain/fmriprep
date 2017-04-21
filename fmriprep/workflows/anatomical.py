@@ -82,21 +82,19 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
     t1_2_mni.interface.num_threads = ants_nthreads
 
     # Resample the brain mask and the tissue probability maps into mni space
-    bmask_mni = pe.Node(
+    ref_img = op.join(get_mni_icbm152_nlin_asym_09c(), '1mm_T1.nii.gz')
+    mni_mask = pe.Node(
         ants.ApplyTransforms(dimension=3, default_value=0, float=True,
-                             interpolation='NearestNeighbor'),
-        name='bmask_mni'
+                             interpolation='NearestNeighbor', reference_image=ref_img),
+        name='mni_mask'
     )
-    bmask_mni.inputs.reference_image = op.join(get_mni_icbm152_nlin_asym_09c(),
-                                               '1mm_T1.nii.gz')
-    tpms_mni = pe.MapNode(
+
+    mni_tpms = pe.MapNode(
         ants.ApplyTransforms(dimension=3, default_value=0, float=True,
-                             interpolation='Linear'),
+                             interpolation='Linear', reference_image=ref_img),
         iterfield=['input_image'],
-        name='tpms_mni'
+        name='mni_tpms'
     )
-    tpms_mni.inputs.reference_image = op.join(get_mni_icbm152_nlin_asym_09c(),
-                                              '1mm_T1.nii.gz')
 
     workflow.connect([
         (inputnode, t1_merge, [('t1w', 'in_files')]),
@@ -105,10 +103,10 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
         (skullstrip_wf, t1_seg, [('outputnode.out_file', 'in_files')]),
         (skullstrip_wf, t1_2_mni, [('outputnode.bias_corrected', 'moving_image')]),
         (skullstrip_wf, t1_2_mni, [('outputnode.out_mask', 'moving_mask')]),
-        (skullstrip_wf, bmask_mni, [('outputnode.out_mask', 'input_image')]),
-        (t1_2_mni, bmask_mni, [('composite_transform', 'transforms')]),
-        (t1_seg, tpms_mni, [('probability_maps', 'input_image')]),
-        (t1_2_mni, tpms_mni, [('composite_transform', 'transforms')]),
+        (skullstrip_wf, mni_mask, [('outputnode.out_mask', 'input_image')]),
+        (t1_2_mni, mni_mask, [('composite_transform', 'transforms')]),
+        (t1_seg, mni_tpms, [('probability_maps', 'input_image')]),
+        (t1_2_mni, mni_tpms, [('composite_transform', 'transforms')]),
         (t1_seg, outputnode, [('tissue_class_map', 't1_seg'),
                               ('probability_maps', 't1_tpms')]),
         (skullstrip_wf, outputnode, [('outputnode.bias_corrected', 'bias_corrected_t1'),
@@ -174,8 +172,8 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
             ('t1_2_mni_forward_transform', 'inputnode.t1_2_mni_forward_transform'),
             ('t1_2_mni', 'inputnode.t1_2_mni'),
             ]),
-        (bmask_mni, anat_derivatives_wf, [('output_image', 'inputnode.mni_mask')]),
-        (tpms_mni, anat_derivatives_wf, [('output_image', 'inputnode.mni_tpms')])
+        (mni_mask, anat_derivatives_wf, [('output_image', 'inputnode.mni_mask')]),
+        (mni_tpms, anat_derivatives_wf, [('output_image', 'inputnode.mni_tpms')])
     ])
 
     return workflow
@@ -533,24 +531,24 @@ def init_anat_derivatives_wf(output_dir, name='anat_derivatives_wf'):
         DerivativesDataSink(base_directory=output_dir, suffix='dtissue'),
         name='ds_t1_seg')
 
-    ds_mask = pe.Node(
+    ds_t1_mask = pe.Node(
         DerivativesDataSink(base_directory=output_dir, suffix='brainmask'),
-        name='ds_mask')
+        name='ds_t1_mask')
 
     ds_t1_mni = pe.Node(
         DerivativesDataSink(base_directory=output_dir, suffix='space-MNI152NLin2009cAsym_preproc'),
         name='ds_t1_mni')
 
-    ds_bmask_mni = pe.Node(
+    ds_mni_mask = pe.Node(
         DerivativesDataSink(base_directory=output_dir,
                             suffix='space-MNI152NLin2009cAsym_brainmask'),
-        name='ds_bmask_mni')
+        name='ds_mni_mask')
 
-    ds_tpms_mni = pe.Node(
+    ds_mni_tpms = pe.Node(
         DerivativesDataSink(base_directory=output_dir,
                             suffix='space-MNI152NLin2009cAsym_class-{extra_value}_probtissue'),
-        name='ds_tpms_mni')
-    ds_tpms_mni.inputs.extra_values = ['CSF', 'GM', 'WM']
+        name='ds_mni_tpms')
+    ds_mni_tpms.inputs.extra_values = ['CSF', 'GM', 'WM']
 
     ds_t1_mni_warp = pe.Node(
         DerivativesDataSink(base_directory=output_dir, suffix='target-MNI152NLin2009cAsym_warp'),
@@ -559,17 +557,17 @@ def init_anat_derivatives_wf(output_dir, name='anat_derivatives_wf'):
     workflow.connect([
         (inputnode, ds_t1_bias, [('source_file', 'source_file'),
                                  ('bias_corrected_t1', 'in_file')]),
-        (inputnode, ds_mask, [('source_file', 'source_file'),
-                              ('t1_mask', 'in_file')]),
+        (inputnode, ds_t1_mask, [('source_file', 'source_file'),
+                                 ('t1_mask', 'in_file')]),
         (inputnode, ds_t1_seg, [('source_file', 'source_file'),
                                 ('t1_seg', 'in_file')]),
         (inputnode, ds_t1_mni_warp, [('source_file', 'source_file'),
                                      ('t1_2_mni_forward_transform', 'in_file')]),
         (inputnode, ds_t1_mni, [('source_file', 'source_file'),
                                 ('t1_2_mni', 'in_file')]),
-        (inputnode, ds_bmask_mni, [('source_file', 'source_file'),
-                                   ('mni_mask', 'in_file')]),
-        (inputnode, ds_tpms_mni, [('source_file', 'source_file'),
+        (inputnode, ds_mni_mask, [('source_file', 'source_file'),
+                                  ('mni_mask', 'in_file')]),
+        (inputnode, ds_mni_tpms, [('source_file', 'source_file'),
                                   ('mni_tpms', 'in_file')])
     ])
 
