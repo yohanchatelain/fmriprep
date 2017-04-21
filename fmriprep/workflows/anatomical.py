@@ -81,14 +81,6 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
     # scheduler knows the resource limits
     t1_2_mni.interface.num_threads = ants_nthreads
 
-    # 6. FreeSurfer reconstruction
-    if freesurfer:
-        surface_recon_wf = init_surface_recon_wf(name='surface_recon_wf',
-                                                 nthreads=nthreads,
-                                                 hires=hires,
-                                                 reportlets_dir=reportlets_dir,
-                                                 output_dir=output_dir)
-
     # Resample the brain mask and the tissue probability maps into mni space
     bmask_mni = pe.Node(
         ants.ApplyTransforms(dimension=3, default_value=0, float=True,
@@ -106,6 +98,52 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
     tpms_mni.inputs.reference_image = op.join(get_mni_icbm152_nlin_asym_09c(),
                                               '1mm_T1.nii.gz')
 
+    workflow.connect([
+        (inputnode, t1wmrg, [('t1w', 'in_files')]),
+        (t1wmrg, arw, [('out_avg', 'in_file')]),
+        (arw, skullstrip_wf, [('out', 'inputnode.in_file')]),
+        (skullstrip_wf, t1_seg, [('outputnode.out_file', 'in_files')]),
+        (skullstrip_wf, t1_2_mni, [('outputnode.bias_corrected', 'moving_image')]),
+        (skullstrip_wf, t1_2_mni, [('outputnode.out_mask', 'moving_mask')]),
+        (skullstrip_wf, bmask_mni, [('outputnode.out_mask', 'input_image')]),
+        (t1_2_mni, bmask_mni, [('composite_transform', 'transforms')]),
+        (t1_seg, tpms_mni, [('probability_maps', 'input_image')]),
+        (t1_2_mni, tpms_mni, [('composite_transform', 'transforms')]),
+        (t1_seg, outputnode, [('tissue_class_map', 't1_seg'),
+                              ('probability_maps', 't1_tpms')]),
+        (skullstrip_wf, outputnode, [('outputnode.bias_corrected', 'bias_corrected_t1'),
+                                     ('outputnode.out_file', 't1_brain'),
+                                     ('outputnode.out_mask', 't1_mask')]),
+        (t1_2_mni, outputnode, [
+            ('warped_image', 't1_2_mni'),
+            ('composite_transform', 't1_2_mni_forward_transform'),
+            ('inverse_composite_transform', 't1_2_mni_reverse_transform')
+        ]),
+    ])
+
+    # 6. FreeSurfer reconstruction
+    if freesurfer:
+        surface_recon_wf = init_surface_recon_wf(name='surface_recon_wf',
+                                                 nthreads=nthreads,
+                                                 hires=hires,
+                                                 reportlets_dir=reportlets_dir,
+                                                 output_dir=output_dir)
+
+        workflow.connect([
+            (inputnode, surface_recon_wf, [
+                ('t1w', 'inputnode.t1w'),
+                ('t2w', 'inputnode.t2w'),
+                ('subjects_dir', 'inputnode.subjects_dir')]),
+            (arw, surface_recon_wf, [('out', 'inputnode.reoriented_t1')]),
+            (skullstrip_wf, surface_recon_wf, [
+                ('outputnode.out_file', 'inputnode.skullstripped_t1')]),
+            (surface_recon_wf, outputnode, [
+                ('outputnode.subjects_dir', 'subjects_dir'),
+                ('outputnode.subject_id', 'subject_id'),
+                ('outputnode.fs_2_t1_transform', 'fs_2_t1_transform')]),
+            ])
+
+    # Reports
     ds_t1_seg_report = pe.Node(
         DerivativesDataSink(base_directory=reportlets_dir,
                             suffix='t1_seg'),
@@ -119,26 +157,6 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
     )
 
     workflow.connect([
-        (inputnode, t1wmrg, [('t1w', 'in_files')]),
-        (t1wmrg, arw, [('out_avg', 'in_file')]),
-        (arw, skullstrip_wf, [('out', 'inputnode.in_file')]),
-        (skullstrip_wf, t1_seg, [('outputnode.out_file', 'in_files')]),
-        (skullstrip_wf, t1_2_mni, [('outputnode.bias_corrected', 'moving_image')]),
-        (skullstrip_wf, t1_2_mni, [('outputnode.out_mask', 'moving_mask')]),
-        (t1_seg, outputnode, [('tissue_class_map', 't1_seg')]),
-        (skullstrip_wf, outputnode, [('outputnode.bias_corrected', 'bias_corrected_t1')]),
-        (t1_seg, outputnode, [('probability_maps', 't1_tpms')]),
-        (t1_2_mni, outputnode, [
-            ('warped_image', 't1_2_mni'),
-            ('composite_transform', 't1_2_mni_forward_transform'),
-            ('inverse_composite_transform', 't1_2_mni_reverse_transform')
-        ]),
-        (skullstrip_wf, bmask_mni, [('outputnode.out_mask', 'input_image')]),
-        (t1_2_mni, bmask_mni, [('composite_transform', 'transforms')]),
-        (t1_seg, tpms_mni, [('probability_maps', 'input_image')]),
-        (t1_2_mni, tpms_mni, [('composite_transform', 'transforms')]),
-        (skullstrip_wf, outputnode, [('outputnode.out_file', 't1_brain'),
-                                     ('outputnode.out_mask', 't1_mask')]),
         (inputnode, ds_t1_seg_report, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
         (t1_seg, ds_t1_seg_report, [('out_report', 'in_file')]),
         (inputnode, ds_t1_2_mni_report, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
@@ -157,22 +175,7 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
             (skullstrip_wf, ds_t1_skull_strip_report, [('outputnode.out_report', 'in_file')])
         ])
 
-    if freesurfer:
-        workflow.connect([
-            (inputnode, surface_recon_wf, [
-                ('t1w', 'inputnode.t1w'),
-                ('t2w', 'inputnode.t2w'),
-                ('subjects_dir', 'inputnode.subjects_dir')]),
-            (arw, surface_recon_wf, [('out', 'inputnode.reoriented_t1')]),
-            (skullstrip_wf, surface_recon_wf, [
-                ('outputnode.out_file', 'inputnode.skullstripped_t1')]),
-            (surface_recon_wf, outputnode, [
-                ('outputnode.subjects_dir', 'subjects_dir'),
-                ('outputnode.subject_id', 'subject_id'),
-                ('outputnode.fs_2_t1_transform', 'fs_2_t1_transform')]),
-            ])
-
-    # Write corrected file in the designated output dir
+    # Derivatives
     ds_t1_bias = pe.Node(
         DerivativesDataSink(base_directory=output_dir,
                             suffix='preproc'),
