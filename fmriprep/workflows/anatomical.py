@@ -48,10 +48,7 @@ def init_anat_preproc_wf(settings, name='anat_preproc_wf'):
     t1wmrg = pe.Node(IntraModalMerge(), name='t1wmrg')
 
     # 1. Reorient T1
-    arw = pe.Node(niu.Function(input_names=['in_file'],
-                               output_names=['out_file'],
-                               function=reorient),
-                  name='arw')
+    arw = pe.Node(niu.Function(function=reorient), name='arw')
 
     # 2. T1 Bias Field Correction
     # Bias field correction is handled in skull strip workflows.
@@ -117,7 +114,7 @@ def init_anat_preproc_wf(settings, name='anat_preproc_wf'):
     workflow.connect([
         (inputnode, t1wmrg, [('t1w', 'in_files')]),
         (t1wmrg, arw, [('out_avg', 'in_file')]),
-        (arw, skullstrip_wf, [('out_file', 'inputnode.in_file')]),
+        (arw, skullstrip_wf, [('out', 'inputnode.in_file')]),
         (skullstrip_wf, t1_seg, [('outputnode.out_file', 'in_files')]),
         (skullstrip_wf, t1_2_mni, [('outputnode.bias_corrected', 'moving_image')]),
         (skullstrip_wf, t1_2_mni, [('outputnode.out_mask', 'moving_mask')]),
@@ -159,7 +156,7 @@ def init_anat_preproc_wf(settings, name='anat_preproc_wf'):
                 ('t1w', 'inputnode.t1w'),
                 ('t2w', 'inputnode.t2w'),
                 ('subjects_dir', 'inputnode.subjects_dir')]),
-            (arw, surface_recon_wf, [('out_file', 'inputnode.reoriented_t1')]),
+            (arw, surface_recon_wf, [('out', 'inputnode.reoriented_t1')]),
             (skullstrip_wf, surface_recon_wf, [
                 ('outputnode.out_file', 'inputnode.skullstripped_t1')]),
             (surface_recon_wf, outputnode, [
@@ -320,7 +317,6 @@ def init_surface_recon_wf(name='surface_recon_wf', settings=None):
     recon_config = pe.Node(
         niu.Function(
             function=detect_inputs,
-            input_names=['t1w_list', 't2w_list', 'hires_enabled'],
             output_names=['t1w', 't2w', 'use_T2', 'hires', 'mris_inflate']),
         name='recon_config',
         run_without_submitting=True)
@@ -334,7 +330,7 @@ def init_surface_recon_wf(name='surface_recon_wf', settings=None):
                                       'acq_id', 'rec_id', 'run_id']))
 
     bids_info = pe.Node(
-        niu.Function(function=bidsinfo, input_names=['in_file'],
+        niu.Function(function=bidsinfo,
                      output_names=['subject_id', 'ses_id', 'task_id',
                                    'acq_id', 'rec_id', 'run_id']),
         name='bids_info',
@@ -374,10 +370,8 @@ def init_surface_recon_wf(name='surface_recon_wf', settings=None):
         return subjects_dir, subject_id
 
     injector = pe.Node(
-        niu.Function(
-            function=inject_skullstripped,
-            input_names=['subjects_dir', 'subject_id', 'skullstripped'],
-            output_names=['subjects_dir', 'subject_id']),
+        niu.Function(function=inject_skullstripped,
+                     output_names=['subjects_dir', 'subject_id']),
         name='injector')
 
     reconall = pe.Node(
@@ -423,10 +417,7 @@ def init_surface_recon_wf(name='surface_recon_wf', settings=None):
         return '{surf}.{LR}.surf'.format(**info)
 
     name_surfs = pe.MapNode(
-        niu.Function(
-            function=get_gifti_name,
-            input_names=['in_file'],
-            output_names=['normalized']),
+        niu.Function(function=get_gifti_name),
         iterfield='in_file',
         name='name_surfs'
         )
@@ -477,10 +468,7 @@ def init_surface_recon_wf(name='surface_recon_wf', settings=None):
         return os.path.abspath(fname)
 
     fix_surfs = pe.MapNode(
-        niu.Function(
-            function=normalize_surfs,
-            input_names=['in_file'],
-            output_names=['out_file']),
+        niu.Function(function=normalize_surfs),
         iterfield='in_file',
         name='fix_surfs')
 
@@ -535,8 +523,8 @@ def init_surface_recon_wf(name='surface_recon_wf', settings=None):
         (gifticonv, name_surfs, [('converted', 'in_file')]),
         (gifticonv, fix_surfs, [('converted', 'in_file')]),
         (inputnode, ds_surfs, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
-        (name_surfs, ds_surfs, [('normalized', 'suffix')]),
-        (fix_surfs, ds_surfs, [('out_file', 'in_file')]),
+        (name_surfs, ds_surfs, [('out', 'suffix')]),
+        (fix_surfs, ds_surfs, [('out', 'in_file')]),
         ])
 
     return workflow
