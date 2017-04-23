@@ -13,7 +13,7 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 import os.path as op
 
 from nipype.interfaces import ants
-from nipype.interfaces import freesurfer
+from nipype.interfaces import freesurfer as fs
 from nipype.interfaces import utility as niu
 from nipype.interfaces import io as nio
 from nipype.pipeline import engine as pe
@@ -30,8 +30,8 @@ from fmriprep.utils.misc import fix_multi_T1w_source_name
 
 
 #  pylint: disable=R0914
-def init_anat_preproc_wf(skull_strip_ants, debug, ants_nthreads, nthreads,
-                         hires, reportlets_dir, output_dir,
+def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
+                         nthreads, hires, reportlets_dir, output_dir,
                          name='anat_preproc_wf'):
     """T1w images preprocessing pipeline"""
 
@@ -339,7 +339,7 @@ def init_surface_recon_wf(nthreads, hires, reportlets_dir, output_dir,
         run_without_submitting=True)
 
     autorecon1 = pe.Node(
-        freesurfer.ReconAll(
+        fs.ReconAll(
             directive='autorecon1',
             flags='-noskullstrip',
             openmp=nthreads,
@@ -387,7 +387,7 @@ def init_surface_recon_wf(nthreads, hires, reportlets_dir, output_dir,
     reconall.interface.num_threads = nthreads
 
     fs_transform = pe.Node(
-        freesurfer.Tkregister2(fsl_out='freesurfer2subT1.mat',
+        fs.Tkregister2(fsl_out='freesurfer2subT1.mat',
                                reg_header=True),
         name='fs_transform')
 
@@ -398,7 +398,7 @@ def init_surface_recon_wf(nthreads, hires, reportlets_dir, output_dir,
     )
 
     midthickness = pe.MapNode(
-        freesurfer.MRIsExpand(thickness=True, distance=0.5,
+        fs.MRIsExpand(thickness=True, distance=0.5,
                               out_name='midthickness'),
         iterfield='in_file',
         name='midthickness')
@@ -406,7 +406,7 @@ def init_surface_recon_wf(nthreads, hires, reportlets_dir, output_dir,
     save_midthickness = pe.Node(nio.DataSink(parameterization=False),
                                 name='save_midthickness')
     surface_list = pe.Node(niu.Merge(4), name='surface_list')
-    gifticonv = pe.MapNode(freesurfer.MRIsConvert(out_datatype='gii'),
+    gifticonv = pe.MapNode(fs.MRIsConvert(out_datatype='gii'),
                            iterfield='in_file', name='gifticonv')
 
     def get_gifti_name(in_file):

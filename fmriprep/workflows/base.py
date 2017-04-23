@@ -83,24 +83,27 @@ def init_single_subject_wf(subject_id, task_id, name,
     The adaptable fMRI preprocessing workflow
     """
 
-    subject_data = collect_bids_data(bids_dir, subject_id, task_id)
-
-    if subject_data['func'] == []:
-        raise Exception("No BOLD images found for participant {} and task {}. "
-                        "All workflows require BOLD images.".format(
-            subject_id, task_id if task_id else '<all>'))
-
-    if subject_data['t1w'] == []:
-        raise Exception("No T1w images found for participant {}. "
-                        "All workflows require T1w images.".format(subject_id))
-
-    workflow = pe.Workflow(name=name)
-
-    if subject_data['func'] == ['bold_preprocessing']:
+    if name == 'single_subject_wf':
         # for documentation purposes
+        subject_data = {'func': ['test_file']}
         layout = None
     else:
         layout = BIDSLayout(bids_dir)
+
+        subject_data = collect_bids_data(bids_dir, subject_id, task_id)
+
+        if subject_data['func'] == []:
+            raise Exception("No BOLD images found for participant {} and task {}. "
+                            "All workflows require BOLD images.".format(
+                subject_id, task_id if task_id else '<all>'))
+
+        if subject_data['t1w'] == []:
+            raise Exception("No T1w images found for participant {}. "
+                            "All workflows require T1w images.".format(subject_id))
+
+    workflow = pe.Workflow(name=name)
+
+
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['subjects_dir']),
                         name='inputnode')
@@ -114,6 +117,7 @@ def init_single_subject_wf(subject_id, task_id, name,
                                            debug=debug,
                                            ants_nthreads=ants_nthreads,
                                            nthreads=nthreads,
+                                           freesurfer=freesurfer,
                                            hires=hires,
                                            reportlets_dir=reportlets_dir,
                                            output_dir=output_dir)
