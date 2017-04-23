@@ -13,7 +13,7 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 import os.path as op
 
 from nipype.interfaces import ants
-from nipype.interfaces import freesurfer
+from nipype.interfaces import freesurfer as fs
 from nipype.interfaces import utility as niu
 from nipype.interfaces import io as nio
 from nipype.pipeline import engine as pe
@@ -30,7 +30,9 @@ from fmriprep.utils.misc import fix_multi_T1w_source_name
 
 
 #  pylint: disable=R0914
-def init_anat_preproc_wf(settings, name='anat_preproc_wf'):
+def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
+                         nthreads, hires, reportlets_dir, output_dir,
+                         name='anat_preproc_wf'):
     """T1w images preprocessing pipeline"""
 
     workflow = pe.Workflow(name=name)
@@ -55,8 +57,10 @@ def init_anat_preproc_wf(settings, name='anat_preproc_wf'):
 
     # 3. Skull-stripping
     skullstrip_wf = init_skullstrip_afni_wf(name='skullstrip_afni_wf')
-    if settings.get('skull_strip_ants', False):
-        skullstrip_wf = init_skullstrip_ants_wf(name='skullstrip_ants_wf', settings=settings)
+    if skull_strip_ants:
+        skullstrip_wf = init_skullstrip_ants_wf(name='skullstrip_ants_wf',
+                                                debug=debug,
+                                                ants_nthreads=ants_nthreads)
 
     # 4. Segmentation
     t1_seg = pe.Node(FASTRPT(generate_report=True, segments=True,
@@ -67,20 +71,23 @@ def init_anat_preproc_wf(settings, name='anat_preproc_wf'):
     t1_2_mni = pe.Node(
         RobustMNINormalizationRPT(
             generate_report=True,
-            num_threads=settings['ants_nthreads'],
-            testing=settings.get('debug', False),
+            num_threads=ants_nthreads,
+            testing=debug,
             template='mni_icbm152_nlin_asym_09c'
         ),
         name='t1_2_mni'
     )
     # should not be necesssary but does not hurt - make sure the multiproc
     # scheduler knows the resource limits
-    t1_2_mni.interface.num_threads = settings['ants_nthreads']
+    t1_2_mni.interface.num_threads = ants_nthreads
 
     # 6. FreeSurfer reconstruction
-    if settings['freesurfer']:
+    if freesurfer:
         surface_recon_wf = init_surface_recon_wf(name='surface_recon_wf',
-                                                 settings=settings)
+                                                 nthreads=nthreads,
+                                                 hires=hires,
+                                                 reportlets_dir=reportlets_dir,
+                                                 output_dir=output_dir)
 
     # Resample the brain mask and the tissue probability maps into mni space
     bmask_mni = pe.Node(
@@ -100,13 +107,13 @@ def init_anat_preproc_wf(settings, name='anat_preproc_wf'):
                                               '1mm_T1.nii.gz')
 
     ds_t1_seg_report = pe.Node(
-        DerivativesDataSink(base_directory=settings['reportlets_dir'],
+        DerivativesDataSink(base_directory=reportlets_dir,
                             suffix='t1_seg'),
         name='ds_t1_seg_report'
     )
 
     ds_t1_2_mni_report = pe.Node(
-        DerivativesDataSink(base_directory=settings['reportlets_dir'],
+        DerivativesDataSink(base_directory=reportlets_dir,
                             suffix='t1_2_mni'),
         name='ds_t1_2_mni_report'
     )
@@ -138,9 +145,9 @@ def init_anat_preproc_wf(settings, name='anat_preproc_wf'):
         (t1_2_mni, ds_t1_2_mni_report, [('out_report', 'in_file')])
     ])
 
-    if settings.get('skull_strip_ants', False):
+    if skull_strip_ants:
         ds_t1_skull_strip_report = pe.Node(
-            DerivativesDataSink(base_directory=settings['reportlets_dir'],
+            DerivativesDataSink(base_directory=reportlets_dir,
                                 suffix='t1_skull_strip'),
             name='ds_t1_skull_strip_report'
         )
@@ -150,7 +157,7 @@ def init_anat_preproc_wf(settings, name='anat_preproc_wf'):
             (skullstrip_wf, ds_t1_skull_strip_report, [('outputnode.out_report', 'in_file')])
         ])
 
-    if settings['freesurfer']:
+    if freesurfer:
         workflow.connect([
             (inputnode, surface_recon_wf, [
                 ('t1w', 'inputnode.t1w'),
@@ -167,39 +174,39 @@ def init_anat_preproc_wf(settings, name='anat_preproc_wf'):
 
     # Write corrected file in the designated output dir
     ds_t1_bias = pe.Node(
-        DerivativesDataSink(base_directory=settings['output_dir'],
+        DerivativesDataSink(base_directory=output_dir,
                             suffix='preproc'),
         name='ds_t1_bias'
     )
     ds_t1_seg = pe.Node(
-        DerivativesDataSink(base_directory=settings['output_dir'],
+        DerivativesDataSink(base_directory=output_dir,
                             suffix='dtissue'),
         name='ds_t1_seg'
     )
     ds_mask = pe.Node(
-        DerivativesDataSink(base_directory=settings['output_dir'],
+        DerivativesDataSink(base_directory=output_dir,
                             suffix='brainmask'),
         name='ds_mask'
     )
     ds_t1_mni = pe.Node(
-        DerivativesDataSink(base_directory=settings['output_dir'],
+        DerivativesDataSink(base_directory=output_dir,
                             suffix='space-MNI152NLin2009cAsym_preproc'),
         name='ds_t1_mni'
     )
     ds_bmask_mni = pe.Node(
-        DerivativesDataSink(base_directory=settings['output_dir'],
+        DerivativesDataSink(base_directory=output_dir,
                             suffix='space-MNI152NLin2009cAsym_brainmask'),
         name='ds_bmask_mni'
     )
     ds_tpms_mni = pe.Node(
-        DerivativesDataSink(base_directory=settings['output_dir'],
+        DerivativesDataSink(base_directory=output_dir,
                             suffix='space-MNI152NLin2009cAsym_class-{extra_value}_probtissue'),
         name='ds_tpms_mni'
     )
     ds_tpms_mni.inputs.extra_values = ['CSF', 'GM', 'WM']
 
     ds_t1_mni_warp = pe.Node(
-        DerivativesDataSink(base_directory=settings['output_dir'],
+        DerivativesDataSink(base_directory=output_dir,
                             suffix='target-MNI152NLin2009cAsym_warp'), name='ds_t1_mni_warp')
 
     workflow.connect([
@@ -227,10 +234,8 @@ def init_anat_preproc_wf(settings, name='anat_preproc_wf'):
     return workflow
 
 
-def init_skullstrip_ants_wf(name='skullstrip_ants_wf', settings=None):
+def init_skullstrip_ants_wf(debug, ants_nthreads, name='skullstrip_ants_wf'):
     from niworkflows.data import get_ants_oasis_template_ras
-    if settings is None:
-        settings = {'debug': False}
 
     workflow = pe.Workflow(name=name)
 
@@ -241,13 +246,13 @@ def init_skullstrip_ants_wf(name='skullstrip_ants_wf', settings=None):
 
     t1_skull_strip = pe.Node(BrainExtractionRPT(
         dimension=3, use_floatingpoint_precision=1,
-        debug=settings['debug'], generate_report=True,
-        num_threads=settings['ants_nthreads'], keep_temporary_files=1),
+        debug=debug, generate_report=True,
+        num_threads=ants_nthreads, keep_temporary_files=1),
         name='t1_skull_strip')
 
     # should not be necesssary byt does not hurt - make sure the multiproc
     # scheduler knows the resource limits
-    t1_skull_strip.interface.num_threads = settings['ants_nthreads']
+    t1_skull_strip.interface.num_threads = ants_nthreads
 
     t1_skull_strip.inputs.brain_template = op.join(
         get_ants_oasis_template_ras(),
@@ -273,9 +278,8 @@ def init_skullstrip_ants_wf(name='skullstrip_ants_wf', settings=None):
     return workflow
 
 
-def init_surface_recon_wf(name='surface_recon_wf', settings=None):
-    if settings is None:
-        settings = {'debug': False}
+def init_surface_recon_wf(nthreads, hires, reportlets_dir, output_dir,
+                          name='surface_recon_wf'):
 
     workflow = pe.Workflow(name=name)
 
@@ -285,8 +289,6 @@ def init_surface_recon_wf(name='surface_recon_wf', settings=None):
         name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['subjects_dir', 'subject_id', 'fs_2_t1_transform']), name='outputnode')
-
-    nthreads = settings['nthreads']
 
     def detect_inputs(t1w_list, t2w_list=[], hires_enabled=True):
         from nipype.interfaces.base import isdefined
@@ -320,7 +322,7 @@ def init_surface_recon_wf(name='surface_recon_wf', settings=None):
             output_names=['t1w', 't2w', 'use_T2', 'hires', 'mris_inflate']),
         name='recon_config',
         run_without_submitting=True)
-    recon_config.inputs.hires_enabled = settings['hires']
+    recon_config.inputs.hires_enabled = hires
 
     def bidsinfo(in_file):
         from fmriprep.interfaces.bids import BIDS_NAME
@@ -337,7 +339,7 @@ def init_surface_recon_wf(name='surface_recon_wf', settings=None):
         run_without_submitting=True)
 
     autorecon1 = pe.Node(
-        freesurfer.ReconAll(
+        fs.ReconAll(
             directive='autorecon1',
             flags='-noskullstrip',
             openmp=nthreads,
@@ -385,18 +387,18 @@ def init_surface_recon_wf(name='surface_recon_wf', settings=None):
     reconall.interface.num_threads = nthreads
 
     fs_transform = pe.Node(
-        freesurfer.Tkregister2(fsl_out='freesurfer2subT1.mat',
+        fs.Tkregister2(fsl_out='freesurfer2subT1.mat',
                                reg_header=True),
         name='fs_transform')
 
     recon_report = pe.Node(
-        DerivativesDataSink(base_directory=settings['reportlets_dir'],
+        DerivativesDataSink(base_directory=reportlets_dir,
                             suffix='reconall'),
         name='recon_report'
     )
 
     midthickness = pe.MapNode(
-        freesurfer.MRIsExpand(thickness=True, distance=0.5,
+        fs.MRIsExpand(thickness=True, distance=0.5,
                               out_name='midthickness'),
         iterfield='in_file',
         name='midthickness')
@@ -404,7 +406,7 @@ def init_surface_recon_wf(name='surface_recon_wf', settings=None):
     save_midthickness = pe.Node(nio.DataSink(parameterization=False),
                                 name='save_midthickness')
     surface_list = pe.Node(niu.Merge(4), name='surface_list')
-    gifticonv = pe.MapNode(freesurfer.MRIsConvert(out_datatype='gii'),
+    gifticonv = pe.MapNode(fs.MRIsConvert(out_datatype='gii'),
                            iterfield='in_file', name='gifticonv')
 
     def get_gifti_name(in_file):
@@ -473,7 +475,7 @@ def init_surface_recon_wf(name='surface_recon_wf', settings=None):
         name='fix_surfs')
 
     ds_surfs = pe.MapNode(
-        DerivativesDataSink(base_directory=settings['output_dir']),
+        DerivativesDataSink(base_directory=output_dir),
         iterfield=['in_file', 'suffix'],
         name='ds_surfs'
     )
