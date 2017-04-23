@@ -150,7 +150,7 @@ BOLD preprocessing
     :simple_form: yes
 
     from fmriprep.workflows.epi import init_func_preproc_wf
-    wf = init_func_preproc_wf("test_file",
+    wf = init_func_preproc_wf('/completely/made/up/path/sub-01_task-nback_bold.nii.gz',
                               ants_nthreads=1,
                               ignore=[],
                               freesurfer=True,

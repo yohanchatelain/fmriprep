@@ -85,7 +85,7 @@ def init_single_subject_wf(subject_id, task_id, name,
 
     if name == 'single_subject_wf':
         # for documentation purposes
-        subject_data = {'func': ['test_file']}
+        subject_data = {'func': ['/completely/made/up/path/sub-01_task-nback_bold.nii.gz']}
         layout = None
     else:
         layout = BIDSLayout(bids_dir)
