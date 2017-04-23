@@ -132,75 +132,75 @@ def create_workflow(opts):
 
     errno = 0
 
-    settings = {
-        'bids_root': op.abspath(opts.bids_dir),
-        'write_graph': opts.write_graph,
-        'nthreads': opts.nthreads,
-        'mem_mb': opts.mem_mb,
-        'debug': opts.debug,
-        'ants_nthreads': opts.ants_nthreads,
-        'skull_strip_ants': opts.skull_strip_ants,
-        'output_dir': op.abspath(opts.output_dir),
-        'work_dir': op.abspath(opts.work_dir),
-        'ignore': opts.ignore,
-        'output_spaces': opts.output_space,
-        'freesurfer': opts.freesurfer,
-        'hires': opts.hires,
-        'reportlets_dir': op.join(op.abspath(opts.work_dir), 'reportlets'),
-        'fmap_bspline': opts.fmap_bspline,
-        'fmap_demean': opts.fmap_no_demean,
-        'bold2t1w_dof': opts.bold2t1w_dof,
-    }
-
     # set up logger
     logger = logging.getLogger('cli')
 
     if opts.debug:
-        settings['ants_t1-mni_settings'] = 't1-mni_registration_test'
         logger.setLevel(logging.DEBUG)
 
     run_uuid = strftime('%Y%m%d-%H%M%S_') + str(uuid.uuid4())
 
     # Check and create output and working directories
     # Using make_folder to prevent https://github.com/poldracklab/mriqc/issues/111
-    make_folder(settings['output_dir'])
-    make_folder(settings['work_dir'])
+    make_folder(opts.output_dir)
+    make_folder(opts.work_dir)
 
     # nipype plugin configuration
     plugin_settings = {'plugin': 'Linear'}
+    nthreads = opts.nthreads
     if opts.use_plugin is not None:
         from yaml import load as loadyml
         with open(opts.use_plugin) as f:
             plugin_settings = loadyml(f)
     else:
         # Setup multiprocessing
-        if settings['nthreads'] == 0:
-            settings['nthreads'] = cpu_count()
+        nthreads = opts.nthreads
+        if nthreads == 0:
+            nthreads = cpu_count()
 
-        if settings['nthreads'] > 1:
+        if nthreads > 1:
             plugin_settings['plugin'] = 'MultiProc'
-            plugin_settings['plugin_args'] = {'n_procs': settings['nthreads']}
-            if settings['mem_mb']:
-                plugin_settings['plugin_args']['memory_gb'] = settings['mem_mb']/1024
+            plugin_settings['plugin_args'] = {'n_procs': nthreads}
+            if opts.mem_mb:
+                plugin_settings['plugin_args']['memory_gb'] = opts.mem_mb/1024
 
-    if settings['ants_nthreads'] == 0:
-        settings['ants_nthreads'] = cpu_count()
+    ants_nthreads = opts.ants_nthreads
+    if ants_nthreads == 0:
+        ants_nthreads = cpu_count()
 
     # Determine subjects to be processed
     subject_list = opts.participant_label
 
     if subject_list is None or not subject_list:
         subject_list = [op.basename(subdir)[4:] for subdir in glob.glob(
-            op.join(settings['bids_root'], 'sub-*'))]
+            op.join(op.abspath(opts.bids_dir), 'sub-*'))]
     else:
         subject_list = [sub[4:] if sub.startswith('sub-') else sub for sub in subject_list]
 
     logger.info('Subject list: %s', ', '.join(subject_list))
 
     # Build main workflow and run
-    fmriprep_wf = init_fmriprep_wf(subject_list, task_id=opts.task_id,
-                                   settings=settings, run_uuid=run_uuid)
-    fmriprep_wf.base_dir = settings['work_dir']
+    reportlets_dir = op.join(op.abspath(opts.work_dir), 'reportlets')
+    output_dir = op.abspath(opts.output_dir)
+    bids_dir = op.abspath(opts.bids_dir)
+    fmriprep_wf = init_fmriprep_wf(subject_list=subject_list,
+                                   task_id=opts.task_id,
+                                   run_uuid=run_uuid,
+                                   ignore=opts.ignore,
+                                   debug=opts.debug,
+                                   nthreads=nthreads,
+                                   ants_nthreads=ants_nthreads,
+                                   skull_strip_ants=opts.skull_strip_ants,
+                                   reportlets_dir=reportlets_dir,
+                                   output_dir=output_dir,
+                                   bids_dir=bids_dir,
+                                   freesurfer=opts.freesurfer,
+                                   output_spaces=opts.output_space,
+                                   hires=opts.hires,
+                                   bold2t1w_dof=opts.bold2t1w_dof,
+                                   fmap_bspline=opts.fmap_bspline,
+                                   fmap_demean=opts.fmap_no_demean)
+    fmriprep_wf.base_dir = op.abspath(opts.work_dir)
 
     if opts.reports_only:
         if opts.write_graph:
@@ -208,8 +208,8 @@ def create_workflow(opts):
                                     simple_form=True)
 
         for subject_label in subject_list:
-            run_reports(settings['reportlets_dir'],
-                        settings['output_dir'],
+            run_reports(reportlets_dir,
+                        output_dir,
                         subject_label, run_uuid=run_uuid)
         sys.exit()
 
@@ -227,8 +227,8 @@ def create_workflow(opts):
 
     report_errors = 0
     for subject_label in subject_list:
-        report_errors += run_reports(settings['reportlets_dir'],
-                                     settings['output_dir'],
+        report_errors += run_reports(reportlets_dir,
+                                     output_dir,
                                      subject_label, run_uuid=run_uuid)
     if errno == 1:
         assert(report_errors > 0)

@@ -16,7 +16,7 @@ from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 
 from fmriprep.interfaces import BIDSDataGrabber, BIDSFreeSurferDir
-from fmriprep.utils.misc import collect_bids_data, get_biggest_epi_file_size_gb
+from fmriprep.utils.misc import collect_bids_data
 
 from fmriprep.workflows.anatomical import init_anat_preproc_wf
 
@@ -25,64 +25,74 @@ from fmriprep.workflows.epi import init_func_preproc_wf
 from bids.grabbids import BIDSLayout
 
 
-def init_fmriprep_wf(subject_list, task_id, settings, run_uuid):
-    workflow = pe.Workflow(name='fmriprep_wf')
+def init_fmriprep_wf(subject_list, task_id, run_uuid,
+                     ignore, debug,
+                     nthreads, ants_nthreads,
+                     skull_strip_ants, reportlets_dir, output_dir, bids_dir,
+                     freesurfer, output_spaces, hires,
+                     bold2t1w_dof, fmap_bspline, fmap_demean):
+    fmriprep_wf = pe.Workflow(name='fmriprep_wf')
 
-    if settings.get('freesurfer', False):
+    if freesurfer:
         fsdir = pe.Node(
             BIDSFreeSurferDir(
-                derivatives=settings['output_dir'],
+                derivatives=output_dir,
                 freesurfer_home=os.getenv('FREESURFER_HOME'),
-                spaces=settings['output_spaces']),
+                spaces=output_spaces),
             name='fsdir')
 
-    for subject in subject_list:
-        generated_workflow = base_workflow_generator(subject, task_id=task_id,
-                                                     settings=settings)
-        if generated_workflow:
-            generated_workflow.config['execution']['crashdump_dir'] = (
-                os.path.join(settings['output_dir'], "fmriprep", "sub-" + subject, 'log', run_uuid)
-            )
-            for node in generated_workflow._get_all_nodes():
-                node.config = deepcopy(generated_workflow.config)
-            if settings.get('freesurfer', False):
-                workflow.connect(fsdir, 'subjects_dir',
-                                 generated_workflow, 'inputnode.subjects_dir')
-            else:
-                workflow.add_nodes([generated_workflow])
+    for subject_id in subject_list:
+        single_subject_wf = init_single_subject_wf(subject_id=subject_id,
+                                                   task_id=task_id,
+                                                   name="single_subject_" + subject_id + "_wf",
+                                                   ignore=ignore,
+                                                   debug=debug,
+                                                   nthreads=nthreads,
+                                                   ants_nthreads=ants_nthreads,
+                                                   skull_strip_ants=skull_strip_ants,
+                                                   reportlets_dir=reportlets_dir,
+                                                   output_dir=output_dir,
+                                                   bids_dir=bids_dir,
+                                                   freesurfer=freesurfer,
+                                                   output_spaces=output_spaces,
+                                                   hires=hires,
+                                                   bold2t1w_dof=bold2t1w_dof,
+                                                   fmap_bspline=fmap_bspline,
+                                                   fmap_demean=fmap_demean)
+        single_subject_wf.config['execution']['crashdump_dir'] = (
+            os.path.join(output_dir, "fmriprep", "sub-" + subject_id, 'log', run_uuid)
+        )
+        for node in single_subject_wf._get_all_nodes():
+            node.config = deepcopy(single_subject_wf.config)
+        if freesurfer:
+            fmriprep_wf.connect(fsdir, 'subjects_dir',
+                                single_subject_wf, 'inputnode.subjects_dir')
+        else:
+            fmriprep_wf.add_nodes([single_subject_wf])
 
-    return workflow
+    return fmriprep_wf
 
 
-def base_workflow_generator(subject_id, task_id, settings):
-    subject_data = collect_bids_data(settings['bids_root'], subject_id, task_id)
+def init_single_subject_wf(subject_id, task_id, name,
+                           ignore, debug,
+                           nthreads, ants_nthreads,
+                           skull_strip_ants, reportlets_dir, output_dir, bids_dir,
+                           freesurfer, output_spaces, hires,
+                           bold2t1w_dof, fmap_bspline, fmap_demean):
+    """
+    The adaptable fMRI preprocessing workflow
+    """
 
-    settings["biggest_epi_file_size_gb"] = get_biggest_epi_file_size_gb(subject_data['func'])
+    subject_data = collect_bids_data(bids_dir, subject_id, task_id)
 
     if subject_data['func'] == []:
         raise Exception("No BOLD images found for participant {} and task {}. "
                         "All workflows require BOLD images.".format(
-                            subject_id, task_id if task_id else '<all>'))
+            subject_id, task_id if task_id else '<all>'))
 
     if subject_data['t1w'] == []:
         raise Exception("No T1w images found for participant {}. "
                         "All workflows require T1w images.".format(subject_id))
-
-    return init_basic_wf(subject_data, settings, name=subject_id)
-
-
-def init_basic_wf(subject_data, settings, name='basic_wf'):
-    """
-    The main fmri preprocessing workflow, for the ds005-type of data:
-
-      * Has at least one T1w and at least one bold file (minimal reqs.)
-      * No SBRefs
-      * May have fieldmaps
-
-    """
-
-    if settings is None:
-        settings = {}
 
     workflow = pe.Workflow(name=name)
 
@@ -90,7 +100,7 @@ def init_basic_wf(subject_data, settings, name='basic_wf'):
         # for documentation purposes
         layout = None
     else:
-        layout = BIDSLayout(settings["bids_root"])
+        layout = BIDSLayout(bids_dir)
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['subjects_dir']),
                         name='inputnode')
@@ -99,7 +109,14 @@ def init_basic_wf(subject_data, settings, name='basic_wf'):
                       name='bidssrc')
 
     # Preprocessing of T1w (includes registration to MNI)
-    anat_preproc_wf = init_anat_preproc_wf(name="anat_preproc_wf", settings=settings)
+    anat_preproc_wf = init_anat_preproc_wf(name="anat_preproc_wf",
+                                           skull_strip_ants=skull_strip_ants,
+                                           debug=debug,
+                                           ants_nthreads=ants_nthreads,
+                                           nthreads=nthreads,
+                                           hires=hires,
+                                           reportlets_dir=reportlets_dir,
+                                           output_dir=output_dir)
 
     workflow.connect([
         (inputnode, anat_preproc_wf, [('subjects_dir', 'inputnode.subjects_dir')]),
@@ -108,8 +125,18 @@ def init_basic_wf(subject_data, settings, name='basic_wf'):
     ])
 
     for bold_file in subject_data['func']:
-        func_preproc_wf = init_func_preproc_wf(bold_file, layout=layout,
-                                               settings=settings)
+        func_preproc_wf = init_func_preproc_wf(bold_file=bold_file,
+                                               layout=layout,
+                                               ignore=ignore,
+                                               freesurfer=freesurfer,
+                                               bold2t1w_dof=bold2t1w_dof,
+                                               reportlets_dir=reportlets_dir,
+                                               output_spaces=output_spaces,
+                                               output_dir=output_dir,
+                                               ants_nthreads=ants_nthreads,
+                                               fmap_bspline=fmap_bspline,
+                                               fmap_demean=fmap_demean,
+                                               debug=debug)
 
         workflow.connect([
             (bidssrc, func_preproc_wf, [('t1w', 'inputnode.t1w')]),
@@ -122,7 +149,7 @@ def init_basic_wf(subject_data, settings, name='basic_wf'):
               ('outputnode.t1_2_mni_forward_transform', 'inputnode.t1_2_mni_forward_transform')])
         ])
 
-        if settings['freesurfer']:
+        if freesurfer:
             workflow.connect([
                 (inputnode, func_preproc_wf,
                  [('subjects_dir', 'inputnode.subjects_dir')]),
