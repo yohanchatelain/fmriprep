@@ -122,9 +122,7 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
     # 6. FreeSurfer reconstruction
     if freesurfer:
         surface_recon_wf = init_surface_recon_wf(name='surface_recon_wf',
-                                                 nthreads=nthreads,
-                                                 hires=hires,
-                                                 output_dir=output_dir)
+                                                 nthreads=nthreads, hires=hires)
 
         workflow.connect([
             (inputnode, surface_recon_wf, [
@@ -160,7 +158,7 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
                 ('outputnode.out_report', 'inputnode.recon_report')])
         ])
 
-    anat_derivatives_wf = init_anat_derivatives_wf(output_dir=output_dir)
+    anat_derivatives_wf = init_anat_derivatives_wf(output_dir=output_dir, freesurfer=freesurfer)
 
     workflow.connect([
         (inputnode, anat_derivatives_wf, [
@@ -174,7 +172,14 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
             ]),
         (mni_mask, anat_derivatives_wf, [('output_image', 'inputnode.mni_mask')]),
         (mni_tpms, anat_derivatives_wf, [('output_image', 'inputnode.mni_tpms')])
-    ])
+        ])
+
+    if freesurfer:
+        workflow.connect([
+            (surface_recon_wf, anat_derivatives_wf, [
+                ('outputnode.surfaces', 'inputnode.surfaces')])
+        ])
+
 
     return workflow
 
@@ -223,7 +228,7 @@ def init_skullstrip_ants_wf(debug, ants_nthreads, name='skullstrip_ants_wf'):
     return workflow
 
 
-def init_surface_recon_wf(nthreads, hires, output_dir, name='surface_recon_wf'):
+def init_surface_recon_wf(nthreads, hires, name='surface_recon_wf'):
 
     workflow = pe.Workflow(name=name)
 
@@ -233,7 +238,7 @@ def init_surface_recon_wf(nthreads, hires, output_dir, name='surface_recon_wf'):
         name='inputnode')
     outputnode = pe.Node(
         niu.IdentityInterface(
-            fields=['subjects_dir', 'subject_id', 'fs_2_t1_transform', 'out_report']),
+            fields=['subjects_dir', 'subject_id', 'fs_2_t1_transform', 'surfaces', 'out_report']),
         name='outputnode')
 
     def detect_inputs(t1w_list, t2w_list=[], hires_enabled=True):
@@ -347,21 +352,6 @@ def init_surface_recon_wf(nthreads, hires, output_dir, name='surface_recon_wf'):
     gifticonv = pe.MapNode(fs.MRIsConvert(out_datatype='gii'),
                            iterfield='in_file', name='gifticonv')
 
-    def get_gifti_name(in_file):
-        import os
-        import re
-        in_format = re.compile(r'(?P<LR>[lr])h.(?P<surf>.+)_converted.gii')
-        name = os.path.basename(in_file)
-        info = in_format.match(name).groupdict()
-        info['LR'] = info['LR'].upper()
-        return '{surf}.{LR}.surf'.format(**info)
-
-    name_surfs = pe.MapNode(
-        niu.Function(function=get_gifti_name),
-        iterfield='in_file',
-        name='name_surfs'
-        )
-
     def normalize_surfs(in_file):
         """ Re-center GIFTI coordinates to fit align to native T1 space
 
@@ -412,12 +402,6 @@ def init_surface_recon_wf(nthreads, hires, output_dir, name='surface_recon_wf'):
         iterfield='in_file',
         name='fix_surfs')
 
-    ds_surfs = pe.MapNode(
-        DerivativesDataSink(base_directory=output_dir),
-        iterfield=['in_file', 'suffix'],
-        name='ds_surfs'
-    )
-
     workflow.connect([
         # Configuration
         (inputnode, recon_config, [('t1w', 't1w_list'),
@@ -457,11 +441,8 @@ def init_surface_recon_wf(nthreads, hires, output_dir, name='surface_recon_wf'):
                                   ('inflated', 'in3')]),
         (save_midthickness, surface_list, [('out_file', 'in4')]),
         (surface_list, gifticonv, [('out', 'in_file')]),
-        (gifticonv, name_surfs, [('converted', 'in_file')]),
         (gifticonv, fix_surfs, [('converted', 'in_file')]),
-        (inputnode, ds_surfs, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
-        (name_surfs, ds_surfs, [('out', 'suffix')]),
-        (fix_surfs, ds_surfs, [('out', 'in_file')]),
+        (fix_surfs, outputnode, [('out', 'surfaces')]),
         ])
 
     return workflow
@@ -513,14 +494,14 @@ def init_anat_reports_wf(reportlets_dir, skull_strip_ants, freesurfer, name='ana
     return workflow
 
 
-def init_anat_derivatives_wf(output_dir, name='anat_derivatives_wf'):
+def init_anat_derivatives_wf(output_dir, freesurfer, name='anat_derivatives_wf'):
     workflow = pe.Workflow(name=name)
 
     inputnode = pe.Node(
         niu.IdentityInterface(
             fields=['source_file', 'bias_corrected_t1', 't1_mask', 't1_seg',
                     't1_2_mni_forward_transform', 't1_2_mni', 'mni_mask',
-                    'mni_tpms']),
+                    'mni_tpms', 'surfaces']),
         name='inputnode')
 
     ds_t1_bias = pe.Node(
@@ -554,6 +535,23 @@ def init_anat_derivatives_wf(output_dir, name='anat_derivatives_wf'):
         DerivativesDataSink(base_directory=output_dir, suffix='target-MNI152NLin2009cAsym_warp'),
         name='ds_t1_mni_warp')
 
+    def get_gifti_name(in_file):
+        import os
+        import re
+        in_format = re.compile(r'(?P<LR>[lr])h.(?P<surf>.+)_converted.gii')
+        name = os.path.basename(in_file)
+        info = in_format.match(name).groupdict()
+        info['LR'] = info['LR'].upper()
+        return '{surf}.{LR}.surf'.format(**info)
+
+    name_surfs = pe.MapNode(niu.Function(function=get_gifti_name),
+                            iterfield='in_file', name='name_surfs')
+
+    ds_surfs = pe.MapNode(
+        DerivativesDataSink(base_directory=output_dir),
+        iterfield=['in_file', 'suffix'],
+        name='ds_surfs')
+
     workflow.connect([
         (inputnode, ds_t1_bias, [('source_file', 'source_file'),
                                  ('bias_corrected_t1', 'in_file')]),
@@ -568,7 +566,15 @@ def init_anat_derivatives_wf(output_dir, name='anat_derivatives_wf'):
         (inputnode, ds_mni_mask, [('source_file', 'source_file'),
                                   ('mni_mask', 'in_file')]),
         (inputnode, ds_mni_tpms, [('source_file', 'source_file'),
-                                  ('mni_tpms', 'in_file')])
-    ])
+                                  ('mni_tpms', 'in_file')]),
+        ])
+
+    if freesurfer:
+        workflow.connect([
+            (inputnode, name_surfs, [('surfaces', 'in_file')]),
+            (inputnode, ds_surfs, [('source_file', 'source_file'),
+                                   ('surfaces', 'in_file')]),
+            (name_surfs, ds_surfs, [('out', 'suffix')]),
+            ])
 
     return workflow
