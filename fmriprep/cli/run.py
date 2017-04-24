@@ -37,7 +37,7 @@ def get_parser():
                              'reports')
     parser.add_argument('analysis_level', choices=['participant'],
                         help='processing stage to be run, only "participant" in the case of '
-                             'FMRPREP (see BIDS-Apps specification).')
+                             'FMRIPREP (see BIDS-Apps specification).')
 
     # optional arguments
     parser.add_argument('-v', '--version', action='version', version=verstr)
