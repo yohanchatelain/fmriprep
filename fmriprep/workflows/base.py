@@ -142,7 +142,6 @@ def init_single_subject_wf(subject_id, task_id, name,
                                                debug=debug)
 
         workflow.connect([
-            (bidssrc, func_preproc_wf, [('t1w', 'inputnode.t1w')]),
             (anat_preproc_wf, func_preproc_wf,
              [('outputnode.t1_preproc', 'inputnode.t1_preproc'),
               ('outputnode.t1_brain', 'inputnode.t1_brain'),
