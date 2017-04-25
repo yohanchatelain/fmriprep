@@ -180,7 +180,6 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
                 ('outputnode.surfaces', 'inputnode.surfaces')])
         ])
 
-
     return workflow
 
 
@@ -322,10 +321,10 @@ def init_surface_recon_wf(nthreads, hires, name='surface_recon_wf'):
 
         return subjects_dir, subject_id
 
-    injector = pe.Node(
+    skull_strip_extern = pe.Node(
         niu.Function(function=inject_skullstripped,
                      output_names=['subjects_dir', 'subject_id']),
-        name='injector')
+        name='skull_strip_extern')
 
     reconall = pe.Node(
         ReconAllRPT(
@@ -349,8 +348,8 @@ def init_surface_recon_wf(nthreads, hires, name='surface_recon_wf'):
     save_midthickness = pe.Node(nio.DataSink(parameterization=False),
                                 name='save_midthickness')
     surface_list = pe.Node(niu.Merge(4), name='surface_list')
-    gifticonv = pe.MapNode(fs.MRIsConvert(out_datatype='gii'),
-                           iterfield='in_file', name='gifticonv')
+    fs_2_gii = pe.MapNode(fs.MRIsConvert(out_datatype='gii'),
+                          iterfield='in_file', name='fs_2_gii')
 
     def normalize_surfs(in_file):
         """ Re-center GIFTI coordinates to fit align to native T1 space
@@ -410,10 +409,10 @@ def init_surface_recon_wf(nthreads, hires, name='surface_recon_wf'):
         # Passing subjects_dir / subject_id enforces serial order
         (inputnode, autorecon1, [('subjects_dir', 'subjects_dir')]),
         (bids_info, autorecon1, [('subject_id', 'subject_id')]),
-        (autorecon1, injector, [('subjects_dir', 'subjects_dir'),
-                                ('subject_id', 'subject_id')]),
-        (injector, reconall, [('subjects_dir', 'subjects_dir'),
-                              ('subject_id', 'subject_id')]),
+        (autorecon1, skull_strip_extern, [('subjects_dir', 'subjects_dir'),
+                                          ('subject_id', 'subject_id')]),
+        (skull_strip_extern, reconall, [('subjects_dir', 'subjects_dir'),
+                                        ('subject_id', 'subject_id')]),
         (reconall, outputnode, [('subjects_dir', 'subjects_dir'),
                                 ('subject_id', 'subject_id'),
                                 ('out_report', 'out_report')]),
@@ -423,7 +422,7 @@ def init_surface_recon_wf(nthreads, hires, name='surface_recon_wf'):
                                     ('hires', 'hires'),
                                     # First run only (recon-all saves expert options)
                                     ('mris_inflate', 'mris_inflate')]),
-        (inputnode, injector, [('skullstripped_t1', 'skullstripped')]),
+        (inputnode, skull_strip_extern, [('skullstripped_t1', 'skullstripped')]),
         (recon_config, reconall, [('use_T2', 'use_T2')]),
         # Construct transform from FreeSurfer conformed image to FMRIPREP
         # reoriented image
@@ -440,8 +439,8 @@ def init_surface_recon_wf(nthreads, hires, name='surface_recon_wf'):
                                   ('pial', 'in2'),
                                   ('inflated', 'in3')]),
         (save_midthickness, surface_list, [('out_file', 'in4')]),
-        (surface_list, gifticonv, [('out', 'in_file')]),
-        (gifticonv, fix_surfs, [('converted', 'in_file')]),
+        (surface_list, fs_2_gii, [('out', 'in_file')]),
+        (fs_2_gii, fix_surfs, [('converted', 'in_file')]),
         (fix_surfs, outputnode, [('out', 'surfaces')]),
         ])
 
