@@ -41,10 +41,11 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
         niu.IdentityInterface(fields=['t1w', 't2w', 'subjects_dir']),
         name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['t1_seg', 't1_tpms', 't1_preproc', 't1_brain', 't1_mask',
-                't1_2_mni', 't1_2_mni_forward_transform',
-                't1_2_mni_reverse_transform', 'subject_id',
-                'fs_2_t1_transform']), name='outputnode')
+        fields=['t1_preproc', 't1_brain', 't1_mask', 't1_seg', 't1_tpms',
+                't1_2_mni', 't1_2_mni_forward_transform', 't1_2_mni_reverse_transform',
+                'mni_mask', 'mni_tpms',
+                'subjects_dir', 'subject_id', 'fs_2_t1_transform', 'surfaces']),
+        name='outputnode')
 
     # 0. Align and merge if several T1w images are provided
     t1_merge = pe.Node(IntraModalMerge(), name='t1_merge')
@@ -107,16 +108,17 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
         (t1_2_mni, mni_mask, [('composite_transform', 'transforms')]),
         (t1_seg, mni_tpms, [('probability_maps', 'input_image')]),
         (t1_2_mni, mni_tpms, [('composite_transform', 'transforms')]),
-        (t1_seg, outputnode, [('tissue_class_map', 't1_seg'),
-                              ('probability_maps', 't1_tpms')]),
         (skullstrip_wf, outputnode, [('outputnode.bias_corrected', 't1_preproc'),
                                      ('outputnode.out_file', 't1_brain'),
                                      ('outputnode.out_mask', 't1_mask')]),
+        (t1_seg, outputnode, [('tissue_class_map', 't1_seg'),
+                              ('probability_maps', 't1_tpms')]),
         (t1_2_mni, outputnode, [
             ('warped_image', 't1_2_mni'),
             ('composite_transform', 't1_2_mni_forward_transform'),
-            ('inverse_composite_transform', 't1_2_mni_reverse_transform')
-        ]),
+            ('inverse_composite_transform', 't1_2_mni_reverse_transform')]),
+        (mni_mask, outputnode, [('output_image', 'mni_mask')]),
+        (mni_tpms, outputnode, [('output_image', 'mni_tpms')]),
     ])
 
     # 6. FreeSurfer reconstruction
@@ -135,7 +137,8 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
             (surface_recon_wf, outputnode, [
                 ('outputnode.subjects_dir', 'subjects_dir'),
                 ('outputnode.subject_id', 'subject_id'),
-                ('outputnode.fs_2_t1_transform', 'fs_2_t1_transform')]),
+                ('outputnode.fs_2_t1_transform', 'fs_2_t1_transform'),
+                ('outputnode.surfaces', 'surfaces')]),
             ])
 
     anat_reports_wf = init_anat_reports_wf(
@@ -169,15 +172,10 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
             ('t1_seg', 'inputnode.t1_seg'),
             ('t1_2_mni_forward_transform', 'inputnode.t1_2_mni_forward_transform'),
             ('t1_2_mni', 'inputnode.t1_2_mni'),
+            ('mni_mask', 'inputnode.mni_mask'),
+            ('mni_tpms', 'inputnode.mni_tpms'),
+            ('surfaces', 'inputnode.surfaces'),
             ]),
-        (mni_mask, anat_derivatives_wf, [('output_image', 'inputnode.mni_mask')]),
-        (mni_tpms, anat_derivatives_wf, [('output_image', 'inputnode.mni_tpms')])
-        ])
-
-    if freesurfer:
-        workflow.connect([
-            (surface_recon_wf, anat_derivatives_wf, [
-                ('outputnode.surfaces', 'inputnode.surfaces')])
         ])
 
     return workflow
