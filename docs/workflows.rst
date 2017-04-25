@@ -220,9 +220,7 @@ EPI to T1w registration
     :simple_form: yes
 
     from fmriprep.workflows.epi import init_epi_reg_wf
-    wf = init_epi_reg_wf('reportlet_suffix',
-                         freesurfer=True,
-                         reportlets_dir='.',
+    wf = init_epi_reg_wf(freesurfer=True,
                          output_dir='.',
                          bold_file_size_gb=3,
                          output_spaces=['T1w', 'fsnative',
@@ -273,8 +271,7 @@ EPI sampled to FreeSurfer surfaces
     :simple_form: yes
 
     from fmriprep.workflows.epi import init_epi_surf_wf
-    wf = init_epi_surf_wf(output_dir='.',
-                          output_spaces=['T1w', 'fsnative',
+    wf = init_epi_surf_wf(output_spaces=['T1w', 'fsnative',
                                          'MNI152NLin2009cAsym', 'fsaverage5'])
 
 If FreeSurfer processing is enabled, the motion-corrected functional series
@@ -297,8 +294,6 @@ Confounds estimation
 
     from fmriprep.workflows.confounds import init_discover_wf
     wf = init_discover_wf(name="discover_wf",
-                          reportlets_dir='.',
-                          output_dir='.',
                           bold_file_size_gb=3)
 
 Given a motion-corrected fMRI, a brain mask, MCFLIRT movement parameters and a
