@@ -24,7 +24,7 @@ from niworkflows.data import get_mni_icbm152_nlin_asym_09c
 from niworkflows.interfaces.masks import BrainExtractionRPT
 from niworkflows.interfaces.segmentation import FASTRPT, ReconAllRPT
 
-from fmriprep.interfaces import (DerivativesDataSink, IntraModalMerge)
+from fmriprep.interfaces import DerivativesDataSink, StructuralReference
 from fmriprep.interfaces.images import reorient
 from fmriprep.utils.misc import fix_multi_T1w_source_name
 
@@ -48,7 +48,16 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
         name='outputnode')
 
     # 0. Align and merge if several T1w images are provided
-    t1_merge = pe.Node(IntraModalMerge(), name='t1_merge')
+    t1_merge = pe.Node(
+        # StructuralReference is fs.RobustTemplate if > 1 volume, copying otherwise
+        StructuralReference(auto_detect_sensitivity=True,
+                            initial_timepoint=1,
+                            fixed_timepoint=True,     # Align to first image
+                            intensity_scaling=True,   # 7-DOF (rigid + intensity)
+                            no_iteration=True,
+                            subsample_threshold=200,
+                            out_file='template.nii.gz',
+                            ), name='t1_merge')
 
     # 1. Reorient T1
     t1_conform = pe.Node(niu.Function(function=reorient), name='t1_conform')
@@ -99,7 +108,7 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
 
     workflow.connect([
         (inputnode, t1_merge, [('t1w', 'in_files')]),
-        (t1_merge, t1_conform, [('out_avg', 'in_file')]),
+        (t1_merge, t1_conform, [('out_file', 'in_file')]),
         (t1_conform, skullstrip_wf, [('out', 'inputnode.in_file')]),
         (skullstrip_wf, t1_seg, [('outputnode.out_file', 'in_files')]),
         (skullstrip_wf, t1_2_mni, [('outputnode.bias_corrected', 'moving_image')]),
