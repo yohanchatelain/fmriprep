@@ -145,7 +145,7 @@ def init_single_subject_wf(subject_id, task_id, name,
         workflow.connect([
             (bidssrc, func_preproc_wf, [('t1w', 'inputnode.t1w')]),
             (anat_preproc_wf, func_preproc_wf,
-             [('outputnode.bias_corrected_t1', 'inputnode.bias_corrected_t1'),
+             [('outputnode.t1_preproc', 'inputnode.t1_preproc'),
               ('outputnode.t1_brain', 'inputnode.t1_brain'),
               ('outputnode.t1_mask', 'inputnode.t1_mask'),
               ('outputnode.t1_seg', 'inputnode.t1_seg'),
