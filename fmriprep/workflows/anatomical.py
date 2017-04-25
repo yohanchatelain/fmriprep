@@ -26,7 +26,7 @@ from niworkflows.interfaces.segmentation import FASTRPT, ReconAllRPT
 
 from fmriprep.interfaces import DerivativesDataSink, StructuralReference
 from fmriprep.interfaces.images import reorient
-from fmriprep.utils.misc import fix_multi_T1w_source_name
+from fmriprep.utils.misc import fix_multi_T1w_source_name, add_suffix
 
 
 #  pylint: disable=R0914
@@ -56,7 +56,6 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
                             intensity_scaling=True,   # 7-DOF (rigid + intensity)
                             no_iteration=True,
                             subsample_threshold=200,
-                            out_file='template.nii.gz',
                             ), name='t1_merge')
 
     # 1. Reorient T1
@@ -107,7 +106,8 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
     )
 
     workflow.connect([
-        (inputnode, t1_merge, [('t1w', 'in_files')]),
+        (inputnode, t1_merge, [('t1w', 'in_files'),
+                               (('t1w', add_suffix, '_template'), 'out_file')]),
         (t1_merge, t1_conform, [('out_file', 'in_file')]),
         (t1_conform, skullstrip_wf, [('out', 'inputnode.in_file')]),
         (skullstrip_wf, t1_seg, [('outputnode.out_file', 'in_files')]),
