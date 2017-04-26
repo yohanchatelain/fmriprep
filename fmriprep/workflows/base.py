@@ -88,7 +88,7 @@ def init_single_subject_wf(subject_id, task_id, name,
         subject_data = {'func': ['/completely/made/up/path/sub-01_task-nback_bold.nii.gz']}
         layout = None
     else:
-        layout = BIDSLayout(bids_dir)
+        layout = BIDSLayout(os.path.abspath(bids_dir))
 
         subject_data = collect_bids_data(bids_dir, subject_id, task_id)
 
@@ -135,6 +135,7 @@ def init_single_subject_wf(subject_id, task_id, name,
                                                freesurfer=freesurfer,
                                                bold2t1w_dof=bold2t1w_dof,
                                                reportlets_dir=reportlets_dir,
+                                               bids_dir=bids_dir,
                                                output_spaces=output_spaces,
                                                output_dir=output_dir,
                                                ants_nthreads=ants_nthreads,
