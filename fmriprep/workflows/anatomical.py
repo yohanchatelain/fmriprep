@@ -24,7 +24,7 @@ from niworkflows.data import get_mni_icbm152_nlin_asym_09c
 from niworkflows.interfaces.masks import BrainExtractionRPT
 from niworkflows.interfaces.segmentation import FASTRPT, ReconAllRPT
 
-from fmriprep.interfaces import DerivativesDataSink, StructuralReference
+from fmriprep.interfaces import DerivativesDataSink, StructuralReference, MakeMidthickness
 from fmriprep.interfaces.images import reorient
 from fmriprep.utils.misc import fix_multi_T1w_source_name, add_suffix
 
@@ -340,14 +340,17 @@ def init_surface_recon_wf(nthreads, hires, name='surface_recon_wf'):
         fs.Tkregister2(fsl_out='freesurfer2subT1.mat', reg_header=True),
         name='fs_transform')
 
-    midthickness = pe.MapNode(
-        fs.MRIsExpand(thickness=True, distance=0.5, out_name='midthickness'),
-        iterfield='in_file',
-        name='midthickness')
+    get_surfaces = pe.Node(nio.FreeSurferSource(), iterables=('hemi', ('lh', 'rh')),
+                           name='get_surfaces')
+
+    midthickness = pe.Node(MakeMidthickness(thickness=True, distance=0.5, out_name='midthickness'),
+                           name='midthickness')
 
     save_midthickness = pe.Node(nio.DataSink(parameterization=False),
                                 name='save_midthickness')
-    surface_list = pe.Node(niu.Merge(4), name='surface_list')
+
+    surface_list = pe.JoinNode(niu.Merge(4, ravel_inputs=True), name='surface_list',
+                               joinsource='get_surfaces', joinfield=['in1', 'in2', 'in3', 'in4'])
     fs_2_gii = pe.MapNode(fs.MRIsConvert(out_datatype='gii'),
                           iterfield='in_file', name='fs_2_gii')
 
@@ -413,6 +416,10 @@ def init_surface_recon_wf(nthreads, hires, name='surface_recon_wf'):
                                           ('subject_id', 'subject_id')]),
         (skull_strip_extern, reconall, [('subjects_dir', 'subjects_dir'),
                                         ('subject_id', 'subject_id')]),
+        (reconall, get_surfaces, [('subjects_dir', 'subjects_dir'),
+                                  ('subject_id', 'subject_id')]),
+        (reconall, save_midthickness, [('subjects_dir', 'base_directory'),
+                                       ('subject_id', 'container')]),
         (reconall, outputnode, [('subjects_dir', 'subjects_dir'),
                                 ('subject_id', 'subject_id'),
                                 ('out_report', 'out_report')]),
@@ -430,14 +437,13 @@ def init_surface_recon_wf(nthreads, hires, name='surface_recon_wf'):
         (autorecon1, fs_transform, [('T1', 'moving_image')]),
         (fs_transform, outputnode, [('fsl_file', 'fs_2_t1_transform')]),
         # Generate midthickness surfaces and save to FreeSurfer derivatives
-        (reconall, midthickness, [('smoothwm', 'in_file')]),
-        (reconall, save_midthickness, [('subjects_dir', 'base_directory'),
-                                       ('subject_id', 'container')]),
+        (get_surfaces, midthickness, [('smoothwm', 'in_file'),
+                                      ('graymid', 'graymid')]),
         (midthickness, save_midthickness, [('out_file', 'surf.@graymid')]),
         # Produce valid GIFTI surface files (dense mesh)
-        (reconall, surface_list, [('smoothwm', 'in1'),
-                                  ('pial', 'in2'),
-                                  ('inflated', 'in3')]),
+        (get_surfaces, surface_list, [('smoothwm', 'in1'),
+                                      ('pial', 'in2'),
+                                      ('inflated', 'in3')]),
         (save_midthickness, surface_list, [('out_file', 'in4')]),
         (surface_list, fs_2_gii, [('out', 'in_file')]),
         (fs_2_gii, fix_surfs, [('converted', 'in_file')]),
