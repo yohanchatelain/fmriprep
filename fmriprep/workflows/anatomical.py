@@ -24,9 +24,9 @@ from niworkflows.data import get_mni_icbm152_nlin_asym_09c
 from niworkflows.interfaces.masks import BrainExtractionRPT
 from niworkflows.interfaces.segmentation import FASTRPT, ReconAllRPT
 
-from fmriprep.interfaces import (DerivativesDataSink, IntraModalMerge)
+from fmriprep.interfaces import DerivativesDataSink, StructuralReference
 from fmriprep.interfaces.images import reorient
-from fmriprep.utils.misc import fix_multi_T1w_source_name
+from fmriprep.utils.misc import fix_multi_T1w_source_name, add_suffix
 
 
 #  pylint: disable=R0914
@@ -48,7 +48,15 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
         name='outputnode')
 
     # 0. Align and merge if several T1w images are provided
-    t1_merge = pe.Node(IntraModalMerge(), name='t1_merge')
+    t1_merge = pe.Node(
+        # StructuralReference is fs.RobustTemplate if > 1 volume, copying otherwise
+        StructuralReference(auto_detect_sensitivity=True,
+                            initial_timepoint=1,
+                            fixed_timepoint=True,     # Align to first image
+                            intensity_scaling=True,   # 7-DOF (rigid + intensity)
+                            no_iteration=True,
+                            subsample_threshold=200,
+                            ), name='t1_merge')
 
     # 1. Reorient T1
     t1_conform = pe.Node(niu.Function(function=reorient), name='t1_conform')
@@ -98,8 +106,9 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
     )
 
     workflow.connect([
-        (inputnode, t1_merge, [('t1w', 'in_files')]),
-        (t1_merge, t1_conform, [('out_avg', 'in_file')]),
+        (inputnode, t1_merge, [('t1w', 'in_files'),
+                               (('t1w', add_suffix, '_template'), 'out_file')]),
+        (t1_merge, t1_conform, [('out_file', 'in_file')]),
         (t1_conform, skullstrip_wf, [('out', 'inputnode.in_file')]),
         (skullstrip_wf, t1_seg, [('outputnode.out_file', 'in_files')]),
         (skullstrip_wf, t1_2_mni, [('outputnode.bias_corrected', 'moving_image')]),
@@ -128,10 +137,9 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
 
         workflow.connect([
             (inputnode, surface_recon_wf, [
-                ('t1w', 'inputnode.t1w'),
                 ('t2w', 'inputnode.t2w'),
                 ('subjects_dir', 'inputnode.subjects_dir')]),
-            (t1_conform, surface_recon_wf, [('out', 'inputnode.reoriented_t1')]),
+            (t1_conform, surface_recon_wf, [('out', 'inputnode.t1w')]),
             (skullstrip_wf, surface_recon_wf, [
                 ('outputnode.out_file', 'inputnode.skullstripped_t1')]),
             (surface_recon_wf, outputnode, [
@@ -231,7 +239,7 @@ def init_surface_recon_wf(nthreads, hires, name='surface_recon_wf'):
 
     inputnode = pe.Node(
         niu.IdentityInterface(
-            fields=['t1w', 't2w', 'reoriented_t1', 'skullstripped_t1', 'subjects_dir']),
+            fields=['t1w', 't2w', 'skullstripped_t1', 'subjects_dir']),
         name='inputnode')
     outputnode = pe.Node(
         niu.IdentityInterface(
@@ -249,12 +257,6 @@ def init_surface_recon_wf(nthreads, hires, name='surface_recon_wf'):
         # Use high resolution preprocessing if voxel size < 1.0mm
         # Tolerance of 0.05mm requires that rounds down to 0.9mm or lower
         hires = hires_enabled and max(t1w_ref.header.get_zooms()) < 1 - 0.05
-        t1w_outs = [t1w_list.pop(0)]
-        for t1w in t1w_list:
-            img = nib.load(t1w)
-            if all((img.shape == t1w_ref.shape,
-                    img.header.get_zooms() == t1w_ref.header.get_zooms())):
-                t1w_outs.append(t1w)
 
         t2w = Undefined
         if t2w_list and max(nib.load(t2w_list[0]).header.get_zooms()) < 1.2:
@@ -262,12 +264,12 @@ def init_surface_recon_wf(nthreads, hires, name='surface_recon_wf'):
 
         # https://surfer.nmr.mgh.harvard.edu/fswiki/SubmillimeterRecon
         mris_inflate = '-n 50' if hires else Undefined
-        return (t1w_outs, t2w, isdefined(t2w), hires, mris_inflate)
+        return (t2w, isdefined(t2w), hires, mris_inflate)
 
     recon_config = pe.Node(
         niu.Function(
             function=detect_inputs,
-            output_names=['t1w', 't2w', 'use_T2', 'hires', 'mris_inflate']),
+            output_names=['t2w', 'use_T2', 'hires', 'mris_inflate']),
         name='recon_config',
         run_without_submitting=True)
     recon_config.inputs.hires_enabled = hires
@@ -415,8 +417,8 @@ def init_surface_recon_wf(nthreads, hires, name='surface_recon_wf'):
                                 ('subject_id', 'subject_id'),
                                 ('out_report', 'out_report')]),
         # Reconstruction phases
-        (recon_config, autorecon1, [('t1w', 'T1_files'),
-                                    ('t2w', 'T2_file'),
+        (inputnode, autorecon1, [('t1w', 'T1_files')]),
+        (recon_config, autorecon1, [('t2w', 'T2_file'),
                                     ('hires', 'hires'),
                                     # First run only (recon-all saves expert options)
                                     ('mris_inflate', 'mris_inflate')]),
@@ -424,7 +426,7 @@ def init_surface_recon_wf(nthreads, hires, name='surface_recon_wf'):
         (recon_config, reconall, [('use_T2', 'use_T2')]),
         # Construct transform from FreeSurfer conformed image to FMRIPREP
         # reoriented image
-        (inputnode, fs_transform, [('reoriented_t1', 'target_image')]),
+        (inputnode, fs_transform, [('t1w', 'target_image')]),
         (autorecon1, fs_transform, [('T1', 'moving_image')]),
         (fs_transform, outputnode, [('fsl_file', 'fs_2_t1_transform')]),
         # Generate midthickness surfaces and save to FreeSurfer derivatives

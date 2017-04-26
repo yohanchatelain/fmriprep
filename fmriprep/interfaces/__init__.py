@@ -5,3 +5,4 @@
 from fmriprep.interfaces.bids import ReadSidecarJSON, DerivativesDataSink, \
     BIDSDataGrabber, BIDSFreeSurferDir
 from fmriprep.interfaces.images import IntraModalMerge, CopyHeader
+from fmriprep.interfaces.freesurfer import StructuralReference
