@@ -112,6 +112,7 @@ def init_single_subject_wf(subject_id, task_id, name,
     # Preprocessing of T1w (includes registration to MNI)
     anat_preproc_wf = init_anat_preproc_wf(name="anat_preproc_wf",
                                            skull_strip_ants=skull_strip_ants,
+                                           output_spaces=output_spaces,
                                            debug=debug,
                                            ants_nthreads=ants_nthreads,
                                            nthreads=nthreads,

@@ -50,6 +50,8 @@ T1w/T2w preprocessing
                               nthreads=1,
                               reportlets_dir='.',
                               output_dir='.',
+                              output_spaces=['T1w', 'fsnative',
+                                            'MNI152NLin2009cAsym', 'fsaverage5'],
                               skull_strip_ants=True,
                               freesurfer=True,
                               debug=False,
