@@ -30,8 +30,8 @@ from fmriprep.utils.misc import fix_multi_T1w_source_name, add_suffix
 
 
 #  pylint: disable=R0914
-def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
-                         nthreads, hires, reportlets_dir, output_dir,
+def init_anat_preproc_wf(skull_strip_ants, output_spaces, debug, freesurfer,
+                         ants_nthreads, nthreads, hires, reportlets_dir, output_dir,
                          name='anat_preproc_wf'):
     """T1w images preprocessing pipeline"""
 
@@ -111,24 +111,27 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
         (t1_merge, t1_conform, [('out_file', 'in_file')]),
         (t1_conform, skullstrip_wf, [('out', 'inputnode.in_file')]),
         (skullstrip_wf, t1_seg, [('outputnode.out_file', 'in_files')]),
-        (skullstrip_wf, t1_2_mni, [('outputnode.bias_corrected', 'moving_image')]),
-        (skullstrip_wf, t1_2_mni, [('outputnode.out_mask', 'moving_mask')]),
-        (skullstrip_wf, mni_mask, [('outputnode.out_mask', 'input_image')]),
-        (t1_2_mni, mni_mask, [('composite_transform', 'transforms')]),
-        (t1_seg, mni_tpms, [('probability_maps', 'input_image')]),
-        (t1_2_mni, mni_tpms, [('composite_transform', 'transforms')]),
         (skullstrip_wf, outputnode, [('outputnode.bias_corrected', 't1_preproc'),
                                      ('outputnode.out_file', 't1_brain'),
                                      ('outputnode.out_mask', 't1_mask')]),
         (t1_seg, outputnode, [('tissue_class_map', 't1_seg'),
                               ('probability_maps', 't1_tpms')]),
-        (t1_2_mni, outputnode, [
-            ('warped_image', 't1_2_mni'),
-            ('composite_transform', 't1_2_mni_forward_transform'),
-            ('inverse_composite_transform', 't1_2_mni_reverse_transform')]),
-        (mni_mask, outputnode, [('output_image', 'mni_mask')]),
-        (mni_tpms, outputnode, [('output_image', 'mni_tpms')]),
-    ])
+        ])
+    if 'MNI152NLin2009cAsym' in output_spaces:
+        workflow.connect([
+            (skullstrip_wf, t1_2_mni, [('outputnode.bias_corrected', 'moving_image')]),
+            (skullstrip_wf, t1_2_mni, [('outputnode.out_mask', 'moving_mask')]),
+            (skullstrip_wf, mni_mask, [('outputnode.out_mask', 'input_image')]),
+            (t1_2_mni, mni_mask, [('composite_transform', 'transforms')]),
+            (t1_seg, mni_tpms, [('probability_maps', 'input_image')]),
+            (t1_2_mni, mni_tpms, [('composite_transform', 'transforms')]),
+            (t1_2_mni, outputnode, [
+                ('warped_image', 't1_2_mni'),
+                ('composite_transform', 't1_2_mni_forward_transform'),
+                ('inverse_composite_transform', 't1_2_mni_reverse_transform')]),
+            (mni_mask, outputnode, [('output_image', 'mni_mask')]),
+            (mni_tpms, outputnode, [('output_image', 'mni_tpms')]),
+        ])
 
     # 6. FreeSurfer reconstruction
     if freesurfer:
@@ -150,12 +153,12 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
             ])
 
     anat_reports_wf = init_anat_reports_wf(
-        reportlets_dir=reportlets_dir, skull_strip_ants=skull_strip_ants, freesurfer=freesurfer)
+        reportlets_dir=reportlets_dir, skull_strip_ants=skull_strip_ants,
+        output_spaces=output_spaces, freesurfer=freesurfer)
     workflow.connect([
         (inputnode, anat_reports_wf, [
             (('t1w', fix_multi_T1w_source_name), 'inputnode.source_file')]),
         (t1_seg, anat_reports_wf, [('out_report', 'inputnode.t1_seg_report')]),
-        (t1_2_mni, anat_reports_wf, [('out_report', 'inputnode.t1_2_mni_report')]),
         ])
 
     if skull_strip_ants:
@@ -168,8 +171,14 @@ def init_anat_preproc_wf(skull_strip_ants, debug, freesurfer, ants_nthreads,
             (surface_recon_wf, anat_reports_wf, [
                 ('outputnode.out_report', 'inputnode.recon_report')])
         ])
+    if 'MNI152NLin2009cAsym' in output_spaces:
+        workflow.connect([
+            (t1_2_mni, anat_reports_wf, [('out_report', 'inputnode.t1_2_mni_report')]),
+        ])
 
-    anat_derivatives_wf = init_anat_derivatives_wf(output_dir=output_dir, freesurfer=freesurfer)
+    anat_derivatives_wf = init_anat_derivatives_wf(output_dir=output_dir,
+                                                   output_spaces=output_spaces,
+                                                   freesurfer=freesurfer)
 
     workflow.connect([
         (inputnode, anat_derivatives_wf, [
@@ -453,7 +462,8 @@ def init_surface_recon_wf(nthreads, hires, name='surface_recon_wf'):
     return workflow
 
 
-def init_anat_reports_wf(reportlets_dir, skull_strip_ants, freesurfer, name='anat_reports_wf'):
+def init_anat_reports_wf(reportlets_dir, skull_strip_ants, output_spaces, freesurfer,
+                         name='anat_reports_wf'):
     workflow = pe.Workflow(name=name)
 
     inputnode = pe.Node(
@@ -481,8 +491,6 @@ def init_anat_reports_wf(reportlets_dir, skull_strip_ants, freesurfer, name='ana
     workflow.connect([
         (inputnode, ds_t1_seg_report, [('source_file', 'source_file'),
                                        ('t1_seg_report', 'in_file')]),
-        (inputnode, ds_t1_2_mni_report, [('source_file', 'source_file'),
-                                         ('t1_2_mni_report', 'in_file')])
     ])
 
     if skull_strip_ants:
@@ -495,11 +503,16 @@ def init_anat_reports_wf(reportlets_dir, skull_strip_ants, freesurfer, name='ana
             (inputnode, ds_recon_report, [('source_file', 'source_file'),
                                           ('recon_report', 'in_file')])
         ])
+    if 'MNI152NLin2009cAsym' in output_spaces:
+        workflow.connect([
+            (inputnode, ds_t1_2_mni_report, [('source_file', 'source_file'),
+                                             ('t1_2_mni_report', 'in_file')])
+        ])
 
     return workflow
 
 
-def init_anat_derivatives_wf(output_dir, freesurfer, name='anat_derivatives_wf'):
+def init_anat_derivatives_wf(output_dir, output_spaces, freesurfer, name='anat_derivatives_wf'):
     workflow = pe.Workflow(name=name)
 
     inputnode = pe.Node(
@@ -564,14 +577,6 @@ def init_anat_derivatives_wf(output_dir, freesurfer, name='anat_derivatives_wf')
                                  ('t1_mask', 'in_file')]),
         (inputnode, ds_t1_seg, [('source_file', 'source_file'),
                                 ('t1_seg', 'in_file')]),
-        (inputnode, ds_t1_mni_warp, [('source_file', 'source_file'),
-                                     ('t1_2_mni_forward_transform', 'in_file')]),
-        (inputnode, ds_t1_mni, [('source_file', 'source_file'),
-                                ('t1_2_mni', 'in_file')]),
-        (inputnode, ds_mni_mask, [('source_file', 'source_file'),
-                                  ('mni_mask', 'in_file')]),
-        (inputnode, ds_mni_tpms, [('source_file', 'source_file'),
-                                  ('mni_tpms', 'in_file')]),
         ])
 
     if freesurfer:
@@ -580,6 +585,17 @@ def init_anat_derivatives_wf(output_dir, freesurfer, name='anat_derivatives_wf')
             (inputnode, ds_surfs, [('source_file', 'source_file'),
                                    ('surfaces', 'in_file')]),
             (name_surfs, ds_surfs, [('out', 'suffix')]),
+            ])
+    if 'MNI152NLin2009cAsym' in output_spaces:
+        workflow.connect([
+            (inputnode, ds_t1_mni_warp, [('source_file', 'source_file'),
+                                         ('t1_2_mni_forward_transform', 'in_file')]),
+            (inputnode, ds_t1_mni, [('source_file', 'source_file'),
+                                    ('t1_2_mni', 'in_file')]),
+            (inputnode, ds_mni_mask, [('source_file', 'source_file'),
+                                      ('mni_mask', 'in_file')]),
+            (inputnode, ds_mni_tpms, [('source_file', 'source_file'),
+                                      ('mni_tpms', 'in_file')]),
             ])
 
     return workflow
