@@ -19,9 +19,10 @@ from nilearn.image import concat_imgs, mean_img
 
 from nipype import logging
 from nipype.interfaces.base import (
-    traits, isdefined, TraitedSpec, BaseInterface, BaseInterfaceInputSpec,
-    File, InputMultiPath, OutputMultiPath, traits
+    traits, isdefined, TraitedSpec, BaseInterfaceInputSpec,
+    File, InputMultiPath
 )
+from niworkflows.interfaces.base import SimpleInterface
 from fmriprep.utils.misc import genfname
 LOGGER = logging.getLogger('interface')
 
@@ -42,13 +43,9 @@ class MaskEPIInputSpec(BaseInterfaceInputSpec):
 class MaskEPIOutputSpec(TraitedSpec):
     out_mask = File(exists=True, desc='output mask')
 
-class MaskEPI(BaseInterface):
+class MaskEPI(SimpleInterface):
     input_spec = MaskEPIInputSpec
     output_spec = MaskEPIOutputSpec
-
-    def __init__(self, **inputs):
-        self._results = {}
-        super(MaskEPI, self).__init__(**inputs)
 
     def _run_interface(self, runtime):
         target_affine = None
@@ -76,9 +73,6 @@ class MaskEPI(BaseInterface):
         masknii.to_filename(self._results['out_mask'])
         return runtime
 
-    def _list_outputs(self):
-        return self._results
-
 
 class MergeInputSpec(BaseInterfaceInputSpec):
     in_files = InputMultiPath(File(exists=True), mandatory=True,
@@ -91,13 +85,9 @@ class MergeInputSpec(BaseInterfaceInputSpec):
 class MergeOutputSpec(TraitedSpec):
     out_file = File(exists=True, desc='output merged file')
 
-class Merge(BaseInterface):
+class Merge(SimpleInterface):
     input_spec = MergeInputSpec
     output_spec = MergeOutputSpec
-
-    def __init__(self, **inputs):
-        self._results = {}
-        super(Merge, self).__init__(**inputs)
 
     def _run_interface(self, runtime):
         self._results['out_file'] = genfname(
@@ -113,6 +103,3 @@ class Merge(BaseInterface):
         new_nii.to_filename(self._results['out_file'])
 
         return runtime
-
-    def _list_outputs(self):
-        return self._results
