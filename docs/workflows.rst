@@ -156,7 +156,7 @@ BOLD preprocessing
                               freesurfer=True,
                               reportlets_dir='.',
                               output_dir='.',
-                              obids_dir='.',
+                              bids_dir='.',
                               output_spaces=['T1w', 'fsnative',
                                     'MNI152NLin2009cAsym', 'fsaverage5'],
                               debug=False,
