@@ -3,6 +3,7 @@ Next release
 
 * [ENH] Use robust template generation for multiple T1w images (#481)
 * [ENH] Anatomical MNI outputs respect ``--output-space`` selection (#490)
+* [ENH] Added support for distortion correction using opposite phase encoding direction (#493)
 
 0.4.1 (20th of April 2017)
 ==========================
