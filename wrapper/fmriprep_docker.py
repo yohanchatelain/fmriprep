@@ -115,8 +115,7 @@ def check_memory(image):
     """Check total memory from within a docker container"""
     ret = subprocess.run(['docker', 'run', '--rm', '--entrypoint=free',
                           image, '-m'],
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.DEVNULL)
+                         stdout=subprocess.PIPE)
     if ret.returncode:
         return -1
 
@@ -280,6 +279,7 @@ def main():
                 return 1
         if resp not in ('y', 'Y', ''):
             return 0
+        print('Downloading. This may take a while...')
 
     # Warn on low memory allocation
     mem_total = check_memory(opts.image)
