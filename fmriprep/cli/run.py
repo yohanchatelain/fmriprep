@@ -79,10 +79,13 @@ def get_parser():
                              'default to compensate for field inhomogeneities.')
     g_conf.add_argument(
         '--output-space', required=False, action='store',
-        choices=['T1w', 'MNI152NLin2009cAsym',
-                 'fsnative', 'fsaverage', 'fsaverage6', 'fsaverage5'],
-        nargs='+', default=['MNI152NLin2009cAsym', 'fsaverage5'],
+        choices=['T1w', 'template', 'fsnative', 'fsaverage', 'fsaverage6', 'fsaverage5'],
+        nargs='+', default=['template', 'fsaverage5'],
         help='volume and surface spaces to resample functional series into')
+    g_conf.add_argument(
+        '--template', required=False, action='store',
+        choices=['MNI152NLin2009cAsym'], default='MNI152NLin2009cAsym',
+        help='volume template space (default: MNI152NLin2009cAsym)')
 
     #  ANTs options
     g_ants = parser.add_argument_group('Specific options for ANTs registrations')
@@ -202,6 +205,7 @@ def create_workflow(opts):
                                    bids_dir=bids_dir,
                                    freesurfer=opts.freesurfer,
                                    output_spaces=opts.output_space,
+                                   template=opts.template,
                                    hires=opts.hires,
                                    bold2t1w_dof=opts.bold2t1w_dof,
                                    fmap_bspline=opts.fmap_bspline,
