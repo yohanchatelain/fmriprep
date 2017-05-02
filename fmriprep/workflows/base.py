@@ -103,8 +103,6 @@ def init_single_subject_wf(subject_id, task_id, name,
 
     workflow = pe.Workflow(name=name)
 
-
-
     inputnode = pe.Node(niu.IdentityInterface(fields=['subjects_dir']),
                         name='inputnode')
 
@@ -114,6 +112,7 @@ def init_single_subject_wf(subject_id, task_id, name,
     # Preprocessing of T1w (includes registration to MNI)
     anat_preproc_wf = init_anat_preproc_wf(name="anat_preproc_wf",
                                            skull_strip_ants=skull_strip_ants,
+                                           output_spaces=output_spaces,
                                            debug=debug,
                                            ants_nthreads=ants_nthreads,
                                            nthreads=nthreads,
@@ -143,9 +142,8 @@ def init_single_subject_wf(subject_id, task_id, name,
                                                debug=debug)
 
         workflow.connect([
-            (bidssrc, func_preproc_wf, [('t1w', 'inputnode.t1w')]),
             (anat_preproc_wf, func_preproc_wf,
-             [('outputnode.bias_corrected_t1', 'inputnode.bias_corrected_t1'),
+             [('outputnode.t1_preproc', 'inputnode.t1_preproc'),
               ('outputnode.t1_brain', 'inputnode.t1_brain'),
               ('outputnode.t1_mask', 'inputnode.t1_mask'),
               ('outputnode.t1_seg', 'inputnode.t1_seg'),
@@ -155,10 +153,9 @@ def init_single_subject_wf(subject_id, task_id, name,
 
         if freesurfer:
             workflow.connect([
-                (inputnode, func_preproc_wf,
-                 [('subjects_dir', 'inputnode.subjects_dir')]),
                 (anat_preproc_wf, func_preproc_wf,
-                 [('outputnode.subject_id', 'inputnode.subject_id'),
+                 [('outputnode.subjects_dir', 'inputnode.subjects_dir'),
+                  ('outputnode.subject_id', 'inputnode.subject_id'),
                   ('outputnode.fs_2_t1_transform', 'inputnode.fs_2_t1_transform')]),
             ])
 
