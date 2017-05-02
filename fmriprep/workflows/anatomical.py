@@ -307,8 +307,7 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         fs.ReconAll(
             directive='autorecon1',
             flags='-noskullstrip',
-            openmp=omp_nthreads,
-            parallel=True),
+            openmp=omp_nthreads),
         name='autorecon1')
     autorecon1.interface._can_resume = False
     autorecon1.interface.num_threads = omp_nthreads
@@ -341,12 +340,25 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
                      output_names=['subjects_dir', 'subject_id']),
         name='skull_strip_extern')
 
+    autorecon2 = pe.Node(
+        fs.ReconAll(
+            directive='autorecon2-volonly',
+            openmp=omp_nthreads),
+        name='autorecon2')
+    autorecon2.interface.num_threads = omp_nthreads
+
+    reconhemis = pe.MapNode(
+        fs.ReconAll(
+            directive='autorecon-hemi',
+            openmp=omp_nthreads),
+        iterfield='hemi',
+        name='reconhemis')
+    reconhemis.interface.num_threads = omp_nthreads
+    reconhemis.inputs.hemi = ['lh', 'rh']
+
     reconall = pe.Node(
         ReconAllRPT(
-            flags='-noskullstrip',
             openmp=omp_nthreads,
-            parallel=True,
-            out_report='reconall.svg',
             generate_report=True),
         name='reconall')
     reconall.interface.num_threads = omp_nthreads
@@ -430,8 +442,12 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         (bids_info, autorecon1, [('subject_id', 'subject_id')]),
         (autorecon1, skull_strip_extern, [('subjects_dir', 'subjects_dir'),
                                           ('subject_id', 'subject_id')]),
-        (skull_strip_extern, reconall, [('subjects_dir', 'subjects_dir'),
-                                        ('subject_id', 'subject_id')]),
+        (skull_strip_extern, autorecon2, [('subjects_dir', 'subjects_dir'),
+                                          ('subject_id', 'subject_id')]),
+        (autorecon2, reconhemis, [('subjects_dir', 'subjects_dir'),
+                                  ('subject_id', 'subject_id')]),
+        (reconhemis, reconall, [('subjects_dir', 'subjects_dir'),
+                                ('subject_id', 'subject_id')]),
         (reconall, get_surfaces, [('subjects_dir', 'subjects_dir'),
                                   ('subject_id', 'subject_id')]),
         (reconall, save_midthickness, [('subjects_dir', 'base_directory'),
