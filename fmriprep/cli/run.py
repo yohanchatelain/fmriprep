@@ -58,6 +58,8 @@ def get_parser():
                          help='run debug version of workflow')
     g_perfm.add_argument('--nthreads', action='store', default=0, type=int,
                          help='maximum number of threads across all processes')
+    g_perfm.add_argument('--n_cpus', action='store', dest='nthreads', type=int,
+                         help='total number of CPUs to use (alias for --nthreads)')
     g_perfm.add_argument('--omp-nthreads', action='store', type=int, default=0,
                          help='maximum number of threads per-process')
     g_perfm.add_argument('--mem_mb', action='store', default=0, type=int,
@@ -167,6 +169,11 @@ def create_workflow(opts):
     omp_nthreads = opts.omp_nthreads
     if omp_nthreads == 0:
         omp_nthreads = cpu_count()
+
+    if 1 < nthreads < omp_nthreads:
+        print('Per-process threads (--omp-nthreads={:d}) cannot exceed total '
+              'threads (--nthreads/--n_cpus={:d})'.format(omp_nthreads, nthreads))
+        sys.exit(1)
 
     # Determine subjects to be processed
     subject_list = opts.participant_label
