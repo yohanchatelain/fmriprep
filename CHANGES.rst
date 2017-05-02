@@ -3,7 +3,7 @@ Next release
 
 * [ENH] Use robust template generation for multiple T1w images (#481)
 * [ENH] Anatomical MNI outputs respect ``--output-space`` selection (#490)
-* [ENH] Added support for distortion correction using opposite phase encoding direction (#493)
+* [ENH] Added support for distortion correction using opposite phase encoding direction EPI images (#493)
 * [ENH] Switched to FSL BET for skullstripping of EPI images (#493)
 
 0.4.1 (20th of April 2017)
