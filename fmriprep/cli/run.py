@@ -168,7 +168,7 @@ def create_workflow(opts):
 
     omp_nthreads = opts.omp_nthreads
     if omp_nthreads == 0:
-        omp_nthreads = cpu_count()
+        omp_nthreads = min(nthreads - 1 if nthreads > 1 else cpu_count(), 8)
 
     if 1 < nthreads < omp_nthreads:
         print('Per-process threads (--omp-nthreads={:d}) cannot exceed total '
