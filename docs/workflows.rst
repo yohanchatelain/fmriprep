@@ -26,8 +26,9 @@ slice-timing information and no fieldmap acquisitions):
                                 output_dir='.',
                                 bids_dir='.',
                                 skull_strip_ants=True,
+                                template='MNI152NLin2009cAsym',
                                 output_spaces=['T1w', 'fsnative',
-                                              'MNI152NLin2009cAsym', 'fsaverage5'],
+                                              'template', 'fsaverage5'],
                                 ignore=[],
                                 debug=False,
                                 hires=True,
@@ -48,8 +49,9 @@ T1w/T2w preprocessing
     wf = init_anat_preproc_wf(omp_nthreads=1,
                               reportlets_dir='.',
                               output_dir='.',
+                              template='MNI152NLin2009cAsym',
                               output_spaces=['T1w', 'fsnative',
-                                            'MNI152NLin2009cAsym', 'fsaverage5'],
+                                             'template', 'fsaverage5'],
                               skull_strip_ants=True,
                               freesurfer=True,
                               debug=False,
@@ -154,8 +156,9 @@ BOLD preprocessing
                               freesurfer=True,
                               reportlets_dir='.',
                               output_dir='.',
+                              template='MNI152NLin2009cAsym',
                               output_spaces=['T1w', 'fsnative',
-                                    'MNI152NLin2009cAsym', 'fsaverage5'],
+                                             'template', 'fsaverage5'],
                               debug=False,
                               bold2t1w_dof=9,
                               fmap_bspline=True,
@@ -222,7 +225,7 @@ EPI to T1w registration
                          output_dir='.',
                          bold_file_size_gb=3,
                          output_spaces=['T1w', 'fsnative',
-                                        'MNI152NLin2009cAsym', 'fsaverage5'],
+                                        'template', 'fsaverage5'],
                          bold2t1w_dof=9)
 
 The reference EPI image of each run is aligned by the ``bbregister`` routine to the
@@ -248,6 +251,7 @@ EPI to MNI transformation
 
     from fmriprep.workflows.epi import init_epi_mni_trans_wf
     wf = init_epi_mni_trans_wf(output_dir='.',
+                               template='MNI152NLin2009cAsym',
                                bold_file_size_gb=3)
 
 This sub-workflow uses the transform from
@@ -270,7 +274,7 @@ EPI sampled to FreeSurfer surfaces
 
     from fmriprep.workflows.epi import init_epi_surf_wf
     wf = init_epi_surf_wf(output_spaces=['T1w', 'fsnative',
-                                         'MNI152NLin2009cAsym', 'fsaverage5'])
+                                         'template', 'fsaverage5'])
 
 If FreeSurfer processing is enabled, the motion-corrected functional series
 (after single shot resampling to T1w space) is sampled to the
