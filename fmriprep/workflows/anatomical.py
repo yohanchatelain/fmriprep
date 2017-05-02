@@ -116,9 +116,8 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
                               ('probability_maps', 't1_tpms')]),
         ])
     if 'template' in output_spaces:
-        template_str = {'MNI152NLin2009cAsym': 'mni_icbm152_nlin_asym_09c'}[template]
-        template_getter = getattr(nid, 'get_{}'.format(template_str))
-        ref_img = op.join(template_getter(), '1mm_T1.nii.gz')
+        template_str = nid.TEMPLATE_MAP[template]
+        ref_img = op.join(nid.get_dataset(template_str), '1mm_T1.nii.gz')
 
         t1_2_mni.inputs.template = template_str
         mni_mask.inputs.reference_image = ref_img
