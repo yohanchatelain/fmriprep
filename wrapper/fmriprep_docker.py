@@ -115,8 +115,10 @@ def check_memory(image):
     """Check total memory from within a docker container"""
     ret = subprocess.run(['docker', 'run', '--rm', '--entrypoint=free',
                           image, '-m'],
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.DEVNULL)
+                         stdout=subprocess.PIPE)
+    if ret.returncode:
+        return -1
+
     mem = [line.decode().split()[1]
            for line in ret.stdout.splitlines()
            if line.startswith(b'Mem:')][0]
@@ -277,9 +279,14 @@ def main():
                 return 1
         if resp not in ('y', 'Y', ''):
             return 0
+        print('Downloading. This may take a while...')
 
     # Warn on low memory allocation
     mem_total = check_memory(opts.image)
+    if mem_total == -1:
+        print('Could not detect memory capacity of Docker container.\n'
+              'Do you have permission to run docker?')
+        return 1
     if mem_total < 8000:
         print('Warning: <8GB of RAM is available within your Docker '
               'environment.\nSome parts of fMRIprep may fail to complete.')
