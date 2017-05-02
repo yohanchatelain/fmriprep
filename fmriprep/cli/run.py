@@ -57,7 +57,11 @@ def get_parser():
     g_perfm.add_argument('--debug', action='store_true', default=False,
                          help='run debug version of workflow')
     g_perfm.add_argument('--nthreads', action='store', default=0, type=int,
-                         help='number of threads')
+                         help='maximum number of threads across all processes')
+    g_perfm.add_argument('--n_cpus', action='store', dest='nthreads', type=int,
+                         help='total number of CPUs to use (alias for --nthreads)')
+    g_perfm.add_argument('--omp-nthreads', action='store', type=int, default=0,
+                         help='maximum number of threads per-process')
     g_perfm.add_argument('--mem_mb', action='store', default=0, type=int,
                          help='upper bound memory limit for FMRIPREP processes')
     g_perfm.add_argument('--use-plugin', action='store', default=None,
@@ -82,8 +86,6 @@ def get_parser():
 
     #  ANTs options
     g_ants = parser.add_argument_group('Specific options for ANTs registrations')
-    g_ants.add_argument('--ants-nthreads', action='store', type=int, default=0,
-                        help='number of threads that will be set in ANTs processes')
     g_ants.add_argument('--skull-strip-ants', dest="skull_strip_ants", action='store_true',
                         help='use ANTs-based skull-stripping (default, slow))')
     g_ants.add_argument('--no-skull-strip-ants', dest="skull_strip_ants", action='store_false',
@@ -164,9 +166,14 @@ def create_workflow(opts):
             if opts.mem_mb:
                 plugin_settings['plugin_args']['memory_gb'] = opts.mem_mb/1024
 
-    ants_nthreads = opts.ants_nthreads
-    if ants_nthreads == 0:
-        ants_nthreads = cpu_count()
+    omp_nthreads = opts.omp_nthreads
+    if omp_nthreads == 0:
+        omp_nthreads = min(nthreads - 1 if nthreads > 1 else cpu_count(), 8)
+
+    if 1 < nthreads < omp_nthreads:
+        print('Per-process threads (--omp-nthreads={:d}) cannot exceed total '
+              'threads (--nthreads/--n_cpus={:d})'.format(omp_nthreads, nthreads))
+        sys.exit(1)
 
     # Determine subjects to be processed
     subject_list = opts.participant_label
@@ -188,8 +195,7 @@ def create_workflow(opts):
                                    run_uuid=run_uuid,
                                    ignore=opts.ignore,
                                    debug=opts.debug,
-                                   nthreads=nthreads,
-                                   ants_nthreads=ants_nthreads,
+                                   omp_nthreads=omp_nthreads,
                                    skull_strip_ants=opts.skull_strip_ants,
                                    reportlets_dir=reportlets_dir,
                                    output_dir=output_dir,
