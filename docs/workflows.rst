@@ -21,7 +21,6 @@ slice-timing information and no fieldmap acquisitions):
                                 name='single_subject_wf',
                                 task_id='',
                                 omp_nthreads=1,
-                                nthreads=1,
                                 freesurfer=True,
                                 reportlets_dir='.',
                                 output_dir='.',
@@ -47,7 +46,6 @@ T1w/T2w preprocessing
 
     from fmriprep.workflows.anatomical import init_anat_preproc_wf
     wf = init_anat_preproc_wf(omp_nthreads=1,
-                              nthreads=1,
                               reportlets_dir='.',
                               output_dir='.',
                               output_spaces=['T1w', 'fsnative',
@@ -85,7 +83,7 @@ Surface preprocessing
     :simple_form: yes
 
     from fmriprep.workflows.anatomical import init_surface_recon_wf
-    wf = init_surface_recon_wf(nthreads=1,
+    wf = init_surface_recon_wf(omp_nthreads=1,
                                hires=True)
 
 ``fmriprep`` uses FreeSurfer_ to reconstruct surfaces from T1w/T2w

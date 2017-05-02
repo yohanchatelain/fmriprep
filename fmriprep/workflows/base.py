@@ -26,8 +26,7 @@ from bids.grabbids import BIDSLayout
 
 
 def init_fmriprep_wf(subject_list, task_id, run_uuid,
-                     ignore, debug,
-                     nthreads, omp_nthreads,
+                     ignore, debug, omp_nthreads,
                      skull_strip_ants, reportlets_dir, output_dir, bids_dir,
                      freesurfer, output_spaces, hires,
                      bold2t1w_dof, fmap_bspline, fmap_demean):
@@ -47,7 +46,6 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
                                                    name="single_subject_" + subject_id + "_wf",
                                                    ignore=ignore,
                                                    debug=debug,
-                                                   nthreads=nthreads,
                                                    omp_nthreads=omp_nthreads,
                                                    skull_strip_ants=skull_strip_ants,
                                                    reportlets_dir=reportlets_dir,
@@ -74,8 +72,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
 
 
 def init_single_subject_wf(subject_id, task_id, name,
-                           ignore, debug,
-                           nthreads, omp_nthreads,
+                           ignore, debug, omp_nthreads,
                            skull_strip_ants, reportlets_dir, output_dir, bids_dir,
                            freesurfer, output_spaces, hires,
                            bold2t1w_dof, fmap_bspline, fmap_demean):
@@ -115,7 +112,6 @@ def init_single_subject_wf(subject_id, task_id, name,
                                            output_spaces=output_spaces,
                                            debug=debug,
                                            omp_nthreads=omp_nthreads,
-                                           nthreads=nthreads,
                                            freesurfer=freesurfer,
                                            hires=hires,
                                            reportlets_dir=reportlets_dir,

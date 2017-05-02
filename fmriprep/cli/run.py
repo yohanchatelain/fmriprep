@@ -195,7 +195,6 @@ def create_workflow(opts):
                                    run_uuid=run_uuid,
                                    ignore=opts.ignore,
                                    debug=opts.debug,
-                                   nthreads=nthreads,
                                    omp_nthreads=omp_nthreads,
                                    skull_strip_ants=opts.skull_strip_ants,
                                    reportlets_dir=reportlets_dir,

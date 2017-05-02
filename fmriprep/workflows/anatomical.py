@@ -31,7 +31,7 @@ from fmriprep.utils.misc import fix_multi_T1w_source_name, add_suffix
 
 #  pylint: disable=R0914
 def init_anat_preproc_wf(skull_strip_ants, output_spaces, debug, freesurfer,
-                         omp_nthreads, nthreads, hires, reportlets_dir, output_dir,
+                         omp_nthreads, hires, reportlets_dir, output_dir,
                          name='anat_preproc_wf'):
     """T1w images preprocessing pipeline"""
 
@@ -136,7 +136,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, debug, freesurfer,
     # 6. FreeSurfer reconstruction
     if freesurfer:
         surface_recon_wf = init_surface_recon_wf(name='surface_recon_wf',
-                                                 nthreads=nthreads, hires=hires)
+                                                 omp_nthreads=omp_nthreads, hires=hires)
 
         workflow.connect([
             (inputnode, surface_recon_wf, [
@@ -242,7 +242,7 @@ def init_skullstrip_ants_wf(debug, omp_nthreads, name='skullstrip_ants_wf'):
     return workflow
 
 
-def init_surface_recon_wf(nthreads, hires, name='surface_recon_wf'):
+def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
 
     workflow = pe.Workflow(name=name)
 
@@ -301,11 +301,11 @@ def init_surface_recon_wf(nthreads, hires, name='surface_recon_wf'):
         fs.ReconAll(
             directive='autorecon1',
             flags='-noskullstrip',
-            openmp=nthreads,
+            openmp=omp_nthreads,
             parallel=True),
         name='autorecon1')
     autorecon1.interface._can_resume = False
-    autorecon1.interface.num_threads = nthreads
+    autorecon1.interface.num_threads = omp_nthreads
 
     def inject_skullstripped(subjects_dir, subject_id, skullstripped):
         import os
@@ -338,12 +338,12 @@ def init_surface_recon_wf(nthreads, hires, name='surface_recon_wf'):
     reconall = pe.Node(
         ReconAllRPT(
             flags='-noskullstrip',
-            openmp=nthreads,
+            openmp=omp_nthreads,
             parallel=True,
             out_report='reconall.svg',
             generate_report=True),
         name='reconall')
-    reconall.interface.num_threads = nthreads
+    reconall.interface.num_threads = omp_nthreads
 
     fs_transform = pe.Node(
         fs.Tkregister2(fsl_out='freesurfer2subT1.mat', reg_header=True),
