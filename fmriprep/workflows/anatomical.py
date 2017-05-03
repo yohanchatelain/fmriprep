@@ -432,6 +432,12 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         iterfield='in_file',
         name='fix_surfs')
 
+    def _dedup(in_list):
+        vals = set(in_list)
+        if len(vals) > 1:
+            raise ValueError("Non-identical values can't be deduplicated:\n{!r}".format(in_list))
+        return vals.pop()
+
     workflow.connect([
         # Configuration
         (inputnode, recon_config, [('t1w', 't1w_list'),
@@ -446,8 +452,8 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
                                           ('subject_id', 'subject_id')]),
         (autorecon2, reconhemis, [('subjects_dir', 'subjects_dir'),
                                   ('subject_id', 'subject_id')]),
-        (reconhemis, reconall, [('subjects_dir', 'subjects_dir'),
-                                ('subject_id', 'subject_id')]),
+        (reconhemis, reconall, [(('subjects_dir', _dedup), 'subjects_dir'),
+                                (('subject_id', _dedup), 'subject_id')]),
         (reconall, get_surfaces, [('subjects_dir', 'subjects_dir'),
                                   ('subject_id', 'subject_id')]),
         (reconall, save_midthickness, [('subjects_dir', 'base_directory'),
