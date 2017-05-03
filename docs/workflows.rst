@@ -199,7 +199,7 @@ Skullstripping of the reference image is performed using Nilearn.
 .. figure:: _static/brainextraction.svg
     :scale: 100%
 
-    Brain extraction (nilearn).
+    Brain extraction (BET).
 
 Susceptibility Distortion Correction (SDC)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
