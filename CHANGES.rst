@@ -1,5 +1,5 @@
-Next release
-============
+0.4.2 (3rd of May 2017)
+=======================
 
 * [ENH] Use robust template generation for multiple T1w images (#481)
 * [ENH] Anatomical MNI outputs respect ``--output-space`` selection (#490)
