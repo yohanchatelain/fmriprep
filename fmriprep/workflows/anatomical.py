@@ -31,7 +31,7 @@ from fmriprep.utils.misc import fix_multi_T1w_source_name, add_suffix
 
 #  pylint: disable=R0914
 def init_anat_preproc_wf(skull_strip_ants, output_spaces, debug, freesurfer,
-                         ants_nthreads, nthreads, hires, reportlets_dir, output_dir,
+                         omp_nthreads, hires, reportlets_dir, output_dir,
                          name='anat_preproc_wf'):
     """T1w images preprocessing pipeline"""
 
@@ -69,7 +69,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, debug, freesurfer,
     if skull_strip_ants:
         skullstrip_wf = init_skullstrip_ants_wf(name='skullstrip_ants_wf',
                                                 debug=debug,
-                                                ants_nthreads=ants_nthreads)
+                                                omp_nthreads=omp_nthreads)
 
     # 4. Segmentation
     t1_seg = pe.Node(FASTRPT(generate_report=True, segments=True,
@@ -80,7 +80,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, debug, freesurfer,
     t1_2_mni = pe.Node(
         RobustMNINormalizationRPT(
             generate_report=True,
-            num_threads=ants_nthreads,
+            num_threads=omp_nthreads,
             testing=debug,
             template='mni_icbm152_nlin_asym_09c'
         ),
@@ -88,7 +88,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, debug, freesurfer,
     )
     # should not be necesssary but does not hurt - make sure the multiproc
     # scheduler knows the resource limits
-    t1_2_mni.interface.num_threads = ants_nthreads
+    t1_2_mni.interface.num_threads = omp_nthreads
 
     # Resample the brain mask and the tissue probability maps into mni space
     ref_img = op.join(get_mni_icbm152_nlin_asym_09c(), '1mm_T1.nii.gz')
@@ -136,7 +136,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, debug, freesurfer,
     # 6. FreeSurfer reconstruction
     if freesurfer:
         surface_recon_wf = init_surface_recon_wf(name='surface_recon_wf',
-                                                 nthreads=nthreads, hires=hires)
+                                                 omp_nthreads=omp_nthreads, hires=hires)
 
         workflow.connect([
             (inputnode, surface_recon_wf, [
@@ -198,7 +198,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, debug, freesurfer,
     return workflow
 
 
-def init_skullstrip_ants_wf(debug, ants_nthreads, name='skullstrip_ants_wf'):
+def init_skullstrip_ants_wf(debug, omp_nthreads, name='skullstrip_ants_wf'):
     from niworkflows.data import get_ants_oasis_template_ras
 
     workflow = pe.Workflow(name=name)
@@ -211,12 +211,12 @@ def init_skullstrip_ants_wf(debug, ants_nthreads, name='skullstrip_ants_wf'):
     t1_skull_strip = pe.Node(BrainExtractionRPT(
         dimension=3, use_floatingpoint_precision=1,
         debug=debug, generate_report=True,
-        num_threads=ants_nthreads, keep_temporary_files=1),
+        num_threads=omp_nthreads, keep_temporary_files=1),
         name='t1_skull_strip')
 
     # should not be necesssary byt does not hurt - make sure the multiproc
     # scheduler knows the resource limits
-    t1_skull_strip.interface.num_threads = ants_nthreads
+    t1_skull_strip.interface.num_threads = omp_nthreads
 
     t1_skull_strip.inputs.brain_template = op.join(
         get_ants_oasis_template_ras(),
@@ -242,7 +242,7 @@ def init_skullstrip_ants_wf(debug, ants_nthreads, name='skullstrip_ants_wf'):
     return workflow
 
 
-def init_surface_recon_wf(nthreads, hires, name='surface_recon_wf'):
+def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
 
     workflow = pe.Workflow(name=name)
 
@@ -301,11 +301,11 @@ def init_surface_recon_wf(nthreads, hires, name='surface_recon_wf'):
         fs.ReconAll(
             directive='autorecon1',
             flags='-noskullstrip',
-            openmp=nthreads,
+            openmp=omp_nthreads,
             parallel=True),
         name='autorecon1')
     autorecon1.interface._can_resume = False
-    autorecon1.interface.num_threads = nthreads
+    autorecon1.interface.num_threads = omp_nthreads
 
     def inject_skullstripped(subjects_dir, subject_id, skullstripped):
         import os
@@ -338,12 +338,12 @@ def init_surface_recon_wf(nthreads, hires, name='surface_recon_wf'):
     reconall = pe.Node(
         ReconAllRPT(
             flags='-noskullstrip',
-            openmp=nthreads,
+            openmp=omp_nthreads,
             parallel=True,
             out_report='reconall.svg',
             generate_report=True),
         name='reconall')
-    reconall.interface.num_threads = nthreads
+    reconall.interface.num_threads = omp_nthreads
 
     fs_transform = pe.Node(
         fs.Tkregister2(fsl_out='freesurfer2subT1.mat', reg_header=True),
