@@ -81,7 +81,12 @@ def get_parser():
         '--output-space', required=False, action='store',
         choices=['T1w', 'template', 'fsnative', 'fsaverage', 'fsaverage6', 'fsaverage5'],
         nargs='+', default=['template', 'fsaverage5'],
-        help='volume and surface spaces to resample functional series into')
+        help='volume and surface spaces to resample functional series into\n'
+             ' - T1w: subject anatomical volume\n'
+             ' - template: normalization target specified by --template\n'
+             ' - fsnative: individual subject surface\n'
+             ' - fsaverage*: FreeSurfer average meshes'
+             )
     g_conf.add_argument(
         '--template', required=False, action='store',
         choices=['MNI152NLin2009cAsym'], default='MNI152NLin2009cAsym',
