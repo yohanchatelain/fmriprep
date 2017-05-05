@@ -356,12 +356,13 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
     reconhemis.interface.num_threads = omp_nthreads
     reconhemis.inputs.hemi = ['lh', 'rh']
 
-    reconall = pe.Node(
+    autorecon3 = pe.Node(
         ReconAllRPT(
+            directive='autorecon3',
             openmp=omp_nthreads,
             generate_report=True),
-        name='reconall')
-    reconall.interface.num_threads = omp_nthreads
+        name='autorecon3')
+    autorecon3.interface.num_threads = omp_nthreads
 
     fs_transform = pe.Node(
         fs.Tkregister2(fsl_out='freesurfer2subT1.mat', reg_header=True),
@@ -450,13 +451,13 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
                                           ('subject_id', 'subject_id')]),
         (autorecon2, reconhemis, [('subjects_dir', 'subjects_dir'),
                                   ('subject_id', 'subject_id')]),
-        (reconhemis, reconall, [(('subjects_dir', _dedup), 'subjects_dir'),
-                                (('subject_id', _dedup), 'subject_id')]),
-        (reconall, save_midthickness, [('subjects_dir', 'base_directory'),
-                                       ('subject_id', 'container')]),
-        (reconall, outputnode, [('subjects_dir', 'subjects_dir'),
-                                ('subject_id', 'subject_id'),
-                                ('out_report', 'out_report')]),
+        (reconhemis, autorecon3, [(('subjects_dir', _dedup), 'subjects_dir'),
+                                  (('subject_id', _dedup), 'subject_id')]),
+        (autorecon3, save_midthickness, [('subjects_dir', 'base_directory'),
+                                         ('subject_id', 'container')]),
+        (autorecon3, outputnode, [('subjects_dir', 'subjects_dir'),
+                                  ('subject_id', 'subject_id'),
+                                  ('out_report', 'out_report')]),
         # Reconstruction phases
         (inputnode, autorecon1, [('t1w', 'T1_files')]),
         (recon_config, autorecon1, [('t2w', 'T2_file'),
@@ -464,20 +465,20 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
                                     # First run only (recon-all saves expert options)
                                     ('mris_inflate', 'mris_inflate')]),
         (inputnode, skull_strip_extern, [('skullstripped_t1', 'skullstripped')]),
-        (recon_config, reconall, [('use_T2', 'use_T2')]),
+        (recon_config, autorecon3, [('use_T2', 'use_T2')]),
         # Construct transform from FreeSurfer conformed image to FMRIPREP
         # reoriented image
         (inputnode, fs_transform, [('t1w', 'target_image')]),
         (autorecon1, fs_transform, [('T1', 'moving_image')]),
         (fs_transform, outputnode, [('fsl_file', 'fs_2_t1_transform')]),
         # Generate midthickness surfaces and save to FreeSurfer derivatives
-        (reconall, midthickness, [('smoothwm', 'in_file'),
-                                  ('graymid', 'graymid')]),
+        (autorecon3, midthickness, [('smoothwm', 'in_file'),
+                                    ('graymid', 'graymid')]),
         (midthickness, save_midthickness, [('out_file', 'surf.@graymid')]),
         # Produce valid GIFTI surface files (dense mesh)
-        (reconall, surface_list, [('smoothwm', 'in1'),
-                                  ('pial', 'in2'),
-                                  ('inflated', 'in3')]),
+        (autorecon3, surface_list, [('smoothwm', 'in1'),
+                                    ('pial', 'in2'),
+                                    ('inflated', 'in3')]),
         (save_midthickness, surface_list, [('out_file', 'in4')]),
         (surface_list, fs_2_gii, [('out', 'in_file')]),
         (fs_2_gii, fix_surfs, [('converted', 'in_file')]),
