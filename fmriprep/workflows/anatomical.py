@@ -340,21 +340,21 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
                      output_names=['subjects_dir', 'subject_id']),
         name='skull_strip_extern')
 
-    autorecon2 = pe.Node(
+    autorecon_vol = pe.Node(
         fs.ReconAll(
             directive='autorecon2-volonly',
             openmp=omp_nthreads),
-        name='autorecon2')
-    autorecon2.interface.num_threads = omp_nthreads
+        name='autorecon_vol')
+    autorecon_vol.interface.num_threads = omp_nthreads
 
-    reconhemis = pe.MapNode(
+    autorecon_surfs = pe.MapNode(
         fs.ReconAll(
             directive='autorecon-hemi',
             openmp=omp_nthreads),
         iterfield='hemi',
-        name='reconhemis')
-    reconhemis.interface.num_threads = omp_nthreads
-    reconhemis.inputs.hemi = ['lh', 'rh']
+        name='autorecon_surfs')
+    autorecon_surfs.interface.num_threads = omp_nthreads
+    autorecon_surfs.inputs.hemi = ['lh', 'rh']
 
     autorecon3 = pe.Node(
         ReconAllRPT(
@@ -447,12 +447,12 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         (bids_info, autorecon1, [('subject_id', 'subject_id')]),
         (autorecon1, skull_strip_extern, [('subjects_dir', 'subjects_dir'),
                                           ('subject_id', 'subject_id')]),
-        (skull_strip_extern, autorecon2, [('subjects_dir', 'subjects_dir'),
+        (skull_strip_extern, autorecon_vol, [('subjects_dir', 'subjects_dir'),
+                                             ('subject_id', 'subject_id')]),
+        (autorecon_vol, autorecon_surfs, [('subjects_dir', 'subjects_dir'),
                                           ('subject_id', 'subject_id')]),
-        (autorecon2, reconhemis, [('subjects_dir', 'subjects_dir'),
-                                  ('subject_id', 'subject_id')]),
-        (reconhemis, autorecon3, [(('subjects_dir', _dedup), 'subjects_dir'),
-                                  (('subject_id', _dedup), 'subject_id')]),
+        (autorecon_surfs, autorecon3, [(('subjects_dir', _dedup), 'subjects_dir'),
+                                       (('subject_id', _dedup), 'subject_id')]),
         (autorecon3, save_midthickness, [('subjects_dir', 'base_directory'),
                                          ('subject_id', 'container')]),
         (autorecon3, outputnode, [('subjects_dir', 'subjects_dir'),
@@ -465,7 +465,7 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
                                     # First run only (recon-all saves expert options)
                                     ('mris_inflate', 'mris_inflate')]),
         (inputnode, skull_strip_extern, [('skullstripped_t1', 'skullstripped')]),
-        (recon_config, autorecon3, [('use_T2', 'use_T2')]),
+        (recon_config, autorecon_surfs, [('use_T2', 'use_T2')]),
         # Construct transform from FreeSurfer conformed image to FMRIPREP
         # reoriented image
         (inputnode, fs_transform, [('t1w', 'target_image')]),
