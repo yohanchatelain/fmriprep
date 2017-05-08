@@ -359,7 +359,8 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
                                 name='save_midthickness')
 
     surface_list = pe.JoinNode(niu.Merge(4, ravel_inputs=True), name='surface_list',
-                               joinsource='get_surfaces', joinfield=['in1', 'in2', 'in3', 'in4'])
+                               joinsource='get_surfaces', joinfield=['in1', 'in2', 'in3', 'in4'],
+                               run_without_submitting=True)
     fs_2_gii = pe.MapNode(fs.MRIsConvert(out_datatype='gii'),
                           iterfield='in_file', name='fs_2_gii')
 
@@ -474,19 +475,19 @@ def init_anat_reports_wf(reportlets_dir, skull_strip_ants, output_spaces, freesu
 
     ds_t1_seg_report = pe.Node(
         DerivativesDataSink(base_directory=reportlets_dir, suffix='t1_seg'),
-        name='ds_t1_seg_report')
+        name='ds_t1_seg_report', run_without_submitting=True)
 
     ds_t1_2_mni_report = pe.Node(
         DerivativesDataSink(base_directory=reportlets_dir, suffix='t1_2_mni'),
-        name='ds_t1_2_mni_report')
+        name='ds_t1_2_mni_report', run_without_submitting=True)
 
     ds_t1_skull_strip_report = pe.Node(
         DerivativesDataSink(base_directory=reportlets_dir, suffix='t1_skull_strip'),
-        name='ds_t1_skull_strip_report')
+        name='ds_t1_skull_strip_report', run_without_submitting=True)
 
     ds_recon_report = pe.Node(
         DerivativesDataSink(base_directory=reportlets_dir, suffix='reconall'),
-        name='ds_recon_report')
+        name='ds_recon_report', run_without_submitting=True)
 
     workflow.connect([
         (inputnode, ds_t1_seg_report, [('source_file', 'source_file'),
@@ -524,34 +525,34 @@ def init_anat_derivatives_wf(output_dir, output_spaces, freesurfer, name='anat_d
 
     ds_t1_preproc = pe.Node(
         DerivativesDataSink(base_directory=output_dir, suffix='preproc'),
-        name='ds_t1_preproc')
+        name='ds_t1_preproc', run_without_submitting=True)
 
     ds_t1_seg = pe.Node(
         DerivativesDataSink(base_directory=output_dir, suffix='dtissue'),
-        name='ds_t1_seg')
+        name='ds_t1_seg', run_without_submitting=True)
 
     ds_t1_mask = pe.Node(
         DerivativesDataSink(base_directory=output_dir, suffix='brainmask'),
-        name='ds_t1_mask')
+        name='ds_t1_mask', run_without_submitting=True)
 
     ds_t1_mni = pe.Node(
         DerivativesDataSink(base_directory=output_dir, suffix='space-MNI152NLin2009cAsym_preproc'),
-        name='ds_t1_mni')
+        name='ds_t1_mni', run_without_submitting=True)
 
     ds_mni_mask = pe.Node(
         DerivativesDataSink(base_directory=output_dir,
                             suffix='space-MNI152NLin2009cAsym_brainmask'),
-        name='ds_mni_mask')
+        name='ds_mni_mask', run_without_submitting=True)
 
     ds_mni_tpms = pe.Node(
         DerivativesDataSink(base_directory=output_dir,
                             suffix='space-MNI152NLin2009cAsym_class-{extra_value}_probtissue'),
-        name='ds_mni_tpms')
+        name='ds_mni_tpms', run_without_submitting=True)
     ds_mni_tpms.inputs.extra_values = ['CSF', 'GM', 'WM']
 
     ds_t1_mni_warp = pe.Node(
         DerivativesDataSink(base_directory=output_dir, suffix='target-MNI152NLin2009cAsym_warp'),
-        name='ds_t1_mni_warp')
+        name='ds_t1_mni_warp', run_without_submitting=True)
 
     def get_gifti_name(in_file):
         import os
@@ -563,12 +564,11 @@ def init_anat_derivatives_wf(output_dir, output_spaces, freesurfer, name='anat_d
         return '{surf}.{LR}.surf'.format(**info)
 
     name_surfs = pe.MapNode(niu.Function(function=get_gifti_name),
-                            iterfield='in_file', name='name_surfs')
+                            iterfield='in_file', name='name_surfs', run_without_submitting=True)
 
     ds_surfs = pe.MapNode(
         DerivativesDataSink(base_directory=output_dir),
-        iterfield=['in_file', 'suffix'],
-        name='ds_surfs')
+        iterfield=['in_file', 'suffix'], name='ds_surfs', run_without_submitting=True)
 
     workflow.connect([
         (inputnode, ds_t1_preproc, [('source_file', 'source_file'),
