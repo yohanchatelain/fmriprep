@@ -1,3 +1,8 @@
+Next release
+============
+
+* [ENH] ``--output-space template`` targets template specified by ``--template`` flag (``MNI152NLin2009cAsym`` supported) (#498)
+
 0.4.2 (3rd of May 2017)
 =======================
 
