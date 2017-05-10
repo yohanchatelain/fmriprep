@@ -1,5 +1,5 @@
-Next release
-============
+0.4.3 (10th of May 2017)
+========================
 
 * [ENH] ``--output-space template`` targets template specified by ``--template`` flag (``MNI152NLin2009cAsym`` supported) (#498)
 * [FIX] Fix a bug causing small numerical discrepancies in input data voxel size to lead to different FOV of the output files (#513)
