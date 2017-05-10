@@ -20,7 +20,7 @@ from nipype.pipeline import engine as pe
 
 from niworkflows.interfaces.registration import RobustMNINormalizationRPT
 from niworkflows.anat.skullstrip import afni_wf as init_skullstrip_afni_wf
-from niworkflows.data import get_mni_icbm152_nlin_asym_09c
+import niworkflows.data as nid
 from niworkflows.interfaces.masks import BrainExtractionRPT
 from niworkflows.interfaces.segmentation import FASTRPT, ReconAllRPT
 
@@ -30,7 +30,7 @@ from fmriprep.utils.misc import fix_multi_T1w_source_name, add_suffix
 
 
 #  pylint: disable=R0914
-def init_anat_preproc_wf(skull_strip_ants, output_spaces, debug, freesurfer,
+def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, freesurfer,
                          omp_nthreads, hires, reportlets_dir, output_dir,
                          name='anat_preproc_wf'):
     """T1w images preprocessing pipeline"""
@@ -82,7 +82,6 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, debug, freesurfer,
             generate_report=True,
             num_threads=omp_nthreads,
             testing=debug,
-            template='mni_icbm152_nlin_asym_09c'
         ),
         name='t1_2_mni'
     )
@@ -91,16 +90,15 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, debug, freesurfer,
     t1_2_mni.interface.num_threads = omp_nthreads
 
     # Resample the brain mask and the tissue probability maps into mni space
-    ref_img = op.join(get_mni_icbm152_nlin_asym_09c(), '1mm_T1.nii.gz')
     mni_mask = pe.Node(
         ants.ApplyTransforms(dimension=3, default_value=0, float=True,
-                             interpolation='NearestNeighbor', reference_image=ref_img),
+                             interpolation='NearestNeighbor'),
         name='mni_mask'
     )
 
     mni_tpms = pe.MapNode(
         ants.ApplyTransforms(dimension=3, default_value=0, float=True,
-                             interpolation='Linear', reference_image=ref_img),
+                             interpolation='Linear'),
         iterfield=['input_image'],
         name='mni_tpms'
     )
@@ -117,7 +115,14 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, debug, freesurfer,
         (t1_seg, outputnode, [('tissue_class_map', 't1_seg'),
                               ('probability_maps', 't1_tpms')]),
         ])
-    if 'MNI152NLin2009cAsym' in output_spaces:
+    if 'template' in output_spaces:
+        template_str = nid.TEMPLATE_MAP[template]
+        ref_img = op.join(nid.get_dataset(template_str), '1mm_T1.nii.gz')
+
+        t1_2_mni.inputs.template = template_str
+        mni_mask.inputs.reference_image = ref_img
+        mni_tpms.inputs.reference_image = ref_img
+
         workflow.connect([
             (skullstrip_wf, t1_2_mni, [('outputnode.bias_corrected', 'moving_image')]),
             (skullstrip_wf, t1_2_mni, [('outputnode.out_mask', 'moving_mask')]),
@@ -154,7 +159,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, debug, freesurfer,
 
     anat_reports_wf = init_anat_reports_wf(
         reportlets_dir=reportlets_dir, skull_strip_ants=skull_strip_ants,
-        output_spaces=output_spaces, freesurfer=freesurfer)
+        output_spaces=output_spaces, template=template, freesurfer=freesurfer)
     workflow.connect([
         (inputnode, anat_reports_wf, [
             (('t1w', fix_multi_T1w_source_name), 'inputnode.source_file')]),
@@ -171,13 +176,14 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, debug, freesurfer,
             (surface_recon_wf, anat_reports_wf, [
                 ('outputnode.out_report', 'inputnode.recon_report')])
         ])
-    if 'MNI152NLin2009cAsym' in output_spaces:
+    if 'template' in output_spaces:
         workflow.connect([
             (t1_2_mni, anat_reports_wf, [('out_report', 'inputnode.t1_2_mni_report')]),
         ])
 
     anat_derivatives_wf = init_anat_derivatives_wf(output_dir=output_dir,
                                                    output_spaces=output_spaces,
+                                                   template=template,
                                                    freesurfer=freesurfer)
 
     workflow.connect([
@@ -463,8 +469,8 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
     return workflow
 
 
-def init_anat_reports_wf(reportlets_dir, skull_strip_ants, output_spaces, freesurfer,
-                         name='anat_reports_wf'):
+def init_anat_reports_wf(reportlets_dir, skull_strip_ants, output_spaces,
+                         template, freesurfer, name='anat_reports_wf'):
     workflow = pe.Workflow(name=name)
 
     inputnode = pe.Node(
@@ -504,7 +510,7 @@ def init_anat_reports_wf(reportlets_dir, skull_strip_ants, output_spaces, freesu
             (inputnode, ds_recon_report, [('source_file', 'source_file'),
                                           ('recon_report', 'in_file')])
         ])
-    if 'MNI152NLin2009cAsym' in output_spaces:
+    if 'template' in output_spaces:
         workflow.connect([
             (inputnode, ds_t1_2_mni_report, [('source_file', 'source_file'),
                                              ('t1_2_mni_report', 'in_file')])
@@ -513,7 +519,8 @@ def init_anat_reports_wf(reportlets_dir, skull_strip_ants, output_spaces, freesu
     return workflow
 
 
-def init_anat_derivatives_wf(output_dir, output_spaces, freesurfer, name='anat_derivatives_wf'):
+def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
+                             name='anat_derivatives_wf'):
     workflow = pe.Workflow(name=name)
 
     inputnode = pe.Node(
@@ -535,23 +542,25 @@ def init_anat_derivatives_wf(output_dir, output_spaces, freesurfer, name='anat_d
         DerivativesDataSink(base_directory=output_dir, suffix='brainmask'),
         name='ds_t1_mask', run_without_submitting=True)
 
+    suffix_fmt = 'space-{}_{}'.format
     ds_t1_mni = pe.Node(
-        DerivativesDataSink(base_directory=output_dir, suffix='space-MNI152NLin2009cAsym_preproc'),
+        DerivativesDataSink(base_directory=output_dir,
+                            suffix=suffix_fmt(template, 'preproc')),
         name='ds_t1_mni', run_without_submitting=True)
 
     ds_mni_mask = pe.Node(
         DerivativesDataSink(base_directory=output_dir,
-                            suffix='space-MNI152NLin2009cAsym_brainmask'),
+                            suffix=suffix_fmt(template, 'brainmask')),
         name='ds_mni_mask', run_without_submitting=True)
 
     ds_mni_tpms = pe.Node(
         DerivativesDataSink(base_directory=output_dir,
-                            suffix='space-MNI152NLin2009cAsym_class-{extra_value}_probtissue'),
+                            suffix=suffix_fmt(template, 'class-{extra_value}_probtissue')),
         name='ds_mni_tpms', run_without_submitting=True)
     ds_mni_tpms.inputs.extra_values = ['CSF', 'GM', 'WM']
 
     ds_t1_mni_warp = pe.Node(
-        DerivativesDataSink(base_directory=output_dir, suffix='target-MNI152NLin2009cAsym_warp'),
+        DerivativesDataSink(base_directory=output_dir, suffix=suffix_fmt(template, 'warp')),
         name='ds_t1_mni_warp', run_without_submitting=True)
 
     def get_gifti_name(in_file):
@@ -586,7 +595,7 @@ def init_anat_derivatives_wf(output_dir, output_spaces, freesurfer, name='anat_d
                                    ('surfaces', 'in_file')]),
             (name_surfs, ds_surfs, [('out', 'suffix')]),
             ])
-    if 'MNI152NLin2009cAsym' in output_spaces:
+    if 'template' in output_spaces:
         workflow.connect([
             (inputnode, ds_t1_mni_warp, [('source_file', 'source_file'),
                                          ('t1_2_mni_forward_transform', 'in_file')]),
