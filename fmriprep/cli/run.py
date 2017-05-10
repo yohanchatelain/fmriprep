@@ -93,8 +93,8 @@ def get_parser():
         help='volume template space (default: MNI152NLin2009cAsym)')
 
     g_conf.add_argument(
-        '--mni-ref', required=False, action='store', default=None,
-        help='Reference image for resampling BOLD files to MNI152NLin2009cAsym space. '
+        '--output-grid-reference', required=False, action='store', default=None,
+        help='Grid reference image for resampling BOLD files to volume template space. '
              'It determines the grid (i.e., affine matrix) of the output files if provided.')
 
     #  ANTs options
@@ -216,7 +216,7 @@ def create_workflow(opts):
                                    freesurfer=opts.freesurfer,
                                    output_spaces=opts.output_space,
                                    template=opts.template,
-                                   mni_ref=opts.mni_ref,
+                                   output_grid_ref=opts.output_grid_reference,
                                    hires=opts.hires,
                                    bold2t1w_dof=opts.bold2t1w_dof,
                                    fmap_bspline=opts.fmap_bspline,

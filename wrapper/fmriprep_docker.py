@@ -224,8 +224,9 @@ def main():
         'Standard options that require mapping files into the container')
     g_wrap.add_argument('-w', '--work-dir', action='store',
                         help='path where intermediate results should be stored')
-    g_wrap.add_argument('--mni-ref', required=False, action='store', type=os.path.abspath,
-                        help='reference image used to resample to MNI')
+    g_wrap.add_argument('--output-grid-reference', required=False, action='store',
+                        type=os.path.abspath,
+                        help='Grid reference image for resampling BOLD files to volume template space.')
 
     # Developer patch/shell options
     g_dev = parser.add_argument_group(
@@ -327,10 +328,10 @@ def main():
         command.extend(['-v', ':'.join((opts.config,
                                         '/root/.nipype/nipype.cfg', 'ro'))])
 
-    if opts.mni_ref:
-        target = '/imports/' + os.path.basename(opts.mni_ref)
-        command.extend(['-v', ':'.join((opts.mni_ref, target, 'ro'))])
-        unknown_args.extend(['--mni-ref', target])
+    if opts.output_grid_reference:
+        target = '/imports/' + os.path.basename(opts.output_grid_reference)
+        command.extend(['-v', ':'.join((opts.output_grid_reference, target, 'ro'))])
+        unknown_args.extend(['--output-grid-reference', target])
 
     if opts.shell:
         command.append('--entrypoint=bash')
