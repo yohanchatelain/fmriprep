@@ -247,7 +247,7 @@ def main():
     opts, unknown_args = parser.parse_known_args()
 
     # Set help if no directories set
-    if (opts.bids_dir, opts.output_dir) == ('', ''):
+    if (opts.bids_dir, opts.output_dir, opts.version) == ('', '', False):
         opts.help = True
 
     # Stop if no docker / docker fails to run
