@@ -1,3 +1,10 @@
+Next release
+============
+
+With thanks to Feilong Ma for contributions.
+
+* [ENH] Option to provide a custom reference grid image (``--output-grid-reference``) for determining the field of view and resolution of output images (#480)
+
 0.4.3 (10th of May 2017)
 ========================
 
