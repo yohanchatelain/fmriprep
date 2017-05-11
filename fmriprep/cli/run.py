@@ -95,7 +95,8 @@ def get_parser():
     g_conf.add_argument(
         '--output-grid-reference', required=False, action='store', default=None,
         help='Grid reference image for resampling BOLD files to volume template space. '
-             'It determines the grid (i.e., affine matrix) of the output files if provided.')
+             'It determines the field of view and resolution of the output images, '
+             'but is not used in normalization.')
 
     #  ANTs options
     g_ants = parser.add_argument_group('Specific options for ANTs registrations')
