@@ -350,6 +350,8 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
     autorecon_surfs = pe.MapNode(
         fs.ReconAll(
             directive='autorecon-hemi',
+            flags=['-noparcstats', '-noparcstats2', '-noparcstats3',
+                   '-nobalabels'],
             openmp=omp_nthreads),
         iterfield='hemi',
         name='autorecon_surfs')
@@ -359,6 +361,7 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
     autorecon3 = pe.Node(
         ReconAllRPT(
             directive='autorecon3',
+            flags=['-cortribbon'],
             openmp=omp_nthreads,
             generate_report=True),
         name='autorecon3')
