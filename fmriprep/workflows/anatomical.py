@@ -413,17 +413,6 @@ def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
         name='autorecon2_surfs')
     autorecon2_surfs.interface.num_threads = omp_nthreads
 
-    autorecon_surfs = pe.Node(
-        fs.ReconAll(
-            directive='autorecon-hemi',
-            flags=['-noparcstats', '-noparcstats2', '-noparcstats3',
-                   '-nobalabels'],
-            openmp=omp_nthreads),
-        itersource=('autorecon2_surfs', 'hemi'),
-        iterables=('hemi', {'lh': ['lh'], 'rh': ['rh']}),
-        name='autorecon_surfs')
-    autorecon_surfs.interface.num_threads = omp_nthreads
-
     def dedup(subjects_dir, subject_id):
         dirs = set(subjects_dir)
         ids = set(subject_id)
@@ -435,14 +424,27 @@ def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
                 "Non-identical values can't be deduplicated:\n{!r}".format(subject_id))
         return dirs.pop(), ids.pop()
 
-    sync = pe.JoinNode(
+    sync1 = pe.JoinNode(
         niu.Function(function=dedup, output_names=['subjects_dir', 'subject_id']),
-        name='sync', joinfield=['subjects_dir', 'subject_id'], joinsource='autorecon_surfs')
+        name='sync1', joinfield=['subjects_dir', 'subject_id'], joinsource='autorecon2_surfs')
+
+    autorecon_surfs = pe.Node(
+        fs.ReconAll(
+            directive='autorecon-hemi',
+            flags=['-noparcstats', '-noparcstats2', '-noparcstats3',
+                   '-nohyporelabel', '-nobalabels'],
+            openmp=omp_nthreads),
+        iterables=('hemi', ('lh', 'rh')),
+        name='autorecon_surfs')
+    autorecon_surfs.interface.num_threads = omp_nthreads
+
+    sync2 = pe.JoinNode(
+        niu.Function(function=dedup, output_names=['subjects_dir', 'subject_id']),
+        name='sync2', joinfield=['subjects_dir', 'subject_id'], joinsource='autorecon_surfs')
 
     autorecon3 = pe.Node(
         ReconAllRPT(
             directive='autorecon3',
-            flags=['-cortribbon'],
             openmp=omp_nthreads,
             generate_report=True),
         name='autorecon3')
@@ -454,12 +456,14 @@ def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
                                      ('subject_id', 'subject_id')]),
         (autorecon2_vol, autorecon2_surfs, [('subjects_dir', 'subjects_dir'),
                                             ('subject_id', 'subject_id')]),
-        (autorecon2_surfs, autorecon_surfs, [('subjects_dir', 'subjects_dir'),
-                                             ('subject_id', 'subject_id')]),
-        (autorecon_surfs, sync, [('subjects_dir', 'subjects_dir'),
-                                 ('subject_id', 'subject_id')]),
-        (sync, autorecon3, [('subjects_dir', 'subjects_dir'),
-                            ('subject_id', 'subject_id')]),
+        (autorecon2_surfs, sync1, [('subjects_dir', 'subjects_dir'),
+                                   ('subject_id', 'subject_id')]),
+        (sync1, autorecon_surfs, [('subjects_dir', 'subjects_dir'),
+                                  ('subject_id', 'subject_id')]),
+        (autorecon_surfs, sync2, [('subjects_dir', 'subjects_dir'),
+                                  ('subject_id', 'subject_id')]),
+        (sync2, autorecon3, [('subjects_dir', 'subjects_dir'),
+                             ('subject_id', 'subject_id')]),
         (autorecon3, outputnode, [('subjects_dir', 'subjects_dir'),
                                   ('subject_id', 'subject_id'),
                                   ('out_report', 'out_report')]),
