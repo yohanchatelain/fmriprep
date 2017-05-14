@@ -340,12 +340,78 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
                      output_names=['subjects_dir', 'subject_id']),
         name='skull_strip_extern')
 
-    autorecon_vol = pe.Node(
+    fs_transform = pe.Node(
+        fs.Tkregister2(fsl_out='freesurfer2subT1.mat', reg_header=True),
+        name='fs_transform')
+
+    autorecon_resume_wf = init_autorecon_resume_wf(omp_nthreads=omp_nthreads)
+    gifti_surface_wf = init_gifti_surface_wf()
+
+    workflow.connect([
+        # Configuration
+        (inputnode, recon_config, [('t1w', 't1w_list'),
+                                   ('t2w', 't2w_list')]),
+        (inputnode, bids_info, [(('t1w', fix_multi_T1w_source_name), 'in_file')]),
+        # Passing subjects_dir / subject_id enforces serial order
+        (inputnode, autorecon1, [('subjects_dir', 'subjects_dir')]),
+        (bids_info, autorecon1, [('subject_id', 'subject_id')]),
+        (autorecon1, skull_strip_extern, [('subjects_dir', 'subjects_dir'),
+                                          ('subject_id', 'subject_id')]),
+        (skull_strip_extern, autorecon_resume_wf, [('subjects_dir', 'inputnode.subjects_dir'),
+                                                   ('subject_id', 'inputnode.subject_id')]),
+        (autorecon_resume_wf, gifti_surface_wf, [
+            ('outputnode.subjects_dir', 'inputnode.subjects_dir'),
+            ('outputnode.subject_id', 'inputnode.subject_id')]),
+        # Reconstruction phases
+        (inputnode, autorecon1, [('t1w', 'T1_files')]),
+        (recon_config, autorecon1, [('t2w', 'T2_file'),
+                                    ('hires', 'hires'),
+                                    # First run only (recon-all saves expert options)
+                                    ('mris_inflate', 'mris_inflate')]),
+        (inputnode, skull_strip_extern, [('skullstripped_t1', 'skullstripped')]),
+        (recon_config, autorecon_resume_wf, [('use_T2', 'inputnode.use_T2')]),
+        # Construct transform from FreeSurfer conformed image to FMRIPREP
+        # reoriented image
+        (inputnode, fs_transform, [('t1w', 'target_image')]),
+        (autorecon1, fs_transform, [('T1', 'moving_image')]),
+        # Output
+        (autorecon_resume_wf, outputnode, [('outputnode.subjects_dir', 'subjects_dir'),
+                                           ('outputnode.subject_id', 'subject_id'),
+                                           ('outputnode.out_report', 'out_report')]),
+        (gifti_surface_wf, outputnode, [('outputnode.surfaces', 'surfaces')]),
+        (fs_transform, outputnode, [('fsl_file', 'fs_2_t1_transform')]),
+        ])
+
+    return workflow
+
+
+def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
+    workflow = pe.Workflow(name=name)
+
+    inputnode = pe.Node(
+        niu.IdentityInterface(
+            fields=['subjects_dir', 'subject_id', 'use_T2']),
+        name='inputnode')
+
+    outputnode = pe.Node(
+        niu.IdentityInterface(
+            fields=['subjects_dir', 'subject_id', 'out_report']),
+        name='outputnode')
+
+    autorecon2_vol = pe.Node(
         fs.ReconAll(
             directive='autorecon2-volonly',
             openmp=omp_nthreads),
-        name='autorecon_vol')
-    autorecon_vol.interface.num_threads = omp_nthreads
+        name='autorecon2_vol')
+    autorecon2_vol.interface.num_threads = omp_nthreads
+
+    autorecon2_surfs = pe.Node(
+        fs.ReconAll(
+            directive='autorecon2-perhemi',
+            openmp=omp_nthreads),
+        iterables=('hemi', ('lh', 'rh')),
+        name='autorecon2_surfs')
+    autorecon2_surfs.interface.num_threads = omp_nthreads
 
     autorecon_surfs = pe.Node(
         fs.ReconAll(
@@ -353,7 +419,8 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
             flags=['-noparcstats', '-noparcstats2', '-noparcstats3',
                    '-nobalabels'],
             openmp=omp_nthreads),
-        iterables=('hemi', ('lh', 'rh')),
+        itersource=('autorecon2_surfs', 'hemi'),
+        iterables=('hemi', {'lh': ['lh'], 'rh': ['rh']}),
         name='autorecon_surfs')
     autorecon_surfs.interface.num_threads = omp_nthreads
 
@@ -381,9 +448,33 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         name='autorecon3')
     autorecon3.interface.num_threads = omp_nthreads
 
-    fs_transform = pe.Node(
-        fs.Tkregister2(fsl_out='freesurfer2subT1.mat', reg_header=True),
-        name='fs_transform')
+    workflow.connect([
+        (inputnode, autorecon_surfs, [('use_T2', 'use_T2')]),
+        (inputnode, autorecon2_vol, [('subjects_dir', 'subjects_dir'),
+                                     ('subject_id', 'subject_id')]),
+        (autorecon2_vol, autorecon2_surfs, [('subjects_dir', 'subjects_dir'),
+                                            ('subject_id', 'subject_id')]),
+        (autorecon2_surfs, autorecon_surfs, [('subjects_dir', 'subjects_dir'),
+                                             ('subject_id', 'subject_id')]),
+        (autorecon_surfs, sync, [('subjects_dir', 'subjects_dir'),
+                                 ('subject_id', 'subject_id')]),
+        (sync, autorecon3, [('subjects_dir', 'subjects_dir'),
+                            ('subject_id', 'subject_id')]),
+        (autorecon3, outputnode, [('subjects_dir', 'subjects_dir'),
+                                  ('subject_id', 'subject_id'),
+                                  ('out_report', 'out_report')]),
+        ])
+
+    return workflow
+
+
+def init_gifti_surface_wf(name='gifti_surface_wf'):
+    workflow = pe.Workflow(name=name)
+
+    inputnode = pe.Node(niu.IdentityInterface(['subjects_dir', 'subject_id']), name='inputnode')
+    outputnode = pe.Node(niu.IdentityInterface(['surfaces']), name='outputnode')
+
+    get_surfaces = pe.Node(nio.FreeSurferSource(), name='get_surfaces')
 
     midthickness = pe.MapNode(
         MakeMidthickness(thickness=True, distance=0.5, out_name='midthickness'),
@@ -449,49 +540,18 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         name='fix_surfs')
 
     workflow.connect([
-        # Configuration
-        (inputnode, recon_config, [('t1w', 't1w_list'),
-                                   ('t2w', 't2w_list')]),
-        (inputnode, bids_info, [(('t1w', fix_multi_T1w_source_name), 'in_file')]),
-        # Passing subjects_dir / subject_id enforces serial order
-        (inputnode, autorecon1, [('subjects_dir', 'subjects_dir')]),
-        (bids_info, autorecon1, [('subject_id', 'subject_id')]),
-        (autorecon1, skull_strip_extern, [('subjects_dir', 'subjects_dir'),
-                                          ('subject_id', 'subject_id')]),
-        (skull_strip_extern, autorecon_vol, [('subjects_dir', 'subjects_dir'),
-                                             ('subject_id', 'subject_id')]),
-        (autorecon_vol, autorecon_surfs, [('subjects_dir', 'subjects_dir'),
-                                          ('subject_id', 'subject_id')]),
-        (autorecon_surfs, sync, [('subjects_dir', 'subjects_dir'),
-                                 ('subject_id', 'subject_id')]),
-        (sync, autorecon3, [('subjects_dir', 'subjects_dir'),
-                            ('subject_id', 'subject_id')]),
-        (autorecon3, save_midthickness, [('subjects_dir', 'base_directory'),
-                                         ('subject_id', 'container')]),
-        (autorecon3, outputnode, [('subjects_dir', 'subjects_dir'),
-                                  ('subject_id', 'subject_id'),
-                                  ('out_report', 'out_report')]),
-        # Reconstruction phases
-        (inputnode, autorecon1, [('t1w', 'T1_files')]),
-        (recon_config, autorecon1, [('t2w', 'T2_file'),
-                                    ('hires', 'hires'),
-                                    # First run only (recon-all saves expert options)
-                                    ('mris_inflate', 'mris_inflate')]),
-        (inputnode, skull_strip_extern, [('skullstripped_t1', 'skullstripped')]),
-        (recon_config, autorecon_surfs, [('use_T2', 'use_T2')]),
-        # Construct transform from FreeSurfer conformed image to FMRIPREP
-        # reoriented image
-        (inputnode, fs_transform, [('t1w', 'target_image')]),
-        (autorecon1, fs_transform, [('T1', 'moving_image')]),
-        (fs_transform, outputnode, [('fsl_file', 'fs_2_t1_transform')]),
+        (inputnode, get_surfaces, [('subjects_dir', 'subjects_dir'),
+                                   ('subject_id', 'subject_id')]),
+        (inputnode, save_midthickness, [('subjects_dir', 'base_directory'),
+                                        ('subject_id', 'container')]),
         # Generate midthickness surfaces and save to FreeSurfer derivatives
-        (autorecon3, midthickness, [('smoothwm', 'in_file'),
-                                    ('graymid', 'graymid')]),
+        (get_surfaces, midthickness, [('smoothwm', 'in_file'),
+                                      ('graymid', 'graymid')]),
         (midthickness, save_midthickness, [('out_file', 'surf.@graymid')]),
         # Produce valid GIFTI surface files (dense mesh)
-        (autorecon3, surface_list, [('smoothwm', 'in1'),
-                                    ('pial', 'in2'),
-                                    ('inflated', 'in3')]),
+        (get_surfaces, surface_list, [('smoothwm', 'in1'),
+                                      ('pial', 'in2'),
+                                      ('inflated', 'in3')]),
         (save_midthickness, surface_list, [('out_file', 'in4')]),
         (surface_list, fs_2_gii, [('out', 'in_file')]),
         (fs_2_gii, fix_surfs, [('converted', 'in_file')]),
