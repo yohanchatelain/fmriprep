@@ -347,16 +347,30 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         name='autorecon_vol')
     autorecon_vol.interface.num_threads = omp_nthreads
 
-    autorecon_surfs = pe.MapNode(
+    autorecon_surfs = pe.Node(
         fs.ReconAll(
             directive='autorecon-hemi',
             flags=['-noparcstats', '-noparcstats2', '-noparcstats3',
                    '-nobalabels'],
             openmp=omp_nthreads),
-        iterfield='hemi',
+        iterables=('hemi', ('lh', 'rh')),
         name='autorecon_surfs')
     autorecon_surfs.interface.num_threads = omp_nthreads
-    autorecon_surfs.inputs.hemi = ['lh', 'rh']
+
+    def dedup(subjects_dir, subject_id):
+        dirs = set(subjects_dir)
+        ids = set(subject_id)
+        if len(dirs) > 1:
+            raise ValueError(
+                "Non-identical values can't be deduplicated:\n{!r}".format(subjects_dir))
+        if len(ids) > 1:
+            raise ValueError(
+                "Non-identical values can't be deduplicated:\n{!r}".format(subject_id))
+        return dirs.pop(), ids.pop()
+
+    sync = pe.JoinNode(
+        niu.Function(function=dedup, output_names=['subjects_dir', 'subject_id']),
+        name='sync', joinfield=['subjects_dir', 'subject_id'], joinsource='autorecon_surfs')
 
     autorecon3 = pe.Node(
         ReconAllRPT(
@@ -434,12 +448,6 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         iterfield='in_file',
         name='fix_surfs')
 
-    def _dedup(in_list):
-        vals = set(in_list)
-        if len(vals) > 1:
-            raise ValueError("Non-identical values can't be deduplicated:\n{!r}".format(in_list))
-        return vals.pop()
-
     workflow.connect([
         # Configuration
         (inputnode, recon_config, [('t1w', 't1w_list'),
@@ -454,8 +462,10 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
                                              ('subject_id', 'subject_id')]),
         (autorecon_vol, autorecon_surfs, [('subjects_dir', 'subjects_dir'),
                                           ('subject_id', 'subject_id')]),
-        (autorecon_surfs, autorecon3, [(('subjects_dir', _dedup), 'subjects_dir'),
-                                       (('subject_id', _dedup), 'subject_id')]),
+        (autorecon_surfs, sync, [('subjects_dir', 'subjects_dir'),
+                                 ('subject_id', 'subject_id')]),
+        (sync, autorecon3, [('subjects_dir', 'subjects_dir'),
+                            ('subject_id', 'subject_id')]),
         (autorecon3, save_midthickness, [('subjects_dir', 'base_directory'),
                                          ('subject_id', 'container')]),
         (autorecon3, outputnode, [('subjects_dir', 'subjects_dir'),
