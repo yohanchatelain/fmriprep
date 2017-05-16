@@ -1,3 +1,8 @@
+Next release
+============
+
+* [ENH] Improved EPI skull stripping and tissue contrast enhancements (#519)
+
 0.4.3 (10th of May 2017)
 ========================
 
