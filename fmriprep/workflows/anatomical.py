@@ -405,42 +405,25 @@ def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
         name='autorecon2_vol')
     autorecon2_vol.interface.num_threads = omp_nthreads
 
-    autorecon2_surfs = pe.Node(
+    autorecon2_surfs = pe.MapNode(
         fs.ReconAll(
             directive='autorecon2-perhemi',
             openmp=omp_nthreads),
-        iterables=('hemi', ('lh', 'rh')),
+        iterfield='hemi',
         name='autorecon2_surfs')
     autorecon2_surfs.interface.num_threads = omp_nthreads
+    autorecon2_surfs.inputs.hemi = ['lh', 'rh']
 
-    def dedup(subjects_dir, subject_id):
-        dirs = set(subjects_dir)
-        ids = set(subject_id)
-        if len(dirs) > 1:
-            raise ValueError(
-                "Non-identical values can't be deduplicated:\n{!r}".format(subjects_dir))
-        if len(ids) > 1:
-            raise ValueError(
-                "Non-identical values can't be deduplicated:\n{!r}".format(subject_id))
-        return dirs.pop(), ids.pop()
-
-    sync1 = pe.JoinNode(
-        niu.Function(function=dedup, output_names=['subjects_dir', 'subject_id']),
-        name='sync1', joinfield=['subjects_dir', 'subject_id'], joinsource='autorecon2_surfs')
-
-    autorecon_surfs = pe.Node(
+    autorecon_surfs = pe.MapNode(
         fs.ReconAll(
             directive='autorecon-hemi',
             flags=['-noparcstats', '-noparcstats2', '-noparcstats3',
                    '-nohyporelabel', '-nobalabels'],
             openmp=omp_nthreads),
-        iterables=('hemi', ('lh', 'rh')),
+        iterfield='hemi',
         name='autorecon_surfs')
     autorecon_surfs.interface.num_threads = omp_nthreads
-
-    sync2 = pe.JoinNode(
-        niu.Function(function=dedup, output_names=['subjects_dir', 'subject_id']),
-        name='sync2', joinfield=['subjects_dir', 'subject_id'], joinsource='autorecon_surfs')
+    autorecon_surfs.inputs.hemi = ['lh', 'rh']
 
     autorecon3 = pe.Node(
         ReconAllRPT(
@@ -450,20 +433,23 @@ def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
         name='autorecon3')
     autorecon3.interface.num_threads = omp_nthreads
 
+    def _dedup(in_list):
+        vals = set(in_list)
+        if len(vals) > 1:
+            raise ValueError(
+                "Non-identical values can't be deduplicated:\n{!r}".format(in_list))
+        return vals.pop()
+
     workflow.connect([
         (inputnode, autorecon_surfs, [('use_T2', 'use_T2')]),
         (inputnode, autorecon2_vol, [('subjects_dir', 'subjects_dir'),
                                      ('subject_id', 'subject_id')]),
         (autorecon2_vol, autorecon2_surfs, [('subjects_dir', 'subjects_dir'),
                                             ('subject_id', 'subject_id')]),
-        (autorecon2_surfs, sync1, [('subjects_dir', 'subjects_dir'),
-                                   ('subject_id', 'subject_id')]),
-        (sync1, autorecon_surfs, [('subjects_dir', 'subjects_dir'),
-                                  ('subject_id', 'subject_id')]),
-        (autorecon_surfs, sync2, [('subjects_dir', 'subjects_dir'),
-                                  ('subject_id', 'subject_id')]),
-        (sync2, autorecon3, [('subjects_dir', 'subjects_dir'),
-                             ('subject_id', 'subject_id')]),
+        (autorecon2_surfs, autorecon_surfs, [(('subjects_dir', _dedup), 'subjects_dir'),
+                                             (('subject_id', _dedup), 'subject_id')]),
+        (autorecon_surfs, autorecon3, [(('subjects_dir', _dedup), 'subjects_dir'),
+                                       (('subject_id', _dedup), 'subject_id')]),
         (autorecon3, outputnode, [('subjects_dir', 'subjects_dir'),
                                   ('subject_id', 'subject_id'),
                                   ('out_report', 'out_report')]),
