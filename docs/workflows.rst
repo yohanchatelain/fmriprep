@@ -81,7 +81,7 @@ Surface preprocessing
 :mod:`fmriprep.workflows.anatomical.init_surface_recon_wf`
 
 .. workflow::
-    :graph2use: colored
+    :graph2use: orig
     :simple_form: yes
 
     from fmriprep.workflows.anatomical import init_surface_recon_wf
@@ -112,10 +112,25 @@ would be processed by the following command::
 The second phase imports the brainmask calculated in the `T1w/T2w preprocessing`_
 sub-workflow.
 The final phase resumes reconstruction, using the T2w image to assist
-in finding the pial surface, if available::
+in finding the pial surface, if available.
+In order to utilize resources efficiently, this is broken down into six
+sub-stages; the first and last are run serially, while each pair of
+per-hemisphere stages are run in parallel, if possible::
 
     $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
-        -all -T2pial
+        -autorecon2-volonly
+    $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
+        -autorecon2-perhemi -hemi lh
+    $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
+        -autorecon2-perhemi -hemi rh
+    $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
+        -autorecon-hemi lh -T2pial \
+        -noparcstats -noparcstats2 -noparcstats3 -nohyporelabel -nobalabels
+    $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
+        -autorecon-hemi rh -T2pial \
+        -noparcstats -noparcstats2 -noparcstats3 -nohyporelabel -nobalabels
+    $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
+        -autorecon3
 
 Reconstructed white and pial surfaces are included in the report.
 

@@ -307,8 +307,7 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         fs.ReconAll(
             directive='autorecon1',
             flags='-noskullstrip',
-            openmp=omp_nthreads,
-            parallel=True),
+            openmp=omp_nthreads),
         name='autorecon1')
     autorecon1.interface._can_resume = False
     autorecon1.interface.num_threads = omp_nthreads
@@ -341,32 +340,142 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
                      output_names=['subjects_dir', 'subject_id']),
         name='skull_strip_extern')
 
-    reconall = pe.Node(
-        ReconAllRPT(
-            flags='-noskullstrip',
-            openmp=omp_nthreads,
-            parallel=True,
-            out_report='reconall.svg',
-            generate_report=True),
-        name='reconall')
-    reconall.interface.num_threads = omp_nthreads
-
     fs_transform = pe.Node(
         fs.Tkregister2(fsl_out='freesurfer2subT1.mat', reg_header=True),
         name='fs_transform')
 
-    get_surfaces = pe.Node(nio.FreeSurferSource(), iterables=('hemi', ('lh', 'rh')),
-                           name='get_surfaces')
+    autorecon_resume_wf = init_autorecon_resume_wf(omp_nthreads=omp_nthreads)
+    gifti_surface_wf = init_gifti_surface_wf()
 
-    midthickness = pe.Node(MakeMidthickness(thickness=True, distance=0.5, out_name='midthickness'),
-                           name='midthickness')
+    workflow.connect([
+        # Configuration
+        (inputnode, recon_config, [('t1w', 't1w_list'),
+                                   ('t2w', 't2w_list')]),
+        (inputnode, bids_info, [(('t1w', fix_multi_T1w_source_name), 'in_file')]),
+        # Passing subjects_dir / subject_id enforces serial order
+        (inputnode, autorecon1, [('subjects_dir', 'subjects_dir')]),
+        (bids_info, autorecon1, [('subject_id', 'subject_id')]),
+        (autorecon1, skull_strip_extern, [('subjects_dir', 'subjects_dir'),
+                                          ('subject_id', 'subject_id')]),
+        (skull_strip_extern, autorecon_resume_wf, [('subjects_dir', 'inputnode.subjects_dir'),
+                                                   ('subject_id', 'inputnode.subject_id')]),
+        (autorecon_resume_wf, gifti_surface_wf, [
+            ('outputnode.subjects_dir', 'inputnode.subjects_dir'),
+            ('outputnode.subject_id', 'inputnode.subject_id')]),
+        # Reconstruction phases
+        (inputnode, autorecon1, [('t1w', 'T1_files')]),
+        (recon_config, autorecon1, [('t2w', 'T2_file'),
+                                    ('hires', 'hires'),
+                                    # First run only (recon-all saves expert options)
+                                    ('mris_inflate', 'mris_inflate')]),
+        (inputnode, skull_strip_extern, [('skullstripped_t1', 'skullstripped')]),
+        (recon_config, autorecon_resume_wf, [('use_T2', 'inputnode.use_T2')]),
+        # Construct transform from FreeSurfer conformed image to FMRIPREP
+        # reoriented image
+        (inputnode, fs_transform, [('t1w', 'target_image')]),
+        (autorecon1, fs_transform, [('T1', 'moving_image')]),
+        # Output
+        (autorecon_resume_wf, outputnode, [('outputnode.subjects_dir', 'subjects_dir'),
+                                           ('outputnode.subject_id', 'subject_id'),
+                                           ('outputnode.out_report', 'out_report')]),
+        (gifti_surface_wf, outputnode, [('outputnode.surfaces', 'surfaces')]),
+        (fs_transform, outputnode, [('fsl_file', 'fs_2_t1_transform')]),
+        ])
+
+    return workflow
+
+
+def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
+    workflow = pe.Workflow(name=name)
+
+    inputnode = pe.Node(
+        niu.IdentityInterface(
+            fields=['subjects_dir', 'subject_id', 'use_T2']),
+        name='inputnode')
+
+    outputnode = pe.Node(
+        niu.IdentityInterface(
+            fields=['subjects_dir', 'subject_id', 'out_report']),
+        name='outputnode')
+
+    autorecon2_vol = pe.Node(
+        fs.ReconAll(
+            directive='autorecon2-volonly',
+            openmp=omp_nthreads),
+        name='autorecon2_vol')
+    autorecon2_vol.interface.num_threads = omp_nthreads
+
+    autorecon2_surfs = pe.MapNode(
+        fs.ReconAll(
+            directive='autorecon2-perhemi',
+            openmp=omp_nthreads),
+        iterfield='hemi',
+        name='autorecon2_surfs')
+    autorecon2_surfs.interface.num_threads = omp_nthreads
+    autorecon2_surfs.inputs.hemi = ['lh', 'rh']
+
+    autorecon_surfs = pe.MapNode(
+        fs.ReconAll(
+            directive='autorecon-hemi',
+            flags=['-noparcstats', '-noparcstats2', '-noparcstats3',
+                   '-nohyporelabel', '-nobalabels'],
+            openmp=omp_nthreads),
+        iterfield='hemi',
+        name='autorecon_surfs')
+    autorecon_surfs.interface.num_threads = omp_nthreads
+    autorecon_surfs.inputs.hemi = ['lh', 'rh']
+
+    autorecon3 = pe.Node(
+        ReconAllRPT(
+            directive='autorecon3',
+            openmp=omp_nthreads,
+            generate_report=True),
+        name='autorecon3')
+    autorecon3.interface.num_threads = omp_nthreads
+
+    def _dedup(in_list):
+        vals = set(in_list)
+        if len(vals) > 1:
+            raise ValueError(
+                "Non-identical values can't be deduplicated:\n{!r}".format(in_list))
+        return vals.pop()
+
+    workflow.connect([
+        (inputnode, autorecon_surfs, [('use_T2', 'use_T2')]),
+        (inputnode, autorecon2_vol, [('subjects_dir', 'subjects_dir'),
+                                     ('subject_id', 'subject_id')]),
+        (autorecon2_vol, autorecon2_surfs, [('subjects_dir', 'subjects_dir'),
+                                            ('subject_id', 'subject_id')]),
+        (autorecon2_surfs, autorecon_surfs, [(('subjects_dir', _dedup), 'subjects_dir'),
+                                             (('subject_id', _dedup), 'subject_id')]),
+        (autorecon_surfs, autorecon3, [(('subjects_dir', _dedup), 'subjects_dir'),
+                                       (('subject_id', _dedup), 'subject_id')]),
+        (autorecon3, outputnode, [('subjects_dir', 'subjects_dir'),
+                                  ('subject_id', 'subject_id'),
+                                  ('out_report', 'out_report')]),
+        ])
+
+    return workflow
+
+
+def init_gifti_surface_wf(name='gifti_surface_wf'):
+    workflow = pe.Workflow(name=name)
+
+    inputnode = pe.Node(niu.IdentityInterface(['subjects_dir', 'subject_id']), name='inputnode')
+    outputnode = pe.Node(niu.IdentityInterface(['surfaces']), name='outputnode')
+
+    get_surfaces = pe.Node(nio.FreeSurferSource(), name='get_surfaces')
+
+    midthickness = pe.MapNode(
+        MakeMidthickness(thickness=True, distance=0.5, out_name='midthickness'),
+        iterfield='in_file',
+        name='midthickness')
 
     save_midthickness = pe.Node(nio.DataSink(parameterization=False),
                                 name='save_midthickness')
 
-    surface_list = pe.JoinNode(niu.Merge(4, ravel_inputs=True), name='surface_list',
-                               joinsource='get_surfaces', joinfield=['in1', 'in2', 'in3', 'in4'],
-                               run_without_submitting=True)
+    surface_list = pe.Node(niu.Merge(4, ravel_inputs=True),
+                           name='surface_list', run_without_submitting=True)
     fs_2_gii = pe.MapNode(fs.MRIsConvert(out_datatype='gii'),
                           iterfield='in_file', name='fs_2_gii')
 
@@ -421,37 +530,10 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         name='fix_surfs')
 
     workflow.connect([
-        # Configuration
-        (inputnode, recon_config, [('t1w', 't1w_list'),
-                                   ('t2w', 't2w_list')]),
-        (inputnode, bids_info, [(('t1w', fix_multi_T1w_source_name), 'in_file')]),
-        # Passing subjects_dir / subject_id enforces serial order
-        (inputnode, autorecon1, [('subjects_dir', 'subjects_dir')]),
-        (bids_info, autorecon1, [('subject_id', 'subject_id')]),
-        (autorecon1, skull_strip_extern, [('subjects_dir', 'subjects_dir'),
-                                          ('subject_id', 'subject_id')]),
-        (skull_strip_extern, reconall, [('subjects_dir', 'subjects_dir'),
-                                        ('subject_id', 'subject_id')]),
-        (reconall, get_surfaces, [('subjects_dir', 'subjects_dir'),
-                                  ('subject_id', 'subject_id')]),
-        (reconall, save_midthickness, [('subjects_dir', 'base_directory'),
-                                       ('subject_id', 'container')]),
-        (reconall, outputnode, [('subjects_dir', 'subjects_dir'),
-                                ('subject_id', 'subject_id'),
-                                ('out_report', 'out_report')]),
-        # Reconstruction phases
-        (inputnode, autorecon1, [('t1w', 'T1_files')]),
-        (recon_config, autorecon1, [('t2w', 'T2_file'),
-                                    ('hires', 'hires'),
-                                    # First run only (recon-all saves expert options)
-                                    ('mris_inflate', 'mris_inflate')]),
-        (inputnode, skull_strip_extern, [('skullstripped_t1', 'skullstripped')]),
-        (recon_config, reconall, [('use_T2', 'use_T2')]),
-        # Construct transform from FreeSurfer conformed image to FMRIPREP
-        # reoriented image
-        (inputnode, fs_transform, [('t1w', 'target_image')]),
-        (autorecon1, fs_transform, [('T1', 'moving_image')]),
-        (fs_transform, outputnode, [('fsl_file', 'fs_2_t1_transform')]),
+        (inputnode, get_surfaces, [('subjects_dir', 'subjects_dir'),
+                                   ('subject_id', 'subject_id')]),
+        (inputnode, save_midthickness, [('subjects_dir', 'base_directory'),
+                                        ('subject_id', 'container')]),
         # Generate midthickness surfaces and save to FreeSurfer derivatives
         (get_surfaces, midthickness, [('smoothwm', 'in_file'),
                                       ('graymid', 'graymid')]),
