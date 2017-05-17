@@ -2,6 +2,7 @@ Next release
 ============
 
 * [ENH] Improved EPI skull stripping and tissue contrast enhancements (#519)
+* [ENH] Improve resource use estimates in FreeSurfer workflow (#506)
 
 0.4.3 (10th of May 2017)
 ========================
