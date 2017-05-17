@@ -2,6 +2,7 @@ Next release
 ============
 
 * [ENH] Improved EPI skull stripping and tissue contrast enhancements (#519)
+* [ENH] Moved missing values in the DVARS* and FramewiseDisplacement columns of the _confounds.tsv from last row to the first row (#523)
 
 0.4.3 (10th of May 2017)
 ========================
