@@ -34,7 +34,8 @@ slice-timing information and no fieldmap acquisitions):
                                 hires=True,
                                 bold2t1w_dof=9,
                                 fmap_bspline=False,
-                                fmap_demean=True)
+                                fmap_demean=True,
+                                output_grid_ref=None)
 
 
 T1w/T2w preprocessing
@@ -177,7 +178,8 @@ BOLD preprocessing
                               debug=False,
                               bold2t1w_dof=9,
                               fmap_bspline=True,
-                              fmap_demean=True)
+                              fmap_demean=True,
+                              output_grid_ref=None)
 
 Preprocessing of BOLD files is split into multiple sub-workflows decribed below.
 
@@ -267,7 +269,8 @@ EPI to MNI transformation
     from fmriprep.workflows.epi import init_epi_mni_trans_wf
     wf = init_epi_mni_trans_wf(output_dir='.',
                                template='MNI152NLin2009cAsym',
-                               bold_file_size_gb=3)
+                               bold_file_size_gb=3,
+                               output_grid_ref=None)
 
 This sub-workflow uses the transform from
 `Head-motion estimation and slice time correction`_,
