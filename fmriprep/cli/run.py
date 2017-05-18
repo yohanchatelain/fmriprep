@@ -92,6 +92,12 @@ def get_parser():
         choices=['MNI152NLin2009cAsym'], default='MNI152NLin2009cAsym',
         help='volume template space (default: MNI152NLin2009cAsym)')
 
+    g_conf.add_argument(
+        '--output-grid-reference', required=False, action='store', default=None,
+        help='Grid reference image for resampling BOLD files to volume template space. '
+             'It determines the field of view and resolution of the output images, '
+             'but is not used in normalization.')
+
     #  ANTs options
     g_ants = parser.add_argument_group('Specific options for ANTs registrations')
     g_ants.add_argument('--skull-strip-ants', dest="skull_strip_ants", action='store_true',
@@ -211,6 +217,7 @@ def create_workflow(opts):
                                    freesurfer=opts.freesurfer,
                                    output_spaces=opts.output_space,
                                    template=opts.template,
+                                   output_grid_ref=opts.output_grid_reference,
                                    hires=opts.hires,
                                    bold2t1w_dof=opts.bold2t1w_dof,
                                    fmap_bspline=opts.fmap_bspline,
