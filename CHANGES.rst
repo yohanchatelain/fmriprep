@@ -1,5 +1,5 @@
-Next release
-============
+0.4.4 (20th of May 2017)
+========================
 
 With thanks to Feilong Ma for contributions.
 
