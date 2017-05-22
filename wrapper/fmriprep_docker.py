@@ -154,8 +154,9 @@ def merge_help(wrapper_help, target_help):
 
     # Make sure we're not clobbering options we don't mean to
     overlap = set(w_flags).intersection(t_flags)
-    assert overlap == set('hvw'), "Clobbering options: {}".format(
-        ', '.join(overlap - set('hvw')))
+    expected_overlap = set(['h', 'v', 'w', 'output-grid-reference'])
+    assert overlap == expected_overlap, "Clobbering options: {}".format(
+        ', '.join(overlap - expected_overlap))
 
     sections = []
 
@@ -219,6 +220,8 @@ def main():
                         default='poldracklab/fmriprep:{}'.format(__version__),
                         help='image name')
 
+    # Options for mapping files and directories into container
+    # Update `expected_overlap` variable in merge_help() when adding to this
     g_wrap = parser.add_argument_group(
         'Wrapper options',
         'Standard options that require mapping files into the container')
