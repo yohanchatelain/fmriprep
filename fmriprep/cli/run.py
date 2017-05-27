@@ -97,7 +97,14 @@ def get_parser():
         help='Grid reference image for resampling BOLD files to volume template space. '
              'It determines the field of view and resolution of the output images, '
              'but is not used in normalization.')
-
+    # ICA_AROMA options
+    g_aroma = parser.add_argument_group('Specific options for running ICA_AROMA')
+    g_aroma.add_argument('--use_aroma',action='store_true', default=False,
+                         help='add ICA_AROMA to your preprocessing stream')
+    g_aroma.add_argument('--denoise_strategy',action='store',choices=['nonaggr','aggr'],
+                         default='nonaggr',
+                         help='you can choose your denoising strategy: nonaggr or aggr. '
+                              'both is not supported currently')
     #  ANTs options
     g_ants = parser.add_argument_group('Specific options for ANTs registrations')
     g_ants.add_argument('--skull-strip-ants', dest="skull_strip_ants", action='store_true',
@@ -221,7 +228,9 @@ def create_workflow(opts):
                                    hires=opts.hires,
                                    bold2t1w_dof=opts.bold2t1w_dof,
                                    fmap_bspline=opts.fmap_bspline,
-                                   fmap_demean=opts.fmap_no_demean)
+                                   fmap_demean=opts.fmap_no_demean,
+                                   use_aroma=opts.use_aroma,
+                                   denoise_strategy=opts.denoise_strategy)
     fmriprep_wf.base_dir = op.abspath(opts.work_dir)
 
     if opts.reports_only:
