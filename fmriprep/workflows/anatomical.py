@@ -81,7 +81,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
         RobustMNINormalizationRPT(
             generate_report=True,
             num_threads=omp_nthreads,
-            testing=debug,
+            flavor='testing' if debug else 'precise',
         ),
         name='t1_2_mni'
     )
