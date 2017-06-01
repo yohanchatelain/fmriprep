@@ -29,8 +29,8 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
                      ignore, debug, omp_nthreads,
                      skull_strip_ants, reportlets_dir, output_dir, bids_dir,
                      freesurfer, output_spaces, template, hires,
-                     bold2t1w_dof, fmap_bspline, fmap_demean, 
-                     use_aroma, denoise_strategy, output_grid_ref,):
+                     bold2t1w_dof, fmap_bspline, fmap_demean,
+                     use_aroma, output_grid_ref,):
     fmriprep_wf = pe.Workflow(name='fmriprep_wf')
 
     if freesurfer:
@@ -60,8 +60,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
                                                    fmap_bspline=fmap_bspline,
                                                    fmap_demean=fmap_demean,
                                                    output_grid_ref=output_grid_ref,
-                                                   use_aroma=use_aroma,
-                                                   denoise_strategy=denoise_strategy)
+                                                   use_aroma=use_aroma)
         single_subject_wf.config['execution']['crashdump_dir'] = (
             os.path.join(output_dir, "fmriprep", "sub-" + subject_id, 'log', run_uuid)
         )
@@ -80,8 +79,8 @@ def init_single_subject_wf(subject_id, task_id, name,
                            ignore, debug, omp_nthreads,
                            skull_strip_ants, reportlets_dir, output_dir, bids_dir,
                            freesurfer, output_spaces, template, hires,
-                           bold2t1w_dof, fmap_bspline, fmap_demean, 
-                           output_grid_ref, use_aroma, denoise_strategy):
+                           bold2t1w_dof, fmap_bspline, fmap_demean,
+                           output_grid_ref, use_aroma):
     """
     The adaptable fMRI preprocessing workflow
     """
@@ -145,8 +144,7 @@ def init_single_subject_wf(subject_id, task_id, name,
                                                fmap_demean=fmap_demean,
                                                debug=debug,
                                                output_grid_ref=output_grid_ref,
-                                               use_aroma=use_aroma,
-                                               denoise_strategy=denoise_strategy)
+                                               use_aroma=use_aroma)
 
         workflow.connect([
             (anat_preproc_wf, func_preproc_wf,
