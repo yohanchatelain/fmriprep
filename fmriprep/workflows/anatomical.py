@@ -12,11 +12,11 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 
 import os.path as op
 
-from nipype.interfaces import ants
-from nipype.interfaces import freesurfer as fs
-from nipype.interfaces import utility as niu
-from nipype.interfaces import io as nio
-from nipype.pipeline import engine as pe
+from niworkflows.nipype.interfaces import ants
+from niworkflows.nipype.interfaces import freesurfer as fs
+from niworkflows.nipype.interfaces import utility as niu
+from niworkflows.nipype.interfaces import io as nio
+from niworkflows.nipype.pipeline import engine as pe
 
 from niworkflows.interfaces.registration import RobustMNINormalizationRPT
 from niworkflows.anat.skullstrip import afni_wf as init_skullstrip_afni_wf
@@ -262,9 +262,9 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         name='outputnode')
 
     def detect_inputs(t1w_list, t2w_list=[], hires_enabled=True):
-        from nipype.interfaces.base import isdefined
-        from nipype.utils.filemanip import filename_to_list
-        from nipype.interfaces.traits_extension import Undefined
+        from niworkflows.nipype.interfaces.base import isdefined
+        from niworkflows.nipype.utils.filemanip import filename_to_list
+        from niworkflows.nipype.interfaces.traits_extension import Undefined
         import nibabel as nib
         t1w_list = filename_to_list(t1w_list)
         t2w_list = filename_to_list(t2w_list) if isdefined(t2w_list) else []
@@ -316,7 +316,7 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         import os
         import nibabel as nib
         from nilearn.image import resample_to_img, new_img_like
-        from nipype.utils.filemanip import copyfile
+        from niworkflows.nipype.utils.filemanip import copyfile
         mridir = os.path.join(subjects_dir, subject_id, 'mri')
         t1 = os.path.join(mridir, 'T1.mgz')
         bm_auto = os.path.join(mridir, 'brainmask.auto.mgz')
