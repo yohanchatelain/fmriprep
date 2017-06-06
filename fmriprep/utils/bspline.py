@@ -12,7 +12,7 @@ from datetime import datetime as dt
 
 from builtins import object, str, bytes
 
-from nipype import logging
+from niworkflows.nipype import logging
 LOGGER = logging.getLogger('interfaces')
 
 

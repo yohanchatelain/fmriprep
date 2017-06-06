@@ -17,8 +17,8 @@ import nibabel as nb
 from nilearn.masking import compute_epi_mask
 from nilearn.image import concat_imgs, mean_img
 
-from nipype import logging
-from nipype.interfaces.base import (
+from niworkflows.nipype import logging
+from niworkflows.nipype.interfaces.base import (
     traits, isdefined, TraitedSpec, BaseInterfaceInputSpec,
     File, InputMultiPath
 )
