@@ -153,7 +153,8 @@ def init_single_subject_wf(subject_id, task_id, name,
               ('outputnode.t1_mask', 'inputnode.t1_mask'),
               ('outputnode.t1_seg', 'inputnode.t1_seg'),
               ('outputnode.t1_tpms', 'inputnode.t1_tpms'),
-              ('outputnode.t1_2_mni_forward_transform', 'inputnode.t1_2_mni_forward_transform')])
+              ('outputnode.t1_2_mni_forward_transform', 'inputnode.t1_2_mni_forward_transform'),
+              ('outputnode.t1_2_mni_reverse_transform', 'inputnode.t1_2_mni_reverse_transform')])
         ])
 
         if freesurfer:
