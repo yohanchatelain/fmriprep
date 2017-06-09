@@ -12,8 +12,8 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 import os
 from copy import deepcopy
 
-from nipype.pipeline import engine as pe
-from nipype.interfaces import utility as niu
+from niworkflows.nipype.pipeline import engine as pe
+from niworkflows.nipype.interfaces import utility as niu
 
 from fmriprep.interfaces import BIDSDataGrabber, BIDSFreeSurferDir
 from fmriprep.utils.misc import collect_bids_data
