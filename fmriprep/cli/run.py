@@ -139,6 +139,10 @@ def get_parser():
 def main():
     """Entry point"""
     opts = get_parser().parse_args()
+    #ERROR check if use_aroma wa specified, but template was not
+    if opts.use_aroma is True and opts.template is not "MNI152NLin2009cAsym":
+        #some error statement
+        print('ERROR: if use_aroma is set, the template must be set to MNI152NLin2009cAsym')
     create_workflow(opts)
 
 
