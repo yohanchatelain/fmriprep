@@ -1,5 +1,5 @@
-Next release
-============
+0.4.5 (12th of June 2017)
+=========================
 
 With thanks to Marcel Falkiewicz for contributions.
 
