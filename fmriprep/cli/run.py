@@ -115,6 +115,11 @@ def get_parser():
     g_fmap.add_argument('--fmap-no-demean', action='store_false', default=True,
                         help='do not remove median (within mask) from fieldmap')
 
+    # SyN-unwarp options
+    g_syn = parser.add_argument_group('Specific options for SyN distortion correction')
+    g_syn.add_argument('--use-syn-sdc', action='store_true', default=False,
+                       help='EXPERIMENTAL: Use fieldmap-free distortion correction')
+
     # FreeSurfer options
     g_fs = parser.add_argument_group('Specific options for FreeSurfer preprocessing')
     g_fs.add_argument('--no-freesurfer', action='store_false', dest='freesurfer',
@@ -230,7 +235,8 @@ def create_workflow(opts):
                                    hires=opts.hires,
                                    bold2t1w_dof=opts.bold2t1w_dof,
                                    fmap_bspline=opts.fmap_bspline,
-                                   fmap_demean=opts.fmap_no_demean)
+                                   fmap_demean=opts.fmap_no_demean,
+                                   use_syn=opts.use_syn_sdc)
     fmriprep_wf.base_dir = op.abspath(opts.work_dir)
 
     if opts.reports_only:

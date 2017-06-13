@@ -29,7 +29,8 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
                      ignore, debug, anat_only, omp_nthreads,
                      skull_strip_ants, reportlets_dir, output_dir, bids_dir,
                      freesurfer, output_spaces, template, hires,
-                     bold2t1w_dof, fmap_bspline, fmap_demean, output_grid_ref):
+                     bold2t1w_dof, fmap_bspline, fmap_demean, use_syn,
+                     output_grid_ref):
     fmriprep_wf = pe.Workflow(name='fmriprep_wf')
 
     if freesurfer:
@@ -59,6 +60,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
                                                    bold2t1w_dof=bold2t1w_dof,
                                                    fmap_bspline=fmap_bspline,
                                                    fmap_demean=fmap_demean,
+                                                   use_syn=use_syn,
                                                    output_grid_ref=output_grid_ref)
         single_subject_wf.config['execution']['crashdump_dir'] = (
             os.path.join(output_dir, "fmriprep", "sub-" + subject_id, 'log', run_uuid)
@@ -78,7 +80,8 @@ def init_single_subject_wf(subject_id, task_id, name,
                            ignore, debug, anat_only, omp_nthreads,
                            skull_strip_ants, reportlets_dir, output_dir, bids_dir,
                            freesurfer, output_spaces, template, hires,
-                           bold2t1w_dof, fmap_bspline, fmap_demean, output_grid_ref):
+                           bold2t1w_dof, fmap_bspline, fmap_demean, use_syn,
+                           output_grid_ref):
     """
     The adaptable fMRI preprocessing workflow
     """
@@ -143,6 +146,7 @@ def init_single_subject_wf(subject_id, task_id, name,
                                                omp_nthreads=omp_nthreads,
                                                fmap_bspline=fmap_bspline,
                                                fmap_demean=fmap_demean,
+                                               use_syn=use_syn,
                                                debug=debug,
                                                output_grid_ref=output_grid_ref)
 
