@@ -193,8 +193,14 @@ def create_workflow(opts):
     subject_list = opts.participant_label
 
     if subject_list is None or not subject_list:
-        subject_list = [op.basename(subdir)[4:] for subdir in glob.glob(
-            op.join(op.abspath(opts.bids_dir), 'sub-*'))]
+        bids_dir = op.abspath(opts.bids_dir)
+        subject_list = [op.basename(subdir)[4:]
+                        for subdir in glob.glob(op.join(bids_dir, 'sub-*'))]
+        if not subject_list:
+            print('Could not find subjects in {}\n'
+                  'If you are using Docker on OS X, you may need to adjust '
+                  'your "File sharing" preferences.'.format(bids_dir))
+            sys.exit(1)
     else:
         subject_list = [sub[4:] if sub.startswith('sub-') else sub for sub in subject_list]
 
