@@ -1,11 +1,17 @@
 Next release
 ============
 
+
+
+0.4.5 (12th of June 2017)
+=========================
+
 With thanks to Marcel Falkiewicz for contributions.
 
 * [FIX] Correctly display help in `fmriprep-docker` (#533)
 * [FIX] Avoid invalid symlinks when running FreeSurfer (#536)
 * [ENH] Improve dependency management for users unable to use Docker/Singularity containers (#549)
+* [FIX] Return correct exit code when a Function node fails (#554)
 
 0.4.4 (20th of May 2017)
 ========================
