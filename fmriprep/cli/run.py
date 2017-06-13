@@ -198,8 +198,8 @@ def create_workflow(opts):
                         for subdir in glob.glob(op.join(bids_dir, 'sub-*'))]
         if not subject_list:
             print('Could not find subjects in {}\n'
-                  'If you are using Docker on OS X, you may need to adjust '
-                  'your "File sharing" preferences.'.format(bids_dir))
+                  'If you are using Docker for Mac or Docker for Windows, you '
+                  'may need to adjust your "File sharing" preferences.'.format(bids_dir))
             sys.exit(1)
     else:
         subject_list = [sub[4:] if sub.startswith('sub-') else sub for sub in subject_list]
