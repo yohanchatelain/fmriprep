@@ -285,8 +285,7 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         niu.Function(
             function=detect_inputs,
             output_names=['t2w', 'use_T2', 'hires', 'mris_inflate']),
-        name='recon_config',
-        run_without_submitting=True)
+        name='recon_config')
     recon_config.inputs.hires_enabled = hires
 
     def bidsinfo(in_file):
@@ -655,7 +654,7 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
         return '{surf}.{LR}.surf'.format(**info)
 
     name_surfs = pe.MapNode(niu.Function(function=get_gifti_name),
-                            iterfield='in_file', name='name_surfs', run_without_submitting=True)
+                            iterfield='in_file', name='name_surfs')
 
     ds_surfs = pe.MapNode(
         DerivativesDataSink(base_directory=output_dir),
