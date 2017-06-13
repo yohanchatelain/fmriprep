@@ -1,7 +1,7 @@
 Next release
 ============
 
-
+* [ENH] Conform and minimally resample multiple T1w images (#545)
 
 0.4.5 (12th of June 2017)
 =========================
