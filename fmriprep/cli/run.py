@@ -119,6 +119,9 @@ def get_parser():
     g_syn = parser.add_argument_group('Specific options for SyN distortion correction')
     g_syn.add_argument('--use-syn-sdc', action='store_true', default=False,
                        help='EXPERIMENTAL: Use fieldmap-free distortion correction')
+    g_syn.add_argument('--force-syn', action='store_true', default=False,
+                       help='EXPERIMENTAL/TEMPORARY: Use SyN correction in addition to '
+                       'fieldmap correction, if available')
 
     # FreeSurfer options
     g_fs = parser.add_argument_group('Specific options for FreeSurfer preprocessing')
@@ -236,7 +239,8 @@ def create_workflow(opts):
                                    bold2t1w_dof=opts.bold2t1w_dof,
                                    fmap_bspline=opts.fmap_bspline,
                                    fmap_demean=opts.fmap_no_demean,
-                                   use_syn=opts.use_syn_sdc)
+                                   use_syn=opts.use_syn_sdc,
+                                   force_syn=opts.force_syn)
     fmriprep_wf.base_dir = op.abspath(opts.work_dir)
 
     if opts.reports_only:
