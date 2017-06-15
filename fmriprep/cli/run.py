@@ -199,6 +199,12 @@ def create_workflow(opts):
               'threads (--nthreads/--n_cpus={:d})'.format(omp_nthreads, nthreads))
         sys.exit(1)
 
+    if 'template' not in opts.output_space and (opts.use_syn_sdc or opts.force_syn):
+        logger.warn('SyN SDC correction requires T1 to MNI registration, but '
+                    '"template" is not specified in "--output-space" arguments')
+        if opts.force_syn:
+            sys.exit(1)
+
     # Determine subjects to be processed
     subject_list = opts.participant_label
 
