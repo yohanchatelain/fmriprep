@@ -1,7 +1,9 @@
-Next release
-============
+0.4.6 (14th of June 2017)
+=========================
 
 * [ENH] Conform and minimally resample multiple T1w images (#545)
+* [FIX] Return non-zero exit code on all errors (#554)
+* [ENH] Improve error reporting for missing subjects (#558)
 
 0.4.5 (12th of June 2017)
 =========================
