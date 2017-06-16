@@ -25,7 +25,7 @@ from niworkflows.interfaces.masks import BrainExtractionRPT
 from niworkflows.interfaces.segmentation import FASTRPT, ReconAllRPT
 
 from fmriprep.interfaces import DerivativesDataSink, StructuralReference, MakeMidthickness
-from fmriprep.interfaces.images import reorient
+from fmriprep.interfaces.images import ConformSeries
 from fmriprep.utils.misc import fix_multi_T1w_source_name, add_suffix
 
 
@@ -47,7 +47,10 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
                 'subjects_dir', 'subject_id', 'fs_2_t1_transform', 'surfaces']),
         name='outputnode')
 
-    # 0. Align and merge if several T1w images are provided
+    # 0. Reorient T1w image(s) to RAS and resample to common voxel space
+    t1_conform = pe.Node(ConformSeries(), name='t1_conform')
+
+    # 1. Align and merge if several T1w images are provided
     t1_merge = pe.Node(
         # StructuralReference is fs.RobustTemplate if > 1 volume, copying otherwise
         StructuralReference(auto_detect_sensitivity=True,
@@ -57,9 +60,6 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
                             no_iteration=True,
                             subsample_threshold=200,
                             ), name='t1_merge')
-
-    # 1. Reorient T1
-    t1_conform = pe.Node(niu.Function(function=reorient), name='t1_conform')
 
     # 2. T1 Bias Field Correction
     # Bias field correction is handled in skull strip workflows.
@@ -104,10 +104,10 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
     )
 
     workflow.connect([
-        (inputnode, t1_merge, [('t1w', 'in_files'),
-                               (('t1w', add_suffix, '_template'), 'out_file')]),
-        (t1_merge, t1_conform, [('out_file', 'in_file')]),
-        (t1_conform, skullstrip_wf, [('out', 'inputnode.in_file')]),
+        (inputnode, t1_conform, [('t1w', 't1w_list')]),
+        (t1_conform, t1_merge, [('t1w_list', 'in_files'),
+                               (('t1w_list', add_suffix, '_template'), 'out_file')]),
+        (t1_merge, skullstrip_wf, [('out_file', 'inputnode.in_file')]),
         (skullstrip_wf, t1_seg, [('outputnode.out_file', 'in_files')]),
         (skullstrip_wf, outputnode, [('outputnode.bias_corrected', 't1_preproc'),
                                      ('outputnode.out_file', 't1_brain'),
@@ -147,7 +147,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
             (inputnode, surface_recon_wf, [
                 ('t2w', 'inputnode.t2w'),
                 ('subjects_dir', 'inputnode.subjects_dir')]),
-            (t1_conform, surface_recon_wf, [('out', 'inputnode.t1w')]),
+            (t1_merge, surface_recon_wf, [('out_file', 'inputnode.t1w')]),
             (skullstrip_wf, surface_recon_wf, [
                 ('outputnode.out_file', 'inputnode.skullstripped_t1')]),
             (surface_recon_wf, outputnode, [
