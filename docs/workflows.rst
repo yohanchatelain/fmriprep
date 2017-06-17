@@ -322,7 +322,8 @@ Given a motion-corrected fMRI, a brain mask, MCFLIRT movement parameters and a
 segmentation, the `discover_wf` sub-workflow calculates potential
 confounds per volume.
 Optional: give a motion corrected fMRI in MNI space, and mask in MNI space,
-the `discover_wf` sub-workflow calculates potential motion related components
+the `discover_wf` sub-workflow calculates potential motion related
+independent components using ICA_AROMA
 
 Calculated confounds include the mean global signal, mean tissue class signal,
 tCompCor, aCompCor, Framewise Displacement, 6 motion parameters and DVARS.

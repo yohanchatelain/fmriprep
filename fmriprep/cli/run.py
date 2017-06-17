@@ -139,7 +139,7 @@ def get_parser():
 def main():
     """Entry point"""
     opts = get_parser().parse_args()
-    
+
     create_workflow(opts)
 
 
@@ -158,11 +158,10 @@ def create_workflow(opts):
     if opts.debug:
         logger.setLevel(logging.DEBUG)
 
-    #ERROR check if use_aroma wa specified, but template was not
+    # ERROR check if use_aroma was specified, but the correct template was not
     if opts.use_aroma is True and str(opts.template) != 'MNI152NLin2009cAsym':
-        #some error statement
-
-        logger.warn('ERROR: if use_aroma is set, the template must be set to MNI152NLin2009cAsym not %s' % opts.template)
+        raise RuntimeError('ERROR: if use_aroma is set, the template must be set '
+                           'to MNI152NLin2009cAsym not %s' % opts.template)
 
     run_uuid = strftime('%Y%m%d-%H%M%S_') + str(uuid.uuid4())
 
