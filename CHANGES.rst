@@ -3,6 +3,7 @@ Next release
 
 * [ENH] Add --anat-only workflow option (#560)
 * [FIX] Output all tissue class/probability maps (#569)
+* [ENH] Upgrade to ANTs 2.2.0 (#561)
 
 0.4.6 (14th of June 2017)
 =========================
