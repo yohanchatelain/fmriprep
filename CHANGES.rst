@@ -1,7 +1,7 @@
 Next release
 ============
 
-
+* [ENH] Add --anat-only workflow option (#560)
 
 0.4.6 (14th of June 2017)
 =========================
