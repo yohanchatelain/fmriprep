@@ -59,7 +59,8 @@ RUN echo "cHJpbnRmICJrcnp5c3p0b2YuZ29yZ29sZXdza2lAZ21haWwuY29tXG41MTcyXG4gKkN2dW
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
                     fsl-core=5.0.9-4~nd16.04+1 \
-                    afni=16.2.07~dfsg.1-5~nd16.04+1
+                    afni=16.2.07~dfsg.1-5~nd16.04+1 \
+                    ants=2.2.0-1~nd16.04+1
 
 ENV FSLDIR=/usr/share/fsl/5.0 \
     FSLOUTPUTTYPE=NIFTI_GZ \
@@ -72,15 +73,8 @@ ENV FSLDIR=/usr/share/fsl/5.0 \
     AFNI_IMSAVE_WARNINGS=NO \
     AFNI_TTATLAS_DATASET=/usr/share/afni/atlases \
     AFNI_PLUGINPATH=/usr/lib/afni/plugins \
-    PATH=/usr/lib/fsl/5.0:/usr/lib/afni/bin:$PATH
-
-# Installing and setting up ANTs
-RUN mkdir -p /opt/ants && \
-    curl -sSL "https://github.com/stnava/ANTs/releases/download/v2.1.0/Linux_Ubuntu14.04.tar.bz2" \
-    | tar -xjC /opt/ants --strip-components 1
-
-ENV ANTSPATH /opt/ants
-ENV PATH $ANTSPATH:$PATH
+    ANTSPATH=/usr/lib/ants
+ENV PATH=/usr/lib/fsl/5.0:/usr/lib/afni/bin:$ANTSPATH:$PATH
 
 # Installing and setting up c3d
 RUN mkdir -p /opt/c3d && \
