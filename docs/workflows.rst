@@ -31,6 +31,7 @@ slice-timing information and no fieldmap acquisitions):
                                               'template', 'fsaverage5'],
                                 ignore=[],
                                 debug=False,
+                                anat_only=False,
                                 hires=True,
                                 bold2t1w_dof=9,
                                 fmap_bspline=False,
