@@ -37,7 +37,8 @@ slice-timing information and no fieldmap acquisitions):
                                 fmap_bspline=False,
                                 fmap_demean=True,
                                 output_grid_ref=None,
-                                use_aroma=False)
+                                use_aroma=False,
+                                ignore_aroma_denoising_errors=False)
 
 
 T1w/T2w preprocessing
@@ -182,7 +183,8 @@ BOLD preprocessing
                               fmap_bspline=True,
                               fmap_demean=True,
                               output_grid_ref=None,
-                              use_aroma=False)
+                              use_aroma=False,
+                              ignore_aroma_denoising_errors=False)
 
 Preprocessing of BOLD files is split into multiple sub-workflows decribed below.
 
@@ -317,7 +319,8 @@ Confounds estimation
 
     from fmriprep.workflows.confounds import init_discover_wf
     wf = init_discover_wf(name="discover_wf",
-                          use_aroma=False, bold_file_size_gb=3)
+                          use_aroma=False,ignore_aroma_denoising_errors=False,
+                          bold_file_size_gb=3)
 
 Given a motion-corrected fMRI, a brain mask, MCFLIRT movement parameters and a
 segmentation, the `discover_wf` sub-workflow calculates potential
