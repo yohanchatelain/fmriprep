@@ -66,6 +66,8 @@ def get_parser():
                          help='upper bound memory limit for FMRIPREP processes')
     g_perfm.add_argument('--use-plugin', action='store', default=None,
                          help='nipype plugin configuration file')
+    g_perfm.add_argument('--anat-only', action='store_true',
+                         help='run anatomical workflows only')
 
     g_conf = parser.add_argument_group('Workflow configuration')
     g_conf.add_argument(
@@ -224,6 +226,7 @@ def create_workflow(opts):
                                    run_uuid=run_uuid,
                                    ignore=opts.ignore,
                                    debug=opts.debug,
+                                   anat_only=opts.anat_only,
                                    omp_nthreads=omp_nthreads,
                                    skull_strip_ants=opts.skull_strip_ants,
                                    reportlets_dir=reportlets_dir,
