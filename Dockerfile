@@ -59,8 +59,7 @@ RUN echo "cHJpbnRmICJrcnp5c3p0b2YuZ29yZ29sZXdza2lAZ21haWwuY29tXG41MTcyXG4gKkN2dW
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
                     fsl-core=5.0.9-4~nd16.04+1 \
-                    afni=16.2.07~dfsg.1-5~nd16.04+1 \
-                    ants=2.2.0-1~nd16.04+1
+                    afni=16.2.07~dfsg.1-5~nd16.04+1
 
 ENV FSLDIR=/usr/share/fsl/5.0 \
     FSLOUTPUTTYPE=NIFTI_GZ \
@@ -72,9 +71,15 @@ ENV FSLDIR=/usr/share/fsl/5.0 \
     AFNI_MODELPATH=/usr/lib/afni/models \
     AFNI_IMSAVE_WARNINGS=NO \
     AFNI_TTATLAS_DATASET=/usr/share/afni/atlases \
-    AFNI_PLUGINPATH=/usr/lib/afni/plugins \
-    ANTSPATH=/usr/lib/ants
-ENV PATH=/usr/lib/fsl/5.0:/usr/lib/afni/bin:$ANTSPATH:$PATH
+    AFNI_PLUGINPATH=/usr/lib/afni/plugins
+ENV PATH=/usr/lib/fsl/5.0:/usr/lib/afni/bin:$PATH
+
+# Installing ANTs 2.2.0 (NeuroDocker build)
+ENV ANTSPATH=/usr/lib/ants
+RUN mkdir -p $ANTSPATH && \
+    curl -sSL "https://dl.dropbox.com/s/2f4sui1z6lcgyek/ANTs-Linux-centos5_x86_64-v2.2.0-0740f91.tar.gz" \
+    | tar -xzC $ANTSPATH --strip-components 1
+ENV PATH=$ANTSPATH:$PATH
 
 # Installing and setting up c3d
 RUN mkdir -p /opt/c3d && \

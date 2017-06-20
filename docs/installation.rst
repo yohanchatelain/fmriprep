@@ -116,7 +116,7 @@ External Dependencies
 software tools:
 
 - `FSL <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/>`_ (version 5.0.9)
-- `ANTs <http://stnava.github.io/ANTs/>`_ (version 2.2.0-Debian)
+- `ANTs <http://stnava.github.io/ANTs/>`_ (version 2.2.0 - NeuroDocker build)
 - `AFNI <https://afni.nimh.nih.gov/>`_ (version Debian-16.2.07)
 - `C3D <https://sourceforge.net/projects/c3d/>`_ (version 1.0.0)
 - `FreeSurfer <https://surfer.nmr.mgh.harvard.edu/>`_ (version 6.0.0)
