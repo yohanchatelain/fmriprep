@@ -410,39 +410,32 @@ def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
         name='outputnode')
 
     autorecon2_vol = pe.Node(
-        fs.ReconAll(
-            directive='autorecon2-volonly',
-            openmp=omp_nthreads),
+        fs.ReconAll(directive='autorecon2-volonly', openmp=omp_nthreads),
+        n_procs=omp_nthreads,
         name='autorecon2_vol')
-    autorecon2_vol.interface.num_threads = omp_nthreads
-
-    autorecon2_surfs = pe.MapNode(
-        fs.ReconAll(
-            directive='autorecon2-perhemi',
-            openmp=omp_nthreads),
-        iterfield='hemi',
-        name='autorecon2_surfs')
-    autorecon2_surfs.interface.num_threads = omp_nthreads
-    autorecon2_surfs.inputs.hemi = ['lh', 'rh']
 
     autorecon_surfs = pe.MapNode(
         fs.ReconAll(
             directive='autorecon-hemi',
-            flags=['-noparcstats', '-noparcstats2', '-noparcstats3',
-                   '-nohyporelabel', '-nobalabels'],
+            flags=['-noparcstats', '-nocortparc2', '-noparcstats2',
+                   '-nocortparc3', '-noparcstats3', '-nopctsurfcon',
+                   '-nohyporelabel', '-noaparc2aseg', '-noapas2aseg',
+                   '-nosegstats', '-nowmparc','-nobalabels'],
             openmp=omp_nthreads),
-        iterfield='hemi',
+        iterfield='hemi', n_procs=omp_nthreads,
         name='autorecon_surfs')
-    autorecon_surfs.interface.num_threads = omp_nthreads
     autorecon_surfs.inputs.hemi = ['lh', 'rh']
 
-    autorecon3 = pe.Node(
-        ReconAllRPT(
-            directive='autorecon3',
-            openmp=omp_nthreads,
-            generate_report=True),
+    autorecon3 = pe.MapNode(
+        fs.ReconAll(directive='autorecon3', openmp=omp_nthreads),
+        iterfield='hemi', n_procs=omp_nthreads,
         name='autorecon3')
-    autorecon3.interface.num_threads = omp_nthreads
+    autorecon3.inputs.hemi = ['lh', 'rh']
+
+    # Only generate the report once; should be nothing to do
+    recon_report = pe.Node(
+        ReconAllRPT(directive='autorecon3', generate_report=True),
+        name='recon_report')
 
     def _dedup(in_list):
         vals = set(in_list)
@@ -452,18 +445,18 @@ def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
         return vals.pop()
 
     workflow.connect([
-        (inputnode, autorecon_surfs, [('use_T2', 'use_T2')]),
+        (inputnode, autorecon3, [('use_T2', 'use_T2')]),
         (inputnode, autorecon2_vol, [('subjects_dir', 'subjects_dir'),
                                      ('subject_id', 'subject_id')]),
-        (autorecon2_vol, autorecon2_surfs, [('subjects_dir', 'subjects_dir'),
+        (autorecon2_vol, autorecon_surfs, [('subjects_dir', 'subjects_dir'),
                                             ('subject_id', 'subject_id')]),
-        (autorecon2_surfs, autorecon_surfs, [(('subjects_dir', _dedup), 'subjects_dir'),
-                                             (('subject_id', _dedup), 'subject_id')]),
         (autorecon_surfs, autorecon3, [(('subjects_dir', _dedup), 'subjects_dir'),
                                        (('subject_id', _dedup), 'subject_id')]),
-        (autorecon3, outputnode, [('subjects_dir', 'subjects_dir'),
-                                  ('subject_id', 'subject_id'),
-                                  ('out_report', 'out_report')]),
+        (autorecon3, outputnode, [(('subjects_dir', _dedup), 'subjects_dir'),
+                                  (('subject_id', _dedup), 'subject_id')]),
+        (autorecon3, recon_report, [(('subjects_dir', _dedup), 'subjects_dir'),
+                                    (('subject_id', _dedup), 'subject_id')]),
+        (recon_report, outputnode, [('out_report', 'out_report')]),
         ])
 
     return workflow

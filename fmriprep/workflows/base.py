@@ -26,7 +26,7 @@ from bids.grabbids import BIDSLayout
 
 
 def init_fmriprep_wf(subject_list, task_id, run_uuid,
-                     ignore, debug, omp_nthreads,
+                     ignore, debug, anat_only, omp_nthreads,
                      skull_strip_ants, reportlets_dir, output_dir, bids_dir,
                      freesurfer, output_spaces, template, hires,
                      bold2t1w_dof, fmap_bspline, fmap_demean, output_grid_ref):
@@ -46,6 +46,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
                                                    name="single_subject_" + subject_id + "_wf",
                                                    ignore=ignore,
                                                    debug=debug,
+                                                   anat_only=anat_only,
                                                    omp_nthreads=omp_nthreads,
                                                    skull_strip_ants=skull_strip_ants,
                                                    reportlets_dir=reportlets_dir,
@@ -74,7 +75,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
 
 
 def init_single_subject_wf(subject_id, task_id, name,
-                           ignore, debug, omp_nthreads,
+                           ignore, debug, anat_only, omp_nthreads,
                            skull_strip_ants, reportlets_dir, output_dir, bids_dir,
                            freesurfer, output_spaces, template, hires,
                            bold2t1w_dof, fmap_bspline, fmap_demean, output_grid_ref):
@@ -91,7 +92,7 @@ def init_single_subject_wf(subject_id, task_id, name,
 
         subject_data = collect_bids_data(bids_dir, subject_id, task_id)
 
-        if subject_data['func'] == []:
+        if not anat_only and subject_data['func'] == []:
             raise Exception("No BOLD images found for participant {} and task {}. "
                             "All workflows require BOLD images.".format(
                 subject_id, task_id if task_id else '<all>'))
@@ -105,7 +106,7 @@ def init_single_subject_wf(subject_id, task_id, name,
     inputnode = pe.Node(niu.IdentityInterface(fields=['subjects_dir']),
                         name='inputnode')
 
-    bidssrc = pe.Node(BIDSDataGrabber(subject_data=subject_data),
+    bidssrc = pe.Node(BIDSDataGrabber(subject_data=subject_data, anat_only=anat_only),
                       name='bidssrc')
 
     # Preprocessing of T1w (includes registration to MNI)
@@ -125,6 +126,9 @@ def init_single_subject_wf(subject_id, task_id, name,
         (bidssrc, anat_preproc_wf, [('t1w', 'inputnode.t1w'),
                                     ('t2w', 'inputnode.t2w')]),
     ])
+
+    if anat_only:
+        return workflow
 
     for bold_file in subject_data['func']:
         func_preproc_wf = init_func_preproc_wf(bold_file=bold_file,
