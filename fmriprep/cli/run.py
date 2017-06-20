@@ -68,6 +68,11 @@ def get_parser():
                          help='nipype plugin configuration file')
     g_perfm.add_argument('--anat-only', action='store_true',
                          help='run anatomical workflows only')
+    g_perfm.add_argument('--ignore-aroma-denoising-errors', action='store_true',
+                         default=False,
+                         help='ignores the errors ICA_AROMA returns when there '
+                              'are no components classified as either noise or '
+                              'signal')
 
     g_conf = parser.add_argument_group('Workflow configuration')
     g_conf.add_argument(
@@ -240,7 +245,8 @@ def create_workflow(opts):
                                    bold2t1w_dof=opts.bold2t1w_dof,
                                    fmap_bspline=opts.fmap_bspline,
                                    fmap_demean=opts.fmap_no_demean,
-                                   use_aroma=opts.use_aroma)
+                                   use_aroma=opts.use_aroma,
+                                   ignore_aroma_denoising_errors=opts.ignore_aroma_denoising_errors)
     fmriprep_wf.base_dir = op.abspath(opts.work_dir)
 
     if opts.reports_only:
