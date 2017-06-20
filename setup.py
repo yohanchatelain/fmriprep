@@ -9,7 +9,6 @@ def main():
     """ Install entry-point """
     from io import open
     from os import path as op
-    from glob import glob
     from inspect import getfile, currentframe
     from setuptools import setup, find_packages
     from setuptools.extension import Extension
@@ -60,6 +59,7 @@ def main():
         zip_safe=False,
         ext_modules=extensions
     )
+
 
 if __name__ == '__main__':
     main()
