@@ -1,6 +1,11 @@
 Next release
 ============
 
+With thanks to James Kent for contributions.
+
+* [FIX] Reduce interpolation artifacts in ConformSeries (#564)
+* [FIX] Improve consistency of handling of fieldmaps (#565)
+* [FIX] Apply T2w pial surface refinement at correct stage of FreeSurfer pipeline (#568)
 * [ENH] Add --anat-only workflow option (#560)
 * [FIX] Output all tissue class/probability maps (#569)
 * [ENH] Upgrade to ANTs 2.2.0 (#561)
