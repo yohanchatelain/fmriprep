@@ -234,6 +234,7 @@ Susceptibility Distortion Correction (SDC)
     :undoc-members:
     :show-inheritance:
 
+
 EPI to T1w registration
 ~~~~~~~~~~~~~~~~~~~~~~~
 :mod:`fmriprep.workflows.epi.init_epi_reg_wf`
