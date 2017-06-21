@@ -3,10 +3,11 @@ Next release
 
 With thanks to James Kent for contributions.
 
+* [ENH] EXPERIMENTAL: Fieldmap-less susceptibility correction with ``--use-syn-sdc`` option (#544)
 * [FIX] Reduce interpolation artifacts in ConformSeries (#564)
 * [FIX] Improve consistency of handling of fieldmaps (#565)
 * [FIX] Apply T2w pial surface refinement at correct stage of FreeSurfer pipeline (#568)
-* [ENH] Add --anat-only workflow option (#560)
+* [ENH] Add ``--anat-only`` workflow option (#560)
 * [FIX] Output all tissue class/probability maps (#569)
 * [ENH] Upgrade to ANTs 2.2.0 (#561)
 
@@ -22,7 +23,7 @@ With thanks to James Kent for contributions.
 
 With thanks to Marcel Falkiewicz for contributions.
 
-* [FIX] Correctly display help in `fmriprep-docker` (#533)
+* [FIX] Correctly display help in ``fmriprep-docker`` (#533)
 * [FIX] Avoid invalid symlinks when running FreeSurfer (#536)
 * [ENH] Improve dependency management for users unable to use Docker/Singularity containers (#549)
 * [FIX] Return correct exit code when a Function node fails (#554)

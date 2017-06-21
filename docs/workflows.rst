@@ -36,6 +36,8 @@ slice-timing information and no fieldmap acquisitions):
                                 bold2t1w_dof=9,
                                 fmap_bspline=False,
                                 fmap_demean=True,
+                                use_syn=True,
+                                force_syn=True,
                                 output_grid_ref=None)
 
 
@@ -180,6 +182,8 @@ BOLD preprocessing
                               bold2t1w_dof=9,
                               fmap_bspline=True,
                               fmap_demean=True,
+                              use_syn=True,
+                              force_syn=True,
                               output_grid_ref=None)
 
 Preprocessing of BOLD files is split into multiple sub-workflows decribed below.
@@ -229,6 +233,7 @@ Susceptibility Distortion Correction (SDC)
     :members:
     :undoc-members:
     :show-inheritance:
+
 
 EPI to T1w registration
 ~~~~~~~~~~~~~~~~~~~~~~~
