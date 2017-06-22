@@ -30,7 +30,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
                      skull_strip_ants, reportlets_dir, output_dir, bids_dir,
                      freesurfer, output_spaces, template, hires,
                      bold2t1w_dof, fmap_bspline, fmap_demean, use_syn, force_syn,
-                     use_aroma, ignore_aroma_denoising_errors, output_grid_ref,):
+                     use_aroma, ignore_aroma_err, output_grid_ref,):
     fmriprep_wf = pe.Workflow(name='fmriprep_wf')
 
     if freesurfer:
@@ -64,7 +64,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
                                                    force_syn=force_syn,
                                                    output_grid_ref=output_grid_ref,
                                                    use_aroma=use_aroma,
-                                                   ignore_aroma_denoising_errors=ignore_aroma_denoising_errors)
+                                                   ignore_aroma_err=ignore_aroma_err)
 
         single_subject_wf.config['execution']['crashdump_dir'] = (
             os.path.join(output_dir, "fmriprep", "sub-" + subject_id, 'log', run_uuid)
@@ -85,7 +85,7 @@ def init_single_subject_wf(subject_id, task_id, name,
                            skull_strip_ants, reportlets_dir, output_dir, bids_dir,
                            freesurfer, output_spaces, template, hires,
                            bold2t1w_dof, fmap_bspline, fmap_demean, use_syn, force_syn,
-                           output_grid_ref, use_aroma, ignore_aroma_denoising_errors):
+                           output_grid_ref, use_aroma, ignore_aroma_err):
     """
     The adaptable fMRI preprocessing workflow
     """
@@ -155,7 +155,7 @@ def init_single_subject_wf(subject_id, task_id, name,
                                                debug=debug,
                                                output_grid_ref=output_grid_ref,
                                                use_aroma=use_aroma,
-                                               ignore_aroma_denoising_errors=ignore_aroma_denoising_errors)
+                                               ignore_aroma_err=ignore_aroma_err)
 
         workflow.connect([
             (anat_preproc_wf, func_preproc_wf,

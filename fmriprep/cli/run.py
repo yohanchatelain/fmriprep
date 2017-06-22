@@ -262,7 +262,7 @@ def create_workflow(opts):
                                    use_syn=opts.use_syn_sdc,
                                    force_syn=opts.force_syn,
                                    use_aroma=opts.use_aroma,
-                                   ignore_aroma_denoising_errors=opts.ignore_aroma_denoising_errors)
+                                   ignore_aroma_err=opts.ignore_aroma_denoising_errors)
 
     fmriprep_wf.base_dir = op.abspath(opts.work_dir)
 
