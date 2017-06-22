@@ -229,7 +229,8 @@ def main():
                         help='path where intermediate results should be stored')
     g_wrap.add_argument('--output-grid-reference', required=False, action='store',
                         type=os.path.abspath,
-                        help='Grid reference image for resampling BOLD files to volume template space.')
+                        help='Grid reference image for resampling BOLD files to volume template '
+                             'space.')
 
     # Developer patch/shell options
     g_dev = parser.add_argument_group(

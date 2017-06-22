@@ -123,6 +123,14 @@ def get_parser():
     g_fmap.add_argument('--fmap-no-demean', action='store_false', default=True,
                         help='do not remove median (within mask) from fieldmap')
 
+    # SyN-unwarp options
+    g_syn = parser.add_argument_group('Specific options for SyN distortion correction')
+    g_syn.add_argument('--use-syn-sdc', action='store_true', default=False,
+                       help='EXPERIMENTAL: Use fieldmap-free distortion correction')
+    g_syn.add_argument('--force-syn', action='store_true', default=False,
+                       help='EXPERIMENTAL/TEMPORARY: Use SyN correction in addition to '
+                       'fieldmap correction, if available')
+
     # FreeSurfer options
     g_fs = parser.add_argument_group('Specific options for FreeSurfer preprocessing')
     g_fs.add_argument('--no-freesurfer', action='store_false', dest='freesurfer',
@@ -205,6 +213,12 @@ def create_workflow(opts):
               'threads (--nthreads/--n_cpus={:d})'.format(omp_nthreads, nthreads))
         sys.exit(1)
 
+    if 'template' not in opts.output_space and (opts.use_syn_sdc or opts.force_syn):
+        logger.warn('SyN SDC correction requires T1 to MNI registration, but '
+                    '"template" is not specified in "--output-space" arguments')
+        if opts.force_syn:
+            sys.exit(1)
+
     # Determine subjects to be processed
     subject_list = opts.participant_label
 
@@ -245,8 +259,11 @@ def create_workflow(opts):
                                    bold2t1w_dof=opts.bold2t1w_dof,
                                    fmap_bspline=opts.fmap_bspline,
                                    fmap_demean=opts.fmap_no_demean,
+                                   use_syn=opts.use_syn_sdc,
+                                   force_syn=opts.force_syn,
                                    use_aroma=opts.use_aroma,
                                    ignore_aroma_denoising_errors=opts.ignore_aroma_denoising_errors)
+
     fmriprep_wf.base_dir = op.abspath(opts.work_dir)
 
     if opts.reports_only:

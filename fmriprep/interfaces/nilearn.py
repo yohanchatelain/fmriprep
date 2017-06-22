@@ -10,12 +10,9 @@ Image tools interfaces
 """
 from __future__ import print_function, division, absolute_import, unicode_literals
 
-import os
-import os.path as op
-import numpy as np
 import nibabel as nb
 from nilearn.masking import compute_epi_mask
-from nilearn.image import concat_imgs, mean_img
+from nilearn.image import concat_imgs
 
 from niworkflows.nipype import logging
 from niworkflows.nipype.interfaces.base import (
@@ -42,6 +39,7 @@ class MaskEPIInputSpec(BaseInterfaceInputSpec):
 
 class MaskEPIOutputSpec(TraitedSpec):
     out_mask = File(exists=True, desc='output mask')
+
 
 class MaskEPI(SimpleInterface):
     input_spec = MaskEPIInputSpec
@@ -84,6 +82,7 @@ class MergeInputSpec(BaseInterfaceInputSpec):
 
 class MergeOutputSpec(TraitedSpec):
     out_file = File(exists=True, desc='output merged file')
+
 
 class Merge(SimpleInterface):
     input_spec = MergeInputSpec

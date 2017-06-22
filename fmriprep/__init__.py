@@ -30,9 +30,11 @@ import warnings
 warnings.filterwarnings('ignore', r'cmp not installed')
 
 # Monkey-patch to ignore AFNI upgrade warnings
-from niworkflows.nipype.interfaces.afni import Info
+from niworkflows.nipype.interfaces.afni import Info  # noqa: E402
 
 _old_version = Info.version
+
+
 def _new_version():
     from niworkflows.nipype import logging
     iflogger = logging.getLogger('interface')
