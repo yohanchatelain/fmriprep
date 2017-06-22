@@ -184,15 +184,11 @@ BOLD preprocessing
                               bold2t1w_dof=9,
                               fmap_bspline=True,
                               fmap_demean=True,
-<<<<<<< HEAD
+                              use_syn=True,
+                              force_syn=True,
                               output_grid_ref=None,
                               use_aroma=False,
                               ignore_aroma_err=False)
-=======
-                              use_syn=True,
-                              force_syn=True,
-                              output_grid_ref=None)
->>>>>>> upstream/master
 
 Preprocessing of BOLD files is split into multiple sub-workflows decribed below.
 
