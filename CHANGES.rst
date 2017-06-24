@@ -1,6 +1,7 @@
-Next release
-============
+0.5.1 (24th of June 2017)
+=========================
 
+* [FIX] Invalid parameter in ``bbreg_wf`` (#572)
 
 0.5.0 (21st of June 2017)
 =========================
