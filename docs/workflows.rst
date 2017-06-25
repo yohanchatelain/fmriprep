@@ -330,13 +330,23 @@ Confounds estimation
 Given a motion-corrected fMRI, a brain mask, MCFLIRT movement parameters and a
 segmentation, the `discover_wf` sub-workflow calculates potential
 confounds per volume.
-Optional: give a motion corrected fMRI in MNI space, and mask in MNI space,
+Optional (--use_aroma): give a motion corrected fMRI in MNI space, and mask in MNI space,
 the `discover_wf` sub-workflow calculates potential motion related
 independent components using ICA_AROMA
 
 Calculated confounds include the mean global signal, mean tissue class signal,
 tCompCor, aCompCor, Framewise Displacement, 6 motion parameters and DVARS.
-Optional: aggressive and non-aggressive motion related components
+
+Optional (--use_aroma): aggressive ICA confounds classified by ICA-AROMA.
+Non-aggressive confounds will not be given in the confounds tsv, but denoising can be completed
+by the user. A noise component classification csv and a melodic mix tsv will be passed
+into the derivatives directory. To get non-aggressively denoised data, use the command
+below as a guide:
+
+``fsl_regfilt -i <BIDS SUBJECT>_task-<TASK>_bold_space-<SPACE>_preproc.nii.gz
+-f $(cat <BIDS SUBJECT>_task-<TASK>_bold_AROMAnoiseICs.csv)
+-d <BIDS SUBJECT>_task-<TASK>_bold_MELODICmix.tsv
+-o <BIDS SUBJECT>_task-<TASK>_bold_space-<SPACE>_AromaNonAggressiveDenoised.nii.gz``
 
 Reports
 -------
@@ -371,6 +381,11 @@ Derivatives related to t1w files are in the ``anat`` subfolder:
 Derivatives related to EPI files are in the ``func`` subfolder.
 
 - ``*bold_confounds.tsv`` A tab-separated value file with one column per calculated confound and one row per timepoint/volume
+
+OPTIONAL (--use_aroma)
+
+- ``*bold_AROMAnoiseICs.csv`` A comma-separated value file listing each melodic component classified as noise.
+- ``*bold_MELODICmix.tsv`` A tab-separated value file with one column per melodic component.
 
 Volumetric output spaces include ``T1w`` and ``MNI152NLin2009cAsym`` (default).
 
