@@ -59,6 +59,7 @@ RUN echo "cHJpbnRmICJrcnp5c3p0b2YuZ29yZ29sZXdza2lAZ21haWwuY29tXG41MTcyXG4gKkN2dW
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
                     fsl-core=5.0.9-4~nd16.04+1 \
+                    fsl-mni152-templates=5.0.7-2 \
                     afni=16.2.07~dfsg.1-5~nd16.04+1
 
 ENV FSLDIR=/usr/share/fsl/5.0 \
@@ -98,6 +99,14 @@ RUN curl -sSLO "http://downloads.webmproject.org/releases/webp/libwebp-0.5.2-lin
 RUN curl -sL https://deb.nodesource.com/setup_7.x | bash -
 RUN apt-get install -y nodejs
 RUN npm install -g svgo
+
+# Installing and setting up ICA_AROMA
+RUN curl -sSLO https://github.com/rhr-pruim/ICA-AROMA/archive/v0.4-beta.tar.gz &&\
+  tar -xf v0.4-beta.tar.gz -C /opt &&\
+  chmod +x /opt/ICA-AROMA-0.4-beta/ICA_AROMA.py &&\
+  chmod +x /opt/ICA-AROMA-0.4-beta/ICA_AROMA_functions.py
+
+ENV PATH=/opt/ICA-AROMA-0.4-beta:$PATH
 
 # Installing and setting up miniconda
 RUN curl -sSLO https://repo.continuum.io/miniconda/Miniconda3-4.3.11-Linux-x86_64.sh && \

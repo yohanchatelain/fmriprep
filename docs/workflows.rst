@@ -38,7 +38,9 @@ slice-timing information and no fieldmap acquisitions):
                                 fmap_demean=True,
                                 use_syn=True,
                                 force_syn=True,
-                                output_grid_ref=None)
+                                output_grid_ref=None,
+                                use_aroma=False,
+                                ignore_aroma_err=False)
 
 
 T1w/T2w preprocessing
@@ -184,7 +186,9 @@ BOLD preprocessing
                               fmap_demean=True,
                               use_syn=True,
                               force_syn=True,
-                              output_grid_ref=None)
+                              output_grid_ref=None,
+                              use_aroma=False,
+                              ignore_aroma_err=False)
 
 Preprocessing of BOLD files is split into multiple sub-workflows decribed below.
 
@@ -320,6 +324,7 @@ Confounds estimation
 
     from fmriprep.workflows.confounds import init_discover_wf
     wf = init_discover_wf(name="discover_wf",
+                          use_aroma=False, ignore_aroma_err=False,
                           bold_file_size_gb=3)
 
 Given a motion-corrected fMRI, a brain mask, MCFLIRT movement parameters and a
@@ -327,8 +332,18 @@ segmentation, the `discover_wf` sub-workflow calculates potential
 confounds per volume.
 
 Calculated confounds include the mean global signal, mean tissue class signal,
-tCompCor, aCompCor, Framewise Displacement, 6 motion parameters and DVARS.
+tCompCor, aCompCor, Framewise Displacement, 6 motion parameters, DVARS, and, if
+the ``--use-aroma`` flag is enabled, the noise components identified by ICA-AROMA
+(those to be removed by the "aggressive" denoising strategy).
 
+*Note*: Confounds for performing *non*-aggressive denoising cannot be generated in FMRIPREP.
+If the ``--use-aroma`` flag is passed to FMRIPREP, the MELODIC mix and noise component indices will
+be generated, and non-aggressive denoising may be performed with ``fsl_regfilt``, *e.g.*::
+
+    ``fsl_regfilt -i sub-<subject_label>_task-<task_id>_bold_space-<space>_preproc.nii.gz \
+        -f $(cat sub-<subject_label>_task-<task_id>_bold_AROMAnoiseICs.csv) \
+        -d sub-<subject_label>_task-<task_id>_bold_MELODICmix.tsv \
+        -o sub-<subject_label>_task-<task_id>_bold_space-<space>_AromaNonAggressiveDenoised.nii.gz``
 
 Reports
 -------
@@ -363,6 +378,8 @@ Derivatives related to t1w files are in the ``anat`` subfolder:
 Derivatives related to EPI files are in the ``func`` subfolder.
 
 - ``*bold_confounds.tsv`` A tab-separated value file with one column per calculated confound and one row per timepoint/volume
+- ``*bold_AROMAnoiseICs.csv`` A comma-separated value file listing each MELODIC component classified as noise
+- ``*bold_MELODICmix.tsv`` A tab-separated value file with one column per MELODIC component
 
 Volumetric output spaces include ``T1w`` and ``MNI152NLin2009cAsym`` (default).
 
@@ -397,4 +414,3 @@ A FreeSurfer subjects directory is created in ``<output dir>/freesurfer``.
 Copies of the ``fsaverage`` subjects distributed with the running version of
 FreeSurfer are copied into this subjects directory, if any functional data are
 sampled to those subject spaces.
-

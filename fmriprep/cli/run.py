@@ -68,6 +68,11 @@ def get_parser():
                          help='nipype plugin configuration file')
     g_perfm.add_argument('--anat-only', action='store_true',
                          help='run anatomical workflows only')
+    g_perfm.add_argument('--ignore-aroma-denoising-errors', action='store_true',
+                         default=False,
+                         help='ignores the errors ICA_AROMA returns when there '
+                              'are no components classified as either noise or '
+                              'signal')
 
     g_conf = parser.add_argument_group('Workflow configuration')
     g_conf.add_argument(
@@ -99,7 +104,10 @@ def get_parser():
         help='Grid reference image for resampling BOLD files to volume template space. '
              'It determines the field of view and resolution of the output images, '
              'but is not used in normalization.')
-
+    # ICA_AROMA options
+    g_aroma = parser.add_argument_group('Specific options for running ICA_AROMA')
+    g_aroma.add_argument('--use-aroma', action='store_true', default=False,
+                         help='add ICA_AROMA to your preprocessing stream')
     #  ANTs options
     g_ants = parser.add_argument_group('Specific options for ANTs registrations')
     g_ants.add_argument('--skull-strip-ants', dest="skull_strip_ants", action='store_true',
@@ -163,6 +171,11 @@ def create_workflow(opts):
 
     if opts.debug:
         logger.setLevel(logging.DEBUG)
+
+    # ERROR check if use_aroma was specified, but the correct template was not
+    if opts.use_aroma is True and str(opts.template) != 'MNI152NLin2009cAsym':
+        raise RuntimeError('ERROR: if use_aroma is set, the template must be set '
+                           'to MNI152NLin2009cAsym not %s' % opts.template)
 
     run_uuid = strftime('%Y%m%d-%H%M%S_') + str(uuid.uuid4())
 
@@ -246,7 +259,10 @@ def create_workflow(opts):
                                    fmap_bspline=opts.fmap_bspline,
                                    fmap_demean=opts.fmap_no_demean,
                                    use_syn=opts.use_syn_sdc,
-                                   force_syn=opts.force_syn)
+                                   force_syn=opts.force_syn,
+                                   use_aroma=opts.use_aroma,
+                                   ignore_aroma_err=opts.ignore_aroma_denoising_errors)
+
     fmriprep_wf.base_dir = op.abspath(opts.work_dir)
 
     if opts.reports_only:
