@@ -106,7 +106,7 @@ def get_parser():
              'but is not used in normalization.')
     # ICA_AROMA options
     g_aroma = parser.add_argument_group('Specific options for running ICA_AROMA')
-    g_aroma.add_argument('--use_aroma', action='store_true', default=False,
+    g_aroma.add_argument('--use-aroma', action='store_true', default=False,
                          help='add ICA_AROMA to your preprocessing stream')
     #  ANTs options
     g_ants = parser.add_argument_group('Specific options for ANTs registrations')
@@ -154,7 +154,6 @@ def get_parser():
 def main():
     """Entry point"""
     opts = get_parser().parse_args()
-
     create_workflow(opts)
 
 
