@@ -1,3 +1,11 @@
+Next release
+============
+
+With thanks to James Kent for contributions.
+
+* [ENH] Calculate noise components in functional data with ICA-AROMA (#539)
+* [FIX] Remove unused parameters from function node, resolving crash (#576)
+
 0.5.1 (24th of June 2017)
 =========================
 
