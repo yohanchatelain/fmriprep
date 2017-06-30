@@ -1,5 +1,5 @@
-Next release
-============
+0.5.2 (30th of June 2017)
+=========================
 
 With thanks to James Kent for contributions.
 
