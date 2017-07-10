@@ -164,6 +164,8 @@ RUN python -c 'from niworkflows.data.getters import get_mni_template_ras; get_mn
     python -c 'from niworkflows.data.getters import get_mni_icbm152_nlin_asym_09c; get_mni_icbm152_nlin_asym_09c()' && \
     python -c 'from niworkflows.data.getters import get_ants_oasis_template_ras; get_ants_oasis_template_ras()'
 
+RUN ldconfig
+
 WORKDIR /root/src/fmriprep
 
 ENTRYPOINT ["/usr/local/miniconda/bin/fmriprep"]
