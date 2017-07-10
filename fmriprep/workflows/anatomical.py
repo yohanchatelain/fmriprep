@@ -62,7 +62,9 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
         name='bids_info',
         run_without_submitting=True)
 
-    summary = pe.Node(AnatomicalSummary(output_spaces=output_spaces), name='summary')
+    summary = pe.Node(
+        AnatomicalSummary(output_spaces=output_spaces, template=template),
+        name='summary')
 
     # 0. Reorient T1w image(s) to RAS and resample to common voxel space
     t1_conform = pe.Node(ConformSeries(), name='t1_conform')

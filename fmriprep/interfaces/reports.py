@@ -61,6 +61,7 @@ class AnatomicalSummaryInputSpec(BaseInterfaceInputSpec):
     subjects_dir = Directory(desc='FreeSurfer subjects directory')
     subject_id = traits.Str(desc='FreeSurfer subject ID')
     output_spaces = traits.List(desc='Target spaces')
+    template = traits.Enum('MNI152NLin2009cAsym', desc='Template space')
 
 
 class AnatomicalSummaryOutputSpec(SummaryOutputSpec):
@@ -89,9 +90,13 @@ class AnatomicalSummary(SummaryInterface):
             else:
                 freesurfer_status = 'Run by FMRIPREP'
 
+        output_spaces = [self.inputs.template if space == 'template' else space
+                         for space in self.inputs.output_spaces
+                         if space[:9] in ('fsaverage', 'template')]
+
         return ANATOMICAL_TEMPLATE.format(n_t1s=len(self.inputs.t1w),
                                           freesurfer_status=freesurfer_status,
-                                          output_spaces=', '.join(self.inputs.output_spaces))
+                                          output_spaces=', '.join(output_spaces))
 
 
 class FunctionalSummaryInputSpec(BaseInterfaceInputSpec):
