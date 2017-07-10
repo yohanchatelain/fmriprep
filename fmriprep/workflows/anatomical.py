@@ -26,6 +26,7 @@ from niworkflows.interfaces.segmentation import FASTRPT, ReconAllRPT
 
 from fmriprep.interfaces import DerivativesDataSink, StructuralReference, MakeMidthickness
 from fmriprep.interfaces.images import ConformSeries
+from fmriprep.interfaces.reports import AnatomicalSummary
 from fmriprep.utils.misc import fix_multi_T1w_source_name, add_suffix
 
 
@@ -46,6 +47,22 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
                 'mni_mask', 'mni_seg', 'mni_tpms',
                 'subjects_dir', 'subject_id', 'fs_2_t1_transform', 'surfaces']),
         name='outputnode')
+
+    def bidsinfo(in_file):
+        from fmriprep.interfaces.bids import BIDS_NAME
+        match = BIDS_NAME.search(in_file)
+        params = match.groupdict() if match is not None else {}
+        return tuple(map(params.get, ['subject_id', 'ses_id', 'task_id',
+                                      'acq_id', 'rec_id', 'run_id']))
+
+    bids_info = pe.Node(
+        niu.Function(function=bidsinfo,
+                     output_names=['subject_id', 'ses_id', 'task_id',
+                                   'acq_id', 'rec_id', 'run_id']),
+        name='bids_info',
+        run_without_submitting=True)
+
+    summary = pe.Node(AnatomicalSummary(output_spaces=output_spaces), name='summary')
 
     # 0. Reorient T1w image(s) to RAS and resample to common voxel space
     t1_conform = pe.Node(ConformSeries(), name='t1_conform')
@@ -110,6 +127,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
     )
 
     workflow.connect([
+        (inputnode, bids_info, [(('t1w', fix_multi_T1w_source_name), 'in_file')]),
         (inputnode, t1_conform, [('t1w', 't1w_list')]),
         (t1_conform, t1_merge, [('t1w_list', 'in_files'),
                                 (('t1w_list', add_suffix, '_template'), 'out_file')]),
@@ -120,6 +138,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
                                      ('outputnode.out_mask', 't1_mask')]),
         (t1_seg, outputnode, [('tissue_class_map', 't1_seg'),
                               ('probability_maps', 't1_tpms')]),
+        (inputnode, summary, [('t1w', 't1w')]),
         ])
     if 'template' in output_spaces:
         template_str = nid.TEMPLATE_MAP[template]
@@ -154,9 +173,12 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
                                                  omp_nthreads=omp_nthreads, hires=hires)
 
         workflow.connect([
+            (inputnode, summary, [('subjects_dir', 'subjects_dir')]),
+            (bids_info, summary, [('subject_id', 'subject_id')]),
             (inputnode, surface_recon_wf, [
                 ('t2w', 'inputnode.t2w'),
                 ('subjects_dir', 'inputnode.subjects_dir')]),
+            (summary, surface_recon_wf, [('subject_id', 'inputnode.subject_id')]),
             (t1_merge, surface_recon_wf, [('out_file', 'inputnode.t1w')]),
             (skullstrip_wf, surface_recon_wf, [
                 ('outputnode.out_file', 'inputnode.skullstripped_t1')]),
@@ -174,6 +196,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
         (inputnode, anat_reports_wf, [
             (('t1w', fix_multi_T1w_source_name), 'inputnode.source_file')]),
         (t1_seg, anat_reports_wf, [('out_report', 'inputnode.t1_seg_report')]),
+        (summary, anat_reports_wf, [('out_report', 'inputnode.summary_report')]),
         ])
 
     if skull_strip_ants:
@@ -266,7 +289,7 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
 
     inputnode = pe.Node(
         niu.IdentityInterface(
-            fields=['t1w', 't2w', 'skullstripped_t1', 'subjects_dir']),
+            fields=['t1w', 't2w', 'skullstripped_t1', 'subjects_dir', 'subject_id']),
         name='inputnode')
     outputnode = pe.Node(
         niu.IdentityInterface(
@@ -299,20 +322,6 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
             output_names=['t2w', 'use_T2', 'hires', 'mris_inflate']),
         name='recon_config')
     recon_config.inputs.hires_enabled = hires
-
-    def bidsinfo(in_file):
-        from fmriprep.interfaces.bids import BIDS_NAME
-        match = BIDS_NAME.search(in_file)
-        params = match.groupdict() if match is not None else {}
-        return tuple(map(params.get, ['subject_id', 'ses_id', 'task_id',
-                                      'acq_id', 'rec_id', 'run_id']))
-
-    bids_info = pe.Node(
-        niu.Function(function=bidsinfo,
-                     output_names=['subject_id', 'ses_id', 'task_id',
-                                   'acq_id', 'rec_id', 'run_id']),
-        name='bids_info',
-        run_without_submitting=True)
 
     autorecon1 = pe.Node(
         fs.ReconAll(
@@ -362,10 +371,9 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         # Configuration
         (inputnode, recon_config, [('t1w', 't1w_list'),
                                    ('t2w', 't2w_list')]),
-        (inputnode, bids_info, [(('t1w', fix_multi_T1w_source_name), 'in_file')]),
         # Passing subjects_dir / subject_id enforces serial order
-        (inputnode, autorecon1, [('subjects_dir', 'subjects_dir')]),
-        (bids_info, autorecon1, [('subject_id', 'subject_id')]),
+        (inputnode, autorecon1, [('subjects_dir', 'subjects_dir'),
+                                 ('subject_id', 'subject_id')]),
         (autorecon1, skull_strip_extern, [('subjects_dir', 'subjects_dir'),
                                           ('subject_id', 'subject_id')]),
         (skull_strip_extern, autorecon_resume_wf, [('subjects_dir', 'inputnode.subjects_dir'),
@@ -561,9 +569,14 @@ def init_anat_reports_wf(reportlets_dir, skull_strip_ants, output_spaces,
 
     inputnode = pe.Node(
         niu.IdentityInterface(
-            fields=['source_file', 't1_seg_report', 't1_2_mni_report',
+            fields=['source_file', 'summary_report', 't1_seg_report', 't1_2_mni_report',
                     't1_skull_strip_report', 'recon_report']),
         name='inputnode')
+
+    ds_summary_report = pe.Node(
+        DerivativesDataSink(base_directory=reportlets_dir,
+                            suffix='summary'),
+        name='ds_summary_report', run_without_submitting=True)
 
     ds_t1_seg_report = pe.Node(
         DerivativesDataSink(base_directory=reportlets_dir, suffix='t1_seg'),
@@ -582,6 +595,8 @@ def init_anat_reports_wf(reportlets_dir, skull_strip_ants, output_spaces,
         name='ds_recon_report', run_without_submitting=True)
 
     workflow.connect([
+        (inputnode, ds_summary_report, [('source_file', 'source_file'),
+                                        ('summary_report', 'in_file')]),
         (inputnode, ds_t1_seg_report, [('source_file', 'source_file'),
                                        ('t1_seg_report', 'in_file')]),
     ])

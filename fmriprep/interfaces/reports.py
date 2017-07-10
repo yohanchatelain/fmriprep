@@ -63,8 +63,18 @@ class AnatomicalSummaryInputSpec(BaseInterfaceInputSpec):
     output_spaces = traits.List(desc='Target spaces')
 
 
+class AnatomicalSummaryOutputSpec(SummaryOutputSpec):
+    subject_id = traits.Str(desc='FreeSurfer subject ID')
+
+
 class AnatomicalSummary(SummaryInterface):
     input_spec = AnatomicalSummaryInputSpec
+    output_spec = AnatomicalSummaryOutputSpec
+
+    def _run_interface(self, runtime):
+        if isdefined(self.inputs.subject_id):
+            self._results['subject_id'] = self.inputs.subject_id
+        return super(AnatomicalSummary, self)._run_interface(runtime)
 
     def _generate_segment(self):
         if not isdefined(self.inputs.subjects_dir):
