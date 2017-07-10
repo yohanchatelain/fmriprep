@@ -27,6 +27,17 @@ ANATOMICAL_TEMPLATE = """\t\t<h3 class="elem-title">Summary</h3>
 """
 
 
+FUNCTIONAL_TEMPLATE = """\t\t<h3 class="elem-title">Summary</h3>
+\t\t<ul class="elem-desc">
+\t\t\t<li>Slice timing correction: {stc}</li>
+\t\t\t<li>Susceptibility distortion correction: {sdc}</li>
+\t\t\t<li>Registration: {registration}</li>
+\t\t\t<li>Functional series resampled to spaces: {output_spaces}</li>
+\t\t\t<li>Confounds collected: {confounds}</li>
+\t\t</ul>
+"""
+
+
 class SummaryOutputSpec(TraitedSpec):
     out_report = File(exists=True, desc='HTML segment containing summary')
 
@@ -71,3 +82,31 @@ class AnatomicalSummary(SummaryInterface):
         return ANATOMICAL_TEMPLATE.format(n_t1s=len(self.inputs.t1w),
                                           freesurfer_status=freesurfer_status,
                                           output_spaces=', '.join(self.inputs.output_spaces))
+
+
+class FunctionalSummaryInputSpec(BaseInterfaceInputSpec):
+    slice_timing = traits.Bool(False, usedefault=True, desc='Slice timing correction used')
+    distortion_correction = traits.Enum('epi', 'fieldmap', 'phasediff', 'SyN', 'None',
+                                        desc='Susceptibility distortion correction method')
+    registration = traits.Enum('FLIRT', 'bbregister',
+                               desc='Functional/anatomical registration method')
+    output_spaces = traits.List(desc='Target spaces')
+    confounds = traits.List(desc='Confounds collected')
+
+
+class FunctionalSummary(SummaryInterface):
+    input_spec = FunctionalSummaryInputSpec
+
+    def _generate_segment(self):
+        stc = "Applied" if self.inputs.slice_timing else "Not applied"
+        sdc = {'epi': 'Phase-encoding polarity (pepolar)',
+               'fieldmap': 'Direct fieldmapping',
+               'phasediff': 'Phase difference',
+               'SyN': 'Symmetric normalization (SyN) - no fieldmaps',
+               'None': 'None'}[self.inputs.distortion_correction]
+        reg = {'FLIRT': 'FLIRT with boundary-based registration (BBR) metric',
+               'bbregister': 'FreeSurfer boundary-based registration (bbregister)'
+               }[self.inputs.registration]
+        return FUNCTIONAL_TEMPLATE.format(stc=stc, sdc=sdc, registration=reg,
+                                          output_spaces=', '.join(self.inputs.output_spaces),
+                                          confounds=', '.join(self.inputs.confounds))
