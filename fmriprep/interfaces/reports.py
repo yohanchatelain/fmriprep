@@ -27,6 +27,24 @@ ANATOMICAL_TEMPLATE = """\t\t<h3 class="elem-title">Summary</h3>
 """
 
 
+class SummaryOutputSpec(TraitedSpec):
+    out_report = File(exists=True, desc='HTML segment containing summary')
+
+
+class SummaryInterface(SimpleInterface):
+    output_spec = SummaryOutputSpec
+
+    def _run_interface(self, runtime):
+        segment = self._generate_segment()
+        fname = os.path.abspath('report.html')
+        with open(fname, 'w') as fobj:
+            fobj.write(segment)
+
+        self._results['out_report'] = fname
+
+        return runtime
+
+
 class AnatomicalSummaryInputSpec(BaseInterfaceInputSpec):
     t1w = InputMultiPath(File(exists=True), desc='T1w structural images')
     subjects_dir = Directory(desc='FreeSurfer subjects directory')
@@ -34,15 +52,10 @@ class AnatomicalSummaryInputSpec(BaseInterfaceInputSpec):
     output_spaces = traits.List(desc='Target spaces')
 
 
-class AnatomicalSummaryOutputSpec(TraitedSpec):
-    out_report = File(exists=True, desc='HTML segment containing summary')
-
-
-class AnatomicalSummary(SimpleInterface):
+class AnatomicalSummary(SummaryInterface):
     input_spec = AnatomicalSummaryInputSpec
-    output_spec = AnatomicalSummaryOutputSpec
 
-    def _run_interface(self, runtime):
+    def _generate_segment(self):
         if not isdefined(self.inputs.subjects_dir):
             freesurfer_status = 'Not run'
         else:
@@ -55,14 +68,6 @@ class AnatomicalSummary(SimpleInterface):
             else:
                 freesurfer_status = 'Run by FMRIPREP'
 
-        segment = ANATOMICAL_TEMPLATE.format(n_t1s=len(self.inputs.t1w),
-                                             freesurfer_status=freesurfer_status,
-                                             output_spaces=', '.join(self.inputs.output_spaces))
-
-        fname = os.path.abspath('report.html')
-        with open(fname, 'w') as fobj:
-            fobj.write(segment)
-
-        self._results['out_report'] = fname
-
-        return runtime
+        return ANATOMICAL_TEMPLATE.format(n_t1s=len(self.inputs.t1w),
+                                          freesurfer_status=freesurfer_status,
+                                          output_spaces=', '.join(self.inputs.output_spaces))
