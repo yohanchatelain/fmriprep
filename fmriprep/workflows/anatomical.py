@@ -85,7 +85,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
         ),
         name='t1_2_mni'
     )
-    # should not be necesssary but does not hurt - make sure the multiproc
+    # should not be necessary but does not hurt - make sure the multiproc
     # scheduler knows the resource limits
     t1_2_mni.interface.num_threads = omp_nthreads
 
