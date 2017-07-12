@@ -323,9 +323,11 @@ Confounds estimation
     :simple_form: yes
 
     from fmriprep.workflows.confounds import init_discover_wf
-    wf = init_discover_wf(name="discover_wf",
-                          use_aroma=False, ignore_aroma_err=False,
-                          bold_file_size_gb=3)
+    wf = init_discover_wf(
+        name="discover_wf",
+        use_aroma=False, ignore_aroma_err=False, bold_file_size_gb=3,
+        metadata={"RepetitionTime": 2.0,
+                  "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]})
 
 Given a motion-corrected fMRI, a brain mask, MCFLIRT movement parameters and a
 segmentation, the `discover_wf` sub-workflow calculates potential
