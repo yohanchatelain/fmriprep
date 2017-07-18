@@ -102,8 +102,9 @@ class AnatomicalSummary(SummaryInterface):
 class FunctionalSummaryInputSpec(BaseInterfaceInputSpec):
     slice_timing = traits.Bool(False, usedefault=True, desc='Slice timing correction used')
     distortion_correction = traits.Enum('epi', 'fieldmap', 'phasediff', 'SyN', 'None',
-                                        desc='Susceptibility distortion correction method')
-    registration = traits.Enum('FLIRT', 'bbregister',
+                                        desc='Susceptibility distortion correction method',
+                                        mandatory=True)
+    registration = traits.Enum('FLIRT', 'bbregister', mandatory=True,
                                desc='Functional/anatomical registration method')
     output_spaces = traits.List(desc='Target spaces')
     confounds = traits.List(desc='Confounds collected')
