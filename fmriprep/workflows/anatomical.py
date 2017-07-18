@@ -73,10 +73,8 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
     t1_merge = pe.Node(
         # StructuralReference is fs.RobustTemplate if > 1 volume, copying otherwise
         StructuralReference(auto_detect_sensitivity=True,
-                            initial_timepoint=1,
-                            fixed_timepoint=True,     # Align to first image
+                            initial_timepoint=1,      # For deterministic behavior
                             intensity_scaling=True,   # 7-DOF (rigid + intensity)
-                            no_iteration=True,
                             subsample_threshold=200,
                             ), name='t1_merge')
 
