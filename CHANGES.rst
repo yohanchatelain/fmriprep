@@ -1,5 +1,5 @@
-Next release
-============
+0.5.3 (18th of July 2017)
+=========================
 
 With thanks to Yaroslav Halchenko for contributions.
 
