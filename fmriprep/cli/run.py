@@ -43,7 +43,7 @@ def get_parser():
     parser.add_argument('-v', '--version', action='version', version=verstr)
 
     g_bids = parser.add_argument_group('Options for filtering BIDS queries')
-    g_bids.add_argument('--participant_label', action='store', nargs='+',
+    g_bids.add_argument('--participant_label', '--participant-label', action='store', nargs='+',
                         help='one or more participant identifiers (the sub- prefix can be '
                              'removed)')
     g_bids.add_argument('-s', '--session-id', action='store', default='single_session',
@@ -56,13 +56,11 @@ def get_parser():
     g_perfm = parser.add_argument_group('Options to handle performance')
     g_perfm.add_argument('--debug', action='store_true', default=False,
                          help='run debug version of workflow')
-    g_perfm.add_argument('--nthreads', action='store', default=0, type=int,
+    g_perfm.add_argument('--nthreads', '--n_cpus', '-n-cpus', action='store', default=0, type=int,
                          help='maximum number of threads across all processes')
-    g_perfm.add_argument('--n_cpus', action='store', dest='nthreads', type=int,
-                         help='total number of CPUs to use (alias for --nthreads)')
     g_perfm.add_argument('--omp-nthreads', action='store', type=int, default=0,
                          help='maximum number of threads per-process')
-    g_perfm.add_argument('--mem_mb', action='store', default=0, type=int,
+    g_perfm.add_argument('--mem_mb', '--mem-mb', action='store', default=0, type=int,
                          help='upper bound memory limit for FMRIPREP processes')
     g_perfm.add_argument('--use-plugin', action='store', default=None,
                          help='nipype plugin configuration file')

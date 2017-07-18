@@ -68,14 +68,14 @@ If the data to be preprocessed is also on the HPC, you are ready to run fmriprep
     $ singularity run path/to/singularity/image.img \
         path/to/data/dir path/to/output/dir \
         participant \
-        --participant_label label
+        --participant-label label
 
 For example: ::
 
     $ singularity run ~/poldracklab_fmriprep_latest-2016-12-04-5b74ad9a4c4d.img \
         /work/04168/asdf/lonestar/ $WORK/lonestar/output \
         participant \
-        --participant_label 387 --nthreads 16 -w $WORK/lonestar/work \
+        --participant-label 387 --nthreads 16 -w $WORK/lonestar/work \
         --ants-nthreads 16
 
 .. note::
@@ -87,7 +87,7 @@ For example: ::
       $ PYTHONPATH="" singularity run ~/poldracklab_fmriprep_latest-2016-12-04-5b74ad9a4c4d.img \
         /work/04168/asdf/lonestar/ $WORK/lonestar/output \
         participant \
-        --participant_label 387 --nthreads 16 -w $WORK/lonestar/work \
+        --participant-label 387 --nthreads 16 -w $WORK/lonestar/work \
         --ants-nthreads 16
 
 Manually Prepared Environment
@@ -107,7 +107,7 @@ If you have pip installed, install fmriprep ::
 
 If you have your data on hand, you are ready to run fmriprep: ::
 
-    $ fmriprep data/dir output/dir participant --participant_label label
+    $ fmriprep data/dir output/dir participant --participant-label label
 
 External Dependencies
 =====================
