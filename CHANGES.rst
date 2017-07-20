@@ -1,6 +1,8 @@
-Next release
-============
+0.5.4 (20th of July 2017)
+=========================
 
+* [DOC] Improved report summaries describing steps taken (#584)
+* [ENH] Uniformize command-line argument style (#592)
 
 0.5.3 (18th of July 2017)
 =========================
