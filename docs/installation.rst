@@ -4,9 +4,17 @@
 Installation
 ------------
 
-There are three ways to use fmriprep: in a `Docker Container`_, in a `Singularity Container`_, or in a `Manually Prepared Environment`_.
-Using a container method is highly recommended.
+There are four ways to use fmriprep: on the free cloud service OpenNeuro.org, in a `Docker Container`_, in a `Singularity Container`_, or in a `Manually Prepared Environment`_.
+Using OpenNeuro or a local container method is highly recommended.
 Once you are ready to run fmriprep, see Usage_ for details.
+
+OpenNeuro
+=========
+
+fmriprep is available on the free cloud platform `OpenNeuro.org <http://openneuro.org>`.
+After uploading your BIDS compatible dataset to OpenNeuro you will be able to
+run fmriprep for free using OpenNeuro servers. Since there is no installation
+required this is the easiest way to run fmriprep.
 
 Docker Container
 ================
