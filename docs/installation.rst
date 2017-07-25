@@ -4,7 +4,7 @@
 Installation
 ------------
 
-There are four ways to use fmriprep: in the free cloud service OpenNeuro.org, in a `Docker Container`_, in a `Singularity Container`_, or in a `Manually Prepared Environment`_.
+There are four ways to use fmriprep: on the free cloud service OpenNeuro.org, in a `Docker Container`_, in a `Singularity Container`_, or in a `Manually Prepared Environment`_.
 Using OpenNeuro or a local container method is highly recommended.
 Once you are ready to run fmriprep, see Usage_ for details.
 
