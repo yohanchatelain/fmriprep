@@ -16,6 +16,8 @@ from argparse import RawTextHelpFormatter
 from multiprocessing import cpu_count
 from time import strftime
 
+from niworkflows.nipype import config as ncfg
+
 
 def get_parser():
     """Build parser object"""
@@ -164,6 +166,9 @@ def create_workflow(opts):
 
     errno = 0
 
+    output_dir = op.abspath(opts.output_dir)
+    log_dir = op.join(opts.output_dir, 'fmriprep', 'logs')
+
     # set up logger
     logger = logging.getLogger('cli')
 
@@ -179,8 +184,14 @@ def create_workflow(opts):
 
     # Check and create output and working directories
     # Using make_folder to prevent https://github.com/poldracklab/mriqc/issues/111
-    make_folder(opts.output_dir)
+    make_folder(output_dir)
     make_folder(opts.work_dir)
+    make_folder(log_dir)
+
+    ncfg.update_config({
+        'logging': {'log_directory': log_dir, 'log_to_file': True},
+        'execution': {'crashdump_dir': log_dir, 'crashfile_format': 'txt'},
+    })
 
     # nipype plugin configuration
     plugin_settings = {'plugin': 'Linear'}
@@ -235,7 +246,6 @@ def create_workflow(opts):
 
     # Build main workflow and run
     reportlets_dir = op.join(op.abspath(opts.work_dir), 'reportlets')
-    output_dir = op.abspath(opts.output_dir)
     bids_dir = op.abspath(opts.bids_dir)
     fmriprep_wf = init_fmriprep_wf(subject_list=subject_list,
                                    task_id=opts.task_id,
