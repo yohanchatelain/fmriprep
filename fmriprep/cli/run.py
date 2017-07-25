@@ -244,45 +244,43 @@ def create_workflow(opts):
 
     logger.info('Subject list: %s', ', '.join(subject_list))
 
-    # Build main workflow and run
+    # Build main workflow
     reportlets_dir = op.join(op.abspath(opts.work_dir), 'reportlets')
     bids_dir = op.abspath(opts.bids_dir)
-    fmriprep_wf = init_fmriprep_wf(subject_list=subject_list,
-                                   task_id=opts.task_id,
-                                   run_uuid=run_uuid,
-                                   ignore=opts.ignore,
-                                   debug=opts.debug,
-                                   anat_only=opts.anat_only,
-                                   omp_nthreads=omp_nthreads,
-                                   skull_strip_ants=opts.skull_strip_ants,
-                                   reportlets_dir=reportlets_dir,
-                                   output_dir=output_dir,
-                                   bids_dir=bids_dir,
-                                   freesurfer=opts.freesurfer,
-                                   output_spaces=opts.output_space,
-                                   template=opts.template,
-                                   output_grid_ref=opts.output_grid_reference,
-                                   hires=opts.hires,
-                                   bold2t1w_dof=opts.bold2t1w_dof,
-                                   fmap_bspline=opts.fmap_bspline,
-                                   fmap_demean=opts.fmap_no_demean,
-                                   use_syn=opts.use_syn_sdc,
-                                   force_syn=opts.force_syn,
-                                   use_aroma=opts.use_aroma,
-                                   ignore_aroma_err=opts.ignore_aroma_denoising_errors)
+    if not opts.reports_only or opts.write_graph:
+        fmriprep_wf = init_fmriprep_wf(subject_list=subject_list,
+                                       task_id=opts.task_id,
+                                       run_uuid=run_uuid,
+                                       ignore=opts.ignore,
+                                       debug=opts.debug,
+                                       anat_only=opts.anat_only,
+                                       omp_nthreads=omp_nthreads,
+                                       skull_strip_ants=opts.skull_strip_ants,
+                                       reportlets_dir=reportlets_dir,
+                                       output_dir=output_dir,
+                                       bids_dir=bids_dir,
+                                       freesurfer=opts.freesurfer,
+                                       output_spaces=opts.output_space,
+                                       template=opts.template,
+                                       output_grid_ref=opts.output_grid_reference,
+                                       hires=opts.hires,
+                                       bold2t1w_dof=opts.bold2t1w_dof,
+                                       fmap_bspline=opts.fmap_bspline,
+                                       fmap_demean=opts.fmap_no_demean,
+                                       use_syn=opts.use_syn_sdc,
+                                       force_syn=opts.force_syn,
+                                       use_aroma=opts.use_aroma,
+                                       ignore_aroma_err=opts.ignore_aroma_denoising_errors)
 
-    fmriprep_wf.base_dir = op.abspath(opts.work_dir)
+        fmriprep_wf.base_dir = op.abspath(opts.work_dir)
 
     if opts.reports_only:
         if opts.write_graph:
-            fmriprep_wf.write_graph(graph2use="colored", format='svg',
-                                    simple_form=True)
+            fmriprep_wf.write_graph(graph2use="colored", format='svg', simple_form=True)
 
         for subject_label in subject_list:
-            run_reports(reportlets_dir,
-                        output_dir,
-                        subject_label, run_uuid=run_uuid)
-        sys.exit()
+            run_reports(reportlets_dir, output_dir, subject_label, run_uuid=run_uuid)
+        sys.exit(errno)
 
     try:
         fmriprep_wf.run(**plugin_settings)
@@ -293,14 +291,11 @@ def create_workflow(opts):
             raise(e)
 
     if opts.write_graph:
-        fmriprep_wf.write_graph(graph2use="colored", format='svg',
-                                simple_form=True)
+        fmriprep_wf.write_graph(graph2use="colored", format='svg', simple_form=True)
 
     report_errors = 0
     for subject_label in subject_list:
-        report_errors += run_reports(reportlets_dir,
-                                     output_dir,
-                                     subject_label, run_uuid=run_uuid)
+        report_errors += run_reports(reportlets_dir, output_dir, subject_label, run_uuid=run_uuid)
     if errno == 1:
         assert(report_errors > 0)
 
