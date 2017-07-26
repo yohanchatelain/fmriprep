@@ -76,7 +76,10 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
                             initial_timepoint=1,      # For deterministic behavior
                             intensity_scaling=True,   # 7-DOF (rigid + intensity)
                             subsample_threshold=200,
-                            ), name='t1_merge')
+                            environ={'OMP_NUM_THREADS': str(omp_nthreads)},
+                            ),
+        n_procs=omp_nthreasd,
+        name='t1_merge')
 
     # 2. T1 Bias Field Correction
     # Bias field correction is handled in skull strip workflows.
