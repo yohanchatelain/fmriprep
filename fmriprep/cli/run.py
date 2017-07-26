@@ -7,6 +7,7 @@ fMRI preprocessing workflow
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import os
 import os.path as op
 import glob
 import sys
@@ -160,7 +161,6 @@ def main():
 def create_workflow(opts):
     """Build workflow"""
     import logging
-    from fmriprep.utils import make_folder
     from fmriprep.viz.reports import run_reports
     from fmriprep.workflows.base import init_fmriprep_wf
 
@@ -183,10 +183,9 @@ def create_workflow(opts):
     run_uuid = strftime('%Y%m%d-%H%M%S_') + str(uuid.uuid4())
 
     # Check and create output and working directories
-    # Using make_folder to prevent https://github.com/poldracklab/mriqc/issues/111
-    make_folder(output_dir)
-    make_folder(opts.work_dir)
-    make_folder(log_dir)
+    os.makedirs(output_dir, exist_ok=True)
+    os.makedirs(opts.work_dir, exist_ok=True)
+    os.makedirs(log_dir, exist_ok=True)
 
     ncfg.update_config({
         'logging': {'log_directory': log_dir, 'log_to_file': True},
