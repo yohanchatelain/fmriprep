@@ -32,7 +32,7 @@ from fmriprep.utils.misc import fix_multi_T1w_source_name, add_suffix
 
 #  pylint: disable=R0914
 def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, freesurfer,
-                         omp_nthreads, hires, reportlets_dir, output_dir,
+                         longitudinal, omp_nthreads, hires, reportlets_dir, output_dir,
                          name='anat_preproc_wf'):
     """T1w images preprocessing pipeline"""
 
@@ -131,17 +131,20 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
     def set_threads(in_list, maximum):
         return min(len(in_list), maximum)
 
-    def len_above_thresh(in_list, threshold):
+    def len_above_thresh(in_list, threshold, longitudinal):
+        if longitudinal:
+            return False
         return len(in_list) > threshold
 
     workflow.connect([
         (inputnode, bids_info, [(('t1w', fix_multi_T1w_source_name), 'in_file')]),
         (inputnode, t1_conform, [('t1w', 't1w_list')]),
-        (t1_conform, t1_merge, [('t1w_list', 'in_files'),
-                                (('t1w_list', set_threads, omp_nthreads), 'num_threads'),
-                                (('t1w_list', len_above_thresh, 2), 'fixed_timepoint'),
-                                (('t1w_list', len_above_thresh, 2), 'no_iteration'),
-                                (('t1w_list', add_suffix, '_template'), 'out_file')]),
+        (t1_conform, t1_merge, [
+            ('t1w_list', 'in_files'),
+            (('t1w_list', set_threads, omp_nthreads), 'num_threads'),
+            (('t1w_list', len_above_thresh, 2, longitudinal), 'fixed_timepoint'),
+            (('t1w_list', len_above_thresh, 2, longitudinal), 'no_iteration'),
+            (('t1w_list', add_suffix, '_template'), 'out_file')]),
         (t1_merge, skullstrip_wf, [('out_file', 'inputnode.in_file')]),
         (skullstrip_wf, t1_seg, [('outputnode.out_file', 'in_files')]),
         (skullstrip_wf, outputnode, [('outputnode.bias_corrected', 't1_preproc'),
