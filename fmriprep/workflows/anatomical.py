@@ -98,6 +98,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
     # 5. Spatial normalization (T1w to MNI registration)
     t1_2_mni = pe.Node(
         RobustMNINormalizationRPT(
+            float=True,
             generate_report=True,
             num_threads=omp_nthreads,
             flavor='testing' if debug else 'precise',
