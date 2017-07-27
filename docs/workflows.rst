@@ -63,9 +63,13 @@ T1w/T2w preprocessing
                               debug=False,
                               hires=True)
 
-This sub-workflow finds the skull stripping mask and the
-white matter/gray matter/cerebrospinal fluid segments and finds a non-linear
-warp to the MNI space.
+The anatomical sub-workflow begins by constructing a template image by
+:ref:`conforming <conformation>` any T1-weighted images to RAS orientation and
+a common voxel size, and, in the case of multiple images, merges them into a
+single template using `mri_robust_register`_.
+This template is then skull-stripped, and the white matter/gray
+matter/cerebrospinal fluid segments are found.
+Finally, a non-linear registration to the MNI template space is estimated.
 
 .. figure:: _static/brainextraction_t1.svg
     :scale: 100%
