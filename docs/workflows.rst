@@ -20,6 +20,7 @@ slice-timing information and no fieldmap acquisitions):
     wf = init_single_subject_wf(subject_id='test',
                                 name='single_subject_wf',
                                 task_id='',
+                                longitudinal=False,
                                 omp_nthreads=1,
                                 freesurfer=True,
                                 reportlets_dir='.',
@@ -60,6 +61,7 @@ T1w/T2w preprocessing
                                              'template', 'fsaverage5'],
                               skull_strip_ants=True,
                               freesurfer=True,
+                              longitudinal=False,
                               debug=False,
                               hires=True)
 
