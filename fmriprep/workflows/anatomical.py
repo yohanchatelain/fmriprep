@@ -197,8 +197,9 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
     workflow.connect([
         (inputnode, anat_reports_wf, [
             (('t1w', fix_multi_T1w_source_name), 'inputnode.source_file')]),
-        (t1_seg, anat_reports_wf, [('out_report', 'inputnode.t1_seg_report')]),
         (summary, anat_reports_wf, [('out_report', 'inputnode.summary_report')]),
+        (t1_conform, anat_reports_wf, [('out_report', 'inputnode.t1_conform_report')]),
+        (t1_seg, anat_reports_wf, [('out_report', 'inputnode.t1_seg_report')]),
         ])
 
     if skull_strip_ants:
@@ -571,14 +572,18 @@ def init_anat_reports_wf(reportlets_dir, skull_strip_ants, output_spaces,
 
     inputnode = pe.Node(
         niu.IdentityInterface(
-            fields=['source_file', 'summary_report', 't1_seg_report', 't1_2_mni_report',
-                    't1_skull_strip_report', 'recon_report']),
+            fields=['source_file', 'summary_report', 't1_conform_report', 't1_seg_report',
+                    't1_2_mni_report', 't1_skull_strip_report', 'recon_report']),
         name='inputnode')
 
     ds_summary_report = pe.Node(
         DerivativesDataSink(base_directory=reportlets_dir,
                             suffix='summary'),
         name='ds_summary_report', run_without_submitting=True)
+
+    ds_t1_conform_report = pe.Node(
+        DerivativesDataSink(base_directory=reportlets_dir, suffix='conform'),
+        name='ds_t1_conform_report', run_without_submitting=True)
 
     ds_t1_seg_report = pe.Node(
         DerivativesDataSink(base_directory=reportlets_dir, suffix='t1_seg'),
@@ -599,6 +604,8 @@ def init_anat_reports_wf(reportlets_dir, skull_strip_ants, output_spaces,
     workflow.connect([
         (inputnode, ds_summary_report, [('source_file', 'source_file'),
                                         ('summary_report', 'in_file')]),
+        (inputnode, ds_t1_conform_report, [('source_file', 'source_file'),
+                                           ('t1_conform_report', 'in_file')]),
         (inputnode, ds_t1_seg_report, [('source_file', 'source_file'),
                                        ('t1_seg_report', 'in_file')]),
     ])
