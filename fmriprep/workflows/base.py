@@ -16,7 +16,7 @@ from niworkflows.nipype.pipeline import engine as pe
 from niworkflows.nipype.interfaces import utility as niu
 
 from fmriprep.interfaces import BIDSDataGrabber, BIDSFreeSurferDir
-from fmriprep.utils.misc import collect_bids_data
+from fmriprep.utils.bids import collect_data
 
 from fmriprep.workflows.anatomical import init_anat_preproc_wf
 
@@ -96,8 +96,7 @@ def init_single_subject_wf(subject_id, task_id, name,
         layout = None
     else:
         layout = BIDSLayout(bids_dir)
-
-        subject_data = collect_bids_data(bids_dir, subject_id, task_id)
+        subject_data = collect_data(bids_dir, subject_id, task_id)
 
         if not anat_only and subject_data['func'] == []:
             raise Exception("No BOLD images found for participant {} and task {}. "

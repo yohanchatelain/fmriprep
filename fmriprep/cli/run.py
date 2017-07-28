@@ -17,6 +17,7 @@ from argparse import RawTextHelpFormatter
 from multiprocessing import cpu_count
 from time import strftime
 
+
 def get_parser():
     """Build parser object"""
 
@@ -93,7 +94,7 @@ def get_parser():
              ' - template: normalization target specified by --template\n'
              ' - fsnative: individual subject surface\n'
              ' - fsaverage*: FreeSurfer average meshes'
-             )
+    )
     g_conf.add_argument(
         '--template', required=False, action='store',
         choices=['MNI152NLin2009cAsym'], default='MNI152NLin2009cAsym',
@@ -163,6 +164,7 @@ def create_workflow(opts):
     from niworkflows.nipype import config as ncfg
     from fmriprep.viz.reports import run_reports
     from fmriprep.workflows.base import init_fmriprep_wf
+    from fmriprep.utils.bids import collect_participants
 
     errno = 0
 
@@ -209,7 +211,7 @@ def create_workflow(opts):
             plugin_settings['plugin'] = 'MultiProc'
             plugin_settings['plugin_args'] = {'n_procs': nthreads}
             if opts.mem_mb:
-                plugin_settings['plugin_args']['memory_gb'] = opts.mem_mb/1024
+                plugin_settings['plugin_args']['memory_gb'] = opts.mem_mb / 1024
 
     omp_nthreads = opts.omp_nthreads
     if omp_nthreads == 0:
@@ -227,21 +229,9 @@ def create_workflow(opts):
             sys.exit(1)
 
     # Determine subjects to be processed
-    subject_list = opts.participant_label
-
-    if subject_list is None or not subject_list:
-        bids_dir = op.abspath(opts.bids_dir)
-        subject_list = [op.basename(subdir)[4:]
-                        for subdir in glob.glob(op.join(bids_dir, 'sub-*'))]
-        if not subject_list:
-            print('Could not find subjects in {}\n'
-                  'If you are using Docker for Mac or Docker for Windows, you '
-                  'may need to adjust your "File sharing" preferences.'.format(bids_dir))
-            sys.exit(1)
-    else:
-        subject_list = [sub[4:] if sub.startswith('sub-') else sub for sub in subject_list]
-
-    logger.info('Subject list: %s', ', '.join(subject_list))
+    subject_list = collect_participants(opts.bids_dir,
+                                        participant_label=opts.participant_label)
+    logger.info('Participants list: %s', ', '.join(subject_list))
 
     # Build main workflow
     reportlets_dir = op.join(op.abspath(opts.work_dir), 'reportlets')
