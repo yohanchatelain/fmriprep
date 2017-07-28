@@ -49,8 +49,9 @@ def get_parser():
     # Re-enable when option is actually implemented
     # g_bids.add_argument('-s', '--session-id', action='store', default='single_session',
     #                     help='select a specific session to be processed')
-    g_bids.add_argument('-r', '--run-id', action='store', default='single_run',
-                        help='select a specific run to be processed')
+    # Re-enable when option is actually implemented
+    # g_bids.add_argument('-r', '--run-id', action='store', default='single_run',
+    #                     help='select a specific run to be processed')
     g_bids.add_argument('-t', '--task-id', action='store',
                         help='select a specific task to be processed')
 
