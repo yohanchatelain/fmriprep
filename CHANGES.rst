@@ -1,6 +1,12 @@
 Next release
 ============
 
+With thanks to Yaroslav Halchenko and Ilkay Isik for contributions.
+
+* [ENH] Set threshold on up-sampling ratio in conformation, report results (#601)
+* [FIX] Conformation failure in thick-slice, oblique T1w datasets (#601)
+* [FIX] Crash/report failure of phase-difference SDC pipeline (#602, #604)
+* [DOC] Save logs to output directory (#605)
 
 0.5.4 (20th of July 2017)
 =========================
