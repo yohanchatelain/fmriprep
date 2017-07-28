@@ -27,11 +27,12 @@ from bids.grabbids import BIDSLayout
 
 def init_fmriprep_wf(subject_list, task_id, run_uuid,
                      ignore, debug, anat_only, omp_nthreads,
-                     skull_strip_ants, reportlets_dir, output_dir, bids_dir,
+                     skull_strip_ants, work_dir, output_dir, bids_dir,
                      freesurfer, output_spaces, template, hires,
                      bold2t1w_dof, fmap_bspline, fmap_demean, use_syn, force_syn,
                      use_aroma, ignore_aroma_err, output_grid_ref,):
     fmriprep_wf = pe.Workflow(name='fmriprep_wf')
+    fmriprep_wf.base_dir = work_dir
 
     if freesurfer:
         fsdir = pe.Node(
@@ -41,6 +42,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
                 spaces=output_spaces),
             name='fsdir')
 
+    reportlets_dir = os.path.join(work_dir, 'reportlets')
     for subject_id in subject_list:
         single_subject_wf = init_single_subject_wf(subject_id=subject_id,
                                                    task_id=task_id,

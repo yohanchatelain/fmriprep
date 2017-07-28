@@ -41,19 +41,8 @@ def collect_participants(bids_dir, participant_label=None):
 
     # Drop sub- prefixes
     participant_label = [sub[4:] if sub.startswith('sub-') else sub for sub in participant_label]
-    # Remove duplicates
-    participant_label = list(set(participant_label))
-    # Find labels not found in BIDS folder
-    notfound_label = list(set(participant_label) - set(all_participants))
-
-    # Sanity check
-    if notfound_label:
-        msg = 'Could not found participants with labels {} in "{}"'.format(
-            ', '.join(notfound_label), bids_dir)
-        if len(notfound_label) == len(participant_label):
-            raise RuntimeError(msg)
-        warnings.warn(msg, RuntimeWarning)
-
+    # Remove duplicates, remove labels not found
+    participant_label = list(set(participant_label) & set(all_participants))
     return participant_label
 
 
