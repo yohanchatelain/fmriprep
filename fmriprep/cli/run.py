@@ -17,9 +17,6 @@ from argparse import RawTextHelpFormatter
 from multiprocessing import cpu_count
 from time import strftime
 
-from niworkflows.nipype import config as ncfg
-
-
 def get_parser():
     """Build parser object"""
 
@@ -161,6 +158,7 @@ def main():
 def create_workflow(opts):
     """Build workflow"""
     import logging
+    from niworkflows.nipype import config as ncfg
     from fmriprep.viz.reports import run_reports
     from fmriprep.workflows.base import init_fmriprep_wf
 
