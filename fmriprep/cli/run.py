@@ -29,13 +29,9 @@ Running fMRIPREP version {version}:
   * Run identifier: {uuid}.
 """.format
 
-cached_warnings = []
 
-
-def warn_redirect(message, category, filename, lineno, file=None, line=None):
-    if category not in cached_warnings:
-        logger.warn('Captured warning (%s): %s', category, message)
-        cached_warnings.append(category)
+def _warn_redirect(message, category, filename, lineno, file=None, line=None):
+    logger.warn('Captured warning (%s): %s', category, message)
 
 
 def get_parser():
@@ -173,7 +169,7 @@ def get_parser():
 
 def main():
     """Entry point"""
-    warnings.showwarning = warn_redirect
+    warnings.showwarning = _warn_redirect
     opts = get_parser().parse_args()
     if opts.debug:
         logger.setLevel(logging.DEBUG)
