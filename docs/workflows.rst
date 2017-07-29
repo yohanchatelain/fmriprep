@@ -20,6 +20,7 @@ slice-timing information and no fieldmap acquisitions):
     wf = init_single_subject_wf(subject_id='test',
                                 name='single_subject_wf',
                                 task_id='',
+                                longitudinal=False,
                                 omp_nthreads=1,
                                 freesurfer=True,
                                 reportlets_dir='.',
@@ -60,13 +61,14 @@ T1w/T2w preprocessing
                                              'template', 'fsaverage5'],
                               skull_strip_ants=True,
                               freesurfer=True,
+                              longitudinal=False,
                               debug=False,
                               hires=True)
 
 The anatomical sub-workflow begins by constructing a template image by
 :ref:`conforming <conformation>` any T1-weighted images to RAS orientation and
 a common voxel size, and, in the case of multiple images, merges them into a
-single template using `mri_robust_register`_.
+single template (see `Longitudinal processing`_).
 This template is then skull-stripped, and the white matter/gray
 matter/cerebrospinal fluid segments are found.
 Finally, a non-linear registration to the MNI template space is estimated.
@@ -85,6 +87,19 @@ Finally, a non-linear registration to the MNI template space is estimated.
     :scale: 100%
 
     Animation showing T1w to MNI normalization (ANTs)
+
+Longitudinal processing
+~~~~~~~~~~~~~~~~~~~~~~~
+In the case of multiple sessions, T1w images are merged into a single template
+image using FreeSurfer's `mri_robust_template`_.
+This template may be *unbiased*, or equidistant from all source images, or
+aligned to the first image (determined lexicographically by session label).
+For two images, the additional cost of estimating an unbiased template is
+trivial and is the default behavior, but, for greater than two images, the cost
+can be a slowdown of an order of magnitude.
+Therefore, in the case of three or more images, ``fmriprep`` constructs
+templates aligned to the first image, unless passed the ``--longitudinal``
+flag, which forces the estimation of an unbiased template.
 
 Surface preprocessing
 ~~~~~~~~~~~~~~~~~~~~~
