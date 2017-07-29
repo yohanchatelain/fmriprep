@@ -24,10 +24,11 @@ import niworkflows.data as nid
 from niworkflows.interfaces.masks import BrainExtractionRPT
 from niworkflows.interfaces.segmentation import FASTRPT, ReconAllRPT
 
-from fmriprep.interfaces import DerivativesDataSink, StructuralReference, MakeMidthickness
-from fmriprep.interfaces.images import ConformSeries
-from fmriprep.interfaces.reports import AnatomicalSummary
-from fmriprep.utils.misc import fix_multi_T1w_source_name, add_suffix
+from ..interfaces import DerivativesDataSink, StructuralReference, MakeMidthickness
+from ..interfaces.bids import BIDSInfo
+from ..interfaces.images import ConformSeries
+from ..interfaces.reports import AnatomicalSummary
+from ..utils.misc import fix_multi_T1w_source_name, add_suffix
 
 
 #  pylint: disable=R0914
@@ -48,19 +49,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
                 'subjects_dir', 'subject_id', 'fs_2_t1_transform', 'surfaces']),
         name='outputnode')
 
-    def bidsinfo(in_file):
-        from fmriprep.interfaces.bids import BIDS_NAME
-        match = BIDS_NAME.search(in_file)
-        params = match.groupdict() if match is not None else {}
-        return tuple(map(params.get, ['subject_id', 'ses_id', 'task_id',
-                                      'acq_id', 'rec_id', 'run_id']))
-
-    bids_info = pe.Node(
-        niu.Function(function=bidsinfo,
-                     output_names=['subject_id', 'ses_id', 'task_id',
-                                   'acq_id', 'rec_id', 'run_id']),
-        name='bids_info',
-        run_without_submitting=True)
+    bids_info = pe.Node(BIDSInfo(), name='bids_info', run_without_submitting=True)
 
     summary = pe.Node(
         AnatomicalSummary(output_spaces=output_spaces, template=template),
