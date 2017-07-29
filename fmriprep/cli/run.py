@@ -96,6 +96,9 @@ def get_parser():
         choices=['fieldmaps', 'slicetiming'],
         help='ignore selected aspects of the input dataset to disable corresponding '
              'parts of the workflow')
+    g_conf.add_argument(
+        '--longitudinal', action='store_true',
+        help='treat dataset as longitudinal - may increase runtime')
     g_conf.add_argument('--bold2t1w-dof', action='store', default=9, choices=[6, 9, 12], type=int,
                         help='Degrees of freedom when registering BOLD to T1w images. '
                              '9 (rotation, translation, and scaling) is used by '
@@ -267,29 +270,32 @@ def create_workflow(opts):
         uuid=run_uuid)
     )
 
-    fmriprep_wf = init_fmriprep_wf(subject_list=subject_list,
-                                   task_id=opts.task_id,
-                                   run_uuid=run_uuid,
-                                   ignore=opts.ignore,
-                                   debug=opts.debug,
-                                   anat_only=opts.anat_only,
-                                   omp_nthreads=omp_nthreads,
-                                   skull_strip_ants=opts.skull_strip_ants,
-                                   work_dir=work_dir,
-                                   output_dir=output_dir,
-                                   bids_dir=bids_dir,
-                                   freesurfer=opts.freesurfer,
-                                   output_spaces=opts.output_space,
-                                   template=opts.template,
-                                   output_grid_ref=opts.output_grid_reference,
-                                   hires=opts.hires,
-                                   bold2t1w_dof=opts.bold2t1w_dof,
-                                   fmap_bspline=opts.fmap_bspline,
-                                   fmap_demean=opts.fmap_no_demean,
-                                   use_syn=opts.use_syn_sdc,
-                                   force_syn=opts.force_syn,
-                                   use_aroma=opts.use_aroma,
-                                   ignore_aroma_err=opts.ignore_aroma_denoising_errors)
+    fmriprep_wf = init_fmriprep_wf(
+        subject_list=subject_list,
+        task_id=opts.task_id,
+        run_uuid=run_uuid,
+        ignore=opts.ignore,
+        debug=opts.debug,
+        anat_only=opts.anat_only,
+        longitudinal=opts.longitudinal,
+        omp_nthreads=omp_nthreads,
+        skull_strip_ants=opts.skull_strip_ants,
+        work_dir=work_dir,
+        output_dir=output_dir,
+        bids_dir=bids_dir,
+        freesurfer=opts.freesurfer,
+        output_spaces=opts.output_space,
+        template=opts.template,
+        output_grid_ref=opts.output_grid_reference,
+        hires=opts.hires,
+        bold2t1w_dof=opts.bold2t1w_dof,
+        fmap_bspline=opts.fmap_bspline,
+        fmap_demean=opts.fmap_no_demean,
+        use_syn=opts.use_syn_sdc,
+        force_syn=opts.force_syn,
+        use_aroma=opts.use_aroma,
+        ignore_aroma_err=opts.ignore_aroma_denoising_errors,
+    )
 
     if opts.write_graph:
         fmriprep_wf.write_graph(graph2use="colored", format='svg', simple_form=True)
