@@ -307,8 +307,8 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         n_procs=omp_nthreads)
     autorecon1.interface._can_resume = False
 
-    skull_strip_extern = pe.Node(FSInjectBrainExtracted(),
-        name='skull_strip_extern', run_without_submitting=True)
+    skull_strip_extern = pe.Node(FSInjectBrainExtracted(), name='skull_strip_extern',
+                                 run_without_submitting=True)
 
     fs_transform = pe.Node(
         fs.Tkregister2(fsl_out='freesurfer2subT1.mat', reg_header=True),
