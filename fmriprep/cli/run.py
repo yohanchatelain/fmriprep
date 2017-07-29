@@ -12,6 +12,7 @@ import os.path as op
 import logging
 import sys
 import uuid
+import warnings
 from argparse import ArgumentParser
 from argparse import RawTextHelpFormatter
 from multiprocessing import cpu_count
@@ -27,6 +28,14 @@ Running fMRIPREP version {version}:
   * Participant list: {subject_list}.
   * Run identifier: {uuid}.
 """.format
+
+cached_warnings = []
+
+
+def warn_redirect(message, category, filename, lineno, file=None, line=None):
+    if category not in cached_warnings:
+        logger.warn('Captured warning (%s): %s', category, message)
+        cached_warnings.append(category)
 
 
 def get_parser():
@@ -164,6 +173,7 @@ def get_parser():
 
 def main():
     """Entry point"""
+    warnings.showwarning = warn_redirect
     opts = get_parser().parse_args()
     if opts.debug:
         logger.setLevel(logging.DEBUG)
@@ -199,9 +209,6 @@ def create_workflow(opts):
     bids_dir = op.abspath(opts.bids_dir)
     subject_list = collect_participants(
         bids_dir, participant_label=opts.participant_label)
-    if not subject_list:
-        raise RuntimeError('Could not find participants in folder '
-                           '"{}".'.format(bids_dir))
 
     # Nipype plugin configuration
     plugin_settings = {'plugin': 'Linear'}

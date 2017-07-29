@@ -36,14 +36,24 @@ def collect_participants(bids_dir, participant_label=None):
             'If you are using Docker for Mac or Docker for Windows, you '
             'may need to adjust your "File sharing" preferences.'.format(bids_dir))
 
-    if participant_label is None:
+    if participant_label is None or not participant_label:
         return all_participants
 
     # Drop sub- prefixes
     participant_label = [sub[4:] if sub.startswith('sub-') else sub for sub in participant_label]
-    # Remove duplicates, remove labels not found
-    participant_label = list(set(participant_label) & set(all_participants))
-    return participant_label
+    # Remove duplicates
+    participant_label = list(set(participant_label))
+    # Remove labels not found
+    found_label = list(set(participant_label) & set(all_participants))
+    if not found_label:
+        raise RuntimeError('Could not find participants [{}] in folder '
+                           '"{}".'.format(', '.join(participant_label), bids_dir))
+
+    notfound_label = list(set(participant_label) - set(all_participants))
+    if notfound_label:
+        warnings.warn('Some participants were not found: {}'.format(
+            ', '.join(notfound_label)), RuntimeWarning)
+    return found_label
 
 
 def collect_data(dataset, subject, task=None, session=None, run=None):
