@@ -31,7 +31,7 @@ Running fMRIPREP version {version}:
 
 
 def _warn_redirect(message, category, filename, lineno, file=None, line=None):
-    logger.warn('Captured warning (%s): %s', category, message)
+    logger.warning('Captured warning (%s): %s', category, message)
 
 
 def get_parser():
@@ -188,7 +188,7 @@ def main():
                '"template" is not specified in "--output-space" arguments')
         if opts.force_syn:
             raise RuntimeError(msg)
-        logger.warn(msg)
+        logger.warning(msg)
 
     create_workflow(opts)
 
@@ -255,8 +255,7 @@ def create_workflow(opts):
 
     # Called with reports only
     if opts.reports_only:
-        logger.log(25, 'Running --reports-only on participants {}'.format(
-            ', '.join(subject_list)))
+        logger.log(25, 'Running --reports-only on participants %s', ', '.join(subject_list))
         report_errors = [
             run_reports(op.join(work_dir, 'reportlets'), output_dir, subject_label,
                         run_uuid=run_uuid)
@@ -314,10 +313,9 @@ def create_workflow(opts):
         for subject_label in subject_list]
 
     if sum(report_errors):
-        logger.warn(
-            'Errors occurred while generating reports for participants: %s.' % ', '.join(
-                ['%s (%d)' % (subid, err) for subid, err in zip(subject_list, report_errors)])
-        )
+        logger.warning('Errors occurred while generating reports for participants: %s.',
+                       ', '.join(['%s (%d)' % (subid, err)
+                                  for subid, err in zip(subject_list, report_errors)]))
 
     errno += sum(report_errors)
     sys.exit(int(errno > 0))
