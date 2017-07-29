@@ -17,9 +17,12 @@ from argparse import RawTextHelpFormatter
 from multiprocessing import cpu_count
 from time import strftime
 from fmriprep.info import __version__
-logger = logging.getLogger('cli')
 
-INIT_MSG = """\
+logging.addLevelName(25, 'INFO')  # Add a new level between INFO and WARNING
+logger = logging.getLogger('cli')
+logger.setLevel(25)
+
+INIT_MSG = """
 Running fMRIPREP version {version}:
   * Participant list: {subject_list}.
   * Run identifier: {uuid}.
@@ -167,7 +170,7 @@ def main():
 
     # Validity of some inputs - OE should be done in parse_args?
     # ERROR check if use_aroma was specified, but the correct template was not
-    if opts.use_aroma is True and str(opts.template) != 'MNI152NLin2009cAsym':
+    if opts.use_aroma and str(opts.template) != 'MNI152NLin2009cAsym':
         raise RuntimeError('ERROR: if use_aroma is set, the template must be set '
                            'to MNI152NLin2009cAsym not %s' % opts.template)
     # Check output_space
@@ -246,19 +249,21 @@ def create_workflow(opts):
 
     # Called with reports only
     if opts.reports_only:
-        logger.info('Running --reports-only on participants {}'.format(
+        logger.log(25, 'Running --reports-only on participants {}'.format(
             ', '.join(subject_list)))
-        for subject_label in subject_list:
-            errno += run_reports(op.join(work_dir, 'reportlets'), output_dir, subject_label,
-                                 run_uuid=run_uuid)
-        sys.exit(int(errno > 0))
+        report_errors = [
+            run_reports(op.join(work_dir, 'reportlets'), output_dir, subject_label,
+                        run_uuid=run_uuid)
+            for subject_label in subject_list]
+        sys.exit(int(sum(report_errors) > 0))
 
     # Build main workflow
-    logger.info(INIT_MSG(
+    logger.log(25, INIT_MSG(
         version=__version__,
         subject_list=subject_list,
         uuid=run_uuid)
     )
+
     fmriprep_wf = init_fmriprep_wf(subject_list=subject_list,
                                    task_id=opts.task_id,
                                    run_uuid=run_uuid,
