@@ -81,6 +81,9 @@ def get_parser():
         choices=['fieldmaps', 'slicetiming'],
         help='ignore selected aspects of the input dataset to disable corresponding '
              'parts of the workflow')
+    g_conf.add_argument(
+        '--longitudinal', action='store_true',
+        help='treat dataset as longitudinal - may increase runtime')
     g_conf.add_argument('--bold2t1w-dof', action='store', default=9, choices=[6, 9, 12], type=int,
                         help='Degrees of freedom when registering BOLD to T1w images. '
                              '9 (rotation, translation, and scaling) is used by '
@@ -253,6 +256,7 @@ def create_workflow(opts):
                                        ignore=opts.ignore,
                                        debug=opts.debug,
                                        anat_only=opts.anat_only,
+                                       longitudinal=opts.longitudinal,
                                        omp_nthreads=omp_nthreads,
                                        skull_strip_ants=opts.skull_strip_ants,
                                        reportlets_dir=reportlets_dir,
