@@ -426,7 +426,7 @@ def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
 def init_gifti_surface_wf(name='gifti_surface_wf'):
     """
     Extract surfaces from FreeSurfer derivatives folder and
-    re-center GIFTI coordinates to fit align to native T1 space
+    re-center GIFTI coordinates to align to native T1 space
 
     """
     workflow = pe.Workflow(name=name)
