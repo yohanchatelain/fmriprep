@@ -239,7 +239,7 @@ def create_workflow(opts):
 
     # Set up directories
     output_dir = op.abspath(opts.output_dir)
-    log_dir = op.join(opts.output_dir, 'fmriprep', 'logs')
+    log_dir = op.join(output_dir, 'fmriprep', 'logs')
     work_dir = op.abspath(opts.work_dir)
 
     # Check and create output and working directories
