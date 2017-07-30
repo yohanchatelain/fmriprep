@@ -95,13 +95,13 @@ def init_single_subject_wf(subject_id, task_id, name,
 
     if name == 'single_subject_wf':
         # for documentation purposes
-        subject_data = {'func': ['/completely/made/up/path/sub-01_task-nback_bold.nii.gz']}
+        subject_data = {'bold': ['/completely/made/up/path/sub-01_task-nback_bold.nii.gz']}
         layout = None
     else:
         layout = BIDSLayout(bids_dir)
         subject_data = collect_data(bids_dir, subject_id, task_id)
 
-        if not anat_only and subject_data['func'] == []:
+        if not anat_only and subject_data['bold'] == []:
             raise Exception("No BOLD images found for participant {} and task {}. "
                             "All workflows require BOLD images.".format(
                                 subject_id, task_id if task_id else '<all>'))
@@ -140,7 +140,7 @@ def init_single_subject_wf(subject_id, task_id, name,
     if anat_only:
         return workflow
 
-    for bold_file in subject_data['func']:
+    for bold_file in subject_data['bold']:
         func_preproc_wf = init_func_preproc_wf(bold_file=bold_file,
                                                layout=layout,
                                                ignore=ignore,
