@@ -64,7 +64,7 @@ def collect_data(dataset, subject, task=None):
     queries = {
         'fmap': {'subject': subject, 'modality': 'fmap', 'extensions': ['nii', 'nii.gz']},
         'bold': {'subject': subject, 'modality': 'func', 'type': 'bold',
-                'extensions': ['nii', 'nii.gz']},
+                 'extensions': ['nii', 'nii.gz']},
         'sbref': {'subject': subject, 'modality': 'func', 'type': 'sbref',
                   'extensions': ['nii', 'nii.gz']},
         't1w': {'subject': subject, 'type': 'T1w', 'extensions': ['nii', 'nii.gz']},
@@ -75,4 +75,4 @@ def collect_data(dataset, subject, task=None):
         queries['bold']['task'] = task
 
     return {modality: [x.filename for x in layout.get(**query)]
-                       for modality, query in queries.items()}
+            for modality, query in queries.items()}
