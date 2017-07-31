@@ -3,9 +3,10 @@
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
 """
-Created on Wed Dec  2 17:35:40 2015
+fMRIprep base processing workflows
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-@author: craigmoodie
+
 """
 from __future__ import print_function, division, absolute_import, unicode_literals
 
@@ -15,14 +16,11 @@ from copy import deepcopy
 from niworkflows.nipype.pipeline import engine as pe
 from niworkflows.nipype.interfaces import utility as niu
 
-from fmriprep.interfaces import BIDSDataGrabber, BIDSFreeSurferDir
-from fmriprep.utils.bids import collect_data
+from ..interfaces import BIDSDataGrabber, BIDSFreeSurferDir
+from ..utils.bids import collect_data, BIDSLayout
 
-from fmriprep.workflows.anatomical import init_anat_preproc_wf
-
-from fmriprep.workflows.epi import init_func_preproc_wf
-
-from bids.grabbids import BIDSLayout
+from .anatomical import init_anat_preproc_wf
+from .bold import init_func_preproc_wf
 
 
 def init_fmriprep_wf(subject_list, task_id, run_uuid,
