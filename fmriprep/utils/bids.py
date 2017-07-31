@@ -20,7 +20,7 @@ import warnings
 from bids.grabbids import BIDSLayout
 
 
-def collect_participants(bids_dir, participant_label=None):
+def collect_participants(bids_dir, participant_label=None, strict=False):
     """
     List the participants under the BIDS root and checks that participants
     designated with the participant_label argument exist in that folder.
@@ -47,6 +47,11 @@ def collect_participants(bids_dir, participant_label=None):
     >>> collect_participants('ds114', participant_label=['02', '14'])
     ['02']
 
+    >>> collect_participants('ds114', participant_label=['02', '14'],
+    ...                      strict=True)
+    Traceback (most recent call last):
+    ...
+    RuntimeError: Some participants were not found: 14
 
     """
     bids_dir = op.abspath(bids_dir)
@@ -83,8 +88,12 @@ def collect_participants(bids_dir, participant_label=None):
     # Warn if some IDs were not found
     notfound_label = sorted(set(participant_label) - set(all_participants))
     if notfound_label:
-        warnings.warn('Some participants were not found: {}'.format(
-            ', '.join(notfound_label)), RuntimeWarning)
+        msg = 'Some participants were not found: {}'.format(
+            ', '.join(notfound_label))
+        if strict:
+            raise RuntimeError(msg)
+        warnings.warn(msg, RuntimeWarning)
+
     return found_label
 
 

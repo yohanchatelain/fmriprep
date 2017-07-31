@@ -101,12 +101,12 @@ RUN apt-get install -y nodejs
 RUN npm install -g svgo
 
 # Installing and setting up ICA_AROMA
-RUN curl -sSLO https://github.com/rhr-pruim/ICA-AROMA/archive/v0.4-beta.tar.gz &&\
-  tar -xf v0.4-beta.tar.gz -C /opt &&\
-  chmod +x /opt/ICA-AROMA-0.4-beta/ICA_AROMA.py &&\
-  chmod +x /opt/ICA-AROMA-0.4-beta/ICA_AROMA_functions.py
+RUN mkdir -p /opt/ICA-AROMA && \
+  curl -sSL "https://github.com/rhr-pruim/ICA-AROMA/archive/v0.4.1-beta.tar.gz" \
+  | tar -xzC /opt/ICA-AROMA --strip-components 1 && \
+  chmod +x /opt/ICA-AROMA/ICA_AROMA.py
 
-ENV PATH=/opt/ICA-AROMA-0.4-beta:$PATH
+ENV PATH=/opt/ICA-AROMA:$PATH
 
 # Installing and setting up miniconda
 RUN curl -sSLO https://repo.continuum.io/miniconda/Miniconda3-4.3.11-Linux-x86_64.sh && \
