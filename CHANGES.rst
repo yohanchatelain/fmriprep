@@ -1,5 +1,5 @@
-Next release
-============
+0.6.0 (31st of July 2017)
+=========================
 
 With thanks to Yaroslav Halchenko and Ilkay Isik for contributions.
 
