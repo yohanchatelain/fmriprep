@@ -9,5 +9,5 @@ from .images import IntraModalMerge, InvertT1w, ValidateImage, ConformSeries
 from .freesurfer import (
     StructuralReference, MakeMidthickness, FSInjectBrainExtracted, FSDetectInputs
 )
-from .surf import NormalizeSurf, GiftiNameSource
+from .surf import NormalizeSurf, GiftiNameSource, GiftiUpdateMeta
 from .reports import AnatomicalSummary

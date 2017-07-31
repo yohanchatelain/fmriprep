@@ -93,20 +93,23 @@ def init_single_subject_wf(subject_id, task_id, name,
 
     if name == 'single_subject_wf':
         # for documentation purposes
-        subject_data = {'bold': ['/completely/made/up/path/sub-01_task-nback_bold.nii.gz']}
+        subject_data = {
+            't1w': ['/completely/made/up/path/sub-01_T1w.nii.gz'],
+            'bold': ['/completely/made/up/path/sub-01_task-nback_bold.nii.gz']
+        }
         layout = None
     else:
-        layout = BIDSLayout(bids_dir)
-        subject_data = collect_data(bids_dir, subject_id, task_id)
+        subject_data, layout = collect_data(bids_dir, subject_id, task_id)
 
-        if not anat_only and subject_data['bold'] == []:
-            raise Exception("No BOLD images found for participant {} and task {}. "
-                            "All workflows require BOLD images.".format(
-                                subject_id, task_id if task_id else '<all>'))
+    # Make sure we always go through these two checks
+    if not anat_only and subject_data['bold'] == []:
+        raise Exception("No BOLD images found for participant {} and task {}. "
+                        "All workflows require BOLD images.".format(
+                            subject_id, task_id if task_id else '<all>'))
 
-        if not subject_data['t1w']:
-            raise Exception("No T1w images found for participant {}. "
-                            "All workflows require T1w images.".format(subject_id))
+    if not subject_data['t1w']:
+        raise Exception("No T1w images found for participant {}. "
+                        "All workflows require T1w images.".format(subject_id))
 
     workflow = pe.Workflow(name=name)
 
