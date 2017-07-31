@@ -17,7 +17,7 @@ from niworkflows.nipype.pipeline import engine as pe
 from niworkflows.nipype.interfaces import utility as niu
 
 from ..interfaces import BIDSDataGrabber, BIDSFreeSurferDir
-from ..utils.bids import collect_data, BIDSLayout
+from ..utils.bids import collect_data
 
 from .anatomical import init_anat_preproc_wf
 from .bold import init_func_preproc_wf
