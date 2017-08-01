@@ -179,9 +179,13 @@ def main():
 
     # Validity of some inputs - OE should be done in parse_args?
     # ERROR check if use_aroma was specified, but the correct template was not
-    if opts.use_aroma and str(opts.template) != 'MNI152NLin2009cAsym':
-        raise RuntimeError('ERROR: if use_aroma is set, the template must be set '
-                           'to MNI152NLin2009cAsym not %s' % opts.template)
+    if opts.use_aroma and (opts.template != 'MNI152NLin2009cAsym' or
+                           'template' not in opts.output_space):
+        raise RuntimeError('ERROR: --use-aroma requires functional images to be resampled to '
+                           'MNI152NLin2009cAsym.\n'
+                           '\t--template must be set to "MNI152NLin2009cAsym" (was: "{}")\n'
+                           '\t--output-space list must include "template" (was: "{}")'.format(
+                               opts.template, ' '.join(opts.output_space)))
     # Check output_space
     if 'template' not in opts.output_space and (opts.use_syn_sdc or opts.force_syn):
         msg = ('SyN SDC correction requires T1 to MNI registration, but '
