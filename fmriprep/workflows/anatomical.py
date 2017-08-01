@@ -81,7 +81,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
     # 4. Segmentation
     t1_seg = pe.Node(FASTRPT(generate_report=True, segments=True,
                              no_bias=True, probability_maps=True),
-                     name='t1_seg', estimated_memory_gb=3)
+                     name='t1_seg', mem_gb=3)
 
     # 5. Spatial normalization (T1w to MNI registration)
     t1_2_mni = pe.Node(
