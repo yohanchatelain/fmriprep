@@ -183,13 +183,13 @@ packages, including FreeSurfer and the `Connectome Workbench`_.
 
 BOLD preprocessing
 ------------------
-:mod:`fmriprep.workflows.epi.init_func_preproc_wf`
+:mod:`fmriprep.workflows.bold.init_func_preproc_wf`
 
 .. workflow::
     :graph2use: orig
     :simple_form: yes
 
-    from fmriprep.workflows.epi import init_func_preproc_wf
+    from fmriprep.workflows.bold import init_func_preproc_wf
     wf = init_func_preproc_wf('/completely/made/up/path/sub-01_task-nback_bold.nii.gz',
                               omp_nthreads=1,
                               ignore=[],
@@ -211,18 +211,18 @@ BOLD preprocessing
 
 Preprocessing of BOLD files is split into multiple sub-workflows decribed below.
 
-.. epi_hmc :
+.. bold_hmc :
 
 Head-motion estimation and slice time correction
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.epi.init_epi_hmc_wf`
+:mod:`fmriprep.workflows.bold.init_bold_hmc_wf`
 
 .. workflow::
     :graph2use: colored
     :simple_form: yes
 
-    from fmriprep.workflows.epi import init_epi_hmc_wf
-    wf = init_epi_hmc_wf(
+    from fmriprep.workflows.bold import init_bold_hmc_wf
+    wf = init_bold_hmc_wf(
         metadata={"RepetitionTime": 2.0,
                   "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]},
                   ignore=[],
@@ -260,14 +260,14 @@ Susceptibility Distortion Correction (SDC)
 
 EPI to T1w registration
 ~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.epi.init_epi_reg_wf`
+:mod:`fmriprep.workflows.bold.init_bold_reg_wf`
 
 .. workflow::
     :graph2use: colored
     :simple_form: yes
 
-    from fmriprep.workflows.epi import init_epi_reg_wf
-    wf = init_epi_reg_wf(freesurfer=True,
+    from fmriprep.workflows.bold import init_bold_reg_wf
+    wf = init_bold_reg_wf(freesurfer=True,
                          output_dir='.',
                          bold_file_size_gb=3,
                          output_spaces=['T1w', 'fsnative',
@@ -289,14 +289,14 @@ boundary.
 
 EPI to MNI transformation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.epi.init_epi_mni_trans_wf`
+:mod:`fmriprep.workflows.bold.init_bold_mni_trans_wf`
 
 .. workflow::
     :graph2use: colored
     :simple_form: yes
 
-    from fmriprep.workflows.epi import init_epi_mni_trans_wf
-    wf = init_epi_mni_trans_wf(output_dir='.',
+    from fmriprep.workflows.bold import init_bold_mni_trans_wf
+    wf = init_bold_mni_trans_wf(output_dir='.',
                                template='MNI152NLin2009cAsym',
                                bold_file_size_gb=3,
                                output_grid_ref=None)
@@ -313,14 +313,14 @@ step, so as little information is lost as possible.
 
 EPI sampled to FreeSurfer surfaces
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.epi.init_epi_surf_wf`
+:mod:`fmriprep.workflows.bold.init_bold_surf_wf`
 
 .. workflow::
     :graph2use: colored
     :simple_form: yes
 
-    from fmriprep.workflows.epi import init_epi_surf_wf
-    wf = init_epi_surf_wf(output_spaces=['T1w', 'fsnative',
+    from fmriprep.workflows.bold import init_bold_surf_wf
+    wf = init_bold_surf_wf(output_spaces=['T1w', 'fsnative',
                                          'template', 'fsaverage5'])
 
 If FreeSurfer processing is enabled, the motion-corrected functional series
