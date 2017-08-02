@@ -34,7 +34,113 @@ from ..utils.misc import fix_multi_T1w_source_name, add_suffix
 def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, freesurfer,
                          longitudinal, omp_nthreads, hires, reportlets_dir, output_dir,
                          name='anat_preproc_wf'):
-    """T1w images preprocessing pipeline"""
+    """
+    This workflow controls the anatomical preprocessing stages of FMRIPREP.
+
+    This includes:
+
+     - Creation of a structural template
+     - Skull-stripping and bias correction
+     - Tissue segmentation
+     - Normalization
+     - Surface reconstruction with FreeSurfer
+
+    .. workflow::
+        :graph2use: orig
+        :simple_form: yes
+
+        from fmriprep.workflows.anatomical import init_anat_preproc_wf
+        wf = init_anat_preproc_wf(omp_nthreads=1,
+                                  reportlets_dir='.',
+                                  output_dir='.',
+                                  template='MNI152NLin2009cAsym',
+                                  output_spaces=['T1w', 'fsnative',
+                                                 'template', 'fsaverage5'],
+                                  skull_strip_ants=True,
+                                  freesurfer=True,
+                                  longitudinal=False,
+                                  debug=False,
+                                  hires=True)
+
+    Parameters
+
+        skull_strip_ants : bool
+            Use ANTs BrainExtraction.sh-based skull-stripping workflow
+            If ``False``, uses a faster AFNI-based workflow
+        output_spaces : list
+            List of output spaces functional images are to be resampled to
+            Some parts of pipeline will only be instantiated for some output spaces
+            Valid spaces:
+             - T1w
+             - template
+             - fsnative
+             - fsaverage (or other pre-existing FreeSurfer templates)
+        template : str
+            Name of template targeted by `'template'` output space
+        debug : bool
+            Enable debugging outputs
+        freesurfer : bool
+            Enable FreeSurfer surface reconstruction (may increase runtime)
+        longitudinal : bool
+            Create unbiased structural template, regardless of number of inputs
+            (may increase runtime)
+        omp_nthreads : int
+            Maximum number of threads an individual process may use
+        hires : bool
+            Enable sub-millimeter preprocessing in FreeSurfer
+        reportlets_dir : str
+            Directory in which to save reportlets
+        output_dir : str
+            Directory in which to save derivatives
+        name : str, optional
+            Workflow name (default: anat_preproc_wf)
+
+
+    Inputs
+
+        t1w
+            List of T1-weighted structural images
+        t2w
+            List of T2-weighted structural images
+        subjects_dir
+            FreeSurfer SUBJECTS_DIR
+
+
+    Outputs
+
+        t1_preproc
+            Bias-corrected structural template, defining T1w space
+        t1_brain
+            Skull-stripped ``t1_preproc``
+        t1_mask
+            Mask of the skull-stripped template image
+        t1_seg
+            Segmentation of preprocessed structural image, including
+            gray-matter (GM), white-matter (WM) and cerebrospinal fluid (CSF)
+        t1_tpms
+            List of tissue probability maps in T1w space
+        t1_2_mni
+            T1w template, normalized to MNI space
+        t1_2_mni_forward_transform
+            ANTs-compatible affine-and-warp transform file
+        t1_2_mni_reverse_transform
+            ANTs-compatible affine-and-warp transform file (inverse)
+        mni_mask
+            Mask of skull-stripped template, in MNI space
+        mni_seg
+            Segmentation, resampled into MNI space
+        mni_tpms
+            List of tissue probability maps in MNI space
+        subjects_dir
+            FreeSurfer SUBJECTS_DIR
+        subject_id
+            FreeSurfer subject ID
+        fs_2_t1_transform
+            Affine transform from FreeSurfer subject space to T1w space
+        surfaces
+            GIFTI surfaces (gray/white boundary, midthickness, pial, inflated)
+
+    """
 
     workflow = pe.Workflow(name=name)
 
