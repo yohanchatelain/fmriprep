@@ -9,8 +9,6 @@ import nibabel as nb
 from scipy.interpolate import interpn
 from datetime import datetime as dt
 
-from builtins import object, str, bytes
-
 from niworkflows.nipype import logging
 LOGGER = logging.getLogger('interfaces')
 
@@ -33,7 +31,7 @@ class BSplineFieldmap(object):
 
         self._knots_zooms = np.array(knots_zooms)
 
-        if isinstance(fmapnii, (str, bytes)):
+        if isinstance(fmapnii, str):
             fmapnii = nb.as_closest_canonical(nb.load(fmapnii))
 
         self._fmapnii = fmapnii
@@ -218,9 +216,8 @@ def _approx(fmapnii, s=14.):
 
     """
     from scipy.interpolate import RectBivariateSpline
-    from builtins import str, bytes
 
-    if isinstance(fmapnii, (str, bytes)):
+    if isinstance(fmapnii, str):
         fmapnii = nb.load(fmapnii)
 
     if not isinstance(s, (tuple, list)):
@@ -269,13 +266,12 @@ def bspl_smoothing(fmapnii, masknii=None, knot_space=[18., 18., 20.]):
     A 3D BSpline smoothing of the fieldmap
     """
     from datetime import datetime as dt
-    from builtins import str, bytes
 
     if not isinstance(knot_space, (list, tuple)):
         knot_space = [knot_space] * 3
     knot_space = np.array(knot_space)
 
-    if isinstance(fmapnii, (str, bytes)):
+    if isinstance(fmapnii, str):
         fmapnii = nb.load(fmapnii)
 
     data = fmapnii.get_data()
@@ -299,7 +295,7 @@ def bspl_smoothing(fmapnii, masknii=None, knot_space=[18., 18., 20.]):
 
     # Mask if provided
     if masknii is not None:
-        if isinstance(masknii, (str, bytes)):
+        if isinstance(masknii, str):
             masknii = nb.load(masknii)
         data[masknii.get_data() <= 0] = 0
         points_ijk = np.where(masknii.get_data() > 0)
