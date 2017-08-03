@@ -11,3 +11,5 @@ from .freesurfer import (
 )
 from .surf import NormalizeSurf, GiftiNameSource, GiftiSetAnatomicalStructure
 from .reports import AnatomicalSummary
+from .utils import ApplyMask
+from .fmap import FieldEnhance
