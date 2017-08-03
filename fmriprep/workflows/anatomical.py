@@ -595,7 +595,10 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
         DerivativesDataSink(base_directory=output_dir, suffix=suffix_fmt(template, 'warp')),
         name='ds_t1_mni_warp', run_without_submitting=True)
 
-    name_surfs = pe.MapNode(GiftiNameSource(), iterfield='in_file', name='name_surfs',
+    name_surfs = pe.MapNode(GiftiNameSource(pattern=r'(?P<LR>[lr])h.(?P<surf>.+)_converted.gii',
+                                            template='{surf}.{LR}.surf'),
+                            iterfield='in_file',
+                            name='name_surfs',
                             run_without_submitting=True)
 
     ds_surfs = pe.MapNode(

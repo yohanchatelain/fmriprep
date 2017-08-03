@@ -335,14 +335,14 @@ All surface outputs are in GIFTI format.
 
 Confounds estimation
 ~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.confounds.init_discover_wf`
+:mod:`fmriprep.workflows.confounds.init_bold_confs_wf`
 
 .. workflow::
     :graph2use: colored
     :simple_form: yes
 
-    from fmriprep.workflows.confounds import init_discover_wf
-    wf = init_discover_wf(
+    from fmriprep.workflows.confounds import init_bold_confs_wf
+    wf = init_bold_confs_wf(
         name="discover_wf",
         use_aroma=False, ignore_aroma_err=False, bold_file_size_gb=3,
         metadata={"RepetitionTime": 2.0,
