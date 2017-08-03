@@ -621,7 +621,7 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
             (inputnode, name_surfs, [('surfaces', 'in_file')]),
             (inputnode, ds_surfs, [('source_file', 'source_file'),
                                    ('surfaces', 'in_file')]),
-            (name_surfs, ds_surfs, [('out_file', 'suffix')]),
+            (name_surfs, ds_surfs, [('out_name', 'suffix')]),
         ])
     if 'template' in output_spaces:
         workflow.connect([
