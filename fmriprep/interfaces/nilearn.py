@@ -8,8 +8,6 @@ Image tools interfaces
 
 
 """
-from __future__ import print_function, division, absolute_import, unicode_literals
-
 import os
 import nibabel as nb
 from nilearn.masking import compute_epi_mask

@@ -8,7 +8,6 @@ Anatomical Reference -processing workflows.
 Originally coded by Craig Moodie. Refactored by the CRN Developers.
 
 """
-from __future__ import print_function, division, absolute_import, unicode_literals
 
 import os.path as op
 
