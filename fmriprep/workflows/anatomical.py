@@ -81,7 +81,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
     # 4. Segmentation
     t1_seg = pe.Node(FASTRPT(generate_report=True, segments=True,
                              no_bias=True, probability_maps=True),
-                     name='t1_seg', estimated_memory_gb=3)
+                     name='t1_seg', mem_gb=3)
 
     # 5. Spatial normalization (T1w to MNI registration)
     t1_2_mni = pe.Node(
@@ -595,7 +595,10 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
         DerivativesDataSink(base_directory=output_dir, suffix=suffix_fmt(template, 'warp')),
         name='ds_t1_mni_warp', run_without_submitting=True)
 
-    name_surfs = pe.MapNode(GiftiNameSource(), iterfield='in_file', name='name_surfs',
+    name_surfs = pe.MapNode(GiftiNameSource(pattern=r'(?P<LR>[lr])h.(?P<surf>.+)_converted.gii',
+                                            template='{surf}.{LR}.surf'),
+                            iterfield='in_file',
+                            name='name_surfs',
                             run_without_submitting=True)
 
     ds_surfs = pe.MapNode(
@@ -618,7 +621,7 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
             (inputnode, name_surfs, [('surfaces', 'in_file')]),
             (inputnode, ds_surfs, [('source_file', 'source_file'),
                                    ('surfaces', 'in_file')]),
-            (name_surfs, ds_surfs, [('out_file', 'suffix')]),
+            (name_surfs, ds_surfs, [('out_name', 'suffix')]),
         ])
     if 'template' in output_spaces:
         workflow.connect([

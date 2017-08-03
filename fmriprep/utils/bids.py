@@ -101,7 +101,7 @@ def collect_data(dataset, participant_label, task=None):
     """
     Uses grabbids to retrieve the input data for a given participant
 
-    >>> bids_root = collect_data('ds054', '100185')
+    >>> bids_root, _ = collect_data('ds054', '100185')
     >>> bids_root['fmap']  # doctest: +ELLIPSIS
     ['.../ds054/sub-100185/fmap/sub-100185_magnitude1.nii.gz', \
 '.../ds054/sub-100185/fmap/sub-100185_magnitude2.nii.gz', \
@@ -149,4 +149,4 @@ def collect_data(dataset, participant_label, task=None):
         queries['bold']['task'] = task
 
     return {modality: [x.filename for x in layout.get(**query)]
-            for modality, query in queries.items()}
+            for modality, query in queries.items()}, layout
