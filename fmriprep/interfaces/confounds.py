@@ -67,7 +67,9 @@ class ICAConfoundsInputSpec(BaseInterfaceInputSpec):
 
 
 class ICAConfoundsOutputSpec(TraitedSpec):
-    out_file = File(exists=True, desc='output average file')
+    aroma_confounds = File(exists=True, desc='output confounds file extracted from ICA-AROMA')
+    aroma_noise_ics = File(exists=True, desc='ICA-AROMA noise components')
+    melodic_mix = File(exists=True, desc='melodic mix file')
 
 
 class ICAConfounds(SimpleInterface):
@@ -83,8 +85,8 @@ class ICAConfounds(SimpleInterface):
         elif not self.inputs.ignore_aroma_err:
             raise RuntimeError('ICA-AROMA failed')
 
-        self._results['motion_ics_out'] = motion_ics_out
-        self._results['melodic_mix_out'] = melodic_mix_out
+        self._results['aroma_noise_ics'] = motion_ics_out
+        self._results['melodic_mix'] = melodic_mix_out
         return runtime
 
 
