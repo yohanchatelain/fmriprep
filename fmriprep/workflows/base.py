@@ -3,11 +3,11 @@
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
 """
-Created on Wed Dec  2 17:35:40 2015
+fMRIprep base processing workflows
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-@author: craigmoodie
+
 """
-from __future__ import print_function, division, absolute_import, unicode_literals
 
 import os
 from copy import deepcopy
@@ -15,23 +15,21 @@ from copy import deepcopy
 from niworkflows.nipype.pipeline import engine as pe
 from niworkflows.nipype.interfaces import utility as niu
 
-from fmriprep.interfaces import BIDSDataGrabber, BIDSFreeSurferDir
-from fmriprep.utils.misc import collect_bids_data
+from ..interfaces import BIDSDataGrabber, BIDSFreeSurferDir
+from ..utils.bids import collect_data
 
-from fmriprep.workflows.anatomical import init_anat_preproc_wf
-
-from fmriprep.workflows.epi import init_func_preproc_wf
-
-from bids.grabbids import BIDSLayout
+from .anatomical import init_anat_preproc_wf
+from .bold import init_func_preproc_wf
 
 
 def init_fmriprep_wf(subject_list, task_id, run_uuid,
                      ignore, debug, anat_only, longitudinal, omp_nthreads,
-                     skull_strip_ants, reportlets_dir, output_dir, bids_dir,
+                     skull_strip_ants, work_dir, output_dir, bids_dir,
                      freesurfer, output_spaces, template, hires,
                      bold2t1w_dof, fmap_bspline, fmap_demean, use_syn, force_syn,
                      use_aroma, ignore_aroma_err, output_grid_ref,):
     fmriprep_wf = pe.Workflow(name='fmriprep_wf')
+    fmriprep_wf.base_dir = work_dir
 
     if freesurfer:
         fsdir = pe.Node(
@@ -41,6 +39,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
                 spaces=output_spaces),
             name='fsdir')
 
+    reportlets_dir = os.path.join(work_dir, 'reportlets')
     for subject_id in subject_list:
         single_subject_wf = init_single_subject_wf(subject_id=subject_id,
                                                    task_id=task_id,
@@ -93,21 +92,23 @@ def init_single_subject_wf(subject_id, task_id, name,
 
     if name == 'single_subject_wf':
         # for documentation purposes
-        subject_data = {'func': ['/completely/made/up/path/sub-01_task-nback_bold.nii.gz']}
+        subject_data = {
+            't1w': ['/completely/made/up/path/sub-01_T1w.nii.gz'],
+            'bold': ['/completely/made/up/path/sub-01_task-nback_bold.nii.gz']
+        }
         layout = None
     else:
-        layout = BIDSLayout(bids_dir)
+        subject_data, layout = collect_data(bids_dir, subject_id, task_id)
 
-        subject_data = collect_bids_data(bids_dir, subject_id, task_id)
+    # Make sure we always go through these two checks
+    if not anat_only and subject_data['bold'] == []:
+        raise Exception("No BOLD images found for participant {} and task {}. "
+                        "All workflows require BOLD images.".format(
+                            subject_id, task_id if task_id else '<all>'))
 
-        if not anat_only and subject_data['func'] == []:
-            raise Exception("No BOLD images found for participant {} and task {}. "
-                            "All workflows require BOLD images.".format(
-                                subject_id, task_id if task_id else '<all>'))
-
-        if not subject_data['t1w']:
-            raise Exception("No T1w images found for participant {}. "
-                            "All workflows require T1w images.".format(subject_id))
+    if not subject_data['t1w']:
+        raise Exception("No T1w images found for participant {}. "
+                        "All workflows require T1w images.".format(subject_id))
 
     workflow = pe.Workflow(name=name)
 
@@ -139,7 +140,7 @@ def init_single_subject_wf(subject_id, task_id, name,
     if anat_only:
         return workflow
 
-    for bold_file in subject_data['func']:
+    for bold_file in subject_data['bold']:
         func_preproc_wf = init_func_preproc_wf(bold_file=bold_file,
                                                layout=layout,
                                                ignore=ignore,
