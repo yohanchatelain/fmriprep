@@ -20,6 +20,23 @@ import warnings
 from bids.grabbids import BIDSLayout
 
 
+class BIDSError(ValueError):
+    def __init__(self, message, bids_root):
+        indent = 10
+        header = '{sep} BIDS root folder: "{bids_root}" {sep}'.format(
+            bids_root=bids_root, sep=''.join(['-'] * indent))
+        self.msg = '\n{header}\n{indent}{message}\n{footer}'.format(
+            header=header, indent=''.join([' '] * (indent + 1)),
+            message=message, footer=''.join(['-'] * len(header))
+        )
+        super(BIDSError, self).__init__(self.msg)
+        self.bids_root = bids_root
+
+
+class BIDSWarning(RuntimeWarning):
+    pass
+
+
 def collect_participants(bids_dir, participant_label=None, strict=False):
     """
     List the participants under the BIDS root and checks that participants
@@ -48,10 +65,13 @@ def collect_participants(bids_dir, participant_label=None, strict=False):
     ['02']
 
     >>> collect_participants('ds114', participant_label=['02', '14'],
-    ...                      strict=True)
+    ...                      strict=True)  # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
+    fmriprep.utils.bids.BIDSError:
     ...
-    RuntimeError: Some participants were not found: 14
+
+
+
 
     """
     bids_dir = op.abspath(bids_dir)
@@ -61,12 +81,12 @@ def collect_participants(bids_dir, participant_label=None, strict=False):
 
     # Error: bids_dir does not contain subjects
     if not all_participants:
-        raise RuntimeError(
-            'Could not find participants in "{}". Please make sure the BIDS data '
+        raise BIDSError(
+            'Could not find participants. Please make sure the BIDS data '
             'structure is present and correct. Datasets can be validated online '
             'using the BIDS Validator (http://incf.github.io/bids-validator/).\n'
             'If you are using Docker for Mac or Docker for Windows, you '
-            'may need to adjust your "File sharing" preferences.'.format(bids_dir))
+            'may need to adjust your "File sharing" preferences.', bids_dir)
 
     # No --participant-label was set, return all
     if participant_label is None or not participant_label:
@@ -82,17 +102,17 @@ def collect_participants(bids_dir, participant_label=None, strict=False):
     # Remove labels not found
     found_label = sorted(set(participant_label) & set(all_participants))
     if not found_label:
-        raise RuntimeError('Could not find participants [{}] in folder '
-                           '"{}".'.format(', '.join(participant_label), bids_dir))
+        raise BIDSError('Could not find participants [{}]'.format(
+            ', '.join(participant_label)), bids_dir)
 
     # Warn if some IDs were not found
     notfound_label = sorted(set(participant_label) - set(all_participants))
     if notfound_label:
-        msg = 'Some participants were not found: {}'.format(
-            ', '.join(notfound_label))
+        exc = BIDSError('Some participants were not found: {}'.format(
+            ', '.join(notfound_label)), bids_dir)
         if strict:
-            raise RuntimeError(msg)
-        warnings.warn(msg, RuntimeWarning)
+            raise exc
+        warnings.warn(exc.msg, BIDSWarning)
 
     return found_label
 
