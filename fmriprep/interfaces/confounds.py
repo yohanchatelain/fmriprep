@@ -2,14 +2,21 @@
 # -*- coding: utf-8 -*-
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
+"""
+Handling confounds
+^^^^^^^^^^^^^^^^^^
 
+    >>> import os
+    >>> import pandas as pd
+
+"""
 import os
 import shutil
 import numpy as np
 import pandas as pd
 from niworkflows.nipype import logging
 from niworkflows.nipype.interfaces.base import (
-    traits, TraitedSpec, BaseInterfaceInputSpec, File, Directory
+    traits, TraitedSpec, BaseInterfaceInputSpec, File, Directory, isdefined
 )
 from niworkflows.interfaces.base import SimpleInterface
 
@@ -85,7 +92,26 @@ class ICAConfounds(SimpleInterface):
 def _gather_confounds(signals=None, dvars=None, fdisp=None,
                       tcompcor=None, acompcor=None, cos_basis=None,
                       motion=None, aroma=None):
-    ''' load confounds from the filenames, concatenate together horizontally, and re-save '''
+    """
+    Load confounds from the filenames, concatenate together horizontally
+    and save new file.
+
+    >>> from tempfile import TemporaryDirectory
+    >>> tmpdir = TemporaryDirectory()
+    >>> os.chdir(tmpdir.name)
+    >>> pd.DataFrame({'a': [0.1]}).to_csv('signals.tsv', index=False, na_rep='n/a')
+    >>> pd.DataFrame({'b': [0.2]}).to_csv('dvars.tsv', index=False, na_rep='n/a')
+    >>> out_file, confound_list = _gather_confounds('signals.tsv', 'dvars.tsv')
+    >>> confound_list
+    ['Global signals', 'DVARS']
+
+    >>> pd.read_csv(out_file, sep='\t', index_col=None)  # doctest: +NORMALIZE_WHITESPACE
+         a    b
+    0  0.1  0.2
+    >>> tmpdir.cleanup()
+
+
+    """
 
     def less_breakable(a_string):
         ''' hardens the string to different envs (i.e. case insensitive, no whitespace, '#' '''
@@ -112,7 +138,7 @@ def _gather_confounds(signals=None, dvars=None, fdisp=None,
                            (cos_basis, 'Cosine basis'),
                            (motion, 'Motion parameters'),
                            (aroma, 'ICA-AROMA')):
-        if confound is not None:
+        if confound is not None and isdefined(confound):
             confounds_list.append(name)
             if os.path.exists(confound) and os.stat(confound).st_size > 0:
                 all_files.append(confound)
@@ -128,8 +154,8 @@ def _gather_confounds(signals=None, dvars=None, fdisp=None,
         confounds_data = pd.concat((confounds_data, new), axis=1)
 
     combined_out = os.path.abspath('confounds.tsv')
-    confounds_data.to_csv(combined_out, sep=str("\t"), index=False,
-                          na_rep="n/a")
+    confounds_data.to_csv(combined_out, sep='\t', index=False,
+                          na_rep='n/a')
 
     return combined_out, confounds_list
 
