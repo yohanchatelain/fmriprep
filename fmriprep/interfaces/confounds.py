@@ -56,8 +56,8 @@ class GatherConfounds(SimpleInterface):
             self.inputs.motion,
             self.inputs.aroma,
         )
-        self._results['combined_out'] = combined_out
-        self._results['confounds_file'] = confounds_list
+        self._results['confounds_file'] = combined_out
+        self._results['confounds_list'] = confounds_list
         return runtime
 
 
