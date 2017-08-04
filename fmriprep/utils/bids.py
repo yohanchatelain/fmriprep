@@ -71,8 +71,6 @@ def collect_participants(bids_dir, participant_label=None, strict=False):
     ...
 
 
-
-
     """
     bids_dir = op.abspath(bids_dir)
     all_participants = sorted(
