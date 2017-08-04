@@ -16,7 +16,7 @@ from argparse import ArgumentParser
 from argparse import RawTextHelpFormatter
 from multiprocessing import cpu_count
 from time import strftime
-from fmriprep.info import __version__
+from ..info import __version__
 
 logging.addLevelName(25, 'INFO')  # Add a new level between INFO and WARNING
 logger = logging.getLogger('cli')
@@ -199,9 +199,9 @@ def main():
 def create_workflow(opts):
     """Build workflow"""
     from niworkflows.nipype import config as ncfg
-    from fmriprep.viz.reports import run_reports
-    from fmriprep.workflows.base import init_fmriprep_wf
-    from fmriprep.utils.bids import collect_participants
+    from ..viz.reports import run_reports
+    from ..workflows.base import init_fmriprep_wf
+    from ..utils.bids import collect_participants
 
     # Set up some instrumental utilities
     errno = 0
