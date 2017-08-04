@@ -24,14 +24,14 @@ LOGGER = logging.getLogger('interface')
 
 
 class GatherConfoundsInputSpec(BaseInterfaceInputSpec):
-    signals = File(exists=True, mandatory=True, desc='input signals')
-    dvars = File(exists=True, mandatory=True, desc='file containing DVARS')
-    fd = File(exists=True, mandatory=True, desc='input framewise displacement')
-    tcompcor = File(exists=True, mandatory=True, desc='input tCompCorr')
-    acompcor = File(exists=True, mandatory=True, desc='input aCompCorr')
-    cos_basis = File(exists=True, mandatory=True, desc='input cosine basis')
-    motion = File(exists=True, mandatory=True, desc='input motion parameters')
-    aroma = File(exists=True, mandatory=True, desc='input ICA-AROMA')
+    signals = File(exists=True, desc='input signals')
+    dvars = File(exists=True, desc='file containing DVARS')
+    fd = File(exists=True, desc='input framewise displacement')
+    tcompcor = File(exists=True, desc='input tCompCorr')
+    acompcor = File(exists=True, desc='input aCompCorr')
+    cos_basis = File(exists=True, desc='input cosine basis')
+    motion = File(exists=True, desc='input motion parameters')
+    aroma = File(exists=True, desc='input ICA-AROMA')
 
 
 class GatherConfoundsOutputSpec(TraitedSpec):
