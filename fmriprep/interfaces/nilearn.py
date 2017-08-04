@@ -8,7 +8,6 @@ Image tools interfaces
 
 
 """
-import os
 import nibabel as nb
 from nilearn.masking import compute_epi_mask
 from nilearn.image import concat_imgs
