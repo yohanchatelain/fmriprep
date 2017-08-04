@@ -67,7 +67,7 @@ class MaskEPI(SimpleInterface):
         )
 
         self._results['out_mask'] = fname_presuffix(
-            self.inputs.in_files[0], suffix='_mask', newpath=os.getcwd())
+            self.inputs.in_files[0], suffix='_mask', newpath=runtime.cwd)
         masknii.to_filename(self._results['out_mask'])
         return runtime
 
@@ -90,7 +90,7 @@ class Merge(SimpleInterface):
 
     def _run_interface(self, runtime):
         self._results['out_file'] = fname_presuffix(
-            self.inputs.in_files[0], suffix='_merged', newpath=os.getcwd())
+            self.inputs.in_files[0], suffix='_merged', newpath=runtime.cwd)
         new_nii = concat_imgs(self.inputs.in_files, dtype=self.inputs.dtype)
 
         if isdefined(self.inputs.header_source):
