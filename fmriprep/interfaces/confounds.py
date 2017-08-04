@@ -168,8 +168,8 @@ def _get_ica_confounds(ica_out_dir):
     motion_ics = os.path.join(ica_out_dir, 'classified_motion_ICs.txt')
 
     # Change names of motion_ics and melodic_mix for output
-    melodic_mix_out = os.path.join(ica_out_dir, 'MELODICmix.tsv')
-    motion_ics_out = os.path.join(ica_out_dir, 'AROMAnoiseICs.csv')
+    melodic_mix_out = os.path.abspath('MELODICmix.tsv')
+    motion_ics_out = os.path.abspath('AROMAnoiseICs.csv')
 
     # melodic_mix replace spaces with tabs
     with open(melodic_mix, 'r') as melodic_file:
