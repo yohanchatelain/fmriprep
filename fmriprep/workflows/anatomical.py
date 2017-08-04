@@ -68,6 +68,9 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
                             ),
         name='t1_merge')
 
+    # 1.5 Reorient template to RAS, if needed (mri_robust_template sets LIA)
+    t1_reorient = pe.Node(ConformSeries(), name='t1_reorient')
+
     # 2. T1 Bias Field Correction
     # Bias field correction is handled in skull strip workflows.
 
@@ -132,7 +135,8 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
             (('t1w_list', len_above_thresh, 2, longitudinal), 'fixed_timepoint'),
             (('t1w_list', len_above_thresh, 2, longitudinal), 'no_iteration'),
             (('t1w_list', add_suffix, '_template'), 'out_file')]),
-        (t1_merge, skullstrip_wf, [('out_file', 'inputnode.in_file')]),
+        (t1_merge, t1_reorient, [('out_file', 't1w_list')]),
+        (t1_reorient, skullstrip_wf, [('t1w_list', 'inputnode.in_file')]),
         (skullstrip_wf, t1_seg, [('outputnode.out_file', 'in_files')]),
         (skullstrip_wf, outputnode, [('outputnode.bias_corrected', 't1_preproc'),
                                      ('outputnode.out_file', 't1_brain'),
@@ -181,7 +185,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
                 ('t2w', 'inputnode.t2w'),
                 ('subjects_dir', 'inputnode.subjects_dir')]),
             (summary, surface_recon_wf, [('subject_id', 'inputnode.subject_id')]),
-            (t1_merge, surface_recon_wf, [('out_file', 'inputnode.t1w')]),
+            (t1_reorient, surface_recon_wf, [('t1w_list', 'inputnode.t1w')]),
             (skullstrip_wf, surface_recon_wf, [
                 ('outputnode.out_file', 'inputnode.skullstripped_t1')]),
             (surface_recon_wf, outputnode, [
