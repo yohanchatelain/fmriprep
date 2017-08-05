@@ -366,6 +366,16 @@ be generated, and non-aggressive denoising may be performed with ``fsl_regfilt``
         -d sub-<subject_label>_task-<task_id>_bold_MELODICmix.tsv \
         -o sub-<subject_label>_task-<task_id>_bold_space-<space>_AromaNonAggressiveDenoised.nii.gz``
 
+A visualisation of the AROMA component classification is also included in the HTML reports.
+
+.. figure:: _static/aroma.svg
+    :scale: 100%
+
+    Maps created with maximum intensity projection (glass brain) with a black
+    brain outline. Right hand side of each map: time series (top in seconds),
+    frequency spectrum (bottom in Hertz). Components classified as signal in
+    green; noise in red.
+
 Reports
 -------
 
