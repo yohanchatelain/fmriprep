@@ -357,11 +357,15 @@ tCompCor, aCompCor, Framewise Displacement, 6 motion parameters, DVARS, and, if
 the ``--use-aroma`` flag is enabled, the noise components identified by ICA-AROMA
 (those to be removed by the "aggressive" denoising strategy).
 
-*Note*: Confounds for performing *non*-aggressive denoising cannot be generated in FMRIPREP.
-If the ``--use-aroma`` flag is passed to FMRIPREP, the MELODIC mix and noise component indices will
-be generated, and non-aggressive denoising may be performed with ``fsl_regfilt``, *e.g.*::
+*Note*: Confounds for performing *non*-aggressive AROMA denoising cannot be generated in FMRIPREP.
+However, for conveninece FMRIPREP produces *non*-aggressive denoised 4D NIFTI files in the MNI space
 
-    ``fsl_regfilt -i sub-<subject_label>_task-<task_id>_bold_space-<space>_preproc.nii.gz \
+``*bold_space-MNI152NLin2009cAsym_variant-smoothAROMAnonaggr_brainmask.nii.gz``
+
+Additionally the MELODIC mix and noise component indices will
+be generated, and non-aggressive denoising may be performed in the T1w space with ``fsl_regfilt``, *e.g.*::
+
+    ``fsl_regfilt -i sub-<subject_label>_task-<task_id>_bold_space-T1w_preproc.nii.gz \
         -f $(cat sub-<subject_label>_task-<task_id>_bold_AROMAnoiseICs.csv) \
         -d sub-<subject_label>_task-<task_id>_bold_MELODICmix.tsv \
         -o sub-<subject_label>_task-<task_id>_bold_space-<space>_AromaNonAggressiveDenoised.nii.gz``
@@ -416,6 +420,8 @@ Volumetric output spaces include ``T1w`` and ``MNI152NLin2009cAsym`` (default).
 
 - ``*bold_space-<space>_brainmask.nii.gz`` Brain mask for EPI files, calculated by nilearn on the average EPI volume, post-motion correction
 - ``*bold_space-<space>_preproc.nii.gz`` Motion-corrected (using MCFLIRT for estimation and ANTs for interpolation) EPI file
+- ``*bold_space-<space>_variant-smoothAROMAnonaggr_brainmask.nii.gz`` Motion-corrected (using MCFLIRT for estimation and ANTs for interpolation),
+  smoothed (6mm), and non-aggressively denoised using AROMA EPI file (currently produced only for ``MNI152NLin2009cAsym`` space)
 
 Surface output spaces include ``fsnative`` (full density subject-specific mesh),
 ``fsaverage`` and the down-sampled meshes ``fsaverage6`` (41k vertices) and
