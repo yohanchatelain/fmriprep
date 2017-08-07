@@ -10,10 +10,11 @@ Interfaces to generate reportlets
 """
 
 import os
+import time
 from collections import Counter
 from niworkflows.nipype.interfaces.base import (
     traits, TraitedSpec, BaseInterfaceInputSpec,
-    File, Directory, InputMultiPath, isdefined)
+    File, Directory, InputMultiPath, Str, isdefined)
 from niworkflows.interfaces.base import SimpleInterface
 
 from niworkflows.nipype.interfaces import freesurfer as fs
@@ -38,6 +39,14 @@ FUNCTIONAL_TEMPLATE = """\t\t<h3 class="elem-title">Summary</h3>
 \t\t\t<li>Functional series resampled to spaces: {output_spaces}</li>
 \t\t\t<li>Confounds collected: {confounds}</li>
 \t\t</ul>
+"""
+
+ABOUT_TEMPLATE = """\t<ul>
+\t\t<li>FMRIPREP version: {version}</li>
+\t\t<li>FMRIPREP command: <tt>{command}</tt></li>
+\t\t<li>Date preprocessed: {date}</li>
+\t</ul>
+</div>
 """
 
 
@@ -152,3 +161,18 @@ class FunctionalSummary(SummaryInterface):
         return FUNCTIONAL_TEMPLATE.format(stc=stc, sdc=sdc, registration=reg,
                                           output_spaces=', '.join(self.inputs.output_spaces),
                                           confounds=', '.join(self.inputs.confounds))
+
+
+class AboutSummaryInputSpec(BaseInterfaceInputSpec):
+    version = Str(desc='FMRIPREP version')
+    command = Str(desc='FMRIPREP command')
+    # Date not included - update timestamp only if version or command changes
+
+
+class AboutSummary(SummaryInterface):
+    input_spec = AboutSummaryInputSpec
+
+    def _generate_segment(self):
+        return ABOUT_TEMPLATE.format(version=self.inputs.version,
+                                     command=self.inputs.command,
+                                     date=time.strftime("%Y-%m-%d %H:%M:%S %z"))

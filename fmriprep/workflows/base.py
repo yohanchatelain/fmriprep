@@ -9,6 +9,7 @@ fMRIprep base processing workflows
 
 """
 
+import sys
 import os
 from copy import deepcopy
 
@@ -16,10 +17,12 @@ from niworkflows.nipype.pipeline import engine as pe
 from niworkflows.nipype.interfaces import utility as niu
 
 from ..interfaces import (
-    BIDSDataGrabber, BIDSFreeSurferDir, BIDSInfo, SubjectSummary, DerivativesDataSink
+    BIDSDataGrabber, BIDSFreeSurferDir, BIDSInfo, SubjectSummary, AboutSummary,
+    DerivativesDataSink
 )
 from ..utils.bids import collect_data
 from ..utils.misc import fix_multi_T1w_source_name
+from ..info import __version__
 
 from .anatomical import init_anat_preproc_wf
 from .bold import init_func_preproc_wf
@@ -124,12 +127,21 @@ def init_single_subject_wf(subject_id, task_id, name,
     bids_info = pe.Node(BIDSInfo(), name='bids_info', run_without_submitting=True)
 
     summary = pe.Node(SubjectSummary(output_spaces=output_spaces, template=template),
-                      name='summary')
+                      name='summary', run_without_submitting=True)
+
+    about = pe.Node(AboutSummary(version=__version__,
+                                 command=' '.join(sys.argv)),
+                    name='about', run_without_submitting=True)
 
     ds_summary_report = pe.Node(
         DerivativesDataSink(base_directory=reportlets_dir,
                             suffix='summary'),
         name='ds_summary_report', run_without_submitting=True)
+
+    ds_about_report = pe.Node(
+        DerivativesDataSink(base_directory=reportlets_dir,
+                            suffix='about'),
+        name='ds_about_report', run_without_submitting=True)
 
     # Preprocessing of T1w (includes registration to MNI)
     anat_preproc_wf = init_anat_preproc_wf(name="anat_preproc_wf",
@@ -157,6 +169,8 @@ def init_single_subject_wf(subject_id, task_id, name,
         (summary, anat_preproc_wf, [('subject_id', 'inputnode.subject_id')]),
         (bidssrc, ds_summary_report, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
         (summary, ds_summary_report, [('out_report', 'in_file')]),
+        (bidssrc, ds_about_report, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
+        (about, ds_about_report, [('out_report', 'in_file')]),
     ])
 
     if anat_only:

@@ -10,7 +10,7 @@ from .freesurfer import (
     StructuralReference, MakeMidthickness, FSInjectBrainExtracted, FSDetectInputs
 )
 from .surf import NormalizeSurf, GiftiNameSource, GiftiSetAnatomicalStructure
-from .reports import SubjectSummary, FunctionalSummary
+from .reports import SubjectSummary, FunctionalSummary, AboutSummary
 from .utils import ApplyMask, TPM2ROI, ConcatROIs, CombineROIs, AddTSVHeader
 from .fmap import FieldEnhance
 from .confounds import GatherConfounds, ICAConfounds
