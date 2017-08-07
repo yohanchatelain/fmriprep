@@ -460,7 +460,62 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
 
 def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
     """
-    Resume broken recon-all execution
+    .. _autorecon_resume
+
+    This workflow resumes recon-all execution, assuming the `-autorecon1` stage
+    has been completed.
+
+    In order to utilize resources efficiently, this is broken down into five
+    sub-stages; after the first stage, the second and third stages may be run
+    simultaneously, and the fourth and fifth stages may be run simultaneously,
+    if resources permit::
+
+        $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
+            -autorecon2-volonly
+        $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
+            -autorecon-hemi lh \
+            -noparcstats -nocortparc2 -noparcstats2 -nocortparc3 \
+            -noparcstats3 -nopctsurfcon -nohyporelabel -noaparc2aseg \
+            -noapas2aseg -nosegstats -nowmparc -nobalabels
+        $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
+            -autorecon-hemi rh \
+            -noparcstats -nocortparc2 -noparcstats2 -nocortparc3 \
+            -noparcstats3 -nopctsurfcon -nohyporelabel -noaparc2aseg \
+            -noapas2aseg -nosegstats -nowmparc -nobalabels
+        $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
+            -autorecon3 -hemi lh -T2pial
+        $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
+            -autorecon3 -hemi rh -T2pial
+
+    The excluded steps in the second and third stages (``-no<option>``) are not
+    fully hemisphere independent, and are therefore postponed to the final two
+    stages.
+
+    .. workflow::
+        :graph2use: orig
+        :simpleform: yes
+
+        from fmriprep.workflows.anatomical import init_autorecon_resume_wf
+        wf = init_autorecon_resume_wf()
+
+    Inputs
+
+        subjects_dir
+            FreeSurfer SUBJECTS_DIR
+        subject_id
+            FreeSurfer subject ID
+        use_T2
+            Refine pial surface using T2w images
+
+    Outputs
+
+        subjects_dir
+            FreeSurfer SUBJECTS_DIR
+        subject_id
+            FreeSurfer subject ID
+        out_report
+            Reportlet visualizing quality of surface alignment
+
     """
     workflow = pe.Workflow(name=name)
 
@@ -529,8 +584,35 @@ def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
 
 def init_gifti_surface_wf(name='gifti_surface_wf'):
     """
-    Extract surfaces from FreeSurfer derivatives folder and
-    re-center GIFTI coordinates to align to native T1 space
+    This workflow prepares GIFTI surfaces from a FreeSurfer subjects directory
+
+    If midthickness (or graymid) surfaces do not exist, they are generated and
+    saved to the subject directory as ``lh/rh.midthickness``.
+    These, along with the gray/white matter boundary (``lh/rh.smoothwm``), pial
+    sufaces (``lh/rh.pial``) and inflated surfaces (``lh/rh.inflated``) are
+    converted to GIFTI files.
+    Additionally, the vertex coordinates are :ref:`recentered
+    <NormalizeSurf>`_ to align with native T1w space.
+
+    .. workflow::
+        :graph2use: orig
+        :simpleform: yes
+
+        from fmriprep.workflows.anatomical import init_gifti_surface_wf
+        wf = init_gifti_surface_wf()
+
+    Inputs
+
+        subjects_dir
+            FreeSurfer SUBJECTS_DIR
+        subject_id
+            FreeSurfer subject ID
+
+    Outputs
+
+        surfaces
+            GIFTI surfaces for gray/white matter boundary, pial surface,
+            midthickness (or graymid) surface, and inflated surfaces
 
     """
     workflow = pe.Workflow(name=name)
