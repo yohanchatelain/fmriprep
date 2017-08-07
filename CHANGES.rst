@@ -1,6 +1,7 @@
 Next release
 ============
 
+* [DOC] Improved report summaries (#647)
 
 0.6.0 (31st of July 2017)
 =========================
