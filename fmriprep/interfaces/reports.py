@@ -72,7 +72,7 @@ class SubjectSummaryInputSpec(BaseInterfaceInputSpec):
     t1w = InputMultiPath(File(exists=True), desc='T1w structural images')
     t2w = InputMultiPath(File(exists=True), desc='T2w structural images')
     subjects_dir = Directory(desc='FreeSurfer subjects directory')
-    subject_id = traits.Str(desc='Subject ID')
+    subject_id = Str(desc='Subject ID')
     bold = InputMultiPath(File(exists=True), desc='BOLD functional series')
     output_spaces = traits.List(desc='Target spaces')
     template = traits.Enum('MNI152NLin2009cAsym', desc='Template space')
@@ -81,7 +81,7 @@ class SubjectSummaryInputSpec(BaseInterfaceInputSpec):
 class SubjectSummaryOutputSpec(SummaryOutputSpec):
     # This exists to ensure that the summary is run prior to the first ReconAll
     # call, allowing a determination whether there is a pre-existing directory
-    subject_id = traits.Str(desc='FreeSurfer subject ID')
+    subject_id = Str(desc='FreeSurfer subject ID')
 
 
 class SubjectSummary(SummaryInterface):
