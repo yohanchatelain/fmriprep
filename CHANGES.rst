@@ -1,5 +1,5 @@
-Next release
-============
+1.0.0-rc1 (8th of August 2017)
+==============================
 
 * [ENH] Include ICA-AROMA confounds in report (#646)
 * [ENH] Save non-aggressively denoised BOLD series (#648)
