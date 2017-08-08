@@ -138,24 +138,27 @@ The second phase imports the brainmask calculated in the `T1w/T2w preprocessing`
 sub-workflow.
 The final phase resumes reconstruction, using the T2w image to assist
 in finding the pial surface, if available.
-In order to utilize resources efficiently, this is broken down into six
-sub-stages; the first and last are run serially, while each pair of
-per-hemisphere stages are run in parallel, if possible::
+In order to utilize resources efficiently, this is broken down into five
+sub-stages; after the first stage, the second and third stages may be run
+simultaneously, and the fourth and fifth stages may be run simultaneously,
+if resources permit::
 
     $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
         -autorecon2-volonly
     $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
-        -autorecon2-perhemi -hemi lh
+        -autorecon-hemi lh \
+        -noparcstats -nocortparc2 -noparcstats2 -nocortparc3 \
+        -noparcstats3 -nopctsurfcon -nohyporelabel -noaparc2aseg \
+        -noapas2aseg -nosegstats -nowmparc -nobalabels
     $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
-        -autorecon2-perhemi -hemi rh
+        -autorecon-hemi rh \
+        -noparcstats -nocortparc2 -noparcstats2 -nocortparc3 \
+        -noparcstats3 -nopctsurfcon -nohyporelabel -noaparc2aseg \
+        -noapas2aseg -nosegstats -nowmparc -nobalabels
     $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
-        -autorecon-hemi lh -T2pial \
-        -noparcstats -noparcstats2 -noparcstats3 -nohyporelabel -nobalabels
+        -autorecon3 -hemi lh -T2pial
     $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
-        -autorecon-hemi rh -T2pial \
-        -noparcstats -noparcstats2 -noparcstats3 -nohyporelabel -nobalabels
-    $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
-        -autorecon3
+        -autorecon3 -hemi rh -T2pial
 
 Reconstructed white and pial surfaces are included in the report.
 
