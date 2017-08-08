@@ -1,6 +1,13 @@
 Next release
 ============
 
+* [ENH] Include ICA-AROMA confounds in report (#646)
+* [ENH] Save non-aggressively denoised BOLD series (#648)
+* [ENH] Improved logging messages (#621)
+* [ENH] Improved resource management (#622, #629, #640, #641)
+* [ENH] Improved confound header names (#634)
+* [FIX] Ensure multi-T1w image datasets have RAS-oriented template (#637)
+* [FIX] More informative errors for conflicting options (#632)
 * [DOC] Improved report summaries (#647)
 
 0.6.0 (31st of July 2017)
