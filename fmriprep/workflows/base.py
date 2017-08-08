@@ -9,14 +9,20 @@ fMRIprep base processing workflows
 
 """
 
+import sys
 import os
 from copy import deepcopy
 
 from niworkflows.nipype.pipeline import engine as pe
 from niworkflows.nipype.interfaces import utility as niu
 
-from ..interfaces import BIDSDataGrabber, BIDSFreeSurferDir
+from ..interfaces import (
+    BIDSDataGrabber, BIDSFreeSurferDir, BIDSInfo, SubjectSummary, AboutSummary,
+    DerivativesDataSink
+)
 from ..utils.bids import collect_data
+from ..utils.misc import fix_multi_T1w_source_name
+from ..info import __version__
 
 from .anatomical import init_anat_preproc_wf
 from .bold import init_func_preproc_wf
@@ -37,7 +43,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
                 derivatives=output_dir,
                 freesurfer_home=os.getenv('FREESURFER_HOME'),
                 spaces=output_spaces),
-            name='fsdir')
+            name='fsdir', run_without_submitting=True)
 
     reportlets_dir = os.path.join(work_dir, 'reportlets')
     for subject_id in subject_list:
@@ -118,6 +124,25 @@ def init_single_subject_wf(subject_id, task_id, name,
     bidssrc = pe.Node(BIDSDataGrabber(subject_data=subject_data, anat_only=anat_only),
                       name='bidssrc')
 
+    bids_info = pe.Node(BIDSInfo(), name='bids_info', run_without_submitting=True)
+
+    summary = pe.Node(SubjectSummary(output_spaces=output_spaces, template=template),
+                      name='summary', run_without_submitting=True)
+
+    about = pe.Node(AboutSummary(version=__version__,
+                                 command=' '.join(sys.argv)),
+                    name='about', run_without_submitting=True)
+
+    ds_summary_report = pe.Node(
+        DerivativesDataSink(base_directory=reportlets_dir,
+                            suffix='summary'),
+        name='ds_summary_report', run_without_submitting=True)
+
+    ds_about_report = pe.Node(
+        DerivativesDataSink(base_directory=reportlets_dir,
+                            suffix='about'),
+        name='ds_about_report', run_without_submitting=True)
+
     # Preprocessing of T1w (includes registration to MNI)
     anat_preproc_wf = init_anat_preproc_wf(name="anat_preproc_wf",
                                            skull_strip_ants=skull_strip_ants,
@@ -133,8 +158,19 @@ def init_single_subject_wf(subject_id, task_id, name,
 
     workflow.connect([
         (inputnode, anat_preproc_wf, [('subjects_dir', 'inputnode.subjects_dir')]),
+        (bidssrc, bids_info, [(('t1w', fix_multi_T1w_source_name), 'in_file')]),
+        (inputnode, summary, [('subjects_dir', 'subjects_dir')]),
+        (bidssrc, summary, [('t1w', 't1w'),
+                            ('t2w', 't2w'),
+                            ('bold', 'bold')]),
+        (bids_info, summary, [('subject_id', 'subject_id')]),
         (bidssrc, anat_preproc_wf, [('t1w', 'inputnode.t1w'),
                                     ('t2w', 'inputnode.t2w')]),
+        (summary, anat_preproc_wf, [('subject_id', 'inputnode.subject_id')]),
+        (bidssrc, ds_summary_report, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
+        (summary, ds_summary_report, [('out_report', 'in_file')]),
+        (bidssrc, ds_about_report, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
+        (about, ds_about_report, [('out_report', 'in_file')]),
     ])
 
     if anat_only:
