@@ -273,11 +273,8 @@ EPI to T1w registration
 
     from fmriprep.workflows.bold import init_bold_reg_wf
     wf = init_bold_reg_wf(freesurfer=True,
-                         output_dir='.',
-                         bold_file_size_gb=3,
-                         output_spaces=['T1w', 'fsnative',
-                                        'template', 'fsaverage5'],
-                         bold2t1w_dof=9)
+                          bold_file_size_gb=3,
+                          bold2t1w_dof=9)
 
 The reference EPI image of each run is aligned by the ``bbregister`` routine to the
 reconstructed subject using
