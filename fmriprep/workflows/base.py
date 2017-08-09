@@ -33,7 +33,105 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
                      skull_strip_ants, work_dir, output_dir, bids_dir,
                      freesurfer, output_spaces, template, hires,
                      bold2t1w_dof, fmap_bspline, fmap_demean, use_syn, force_syn,
-                     use_aroma, ignore_aroma_err, output_grid_ref,):
+                     use_aroma, ignore_aroma_err, output_grid_ref):
+    """
+    This workflow organizes the execution of FMRIPREP, with a sub-workflow for
+    each subject.
+
+    If FreeSurfer is to be used, a FreeSurfer derivatives folder is created and
+    populated with any needed template subjects.
+
+    .. workflow::
+        :graph2use: orig
+        :simple_form: yes
+
+        from fmriprep.workflows.base import init_fmriprep_wf
+        wf = init_fmriprep_wf(subject_list=['test'],
+                              task_id='',
+                              run_uuid='X',
+                              ignore=[],
+                              debug=False,
+                              anat_only=False,
+                              longitudinal=False,
+                              omp_nthreads=1,
+                              skull_strip_ants=True,
+                              work_dir='.',
+                              output_dir='.',
+                              bids_dir='.',
+                              freesurfer=True,
+                              output_spaces=['T1w', 'fsnative',
+                                            'template', 'fsaverage5'],
+                              template='MNI152NLin2009cAsym',
+                              hires=True,
+                              bold2t1w_dof=9,
+                              fmap_bspline=False,
+                              fmap_demean=True,
+                              use_syn=True,
+                              force_syn=True,
+                              use_aroma=False,
+                              ignore_aroma_err=False,
+                              output_grid_ref=None)
+
+
+    Parameters
+
+        subject_list : list
+            List of subject labels
+        task_id : str or None
+            Task ID of BOLD series to preprocess, or ``None`` to preprocess all
+        run_uuid : str
+            Unique identifier for execution instance
+        ignore : list
+            Preprocessing steps to skip (may include "slicetiming", "fieldmaps")
+        debug : bool
+            Enable debugging outputs
+        anat_only : bool
+            Disable functional workflows
+        longitudinal : bool
+            Treat multiple sessions as longitudinal (may increase runtime)
+            See sub-workflows for specific differences
+        omp_nthreads : int
+            Maximum number of threads an individual process may use
+        skull_strip_ants : bool
+            Use ANTs BrainExtraction.sh-based skull-stripping workflow
+            If ``False``, uses a faster AFNI-based workflow
+        work_dir : str
+            Directory in which to store workflow execution state and temporary files
+        output_dir : str
+            Directory in which to save derivatives
+        bids_dir : str
+            Root directory of BIDS dataset
+        freesurfer : bool
+            Enable FreeSurfer surface reconstruction (may increase runtime)
+        output_spaces : list
+            List of output spaces functional images are to be resampled to
+            Some parts of pipeline will only be instantiated for some output spaces
+            Valid spaces:
+             - T1w
+             - template
+             - fsnative
+             - fsaverage (or other pre-existing FreeSurfer templates)
+        template : str
+            Name of template targeted by `'template'` output space
+        hires : bool
+            Enable sub-millimeter preprocessing in FreeSurfer
+        bold2t1w_dof : 6, 9 or 12
+            Degrees-of-freedom for BOLD-T1w registration
+        fmap_bspline : bool
+        fmap_demean : bool
+        use_syn : bool [EXPERIMENTAL]
+            Enable ANTs SyN-based susceptibility distortion correction (SDC)
+            If fieldmaps are present and enabled, this is not run, by default.
+        force_syn : bool [TEMPORARY]
+            Always run SyN-based SDC
+        use_aroma : bool
+            Perform ICA-AROMA on MNI-resampled functional series
+        ignore_aroma_err : bool
+            Do not fail on ICA-AROMA errors
+        output_grid_ref : str or None
+            Path of custom reference image for normalization
+
+    """
     fmriprep_wf = pe.Workflow(name='fmriprep_wf')
     fmriprep_wf.base_dir = work_dir
 
@@ -94,9 +192,105 @@ def init_single_subject_wf(subject_id, task_id, name,
                            bold2t1w_dof, fmap_bspline, fmap_demean, use_syn, force_syn,
                            output_grid_ref, use_aroma, ignore_aroma_err):
     """
-    The adaptable fMRI preprocessing workflow
-    """
+    This workflow organizes the preprocessing pipeline for a single subject.
+    It collects and reports information about the subject, and prepares
+    sub-workflows to perform anatomical and functional preprocessing.
 
+    Anatomical preprocessing is performed in a single workflow, regardless of
+    the number of sessions.
+    Functional preprocessing is performed using a separate workflow for each
+    individual BOLD series.
+
+    .. workflow::
+        :graph2use: orig
+        :simple_form: yes
+
+        from fmriprep.workflows.base import init_single_subject_wf
+        wf = init_single_subject_wf(subject_id='test',
+                                    name='single_subject_wf',
+                                    task_id='',
+                                    longitudinal=False,
+                                    omp_nthreads=1,
+                                    freesurfer=True,
+                                    reportlets_dir='.',
+                                    output_dir='.',
+                                    bids_dir='.',
+                                    skull_strip_ants=True,
+                                    template='MNI152NLin2009cAsym',
+                                    output_spaces=['T1w', 'fsnative',
+                                                  'template', 'fsaverage5'],
+                                    ignore=[],
+                                    debug=False,
+                                    anat_only=False,
+                                    hires=True,
+                                    bold2t1w_dof=9,
+                                    fmap_bspline=False,
+                                    fmap_demean=True,
+                                    use_syn=True,
+                                    force_syn=True,
+                                    output_grid_ref=None,
+                                    use_aroma=False,
+                                    ignore_aroma_err=False)
+
+    Parameters
+
+        subject_id : str
+            List of subject labels
+        task_id : str or None
+            Task ID of BOLD series to preprocess, or ``None`` to preprocess all
+        name : str
+            Name of workflow
+        ignore : list
+            Preprocessing steps to skip (may include "slicetiming", "fieldmaps")
+        debug : bool
+            Enable debugging outputs
+        anat_only : bool
+            Disable functional workflows
+        longitudinal : bool
+            Treat multiple sessions as longitudinal (may increase runtime)
+            See sub-workflows for specific differences
+        omp_nthreads : int
+            Maximum number of threads an individual process may use
+        skull_strip_ants : bool
+            Use ANTs BrainExtraction.sh-based skull-stripping workflow
+            If ``False``, uses a faster AFNI-based workflow
+        reportlets_dir : str
+            Directory in which to save reportlets
+        output_dir : str
+            Directory in which to save derivatives
+        bids_dir : str
+            Root directory of BIDS dataset
+        freesurfer : bool
+            Enable FreeSurfer surface reconstruction (may increase runtime)
+        output_spaces : list
+            List of output spaces functional images are to be resampled to
+            Some parts of pipeline will only be instantiated for some output spaces
+            Valid spaces:
+             - T1w
+             - template
+             - fsnative
+             - fsaverage (or other pre-existing FreeSurfer templates)
+        template : str
+            Name of template targeted by `'template'` output space
+        hires : bool
+            Enable sub-millimeter preprocessing in FreeSurfer
+        bold2t1w_dof : 6, 9 or 12
+            Degrees-of-freedom for BOLD-T1w registration
+        fmap_bspline : bool
+        fmap_demean : bool
+        use_syn : bool [EXPERIMENTAL]
+            Enable ANTs SyN-based susceptibility distortion correction (SDC)
+            If fieldmaps are present and enabled, this is not run, by default.
+        force_syn : bool [TEMPORARY]
+            Always run SyN-based SDC
+        output_grid_ref : str or None
+            Path of custom reference image for normalization
+        use_aroma : bool
+            Perform ICA-AROMA on MNI-resampled functional series
+        ignore_aroma_err : bool
+            Do not fail on ICA-AROMA errors
+
+    """
     if name == 'single_subject_wf':
         # for documentation purposes
         subject_data = {
