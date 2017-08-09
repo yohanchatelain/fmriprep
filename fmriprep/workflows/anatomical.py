@@ -3,9 +3,25 @@
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
 """
-Anatomical Reference -processing workflows.
+Anatomical reference preprocessing workflows
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Originally coded by Craig Moodie. Refactored by the CRN Developers.
+.. autofunction:: init_anat_preproc_wf
+.. autofunction:: init_skullstrip_ants_wf
+
+Surface preprocessing
++++++++++++++++++++++
+
+``fmriprep`` uses FreeSurfer_ to reconstruct surfaces from T1w/T2w
+structural images.
+
+.. autofunction:: init_surface_recon_wf
+.. autofunction:: init_autorecon_resume_wf
+.. autofunction:: init_gifti_surface_wf
+
+  .. note ::
+
+      Originally coded by Craig Moodie. Refactored by the CRN Developers.
 
 """
 
@@ -34,7 +50,7 @@ from ..utils.misc import fix_multi_T1w_source_name, add_suffix
 def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, freesurfer,
                          longitudinal, omp_nthreads, hires, reportlets_dir, output_dir,
                          name='anat_preproc_wf'):
-    """
+    r"""
     This workflow controls the anatomical preprocessing stages of FMRIPREP.
 
     This includes:
@@ -62,19 +78,22 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
                                   debug=False,
                                   hires=True)
 
-    Parameters
+    **Parameters**
 
         skull_strip_ants : bool
-            Use ANTs BrainExtraction.sh-based skull-stripping workflow
+            Use ANTs BrainExtraction.sh-based skull-stripping workflow.
             If ``False``, uses a faster AFNI-based workflow
         output_spaces : list
-            List of output spaces functional images are to be resampled to
-            Some parts of pipeline will only be instantiated for some output spaces
+            List of output spaces functional images are to be resampled to.
+
+            Some pipeline components will only be instantiated for some output spaces.
+
             Valid spaces:
-             - T1w
-             - template
-             - fsnative
-             - fsaverage (or other pre-existing FreeSurfer templates)
+
+              - T1w
+              - template
+              - fsnative
+              - fsaverage (or other pre-existing FreeSurfer templates)
         template : str
             Name of template targeted by `'template'` output space
         debug : bool
@@ -96,7 +115,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
             Workflow name (default: anat_preproc_wf)
 
 
-    Inputs
+    **Inputs**
 
         t1w
             List of T1-weighted structural images
@@ -106,7 +125,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
             FreeSurfer SUBJECTS_DIR
 
 
-    Outputs
+    **Outputs**
 
         t1_preproc
             Bias-corrected structural template, defining T1w space
@@ -139,6 +158,11 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
             Affine transform from FreeSurfer subject space to T1w space
         surfaces
             GIFTI surfaces (gray/white boundary, midthickness, pial, inflated)
+
+    **Subworkflows**
+
+        * :py:func:`~fmriprep.workflows.anatomical.init_skullstrip_ants_wf`
+        * :py:func:`~fmriprep.workflows.anatomical.init_surface_recon_wf`
 
     """
 
@@ -347,29 +371,29 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
 
 
 def init_skullstrip_ants_wf(debug, omp_nthreads, name='skullstrip_ants_wf'):
-    """
+    r"""
     This workflow performs skull-stripping using ANTs' ``BrainExtraction.sh``
 
     .. workflow::
         :graph2use: orig
-        :simpleform: yes
+        :simple_form: yes
 
         from fmriprep.workflows.anatomical import init_skullstrip_ants_wf
-        wf = init_skullstrip_ants_wf()
+        wf = init_skullstrip_ants_wf(debug=False, omp_nthreads=1)
 
-    Parameters
+    **Parameters**
 
         debug : bool
             Enable debugging outputs
         omp_nthreads : int
             Maximum number of threads an individual process may use
 
-    Inputs
+    **Inputs**
 
         in_file
             T1-weighted structural image to skull-strip
 
-    Outputs
+    **Outputs**
 
         bias_corrected
             Bias-corrected ``in_file``, before skull-stripping
@@ -421,7 +445,7 @@ def init_skullstrip_ants_wf(debug, omp_nthreads, name='skullstrip_ants_wf'):
 
 
 def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
-    """
+    r"""
     This workflow reconstructs anatomical surfaces using FreeSurfer's ``recon-all``.
 
     Reconstruction is performed in three phases.
@@ -440,24 +464,24 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
     The second phase imports an externally computed skull-stripping mask.
     The final phase resumes reconstruction, using the T2w image to assist
     in finding the pial surface, if available.
-    See :ref:`init_autorecon_resume_wf` for details.
+    See :py:func:`~fmriprep.workflows.anatomical.init_autorecon_resume_wf` for details.
 
 
     .. workflow::
         :graph2use: orig
-        :simpleform: yes
+        :simple_form: yes
 
         from fmriprep.workflows.anatomical import init_surface_recon_wf
-        wf = init_surface_recon_wf()
+        wf = init_surface_recon_wf(omp_nthreads=1, hires=True)
 
-    Parameters
+    **Parameters**
 
         omp_nthreads : int
             Maximum number of threads an individual process may use
         hires : bool
             Enable sub-millimeter preprocessing in FreeSurfer
 
-    Inputs
+    **Inputs**
 
         t1w
             List of T1-weighted structural images
@@ -470,7 +494,7 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         subject_id
             FreeSurfer subject ID
 
-    Outputs
+    **Outputs**
 
         subjects_dir
             FreeSurfer SUBJECTS_DIR
@@ -484,6 +508,10 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         out_report
             Reportlet visualizing quality of surface alignment
 
+    **Subworkflows**
+
+        * :py:func:`~fmriprep.workflows.anatomical.init_autorecon_resume_wf`
+        * :py:func:`~fmriprep.workflows.anatomical.init_gifti_surface_wf`
     """
 
     workflow = pe.Workflow(name=name)
@@ -557,9 +585,7 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
 
 
 def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
-    """
-    .. _autorecon_resume
-
+    r"""
     This workflow resumes recon-all execution, assuming the `-autorecon1` stage
     has been completed.
 
@@ -591,12 +617,12 @@ def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
 
     .. workflow::
         :graph2use: orig
-        :simpleform: yes
+        :simple_form: yes
 
         from fmriprep.workflows.anatomical import init_autorecon_resume_wf
-        wf = init_autorecon_resume_wf()
+        wf = init_autorecon_resume_wf(omp_nthreads=1)
 
-    Inputs
+    **Inputs**
 
         subjects_dir
             FreeSurfer SUBJECTS_DIR
@@ -605,7 +631,7 @@ def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
         use_T2
             Refine pial surface using T2w images
 
-    Outputs
+    **Outputs**
 
         subjects_dir
             FreeSurfer SUBJECTS_DIR
@@ -681,7 +707,7 @@ def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
 
 
 def init_gifti_surface_wf(name='gifti_surface_wf'):
-    """
+    r"""
     This workflow prepares GIFTI surfaces from a FreeSurfer subjects directory
 
     If midthickness (or graymid) surfaces do not exist, they are generated and
@@ -694,19 +720,19 @@ def init_gifti_surface_wf(name='gifti_surface_wf'):
 
     .. workflow::
         :graph2use: orig
-        :simpleform: yes
+        :simple_form: yes
 
         from fmriprep.workflows.anatomical import init_gifti_surface_wf
         wf = init_gifti_surface_wf()
 
-    Inputs
+    **Inputs**
 
         subjects_dir
             FreeSurfer SUBJECTS_DIR
         subject_id
             FreeSurfer subject ID
 
-    Outputs
+    **Outputs**
 
         surfaces
             GIFTI surfaces for gray/white matter boundary, pial surface,
