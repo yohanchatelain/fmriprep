@@ -298,10 +298,9 @@ EPI to MNI transformation
     :simple_form: yes
 
     from fmriprep.workflows.bold import init_bold_mni_trans_wf
-    wf = init_bold_mni_trans_wf(output_dir='.',
-                               template='MNI152NLin2009cAsym',
-                               bold_file_size_gb=3,
-                               output_grid_ref=None)
+    wf = init_bold_mni_trans_wf(template='MNI152NLin2009cAsym',
+                                bold_file_size_gb=3,
+                                output_grid_ref=None)
 
 This sub-workflow uses the transform from
 `Head-motion estimation and slice time correction`_,
