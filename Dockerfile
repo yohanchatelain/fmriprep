@@ -118,7 +118,7 @@ ENV PATH=/usr/local/miniconda/bin:$PATH \
     LC_ALL=C.UTF-8
 
 # Installing precomputed python packages
-RUN conda install -y mkl=2017.0.1 mkl-service &&  \
+RUN conda install -y mkl=2017.0.1 mkl-service;  sync &&\
     conda install -y numpy=1.12.0 \
                      scipy=0.18.1 \
                      scikit-learn=0.18.1 \
@@ -126,9 +126,10 @@ RUN conda install -y mkl=2017.0.1 mkl-service &&  \
                      pandas=0.19.2 \
                      libxml2=2.9.4 \
                      libxslt=1.1.29\
-                     traits=4.6.0 &&  \
-    chmod +x /usr/local/miniconda/bin/* && \
-    conda clean --all -y
+                     traits=4.6.0; sync &&  \
+    chmod +x /usr/local/miniconda/bin/*; sync && \
+    conda clean --all -y; sync && \
+    conda clean -tipsy && sync
 
 # Precaching fonts
 RUN python -c "from matplotlib import font_manager"
