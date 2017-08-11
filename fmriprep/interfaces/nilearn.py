@@ -77,6 +77,7 @@ class MergeInputSpec(BaseInterfaceInputSpec):
     dtype = traits.Enum('f4', 'f8', 'u1', 'u2', 'u4', 'i2', 'i4',
                         usedefault=True, desc='numpy dtype of output image')
     header_source = File(exists=True, desc='a Nifti file from which the header should be copied')
+    compress = traits.Bool(True, usedefault=True, desc='Use gzip compression on .nii output')
 
 
 class MergeOutputSpec(TraitedSpec):
@@ -88,8 +89,9 @@ class Merge(SimpleInterface):
     output_spec = MergeOutputSpec
 
     def _run_interface(self, runtime):
+        ext = '.nii.gz' if self.inputs.compress else '.nii'
         self._results['out_file'] = fname_presuffix(
-            self.inputs.in_files[0], suffix='_merged', newpath=runtime.cwd)
+            self.inputs.in_files[0], suffix='_merged' + ext, newpath=runtime.cwd, use_ext=False)
         new_nii = concat_imgs(self.inputs.in_files, dtype=self.inputs.dtype)
 
         if isdefined(self.inputs.header_source):
