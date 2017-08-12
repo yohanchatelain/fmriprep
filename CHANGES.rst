@@ -1,6 +1,7 @@
 Next release
 ============
-
+* [FIX] Slice time correction is now being applied to output data (no only to intermediate file used for motion estimation - #662)
+* [FIX] Fieldmap unwarping is now being applied to MNI space outputs (no only to T1w space outputs - #662)
 
 1.0.0-rc1 (8th of August 2017)
 ==============================
