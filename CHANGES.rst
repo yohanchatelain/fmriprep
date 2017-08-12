@@ -1,7 +1,9 @@
-Next release
-============
-* [FIX] Slice time correction is now being applied to output data (no only to intermediate file used for motion estimation - #662)
-* [FIX] Fieldmap unwarping is now being applied to MNI space outputs (no only to T1w space outputs - #662)
+1.0.0-rc2 (12th of August 2017)
+===============================
+
+* [ENH] Increased support for partial field-of-view BOLD datasets (#659)
+* [FIX] Slice time correction is now being applied to output data (not only to intermediate file used for motion estimation - #662)
+* [FIX] Fieldmap unwarping is now being applied to MNI space outputs (not only to T1w space outputs - #662)
 
 1.0.0-rc1 (8th of August 2017)
 ==============================
