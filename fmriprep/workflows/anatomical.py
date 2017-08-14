@@ -190,7 +190,8 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
     workflow.connect([
         (inputnode, anat_reports_wf, [
             (('t1w', fix_multi_T1w_source_name), 'inputnode.source_file')]),
-        (t1_conform_wf, anat_reports_wf, [('outputnode.out_report', 'inputnode.t1_conform_report')]),
+        (t1_conform_wf, anat_reports_wf, [
+            ('outputnode.out_report', 'inputnode.t1_conform_report')]),
         (t1_seg, anat_reports_wf, [('out_report', 'inputnode.t1_seg_report')]),
     ])
 
@@ -233,16 +234,17 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
 
     return workflow
 
+
 def init_anat_conform_wf(name='t1_conform_wf'):
 
     workflow = pe.Workflow(name=name)
 
     inputnode = pe.Node(
         niu.IdentityInterface(fields=['t1w_list']),
-                              name='inputnode')
+        name='inputnode')
     outputnode = pe.Node(
         niu.IdentityInterface(fields=['t1w_list', 'out_report']),
-                              name='outputnode')
+        name='outputnode')
 
     t1_prune_zoom = pe.Node(PruneExcessiveZoom(), name='t1_prune_zoom')
     t1_conform = pe.MapNode(ConformSeries(), iterfield='t1w', name='t1_conform')
@@ -264,6 +266,7 @@ def init_anat_conform_wf(name='t1_conform_wf'):
     ])
 
     return workflow
+
 
 def init_skullstrip_ants_wf(debug, omp_nthreads, name='skullstrip_ants_wf'):
     from niworkflows.data import get_ants_oasis_template_ras
