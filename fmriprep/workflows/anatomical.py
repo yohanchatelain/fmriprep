@@ -186,7 +186,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
                 ('t2w', 'inputnode.t2w'),
                 ('subjects_dir', 'inputnode.subjects_dir')]),
             (summary, surface_recon_wf, [('subject_id', 'inputnode.subject_id')]),
-            (t1_reorient, surface_recon_wf, [('t1w_list', 'inputnode.t1w')]),
+            (t1_reorient, surface_recon_wf, [('outputnode.t1w_list', 'inputnode.t1w')]),
             (skullstrip_wf, surface_recon_wf, [
                 ('outputnode.out_file', 'inputnode.skullstripped_t1')]),
             (surface_recon_wf, outputnode, [
@@ -203,7 +203,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
         (inputnode, anat_reports_wf, [
             (('t1w', fix_multi_T1w_source_name), 'inputnode.source_file')]),
         (summary, anat_reports_wf, [('out_report', 'inputnode.summary_report')]),
-        (t1_conform, anat_reports_wf, [('out_report', 'inputnode.t1_conform_report')]),
+        (t1_conform, anat_reports_wf, [('outputnode.out_report', 'inputnode.t1_conform_report')]),
         (t1_seg, anat_reports_wf, [('out_report', 'inputnode.t1_seg_report')]),
     ])
 
@@ -254,7 +254,7 @@ def init_anat_conform_wf(name='t1_conform'):
         niu.IdentityInterface(fields=['t1w_list']),
                               name='inputnode')
     outputnode = pe.Node(
-        niu.IdentityInterface(fields=['t1w_list']),
+        niu.IdentityInterface(fields=['t1w_list', 'out_report']),
                               name='outputnode')
 
     t1_prune_zoom = pe.Node(PruneExcessiveZoom(), name='t1_prune_zoom')
@@ -270,6 +270,9 @@ def init_anat_conform_wf(name='t1_conform'):
         ]),
         (t1_conform, outputnode, [
             ('t1w', 't1w_list'),
+        ]),
+        (t1_prune_zoom, outputnode, [
+            ('out_report', 'out_report'),
         ]),
     ])
 
