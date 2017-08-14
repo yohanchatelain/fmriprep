@@ -2,6 +2,25 @@ Next release
 ============
 
 
+1.0.0-rc2 (12th of August 2017)
+===============================
+
+* [ENH] Increased support for partial field-of-view BOLD datasets (#659)
+* [FIX] Slice time correction is now being applied to output data (not only to intermediate file used for motion estimation - #662)
+* [FIX] Fieldmap unwarping is now being applied to MNI space outputs (not only to T1w space outputs - #662)
+
+1.0.0-rc1 (8th of August 2017)
+==============================
+
+* [ENH] Include ICA-AROMA confounds in report (#646)
+* [ENH] Save non-aggressively denoised BOLD series (#648)
+* [ENH] Improved logging messages (#621)
+* [ENH] Improved resource management (#622, #629, #640, #641)
+* [ENH] Improved confound header names (#634)
+* [FIX] Ensure multi-T1w image datasets have RAS-oriented template (#637)
+* [FIX] More informative errors for conflicting options (#632)
+* [DOC] Improved report summaries (#647)
+
 0.6.0 (31st of July 2017)
 =========================
 

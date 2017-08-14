@@ -138,24 +138,27 @@ The second phase imports the brainmask calculated in the `T1w/T2w preprocessing`
 sub-workflow.
 The final phase resumes reconstruction, using the T2w image to assist
 in finding the pial surface, if available.
-In order to utilize resources efficiently, this is broken down into six
-sub-stages; the first and last are run serially, while each pair of
-per-hemisphere stages are run in parallel, if possible::
+In order to utilize resources efficiently, this is broken down into five
+sub-stages; after the first stage, the second and third stages may be run
+simultaneously, and the fourth and fifth stages may be run simultaneously,
+if resources permit::
 
     $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
         -autorecon2-volonly
     $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
-        -autorecon2-perhemi -hemi lh
+        -autorecon-hemi lh \
+        -noparcstats -nocortparc2 -noparcstats2 -nocortparc3 \
+        -noparcstats3 -nopctsurfcon -nohyporelabel -noaparc2aseg \
+        -noapas2aseg -nosegstats -nowmparc -nobalabels
     $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
-        -autorecon2-perhemi -hemi rh
+        -autorecon-hemi rh \
+        -noparcstats -nocortparc2 -noparcstats2 -nocortparc3 \
+        -noparcstats3 -nopctsurfcon -nohyporelabel -noaparc2aseg \
+        -noapas2aseg -nosegstats -nowmparc -nobalabels
     $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
-        -autorecon-hemi lh -T2pial \
-        -noparcstats -noparcstats2 -noparcstats3 -nohyporelabel -nobalabels
+        -autorecon3 -hemi lh -T2pial
     $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
-        -autorecon-hemi rh -T2pial \
-        -noparcstats -noparcstats2 -noparcstats3 -nohyporelabel -nobalabels
-    $ recon-all -sd <output dir>/freesurfer -subjid sub-<subject_label> \
-        -autorecon3
+        -autorecon3 -hemi rh -T2pial
 
 Reconstructed white and pial surfaces are included in the report.
 
@@ -357,14 +360,31 @@ tCompCor, aCompCor, Framewise Displacement, 6 motion parameters, DVARS, and, if
 the ``--use-aroma`` flag is enabled, the noise components identified by ICA-AROMA
 (those to be removed by the "aggressive" denoising strategy).
 
-*Note*: Confounds for performing *non*-aggressive denoising cannot be generated in FMRIPREP.
-If the ``--use-aroma`` flag is passed to FMRIPREP, the MELODIC mix and noise component indices will
-be generated, and non-aggressive denoising may be performed with ``fsl_regfilt``, *e.g.*::
+*Note*: *non*-aggressive AROMA denoising is a fundamentally different procedure
+from its "aggressive" counterpart and cannot be performed only by using a set of noise
+regressors (a separate GLM with both noise and signal regressors needs to be used).
+Therefore instead of regressors FMRIPREP produces *non*-aggressive denoised 4D NIFTI
+files in the MNI space:
 
-    ``fsl_regfilt -i sub-<subject_label>_task-<task_id>_bold_space-<space>_preproc.nii.gz \
+``*bold_space-MNI152NLin2009cAsym_variant-smoothAROMAnonaggr_brainmask.nii.gz``
+
+Additionally, the MELODIC mix and noise component indices will
+be generated, so non-aggressive denoising can be manually performed in the T1w space with ``fsl_regfilt``, *e.g.*::
+
+    fsl_regfilt -i sub-<subject_label>_task-<task_id>_bold_space-T1w_preproc.nii.gz \
         -f $(cat sub-<subject_label>_task-<task_id>_bold_AROMAnoiseICs.csv) \
         -d sub-<subject_label>_task-<task_id>_bold_MELODICmix.tsv \
-        -o sub-<subject_label>_task-<task_id>_bold_space-<space>_AromaNonAggressiveDenoised.nii.gz``
+        -o sub-<subject_label>_task-<task_id>_bold_space-<space>_AromaNonAggressiveDenoised.nii.gz
+
+A visualisation of the AROMA component classification is also included in the HTML reports.
+
+.. figure:: _static/aroma.svg
+    :scale: 100%
+
+    Maps created with maximum intensity projection (glass brain) with a black
+    brain outline. Right hand side of each map: time series (top in seconds),
+    frequency spectrum (bottom in Hertz). Components classified as signal in
+    green; noise in red.
 
 Reports
 -------
@@ -406,6 +426,8 @@ Volumetric output spaces include ``T1w`` and ``MNI152NLin2009cAsym`` (default).
 
 - ``*bold_space-<space>_brainmask.nii.gz`` Brain mask for EPI files, calculated by nilearn on the average EPI volume, post-motion correction
 - ``*bold_space-<space>_preproc.nii.gz`` Motion-corrected (using MCFLIRT for estimation and ANTs for interpolation) EPI file
+- ``*bold_space-<space>_variant-smoothAROMAnonaggr_brainmask.nii.gz`` Motion-corrected (using MCFLIRT for estimation and ANTs for interpolation),
+  smoothed (6mm), and non-aggressively denoised (using AROMA) EPI file - currently produced only for the ``MNI152NLin2009cAsym`` space
 
 Surface output spaces include ``fsnative`` (full density subject-specific mesh),
 ``fsaverage`` and the down-sampled meshes ``fsaverage6`` (41k vertices) and

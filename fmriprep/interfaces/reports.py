@@ -8,24 +8,28 @@ Interfaces to generate reportlets
 
 
 """
-from __future__ import print_function, division, absolute_import, unicode_literals
 
 import os
+import time
+from collections import Counter
 from niworkflows.nipype.interfaces.base import (
     traits, TraitedSpec, BaseInterfaceInputSpec,
-    File, Directory, InputMultiPath, isdefined)
+    File, Directory, InputMultiPath, Str, isdefined)
 from niworkflows.interfaces.base import SimpleInterface
 
 from niworkflows.nipype.interfaces import freesurfer as fs
 
-ANATOMICAL_TEMPLATE = """\t\t<h3 class="elem-title">Summary</h3>
-\t\t<ul class="elem-desc">
-\t\t\t<li>Structural images: {n_t1s:d}</li>
-\t\t\t<li>FreeSurfer reconstruction: {freesurfer_status}</li>
-\t\t\t<li>Output spaces: {output_spaces}</li>
-\t\t</ul>
-"""
+from .bids import BIDS_NAME
 
+SUBJECT_TEMPLATE = """\t<ul class="elem-desc">
+\t\t<li>Subject ID: {subject_id}</li>
+\t\t<li>Structural images: {n_t1s:d} T1-weighted {t2w}</li>
+\t\t<li>Functional series: {n_bold:d}</li>
+{tasks}
+\t\t<li>Resampling targets: {output_spaces}
+\t\t<li>FreeSurfer reconstruction: {freesurfer_status}</li>
+\t</ul>
+"""
 
 FUNCTIONAL_TEMPLATE = """\t\t<h3 class="elem-title">Summary</h3>
 \t\t<ul class="elem-desc">
@@ -35,6 +39,14 @@ FUNCTIONAL_TEMPLATE = """\t\t<h3 class="elem-title">Summary</h3>
 \t\t\t<li>Functional series resampled to spaces: {output_spaces}</li>
 \t\t\t<li>Confounds collected: {confounds}</li>
 \t\t</ul>
+"""
+
+ABOUT_TEMPLATE = """\t<ul>
+\t\t<li>FMRIPREP version: {version}</li>
+\t\t<li>FMRIPREP command: <tt>{command}</tt></li>
+\t\t<li>Date preprocessed: {date}</li>
+\t</ul>
+</div>
 """
 
 
@@ -56,26 +68,30 @@ class SummaryInterface(SimpleInterface):
         return runtime
 
 
-class AnatomicalSummaryInputSpec(BaseInterfaceInputSpec):
+class SubjectSummaryInputSpec(BaseInterfaceInputSpec):
     t1w = InputMultiPath(File(exists=True), desc='T1w structural images')
+    t2w = InputMultiPath(File(exists=True), desc='T2w structural images')
     subjects_dir = Directory(desc='FreeSurfer subjects directory')
-    subject_id = traits.Str(desc='FreeSurfer subject ID')
+    subject_id = Str(desc='Subject ID')
+    bold = InputMultiPath(File(exists=True), desc='BOLD functional series')
     output_spaces = traits.List(desc='Target spaces')
     template = traits.Enum('MNI152NLin2009cAsym', desc='Template space')
 
 
-class AnatomicalSummaryOutputSpec(SummaryOutputSpec):
-    subject_id = traits.Str(desc='FreeSurfer subject ID')
+class SubjectSummaryOutputSpec(SummaryOutputSpec):
+    # This exists to ensure that the summary is run prior to the first ReconAll
+    # call, allowing a determination whether there is a pre-existing directory
+    subject_id = Str(desc='FreeSurfer subject ID')
 
 
-class AnatomicalSummary(SummaryInterface):
-    input_spec = AnatomicalSummaryInputSpec
-    output_spec = AnatomicalSummaryOutputSpec
+class SubjectSummary(SummaryInterface):
+    input_spec = SubjectSummaryInputSpec
+    output_spec = SubjectSummaryOutputSpec
 
     def _run_interface(self, runtime):
         if isdefined(self.inputs.subject_id):
             self._results['subject_id'] = self.inputs.subject_id
-        return super(AnatomicalSummary, self)._run_interface(runtime)
+        return super(SubjectSummary, self)._run_interface(runtime)
 
     def _generate_segment(self):
         if not isdefined(self.inputs.subjects_dir):
@@ -91,12 +107,31 @@ class AnatomicalSummary(SummaryInterface):
                 freesurfer_status = 'Run by FMRIPREP'
 
         output_spaces = [self.inputs.template if space == 'template' else space
-                         for space in self.inputs.output_spaces
-                         if space[:9] in ('fsaverage', 'template')]
+                         for space in self.inputs.output_spaces]
 
-        return ANATOMICAL_TEMPLATE.format(n_t1s=len(self.inputs.t1w),
-                                          freesurfer_status=freesurfer_status,
-                                          output_spaces=', '.join(output_spaces))
+        t2w_seg = ''
+        if self.inputs.t2w:
+            t2w_seg = '(+ {:d} T2-weighted)'.format(len(self.inputs.t2w))
+
+        # Add list of tasks with number of runs
+        counts = Counter(BIDS_NAME.search(series).groupdict()['task_id'][5:]
+                         for series in self.inputs.bold)
+        tasks = ''
+        if counts:
+            header = '\t\t<ul class="elem-desc">'
+            footer = '\t\t</ul>'
+            lines = ['\t\t\t<li>Task: {task_id} ({n_runs:d} run{s})</li>'.format(
+                         task_id=task_id, n_runs=n_runs, s='' if n_runs == 1 else 's')
+                     for task_id, n_runs in sorted(counts.items())]
+            tasks = '\n'.join([header] + lines + [footer])
+
+        return SUBJECT_TEMPLATE.format(subject_id=self.inputs.subject_id,
+                                       n_t1s=len(self.inputs.t1w),
+                                       t2w=t2w_seg,
+                                       n_bold=len(self.inputs.bold),
+                                       tasks=tasks,
+                                       output_spaces=', '.join(output_spaces),
+                                       freesurfer_status=freesurfer_status)
 
 
 class FunctionalSummaryInputSpec(BaseInterfaceInputSpec):
@@ -126,3 +161,18 @@ class FunctionalSummary(SummaryInterface):
         return FUNCTIONAL_TEMPLATE.format(stc=stc, sdc=sdc, registration=reg,
                                           output_spaces=', '.join(self.inputs.output_spaces),
                                           confounds=', '.join(self.inputs.confounds))
+
+
+class AboutSummaryInputSpec(BaseInterfaceInputSpec):
+    version = Str(desc='FMRIPREP version')
+    command = Str(desc='FMRIPREP command')
+    # Date not included - update timestamp only if version or command changes
+
+
+class AboutSummary(SummaryInterface):
+    input_spec = AboutSummaryInputSpec
+
+    def _generate_segment(self):
+        return ABOUT_TEMPLATE.format(version=self.inputs.version,
+                                     command=self.inputs.command,
+                                     date=time.strftime("%Y-%m-%d %H:%M:%S %z"))

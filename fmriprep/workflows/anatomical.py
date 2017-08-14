@@ -8,7 +8,6 @@ Anatomical Reference -processing workflows.
 Originally coded by Craig Moodie. Refactored by the CRN Developers.
 
 """
-from __future__ import print_function, division, absolute_import, unicode_literals
 
 import os.path as op
 
@@ -26,8 +25,7 @@ from niworkflows.interfaces.segmentation import FASTRPT, ReconAllRPT
 
 from ..interfaces import (
     DerivativesDataSink, StructuralReference, MakeMidthickness, FSInjectBrainExtracted,
-    FSDetectInputs, BIDSInfo, NormalizeSurf, GiftiNameSource, PruneExcessiveZoom, ConformSeries,
-    AnatomicalSummary
+    FSDetectInputs, NormalizeSurf, GiftiNameSource, PruneExcessiveZoom, ConformSeries
 )
 from ..utils.misc import fix_multi_T1w_source_name, add_suffix
 
@@ -41,7 +39,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
     workflow = pe.Workflow(name=name)
 
     inputnode = pe.Node(
-        niu.IdentityInterface(fields=['t1w', 't2w', 'subjects_dir']),
+        niu.IdentityInterface(fields=['t1w', 't2w', 'subjects_dir', 'subject_id']),
         name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['t1_preproc', 't1_brain', 't1_mask', 't1_seg', 't1_tpms',
@@ -49,12 +47,6 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
                 'mni_mask', 'mni_seg', 'mni_tpms',
                 'subjects_dir', 'subject_id', 'fs_2_t1_transform', 'surfaces']),
         name='outputnode')
-
-    bids_info = pe.Node(BIDSInfo(), name='bids_info', run_without_submitting=True)
-
-    summary = pe.Node(
-        AnatomicalSummary(output_spaces=output_spaces, template=template),
-        name='summary')
 
     # 0. Reorient T1w image(s) to RAS and resample to common voxel space
     t1_conform_wf = init_anat_conform_wf(name='t1_conform_wf')
@@ -128,7 +120,6 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
         return len(in_list) > threshold
 
     workflow.connect([
-        (inputnode, bids_info, [(('t1w', fix_multi_T1w_source_name), 'in_file')]),
         (inputnode, t1_conform_wf, [('t1w', 'inputnode.t1w_list')]),
         (t1_conform_wf, t1_merge, [
             ('outputnode.t1w_list', 'in_files'),
@@ -144,7 +135,6 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
                                      ('outputnode.out_mask', 't1_mask')]),
         (t1_seg, outputnode, [('tissue_class_map', 't1_seg'),
                               ('probability_maps', 't1_tpms')]),
-        (inputnode, summary, [('t1w', 't1w')]),
     ])
 
     if 'template' in output_spaces:
@@ -180,12 +170,10 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
                                                  omp_nthreads=omp_nthreads, hires=hires)
 
         workflow.connect([
-            (inputnode, summary, [('subjects_dir', 'subjects_dir')]),
-            (bids_info, summary, [('subject_id', 'subject_id')]),
             (inputnode, surface_recon_wf, [
                 ('t2w', 'inputnode.t2w'),
-                ('subjects_dir', 'inputnode.subjects_dir')]),
-            (summary, surface_recon_wf, [('subject_id', 'inputnode.subject_id')]),
+                ('subjects_dir', 'inputnode.subjects_dir'),
+                ('subject_id', 'inputnode.subject_id')]),
             (t1_reorient_wf, surface_recon_wf, [('outputnode.t1w_list', 'inputnode.t1w')]),
             (skullstrip_wf, surface_recon_wf, [
                 ('outputnode.out_file', 'inputnode.skullstripped_t1')]),
@@ -202,7 +190,6 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
     workflow.connect([
         (inputnode, anat_reports_wf, [
             (('t1w', fix_multi_T1w_source_name), 'inputnode.source_file')]),
-        (summary, anat_reports_wf, [('out_report', 'inputnode.summary_report')]),
         (t1_conform_wf, anat_reports_wf, [('outputnode.out_report', 'inputnode.t1_conform_report')]),
         (t1_seg, anat_reports_wf, [('out_report', 'inputnode.t1_seg_report')]),
     ])
@@ -516,14 +503,9 @@ def init_anat_reports_wf(reportlets_dir, skull_strip_ants, output_spaces,
 
     inputnode = pe.Node(
         niu.IdentityInterface(
-            fields=['source_file', 'summary_report', 't1_conform_report', 't1_seg_report',
+            fields=['source_file', 't1_conform_report', 't1_seg_report',
                     't1_2_mni_report', 't1_skull_strip_report', 'recon_report']),
         name='inputnode')
-
-    ds_summary_report = pe.Node(
-        DerivativesDataSink(base_directory=reportlets_dir,
-                            suffix='summary'),
-        name='ds_summary_report', run_without_submitting=True)
 
     ds_t1_conform_report = pe.Node(
         DerivativesDataSink(base_directory=reportlets_dir, suffix='conform'),
@@ -546,8 +528,6 @@ def init_anat_reports_wf(reportlets_dir, skull_strip_ants, output_spaces,
         name='ds_recon_report', run_without_submitting=True)
 
     workflow.connect([
-        (inputnode, ds_summary_report, [('source_file', 'source_file'),
-                                        ('summary_report', 'in_file')]),
         (inputnode, ds_t1_conform_report, [('source_file', 'source_file'),
                                            ('t1_conform_report', 'in_file')]),
         (inputnode, ds_t1_seg_report, [('source_file', 'source_file'),

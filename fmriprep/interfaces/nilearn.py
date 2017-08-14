@@ -8,19 +8,18 @@ Image tools interfaces
 
 
 """
-from __future__ import print_function, division, absolute_import, unicode_literals
-
 import nibabel as nb
 from nilearn.masking import compute_epi_mask
 from nilearn.image import concat_imgs
 
 from niworkflows.nipype import logging
+from niworkflows.nipype.utils.filemanip import fname_presuffix
 from niworkflows.nipype.interfaces.base import (
     traits, isdefined, TraitedSpec, BaseInterfaceInputSpec,
     File, InputMultiPath
 )
 from niworkflows.interfaces.base import SimpleInterface
-from fmriprep.utils.misc import genfname
+
 LOGGER = logging.getLogger('interface')
 
 
@@ -66,8 +65,8 @@ class MaskEPI(SimpleInterface):
             target_shape=target_shape
         )
 
-        self._results['out_mask'] = genfname(
-            self.inputs.in_files[0], suffix='mask')
+        self._results['out_mask'] = fname_presuffix(
+            self.inputs.in_files[0], suffix='_mask', newpath=runtime.cwd)
         masknii.to_filename(self._results['out_mask'])
         return runtime
 
@@ -89,8 +88,8 @@ class Merge(SimpleInterface):
     output_spec = MergeOutputSpec
 
     def _run_interface(self, runtime):
-        self._results['out_file'] = genfname(
-            self.inputs.in_files[0], suffix='merged')
+        self._results['out_file'] = fname_presuffix(
+            self.inputs.in_files[0], suffix='_merged', newpath=runtime.cwd)
         new_nii = concat_imgs(self.inputs.in_files, dtype=self.inputs.dtype)
 
         if isdefined(self.inputs.header_source):
