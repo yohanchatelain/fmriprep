@@ -26,7 +26,8 @@ from niworkflows.interfaces.segmentation import FASTRPT, ReconAllRPT
 
 from ..interfaces import (
     DerivativesDataSink, StructuralReference, MakeMidthickness, FSInjectBrainExtracted,
-    FSDetectInputs, BIDSInfo, NormalizeSurf, GiftiNameSource, ConformSeries, AnatomicalSummary
+    FSDetectInputs, BIDSInfo, NormalizeSurf, GiftiNameSource, PruneExcessiveZoom, ConformSeries,
+    AnatomicalSummary
 )
 from ..utils.misc import fix_multi_T1w_source_name, add_suffix
 
@@ -56,7 +57,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
         name='summary')
 
     # 0. Reorient T1w image(s) to RAS and resample to common voxel space
-    t1_conform = pe.Node(ConformSeries(), name='t1_conform')
+    t1_conform = init_anat_conform_wf(name='t1_conform')
 
     # 1. Align and merge if several T1w images are provided
     t1_merge = pe.Node(
@@ -69,7 +70,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
         name='t1_merge')
 
     # 1.5 Reorient template to RAS, if needed (mri_robust_template sets LIA)
-    t1_reorient = pe.Node(ConformSeries(), name='t1_reorient')
+    t1_reorient = init_anat_conform_wf(name='t1_reorient')
 
     # 2. T1 Bias Field Correction
     # Bias field correction is handled in skull strip workflows.
@@ -128,15 +129,15 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
 
     workflow.connect([
         (inputnode, bids_info, [(('t1w', fix_multi_T1w_source_name), 'in_file')]),
-        (inputnode, t1_conform, [('t1w', 't1w_list')]),
+        (inputnode, t1_conform, [('t1w', 'inputnode.t1w_list')]),
         (t1_conform, t1_merge, [
-            ('t1w_list', 'in_files'),
-            (('t1w_list', set_threads, omp_nthreads), 'num_threads'),
-            (('t1w_list', len_above_thresh, 2, longitudinal), 'fixed_timepoint'),
-            (('t1w_list', len_above_thresh, 2, longitudinal), 'no_iteration'),
-            (('t1w_list', add_suffix, '_template'), 'out_file')]),
-        (t1_merge, t1_reorient, [('out_file', 't1w_list')]),
-        (t1_reorient, skullstrip_wf, [('t1w_list', 'inputnode.in_file')]),
+            ('outputnode.t1w_list', 'in_files'),
+            (('outputnode.t1w_list', set_threads, omp_nthreads), 'num_threads'),
+            (('outputnode.t1w_list', len_above_thresh, 2, longitudinal), 'fixed_timepoint'),
+            (('outputnode.t1w_list', len_above_thresh, 2, longitudinal), 'no_iteration'),
+            (('outputnode.t1w_list', add_suffix, '_template'), 'out_file')]),
+        (t1_merge, t1_reorient, [('out_file', 'inputnode.t1w_list')]),
+        (t1_reorient, skullstrip_wf, [('outputnode.t1w_list', 'inputnode.in_file')]),
         (skullstrip_wf, t1_seg, [('outputnode.out_file', 'in_files')]),
         (skullstrip_wf, outputnode, [('outputnode.bias_corrected', 't1_preproc'),
                                      ('outputnode.out_file', 't1_brain'),
@@ -245,6 +246,34 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
 
     return workflow
 
+def init_anat_conform_wf(name='t1_conform'):
+
+    workflow = pe.Workflow(name=name)
+
+    inputnode = pe.Node(
+        niu.IdentityInterface(fields=['t1w_list']),
+                              name='inputnode')
+    outputnode = pe.Node(
+        niu.IdentityInterface(fields=['t1w_list']),
+                              name='outputnode')
+
+    t1_prune_zoom = pe.Node(PruneExcessiveZoom(), name='t1_prune_zoom')
+    t1_conform = pe.MapNode(ConformSeries(), iterfield='t1w', name='t1_conform')
+
+    workflow.connect([
+        (inputnode, t1_prune_zoom, [('t1w_list', 't1w_list')]),
+        (t1_prune_zoom, t1_conform, [
+            ('t1w_valid_list', 't1w'),
+            ('target_zooms', 'target_zooms'),
+            ('target_shape', 'target_shape'),
+            ('target_span', 'target_span'),
+        ]),
+        (t1_conform, outputnode, [
+            ('t1w', 't1w_list'),
+        ]),
+    ])
+
+    return workflow
 
 def init_skullstrip_ants_wf(debug, omp_nthreads, name='skullstrip_ants_wf'):
     from niworkflows.data import get_ants_oasis_template_ras
