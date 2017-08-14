@@ -57,7 +57,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
         name='summary')
 
     # 0. Reorient T1w image(s) to RAS and resample to common voxel space
-    t1_conform = init_anat_conform_wf(name='t1_conform')
+    t1_conform_wf = init_anat_conform_wf(name='t1_conform_wf')
 
     # 1. Align and merge if several T1w images are provided
     t1_merge = pe.Node(
@@ -70,7 +70,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
         name='t1_merge')
 
     # 1.5 Reorient template to RAS, if needed (mri_robust_template sets LIA)
-    t1_reorient = init_anat_conform_wf(name='t1_reorient')
+    t1_reorient_wf = init_anat_conform_wf(name='t1_reorient_wf')
 
     # 2. T1 Bias Field Correction
     # Bias field correction is handled in skull strip workflows.
@@ -129,15 +129,15 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
 
     workflow.connect([
         (inputnode, bids_info, [(('t1w', fix_multi_T1w_source_name), 'in_file')]),
-        (inputnode, t1_conform, [('t1w', 'inputnode.t1w_list')]),
-        (t1_conform, t1_merge, [
+        (inputnode, t1_conform_wf, [('t1w', 'inputnode.t1w_list')]),
+        (t1_conform_wf, t1_merge, [
             ('outputnode.t1w_list', 'in_files'),
             (('outputnode.t1w_list', set_threads, omp_nthreads), 'num_threads'),
             (('outputnode.t1w_list', len_above_thresh, 2, longitudinal), 'fixed_timepoint'),
             (('outputnode.t1w_list', len_above_thresh, 2, longitudinal), 'no_iteration'),
             (('outputnode.t1w_list', add_suffix, '_template'), 'out_file')]),
-        (t1_merge, t1_reorient, [('out_file', 'inputnode.t1w_list')]),
-        (t1_reorient, skullstrip_wf, [('outputnode.t1w_list', 'inputnode.in_file')]),
+        (t1_merge, t1_reorient_wf, [('out_file', 'inputnode.t1w_list')]),
+        (t1_reorient_wf, skullstrip_wf, [('outputnode.t1w_list', 'inputnode.in_file')]),
         (skullstrip_wf, t1_seg, [('outputnode.out_file', 'in_files')]),
         (skullstrip_wf, outputnode, [('outputnode.bias_corrected', 't1_preproc'),
                                      ('outputnode.out_file', 't1_brain'),
@@ -186,7 +186,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
                 ('t2w', 'inputnode.t2w'),
                 ('subjects_dir', 'inputnode.subjects_dir')]),
             (summary, surface_recon_wf, [('subject_id', 'inputnode.subject_id')]),
-            (t1_reorient, surface_recon_wf, [('outputnode.t1w_list', 'inputnode.t1w')]),
+            (t1_reorient_wf, surface_recon_wf, [('outputnode.t1w_list', 'inputnode.t1w')]),
             (skullstrip_wf, surface_recon_wf, [
                 ('outputnode.out_file', 'inputnode.skullstripped_t1')]),
             (surface_recon_wf, outputnode, [
@@ -203,7 +203,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
         (inputnode, anat_reports_wf, [
             (('t1w', fix_multi_T1w_source_name), 'inputnode.source_file')]),
         (summary, anat_reports_wf, [('out_report', 'inputnode.summary_report')]),
-        (t1_conform, anat_reports_wf, [('outputnode.out_report', 'inputnode.t1_conform_report')]),
+        (t1_conform_wf, anat_reports_wf, [('outputnode.out_report', 'inputnode.t1_conform_report')]),
         (t1_seg, anat_reports_wf, [('out_report', 'inputnode.t1_seg_report')]),
     ])
 
@@ -246,7 +246,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
 
     return workflow
 
-def init_anat_conform_wf(name='t1_conform'):
+def init_anat_conform_wf(name='t1_conform_wf'):
 
     workflow = pe.Workflow(name=name)
 
