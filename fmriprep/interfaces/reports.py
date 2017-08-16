@@ -114,8 +114,9 @@ class SubjectSummary(SummaryInterface):
             t2w_seg = '(+ {:d} T2-weighted)'.format(len(self.inputs.t2w))
 
         # Add list of tasks with number of runs
+        bold_series = self.inputs.bold if isdefined(self.inputs.bold) else []
         counts = Counter(BIDS_NAME.search(series).groupdict()['task_id'][5:]
-                         for series in self.inputs.bold)
+                         for series in bold_series)
         tasks = ''
         if counts:
             header = '\t\t<ul class="elem-desc">'
@@ -128,7 +129,7 @@ class SubjectSummary(SummaryInterface):
         return SUBJECT_TEMPLATE.format(subject_id=self.inputs.subject_id,
                                        n_t1s=len(self.inputs.t1w),
                                        t2w=t2w_seg,
-                                       n_bold=len(self.inputs.bold),
+                                       n_bold=len(bold_series),
                                        tasks=tasks,
                                        output_spaces=', '.join(output_spaces),
                                        freesurfer_status=freesurfer_status)
