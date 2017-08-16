@@ -79,6 +79,9 @@ def get_parser():
                          help='maximum number of threads per-process')
     g_perfm.add_argument('--mem_mb', '--mem-mb', action='store', default=0, type=int,
                          help='upper bound memory limit for FMRIPREP processes')
+    g_perfm.add_argument('--low-mem', action='store_true',
+                         help='attempt to reduce memory usage (will increase disk usage '
+                              'in working directory)')
     g_perfm.add_argument('--use-plugin', action='store', default=None,
                          help='nipype plugin configuration file')
     g_perfm.add_argument('--anat-only', action='store_true',
@@ -278,6 +281,7 @@ def create_workflow(opts):
         run_uuid=run_uuid,
         ignore=opts.ignore,
         debug=opts.debug,
+        low_mem=opts.low_mem,
         anat_only=opts.anat_only,
         longitudinal=opts.longitudinal,
         omp_nthreads=omp_nthreads,
