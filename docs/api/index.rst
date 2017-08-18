@@ -9,6 +9,7 @@ Workflows
 
 .. automodule:: fmriprep.workflows.anatomical
 .. automodule:: fmriprep.workflows.bold
+.. automodule:: fmriprep.workflows.util
 
 Interfaces
 ----------
