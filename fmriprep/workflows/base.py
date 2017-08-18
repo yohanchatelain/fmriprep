@@ -6,6 +6,8 @@
 fMRIprep base processing workflows
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. autofunction:: init_fmriprep_wf
+.. autofunction:: init_single_subject_wf
 
 """
 
@@ -46,11 +48,12 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
         :simple_form: yes
 
         from fmriprep.workflows.base import init_fmriprep_wf
-        wf = init_fmriprep_wf(subject_list=['test'],
+        wf = init_fmriprep_wf(subject_list=['fmripreptest'],
                               task_id='',
                               run_uuid='X',
                               ignore=[],
                               debug=False,
+                              low_mem=False,
                               anat_only=False,
                               longitudinal=False,
                               omp_nthreads=1,
@@ -85,6 +88,8 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
             Preprocessing steps to skip (may include "slicetiming", "fieldmaps")
         debug : bool
             Enable debugging outputs
+        low_mem : bool
+            Write uncompressed .nii files in some cases to reduce memory usage
         anat_only : bool
             Disable functional workflows
         longitudinal : bool
@@ -221,6 +226,7 @@ def init_single_subject_wf(subject_id, task_id, name,
                                                   'template', 'fsaverage5'],
                                     ignore=[],
                                     debug=False,
+                                    low_mem=False,
                                     anat_only=False,
                                     hires=True,
                                     bold2t1w_dof=9,
@@ -244,6 +250,8 @@ def init_single_subject_wf(subject_id, task_id, name,
             Preprocessing steps to skip (may include "slicetiming", "fieldmaps")
         debug : bool
             Enable debugging outputs
+        low_mem : bool
+            Write uncompressed .nii files in some cases to reduce memory usage
         anat_only : bool
             Disable functional workflows
         longitudinal : bool
@@ -291,7 +299,7 @@ def init_single_subject_wf(subject_id, task_id, name,
             Do not fail on ICA-AROMA errors
 
     """
-    if name == 'single_subject_wf':
+    if name in ('single_subject_wf', 'single_subject_fmripreptest_wf'):
         # for documentation purposes
         subject_data = {
             't1w': ['/completely/made/up/path/sub-01_T1w.nii.gz'],
