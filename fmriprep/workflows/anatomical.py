@@ -25,7 +25,7 @@ from niworkflows.interfaces.segmentation import FASTRPT, ReconAllRPT
 
 from ..interfaces import (
     DerivativesDataSink, StructuralReference, MakeMidthickness, FSInjectBrainExtracted,
-    FSDetectInputs, NormalizeSurf, GiftiNameSource, PruneExcessiveZoom, ConformSeries
+    FSDetectInputs, NormalizeSurf, GiftiNameSource, TemplateDimensions, Conform, Reorient
 )
 from ..utils.misc import fix_multi_T1w_source_name, add_suffix
 
@@ -49,7 +49,8 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
         name='outputnode')
 
     # 0. Reorient T1w image(s) to RAS and resample to common voxel space
-    t1_conform_wf = init_anat_conform_wf(name='t1_conform_wf')
+    t1_template_dimensions = pe.Node(TemplateDimensions(), name='t1_template_dimensions')
+    t1_conform = pe.MapNode(Conform(), iterfield='in_file', name='t1_conform')
 
     # 1. Align and merge if several T1w images are provided
     t1_merge = pe.Node(
@@ -62,7 +63,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
         name='t1_merge')
 
     # 1.5 Reorient template to RAS, if needed (mri_robust_template sets LIA)
-    t1_reorient_wf = init_anat_conform_wf(name='t1_reorient_wf')
+    t1_reorient = pe.Node(Reorient(), name='t1_reorient')
 
     # 2. T1 Bias Field Correction
     # Bias field correction is handled in skull strip workflows.
@@ -120,15 +121,19 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
         return len(in_list) > threshold
 
     workflow.connect([
-        (inputnode, t1_conform_wf, [('t1w', 'inputnode.t1w_list')]),
-        (t1_conform_wf, t1_merge, [
-            ('outputnode.t1w_list', 'in_files'),
-            (('outputnode.t1w_list', set_threads, omp_nthreads), 'num_threads'),
-            (('outputnode.t1w_list', len_above_thresh, 2, longitudinal), 'fixed_timepoint'),
-            (('outputnode.t1w_list', len_above_thresh, 2, longitudinal), 'no_iteration'),
-            (('outputnode.t1w_list', add_suffix, '_template'), 'out_file')]),
-        (t1_merge, t1_reorient_wf, [('out_file', 'inputnode.t1w_list')]),
-        (t1_reorient_wf, skullstrip_wf, [('outputnode.t1w_list', 'inputnode.in_file')]),
+        (inputnode, t1_template_dimensions, [('t1w', 't1w_list')]),
+        (t1_template_dimensions, t1_conform, [
+            ('t1w_valid_list', 'in_file'),
+            ('target_zooms', 'target_zooms'),
+            ('target_shape', 'target_shape')]),
+        (t1_conform, t1_merge, [
+            ('out_file', 'in_files'),
+            (('out_file', set_threads, omp_nthreads), 'num_threads'),
+            (('out_file', len_above_thresh, 2, longitudinal), 'fixed_timepoint'),
+            (('out_file', len_above_thresh, 2, longitudinal), 'no_iteration'),
+            (('out_file', add_suffix, '_template'), 'out_file')]),
+        (t1_merge, t1_reorient, [('out_file', 'in_file')]),
+        (t1_reorient, skullstrip_wf, [('out_file', 'inputnode.in_file')]),
         (skullstrip_wf, t1_seg, [('outputnode.out_file', 'in_files')]),
         (skullstrip_wf, outputnode, [('outputnode.bias_corrected', 't1_preproc'),
                                      ('outputnode.out_file', 't1_brain'),
@@ -174,7 +179,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
                 ('t2w', 'inputnode.t2w'),
                 ('subjects_dir', 'inputnode.subjects_dir'),
                 ('subject_id', 'inputnode.subject_id')]),
-            (t1_reorient_wf, surface_recon_wf, [('outputnode.t1w_list', 'inputnode.t1w')]),
+            (t1_reorient, surface_recon_wf, [('out_file', 'inputnode.t1w')]),
             (skullstrip_wf, surface_recon_wf, [
                 ('outputnode.out_file', 'inputnode.skullstripped_t1')]),
             (surface_recon_wf, outputnode, [
@@ -190,8 +195,8 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
     workflow.connect([
         (inputnode, anat_reports_wf, [
             (('t1w', fix_multi_T1w_source_name), 'inputnode.source_file')]),
-        (t1_conform_wf, anat_reports_wf, [
-            ('outputnode.out_report', 'inputnode.t1_conform_report')]),
+        (t1_template_dimensions, anat_reports_wf, [
+            ('out_report', 'inputnode.t1_conform_report')]),
         (t1_seg, anat_reports_wf, [('out_report', 'inputnode.t1_seg_report')]),
     ])
 
@@ -233,40 +238,6 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
     ])
 
     return workflow
-
-
-def init_anat_conform_wf(name='t1_conform_wf'):
-
-    workflow = pe.Workflow(name=name)
-
-    inputnode = pe.Node(
-        niu.IdentityInterface(fields=['t1w_list']),
-        name='inputnode')
-    outputnode = pe.Node(
-        niu.IdentityInterface(fields=['t1w_list', 'out_report']),
-        name='outputnode')
-
-    t1_prune_zoom = pe.Node(PruneExcessiveZoom(), name='t1_prune_zoom')
-    t1_conform = pe.MapNode(ConformSeries(), iterfield='t1w', name='t1_conform')
-
-    workflow.connect([
-        (inputnode, t1_prune_zoom, [('t1w_list', 't1w_list')]),
-        (t1_prune_zoom, t1_conform, [
-            ('t1w_valid_list', 't1w'),
-            ('target_zooms', 'target_zooms'),
-            ('target_shape', 'target_shape'),
-            ('target_span', 'target_span'),
-        ]),
-        (t1_conform, outputnode, [
-            ('t1w', 't1w_list'),
-        ]),
-        (t1_prune_zoom, outputnode, [
-            ('out_report', 'out_report'),
-        ]),
-    ])
-
-    return workflow
-
 
 def init_skullstrip_ants_wf(debug, omp_nthreads, name='skullstrip_ants_wf'):
     from niworkflows.data import get_ants_oasis_template_ras
