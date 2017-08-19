@@ -239,6 +239,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
 
     return workflow
 
+
 def init_skullstrip_ants_wf(debug, omp_nthreads, name='skullstrip_ants_wf'):
     from niworkflows.data import get_ants_oasis_template_ras
 
