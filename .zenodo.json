@@ -57,6 +57,6 @@
     "fMRI",
     "BIDS"
   ],
-  "license": "BSD 3-clause",
+  "license": "BSD-3-Clause",
   "upload_type": "software"
 }

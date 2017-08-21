@@ -79,6 +79,9 @@ def get_parser():
                          help='maximum number of threads per-process')
     g_perfm.add_argument('--mem_mb', '--mem-mb', action='store', default=0, type=int,
                          help='upper bound memory limit for FMRIPREP processes')
+    g_perfm.add_argument('--low-mem', action='store_true',
+                         help='attempt to reduce memory usage (will increase disk usage '
+                              'in working directory)')
     g_perfm.add_argument('--use-plugin', action='store', default=None,
                          help='nipype plugin configuration file')
     g_perfm.add_argument('--anat-only', action='store_true',
@@ -127,12 +130,12 @@ def get_parser():
     g_aroma.add_argument('--use-aroma', action='store_true', default=False,
                          help='add ICA_AROMA to your preprocessing stream')
     #  ANTs options
-    g_ants = parser.add_argument_group('Specific options for ANTs registrations')
-    g_ants.add_argument('--skull-strip-ants', dest="skull_strip_ants", action='store_true',
-                        help='use ANTs-based skull-stripping (default, slow))')
-    g_ants.add_argument('--no-skull-strip-ants', dest="skull_strip_ants", action='store_false',
-                        help="don't use ANTs-based skull-stripping (use  AFNI instead, fast)")
-    g_ants.set_defaults(skull_strip_ants=True)
+    # g_ants = parser.add_argument_group('Specific options for ANTs registrations')
+    # g_ants.add_argument('--skull-strip-ants', dest="skull_strip_ants", action='store_true',
+    #                     help='use ANTs-based skull-stripping (default, slow))')
+    # g_ants.add_argument('--no-skull-strip-ants', dest="skull_strip_ants", action='store_false',
+    #                     help="don't use ANTs-based skull-stripping (use  AFNI instead, fast)")
+    # g_ants.set_defaults(skull_strip_ants=True)
 
     # Fieldmap options
     g_fmap = parser.add_argument_group('Specific options for handling fieldmaps')
@@ -278,10 +281,11 @@ def create_workflow(opts):
         run_uuid=run_uuid,
         ignore=opts.ignore,
         debug=opts.debug,
+        low_mem=opts.low_mem,
         anat_only=opts.anat_only,
         longitudinal=opts.longitudinal,
         omp_nthreads=omp_nthreads,
-        skull_strip_ants=opts.skull_strip_ants,
+        skull_strip_ants=True,
         work_dir=work_dir,
         output_dir=output_dir,
         bids_dir=bids_dir,
