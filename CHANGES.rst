@@ -7,6 +7,7 @@ With thanks to Anibal Sólon for contributions.
 * [ENH] Parallelize anatomical conformation step (#666)
 * [FIX] Handle missing functional data in SubjectSummary node (#670)
 * [FIX] Disable --no-skull-strip-ants (AFNI skull-stripping) (#674)
+* [FIX] Initialize SyN SDC more robustly (#680)
 
 1.0.0-rc2 (12th of August 2017)
 ===============================
