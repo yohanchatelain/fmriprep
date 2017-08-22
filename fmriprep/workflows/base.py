@@ -109,9 +109,11 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
         freesurfer : bool
             Enable FreeSurfer surface reconstruction (may increase runtime)
         output_spaces : list
-            List of output spaces functional images are to be resampled to
-            Some parts of pipeline will only be instantiated for some output spaces
+            List of output spaces functional images are to be resampled to.
+            Some parts of pipeline will only be instantiated for some output spaces.
+
             Valid spaces:
+
              - T1w
              - template
              - fsnative
@@ -123,12 +125,14 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
         bold2t1w_dof : 6, 9 or 12
             Degrees-of-freedom for BOLD-T1w registration
         fmap_bspline : bool
+            **Experimental**: Fit B-Spline field using least-squares
         fmap_demean : bool
-        use_syn : bool [EXPERIMENTAL]
-            Enable ANTs SyN-based susceptibility distortion correction (SDC)
+            Demean voxel-shift map during unwarp
+        use_syn : bool
+            **Experimental**: Enable ANTs SyN-based susceptibility distortion correction (SDC).
             If fieldmaps are present and enabled, this is not run, by default.
-        force_syn : bool [TEMPORARY]
-            Always run SyN-based SDC
+        force_syn : bool
+            **Temporary**: Always run SyN-based SDC
         use_aroma : bool
             Perform ICA-AROMA on MNI-resampled functional series
         ignore_aroma_err : bool
@@ -271,9 +275,11 @@ def init_single_subject_wf(subject_id, task_id, name,
         freesurfer : bool
             Enable FreeSurfer surface reconstruction (may increase runtime)
         output_spaces : list
-            List of output spaces functional images are to be resampled to
-            Some parts of pipeline will only be instantiated for some output spaces
+            List of output spaces functional images are to be resampled to.
+            Some parts of pipeline will only be instantiated for some output spaces.
+
             Valid spaces:
+
              - T1w
              - template
              - fsnative
@@ -285,18 +291,25 @@ def init_single_subject_wf(subject_id, task_id, name,
         bold2t1w_dof : 6, 9 or 12
             Degrees-of-freedom for BOLD-T1w registration
         fmap_bspline : bool
+            **Experimental**: Fit B-Spline field using least-squares
         fmap_demean : bool
-        use_syn : bool [EXPERIMENTAL]
-            Enable ANTs SyN-based susceptibility distortion correction (SDC)
+            Demean voxel-shift map during unwarp
+        use_syn : bool
+            **Experimental**: Enable ANTs SyN-based susceptibility distortion correction (SDC).
             If fieldmaps are present and enabled, this is not run, by default.
-        force_syn : bool [TEMPORARY]
-            Always run SyN-based SDC
+        force_syn : bool
+            **Temporary**: Always run SyN-based SDC
         output_grid_ref : str or None
             Path of custom reference image for normalization
         use_aroma : bool
             Perform ICA-AROMA on MNI-resampled functional series
         ignore_aroma_err : bool
             Do not fail on ICA-AROMA errors
+
+    Inputs
+
+        subjects_dir
+            FreeSurfer SUBJECTS_DIR
 
     """
     if name in ('single_subject_wf', 'single_subject_fmripreptest_wf'):
