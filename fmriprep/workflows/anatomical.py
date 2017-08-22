@@ -715,8 +715,8 @@ def init_gifti_surface_wf(name='gifti_surface_wf'):
     These, along with the gray/white matter boundary (``lh/rh.smoothwm``), pial
     sufaces (``lh/rh.pial``) and inflated surfaces (``lh/rh.inflated``) are
     converted to GIFTI files.
-    Additionally, the vertex coordinates are :ref:`recentered
-    <NormalizeSurf>`_ to align with native T1w space.
+    Additionally, the vertex coordinates are :py:class:`recentered
+    <fmriprep.interfaces.NormalizeSurf>` to align with native T1w space.
 
     .. workflow::
         :graph2use: orig

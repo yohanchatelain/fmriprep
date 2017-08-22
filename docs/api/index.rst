@@ -14,3 +14,6 @@ Workflows
 
 Interfaces
 ----------
+
+.. autoclass:: fmriprep.interfaces.StructuralReference
+.. autoclass:: fmriprep.interfaces.NormalizeSurf
