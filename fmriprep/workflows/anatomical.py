@@ -19,11 +19,10 @@ structural images.
 .. autofunction:: init_autorecon_resume_wf
 .. autofunction:: init_gifti_surface_wf
 
-  .. note ::
-
-      Originally coded by Craig Moodie. Refactored by the CRN Developers.
-
 """
+
+# Originally coded by Craig Moodie. Refactored by the CRN Developers.
+
 
 import os.path as op
 
