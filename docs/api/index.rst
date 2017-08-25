@@ -11,9 +11,3 @@ Workflows
 .. automodule:: fmriprep.workflows.anatomical
 .. automodule:: fmriprep.workflows.bold
 .. automodule:: fmriprep.workflows.util
-
-Interfaces
-----------
-
-.. autoclass:: fmriprep.interfaces.StructuralReference
-.. autoclass:: fmriprep.interfaces.NormalizeSurf
