@@ -1,5 +1,5 @@
-Next release
-============
+1.0.0-rc3 (28th of August 2017)
+===============================
 
 With thanks to Anibal Sólon for contributions.
 
@@ -8,6 +8,7 @@ With thanks to Anibal Sólon for contributions.
 * [FIX] Handle missing functional data in SubjectSummary node (#670)
 * [FIX] Disable --no-skull-strip-ants (AFNI skull-stripping) (#674)
 * [FIX] Initialize SyN SDC more robustly (#680)
+* [DOC] Add comprehensive documentation of workflow API (#638)
 
 1.0.0-rc2 (12th of August 2017)
 ===============================
