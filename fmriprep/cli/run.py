@@ -126,9 +126,9 @@ def get_parser():
              'but is not used in normalization.')
     g_conf.add_argument(
         '--medial-surface-nan', required=False, action='store', default=False,
-        help='Replace medial wall values with NaNs on surface gifti files. Only '
+        help='Replace medial wall values with NaNs on functional GIFTI files. Only '
         'performed for gifti files mapped to an fsaverage')
-     
+
     # ICA_AROMA options
     g_aroma = parser.add_argument_group('Specific options for running ICA_AROMA')
     g_aroma.add_argument('--use-aroma', action='store_true', default=False,

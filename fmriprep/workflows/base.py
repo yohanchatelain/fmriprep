@@ -122,7 +122,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
         template : str
             Name of template targeted by `'template'` output space
         medial_surface_nan : bool
-            Replace medial wall values with NaNs on surface gifti files
+            Replace medial wall values with NaNs on functional GIFTI files
         hires : bool
             Enable sub-millimeter preprocessing in FreeSurfer
         bold2t1w_dof : 6, 9 or 12
@@ -292,7 +292,7 @@ def init_single_subject_wf(subject_id, task_id, name,
         template : str
             Name of template targeted by `'template'` output space
         medial_surface_nan : bool
-            Replace medial wall values with NaNs on surface gifti files
+            Replace medial wall values with NaNs on functional GIFTI files
         hires : bool
             Enable sub-millimeter preprocessing in FreeSurfer
         bold2t1w_dof : 6, 9 or 12
