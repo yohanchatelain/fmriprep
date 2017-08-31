@@ -119,12 +119,16 @@ def get_parser():
         '--template', required=False, action='store',
         choices=['MNI152NLin2009cAsym'], default='MNI152NLin2009cAsym',
         help='volume template space (default: MNI152NLin2009cAsym)')
-
     g_conf.add_argument(
         '--output-grid-reference', required=False, action='store', default=None,
         help='Grid reference image for resampling BOLD files to volume template space. '
              'It determines the field of view and resolution of the output images, '
              'but is not used in normalization.')
+    g_conf.add_argument(
+        '--medial-surface-nan', required=False, action='store', default=False,
+        help='Replace medial wall values with NaNs on surface gifti files. Only '
+        'performed for gifti files mapped to an fsaverage')
+     
     # ICA_AROMA options
     g_aroma = parser.add_argument_group('Specific options for running ICA_AROMA')
     g_aroma.add_argument('--use-aroma', action='store_true', default=False,
@@ -292,6 +296,7 @@ def create_workflow(opts):
         freesurfer=opts.freesurfer,
         output_spaces=opts.output_space,
         template=opts.template,
+        medial_surface_nan=opts.medial_surface_nan,
         output_grid_ref=opts.output_grid_reference,
         hires=opts.hires,
         bold2t1w_dof=opts.bold2t1w_dof,
