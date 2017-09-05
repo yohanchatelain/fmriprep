@@ -30,6 +30,7 @@ slice-timing information and no fieldmap acquisitions):
                                 template='MNI152NLin2009cAsym',
                                 output_spaces=['T1w', 'fsnative',
                                               'template', 'fsaverage5'],
+                                medial_surface_nan=False,
                                 ignore=[],
                                 debug=False,
                                 low_mem=False,
@@ -184,6 +185,7 @@ BOLD preprocessing
                               template='MNI152NLin2009cAsym',
                               output_spaces=['T1w', 'fsnative',
                                              'template', 'fsaverage5'],
+                              medial_surface_nan=False,
                               debug=False,
                               low_mem=False,
                               bold2t1w_dof=9,
@@ -303,7 +305,8 @@ EPI sampled to FreeSurfer surfaces
 
     from fmriprep.workflows.bold import init_bold_surf_wf
     wf = init_bold_surf_wf(output_spaces=['T1w', 'fsnative',
-                                         'template', 'fsaverage5'])
+                                         'template', 'fsaverage5'],
+                           medial_surface_nan=False)
 
 If FreeSurfer processing is enabled, the motion-corrected functional series
 (after single shot resampling to T1w space) is sampled to the
