@@ -16,7 +16,6 @@ from argparse import ArgumentParser
 from argparse import RawTextHelpFormatter
 from multiprocessing import cpu_count
 from time import strftime
-from ..info import __version__
 
 logging.addLevelName(25, 'INFO')  # Add a new level between INFO and WARNING
 logger = logging.getLogger('cli')
@@ -35,6 +34,7 @@ def _warn_redirect(message, category, filename, lineno, file=None, line=None):
 
 def get_parser():
     """Build parser object"""
+    from ..info import __version__
 
     verstr = 'fmriprep v{}'.format(__version__)
 
@@ -209,6 +209,7 @@ def create_workflow(opts):
     from ..viz.reports import run_reports
     from ..workflows.base import init_fmriprep_wf
     from ..utils.bids import collect_participants
+    from ..info import __version__
 
     # Set up some instrumental utilities
     errno = 0
@@ -334,4 +335,5 @@ def create_workflow(opts):
 
 
 if __name__ == '__main__':
-    main()
+    raise RuntimeError("fmriprep/cli/run.py should not be run directly;\n"
+                       "Please `pip install` fmriprep and use the `fmriprep` command")
