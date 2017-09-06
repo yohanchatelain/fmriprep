@@ -170,6 +170,10 @@ def get_parser():
         '--reports-only', action='store_true', default=False,
         help='only generate reports, don\'t run workflows. This will only rerun report '
              'aggregation, not reportlet generation for specific nodes.')
+    g_other.add_argument(
+        '--run-uuid', action='store', default=None,
+        help='Specify UUID of previous run, to include error logs in report. '
+             'No effect without --reports-only.')
     g_other.add_argument('--write-graph', action='store_true', default=False,
                          help='Write workflow graph.')
 
@@ -266,6 +270,8 @@ def create_workflow(opts):
     # Called with reports only
     if opts.reports_only:
         logger.log(25, 'Running --reports-only on participants %s', ', '.join(subject_list))
+        if opts.run_uuid is not None:
+            run_uuid = opts.run_uuid
         report_errors = [
             run_reports(op.join(work_dir, 'reportlets'), output_dir, subject_label,
                         run_uuid=run_uuid)
