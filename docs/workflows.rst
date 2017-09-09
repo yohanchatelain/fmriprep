@@ -285,7 +285,7 @@ EPI to MNI transformation
     from fmriprep.workflows.bold import init_bold_mni_trans_wf
     wf = init_bold_mni_trans_wf(template='MNI152NLin2009cAsym',
                                 bold_file_size_gb=3,
-                                omp_ntrheads=1,
+                                omp_nthreads=1,
                                 output_grid_ref=None)
 
 This sub-workflow uses the transform from
