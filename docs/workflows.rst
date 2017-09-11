@@ -214,7 +214,8 @@ Head-motion estimation and slice time correction
         metadata={"RepetitionTime": 2.0,
                   "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]},
                   ignore=[],
-                  bold_file_size_gb=3)
+                  bold_file_size_gb=3,
+                  omp_nthreads=1)
 
 This workflow performs slice time
 correction (if ``SliceTiming`` field is present in the input dataset metadata), head
@@ -257,6 +258,7 @@ EPI to T1w registration
     from fmriprep.workflows.bold import init_bold_reg_wf
     wf = init_bold_reg_wf(freesurfer=True,
                           bold_file_size_gb=3,
+                          omp_nthreads=1,
                           bold2t1w_dof=9)
 
 The reference EPI image of each run is aligned by the ``bbregister`` routine to the
@@ -283,6 +285,7 @@ EPI to MNI transformation
     from fmriprep.workflows.bold import init_bold_mni_trans_wf
     wf = init_bold_mni_trans_wf(template='MNI152NLin2009cAsym',
                                 bold_file_size_gb=3,
+                                omp_nthreads=1,
                                 output_grid_ref=None)
 
 This sub-workflow uses the transform from
