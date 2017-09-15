@@ -16,11 +16,12 @@ Please run this first: ::
 
     # list subjects
     cd openfmri
+
+
 """
 
 import os
 import glob
-import yaml
 import numpy as np
 
 
@@ -28,9 +29,7 @@ def get_parser():
     """Build parser object"""
     from argparse import ArgumentParser
     from argparse import RawTextHelpFormatter
-    from ..info import __version__
 
-    verstr = 'fmriprep v{}'.format(__version__)
     parser = ArgumentParser(
         description='OpenfMRI participants sampler, for FMRIPREP\'s testing purposes',
         formatter_class=RawTextHelpFormatter)
@@ -47,7 +46,6 @@ def get_parser():
     parser.add_argument('--njobs', action='store', type=int, help='parallel downloads')
     parser.add_argument('--seed', action='store', type=int, default=20170914,
                         help='seed for random number generation')
-    parser.add_argument('-v', '--version', action='version', version=verstr)
 
     return parser
 
@@ -96,6 +94,7 @@ def main():
                 sublist, size=opts.num_participants, replace=False).tolist())
 
     if out_file is not None:
+        import yaml
         with open(out_file, 'w') as outfh:
             outfh.write(yaml.dump(subsample))
         print('Sampled participants stored to %s' % out_file)
