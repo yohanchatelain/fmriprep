@@ -74,7 +74,8 @@ def main():
             datasets[ds] += [os.path.basename(subj)]
             continue
 
-        if glob.glob(os.path.join(subj, 'ses-*', 'anat')) and glob.glob(os.path.join(subj, 'ses-*', 'func')):
+        if (glob.glob(os.path.join(subj, 'ses-*', 'anat')) and
+                glob.glob(os.path.join(subj, 'ses-*', 'func'))):
             multises.append(ds)
             if ds not in datasets:
                 datasets[ds] = []
