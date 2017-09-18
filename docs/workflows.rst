@@ -210,12 +210,7 @@ Head-motion estimation and slice time correction
     :simple_form: yes
 
     from fmriprep.workflows.bold import init_bold_hmc_wf
-    wf = init_bold_hmc_wf(
-        metadata={"RepetitionTime": 2.0,
-                  "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]},
-                  ignore=[],
-                  bold_file_size_gb=3,
-                  omp_nthreads=1)
+    wf = init_bold_hmc_wf(bold_file_size_gb=3, omp_nthreads=1)
 
 This workflow performs slice time
 correction (if ``SliceTiming`` field is present in the input dataset metadata), head
