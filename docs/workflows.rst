@@ -296,7 +296,7 @@ EPI to T1w registration
 :mod:`fmriprep.workflows.bold.init_bold_reg_wf`
 
 .. workflow::
-    :graph2use: colored
+    :graph2use: orig
     :simple_form: yes
 
     from fmriprep.workflows.bold import init_bold_reg_wf
