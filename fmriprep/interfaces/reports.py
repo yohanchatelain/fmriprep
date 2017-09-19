@@ -136,7 +136,8 @@ class SubjectSummary(SummaryInterface):
 
 
 class FunctionalSummaryInputSpec(BaseInterfaceInputSpec):
-    slice_timing = traits.Bool(False, usedefault=True, desc='Slice timing correction used')
+    slice_timing = traits.Enum(False, True, 'TooShort', usedefault=True,
+                               desc='Slice timing correction used')
     distortion_correction = traits.Enum('epi', 'fieldmap', 'phasediff', 'SyN', 'None',
                                         desc='Susceptibility distortion correction method',
                                         mandatory=True)
@@ -150,6 +151,9 @@ class FunctionalSummary(SummaryInterface):
     input_spec = FunctionalSummaryInputSpec
 
     def _generate_segment(self):
+        stc = {True: 'Applied',
+               False: 'Not applied',
+               'TooShort': 'Skipped (too few volumes)'}[self.inputs.slice_timing]
         stc = "Applied" if self.inputs.slice_timing else "Not applied"
         sdc = {'epi': 'Phase-encoding polarity (pepolar)',
                'fieldmap': 'Direct fieldmapping',
