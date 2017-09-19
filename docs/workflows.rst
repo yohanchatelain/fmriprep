@@ -199,10 +199,65 @@ BOLD preprocessing
 
 Preprocessing of BOLD files is split into multiple sub-workflows decribed below.
 
-.. bold_hmc :
+.. _bold_ref:
 
-Head-motion estimation and slice time correction
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+BOLD reference image estimation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:mod:`fmriprep.workflows.bold.init_bold_reference_wf`
+
+.. workflow::
+    :graph2use: orig
+    :simple_form: yes
+
+    from fmriprep.workflows.bold import init_bold_reference_wf
+    wf = init_bold_reference_wf(omp_nthreads=1)
+
+This workflow estimates a reference image for a BOLD series, which is used to
+:ref:`estimate head motion <bold_hmc>` and :ref:`register BOLD series to T1
+<bold_reg>`,
+and performs skull-stripping and contrast enhancement.
+If T1-saturation effects ("dummy scans" or non-steady state volumes) are
+detected they are used as reference due to their superior tissue contrast.
+Otherwise a median of motion corrected subset of volumes is used.
+
+Skullstripping of the reference image is performed using Nilearn.
+
+.. figure:: _static/brainextraction.svg
+    :scale: 100%
+
+    Brain extraction (BET).
+
+.. _bold_stc:
+
+Slice time correction
+~~~~~~~~~~~~~~~~~~~~~
+:mod:`fmriprep.workflows.bold.init_bold_stc_wf`
+
+.. workflow::
+    :graph2use: colored
+    :simple_form: yes
+
+    from fmriprep.workflows.bold import init_bold_stc_wf
+    wf = init_bold_stc_wf(
+        metadata={'RepetitionTime': 2.0,
+                  'SliceTiming': [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]},
+        )
+
+If the ``SliceTiming`` field is present in the input dataset metadata, this
+workflow will be included to perform slice time correction prior to head motion
+estimation.
+Slice time correction is performed using AFNI 3dTShift.
+All slices are realigned in time to the middle of each TR.
+
+Slice time correction can be disabled with ``--ignore slicetiming`` command
+line argument.
+If a BOLD series has fewer than 5 usable (steady-state) volumes, slice time
+correction will be disabled.
+
+.. _bold_hmc:
+
+Head-motion estimation
+~~~~~~~~~~~~~~~~~~~~~~
 :mod:`fmriprep.workflows.bold.init_bold_hmc_wf`
 
 .. workflow::
@@ -212,26 +267,8 @@ Head-motion estimation and slice time correction
     from fmriprep.workflows.bold import init_bold_hmc_wf
     wf = init_bold_hmc_wf(bold_file_size_gb=3, omp_nthreads=1)
 
-This workflow performs slice time
-correction (if ``SliceTiming`` field is present in the input dataset metadata), head
-motion estimation, and skullstripping.
-
-Slice time correction is performed
-using AFNI 3dTShift. All slices are realigned in time to the middle of each
-TR. Slice time correction can be disabled with ``--ignore slicetiming`` command
-line argument.
-
-FSL MCFLIRT is used to estimate motion
-transformations using an automatically estimated reference scan. If T1-saturation effects
-("dummy scans" or non-steady state volumes) are detected they are used as reference due to
-their superior tissue contrast. Otherwise a median of motion corrected subset of volumes is used.
-
-Skullstripping of the reference image is performed using Nilearn.
-
-.. figure:: _static/brainextraction.svg
-    :scale: 100%
-
-    Brain extraction (BET).
+FSL MCFLIRT is used to estimate motion transformations using an automatically
+estimated reference scan (see :ref:`bold_ref`).
 
 Susceptibility Distortion Correction (SDC)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -241,6 +278,8 @@ Susceptibility Distortion Correction (SDC)
     :undoc-members:
     :show-inheritance:
 
+
+.. _bold_reg:
 
 EPI to T1w registration
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -284,10 +323,10 @@ EPI to MNI transformation
                                 output_grid_ref=None)
 
 This sub-workflow uses the transform from
-`Head-motion estimation and slice time correction`_,
-`Susceptibility Distortion Correction (SDC)`_ (if fieldmaps are available),
-`EPI to T1w registration`_, and a T1w-to-MNI transform from
-`T1w/T2w preprocessing`_ to map the EPI image to standardized MNI space.
+`Head-motion estimation`_, `Susceptibility Distortion Correction (SDC)`_ (if
+fieldmaps are available), `EPI to T1w registration`_, and a T1w-to-MNI
+transform from `T1w/T2w preprocessing`_ to map the EPI image to standardized
+MNI space.
 It also maps the T1w-based mask to MNI space.
 
 Transforms are concatenated and applied all at once, with one interpolation (Lanczos)
