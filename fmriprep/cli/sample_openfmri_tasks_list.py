@@ -89,7 +89,7 @@ def main():
     # Try to make this Python 2 compatible
     try:
         os.makedirs(opts.output_dir)
-    except OSError, e:
+    except OSError as e:
         if e.errno != os.errno.EEXIST:
             raise
 
