@@ -63,25 +63,16 @@ def main():
     os.chdir(opts.openfmri_dir)
     all_sub = sorted(glob.glob('ds*/sub-*'))
     datasets = {}
-    multises = []
+    multises = set()
     for subj in all_sub:
         ds = subj.split('/')[0]
         if os.path.isdir(os.path.join(subj, 'anat')) and os.path.isdir(os.path.join(subj, 'func')):
-            if ds not in datasets:
-                datasets[ds] = []
-            datasets[ds] += [os.path.basename(subj)]
-            continue
+            datasets.setdefault(ds, []).append(os.path.basename(subj))
+        elif (glob.glob(os.path.join(subj, 'ses-*', 'anat')) and
+              glob.glob(os.path.join(subj, 'ses-*', 'func'))):
+            multises.add(ds)
+            datasets.setdefault(ds, []).append(os.path.basename(subj))
 
-        if (glob.glob(os.path.join(subj, 'ses-*', 'anat')) and
-                glob.glob(os.path.join(subj, 'ses-*', 'func'))):
-            multises.append(ds)
-            if ds not in datasets:
-                datasets[ds] = []
-            datasets[ds] += [os.path.basename(subj)]
-            continue
-
-    multises = list(set(multises))
-    singleses = list(set(datasets.keys()) - set(multises))
     subsample = {}
 
     n_sample = 0
@@ -93,17 +84,20 @@ def main():
             subsample[ds] = sorted(np.random.choice(
                 sublist, size=opts.num_participants, replace=False).tolist())
 
+    # Double check everything looks good
+    assert n_sample == len([sub for _, sublist in datasets.items() for sub in sublist])
+
     if out_file is not None:
         import yaml
         with open(out_file, 'w') as outfh:
             outfh.write(yaml.dump(subsample))
         print('Sampled participants stored to %s' % out_file)
 
-    all_sub = [sub for _, sublist in datasets.items() for sub in sublist]
+    singleses = set(datasets.keys()) - multises
     print('Sampled %d participants' % n_sample)
     print('Datasets summary:\n\tSingle-session=%d'
           '\n\tMulti-session=%d'
-          '\n\tTotal participants=%d' % (len(singleses), len(multises), len(all_sub)))
+          '\n\tTotal participants=%d' % (len(singleses), len(multises), n_sample))
     os.chdir(thispath)
 
     if opts.datalad_fetch:
