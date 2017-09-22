@@ -10,9 +10,12 @@ Please run this first: ::
     datalad install -r ///openfmri
 
     # get all sidecar files
-    datalad get -J8 openfmri/ds*/*_bold.json
-    datalad get -J8 openfmri/ds*/*T1w.json
-    datalad get -J8 openfmri/ds*/*T2w.json
+    datalad get -J8 $( find openfmri/ -name "*_T1w.json" )
+    datalad get -J8 $( find openfmri/ -name "*_T2w.json" )
+    datalad get -J8 $( find openfmri/ -name "*_bold.json" )
+    datalad get -J8 $( find openfmri/ -name "*_magnitude*.json" )
+    datalad get -J8 $( find openfmri/ -name "*_phase*.json" )
+    datalad get -J8 $( find openfmri/ -name "*_fieldmap.json" )
 
     # list subjects
     cd openfmri
