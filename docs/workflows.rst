@@ -296,8 +296,8 @@ EPI to T1w registration
                           bold2t1w_dof=9)
 
 The reference EPI image of each run is aligned by the ``bbregister`` routine to the
-reconstructed subject using
-the gray/white matter boundary (FreeSurfer's ``?h.white`` surfaces).
+reconstructed subject using the gray/white matter boundary (FreeSurfer's
+``?h.white`` surfaces).
 
 .. figure:: _static/EPIT1Normalization.svg
     :scale: 100%
@@ -322,10 +322,10 @@ EPI to MNI transformation
                                 omp_nthreads=1,
                                 output_grid_ref=None)
 
-This sub-workflow uses the transform from
+This sub-workflow concatenates the transforms calculated upstream (see
 `Head-motion estimation`_, `Susceptibility Distortion Correction (SDC)`_ (if
 fieldmaps are available), `EPI to T1w registration`_, and a T1w-to-MNI
-transform from `T1w/T2w preprocessing`_ to map the EPI image to standardized
+transform from `T1w/T2w preprocessing`_) to map the EPI image to standardized
 MNI space.
 It also maps the T1w-based mask to MNI space.
 
