@@ -315,9 +315,9 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
                                                    freesurfer=freesurfer)
 
     workflow.connect([
-        (inputnode, anat_derivatives_wf, [
-            (('t1w', fix_multi_T1w_source_name), 'inputnode.source_file')]),
+        (inputnode, anat_derivatives_wf, [('t1w', 'inputnode.source_files')]),
         (outputnode, anat_derivatives_wf, [
+            ('t1_template_transforms', 'inputnode.t1_template_transforms'),
             ('t1_preproc', 'inputnode.t1_preproc'),
             ('t1_mask', 'inputnode.t1_mask'),
             ('t1_seg', 'inputnode.t1_seg'),
@@ -940,11 +940,19 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
 
     inputnode = pe.Node(
         niu.IdentityInterface(
-            fields=['source_file', 't1_preproc', 't1_mask', 't1_seg', 't1_tpms',
+            fields=['source_files', 't1_template_transforms',
+                    't1_preproc', 't1_mask', 't1_seg', 't1_tpms',
                     't1_2_mni_forward_transform', 't1_2_mni_reverse_transform',
                     't1_2_mni', 'mni_mask', 'mni_seg', 'mni_tpms',
                     't1_2_fsnative_forward_transform', 'surfaces']),
         name='inputnode')
+
+    t1_name = pe.Node(niu.Function(function=fix_multi_T1w_source_name), name='t1_name')
+
+    ds_t1_template_transforms = pe.MapNode(
+        DerivativesDataSink(base_directory=output_dir, suffix='space-T1w'),
+        iterfield=['source_file', 'in_file'],
+        name='ds_t1_template_transforms', run_without_submitting=True)
 
     ds_t1_preproc = pe.Node(
         DerivativesDataSink(base_directory=output_dir, suffix='preproc'),
@@ -1015,14 +1023,17 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
         iterfield=['in_file', 'suffix'], name='ds_surfs', run_without_submitting=True)
 
     workflow.connect([
-        (inputnode, ds_t1_preproc, [('source_file', 'source_file'),
-                                    ('t1_preproc', 'in_file')]),
-        (inputnode, ds_t1_mask, [('source_file', 'source_file'),
-                                 ('t1_mask', 'in_file')]),
-        (inputnode, ds_t1_seg, [('source_file', 'source_file'),
-                                ('t1_seg', 'in_file')]),
-        (inputnode, ds_t1_tpms, [('source_file', 'source_file'),
-                                 ('t1_tpms', 'in_file')]),
+        (inputnode, t1_name, [('source_files', 'in_files')]),
+        (inputnode, ds_t1_template_transforms, [('source_files', 'source_file'),
+                                                ('t1_template_transforms', 'in_file')]),
+        (inputnode, ds_t1_preproc, [('t1_preproc', 'in_file')]),
+        (inputnode, ds_t1_mask, [('t1_mask', 'in_file')]),
+        (inputnode, ds_t1_seg, [('t1_seg', 'in_file')]),
+        (inputnode, ds_t1_tpms, [('t1_tpms', 'in_file')]),
+        (t1_name, ds_t1_preproc, [('out', 'source_file')]),
+        (t1_name, ds_t1_mask, [('out', 'source_file')]),
+        (t1_name, ds_t1_seg, [('out', 'source_file')]),
+        (t1_name, ds_t1_tpms, [('out', 'source_file')]),
     ])
 
     if freesurfer:
@@ -1031,24 +1042,24 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
             (inputnode, ds_t1_fsnative, [('source_file', 'source_file')]),
             (lta_2_itk, ds_t1_fsnative, [('out_itk', 'in_file')]),
             (inputnode, name_surfs, [('surfaces', 'in_file')]),
-            (inputnode, ds_surfs, [('source_file', 'source_file'),
-                                   ('surfaces', 'in_file')]),
+            (inputnode, ds_surfs, [('surfaces', 'in_file')]),
+            (t1_name, ds_surfs, [('out', 'source_file')]),
             (name_surfs, ds_surfs, [('out_name', 'suffix')]),
         ])
     if 'template' in output_spaces:
         workflow.connect([
-            (inputnode, ds_t1_mni_warp, [('source_file', 'source_file'),
-                                         ('t1_2_mni_forward_transform', 'in_file')]),
-            (inputnode, ds_t1_mni_inv_warp, [('source_file', 'source_file'),
-                                             ('t1_2_mni_reverse_transform', 'in_file')]),
-            (inputnode, ds_t1_mni, [('source_file', 'source_file'),
-                                    ('t1_2_mni', 'in_file')]),
-            (inputnode, ds_mni_mask, [('source_file', 'source_file'),
-                                      ('mni_mask', 'in_file')]),
-            (inputnode, ds_mni_seg, [('source_file', 'source_file'),
-                                     ('mni_seg', 'in_file')]),
-            (inputnode, ds_mni_tpms, [('source_file', 'source_file'),
-                                      ('mni_tpms', 'in_file')]),
+            (inputnode, ds_t1_mni_warp, [('t1_2_mni_forward_transform', 'in_file')]),
+            (inputnode, ds_t1_mni_inv_warp, [('t1_2_mni_reverse_transform', 'in_file')]),
+            (inputnode, ds_t1_mni, [('t1_2_mni', 'in_file')]),
+            (inputnode, ds_mni_mask, [('mni_mask', 'in_file')]),
+            (inputnode, ds_mni_seg, [('mni_seg', 'in_file')]),
+            (inputnode, ds_mni_tpms, [('mni_tpms', 'in_file')]),
+            (t1_name, ds_t1_mni_warp, [('out', 'source_file')]),
+            (t1_name, ds_t1_mni_inv_warp, [('out', 'source_file')]),
+            (t1_name, ds_t1_mni, [('out', 'source_file')]),
+            (t1_name, ds_mni_mask, [('out', 'source_file')]),
+            (t1_name, ds_mni_seg, [('out', 'source_file')]),
+            (t1_name, ds_mni_tpms, [('out', 'source_file')]),
         ])
 
     return workflow
