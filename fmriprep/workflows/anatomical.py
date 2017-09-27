@@ -174,6 +174,7 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
         fields=['t1_preproc', 't1_brain', 't1_mask', 't1_seg', 't1_tpms',
                 't1_2_mni', 't1_2_mni_forward_transform', 't1_2_mni_reverse_transform',
                 'mni_mask', 'mni_seg', 'mni_tpms',
+                'template_transforms',
                 'subjects_dir', 'subject_id', 't1_2_fsnative_forward_transform',
                 't1_2_fsnative_reverse_transform', 'surfaces']),
         name='outputnode')
@@ -243,6 +244,9 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
         name='mni_tpms'
     )
 
+    lta_to_fsl = pe.MapNode(fs.utils.LTAConvert(out_fsl=True), iterfield=['in_lta'],
+                            name='lta_to_fsl')
+
     def set_threads(in_list, maximum):
         return min(len(in_list), maximum)
 
@@ -264,6 +268,7 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
                                           ('outputnode.out_mask', 't1_mask')]),
         (t1_seg, outputnode, [('tissue_class_map', 't1_seg'),
                               ('probability_maps', 't1_tpms')]),
+        (t1_merge, lta_to_fsl, [('transform_outputs', 'in_lta')]),
     ])
 
     if 'template' in output_spaces:
