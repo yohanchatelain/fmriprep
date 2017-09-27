@@ -191,6 +191,7 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
                             subsample_threshold=200,
                             fixed_timepoint=not longitudinal,
                             no_iteration=not longitudinal,
+                            transform_outputs=True,
                             ),
         name='t1_merge')
 
