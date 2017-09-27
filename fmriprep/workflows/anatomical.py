@@ -180,30 +180,10 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
                 't1_2_fsnative_reverse_transform', 'surfaces']),
         name='outputnode')
 
-    # 0. Reorient T1w image(s) to RAS and resample to common voxel space
-    t1_template_dimensions = pe.Node(TemplateDimensions(), name='t1_template_dimensions')
-    t1_conform = pe.MapNode(Conform(), iterfield='in_file', name='t1_conform')
-
-    # 1. Align and merge if several T1w images are provided
-    t1_merge = pe.Node(
-        # StructuralReference is fs.RobustTemplate if > 1 volume, copying otherwise
-        StructuralReference(auto_detect_sensitivity=True,
-                            initial_timepoint=1,      # For deterministic behavior
-                            intensity_scaling=True,   # 7-DOF (rigid + intensity)
-                            subsample_threshold=200,
-                            fixed_timepoint=not longitudinal,
-                            no_iteration=not longitudinal,
-                            transform_outputs=True,
-                            ),
-        name='t1_merge')
-
-    # 1.5 Reorient template to RAS, if needed (mri_robust_template sets LIA)
-    t1_reorient = pe.Node(Reorient(), name='t1_reorient')
-
-    # 2. T1 Bias Field Correction
-    # Bias field correction is handled in skull strip workflows.
+    anat_template_wf = init_anat_template_wf(longitudinal=longitudinal, omp_nthreads=omp_nthreads)
 
     # 3. Skull-stripping
+    # Bias field correction is handled in skull strip workflows.
     skullstrip_ants_wf = init_skullstrip_ants_wf(name='skullstrip_ants_wf',
                                                  skull_strip_template=skull_strip_template,
                                                  debug=debug,
@@ -245,39 +225,17 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
         name='mni_tpms'
     )
 
-    lta_to_fsl = pe.MapNode(fs.utils.LTAConvert(out_fsl=True), iterfield=['in_lta'],
-                            name='lta_to_fsl')
-
-    concat_affines = pe.MapNode(
-        ConcatAffines(3, invert=True), iterfield=['mat_AtoB', 'mat_BtoC'],
-        name='concat_affines', run_without_submitting=True)
-
-    def set_threads(in_list, maximum):
-        return min(len(in_list), maximum)
-
     workflow.connect([
-        (inputnode, t1_template_dimensions, [('t1w', 't1w_list')]),
-        (t1_template_dimensions, t1_conform, [
-            ('t1w_valid_list', 'in_file'),
-            ('target_zooms', 'target_zooms'),
-            ('target_shape', 'target_shape')]),
-        (t1_conform, t1_merge, [
-            ('out_file', 'in_files'),
-            (('out_file', set_threads, omp_nthreads), 'num_threads'),
-            (('out_file', add_suffix, '_template'), 'out_file')]),
-        (t1_merge, t1_reorient, [('out_file', 'in_file')]),
-        (t1_reorient, skullstrip_ants_wf, [('out_file', 'inputnode.in_file')]),
+        (inputnode, anat_template_wf, [('t1w', 'inputnode.t1w')]),
+        (anat_template_wf, skullstrip_wf, [('outputnode.t1_template', 'inputnode.in_file')]),
         (skullstrip_ants_wf, t1_seg, [('outputnode.out_file', 'in_files')]),
         (skullstrip_ants_wf, outputnode, [('outputnode.bias_corrected', 't1_preproc'),
                                           ('outputnode.out_file', 't1_brain'),
                                           ('outputnode.out_mask', 't1_mask')]),
         (t1_seg, outputnode, [('tissue_class_map', 't1_seg'),
                               ('probability_maps', 't1_tpms')]),
-        (t1_conform, concat_affines, [('transform', 'mat_AtoB')]),
-        (t1_merge, lta_to_fsl, [('transform_outputs', 'in_lta')]),
-        (lta_to_fsl, concat_affines, [('out_fsl', 'mat_BtoC')]),
-        (t1_reorient, concat_affines, [('transform', 'mat_CtoD')]),
-        (concat_affines, outputnode, [('out_mat', 'template_transforms')]),
+        (anat_template_wf, outputnode, [
+            ('outputnode.template_transforms', 't1_template_transforms')]),
     ])
 
     if 'template' in output_spaces:
@@ -317,7 +275,7 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
                 ('t2w', 'inputnode.t2w'),
                 ('subjects_dir', 'inputnode.subjects_dir'),
                 ('subject_id', 'inputnode.subject_id')]),
-            (t1_reorient, surface_recon_wf, [('out_file', 'inputnode.t1w')]),
+            (anat_template_wf, surface_recon_wf, [('outputnode.t1_template', 'inputnode.t1w')]),
             (skullstrip_ants_wf, surface_recon_wf, [
                 ('outputnode.out_file', 'inputnode.skullstripped_t1')]),
             (surface_recon_wf, outputnode, [
@@ -334,8 +292,8 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
     workflow.connect([
         (inputnode, anat_reports_wf, [
             (('t1w', fix_multi_T1w_source_name), 'inputnode.source_file')]),
-        (t1_template_dimensions, anat_reports_wf, [
-            ('out_report', 'inputnode.t1_conform_report')]),
+        (anat_template_wf, anat_reports_wf, [
+            ('outputnode.out_report', 'inputnode.t1_conform_report')]),
         (skullstrip_ants_wf, anat_reports_wf, [
             ('outputnode.out_report', 'inputnode.t1_skull_strip_report')]),
         (t1_seg, anat_reports_wf, [('out_report', 'inputnode.t1_seg_report')]),
@@ -373,6 +331,108 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
             ('t1_2_fsnative_forward_transform', 'inputnode.t1_2_fsnative_forward_transform'),
             ('surfaces', 'inputnode.surfaces'),
         ]),
+    ])
+
+    return workflow
+
+
+def init_anat_template_wf(longitudinal, omp_nthreads, name='anat_template_wf'):
+    r"""
+    This workflow generates a canonically oriented structural template from
+    input T1w images.
+
+
+    .. workflow::
+        :graph2use: orig
+        :simple_form: yes
+
+        from fmriprep.workflows.anatomical import init_anat_template_wf
+        wf = init_anat_template_wf(longitudinal=False, omp_nthreads=1)
+
+    **Parameters**
+
+        longitudinal : bool
+            Create unbiased structural template, regardless of number of inputs
+            (may increase runtime)
+        omp_nthreads : int
+            Maximum number of threads an individual process may use
+        name : str, optional
+            Workflow name (default: anat_template_wf)
+
+
+    **Inputs**
+
+        t1w
+            List of T1-weighted structural images
+
+
+    **Outputs**
+
+        t1_template
+            Structural template, defining T1w space
+        template_transforms
+            List of affine transforms from ``t1_template`` to original T1w images
+        out_report
+            Conformation report
+    """
+
+    workflow = pe.Workflow(name=name)
+
+    inputnode = pe.Node(niu.IdentityInterface(fields=['t1w']), name='inputnode')
+    outputnode = pe.Node(niu.IdentityInterface(
+        fields=['t1_template',  'template_transforms', 'out_report']),
+        name='outputnode')
+
+    # 0. Reorient T1w image(s) to RAS and resample to common voxel space
+    t1_template_dimensions = pe.Node(TemplateDimensions(), name='t1_template_dimensions')
+    t1_conform = pe.MapNode(Conform(), iterfield='in_file', name='t1_conform')
+
+    # 1. Align and merge if several T1w images are provided
+    t1_merge = pe.Node(
+        # StructuralReference is fs.RobustTemplate if > 1 volume, copying otherwise
+        StructuralReference(auto_detect_sensitivity=True,
+                            initial_timepoint=1,      # For deterministic behavior
+                            intensity_scaling=True,   # 7-DOF (rigid + intensity)
+                            subsample_threshold=200,
+                            fixed_timepoint=not longitudinal,
+                            no_iteration=not longitudinal,
+                            transform_outputs=True,
+                            ),
+        name='t1_merge')
+
+    # Reorient template to RAS, if needed (mri_robust_template may set to LIA)
+    t1_reorient = pe.Node(Reorient(), name='t1_reorient')
+
+    lta_to_fsl = pe.MapNode(fs.utils.LTAConvert(out_fsl=True), iterfield=['in_lta'],
+                            name='lta_to_fsl')
+
+    concat_affines = pe.MapNode(
+        ConcatAffines(3, invert=True), iterfield=['mat_AtoB', 'mat_BtoC'],
+        name='concat_affines', run_without_submitting=True)
+
+    def set_threads(in_list, maximum):
+        return min(len(in_list), maximum)
+
+    workflow.connect([
+        (inputnode, t1_template_dimensions, [('t1w', 't1w_list')]),
+        (t1_template_dimensions, t1_conform, [
+            ('t1w_valid_list', 'in_file'),
+            ('target_zooms', 'target_zooms'),
+            ('target_shape', 'target_shape')]),
+        (t1_conform, t1_merge, [
+            ('out_file', 'in_files'),
+            (('out_file', set_threads, omp_nthreads), 'num_threads'),
+            (('out_file', add_suffix, '_template'), 'out_file')]),
+        (t1_merge, t1_reorient, [('out_file', 'in_file')]),
+        # Combine orientation and template transforms
+        (t1_merge, lta_to_fsl, [('transform_outputs', 'in_lta')]),
+        (t1_conform, concat_affines, [('transform', 'mat_AtoB')]),
+        (lta_to_fsl, concat_affines, [('out_fsl', 'mat_BtoC')]),
+        (t1_reorient, concat_affines, [('transform', 'mat_CtoD')]),
+        # Output
+        (t1_template_dimensions, outputnode, [('out_report', 'out_report')]),
+        (t1_reorient, outputnode, [('out_file', 't1_template')]),
+        (concat_affines, outputnode, [('out_mat', 'template_transforms')]),
     ])
 
     return workflow
