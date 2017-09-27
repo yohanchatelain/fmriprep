@@ -39,7 +39,8 @@ from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransf
 
 from ..interfaces import (
     DerivativesDataSink, StructuralReference, MakeMidthickness, FSInjectBrainExtracted,
-    FSDetectInputs, NormalizeSurf, GiftiNameSource, TemplateDimensions, Conform, Reorient
+    FSDetectInputs, NormalizeSurf, GiftiNameSource, TemplateDimensions, Conform, Reorient,
+    ConcatAffines
 )
 from ..utils.misc import fix_multi_T1w_source_name, add_suffix
 
@@ -247,6 +248,10 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
     lta_to_fsl = pe.MapNode(fs.utils.LTAConvert(out_fsl=True), iterfield=['in_lta'],
                             name='lta_to_fsl')
 
+    concat_affines = pe.MapNode(
+        ConcatAffines(3, invert=True), iterfield=['mat_AtoB', 'mat_BtoC'],
+        name='concat_affines', run_without_submitting=True)
+
     def set_threads(in_list, maximum):
         return min(len(in_list), maximum)
 
@@ -268,7 +273,11 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
                                           ('outputnode.out_mask', 't1_mask')]),
         (t1_seg, outputnode, [('tissue_class_map', 't1_seg'),
                               ('probability_maps', 't1_tpms')]),
+        (t1_conform, concat_affines, [('transform', 'mat_AtoB')]),
         (t1_merge, lta_to_fsl, [('transform_outputs', 'in_lta')]),
+        (lta_to_fsl, concat_affines, [('out_fsl', 'mat_BtoC')]),
+        (t1_reorient, concat_affines, [('transform', 'mat_CtoD')]),
+        (concat_affines, outputnode, [('out_mat', 'template_transforms')]),
     ])
 
     if 'template' in output_spaces:
