@@ -103,6 +103,14 @@ Therefore, in the case of three or more images, ``fmriprep`` constructs
 templates aligned to the first image, unless passed the ``--longitudinal``
 flag, which forces the estimation of an unbiased template.
 
+.. note::
+
+    The preprocessed T1w image defines the ``T1w`` space.
+    In the case of multiple T1w images, this space may not be precisely aligned
+    with any of the original images.
+    Reconstructed surfaces and functional datasets will be registered to the
+    ``T1w`` space, and not to the input images.
+
 Surface preprocessing
 ~~~~~~~~~~~~~~~~~~~~~
 :mod:`fmriprep.workflows.anatomical.init_surface_recon_wf`
