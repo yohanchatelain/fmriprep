@@ -157,7 +157,7 @@ def init_anat_preproc_wf(skull_strip_ants, skull_strip_template, output_spaces, 
         subject_id
             FreeSurfer subject ID
         t1_2_fsnative_reverse_transform
-            Affine transform from FreeSurfer subject space to T1w space
+            LTA-style affine matrix translating from FreeSurfer-conformed subject space to T1w
         surfaces
             GIFTI surfaces (gray/white boundary, midthickness, pial, inflated)
 
@@ -515,7 +515,7 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         subject_id
             FreeSurfer subject ID
         t1_2_fsnative_reverse_transform
-            FSL-style affine matrix translating from FreeSurfer T1.mgz to T1w
+            LTA-style affine matrix translating from FreeSurfer-conformed subject space to T1w
         surfaces
             GIFTI surfaces for gray/white matter boundary, pial surface,
             midthickness (or graymid) surface, and inflated surfaces
@@ -555,10 +555,8 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
     skull_strip_extern = pe.Node(FSInjectBrainExtracted(), name='skull_strip_extern',
                                  run_without_submitting=True)
 
-    fs_transform = pe.Node(
-        fs.Tkregister2(fsl_out='freesurfer2subT1.mat', reg_header=True),
-        name='fs_transform')
-    fsl2lta = pe.Node(fs.utils.LTAConvert(out_lta=True), name='fsl2lta')
+    fsnative_2_t1_xfm = pe.Node(fs.RobustRegister(auto_sens=True, est_int_scale=True),
+                                name='fsnative_2_t1_xfm')
 
     autorecon_resume_wf = init_autorecon_resume_wf(omp_nthreads=omp_nthreads)
     gifti_surface_wf = init_gifti_surface_wf()
@@ -587,17 +585,14 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         (recon_config, autorecon_resume_wf, [('use_t2w', 'inputnode.use_T2')]),
         # Construct transform from FreeSurfer conformed image to FMRIPREP
         # reoriented image
-        (inputnode, fs_transform, [('t1w', 'target_image')]),
-        (autorecon1, fs_transform, [('T1', 'moving_image')]),
-        (inputnode, fsl2lta, [('t1w', 'target_file')]),
-        (autorecon1, fsl2lta, [('T1', 'source_file')]),
-        (fs_transform, fsl2lta, [('fsl_file', 'in_fsl')]),
+        (inputnode, fsnative_2_t1_xfm, [('t1w', 'target_file')]),
+        (autorecon1, fsnative_2_t1_xfm, [('T1', 'source_file')]),
         # Output
         (autorecon_resume_wf, outputnode, [('outputnode.subjects_dir', 'subjects_dir'),
                                            ('outputnode.subject_id', 'subject_id'),
                                            ('outputnode.out_report', 'out_report')]),
         (gifti_surface_wf, outputnode, [('outputnode.surfaces', 'surfaces')]),
-        (fsl2lta, outputnode, [('out_lta', 't1_2_fsnative_reverse_transform')]),
+        (fsnative_2_t1_xfm, outputnode, [('out_reg_file', 't1_2_fsnative_reverse_transform')]),
     ])
 
     return workflow
