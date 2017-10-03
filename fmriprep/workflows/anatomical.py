@@ -587,6 +587,8 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         # reoriented image
         (inputnode, fsnative_2_t1_xfm, [('t1w', 'target_file')]),
         (autorecon1, fsnative_2_t1_xfm, [('T1', 'source_file')]),
+        (fsnative_2_t1_xfm, gifti_surface_wf, [
+            ('out_reg_file', 'inputnode.t1_2_fsnative_reverse_transform')]),
         # Output
         (autorecon_resume_wf, outputnode, [('outputnode.subjects_dir', 'subjects_dir'),
                                            ('outputnode.subject_id', 'subject_id'),
@@ -745,6 +747,8 @@ def init_gifti_surface_wf(name='gifti_surface_wf'):
             FreeSurfer SUBJECTS_DIR
         subject_id
             FreeSurfer subject ID
+        t1_2_fsnative_reverse_transform
+            LTA formatted affine transform file (inverse)
 
     **Outputs**
 
@@ -755,7 +759,9 @@ def init_gifti_surface_wf(name='gifti_surface_wf'):
     """
     workflow = pe.Workflow(name=name)
 
-    inputnode = pe.Node(niu.IdentityInterface(['subjects_dir', 'subject_id']), name='inputnode')
+    inputnode = pe.Node(niu.IdentityInterface(['subjects_dir', 'subject_id',
+                                               't1_2_fsnative_reverse_transform']),
+                        name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(['surfaces']), name='outputnode')
 
     get_surfaces = pe.Node(nio.FreeSurferSource(), name='get_surfaces')
@@ -790,6 +796,7 @@ def init_gifti_surface_wf(name='gifti_surface_wf'):
         (save_midthickness, surface_list, [('out_file', 'in4')]),
         (surface_list, fs_2_gii, [('out', 'in_file')]),
         (fs_2_gii, fix_surfs, [('converted', 'in_file')]),
+        (inputnode, fix_surfs, [('t1_2_fsnative_reverse_transform', 'transform_file')]),
         (fix_surfs, outputnode, [('out_file', 'surfaces')]),
     ])
     return workflow
