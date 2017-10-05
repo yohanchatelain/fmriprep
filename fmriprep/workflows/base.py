@@ -437,7 +437,8 @@ def init_single_subject_wf(subject_id, task_id, name,
                 (anat_preproc_wf, func_preproc_wf,
                  [('outputnode.subjects_dir', 'inputnode.subjects_dir'),
                   ('outputnode.subject_id', 'inputnode.subject_id'),
-                  ('outputnode.fs_2_t1_transform', 'inputnode.fs_2_t1_transform')]),
+                  ('outputnode.t1_2_fsnative_reverse_transform',
+                   'inputnode.t1_2_fsnative_reverse_transform')]),
             ])
 
     return workflow

@@ -153,7 +153,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
             FreeSurfer SUBJECTS_DIR
         subject_id
             FreeSurfer subject ID
-        fs_2_t1_transform
+        t1_2_fsnative_reverse_transform
             Affine transform from FreeSurfer subject space to T1w space
         surfaces
             GIFTI surfaces (gray/white boundary, midthickness, pial, inflated)
@@ -174,7 +174,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
         fields=['t1_preproc', 't1_brain', 't1_mask', 't1_seg', 't1_tpms',
                 't1_2_mni', 't1_2_mni_forward_transform', 't1_2_mni_reverse_transform',
                 'mni_mask', 'mni_seg', 'mni_tpms',
-                'subjects_dir', 'subject_id', 'fs_2_t1_transform', 'surfaces']),
+                'subjects_dir', 'subject_id', 't1_2_fsnative_reverse_transform', 'surfaces']),
         name='outputnode')
 
     # 0. Reorient T1w image(s) to RAS and resample to common voxel space
@@ -314,7 +314,7 @@ def init_anat_preproc_wf(skull_strip_ants, output_spaces, template, debug, frees
             (surface_recon_wf, outputnode, [
                 ('outputnode.subjects_dir', 'subjects_dir'),
                 ('outputnode.subject_id', 'subject_id'),
-                ('outputnode.fs_2_t1_transform', 'fs_2_t1_transform'),
+                ('outputnode.t1_2_fsnative_reverse_transform', 't1_2_fsnative_reverse_transform'),
                 ('outputnode.surfaces', 'surfaces')]),
         ])
 
@@ -499,7 +499,7 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
             FreeSurfer SUBJECTS_DIR
         subject_id
             FreeSurfer subject ID
-        fs_2_t1_transform
+        t1_2_fsnative_reverse_transform
             FSL-style affine matrix translating from FreeSurfer T1.mgz to T1w
         surfaces
             GIFTI surfaces for gray/white matter boundary, pial surface,
@@ -521,7 +521,8 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         name='inputnode')
     outputnode = pe.Node(
         niu.IdentityInterface(
-            fields=['subjects_dir', 'subject_id', 'fs_2_t1_transform', 'surfaces', 'out_report']),
+            fields=['subjects_dir', 'subject_id', 't1_2_fsnative_reverse_transform', 'surfaces',
+                    'out_report']),
         name='outputnode')
 
     recon_config = pe.Node(FSDetectInputs(hires_enabled=hires), name='recon_config',
@@ -577,7 +578,7 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
                                            ('outputnode.subject_id', 'subject_id'),
                                            ('outputnode.out_report', 'out_report')]),
         (gifti_surface_wf, outputnode, [('outputnode.surfaces', 'surfaces')]),
-        (fs_transform, outputnode, [('fsl_file', 'fs_2_t1_transform')]),
+        (fs_transform, outputnode, [('fsl_file', 't1_2_fsnative_reverse_transform')]),
     ])
 
     return workflow
