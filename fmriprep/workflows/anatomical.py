@@ -367,6 +367,7 @@ def init_anat_preproc_wf(skull_strip_ants, skull_strip_template, output_spaces, 
             ('mni_mask', 'inputnode.mni_mask'),
             ('mni_seg', 'inputnode.mni_seg'),
             ('mni_tpms', 'inputnode.mni_tpms'),
+            ('t1_2_fsnative_reverse_transform', 'inputnode.t1_2_fsnative_reverse_transform'),
             ('surfaces', 'inputnode.surfaces'),
         ]),
     ])
@@ -872,7 +873,8 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
         niu.IdentityInterface(
             fields=['source_file', 't1_preproc', 't1_mask', 't1_seg', 't1_tpms',
                     't1_2_mni_forward_transform', 't1_2_mni', 'mni_mask',
-                    'mni_seg', 'mni_tpms', 'surfaces']),
+                    'mni_seg', 'mni_tpms',
+                    't1_2_fsnative_reverse_transform', 'surfaces']),
         name='inputnode')
 
     ds_t1_preproc = pe.Node(
@@ -919,6 +921,14 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
         DerivativesDataSink(base_directory=output_dir, suffix=suffix_fmt(template, 'warp')),
         name='ds_t1_mni_warp', run_without_submitting=True)
 
+    # Freesurfer nodes
+    lta_2_itk = pe.Node(fs.utils.LTAConvert(out_itk=True, invert=True), name='lta_2_itk')
+
+    ds_t1_fsnative = pe.Node(
+        DerivativesDataSink(base_directory=output_dir,
+                            suffix='target-fsnative_affine'),
+        name='ds_t1_fsnative', run_without_submitting=True)
+
     name_surfs = pe.MapNode(GiftiNameSource(pattern=r'(?P<LR>[lr])h.(?P<surf>.+)_converted.gii',
                                             template='{surf}.{LR}.surf'),
                             iterfield='in_file',
@@ -942,6 +952,9 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
 
     if freesurfer:
         workflow.connect([
+            (inputnode, lta_2_itk, [('t1_2_fsnative_reverse_transform', 'in_lta')]),
+            (inputnode, ds_t1_fsnative, [('source_file', 'source_file')]),
+            (lta_2_itk, ds_t1_fsnative, [('out_itk', 'in_file')]),
             (inputnode, name_surfs, [('surfaces', 'in_file')]),
             (inputnode, ds_surfs, [('source_file', 'source_file'),
                                    ('surfaces', 'in_file')]),
