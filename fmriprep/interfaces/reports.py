@@ -33,6 +33,7 @@ SUBJECT_TEMPLATE = """\t<ul class="elem-desc">
 
 FUNCTIONAL_TEMPLATE = """\t\t<h3 class="elem-title">Summary</h3>
 \t\t<ul class="elem-desc">
+\t\t\t<li>Detected phase-encoding (PE) direction: {pedir}</li>
 \t\t\t<li>Slice timing correction: {stc}</li>
 \t\t\t<li>Susceptibility distortion correction: {sdc}</li>
 \t\t\t<li>Registration: {registration}</li>
@@ -141,6 +142,8 @@ class FunctionalSummaryInputSpec(BaseInterfaceInputSpec):
     distortion_correction = traits.Enum('epi', 'fieldmap', 'phasediff', 'SyN', 'None',
                                         desc='Susceptibility distortion correction method',
                                         mandatory=True)
+    pe_direction = traits.Enum(None, 'i', 'i-', 'j', 'j-', mandatory=True,
+                               desc='Phase-encoding direction detected')
     registration = traits.Enum('FLIRT', 'bbregister', mandatory=True,
                                desc='Functional/anatomical registration method')
     output_spaces = traits.List(desc='Target spaces')
@@ -163,7 +166,11 @@ class FunctionalSummary(SummaryInterface):
         reg = {'FLIRT': 'FLIRT with boundary-based registration (BBR) metric',
                'bbregister': 'FreeSurfer boundary-based registration (bbregister)'
                }[self.inputs.registration]
-        return FUNCTIONAL_TEMPLATE.format(stc=stc, sdc=sdc, registration=reg,
+        if self.inputs.pe_direction is None:
+            pedir = 'MISSING - Assuming Anterior-Posterior'
+        else:
+            pedir = {'i': 'Left-Right', 'j': 'Anterior-Posterior'}[self.inputs.pe_direction[0]]
+        return FUNCTIONAL_TEMPLATE.format(pedir=pedir, stc=stc, sdc=sdc, registration=reg,
                                           output_spaces=', '.join(self.inputs.output_spaces),
                                           confounds=', '.join(self.inputs.confounds))
 
