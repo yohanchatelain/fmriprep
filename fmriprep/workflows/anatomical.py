@@ -543,6 +543,7 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
     fs_transform = pe.Node(
         fs.Tkregister2(fsl_out='freesurfer2subT1.mat', reg_header=True),
         name='fs_transform')
+    fsl2lta = pe.Node(fs.utils.LTAConvert(out_lta=True), name='fsl2lta')
 
     autorecon_resume_wf = init_autorecon_resume_wf(omp_nthreads=omp_nthreads)
     gifti_surface_wf = init_gifti_surface_wf()
@@ -573,12 +574,15 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         # reoriented image
         (inputnode, fs_transform, [('t1w', 'target_image')]),
         (autorecon1, fs_transform, [('T1', 'moving_image')]),
+        (inputnode, fsl2lta, [('t1w', 'target_file')]),
+        (autorecon1, fsl2lta, [('T1', 'source_file')]),
+        (fs_transform, fsl2lta, [('fsl_file', 'in_fsl')]),
         # Output
         (autorecon_resume_wf, outputnode, [('outputnode.subjects_dir', 'subjects_dir'),
                                            ('outputnode.subject_id', 'subject_id'),
                                            ('outputnode.out_report', 'out_report')]),
         (gifti_surface_wf, outputnode, [('outputnode.surfaces', 'surfaces')]),
-        (fs_transform, outputnode, [('fsl_file', 't1_2_fsnative_reverse_transform')]),
+        (fsl2lta, outputnode, [('out_lta', 't1_2_fsnative_reverse_transform')]),
     ])
 
     return workflow
