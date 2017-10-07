@@ -33,7 +33,7 @@ SUBJECT_TEMPLATE = """\t<ul class="elem-desc">
 
 FUNCTIONAL_TEMPLATE = """\t\t<h3 class="elem-title">Summary</h3>
 \t\t<ul class="elem-desc">
-\t\t\t<li>Detected phase-encoding (PE) direction: {pedir}</li>
+\t\t\t<li>Phase-encoding (PE) direction: {pedir}</li>
 \t\t\t<li>Slice timing correction: {stc}</li>
 \t\t\t<li>Susceptibility distortion correction: {sdc}</li>
 \t\t\t<li>Registration: {registration}</li>
