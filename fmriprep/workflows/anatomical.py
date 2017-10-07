@@ -917,16 +917,16 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
         name='ds_mni_tpms', run_without_submitting=True)
     ds_mni_tpms.inputs.extra_values = ['CSF', 'GM', 'WM']
 
+    # Transforms
+    suffix_fmt = 'target-{}_{}'.format
     ds_t1_mni_warp = pe.Node(
         DerivativesDataSink(base_directory=output_dir, suffix=suffix_fmt(template, 'warp')),
         name='ds_t1_mni_warp', run_without_submitting=True)
 
-    # Freesurfer nodes
     lta_2_itk = pe.Node(fs.utils.LTAConvert(out_itk=True, invert=True), name='lta_2_itk')
 
     ds_t1_fsnative = pe.Node(
-        DerivativesDataSink(base_directory=output_dir,
-                            suffix='target-fsnative_affine'),
+        DerivativesDataSink(base_directory=output_dir, suffix=suffix_fmt('fsnative', 'affine')),
         name='ds_t1_fsnative', run_without_submitting=True)
 
     name_surfs = pe.MapNode(GiftiNameSource(pattern=r'(?P<LR>[lr])h.(?P<surf>.+)_converted.gii',
