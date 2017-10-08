@@ -157,7 +157,7 @@ def init_anat_preproc_wf(skull_strip_ants, skull_strip_template, output_spaces, 
         subject_id
             FreeSurfer subject ID
         t1_2_fsnative_reverse_transform
-            Affine transform from FreeSurfer subject space to T1w space
+            LTA-style affine matrix translating from FreeSurfer-conformed subject space to T1w
         surfaces
             GIFTI surfaces (gray/white boundary, midthickness, pial, inflated)
 
@@ -367,6 +367,7 @@ def init_anat_preproc_wf(skull_strip_ants, skull_strip_template, output_spaces, 
             ('mni_mask', 'inputnode.mni_mask'),
             ('mni_seg', 'inputnode.mni_seg'),
             ('mni_tpms', 'inputnode.mni_tpms'),
+            ('t1_2_fsnative_reverse_transform', 'inputnode.t1_2_fsnative_reverse_transform'),
             ('surfaces', 'inputnode.surfaces'),
         ]),
     ])
@@ -515,7 +516,7 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         subject_id
             FreeSurfer subject ID
         t1_2_fsnative_reverse_transform
-            FSL-style affine matrix translating from FreeSurfer T1.mgz to T1w
+            LTA-style affine matrix translating from FreeSurfer-conformed subject space to T1w
         surfaces
             GIFTI surfaces for gray/white matter boundary, pial surface,
             midthickness (or graymid) surface, and inflated surfaces
@@ -555,10 +556,8 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
     skull_strip_extern = pe.Node(FSInjectBrainExtracted(), name='skull_strip_extern',
                                  run_without_submitting=True)
 
-    fs_transform = pe.Node(
-        fs.Tkregister2(fsl_out='freesurfer2subT1.mat', reg_header=True),
-        name='fs_transform')
-    fsl2lta = pe.Node(fs.utils.LTAConvert(out_lta=True), name='fsl2lta')
+    fsnative_2_t1_xfm = pe.Node(fs.RobustRegister(auto_sens=True, est_int_scale=True),
+                                name='fsnative_2_t1_xfm')
 
     autorecon_resume_wf = init_autorecon_resume_wf(omp_nthreads=omp_nthreads)
     gifti_surface_wf = init_gifti_surface_wf()
@@ -587,17 +586,16 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         (recon_config, autorecon_resume_wf, [('use_t2w', 'inputnode.use_T2')]),
         # Construct transform from FreeSurfer conformed image to FMRIPREP
         # reoriented image
-        (inputnode, fs_transform, [('t1w', 'target_image')]),
-        (autorecon1, fs_transform, [('T1', 'moving_image')]),
-        (inputnode, fsl2lta, [('t1w', 'target_file')]),
-        (autorecon1, fsl2lta, [('T1', 'source_file')]),
-        (fs_transform, fsl2lta, [('fsl_file', 'in_fsl')]),
+        (inputnode, fsnative_2_t1_xfm, [('t1w', 'target_file')]),
+        (autorecon1, fsnative_2_t1_xfm, [('T1', 'source_file')]),
+        (fsnative_2_t1_xfm, gifti_surface_wf, [
+            ('out_reg_file', 'inputnode.t1_2_fsnative_reverse_transform')]),
         # Output
         (autorecon_resume_wf, outputnode, [('outputnode.subjects_dir', 'subjects_dir'),
                                            ('outputnode.subject_id', 'subject_id'),
                                            ('outputnode.out_report', 'out_report')]),
         (gifti_surface_wf, outputnode, [('outputnode.surfaces', 'surfaces')]),
-        (fsl2lta, outputnode, [('out_lta', 't1_2_fsnative_reverse_transform')]),
+        (fsnative_2_t1_xfm, outputnode, [('out_reg_file', 't1_2_fsnative_reverse_transform')]),
     ])
 
     return workflow
@@ -750,6 +748,8 @@ def init_gifti_surface_wf(name='gifti_surface_wf'):
             FreeSurfer SUBJECTS_DIR
         subject_id
             FreeSurfer subject ID
+        t1_2_fsnative_reverse_transform
+            LTA formatted affine transform file (inverse)
 
     **Outputs**
 
@@ -760,7 +760,9 @@ def init_gifti_surface_wf(name='gifti_surface_wf'):
     """
     workflow = pe.Workflow(name=name)
 
-    inputnode = pe.Node(niu.IdentityInterface(['subjects_dir', 'subject_id']), name='inputnode')
+    inputnode = pe.Node(niu.IdentityInterface(['subjects_dir', 'subject_id',
+                                               't1_2_fsnative_reverse_transform']),
+                        name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(['surfaces']), name='outputnode')
 
     get_surfaces = pe.Node(nio.FreeSurferSource(), name='get_surfaces')
@@ -795,6 +797,7 @@ def init_gifti_surface_wf(name='gifti_surface_wf'):
         (save_midthickness, surface_list, [('out_file', 'in4')]),
         (surface_list, fs_2_gii, [('out', 'in_file')]),
         (fs_2_gii, fix_surfs, [('converted', 'in_file')]),
+        (inputnode, fix_surfs, [('t1_2_fsnative_reverse_transform', 'transform_file')]),
         (fix_surfs, outputnode, [('out_file', 'surfaces')]),
     ])
     return workflow
@@ -870,7 +873,8 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
         niu.IdentityInterface(
             fields=['source_file', 't1_preproc', 't1_mask', 't1_seg', 't1_tpms',
                     't1_2_mni_forward_transform', 't1_2_mni', 'mni_mask',
-                    'mni_seg', 'mni_tpms', 'surfaces']),
+                    'mni_seg', 'mni_tpms',
+                    't1_2_fsnative_reverse_transform', 'surfaces']),
         name='inputnode')
 
     ds_t1_preproc = pe.Node(
@@ -913,9 +917,17 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
         name='ds_mni_tpms', run_without_submitting=True)
     ds_mni_tpms.inputs.extra_values = ['CSF', 'GM', 'WM']
 
+    # Transforms
+    suffix_fmt = 'target-{}_{}'.format
     ds_t1_mni_warp = pe.Node(
         DerivativesDataSink(base_directory=output_dir, suffix=suffix_fmt(template, 'warp')),
         name='ds_t1_mni_warp', run_without_submitting=True)
+
+    lta_2_itk = pe.Node(fs.utils.LTAConvert(out_itk=True, invert=True), name='lta_2_itk')
+
+    ds_t1_fsnative = pe.Node(
+        DerivativesDataSink(base_directory=output_dir, suffix=suffix_fmt('fsnative', 'affine')),
+        name='ds_t1_fsnative', run_without_submitting=True)
 
     name_surfs = pe.MapNode(GiftiNameSource(pattern=r'(?P<LR>[lr])h.(?P<surf>.+)_converted.gii',
                                             template='{surf}.{LR}.surf'),
@@ -940,6 +952,9 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
 
     if freesurfer:
         workflow.connect([
+            (inputnode, lta_2_itk, [('t1_2_fsnative_reverse_transform', 'in_lta')]),
+            (inputnode, ds_t1_fsnative, [('source_file', 'source_file')]),
+            (lta_2_itk, ds_t1_fsnative, [('out_itk', 'in_file')]),
             (inputnode, name_surfs, [('surfaces', 'in_file')]),
             (inputnode, ds_surfs, [('source_file', 'source_file'),
                                    ('surfaces', 'in_file')]),
