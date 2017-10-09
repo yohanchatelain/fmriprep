@@ -22,14 +22,16 @@ as well as for open-source software distribution.
 About
 -----
 
-``fmriprep`` is a functional magnetic resonance imaging (fMRI) data preprocessing pipeline
-that is designed to provide an easily accessible, state-of-the-art interface
-that is robust to differences in scan acquisition protocols and that requires
-minimal user input, while providing easily interpretable and comprehensive
-error and output reporting.
+``fmriprep`` is a functional magnetic resonance imaging (fMRI) data
+preprocessing pipeline that is designed to provide an easily accessible,
+state-of-the-art interface that is robust to variations in scan acquisition
+protocols and that requires minimal user input, while providing easily
+interpretable and comprehensive error and output reporting.
 It performs basic processing steps (coregistration, normalization, unwarping, 
-noise component extraction, segmentation, skullstripping etc.) providing outputs that make
-running a variety of group level analyses (task based or resting state fMRI, graph theory measures, surface or volume, etc.) easy.
+noise component extraction, segmentation, skullstripping etc.) providing
+outputs that can be easily submitted to a variety of group level analyses,
+including task-based or resting-state fMRI, graph theory measures, surface or
+volume-based statistics, etc.
 
 .. note::
 
@@ -37,15 +39,15 @@ running a variety of group level analyses (task based or resting state fMRI, gra
    Here we define 'minimal preprocessing'  as motion correction, field unwarping, normalization, bias field correction, and brain extraction.
    See the workflows_ for more details.
 
-The fmriprep pipeline primarily
-utilizes FSL tools, but also utilizes ANTs tools at several stages such as
-skull stripping and template registration. This pipeline was designed to
-provide the best software implementation for each state of preprocessing, and
-will be updated as newer and better neuroimaging software become available.
+The ``fmriprep`` pipeline uses a combination of tools from well-known software
+packages, including FSL_, ANTs_, FreeSurfer_ and AFNI_.
+This pipeline was designed to provide the best software implementation for each
+state of preprocessing, and will be updated as newer and better neuroimaging
+software become available.
 
 This tool allows you to easily do the following:
 
-- Take fMRI data from raw to full preprocessed form.
+- Take fMRI data from raw to fully preprocessed form.
 - Implement tools from different software packages.
 - Achieve optimal data processing quality by using the best tools available.
 - Generate preprocessing quality reports, with which the user can easily identify outliers.
