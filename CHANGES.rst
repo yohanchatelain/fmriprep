@@ -1,6 +1,14 @@
 Next release
 ============
 
+* [FIX] Register FreeSurfer template to FMRIPREP template, handling pre-run
+  FreeSurfer subjects more robustly, saving affine to derivatives (#733)
+* [ENH] Add OpenFMRI participant sampler command-line tool (#704)
+* [ENH] For SyN-SDC, assume phase-encoding direction of A-P unless specified
+  L-R (#740, #744)
+* [ENH] Permit skull-stripping with NKI ANTs template (#729)
+* [ENH] Erode aCompCor masks to target volume proportions, instead of fixed
+  distances (#731, #732)
 
 1.0.0-rc5 (25th of September 2017)
 ==================================
