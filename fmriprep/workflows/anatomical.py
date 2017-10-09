@@ -219,7 +219,6 @@ def init_anat_preproc_wf(skull_strip_ants, skull_strip_template, output_spaces, 
         RobustMNINormalizationRPT(
             float=True,
             generate_report=True,
-            num_threads=omp_nthreads,
             flavor='testing' if debug else 'precise',
         ),
         name='t1_2_mni',
@@ -439,10 +438,9 @@ def init_skullstrip_ants_wf(skull_strip_template, debug, omp_nthreads, name='sku
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['bias_corrected', 'out_file', 'out_mask', 'out_report']), name='outputnode')
 
-    t1_skull_strip = pe.Node(BrainExtractionRPT(
-        dimension=3, use_floatingpoint_precision=1,
-        debug=debug, generate_report=True,
-        num_threads=omp_nthreads, keep_temporary_files=1),
+    t1_skull_strip = pe.Node(
+        BrainExtractionRPT(dimension=3, use_floatingpoint_precision=1, debug=debug,
+                           generate_report=True, keep_temporary_files=1),
         name='t1_skull_strip', n_procs=omp_nthreads)
 
     t1_skull_strip.inputs.brain_template = brain_template
