@@ -91,17 +91,7 @@ and the version, along with the link to the GitHub repository
 (https://github.com/poldracklab/fmriprep).
 
 
-License information
--------------------
-
-We use the 3-clause BSD license; the full license is in the file ``LICENSE`` in
-the ``fmriprep`` distribution.
-
-All trademarks referenced herein are property of their respective
-holders.
-
-Copyright (c) 2015-2017, the fmriprep developers and the CRN.
-All rights reserved.
+.. include:: license.rst
 
 
 .. image:: https://badges.gitter.im/poldracklab/fmriprep.svg
