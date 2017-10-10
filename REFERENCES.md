@@ -32,14 +32,10 @@
 | phdiff2fmap | https://doi.org/10.1006/nimg.2001.1054 | https://fmriprep.readthedocs.io/en/stable/sdc/estimation.html#fmriprep.workflows.fieldmap.phdiff.phdiff2fmap |
 | nibabel | https://doi.org/10.5281/zenodo.60808 | https://github.com/nipy/nibabel/ |
 | nilearn | https://doi.org/10.3389/fninf.2014.00014 | https://github.com/nilearn/nilearn/ |
-| nipype | https://doi.org/10.5281/zenodo.581704 | https://github.com/nipy/nipype/ |
+| nipype | https://doi.org/10.3389/fninf.2011.00013 https://doi.org/10.5281/zenodo.581704 | https://github.com/nipy/nipype/ |
 | convert3d | | https://sourceforge.net/projects/c3d/ |
 | **Graphics**
 | seaborn | https://doi.org/10.5281/zenodo.883859 | https://github.com/mwaskom/seaborn |
 | matplotlib 2.0.0 | https://doi.org/10.5281/zenodo.248351 | https://github.com/matplotlib/matplotlib |
 | cwebp | https://developers.google.com/speed/webp/docs/webp_study https://developers.google.com/speed/webp/docs/webp_lossless_alpha_study | https://developers.google.com/speed/webp/ |
 | SVGO | | https://github.com/svg/svgo |
-
-Additional references worth considering:
-
-* HCP pipeline (for GIFTI surface modifications)
