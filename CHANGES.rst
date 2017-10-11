@@ -1,5 +1,5 @@
-Next release
-============
+1.0.0-rc6 (11th of October 2017)
+================================
 
 * [ENH] Add inverse normalization transform (MNI -> T1w) to derivatives (#754)
 * [ENH] Fall back to initial registration if BBR fails (#694)
