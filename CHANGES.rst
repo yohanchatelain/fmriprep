@@ -1,6 +1,8 @@
 Next release
 ============
 
+* [FIX] Header and affine transform updates to resolve intermittent
+  misalignments in reports (#743)
 * [FIX] Register FreeSurfer template to FMRIPREP template, handling pre-run
   FreeSurfer subjects more robustly, saving affine to derivatives (#733)
 * [ENH] Add OpenFMRI participant sampler command-line tool (#704)
