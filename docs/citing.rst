@@ -12,7 +12,7 @@ state-of-the-art preprocessing algorithms to a wide variety of structural and
 functional neuroimages and generate readable reports.
 For a full list of external software and relevant citations (where available)
 of tools and algorithms, please see the `REFERENCES.md
-<https://github.com/poldracklab/fmriprep/tree/master/RERFERENCES.md>`_ table in
+<https://github.com/poldracklab/fmriprep/blob/master/REFERENCES.md>`_ table in
 the source distribution.
 Please cite the relevant packages to your use case.
 ``fmriprep`` may be cited by its Zenodo reference::
@@ -35,6 +35,14 @@ Please cite the relevant packages to your use case.
       doi          = {10.5281/zenodo.996169},
       url          = {https://doi.org/10.5281/zenodo.996169}
     }
+
+Posters
+-------
+
+* Organization for Human Brain Mapping 2017 (`pdf <https://f1000research.com/posters/6-1129>`_)
+
+.. image:: _static/OHBM2017-poster_thumb.png
+   :target: _static/OHBM2017-poster.png
 
 .. include:: authors.rst
 .. include:: license.rst
