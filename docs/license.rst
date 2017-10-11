@@ -2,7 +2,7 @@ License information
 -------------------
 
 We use the 3-clause BSD license; the full license may be found in the
-`LICENSE <https://github.com/poldracklab/fmriprep/tree/master/LICENSE>`_ file
+`LICENSE <https://github.com/poldracklab/fmriprep/blob/master/LICENSE>`_ file
 in the ``fmriprep`` distribution.
 
 All trademarks referenced herein are property of their respective holders.
