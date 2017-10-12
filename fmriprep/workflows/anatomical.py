@@ -227,7 +227,7 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
 
     workflow.connect([
         (inputnode, anat_template_wf, [('t1w', 'inputnode.t1w')]),
-        (anat_template_wf, skullstrip_wf, [('outputnode.t1_template', 'inputnode.in_file')]),
+        (anat_template_wf, skullstrip_ants_wf, [('outputnode.t1_template', 'inputnode.in_file')]),
         (skullstrip_ants_wf, t1_seg, [('outputnode.out_file', 'in_files')]),
         (skullstrip_ants_wf, outputnode, [('outputnode.bias_corrected', 't1_preproc'),
                                           ('outputnode.out_file', 't1_brain'),
@@ -950,7 +950,7 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     t1_name = pe.Node(niu.Function(function=fix_multi_T1w_source_name), name='t1_name')
 
     ds_t1_template_transforms = pe.MapNode(
-        DerivativesDataSink(base_directory=output_dir, suffix='space-T1w'),
+        DerivativesDataSink(base_directory=output_dir, suffix='target-T1w'),
         iterfield=['source_file', 'in_file'],
         name='ds_t1_template_transforms', run_without_submitting=True)
 
@@ -1039,7 +1039,7 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     if freesurfer:
         workflow.connect([
             (inputnode, lta_2_itk, [('t1_2_fsnative_forward_transform', 'in_lta')]),
-            (inputnode, ds_t1_fsnative, [('source_file', 'source_file')]),
+            (t1_name, ds_t1_fsnative, [('out', 'source_file')]),
             (lta_2_itk, ds_t1_fsnative, [('out_itk', 'in_file')]),
             (inputnode, name_surfs, [('surfaces', 'in_file')]),
             (inputnode, ds_surfs, [('surfaces', 'in_file')]),
