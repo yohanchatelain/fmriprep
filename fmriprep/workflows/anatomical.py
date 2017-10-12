@@ -26,7 +26,7 @@ structural images.
 
 import os.path as op
 
-from niworkflows.nipype.interfaces import freesurfer as fs
+from niworkflows.nipype.interfaces import c3, freesurfer as fs
 from niworkflows.nipype.interfaces import utility as niu
 from niworkflows.nipype.interfaces import io as nio
 from niworkflows.nipype.pipeline import engine as pe
@@ -410,6 +410,9 @@ def init_anat_template_wf(longitudinal, omp_nthreads, name='anat_template_wf'):
         ConcatAffines(3, invert=True), iterfield=['mat_AtoB', 'mat_BtoC'],
         name='concat_affines', run_without_submitting=True)
 
+    fsl_to_itk = pe.MapNode(c3.C3dAffineTool(fsl2ras=True, itk_transform=True),
+                            iterfield=['transform_file', 'source_file'], name='fsl_to_itk')
+
     def set_threads(in_list, maximum):
         return min(len(in_list), maximum)
 
@@ -429,10 +432,13 @@ def init_anat_template_wf(longitudinal, omp_nthreads, name='anat_template_wf'):
         (t1_conform, concat_affines, [('transform', 'mat_AtoB')]),
         (lta_to_fsl, concat_affines, [('out_fsl', 'mat_BtoC')]),
         (t1_reorient, concat_affines, [('transform', 'mat_CtoD')]),
+        (inputnode, fsl_to_itk, [('t1w', 'source_file')]),
+        (t1_reorient, fsl_to_itk, [('out_file', 'reference_file')]),
+        (concat_affines, fsl_to_itk, [('out_mat', 'transform_file')]),
         # Output
         (t1_template_dimensions, outputnode, [('out_report', 'out_report')]),
         (t1_reorient, outputnode, [('out_file', 't1_template')]),
-        (concat_affines, outputnode, [('out_mat', 'template_transforms')]),
+        (fsl_to_itk, outputnode, [('itk_transform', 'template_transforms')]),
     ])
 
     return workflow
@@ -949,11 +955,6 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
 
     t1_name = pe.Node(niu.Function(function=fix_multi_T1w_source_name), name='t1_name')
 
-    ds_t1_template_transforms = pe.MapNode(
-        DerivativesDataSink(base_directory=output_dir, suffix='target-T1w'),
-        iterfield=['source_file', 'in_file'],
-        name='ds_t1_template_transforms', run_without_submitting=True)
-
     ds_t1_preproc = pe.Node(
         DerivativesDataSink(base_directory=output_dir, suffix='preproc'),
         name='ds_t1_preproc', run_without_submitting=True)
@@ -1002,6 +1003,11 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
         name='ds_t1_mni_inv_warp', run_without_submitting=True)
 
     suffix_fmt = 'target-{}_{}'.format
+    ds_t1_template_transforms = pe.MapNode(
+        DerivativesDataSink(base_directory=output_dir, suffix=suffix_fmt('T1w', 'affine')),
+        iterfield=['source_file', 'in_file'],
+        name='ds_t1_template_transforms', run_without_submitting=True)
+
     ds_t1_mni_warp = pe.Node(
         DerivativesDataSink(base_directory=output_dir, suffix=suffix_fmt(template, 'warp')),
         name='ds_t1_mni_warp', run_without_submitting=True)
