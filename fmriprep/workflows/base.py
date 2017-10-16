@@ -447,16 +447,14 @@ def init_single_subject_wf(subject_id, task_id, name,
               ('outputnode.t1_seg', 'inputnode.t1_seg'),
               ('outputnode.t1_tpms', 'inputnode.t1_tpms'),
               ('outputnode.t1_2_mni_forward_transform', 'inputnode.t1_2_mni_forward_transform'),
-              ('outputnode.t1_2_mni_reverse_transform', 'inputnode.t1_2_mni_reverse_transform')])
-        ])
-
-        if freesurfer:
-            workflow.connect([
-                (anat_preproc_wf, func_preproc_wf,
-                 [('outputnode.subjects_dir', 'inputnode.subjects_dir'),
-                  ('outputnode.subject_id', 'inputnode.subject_id'),
-                  ('outputnode.t1_2_fsnative_reverse_transform',
-                   'inputnode.t1_2_fsnative_reverse_transform')]),
+              ('outputnode.t1_2_mni_reverse_transform', 'inputnode.t1_2_mni_reverse_transform'),
+              # Undefined if --no-freesurfer, but this is safe
+              ('outputnode.subjects_dir', 'inputnode.subjects_dir'),
+              ('outputnode.subject_id', 'inputnode.subject_id'),
+              ('outputnode.t1_2_fsnative_forward_transform',
+               'inputnode.t1_2_fsnative_forward_transform'),
+              ('outputnode.t1_2_fsnative_reverse_transform',
+               'inputnode.t1_2_fsnative_reverse_transform')]),
             ])
 
     return workflow

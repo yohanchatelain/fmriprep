@@ -156,6 +156,8 @@ def init_anat_preproc_wf(skull_strip_ants, skull_strip_template, output_spaces, 
             FreeSurfer SUBJECTS_DIR
         subject_id
             FreeSurfer subject ID
+        t1_2_fsnative_forward_transform
+            LTA-style affine matrix translating from T1w to FreeSurfer-conformed subject space
         t1_2_fsnative_reverse_transform
             LTA-style affine matrix translating from FreeSurfer-conformed subject space to T1w
         surfaces
@@ -177,7 +179,8 @@ def init_anat_preproc_wf(skull_strip_ants, skull_strip_template, output_spaces, 
         fields=['t1_preproc', 't1_brain', 't1_mask', 't1_seg', 't1_tpms',
                 't1_2_mni', 't1_2_mni_forward_transform', 't1_2_mni_reverse_transform',
                 'mni_mask', 'mni_seg', 'mni_tpms',
-                'subjects_dir', 'subject_id', 't1_2_fsnative_reverse_transform', 'surfaces']),
+                'subjects_dir', 'subject_id', 't1_2_fsnative_forward_transform',
+                't1_2_fsnative_reverse_transform', 'surfaces']),
         name='outputnode')
 
     # 0. Reorient T1w image(s) to RAS and resample to common voxel space
@@ -319,6 +322,7 @@ def init_anat_preproc_wf(skull_strip_ants, skull_strip_template, output_spaces, 
             (surface_recon_wf, outputnode, [
                 ('outputnode.subjects_dir', 'subjects_dir'),
                 ('outputnode.subject_id', 'subject_id'),
+                ('outputnode.t1_2_fsnative_forward_transform', 't1_2_fsnative_forward_transform'),
                 ('outputnode.t1_2_fsnative_reverse_transform', 't1_2_fsnative_reverse_transform'),
                 ('outputnode.surfaces', 'surfaces')]),
         ])
@@ -368,7 +372,7 @@ def init_anat_preproc_wf(skull_strip_ants, skull_strip_template, output_spaces, 
             ('mni_mask', 'inputnode.mni_mask'),
             ('mni_seg', 'inputnode.mni_seg'),
             ('mni_tpms', 'inputnode.mni_tpms'),
-            ('t1_2_fsnative_reverse_transform', 'inputnode.t1_2_fsnative_reverse_transform'),
+            ('t1_2_fsnative_forward_transform', 'inputnode.t1_2_fsnative_forward_transform'),
             ('surfaces', 'inputnode.surfaces'),
         ]),
     ])
@@ -516,6 +520,8 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
             FreeSurfer SUBJECTS_DIR
         subject_id
             FreeSurfer subject ID
+        t1_2_fsnative_forward_transform
+            LTA-style affine matrix translating from T1w to FreeSurfer-conformed subject space
         t1_2_fsnative_reverse_transform
             LTA-style affine matrix translating from FreeSurfer-conformed subject space to T1w
         surfaces
@@ -538,7 +544,8 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         name='inputnode')
     outputnode = pe.Node(
         niu.IdentityInterface(
-            fields=['subjects_dir', 'subject_id', 't1_2_fsnative_reverse_transform', 'surfaces',
+            fields=['subjects_dir', 'subject_id', 't1_2_fsnative_forward_transform',
+                    't1_2_fsnative_reverse_transform', 'surfaces',
                     'out_report']),
         name='outputnode')
 
@@ -559,6 +566,8 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
 
     fsnative_2_t1_xfm = pe.Node(fs.RobustRegister(auto_sens=True, est_int_scale=True),
                                 name='fsnative_2_t1_xfm')
+    t1_2_fsnative_xfm = pe.Node(fs.utils.LTAConvert(out_lta=True, invert=True),
+                                name='t1_2_fsnative_xfm')
 
     autorecon_resume_wf = init_autorecon_resume_wf(omp_nthreads=omp_nthreads)
     gifti_surface_wf = init_gifti_surface_wf()
@@ -591,11 +600,13 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         (autorecon1, fsnative_2_t1_xfm, [('T1', 'source_file')]),
         (fsnative_2_t1_xfm, gifti_surface_wf, [
             ('out_reg_file', 'inputnode.t1_2_fsnative_reverse_transform')]),
+        (fsnative_2_t1_xfm, t1_2_fsnative_xfm, [('out_reg_file', 'in_lta')]),
         # Output
         (autorecon_resume_wf, outputnode, [('outputnode.subjects_dir', 'subjects_dir'),
                                            ('outputnode.subject_id', 'subject_id'),
                                            ('outputnode.out_report', 'out_report')]),
         (gifti_surface_wf, outputnode, [('outputnode.surfaces', 'surfaces')]),
+        (t1_2_fsnative_xfm, outputnode, [('out_lta', 't1_2_fsnative_forward_transform')]),
         (fsnative_2_t1_xfm, outputnode, [('out_reg_file', 't1_2_fsnative_reverse_transform')]),
     ])
 
@@ -875,7 +886,7 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
             fields=['source_file', 't1_preproc', 't1_mask', 't1_seg', 't1_tpms',
                     't1_2_mni_forward_transform', 't1_2_mni_reverse_transform',
                     't1_2_mni', 'mni_mask', 'mni_seg', 'mni_tpms',
-                    't1_2_fsnative_reverse_transform', 'surfaces']),
+                    't1_2_fsnative_forward_transform', 'surfaces']),
         name='inputnode')
 
     ds_t1_preproc = pe.Node(
@@ -930,7 +941,7 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
         DerivativesDataSink(base_directory=output_dir, suffix=suffix_fmt(template, 'warp')),
         name='ds_t1_mni_warp', run_without_submitting=True)
 
-    lta_2_itk = pe.Node(fs.utils.LTAConvert(out_itk=True, invert=True), name='lta_2_itk')
+    lta_2_itk = pe.Node(fs.utils.LTAConvert(out_itk=True), name='lta_2_itk')
 
     ds_t1_fsnative = pe.Node(
         DerivativesDataSink(base_directory=output_dir, suffix=suffix_fmt('fsnative', 'affine')),
@@ -959,7 +970,7 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
 
     if freesurfer:
         workflow.connect([
-            (inputnode, lta_2_itk, [('t1_2_fsnative_reverse_transform', 'in_lta')]),
+            (inputnode, lta_2_itk, [('t1_2_fsnative_forward_transform', 'in_lta')]),
             (inputnode, ds_t1_fsnative, [('source_file', 'source_file')]),
             (lta_2_itk, ds_t1_fsnative, [('out_itk', 'in_file')]),
             (inputnode, name_surfs, [('surfaces', 'in_file')]),
