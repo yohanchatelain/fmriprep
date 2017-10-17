@@ -189,6 +189,8 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
                             initial_timepoint=1,      # For deterministic behavior
                             intensity_scaling=True,   # 7-DOF (rigid + intensity)
                             subsample_threshold=200,
+                            fixed_timepoint=not longitudinal,
+                            no_iteration=not longitudinal,
                             ),
         name='t1_merge')
 
@@ -243,11 +245,6 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
     def set_threads(in_list, maximum):
         return min(len(in_list), maximum)
 
-    def len_above_thresh(in_list, threshold, longitudinal):
-        if longitudinal:
-            return False
-        return len(in_list) > threshold
-
     workflow.connect([
         (inputnode, t1_template_dimensions, [('t1w', 't1w_list')]),
         (t1_template_dimensions, t1_conform, [
@@ -257,8 +254,6 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
         (t1_conform, t1_merge, [
             ('out_file', 'in_files'),
             (('out_file', set_threads, omp_nthreads), 'num_threads'),
-            (('out_file', len_above_thresh, 2, longitudinal), 'fixed_timepoint'),
-            (('out_file', len_above_thresh, 2, longitudinal), 'no_iteration'),
             (('out_file', add_suffix, '_template'), 'out_file')]),
         (t1_merge, t1_reorient, [('out_file', 'in_file')]),
         (t1_reorient, skullstrip_ants_wf, [('out_file', 'inputnode.in_file')]),
