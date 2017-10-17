@@ -676,8 +676,8 @@ def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
                    '-nocortparc3', '-noparcstats3', '-nopctsurfcon',
                    '-nohyporelabel', '-noaparc2aseg', '-noapas2aseg',
                    '-nosegstats', '-nowmparc', '-nobalabels'],
-            openmp=omp_nthreads, mem_gb=32),
-        iterfield='hemi', n_procs=omp_nthreads,
+            openmp=omp_nthreads),
+        iterfield='hemi', n_procs=omp_nthreads, mem_gb=32,
         name='autorecon_surfs')
     autorecon_surfs.inputs.hemi = ['lh', 'rh']
 
