@@ -32,7 +32,6 @@ from niworkflows.nipype.interfaces import io as nio
 from niworkflows.nipype.pipeline import engine as pe
 
 from niworkflows.interfaces.registration import RobustMNINormalizationRPT
-from niworkflows.anat.skullstrip import afni_wf as init_skullstrip_afni_wf
 import niworkflows.data as nid
 from niworkflows.interfaces.masks import BrainExtractionRPT
 from niworkflows.interfaces.segmentation import FASTRPT, ReconAllRPT
@@ -46,7 +45,7 @@ from ..utils.misc import fix_multi_T1w_source_name, add_suffix
 
 
 #  pylint: disable=R0914
-def init_anat_preproc_wf(skull_strip_ants, skull_strip_template, output_spaces, template, debug,
+def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
                          freesurfer, longitudinal, omp_nthreads, hires, reportlets_dir, output_dir,
                          name='anat_preproc_wf'):
     r"""
@@ -71,7 +70,6 @@ def init_anat_preproc_wf(skull_strip_ants, skull_strip_template, output_spaces, 
                                   template='MNI152NLin2009cAsym',
                                   output_spaces=['T1w', 'fsnative',
                                                  'template', 'fsaverage5'],
-                                  skull_strip_ants=True,
                                   skull_strip_template='OASIS',
                                   freesurfer=True,
                                   longitudinal=False,
@@ -80,9 +78,6 @@ def init_anat_preproc_wf(skull_strip_ants, skull_strip_template, output_spaces, 
 
     **Parameters**
 
-        skull_strip_ants : bool
-            Use ANTs BrainExtraction.sh-based skull-stripping workflow.
-            If ``False``, uses a faster AFNI-based workflow
         skull_strip_template : str
             Name of ANTs skull-stripping template ('OASIS' or 'NKI')
         output_spaces : list
@@ -201,13 +196,10 @@ def init_anat_preproc_wf(skull_strip_ants, skull_strip_template, output_spaces, 
     # Bias field correction is handled in skull strip workflows.
 
     # 3. Skull-stripping
-    if skull_strip_ants:
-        skullstrip_wf = init_skullstrip_ants_wf(name='skullstrip_ants_wf',
-                                                skull_strip_template=skull_strip_template,
-                                                debug=debug,
-                                                omp_nthreads=omp_nthreads)
-    else:
-        skullstrip_wf = init_skullstrip_afni_wf(name='skullstrip_afni_wf')
+    skullstrip_ants_wf = init_skullstrip_ants_wf(name='skullstrip_ants_wf',
+                                                 skull_strip_template=skull_strip_template,
+                                                 debug=debug,
+                                                 omp_nthreads=omp_nthreads)
 
     # 4. Segmentation
     t1_seg = pe.Node(FASTRPT(generate_report=True, segments=True,
@@ -267,11 +259,11 @@ def init_anat_preproc_wf(skull_strip_ants, skull_strip_template, output_spaces, 
             (('out_file', len_above_thresh, 2, longitudinal), 'no_iteration'),
             (('out_file', add_suffix, '_template'), 'out_file')]),
         (t1_merge, t1_reorient, [('out_file', 'in_file')]),
-        (t1_reorient, skullstrip_wf, [('out_file', 'inputnode.in_file')]),
-        (skullstrip_wf, t1_seg, [('outputnode.out_file', 'in_files')]),
-        (skullstrip_wf, outputnode, [('outputnode.bias_corrected', 't1_preproc'),
-                                     ('outputnode.out_file', 't1_brain'),
-                                     ('outputnode.out_mask', 't1_mask')]),
+        (t1_reorient, skullstrip_ants_wf, [('out_file', 'inputnode.in_file')]),
+        (skullstrip_ants_wf, t1_seg, [('outputnode.out_file', 'in_files')]),
+        (skullstrip_ants_wf, outputnode, [('outputnode.bias_corrected', 't1_preproc'),
+                                          ('outputnode.out_file', 't1_brain'),
+                                          ('outputnode.out_mask', 't1_mask')]),
         (t1_seg, outputnode, [('tissue_class_map', 't1_seg'),
                               ('probability_maps', 't1_tpms')]),
     ])
@@ -286,9 +278,9 @@ def init_anat_preproc_wf(skull_strip_ants, skull_strip_template, output_spaces, 
         mni_tpms.inputs.reference_image = ref_img
 
         workflow.connect([
-            (skullstrip_wf, t1_2_mni, [('outputnode.bias_corrected', 'moving_image')]),
-            (skullstrip_wf, t1_2_mni, [('outputnode.out_mask', 'moving_mask')]),
-            (skullstrip_wf, mni_mask, [('outputnode.out_mask', 'input_image')]),
+            (skullstrip_ants_wf, t1_2_mni, [('outputnode.bias_corrected', 'moving_image')]),
+            (skullstrip_ants_wf, t1_2_mni, [('outputnode.out_mask', 'moving_mask')]),
+            (skullstrip_ants_wf, mni_mask, [('outputnode.out_mask', 'input_image')]),
             (t1_2_mni, mni_mask, [('composite_transform', 'transforms')]),
             (t1_seg, mni_seg, [('tissue_class_map', 'input_image')]),
             (t1_2_mni, mni_seg, [('composite_transform', 'transforms')]),
@@ -314,7 +306,7 @@ def init_anat_preproc_wf(skull_strip_ants, skull_strip_template, output_spaces, 
                 ('subjects_dir', 'inputnode.subjects_dir'),
                 ('subject_id', 'inputnode.subject_id')]),
             (t1_reorient, surface_recon_wf, [('out_file', 'inputnode.t1w')]),
-            (skullstrip_wf, surface_recon_wf, [
+            (skullstrip_ants_wf, surface_recon_wf, [
                 ('outputnode.out_file', 'inputnode.skullstripped_t1')]),
             (surface_recon_wf, outputnode, [
                 ('outputnode.subjects_dir', 'subjects_dir'),
@@ -324,21 +316,18 @@ def init_anat_preproc_wf(skull_strip_ants, skull_strip_template, output_spaces, 
         ])
 
     anat_reports_wf = init_anat_reports_wf(
-        reportlets_dir=reportlets_dir, skull_strip_ants=skull_strip_ants,
-        output_spaces=output_spaces, template=template, freesurfer=freesurfer)
+        reportlets_dir=reportlets_dir, output_spaces=output_spaces, template=template,
+        freesurfer=freesurfer)
     workflow.connect([
         (inputnode, anat_reports_wf, [
             (('t1w', fix_multi_T1w_source_name), 'inputnode.source_file')]),
         (t1_template_dimensions, anat_reports_wf, [
             ('out_report', 'inputnode.t1_conform_report')]),
+        (skullstrip_ants_wf, anat_reports_wf, [
+            ('outputnode.out_report', 'inputnode.t1_skull_strip_report')]),
         (t1_seg, anat_reports_wf, [('out_report', 'inputnode.t1_seg_report')]),
     ])
 
-    if skull_strip_ants:
-        workflow.connect([
-            (skullstrip_wf, anat_reports_wf, [
-                ('outputnode.out_report', 'inputnode.t1_skull_strip_report')])
-        ])
     if freesurfer:
         workflow.connect([
             (surface_recon_wf, anat_reports_wf, [
@@ -804,7 +793,7 @@ def init_gifti_surface_wf(name='gifti_surface_wf'):
     return workflow
 
 
-def init_anat_reports_wf(reportlets_dir, skull_strip_ants, output_spaces,
+def init_anat_reports_wf(reportlets_dir, output_spaces,
                          template, freesurfer, name='anat_reports_wf'):
     """
     Set up a battery of datasinks to store reports in the right location
@@ -840,15 +829,12 @@ def init_anat_reports_wf(reportlets_dir, skull_strip_ants, output_spaces,
     workflow.connect([
         (inputnode, ds_t1_conform_report, [('source_file', 'source_file'),
                                            ('t1_conform_report', 'in_file')]),
+        (inputnode, ds_t1_skull_strip_report, [('source_file', 'source_file'),
+                                               ('t1_skull_strip_report', 'in_file')]),
         (inputnode, ds_t1_seg_report, [('source_file', 'source_file'),
                                        ('t1_seg_report', 'in_file')]),
     ])
 
-    if skull_strip_ants:
-        workflow.connect([
-            (inputnode, ds_t1_skull_strip_report, [('source_file', 'source_file'),
-                                                   ('t1_skull_strip_report', 'in_file')])
-        ])
     if freesurfer:
         workflow.connect([
             (inputnode, ds_recon_report, [('source_file', 'source_file'),
