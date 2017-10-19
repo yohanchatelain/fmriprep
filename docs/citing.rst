@@ -19,26 +19,20 @@ we recommend to include in your paper.
       $('#workflow_url').text('http://fmriprep.readthedocs.io/en/' + version + '/workflows.html');
       $('#workflow_url').attr('href', 'http://fmriprep.readthedocs.io/en/' + version + '/workflows.html');
 
+      function cb(err, zenodoID) {
+         getCitation(zenodoID, 'vancouver-brackets-no-et-al', function(err, citation) {
+            $('#fmriprep_citation').text(citation);
+         });
+         getDOI(zenodoID, function(err, DOI) {
+            $('#fmriprep_doi_url').text('http://dx.doi.org/' + DOI);
+            $('#fmriprep_doi_url').attr('href', 'http://dx.doi.org/' + DOI);
+         });
+      }
+
       if(version == 'latest') {
-         getLatestIDFromconceptID("852659", function (err, zenodoID) {
-             getCitation(zenodoID, 'vancouver-brackets-no-et-al', function(err, citation) {
-                $('#fmriprep_citation').text(citation);
-             });
-             getDOI(zenodoID, function(err, DOI) {
-                $('#fmriprep_doi_url').text('http://dx.doi.org/' + DOI);
-                $('#fmriprep_doi_url').attr('href', 'http://dx.doi.org/' + DOI);
-             });
-          });
+         getLatestIDFromconceptID("852659", cb);
       } else {
-         getZenodoIDFromTag("852659", version, function (err, zenodoID) {
-             getCitation(zenodoID, 'vancouver-brackets-no-et-al', function(err, citation) {
-                $('#fmriprep_citation').text(citation);
-             });
-             getDOI(zenodoID, function(err, DOI) {
-                $('#fmriprep_doi_url').text('http://dx.doi.org/' + DOI);
-                $('#fmriprep_doi_url').attr('href', 'http://dx.doi.org/' + DOI);
-             });
-          });
+         getZenodoIDFromTag("852659", version, cb);
       }
    }
 
