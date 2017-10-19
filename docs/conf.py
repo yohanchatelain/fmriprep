@@ -308,3 +308,10 @@ texinfo_documents = [
 intersphinx_mapping = {'https://docs.python.org/': None}
 
 suppress_warnings = ["image.nonlocal_uri"]
+
+
+def setup(app):
+    # (create a setup() function if you don't already have one;
+    # or add to the existing setup() ...)
+    app.add_javascript("https://code.jquery.com/jquery-3.2.1.min.js")
+    app.add_javascript("boilerplate.js")
