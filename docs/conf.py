@@ -312,4 +312,4 @@ suppress_warnings = ["image.nonlocal_uri"]
 
 def setup(app):
     # We need this for the boilerplate script
-    app.add_javascript("https://code.jquery.com/jquery-3.2.1.min.js")
+    app.add_javascript("https://cdn.rawgit.com/chrisfilo/zenodo.js/v0.1/zenodo.js")

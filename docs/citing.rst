@@ -12,7 +12,36 @@ we recommend to include in your paper.
 
 .. raw:: html
 
-   <script>
+   <script language="javascript">
+   var version = '1.0.0-rc6';
+   function fillCitation(){
+      $('#fmriprep_version').text(version);
+      $('#workflow_url').text('http://fmriprep.readthedocs.io/en/' + version + '/workflows.html');
+      $('#workflow_url').attr('href', 'http://fmriprep.readthedocs.io/en/' + version + '/workflows.html');
+
+      if(version == 'latest') {
+         getLatestIDFromconceptID("852659", function (err, zenodoID) {
+             getCitation(zenodoID, 'vancouver-brackets-no-et-al', function(err, citation) {
+                $('#fmriprep_citation').text(citation);
+             });
+             getDOI(zenodoID, function(err, DOI) {
+                $('#fmriprep_doi_url').text('http://dx.doi.org/' + DOI);
+                $('#fmriprep_doi_url').attr('href', 'http://dx.doi.org/' + DOI);
+             });
+          });
+      } else {
+         getZenodoIDFromTag("852659", version, function (err, zenodoID) {
+             getCitation(zenodoID, 'vancouver-brackets-no-et-al', function(err, citation) {
+                $('#fmriprep_citation').text(citation);
+             });
+             getDOI(zenodoID, function(err, DOI) {
+                $('#fmriprep_doi_url').text('http://dx.doi.org/' + DOI);
+                $('#fmriprep_doi_url').attr('href', 'http://dx.doi.org/' + DOI);
+             });
+          });
+      }
+   }
+
    function toggle() {
         var controlElementsIds = ["freesurfer","slicetime", "AROMA", "ss_template", "SDC"];
         var controlElementsIdsLength = controlElementsIds.length;
@@ -34,7 +63,6 @@ we recommend to include in your paper.
             el.style.display='inline'
           });
         }
-
         return false;
    }
    </script>
@@ -54,7 +82,7 @@ we recommend to include in your paper.
    With slicetime correction: <input id="slicetime" type="checkbox" checked="true" onclick="toggle();"/><br />
    </p>
 
-   <p style="font-style: italic;">Results included in this manuscript come from preprocessing performed using FMRIPREP version 1.0.0-rc6 [1] a Nipype [2,3] based tool. Each T1 weighted volume was corrected for bias field using N4BiasFieldCorrection v2.1.0 [4] and skullstripped using antsBrainExtraction.sh v2.1.0 (using
+   <p style="font-style: italic;">Results included in this manuscript come from preprocessing performed using FMRIPREP version <span id="fmriprep_version">latest</span> [1] a Nipype [2,3] based tool. Each T1 weighted volume was corrected for bias field using N4BiasFieldCorrection v2.1.0 [4] and skullstripped using antsBrainExtraction.sh v2.1.0 (using
    <span class="ss_template_text_OASIS">OASIS</span>
    <span class="ss_template_text_NKI" style="display: none">NKI</span>
    template).
@@ -77,10 +105,11 @@ we recommend to include in your paper.
   <p style="font-style: italic;">
   Three tissue classes were extracted from T1w images using FSL FAST v5.0.9 [16]. Voxels from cerebrospinal fluid and white matter were used to create a mask in turn used to extract physiological noise regressors using aCompCor [17]. Mask was eroded and limited to subcortical regions to limit overlap with grey matter, six principal components were estimated. Framewise displacement [18] was calculated for each functional run using Nipype implementation. <span class="AROMA_text_true" style="display: none">ICA-based Automatic Removal Of Motion Artifacts (AROMA) was used to generate aggressive noise regressors as well as creating a variant of data that was non-aggressively denoised [19].</span></p>
   <p style="font-style: italic;">
-  For more details of the pipeline see <a href="http://fmriprep.readthedocs.io/en/1.0.0-rc6/workflows.html">http://fmriprep.readthedocs.io/en/1.0.0-rc6/workflows.html</a>.
+  For more details of the pipeline see <a id="workflow_url" href="http://fmriprep.readthedocs.io/en/latest/workflows.html">http://fmriprep.readthedocs.io/en/latest/workflows.html</a>.
   </p>
   <p>
-  1. 	Esteban O, Blair R, Markiewicz CJ, Berleant SL, Moodie C, Ma F, Isik AI, Erramuzpe A, Kent JD, Goncalves M, Poldrack RA, Gorgolewski KJ. poldracklab/fmriprep: 1.0.0-rc6 [Internet]. 2017. Available from: <a href="https://zenodo.org/record/1009184">https://zenodo.org/record/1009184</a>
+  <span id="fmriprep_citation">FMRIPREP</span> Available from: <a id="fmriprep_doi_url" href="https://doi.org/10.5281/zenodo.852659">https://doi.org/10.5281/zenodo.852659</a>
+  <img src onerror='fillCitation()'>
   </p>
   <p>
   2. 	Gorgolewski K, Burns CD, Madison C, Clark D, Halchenko YO, Waskom ML, Ghosh SS. Nipype: a flexible, lightweight and extensible neuroimaging data processing framework in python. Front Neuroinform [Internet]. 2011 Aug 22;5(August):13. Available from: <a href="http://dx.doi.org/10.3389/fninf.2011.00013">http://dx.doi.org/10.3389/fninf.2011.00013</a>
