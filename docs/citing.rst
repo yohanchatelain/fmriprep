@@ -119,5 +119,4 @@ Posters
 .. image:: _static/OHBM2017-poster_thumb.png
    :target: _static/OHBM2017-poster.png
 
-.. include:: authors.rst
 .. include:: license.rst
