@@ -12,6 +12,32 @@ we recommend to include in your paper.
 
 .. raw:: html
 
+   <script>
+   function toggle() {
+        var controlElementsIds = ["freesurfer","slicetime", "AROMA", "ss_template", "SDC"];
+        var controlElementsIdsLength = controlElementsIds.length;
+
+        for (var i = 0; i < controlElementsIdsLength; i++) {
+        	controlElement = document.getElementById(controlElementsIds[i])
+
+        	if (controlElement.checked == null){
+          	var value = controlElement.value;
+          } else {
+          	var value = controlElement.checked;
+          }
+
+          $("span[class^='" + controlElementsIds[i] + "_text_']").each(function (i, el) {
+            el.style.display='none'
+          });
+
+          $("span[class='" + controlElementsIds[i] + "_text_" + value + "']").each(function (i, el) {
+            el.style.display='inline'
+          });
+        }
+
+        return false;
+   }
+   </script>
    <p>
    With Freesurfer: <input id="freesurfer" type="checkbox" checked="true" onclick="toggle();"/><br />
    Suceptibility Distortion Correction: <select id="SDC" onclick="toggle();">
