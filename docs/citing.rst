@@ -13,11 +13,11 @@ we recommend to include in your paper.
 .. raw:: html
 
    <script language="javascript">
-   var version = '1.0.0-rc6';
+   var version = 'latest';
    function fillCitation(){
       $('#fmriprep_version').text(version);
-      $('#workflow_url').text('http://fmriprep.readthedocs.io/en/' + version + '/workflows.html');
-      $('#workflow_url').attr('href', 'http://fmriprep.readthedocs.io/en/' + version + '/workflows.html');
+      $('#workflow_url').text('https://fmriprep.readthedocs.io/en/' + version + '/workflows.html');
+      $('#workflow_url').attr('href', 'https://fmriprep.readthedocs.io/en/' + version + '/workflows.html');
 
       function cb(err, zenodoID) {
          getCitation(zenodoID, 'vancouver-brackets-no-et-al', function(err, citation) {
@@ -41,21 +41,21 @@ we recommend to include in your paper.
         var controlElementsIdsLength = controlElementsIds.length;
 
         for (var i = 0; i < controlElementsIdsLength; i++) {
-        	controlElement = document.getElementById(controlElementsIds[i])
+            controlElement = document.getElementById(controlElementsIds[i])
 
-        	if (controlElement.checked == null){
-          	var value = controlElement.value;
-          } else {
-          	var value = controlElement.checked;
-          }
+            if (controlElement.checked == null){
+                var value = controlElement.value;
+            } else {
+          	    var value = controlElement.checked;
+            }
 
-          $("span[class^='" + controlElementsIds[i] + "_text_']").each(function (i, el) {
-            el.style.display='none'
-          });
+            $("span[class^='" + controlElementsIds[i] + "_text_']").each(function (i, el) {
+                el.style.display='none'
+            });
 
-          $("span[class='" + controlElementsIds[i] + "_text_" + value + "']").each(function (i, el) {
-            el.style.display='inline'
-          });
+            $("span[class='" + controlElementsIds[i] + "_text_" + value + "']").each(function (i, el) {
+                el.style.display='inline'
+            });
         }
         return false;
    }
