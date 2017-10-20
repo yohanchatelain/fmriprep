@@ -22,7 +22,7 @@ RUN apt-get update && \
     apt-get update
 
 # Installing freesurfer
-RUN curl -sSL https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/6.0.0/freesurfer-Linux-centos6_x86_64-stable-pub-v6.0.0.tar.gz | tar zxv -C /opt \
+RUN curl -sSL https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/6.0.1/freesurfer-Linux-centos6_x86_64-stable-pub-v6.0.1.tar.gz | tar zxv -C /opt \
     --exclude='freesurfer/trctrain' \
     --exclude='freesurfer/subjects/fsaverage_sym' \
     --exclude='freesurfer/subjects/fsaverage3' \
@@ -40,7 +40,8 @@ ENV FSL_DIR=/usr/share/fsl/5.0 \
     FS_OVERRIDE=0 \
     FIX_VERTEX_AREA= \
     FSF_OUTPUT_FORMAT=nii.gz \
-    FREESURFER_HOME=/opt/freesurfer
+    FREESURFER_HOME=/opt/freesurfer \
+    FS_LICENSE=/opt/freesurfer/license
 ENV SUBJECTS_DIR=$FREESURFER_HOME/subjects \
     FUNCTIONALS_DIR=$FREESURFER_HOME/sessions \
     MNI_DIR=$FREESURFER_HOME/mni \
