@@ -232,6 +232,9 @@ def get_parser():
                         type=os.path.abspath,
                         help='Grid reference image for resampling BOLD files to volume template '
                              'space.')
+    g_wrap.add_argument('--fs-license', metavar='PATH', type=os.path.abspath,
+                        default=os.getenv('FS_LICENSE', None),
+                        help='folder containing FreeSurfer\'s license.txt file')
 
     # Developer patch/shell options
     g_dev = parser.add_argument_group(
@@ -246,9 +249,6 @@ def get_parser():
     g_dev.add_argument('-p', '--patch-nipype', metavar='PATH',
                        type=os.path.abspath,
                        help='working nipype repository')
-    g_dev.add_argument('--fs-license', metavar='PATH', type=os.path.abspath,
-                       default=os.getenv('FS_LICENSE', None),
-                       help='folder containing FreeSurfer\'s license.txt file')
     g_dev.add_argument('--shell', action='store_true',
                        help='open shell in image instead of running FMRIPREP')
     g_dev.add_argument('--config', metavar='PATH', action='store',
