@@ -247,6 +247,7 @@ def get_parser():
                        type=os.path.abspath,
                        help='working nipype repository')
     g_dev.add_argument('--fs-license', metavar='PATH', type=os.path.abspath,
+                       default=os.getenv('FS_LICENSE', None),
                        help='folder containing FreeSurfer\'s license.txt file')
     g_dev.add_argument('--shell', action='store_true',
                        help='open shell in image instead of running FMRIPREP')
@@ -258,8 +259,10 @@ def get_parser():
 
 def main():
     """Entry point"""
+
+    parser = get_parser()
     # Capture additional arguments to pass inside container
-    opts, unknown_args = get_parser().parse_known_args()
+    opts, unknown_args = parser.parse_known_args()
 
     # Set help if no directories set
     if (opts.bids_dir, opts.output_dir, opts.version) == ('', '', False):

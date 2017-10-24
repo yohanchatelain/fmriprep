@@ -65,8 +65,9 @@ what is included in the latest Docker images.
 If the flag ``--no-freesurfer`` is not set, then FreeSurfer will require a proper
 license file.
 It is possible to run the docker container pointing the image to a local path
-where a valid license file is stored, when the license is stored in the
-``$HOME/.licenses/freesurfer/license.txt`` file on the host system: ::
+where a valid license file is stored.
+For example, if the license is stored in the ``$HOME/.licenses/freesurfer/license.txt`` 
+file on the host system: ::
 
     $ docker run -ti --rm \
         -v $HOME/fullds005:/data:ro \
@@ -80,6 +81,17 @@ where a valid license file is stored, when the license is stored in the
 It is also possible to run ``fmriprep-docker`` with FreeSurfer processing: ::
 
     $ fmriprep-docker --fs-license $HOME/.licenses/freesurfer /path/to/data/dir /path/to/output/dir participant
+    RUNNING: docker run --rm -it -v /path/to/data/dir:/data:ro \
+        -v /path/to_output/dir:/out poldracklab/fmriprep:1.0.0 \
+        /data /out participant
+    ...
+
+If the environment variable ``$FS_LICENSE`` is set in the host system, then
+it will automatically used by ``fmriprep-docker``. For instance, the following
+would be equivalent to the latest example: ::
+
+    $ export FS_LICENSE=$HOME/.licenses/freesurfer
+    $ fmriprep-docker /path/to/data/dir /path/to/output/dir participant
     RUNNING: docker run --rm -it -v /path/to/data/dir:/data:ro \
         -v /path/to_output/dir:/out poldracklab/fmriprep:1.0.0 \
         /data /out participant
