@@ -5,7 +5,6 @@ from future import standard_library
 import sys
 import os
 import re
-import argparse
 import subprocess
 
 standard_library.install_aliases()
@@ -198,7 +197,9 @@ def merge_help(wrapper_help, target_help):
     return '\n\n'.join(sections)
 
 
-def main():
+def get_parser():
+    """Defines the command line interface of the wrapper"""
+    import argparse
     parser = argparse.ArgumentParser(
         description='fMRI Preprocessing workflow',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -245,13 +246,20 @@ def main():
     g_dev.add_argument('-p', '--patch-nipype', metavar='PATH',
                        type=os.path.abspath,
                        help='working nipype repository')
+    g_dev.add_argument('--fs-license', metavar='PATH', type=os.path.abspath,
+                       help='folder containing FreeSurfer\'s license.txt file')
     g_dev.add_argument('--shell', action='store_true',
                        help='open shell in image instead of running FMRIPREP')
     g_dev.add_argument('--config', metavar='PATH', action='store',
                        type=os.path.abspath, help='Use custom nipype.cfg file')
 
+    return parser
+
+
+def main():
+    """Entry point"""
     # Capture additional arguments to pass inside container
-    opts, unknown_args = parser.parse_known_args()
+    opts, unknown_args = get_parser().parse_known_args()
 
     # Set help if no directories set
     if (opts.bids_dir, opts.output_dir, opts.version) == ('', '', False):
@@ -314,6 +322,9 @@ def main():
         pkg_path = '{}/{}'.format(PKG_PATH, pkg)  # Always POSIX path
         if repo_path is not None:
             command.extend(['-v', '{}:{}:ro'.format(repo_path, pkg_path)])
+
+    if opts.fs_license:
+        command.extend(['-v', '{}:/etc/licenses/freesurfer:ro'.format(opts.fs_license)])
 
     main_args = []
     if opts.bids_dir:

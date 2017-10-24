@@ -37,7 +37,7 @@ print it out for reporting purposes, and then run the command, e.g.::
     $ fmriprep-docker /path/to/data/dir /path/to/output/dir participant
     RUNNING: docker run --rm -it -v /path/to/data/dir:/data:ro \
         -v /path/to_output/dir:/out poldracklab/fmriprep:1.0.0 \
-        /data /out participant
+        /data /out participant --no-freesurfer
     ...
 
 You may also invoke ``docker`` directly::
@@ -47,7 +47,7 @@ You may also invoke ``docker`` directly::
         -v filepath/to/output/dir:/out \
         poldracklab/fmriprep:latest \
         /data /out/out \
-        participant
+        participant --no-freesurfer
 
 For example: ::
 
@@ -57,10 +57,34 @@ For example: ::
         poldracklab/fmriprep:latest \
         /data /out/out \
         participant \
-        --ignore fieldmaps
+        --ignore fieldmaps --no-freesurfer
 
 See `External Dependencies`_ for more information (e.g., specific versions) on
 what is included in the latest Docker images.
+
+If the flag ``--no-freesurfer`` is not set, then FreeSurfer will require a proper
+license file.
+It is possible to run the docker container pointing the image to a local path
+where a valid license file is stored, when the license is stored in the
+``$HOME/.licenses/freesurfer/license.txt`` file on the host system: ::
+
+    $ docker run -ti --rm \
+        -v $HOME/fullds005:/data:ro \
+        -v $HOME/dockerout:/out \
+        -v $HOME/.licenses/freesurfer:/etc/licenses/freesurfer \
+        poldracklab/fmriprep:latest \
+        /data /out/out \
+        participant \
+        --ignore fieldmaps
+
+It is also possible to run ``fmriprep-docker`` with FreeSurfer processing: ::
+
+    $ fmriprep-docker --fs-license $HOME/.licenses/freesurfer /path/to/data/dir /path/to/output/dir participant
+    RUNNING: docker run --rm -it -v /path/to/data/dir:/data:ro \
+        -v /path/to_output/dir:/out poldracklab/fmriprep:1.0.0 \
+        /data /out participant
+    ...
+
 
 Singularity Container
 =====================
