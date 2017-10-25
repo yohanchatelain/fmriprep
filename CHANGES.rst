@@ -1,6 +1,18 @@
 Next release
 ============
 
+1.0.0-rc7 (20th of October 2017)
+================================
+
+* [ENH] Update pinned version of nipype to latest master
+* [ENH] Added rX permissions to make life easier on Singularity users (#757)
+* [DOC] Citation boilerplate (#779)
+* [FIX] Patch to remove long filenames after mri_concatenate_lta (#778)
+* [FIX] Only use unbiased template with --longitudinal (#771)
+* [FIX] Use t1_2_fsnative registration when sampling to surface (#762)
+* [ENH] Remove --skull_strip_ants option (#761)
+* [DOC] Add reference to beginners guide (#763)
+
 
 1.0.0-rc6 (11th of October 2017)
 ================================
