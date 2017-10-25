@@ -75,6 +75,17 @@ Use `docker2singularity <https://github.com/singularityware/docker2singularity>`
         singularityware/docker2singularity \
         poldracklab/fmriprep:latest
 
+
+Beware of the back slashes, expected for Windows systems.
+For *nix users the command translates as follows: ::
+
+    $ docker run --privileged -t --rm \
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        -v /absolute/path/to/output/folder:/output \
+        singularityware/docker2singularity \
+        poldracklab/fmriprep:latest
+
+
 Transfer the resulting Singularity image to the HPC, for example, using ``scp``. ::
 
     $ scp poldracklab_fmriprep_latest-*.img user@hcpserver.edu:/path/to/downloads
