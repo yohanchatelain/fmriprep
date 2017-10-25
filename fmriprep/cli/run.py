@@ -27,6 +27,13 @@ Running fMRIPREP version {version}:
   * Run identifier: {uuid}.
 """.format
 
+try:
+    import indexed_gzip
+    import nibabel
+    nibabel.arrayproxy.KEEP_FILE_OPEN_DEFAULT = 'auto'
+except ImportError:
+    pass
+
 
 def _warn_redirect(message, category, filename, lineno, file=None, line=None):
     logger.warning('Captured warning (%s): %s', category, message)
