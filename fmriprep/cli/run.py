@@ -16,6 +16,9 @@ from argparse import ArgumentParser
 from argparse import RawTextHelpFormatter
 from multiprocessing import cpu_count
 from time import strftime
+import nibabel
+
+nibabel.arrayproxy.KEEP_FILE_OPEN_DEFAULT = 'auto'
 
 logging.addLevelName(25, 'INFO')  # Add a new level between INFO and WARNING
 logger = logging.getLogger('cli')
