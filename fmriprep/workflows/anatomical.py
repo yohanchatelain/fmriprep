@@ -535,12 +535,8 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
                            run_without_submitting=True)
 
     autorecon1 = pe.Node(
-        fs.ReconAll(directive='autorecon1', flags='-noskullstrip',
-                    openmp=omp_nthreads),
-        name='autorecon1',
-        n_procs=omp_nthreads,
-        mem_gb=32
-    )
+        fs.ReconAll(directive='autorecon1', flags='-noskullstrip', openmp=omp_nthreads),
+        name='autorecon1', n_procs=omp_nthreads, mem_gb=32)
     autorecon1.interface._can_resume = False
 
     skull_strip_extern = pe.Node(FSInjectBrainExtracted(), name='skull_strip_extern',
