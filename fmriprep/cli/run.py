@@ -16,6 +16,9 @@ from argparse import ArgumentParser
 from argparse import RawTextHelpFormatter
 from multiprocessing import cpu_count
 from time import strftime
+import nibabel
+
+nibabel.arrayproxy.KEEP_FILE_OPEN_DEFAULT = 'auto'
 
 logging.addLevelName(25, 'INFO')  # Add a new level between INFO and WARNING
 logger = logging.getLogger('cli')
@@ -26,13 +29,6 @@ Running fMRIPREP version {version}:
   * Participant list: {subject_list}.
   * Run identifier: {uuid}.
 """.format
-
-try:
-    import indexed_gzip
-    import nibabel
-    nibabel.arrayproxy.KEEP_FILE_OPEN_DEFAULT = 'auto'
-except ImportError:
-    pass
 
 
 def _warn_redirect(message, category, filename, lineno, file=None, line=None):
