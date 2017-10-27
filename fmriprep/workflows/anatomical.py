@@ -469,6 +469,13 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
     See :py:func:`~fmriprep.workflows.anatomical.init_autorecon_resume_wf` for details.
 
 
+    Memory annotations for FreeSurfer are based off `their documentation
+    <https://surfer.nmr.mgh.harvard.edu/fswiki/SystemRequirements>`_.
+    They specify an allocation of 4GB per subject. Here we define 5GB
+    to have a certain margin.
+
+
+
     .. workflow::
         :graph2use: orig
         :simple_form: yes
@@ -536,7 +543,7 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
 
     autorecon1 = pe.Node(
         fs.ReconAll(directive='autorecon1', flags='-noskullstrip', openmp=omp_nthreads),
-        name='autorecon1', n_procs=omp_nthreads, mem_gb=32)
+        name='autorecon1', n_procs=omp_nthreads, mem_gb=5)
     autorecon1.interface._can_resume = False
 
     skull_strip_extern = pe.Node(FSInjectBrainExtracted(), name='skull_strip_extern',
@@ -673,20 +680,20 @@ def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
                    '-nohyporelabel', '-noaparc2aseg', '-noapas2aseg',
                    '-nosegstats', '-nowmparc', '-nobalabels'],
             openmp=omp_nthreads),
-        iterfield='hemi', n_procs=omp_nthreads, mem_gb=32,
+        iterfield='hemi', n_procs=omp_nthreads, mem_gb=5,
         name='autorecon_surfs')
     autorecon_surfs.inputs.hemi = ['lh', 'rh']
 
     autorecon3 = pe.MapNode(
         fs.ReconAll(directive='autorecon3', openmp=omp_nthreads),
-        iterfield='hemi', n_procs=omp_nthreads, mem_gb=32,
+        iterfield='hemi', n_procs=omp_nthreads, mem_gb=5,
         name='autorecon3')
     autorecon3.inputs.hemi = ['lh', 'rh']
 
     # Only generate the report once; should be nothing to do
     recon_report = pe.Node(
         ReconAllRPT(directive='autorecon3', generate_report=True),
-        name='recon_report', mem_gb=8)
+        name='recon_report', mem_gb=5)
 
     def _dedup(in_list):
         vals = set(in_list)
