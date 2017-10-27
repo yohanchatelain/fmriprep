@@ -191,6 +191,12 @@ def main():
     if opts.debug:
         logger.setLevel(logging.DEBUG)
 
+    default_license = op.join(os.getenv('FREESURFER_HOME', ''), 'license.txt')
+    license_file = os.getenv('FS_LICENSE', default_license)
+    if opts.freesurfer and not os.path.exists(license_file):
+        raise RuntimeError('ERROR: when --no-freesurfer is not set, a valid '
+                           'license file is required for FreeSurfer to run.')
+
     # Validity of some inputs - OE should be done in parse_args?
     # ERROR check if use_aroma was specified, but the correct template was not
     if opts.use_aroma and (opts.template != 'MNI152NLin2009cAsym' or

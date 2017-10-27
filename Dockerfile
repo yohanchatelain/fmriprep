@@ -41,7 +41,7 @@ ENV FSL_DIR=/usr/share/fsl/5.0 \
     FIX_VERTEX_AREA= \
     FSF_OUTPUT_FORMAT=nii.gz \
     FREESURFER_HOME=/opt/freesurfer \
-    FS_LICENSE=/etc/licenses/freesurfer
+    FS_LICENSE=/etc/licenses/freesurfer/license.txt
 ENV SUBJECTS_DIR=$FREESURFER_HOME/subjects \
     FUNCTIONALS_DIR=$FREESURFER_HOME/sessions \
     MNI_DIR=$FREESURFER_HOME/mni \
@@ -54,7 +54,7 @@ ENV SUBJECTS_DIR=$FREESURFER_HOME/subjects \
 ENV PERL5LIB=$MINC_LIB_DIR/perl5/5.8.5 \
     MNI_PERL5LIB=$MINC_LIB_DIR/perl5/5.8.5 \
     PATH=$FREESURFER_HOME/bin:$FSFAST_HOME/bin:$FREESURFER_HOME/tktools:$MINC_BIN_DIR:$PATH
-RUN mkdir -p $FS_LICENSE
+RUN mkdir -p /etc/licenses/freesurfer
 
 # Installing Neurodebian packages (FSL, AFNI, git)
 RUN apt-get update && \

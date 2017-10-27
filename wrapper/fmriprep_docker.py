@@ -232,7 +232,7 @@ def get_parser():
                         type=os.path.abspath,
                         help='Grid reference image for resampling BOLD files to volume template '
                              'space.')
-    g_wrap.add_argument('--fs-license', metavar='PATH', type=os.path.abspath,
+    g_wrap.add_argument('--fs-license-file', metavar='PATH', type=os.path.abspath,
                         default=os.getenv('FS_LICENSE', None),
                         help='folder containing FreeSurfer\'s license.txt file')
 
@@ -326,8 +326,19 @@ def main():
         if repo_path is not None:
             command.extend(['-v', '{}:{}:ro'.format(repo_path, pkg_path)])
 
-    if opts.fs_license:
-        command.extend(['-v', '{}:/etc/licenses/freesurfer:ro'.format(opts.fs_license)])
+    if opts.fs_license_file:
+        command.extend([
+            '-v', '{}:/etc/licenses/freesurfer/license.txt:ro'.format(
+                opts.fs_license_file)])
+    else:
+        # Check license if --no-freesurfer not present
+        if '--no-freesurfer' not in unknown_args:
+            print(
+                'No FreeSurfer license was provided, and it is mandatory '
+                'because "--no-freesurfer" is not set. Please try again '
+                'without freesurfer (adding --no-freesurfer) or provide '
+                'a license file.')
+            return 1
 
     main_args = []
     if opts.bids_dir:
