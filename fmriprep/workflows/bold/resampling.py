@@ -27,7 +27,7 @@ from ...interfaces.freesurfer import PatchedConcatenateLTA as ConcatenateLTA
 DEFAULT_MEMORY_MIN_GB = 0.01
 
 
-def init_bold_surf_wf(bold_file_size_gb, output_spaces, medial_surface_nan, name='bold_surf_wf'):
+def init_bold_surf_wf(mem_gb, output_spaces, medial_surface_nan, name='bold_surf_wf'):
     """
     This workflow samples functional images to FreeSurfer surfaces
 
@@ -41,7 +41,7 @@ def init_bold_surf_wf(bold_file_size_gb, output_spaces, medial_surface_nan, name
         :simple_form: yes
 
         from fmriprep.workflows.bold import init_bold_surf_wf
-        wf = init_bold_surf_wf(bold_file_size_gb=0.1,
+        wf = init_bold_surf_wf(mem_gb=0.1,
                                output_spaces=['T1w', 'fsnative',
                                              'template', 'fsaverage5'],
                                medial_surface_nan=False)
@@ -111,7 +111,7 @@ def init_bold_surf_wf(bold_file_size_gb, output_spaces, medial_surface_nan, name
                            override_reg_subj=True, out_type='gii'),
         iterfield=['source_file', 'target_subject'],
         iterables=('hemi', ['lh', 'rh']),
-        name='sampler', mem_gb=bold_file_size_gb * 3)
+        name='sampler', mem_gb=mem_gb * 3)
 
     def medial_wall_to_nan(in_file, subjects_dir, target_subject):
         """ Convert values on medial wall to NaNs
@@ -175,7 +175,7 @@ def init_bold_surf_wf(bold_file_size_gb, output_spaces, medial_surface_nan, name
     return workflow
 
 
-def init_bold_mni_trans_wf(template, bold_file_size_gb, omp_nthreads,
+def init_bold_mni_trans_wf(template, mem_gb, omp_nthreads,
                            name='bold_mni_trans_wf',
                            output_grid_ref=None, use_compression=True,
                            use_fieldwarp=False):
@@ -189,7 +189,7 @@ def init_bold_mni_trans_wf(template, bold_file_size_gb, omp_nthreads,
 
         from fmriprep.workflows.bold import init_bold_mni_trans_wf
         wf = init_bold_mni_trans_wf(template='MNI152NLin2009cAsym',
-                                    bold_file_size_gb=3,
+                                    mem_gb=3,
                                     omp_nthreads=1,
                                     output_grid_ref=None)
 
@@ -197,7 +197,7 @@ def init_bold_mni_trans_wf(template, bold_file_size_gb, omp_nthreads,
 
         template : str
             Name of template targeted by `'template'` output space
-        bold_file_size_gb : float
+        mem_gb : float
             Size of BOLD file in GB
         omp_nthreads : int
             Maximum number of threads an individual process may use
@@ -267,7 +267,7 @@ def init_bold_mni_trans_wf(template, bold_file_size_gb, omp_nthreads,
     mask_mni_tfm = pe.Node(
         ApplyTransforms(interpolation='NearestNeighbor', float=True),
         name='mask_mni_tfm',
-        mem_gb=bold_file_size_gb * 3
+        mem_gb=1
     )
 
     # Write corrected file in the designated output dir
@@ -293,10 +293,10 @@ def init_bold_mni_trans_wf(template, bold_file_size_gb, omp_nthreads,
 
     bold_to_mni_transform = pe.Node(
         MultiApplyTransforms(interpolation="LanczosWindowedSinc", float=True, copy_dtype=True),
-        name='bold_to_mni_transform', mem_gb=bold_file_size_gb * 3, n_procs=omp_nthreads)
+        name='bold_to_mni_transform', mem_gb=mem_gb * 3, n_procs=omp_nthreads)
 
     merge = pe.Node(Merge(compress=use_compression), name='merge',
-                    mem_gb=bold_file_size_gb * 3)
+                    mem_gb=mem_gb * 3)
 
     workflow.connect([
         (inputnode, merge_xforms, [('t1_2_mni_forward_transform', 'in1'),

@@ -13,6 +13,7 @@ Orchestrating the BOLD-preprocessing workflow
 
 import os
 
+import nibabel as nb
 from niworkflows.nipype import logging
 from niworkflows.nipype.utils.filemanip import split_filename
 from niworkflows.nipype.pipeline import engine as pe
@@ -202,11 +203,18 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     """
 
     if bold_file == '/completely/made/up/path/sub-01_task-nback_bold.nii.gz':
-        bold_file_size_gb = 1
+        mem_gb = {'filesize': 1, 'resampled': 1, 'largemem': 1}
     else:
-        bold_file_size_gb = os.path.getsize(bold_file) / (1024**3)
+        bold_size_gb = os.path.getsize(bold_file) / (1024**3)
+        bold_tlen = nb.load(bold_file).shape[-1]
+        mem_gb = {
+            'filesize': bold_size_gb,
+            'resampled': bold_size_gb * 4,
+            'largemem': (0.007 * max(bold_tlen, 100) + 1.5) * bold_size_gb,
+        }
 
-    LOGGER.info('Creating bold processing workflow for "%s".', bold_file)
+    LOGGER.info('Creating bold processing workflow for "%s" '
+                '(%.2f GB / %d TRs).', bold_file, bold_tlen)
     fname = split_filename(bold_file)[1]
     fname_nosub = '_'.join(fname.split("_")[1:])
     name = "func_preproc_" + fname_nosub.replace(
@@ -304,7 +312,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
     # HMC on the BOLD
     bold_hmc_wf = init_bold_hmc_wf(name='bold_hmc_wf',
-                                   bold_file_size_gb=bold_file_size_gb,
+                                   mem_gb=mem_gb['filesize'],
                                    omp_nthreads=omp_nthreads)
 
     # mean BOLD registration to T1w
@@ -312,14 +320,14 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                    freesurfer=freesurfer,
                                    use_bbr=use_bbr,
                                    bold2t1w_dof=bold2t1w_dof,
-                                   bold_file_size_gb=bold_file_size_gb,
+                                   mem_gb=mem_gb['largemem'],
                                    omp_nthreads=omp_nthreads,
                                    use_compression=not low_mem,
                                    use_fieldwarp=(fmaps is not None or use_syn))
 
     # get confounds
     bold_confounds_wf = init_bold_confs_wf(
-        bold_file_size_gb=bold_file_size_gb,
+        mem_gb=mem_gb['largemem'],
         use_aroma=use_aroma,
         ignore_aroma_err=ignore_aroma_err,
         metadata=metadata,
@@ -507,7 +515,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         # Only use uncompressed output if AROMA is to be run
         bold_mni_trans_wf = init_bold_mni_trans_wf(
             template=template,
-            bold_file_size_gb=bold_file_size_gb,
+            mem_gb=mem_gb['resampled'],
             omp_nthreads=omp_nthreads,
             output_grid_ref=output_grid_ref,
             use_compression=not (low_mem and use_aroma),
@@ -551,7 +559,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
     if freesurfer and any(space.startswith('fs') for space in output_spaces):
         LOGGER.info('Creating BOLD surface-sampling workflow.')
-        bold_surf_wf = init_bold_surf_wf(bold_file_size_gb=bold_file_size_gb,
+        bold_surf_wf = init_bold_surf_wf(mem_gb=mem_gb['resampled'],
                                          output_spaces=output_spaces,
                                          medial_surface_nan=medial_surface_nan,
                                          name='bold_surf_wf')

@@ -22,7 +22,7 @@ from ...interfaces import (
 )
 
 
-def init_bold_confs_wf(bold_file_size_gb, use_aroma, ignore_aroma_err, metadata,
+def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
                        name="bold_confs_wf"):
     """
     This workflow calculates confounds for a BOLD series, and aggregates them
@@ -53,15 +53,18 @@ def init_bold_confs_wf(bold_file_size_gb, use_aroma, ignore_aroma_err, metadata,
         :simple_form: yes
 
         from fmriprep.workflows.bold.confounds import init_bold_confs_wf
-        wf = init_bold_confs_wf(bold_file_size_gb=1,
-                                use_aroma=True,
-                                ignore_aroma_err=True,
-                                metadata={})
+        wf = init_bold_confs_wf(
+            mem_gb=1,
+            use_aroma=True,
+            ignore_aroma_err=True,
+            metadata={})
 
     **Parameters**
 
-        bold_file_size_gb : float
-            Size of BOLD file in GB
+        mem_gb : dict
+            Size of BOLD file in GB - please note that this size
+            should be calculated after resamplings that may extend
+            the FoV
         use_aroma : bool
             Perform ICA-AROMA on MNI-resampled functional series
         ignore_aroma_err : bool
@@ -128,11 +131,11 @@ def init_bold_confs_wf(bold_file_size_gb, use_aroma, ignore_aroma_err, metadata,
 
     # DVARS
     dvars = pe.Node(nac.ComputeDVARS(save_all=True, remove_zerovariance=True),
-                    name="dvars", mem_gb=bold_file_size_gb * 3)
+                    name="dvars", mem_gb=mem_gb)
 
     # Frame displacement
     fdisp = pe.Node(nac.FramewiseDisplacement(parameter_source="SPM"),
-                    name="fdisp", mem_gb=bold_file_size_gb * 3)
+                    name="fdisp", mem_gb=mem_gb)
 
     # CompCor
     non_steady_state = pe.Node(nac.NonSteadyStateDetector(), name='non_steady_state')
@@ -141,12 +144,12 @@ def init_bold_confs_wf(bold_file_size_gb, use_aroma, ignore_aroma_err, metadata,
                                    pre_filter='cosine',
                                    save_pre_filter=True,
                                    percentile_threshold=.05),
-                       name="tcompcor", mem_gb=bold_file_size_gb * 3)
+                       name="tcompcor", mem_gb=mem_gb)
     acompcor = pe.Node(ACompCorRPT(components_file='acompcor.tsv',
                                    pre_filter='cosine',
                                    save_pre_filter=True,
                                    generate_report=True),
-                       name="acompcor", mem_gb=bold_file_size_gb * 3)
+                       name="acompcor", mem_gb=mem_gb)
 
     csf_roi = pe.Node(TPM2ROI(erode_mm=0, mask_erode_mm=30), name='csf_roi')
     wm_roi = pe.Node(TPM2ROI(erode_prop=0.6,
@@ -159,7 +162,7 @@ def init_bold_confs_wf(bold_file_size_gb, use_aroma, ignore_aroma_err, metadata,
     # Global and segment regressors
     signals = pe.Node(SignalExtraction(detrend=True,
                                        class_labels=["WhiteMatter", "GlobalSignal"]),
-                      name="signals", mem_gb=bold_file_size_gb * 3)
+                      name="signals", mem_gb=mem_gb)
 
     # Arrange confounds
     add_header = pe.Node(AddTSVHeader(columns=["X", "Y", "Z", "RotX", "RotY", "RotZ"]),
