@@ -293,7 +293,7 @@ def init_bold_mni_trans_wf(template, mem_gb, omp_nthreads,
 
     bold_to_mni_transform = pe.Node(
         MultiApplyTransforms(interpolation="LanczosWindowedSinc", float=True, copy_dtype=True),
-        name='bold_to_mni_transform', mem_gb=mem_gb * 3, n_procs=omp_nthreads)
+        name='bold_to_mni_transform', mem_gb=mem_gb * 3 * omp_nthreads, n_procs=omp_nthreads)
 
     merge = pe.Node(Merge(compress=use_compression), name='merge',
                     mem_gb=mem_gb * 3)

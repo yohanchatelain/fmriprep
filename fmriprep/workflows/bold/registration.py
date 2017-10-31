@@ -199,7 +199,7 @@ def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
 
     bold_to_t1w_transform = pe.Node(
         MultiApplyTransforms(interpolation="LanczosWindowedSinc", float=True, copy_dtype=True),
-        name='bold_to_t1w_transform', mem_gb=mem_gb, n_procs=omp_nthreads)
+        name='bold_to_t1w_transform', mem_gb=mem_gb * 3 * omp_nthreads, n_procs=omp_nthreads)
 
     merge = pe.Node(Merge(compress=use_compression), name='merge', mem_gb=mem_gb)
 
@@ -296,7 +296,7 @@ def init_bbreg_wf(use_bbr, bold2t1w_dof, omp_nthreads, name='bbreg_wf'):
     mri_coreg = pe.Node(
         MRICoregRPT(dof=bold2t1w_dof, sep=[4], ftol=0.0001, linmintol=0.01,
                     generate_report=not use_bbr),
-        name='mri_coreg', n_procs=omp_nthreads, mem_gb=32)
+        name='mri_coreg', n_procs=omp_nthreads, mem_gb=5)
 
     lta_concat = pe.Node(ConcatenateLTA(out_file='out.lta'), name='lta_concat')
     # XXX LTA-FSL-ITK may ultimately be able to be replaced with a straightforward
