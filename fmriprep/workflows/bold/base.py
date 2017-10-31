@@ -33,7 +33,7 @@ from ..fieldmap import (
 )
 
 # BOLD workflows
-import confounds
+from .confounds import init_bold_confs_wf
 from .hmc import init_bold_hmc_wf
 from .stc import init_bold_stc_wf
 from .registration import init_bold_reg_wf
@@ -187,13 +187,13 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
     **Subworkflows**
 
-        * :py:func:`~fmriprep.workflows.bold.init_bold_reference_wf`
-        * :py:func:`~fmriprep.workflows.bold.init_bold_stc_wf`
-        * :py:func:`~fmriprep.workflows.bold.init_bold_hmc_wf`
-        * :py:func:`~fmriprep.workflows.bold.init_bold_reg_wf`
-        * :py:func:`~fmriprep.workflows.bold.init_bold_confounds_wf`
-        * :py:func:`~fmriprep.workflows.bold.init_bold_mni_trans_wf`
-        * :py:func:`~fmriprep.workflows.bold.init_bold_surf_wf`
+        * :py:func:`~fmriprep.workflows.bold.util.init_bold_reference_wf`
+        * :py:func:`~fmriprep.workflows.bold.stc.init_bold_stc_wf`
+        * :py:func:`~fmriprep.workflows.bold.hmc.init_bold_hmc_wf`
+        * :py:func:`~fmriprep.workflows.bold.registration.init_bold_reg_wf`
+        * :py:func:`~fmriprep.workflows.bold.confounds.init_bold_confounds_wf`
+        * :py:func:`~fmriprep.workflows.bold.resampling.init_bold_mni_trans_wf`
+        * :py:func:`~fmriprep.workflows.bold.resampling.init_bold_surf_wf`
         * :py:func:`~fmriprep.workflows.fieldmap.unwarp.init_pepolar_unwarp_wf`
         * :py:func:`~fmriprep.workflows.fieldmap.init_fmap_estimator_wf`
         * :py:func:`~fmriprep.workflows.fieldmap.init_sdc_unwarp_wf`
@@ -318,7 +318,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                    use_fieldwarp=(fmaps is not None or use_syn))
 
     # get confounds
-    bold_confounds_wf = confounds.init_bold_confs_wf(
+    bold_confounds_wf = init_bold_confs_wf(
         bold_file_size_gb=bold_file_size_gb,
         use_aroma=use_aroma,
         ignore_aroma_err=ignore_aroma_err,

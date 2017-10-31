@@ -73,7 +73,7 @@ def init_bold_reference_wf(omp_nthreads, bold_file=None, name='bold_reference_wf
 
     **Subworkflows**
 
-        * :py:func:`~fmriprep.workflows.util.init_enhance_and_skullstrip_wf`
+        * :py:func:`~fmriprep.workflows.bold.util.init_enhance_and_skullstrip_wf`
 
     """
     workflow = pe.Workflow(name=name)
@@ -124,7 +124,7 @@ def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
         :graph2use: orig
         :simple_form: yes
 
-        from fmriprep.workflows.util import init_enhance_and_skullstrip_bold_wf
+        from fmriprep.workflows.bold.util import init_enhance_and_skullstrip_bold_wf
         wf = init_enhance_and_skullstrip_bold_wf(omp_nthreads=1)
 
 
@@ -201,13 +201,13 @@ def init_skullstrip_bold_wf(name='skullstrip_bold_wf'):
 
     It is intended to be used on an image that has previously been
     bias-corrected with
-    :py:func:`~fmriprep.workflows.util.init_enhance_and_skullstrip_bold_wf`
+    :py:func:`~fmriprep.workflows.bold.util.init_enhance_and_skullstrip_bold_wf`
 
     .. workflow ::
         :graph2use: orig
         :simple_form: yes
 
-        from fmriprep.workflows.util import init_skullstrip_bold_wf
+        from fmriprep.workflows.bold.util import init_skullstrip_bold_wf
         wf = init_skullstrip_bold_wf()
 
 

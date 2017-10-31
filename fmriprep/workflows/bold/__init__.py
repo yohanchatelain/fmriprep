@@ -2,8 +2,24 @@
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
 # pylint: disable=unused-import
+"""
+
+Pre-processing fMRI - BOLD signal workflows
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: fmriprep.workflows.bold.base
+.. automodule:: fmriprep.workflows.bold.util
+.. automodule:: fmriprep.workflows.bold.hmc
+.. automodule:: fmriprep.workflows.bold.stc
+.. automodule:: fmriprep.workflows.bold.registration
+.. automodule:: fmriprep.workflows.bold.resampling
+.. automodule:: fmriprep.workflows.bold.confounds
+
+
+"""
 
 from .base import init_func_preproc_wf
+from .util import init_bold_reference_wf
 from .hmc import init_bold_hmc_wf
 from .stc import init_bold_stc_wf
 from .registration import init_bold_reg_wf
