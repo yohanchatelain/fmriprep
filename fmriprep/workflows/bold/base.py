@@ -216,7 +216,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         }
 
     LOGGER.info('Creating bold processing workflow for "%s" '
-                '(%.2f GB / %d TRs).', bold_file, bold_tlen)
+                '(%.2f GB / %d TRs).',
+                bold_file, mem_gb['filesize'], bold_tlen)
     fname = split_filename(bold_file)[1]
     fname_nosub = '_'.join(fname.split("_")[1:])
     name = "func_preproc_" + fname_nosub.replace(
