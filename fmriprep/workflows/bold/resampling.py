@@ -402,7 +402,7 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
         (inputnode, bold_transform, [('bold_split', 'input_image'),
                                      (('bold_split', _first), 'reference_image')]),
         (bold_transform, merge, [('out_files', 'in_files')]),
-        (merge, bold_reference_wf, [('bold_file', 'inputnode.bold_file')]),
+        (merge, bold_reference_wf, [('out_file', 'inputnode.bold_file')]),
         (merge, outputnode, [('out_file', 'bold')]),
         (bold_reference_wf, outputnode, [
             ('outputnode.ref_image', 'bold_ref'),
