@@ -576,13 +576,11 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         (bold_hmc_wf, bold_bold_trans_wf, [
             ('outputnode.bold_split', 'inputnode.bold_split'),
             ('outputnode.xforms', 'inputnode.hmc_xforms')]),
-        (bold_reg_wf, bold_bold_trans_wf, [
-            ('outputnode.itk_bold_to_t1', 'inputnode.itk_bold_to_t1')]),
-        (bold_bold_trans_wf, outputnode, [('outputnode.bold_mni', 'bold_mni'),
-                                         ('outputnode.bold_mask_mni', 'bold_mask_mni')]),
-        (bold_bold_trans_wf, bold_confounds_wf, [
-            ('outputnode.bold_mask_mni', 'inputnode.bold_mask_mni'),
-            ('outputnode.bold_mni', 'inputnode.bold_mni')])
+        # (bold_bold_trans_wf, bold_confounds_wf, [
+        #     ('outputnode.bold_mask_mni', 'inputnode.bold_mask_mni'),
+        #     ('outputnode.bold_mni', 'inputnode.bold_mni')])
+        # (bold_bold_trans_wf, outputnode, [('outputnode.bold_mni', 'bold_mni'),
+        #                                  ('outputnode.bold_mask_mni', 'bold_mask_mni')]),
     ])
 
     if fmaps:
