@@ -7,6 +7,7 @@ Resampling workflows
 
 .. autofunction:: init_bold_surf_wf
 .. autofunction:: init_bold_mni_trans_wf
+.. autofunction:: init_bold_preproc_trans_wf
 
 """
 import os.path as op
@@ -23,6 +24,8 @@ from ...interfaces import GiftiSetAnatomicalStructure, MultiApplyTransforms
 from ...interfaces.nilearn import Merge
 # See https://github.com/poldracklab/fmriprep/issues/768
 from ...interfaces.freesurfer import PatchedConcatenateLTA as ConcatenateLTA
+
+from .util import init_bold_reference_wf
 
 DEFAULT_MEMORY_MIN_GB = 0.01
 
@@ -368,17 +371,21 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
             BOLD series, resampled in native space, including all preprocessing
         bold_mask
             BOLD series mask calculated with the new time-series
+        bold_ref
+            BOLD reference image: an average-like 3D image of the time-series
+        bold_ref_brain
+            Same as ``bold_ref``, but once the brain mask has been applied
 
     """
     workflow = pe.Workflow(name=name)
     inputnode = pe.Node(niu.IdentityInterface(fields=[
-        'name_source','bold_split','bold_mask','hmc_xforms','fieldwarp']),
+        'name_source', 'bold_split', 'bold_mask', 'hmc_xforms', 'fieldwarp']),
         name='inputnode'
     )
 
     outputnode = pe.Node(
-        niu.IdentityInterface(fields=['bold', 'bold_mask']), name='outputnode')
-
+        niu.IdentityInterface(fields=['bold', 'bold_mask', 'bold_ref', 'bold_ref_brain']),
+        name='outputnode')
 
     bold_transform = pe.Node(
         MultiApplyTransforms(interpolation="LanczosWindowedSinc", float=True, copy_dtype=True),
@@ -387,12 +394,20 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
     merge = pe.Node(Merge(compress=use_compression), name='merge',
                     mem_gb=mem_gb * 3)
 
+    # Generate a new BOLD reference
+    bold_reference_wf = init_bold_reference_wf(omp_nthreads=omp_nthreads)
+
     workflow.connect([
         (inputnode, merge, [('name_source', 'header_source')]),
         (inputnode, bold_transform, [('bold_split', 'input_image'),
                                      (('bold_split', _first), 'reference_image')]),
         (bold_transform, merge, [('out_files', 'in_files')]),
+        (merge, bold_reference_wf, [('bold_file', 'inputnode.bold_file')]),
         (merge, outputnode, [('out_file', 'bold')]),
+        (bold_reference_wf, outputnode, [
+            ('outputnode.ref_image', 'bold_ref'),
+            ('outputnode.ref_image_brain', 'bold_ref_brain'),
+            ('outputnode.bold_mask', 'bold_mask')]),
     ])
 
     if use_fieldwarp:
@@ -412,6 +427,6 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
 
     return workflow
 
+
 def _first(inlist):
     return inlist[0]
-
