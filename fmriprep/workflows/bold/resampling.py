@@ -317,3 +317,101 @@ def init_bold_mni_trans_wf(template, mem_gb, omp_nthreads,
         mask_mni_tfm.inputs.reference_image = output_grid_ref
         bold_to_mni_transform.inputs.reference_image = output_grid_ref
     return workflow
+
+
+def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
+                               name='bold_preproc_trans_wf',
+                               use_compression=True,
+                               use_fieldwarp=False):
+    """
+    This workflow resamples the input fMRI in its native (original)
+    space in a "single shot" from the original BOLD series.
+
+    .. workflow::
+        :graph2use: colored
+        :simple_form: yes
+
+        from fmriprep.workflows.bold import init_bold_preproc_trans_wf
+        wf = init_bold_preproc_trans_wf(mem_gb=3,
+                                        omp_nthreads=1)
+
+    **Parameters**
+
+        mem_gb : float
+            Size of BOLD file in GB
+        omp_nthreads : int
+            Maximum number of threads an individual process may use
+        name : str
+            Name of workflow (default: ``bold_mni_trans_wf``)
+        use_compression : bool
+            Save registered BOLD series as ``.nii.gz``
+        use_fieldwarp : bool
+            Include SDC warp in single-shot transform from BOLD to MNI
+
+    **Inputs**
+
+        bold_split
+            Individual 3D volumes, not motion corrected
+        bold_mask
+            Skull-stripping mask of reference image
+        name_source
+            BOLD series NIfTI file
+            Used to recover original information lost during processing
+        hmc_xforms
+            List of affine transforms aligning each volume to ``ref_image`` in ITK format
+        fieldwarp
+            a :abbr:`DFM (displacements field map)` in ITK format
+
+    **Outputs**
+
+        bold
+            BOLD series, resampled in native space, including all preprocessing
+        bold_mask
+            BOLD series mask calculated with the new time-series
+
+    """
+    workflow = pe.Workflow(name=name)
+    inputnode = pe.Node(niu.IdentityInterface(fields=[
+        'name_source','bold_split','bold_mask','hmc_xforms','fieldwarp']),
+        name='inputnode'
+    )
+
+    outputnode = pe.Node(
+        niu.IdentityInterface(fields=['bold', 'bold_mask']), name='outputnode')
+
+
+    bold_transform = pe.Node(
+        MultiApplyTransforms(interpolation="LanczosWindowedSinc", float=True, copy_dtype=True),
+        name='bold_transform', mem_gb=mem_gb * 3 * omp_nthreads, n_procs=omp_nthreads)
+
+    merge = pe.Node(Merge(compress=use_compression), name='merge',
+                    mem_gb=mem_gb * 3)
+
+    workflow.connect([
+        (inputnode, merge, [('name_source', 'header_source')]),
+        (inputnode, bold_transform, [('bold_split', 'input_image'),
+                                     (('bold_split', _first), 'reference_image')]),
+        (bold_transform, merge, [('out_files', 'in_files')]),
+        (merge, outputnode, [('out_file', 'bold')]),
+    ])
+
+    if use_fieldwarp:
+        merge_xforms = pe.Node(niu.Merge(2), name='merge_xforms',
+                               run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
+        workflow.connect([
+            (inputnode, merge_xforms, [('fieldwarp', 'in1'),
+                                       ('hmc_xforms', 'in2')]),
+            (merge_xforms, bold_transform, [('out', 'transforms')]),
+        ])
+    else:
+        def _aslist(val):
+            return [val]
+        workflow.connect([
+            (inputnode, bold_transform, [(('hmc_xforms', _aslist), 'transforms')]),
+        ])
+
+    return workflow
+
+def _first(inlist):
+    return inlist[0]
+

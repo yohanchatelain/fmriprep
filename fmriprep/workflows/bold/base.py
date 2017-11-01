@@ -38,7 +38,7 @@ from .confounds import init_bold_confs_wf
 from .hmc import init_bold_hmc_wf
 from .stc import init_bold_stc_wf
 from .registration import init_bold_reg_wf
-from .resampling import init_bold_surf_wf, init_bold_mni_trans_wf
+from .resampling import init_bold_surf_wf, init_bold_mni_trans_wf, init_bold_preproc_trans_wf
 from .util import init_bold_reference_wf
 
 DEFAULT_MEMORY_MIN_GB = 0.01
@@ -194,6 +194,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         * :py:func:`~fmriprep.workflows.bold.registration.init_bold_reg_wf`
         * :py:func:`~fmriprep.workflows.bold.confounds.init_bold_confounds_wf`
         * :py:func:`~fmriprep.workflows.bold.resampling.init_bold_mni_trans_wf`
+        * :py:func:`~fmriprep.workflows.bold.resampling.init_bold_preproc_trans_wf`
         * :py:func:`~fmriprep.workflows.bold.resampling.init_bold_surf_wf`
         * :py:func:`~fmriprep.workflows.fieldmap.unwarp.init_pepolar_unwarp_wf`
         * :py:func:`~fmriprep.workflows.fieldmap.init_fmap_estimator_wf`
@@ -557,6 +558,50 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 (bold_reference_wf, bold_mni_trans_wf, [
                     ('outputnode.bold_mask', 'inputnode.bold_mask')]),
             ])
+
+
+    # Apply transforms in 1 shot
+    # Only use uncompressed output if AROMA is to be run
+    bold_bold_trans_wf = init_bold_preproc_trans_wf(
+        mem_gb=mem_gb['resampled'],
+        omp_nthreads=omp_nthreads,
+        use_compression=not (low_mem and use_aroma),
+        use_fieldwarp=(fmaps is not None or use_syn),
+        name='bold_bold_trans_wf'
+    )
+
+    workflow.connect([
+        (inputnode, bold_bold_trans_wf, [
+            ('bold_file', 'inputnode.name_source')]),
+        (bold_hmc_wf, bold_bold_trans_wf, [
+            ('outputnode.bold_split', 'inputnode.bold_split'),
+            ('outputnode.xforms', 'inputnode.hmc_xforms')]),
+        (bold_reg_wf, bold_bold_trans_wf, [
+            ('outputnode.itk_bold_to_t1', 'inputnode.itk_bold_to_t1')]),
+        (bold_bold_trans_wf, outputnode, [('outputnode.bold_mni', 'bold_mni'),
+                                         ('outputnode.bold_mask_mni', 'bold_mask_mni')]),
+        (bold_bold_trans_wf, bold_confounds_wf, [
+            ('outputnode.bold_mask_mni', 'inputnode.bold_mask_mni'),
+            ('outputnode.bold_mni', 'inputnode.bold_mni')])
+    ])
+
+    if fmaps:
+        workflow.connect([
+            (sdc_unwarp_wf, bold_bold_trans_wf, [
+                ('outputnode.out_warp', 'inputnode.fieldwarp'),
+                ('outputnode.out_mask', 'inputnode.bold_mask')]),
+        ])
+    elif use_syn:
+        workflow.connect([
+            (nonlinear_sdc_wf, bold_bold_trans_wf, [
+                ('outputnode.out_warp', 'inputnode.fieldwarp'),
+                ('outputnode.out_mask', 'inputnode.bold_mask')]),
+        ])
+    else:
+        workflow.connect([
+            (bold_reference_wf, bold_bold_trans_wf, [
+                ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+        ])
 
     if freesurfer and any(space.startswith('fs') for space in output_spaces):
         LOGGER.info('Creating BOLD surface-sampling workflow.')
