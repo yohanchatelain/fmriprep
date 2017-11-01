@@ -278,7 +278,7 @@ Head-motion estimation
 
     from fmriprep.workflows.bold import init_bold_hmc_wf
     wf = init_bold_hmc_wf(
-        mem_gb={'filesize': 1, 'resampled': 1, 'largemem': 1},
+        mem_gb=1,
         omp_nthreads=1)
 
 FSL MCFLIRT is used to estimate motion transformations using an automatically
@@ -306,7 +306,7 @@ EPI to T1w registration
     from fmriprep.workflows.bold import init_bold_reg_wf
     wf = init_bold_reg_wf(
         freesurfer=True,
-        mem_gb={'filesize': 1, 'resampled': 1, 'largemem': 1},
+        mem_gb=1,
         omp_nthreads=1,
         use_bbr=True,
         bold2t1w_dof=9)
@@ -335,7 +335,7 @@ EPI to MNI transformation
     from fmriprep.workflows.bold import init_bold_mni_trans_wf
     wf = init_bold_mni_trans_wf(
         template='MNI152NLin2009cAsym',
-        mem_gb={'filesize': 1, 'resampled': 1, 'largemem': 1},
+        mem_gb=1,
         omp_nthreads=1,
         output_grid_ref=None)
 
@@ -359,7 +359,7 @@ EPI sampled to FreeSurfer surfaces
 
     from fmriprep.workflows.bold import init_bold_surf_wf
     wf = init_bold_surf_wf(
-        mem_gb={'filesize': 1, 'resampled': 1, 'largemem': 1},
+        mem_gb=1,
         output_spaces=['T1w', 'fsnative',
                        'template', 'fsaverage5'],
         medial_surface_nan=False)
@@ -387,7 +387,7 @@ Confounds estimation
         name="discover_wf",
         use_aroma=False,
         ignore_aroma_err=False,
-        mem_gb={'filesize': 1, 'resampled': 1, 'largemem': 1},
+        mem_gb=1,
         metadata={"RepetitionTime": 2.0,
                   "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]})
 
