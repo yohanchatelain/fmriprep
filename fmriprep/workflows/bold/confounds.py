@@ -32,16 +32,20 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
 
     The following confounds are calculated, with column headings in parentheses:
 
-    #. White matter / global signals (WhiteMatter, GlobalSignal)
+    #. White matter / global signals (``WhiteMatter``, ``GlobalSignal``)
     #. DVARS - standard, nonstandard, and voxel-wise standard variants
-        (stdDVARS, non-stdDVARS, vx-wisestdDVARS)
-    #. Framewise displacement, based on MCFLIRT motion parameters (FramewiseDisplacement)
-    #. tCompCor
-    #. aCompCor
-    #. Cosine basis set for high-pass filtering w/ 0.008 Hz cut-off (CosineXX)
-    #. Non-steady-state volumes (NonSteadyStateXX)
-    #. MCFLIRT motion parameters, in mm and rad (X, Y, Z, RotX, RotY, RotZ)
-    #. ICA-AROMA-identified noise components, if enabled (AROMAAggrCompXX)
+       (``stdDVARS``, ``non-stdDVARS``, ``vx-wisestdDVARS``)
+    #. Framewise displacement, based on MCFLIRT motion parameters
+       (``FramewiseDisplacement``)
+    #. Temporal CompCor (``tCompCorXX``)
+    #. Anatomical CompCor (``aCompCorXX``)
+    #. Cosine basis set for high-pass filtering w/ 0.008 Hz cut-off
+       (``CosineXX``)
+    #. Non-steady-state volumes (``NonSteadyStateXX``)
+    #. Estimated head-motion parameters, in mm and rad
+       (``X``, ``Y``, ``Z``, ``RotX``, ``RotY``, ``RotZ``)
+    #. ICA-AROMA-identified noise components, if enabled
+       (``AROMAAggrCompXX``)
 
     Prior to estimating aCompCor and tCompCor, non-steady-state volumes are
     censored and high-pass filtered using a :abbr:`DCT (discrete cosine
@@ -62,7 +66,7 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
 
     **Parameters**
 
-        mem_gb : dict
+        mem_gb : float
             Size of BOLD file in GB - please note that this size
             should be calculated after resamplings that may extend
             the FoV

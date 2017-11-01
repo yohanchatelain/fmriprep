@@ -180,7 +180,7 @@ packages, including FreeSurfer and the `Connectome Workbench`_.
 
 BOLD preprocessing
 ------------------
-:mod:`fmriprep.workflows.bold.init_func_preproc_wf`
+:mod:`fmriprep.workflows.bold.base.init_func_preproc_wf`
 
 .. workflow::
     :graph2use: orig
@@ -215,7 +215,7 @@ Preprocessing of BOLD files is split into multiple sub-workflows decribed below.
 
 BOLD reference image estimation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.bold.init_bold_reference_wf`
+:mod:`fmriprep.workflows.bold.util.init_bold_reference_wf`
 
 .. workflow::
     :graph2use: orig
@@ -243,7 +243,7 @@ Skullstripping of the reference image is performed using Nilearn.
 
 Slice time correction
 ~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.bold.init_bold_stc_wf`
+:mod:`fmriprep.workflows.bold.stc.init_bold_stc_wf`
 
 .. workflow::
     :graph2use: colored
@@ -270,7 +270,7 @@ correction will be disabled.
 
 Head-motion estimation
 ~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.bold.init_bold_hmc_wf`
+:mod:`fmriprep.workflows.bold.hmc.init_bold_hmc_wf`
 
 .. workflow::
     :graph2use: colored
@@ -293,11 +293,23 @@ Susceptibility Distortion Correction (SDC)
     :show-inheritance:
 
 
+Pre-processed BOLD in native space
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:mod:`fmriprep.workflows.bold.resampling.init_bold_preproc_trans_wf`
+
+.. workflow::
+    :graph2use: colored
+    :simple_form: yes
+
+    from fmriprep.workflows.bold import init_bold_preproc_trans_wf
+    wf = init_bold_preproc_trans_wf(mem_gb=3, omp_nthreads=1)
+
+
 .. _bold_reg:
 
 EPI to T1w registration
 ~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.bold.init_bold_reg_wf`
+:mod:`fmriprep.workflows.bold.registration.init_bold_reg_wf`
 
 .. workflow::
     :graph2use: orig
@@ -326,7 +338,7 @@ boundary.
 
 EPI to MNI transformation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.bold.init_bold_mni_trans_wf`
+:mod:`fmriprep.workflows.bold.resampling.init_bold_mni_trans_wf`
 
 .. workflow::
     :graph2use: colored
@@ -351,7 +363,7 @@ step, so as little information is lost as possible.
 
 EPI sampled to FreeSurfer surfaces
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.bold.init_bold_surf_wf`
+:mod:`fmriprep.workflows.bold.resampling.init_bold_surf_wf`
 
 .. workflow::
     :graph2use: colored

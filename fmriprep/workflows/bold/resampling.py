@@ -335,8 +335,7 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
         :simple_form: yes
 
         from fmriprep.workflows.bold import init_bold_preproc_trans_wf
-        wf = init_bold_preproc_trans_wf(mem_gb=3,
-                                        omp_nthreads=1)
+        wf = init_bold_preproc_trans_wf(mem_gb=3, omp_nthreads=1)
 
     **Parameters**
 
