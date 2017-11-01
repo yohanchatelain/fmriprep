@@ -575,7 +575,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         (bold_hmc_wf, bold_bold_trans_wf, [
             ('outputnode.bold_split', 'inputnode.bold_split'),
             ('outputnode.xforms', 'inputnode.hmc_xforms')]),
-        (bold_reg_wf, bold_bold_trans_wf, [
+        (bold_reg_wf, bold_confounds_wf, [
             ('outputnode.itk_t1_to_bold', 'inputnode.t1_bold_xform')]),
         (bold_bold_trans_wf, bold_confounds_wf, [
             ('outputnode.bold', 'inputnode.bold')]),
