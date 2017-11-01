@@ -356,9 +356,9 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         (bold_hmc_wf, bold_reg_wf, [('outputnode.bold_split', 'inputnode.bold_split'),
                                     ('outputnode.xforms', 'inputnode.hmc_xforms')]),
         (bold_hmc_wf, bold_confounds_wf, [('outputnode.movpar_file', 'inputnode.movpar_file')]),
-        (bold_reg_wf, bold_confounds_wf, [
-            ('outputnode.bold_t1', 'inputnode.bold_t1'),
-            ('outputnode.bold_mask_t1', 'inputnode.bold_mask_t1')]),
+        # (bold_reg_wf, bold_confounds_wf, [
+        #     ('outputnode.bold_t1', 'inputnode.bold_t1'),
+        #     ('outputnode.bold_mask_t1', 'inputnode.bold_mask_t1')]),
         (bold_reference_wf, func_reports_wf, [
             ('outputnode.validation_report', 'inputnode.validation_report')]),
         (bold_reg_wf, func_reports_wf, [
@@ -559,7 +559,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                     ('outputnode.bold_mask', 'inputnode.bold_mask')]),
             ])
 
-
     # Apply transforms in 1 shot
     # Only use uncompressed output if AROMA is to be run
     bold_bold_trans_wf = init_bold_preproc_trans_wf(
@@ -576,11 +575,10 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         (bold_hmc_wf, bold_bold_trans_wf, [
             ('outputnode.bold_split', 'inputnode.bold_split'),
             ('outputnode.xforms', 'inputnode.hmc_xforms')]),
-        # (bold_bold_trans_wf, bold_confounds_wf, [
-        #     ('outputnode.bold_mask_mni', 'inputnode.bold_mask_mni'),
-        #     ('outputnode.bold_mni', 'inputnode.bold_mni')])
-        # (bold_bold_trans_wf, outputnode, [('outputnode.bold_mni', 'bold_mni'),
-        #                                  ('outputnode.bold_mask_mni', 'bold_mask_mni')]),
+        (bold_reg_wf, bold_bold_trans_wf, [
+            ('outputnode.itk_t1_to_bold', 'inputnode.t1_bold_xform')]),
+        (bold_bold_trans_wf, bold_confounds_wf, [
+            ('outputnode.bold', 'inputnode.bold')]),
     ])
 
     if fmaps:

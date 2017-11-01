@@ -16,6 +16,7 @@ from niworkflows.nipype.algorithms import confounds as nac
 
 from niworkflows.interfaces import segmentation as nws
 from niworkflows.interfaces.masks import ACompCorRPT, TCompCorRPT
+from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
 
 from ...interfaces import (
     TPM2ROI, ConcatROIs, CombineROIs, AddTSVHeader, GatherConfounds, ICAConfounds
@@ -74,20 +75,25 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
 
     **Inputs**
 
-        bold_t1
-            BOLD image, resampled in T1w space
+        bold
+            BOLD image, after the prescribed corrections (STC, HMC and SDC)
+            when available.
+        bold_mask
+            BOLD series mask
         movpar_file
             SPM-formatted motion parameters file
         t1_mask
             Mask of the skull-stripped template image
         t1_tpms
             List of tissue probability maps in T1w space
-        bold_mask_t1
-            BOLD series mask in T1w space
+        t1_bold_xform
+            Affine matrix that maps the T1w space into alignment with
+            the native BOLD space
         bold_mni
-            BOLD series, resampled to template space
+            BOLD image resampled in MNI space (only if ``use_aroma`` enabled)
         bold_mask_mni
-            BOLD series mask in template space
+            Brain mask corresponding to the BOLD image resampled in MNI space
+            (only if ``use_aroma`` enabled)
 
     **Outputs**
 
@@ -115,8 +121,8 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
     """
 
     inputnode = pe.Node(niu.IdentityInterface(
-        fields=['bold_t1', 'movpar_file', 't1_mask', 't1_tpms',
-                'bold_mask_t1', 'bold_mni', 'bold_mask_mni']),
+        fields=['bold', 'bold_mask', 'movpar_file', 't1_mask', 't1_tpms',
+                't1_bold_xform', 'bold_mni', 'bold_mask_mni']),
         name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['confounds_file', 'confounds_list', 'acompcor_report', 'tcompcor_report',
@@ -124,10 +130,15 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
                 'nonaggr_denoised_file']),
         name='outputnode')
 
-    # ICA-AROMA
-    if use_aroma:
-        ica_aroma_wf = init_ica_aroma_wf(name='ica_aroma_wf',
-                                         ignore_aroma_err=ignore_aroma_err)
+    # Map space-T1w objects into BOLD space
+    mask_t1w_tfm = pe.Node(
+        ApplyTransforms(interpolation='NearestNeighbor', float=True),
+        name='mask_t1w_tfm', mem_gb=0.1
+    )
+
+    tpms_t1w_tfm = pe.MapNode(ApplyTransforms(float=True),
+                              name='tpms_t1w_tfm', mem_gb=0.1,
+                              iterfield=['input_image'])
 
     # DVARS
     dvars = pe.Node(nac.ComputeDVARS(save_all=True, remove_zerovariance=True),
@@ -174,51 +185,62 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
         tcompcor.inputs.repetition_time = metadata['RepetitionTime']
         acompcor.inputs.repetition_time = metadata['RepetitionTime']
 
+    def _select(files):
+        return [files[0], files[2]]
+
     def _pick_csf(files):
         return files[0]
 
     def _pick_wm(files):
-        return files[2]
+        return files[-1]
 
     workflow = pe.Workflow(name=name)
     workflow.connect([
+        (inputnode, mask_t1w_tfm, [('t1_mask', 'input_image'),
+                                   ('bold_mask', 'reference_image'),
+                                   ('t1_bold_xform', 'transforms')]),
+        (inputnode, tpms_t1w_tfm, [(('t1_tpms', _select), 'input_image'),
+                                   ('bold_mask', 'reference_image'),
+                                   ('t1_bold_xform', 'transforms')]),
+        # Massage ROIs
+        (inputnode, csf_roi, [('bold_mask', 'bold_mask')]),
+        (inputnode, wm_roi, [('bold_mask', 'bold_mask')]),
+        (tpms_t1w_tfm, csf_roi, [(('output_image', _pick_csf), 't1_tpm')]),
+        (mask_t1w_tfm, csf_roi, [('output_image', 't1_mask')]),
+        (tpms_t1w_tfm, wm_roi, [(('output_image', _pick_wm), 't1_tpm')]),
+        (mask_t1w_tfm, wm_roi, [('output_image', 't1_mask')]),
+
         # connect inputnode to each non-anatomical confound node
-        (inputnode, dvars, [('bold_t1', 'in_file'),
-                            ('bold_mask_t1', 'in_mask')]),
+        (inputnode, dvars, [('bold', 'in_file'),
+                            ('bold_mask', 'in_mask')]),
         (inputnode, fdisp, [('movpar_file', 'in_file')]),
-        (inputnode, non_steady_state, [('bold_t1', 'in_file')]),
-        (inputnode, tcompcor, [('bold_t1', 'realigned_file')]),
 
+        # Calculate nonsteady state
+        (inputnode, non_steady_state, [('bold', 'in_file')]),
+
+        # tCompCor
+        (inputnode, tcompcor, [('bold', 'realigned_file')]),
         (non_steady_state, tcompcor, [('n_volumes_to_discard', 'ignore_initial_volumes')]),
-        (non_steady_state, acompcor, [('n_volumes_to_discard', 'ignore_initial_volumes')]),
-
-        (inputnode, csf_roi, [(('t1_tpms', _pick_csf), 't1_tpm'),
-                              ('t1_mask', 't1_mask'),
-                              ('bold_mask_t1', 'bold_mask')]),
         (csf_roi, tcompcor, [('eroded_mask', 'mask_files')]),
 
-        (inputnode, wm_roi, [(('t1_tpms', _pick_wm), 't1_tpm'),
-                             ('t1_mask', 't1_mask'),
-                             ('bold_mask_t1', 'bold_mask')]),
+        # aCompCor
+        (inputnode, acompcor, [('bold', 'realigned_file')]),
+        (non_steady_state, acompcor, [('n_volumes_to_discard', 'ignore_initial_volumes')]),
+        (inputnode, combine_rois, [('bold', 'ref_header')]),
+        (merge_rois, combine_rois, [('out', 'in_files')]),
+        (combine_rois, acompcor, [('out_file', 'mask_files')]),
 
         (csf_roi, merge_rois, [('roi_file', 'in1')]),
         (wm_roi, merge_rois, [('roi_file', 'in2')]),
-        (merge_rois, combine_rois, [('out', 'in_files')]),
-        (inputnode, combine_rois, [('bold_t1', 'ref_header')]),
 
-        # anatomical confound: aCompCor.
-        (inputnode, acompcor, [('bold_t1', 'realigned_file')]),
-        (combine_rois, acompcor, [('out_file', 'mask_files')]),
-
+        # Global signal extraction (constrained by anatomy)
+        (inputnode, signals, [('bold', 'in_file')]),
+        (inputnode, concat_rois, [('bold', 'ref_header'),
+                                  ('bold_mask', 'in_mask')]),
         (wm_roi, concat_rois, [('roi_file', 'in_file')]),
-        (inputnode, concat_rois, [('bold_mask_t1', 'in_mask')]),
-        (inputnode, concat_rois, [('bold_t1', 'ref_header')]),
-
-        # anatomical confound: signal extraction
         (concat_rois, signals, [('out_file', 'label_files')]),
-        (inputnode, signals, [('bold_t1', 'in_file')]),
 
-        # connect the confound nodes to the concatenate node
+        # Collate computed confounds together
         (inputnode, add_header, [('movpar_file', 'in_file')]),
         (signals, concat, [('out_file', 'signals')]),
         (dvars, concat, [('out_all', 'dvars')]),
@@ -228,6 +250,7 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
         (acompcor, concat, [('components_file', 'acompcor')]),
         (add_header, concat, [('out_file', 'motion')]),
 
+        # Set outputs
         (concat, outputnode, [('confounds_file', 'confounds_file'),
                               ('confounds_list', 'confounds_list')]),
         (acompcor, outputnode, [('out_report', 'acompcor_report')]),
@@ -235,6 +258,9 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
     ])
 
     if use_aroma:
+        # ICA-AROMA
+        ica_aroma_wf = init_ica_aroma_wf(name='ica_aroma_wf',
+                                         ignore_aroma_err=ignore_aroma_err)
         workflow.connect([
             (inputnode, ica_aroma_wf, [('bold_mni', 'inputnode.bold_mni'),
                                        ('bold_mask_mni', 'inputnode.bold_mask_mni'),
