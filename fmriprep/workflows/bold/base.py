@@ -204,6 +204,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
     if bold_file == '/completely/made/up/path/sub-01_task-nback_bold.nii.gz':
         mem_gb = {'filesize': 1, 'resampled': 1, 'largemem': 1}
+        bold_tlen = 10
     else:
         bold_size_gb = os.path.getsize(bold_file) / (1024**3)
         bold_tlen = nb.load(bold_file).shape[-1]
