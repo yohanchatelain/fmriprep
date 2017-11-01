@@ -38,7 +38,12 @@ from .confounds import init_bold_confs_wf
 from .hmc import init_bold_hmc_wf
 from .stc import init_bold_stc_wf
 from .registration import init_bold_reg_wf
-from .resampling import init_bold_surf_wf, init_bold_mni_trans_wf, init_bold_preproc_trans_wf
+from .resampling import (
+    init_bold_surf_wf,
+    init_bold_mni_trans_wf,
+    init_bold_preproc_trans_wf,
+    init_bold_preproc_report_wf,
+)
 from .util import init_bold_reference_wf
 
 DEFAULT_MEMORY_MIN_GB = 0.01
@@ -567,17 +572,27 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         name='bold_bold_trans_wf'
     )
 
+    bold_bold_report_wf = init_bold_preproc_report_wf(
+        mem_gb=mem_gb['resampled'],
+        reportlets_dir=reportlets_dir
+    )
+
     workflow.connect([
         (inputnode, bold_bold_trans_wf, [
             ('bold_file', 'inputnode.name_source')]),
         (bold_hmc_wf, bold_bold_trans_wf, [
-            ('outputnode.bold_split', 'inputnode.bold_split'),
+            ('outputnode.bold_split', 'inputnode.bold_split'),   # This should be after STC
             ('outputnode.xforms', 'inputnode.hmc_xforms')]),
         (bold_reg_wf, bold_confounds_wf, [
             ('outputnode.itk_t1_to_bold', 'inputnode.t1_bold_xform')]),
         (bold_bold_trans_wf, bold_confounds_wf, [
             ('outputnode.bold', 'inputnode.bold'),
             ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+        (inputnode, bold_bold_report_wf, [
+            ('bold_file', 'inputnode.name_source'),
+            ('bold_file', 'inputnode.in_pre')]),  # This should be after STC
+        (bold_bold_trans_wf, bold_bold_report_wf, [
+            ('outputnode.bold', 'inputnode.in_post')]),
     ])
 
     if fmaps:

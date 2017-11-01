@@ -427,5 +427,71 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
     return workflow
 
 
+def init_bold_preproc_report_wf(mem_gb, reportlets_dir, name='bold_preproc_report_wf'):
+    """
+    This workflow generates and saves a reportlet showing the effect of resampling
+    the BOLD signal using the standard deviation maps.
+
+    .. workflow::
+        :graph2use: orig
+        :simple_form: yes
+
+        from fmriprep.workflows.bold.resampling import init_bold_preproc_report_wf
+        wf = init_bold_preproc_report_wf(mem_gb=1, reportlets_dir='.')
+
+    **Parameters**
+
+        mem_gb : float
+            Size of BOLD file in GB
+        reportlets_dir : str
+            Directory in which to save reportlets
+        name : str, optional
+            Workflow name (default: bold_preproc_report_wf)
+
+    **Inputs**
+
+        in_pre
+            BOLD time-series, before resampling
+        in_post
+            BOLD time-series, after resampling
+        name_source
+            BOLD series NIfTI file
+            Used to recover original information lost during processing
+
+    """
+
+    from niworkflows.nipype.algorithms.confounds import TSNR
+    from niworkflows.interfaces import SimpleBeforeAfter
+    from ...interfaces import DerivativesDataSink
+
+    workflow = pe.Workflow(name=name)
+
+    inputnode = pe.Node(niu.IdentityInterface(
+        fields=['in_pre', 'in_post', 'name_source']), name='inputnode')
+
+    pre_tsnr = pe.Node(TSNR(), name='pre_tsnr', mem_gb=mem_gb * 4.5)
+    pos_tsnr = pe.Node(TSNR(), name='pos_tsnr', mem_gb=mem_gb * 4.5)
+
+    bold_rpt = pe.Node(SimpleBeforeAfter(), name='bold_rpt',
+                       mem_gb=0.1)
+    bold_rpt_ds = pe.Node(
+        DerivativesDataSink(base_directory=reportlets_dir,
+                            suffix='variant-preproc'), name='bold_rpt_ds',
+        mem_gb=DEFAULT_MEMORY_MIN_GB,
+        run_without_submitting=True
+    )
+
+    workflow.connect([
+        (inputnode, bold_rpt_ds, [('name_source', 'source_file')]),
+        (inputnode, pre_tsnr, [('in_pre', 'in_file')]),
+        (inputnode, pos_tsnr, [('in_post', 'in_file')]),
+        (pre_tsnr, bold_rpt, [('stddev_file', 'before')]),
+        (pos_tsnr, bold_rpt, [('stddev_file', 'after')]),
+        (bold_rpt, bold_rpt_ds, [('out_report', 'in_file')]),
+    ])
+
+    return workflow
+
+
 def _first(inlist):
     return inlist[0]
