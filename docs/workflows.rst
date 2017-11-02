@@ -180,7 +180,7 @@ packages, including FreeSurfer and the `Connectome Workbench`_.
 
 BOLD preprocessing
 ------------------
-:mod:`fmriprep.workflows.bold.init_func_preproc_wf`
+:mod:`fmriprep.workflows.bold.base.init_func_preproc_wf`
 
 .. workflow::
     :graph2use: orig
@@ -215,7 +215,7 @@ Preprocessing of BOLD files is split into multiple sub-workflows decribed below.
 
 BOLD reference image estimation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.bold.init_bold_reference_wf`
+:mod:`fmriprep.workflows.bold.util.init_bold_reference_wf`
 
 .. workflow::
     :graph2use: orig
@@ -243,7 +243,7 @@ Skullstripping of the reference image is performed using Nilearn.
 
 Slice time correction
 ~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.bold.init_bold_stc_wf`
+:mod:`fmriprep.workflows.bold.stc.init_bold_stc_wf`
 
 .. workflow::
     :graph2use: colored
@@ -270,14 +270,16 @@ correction will be disabled.
 
 Head-motion estimation
 ~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.bold.init_bold_hmc_wf`
+:mod:`fmriprep.workflows.bold.hmc.init_bold_hmc_wf`
 
 .. workflow::
     :graph2use: colored
     :simple_form: yes
 
     from fmriprep.workflows.bold import init_bold_hmc_wf
-    wf = init_bold_hmc_wf(bold_file_size_gb=3, omp_nthreads=1)
+    wf = init_bold_hmc_wf(
+        mem_gb=1,
+        omp_nthreads=1)
 
 FSL MCFLIRT is used to estimate motion transformations using an automatically
 estimated reference scan (see :ref:`bold_ref`).
@@ -291,22 +293,35 @@ Susceptibility Distortion Correction (SDC)
     :show-inheritance:
 
 
+Pre-processed BOLD in native space
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:mod:`fmriprep.workflows.bold.resampling.init_bold_preproc_trans_wf`
+
+.. workflow::
+    :graph2use: colored
+    :simple_form: yes
+
+    from fmriprep.workflows.bold import init_bold_preproc_trans_wf
+    wf = init_bold_preproc_trans_wf(mem_gb=3, omp_nthreads=1)
+
+
 .. _bold_reg:
 
 EPI to T1w registration
 ~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.bold.init_bold_reg_wf`
+:mod:`fmriprep.workflows.bold.registration.init_bold_reg_wf`
 
 .. workflow::
     :graph2use: orig
     :simple_form: yes
 
     from fmriprep.workflows.bold import init_bold_reg_wf
-    wf = init_bold_reg_wf(freesurfer=True,
-                          bold_file_size_gb=3,
-                          omp_nthreads=1,
-                          use_bbr=True,
-                          bold2t1w_dof=9)
+    wf = init_bold_reg_wf(
+        freesurfer=True,
+        mem_gb=1,
+        omp_nthreads=1,
+        use_bbr=True,
+        bold2t1w_dof=9)
 
 The reference EPI image of each run is aligned by the ``bbregister`` routine to the
 reconstructed subject using the gray/white matter boundary (FreeSurfer's
@@ -323,17 +338,18 @@ boundary.
 
 EPI to MNI transformation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.bold.init_bold_mni_trans_wf`
+:mod:`fmriprep.workflows.bold.resampling.init_bold_mni_trans_wf`
 
 .. workflow::
     :graph2use: colored
     :simple_form: yes
 
     from fmriprep.workflows.bold import init_bold_mni_trans_wf
-    wf = init_bold_mni_trans_wf(template='MNI152NLin2009cAsym',
-                                bold_file_size_gb=3,
-                                omp_nthreads=1,
-                                output_grid_ref=None)
+    wf = init_bold_mni_trans_wf(
+        template='MNI152NLin2009cAsym',
+        mem_gb=1,
+        omp_nthreads=1,
+        output_grid_ref=None)
 
 This sub-workflow concatenates the transforms calculated upstream (see
 `Head-motion estimation`_, `Susceptibility Distortion Correction (SDC)`_ (if
@@ -347,17 +363,18 @@ step, so as little information is lost as possible.
 
 EPI sampled to FreeSurfer surfaces
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.bold.init_bold_surf_wf`
+:mod:`fmriprep.workflows.bold.resampling.init_bold_surf_wf`
 
 .. workflow::
     :graph2use: colored
     :simple_form: yes
 
     from fmriprep.workflows.bold import init_bold_surf_wf
-    wf = init_bold_surf_wf(bold_file_size_gb=0.1,
-                           output_spaces=['T1w', 'fsnative',
-                                         'template', 'fsaverage5'],
-                           medial_surface_nan=False)
+    wf = init_bold_surf_wf(
+        mem_gb=1,
+        output_spaces=['T1w', 'fsnative',
+                       'template', 'fsaverage5'],
+        medial_surface_nan=False)
 
 If FreeSurfer processing is enabled, the motion-corrected functional series
 (after single shot resampling to T1w space) is sampled to the
@@ -380,7 +397,9 @@ Confounds estimation
     from fmriprep.workflows.bold.confounds import init_bold_confs_wf
     wf = init_bold_confs_wf(
         name="discover_wf",
-        use_aroma=False, ignore_aroma_err=False, bold_file_size_gb=3,
+        use_aroma=False,
+        ignore_aroma_err=False,
+        mem_gb=1,
         metadata={"RepetitionTime": 2.0,
                   "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]})
 
