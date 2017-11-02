@@ -155,6 +155,13 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
     tcc_tfm = pe.Node(ApplyTransforms(interpolation='NearestNeighbor', float=True),
                       name='tcc_tfm', mem_gb=0.1)
 
+    # Ensure ROIs don't go off-limits (reduced FoV)
+    csf_msk = pe.Node(niu.Function(function=_maskroi), name='csf_msk', run_without_submitting=True)
+    wm_msk = pe.Node(niu.Function(function=_maskroi), name='wm_msk', run_without_submitting=True)
+    acc_msk = pe.Node(niu.Function(function=_maskroi), name='acc_msk', run_without_submitting=True)
+    tcc_msk = pe.Node(niu.Function(function=_maskroi), name='tcc_msk', run_without_submitting=True)
+
+
     # DVARS
     dvars = pe.Node(nac.ComputeDVARS(save_all=True, remove_zerovariance=True),
                     name="dvars", mem_gb=mem_gb)
@@ -222,7 +229,11 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
         (inputnode, tcc_tfm, [('bold_mask', 'reference_image'),
                               ('t1_bold_xform', 'transforms')]),
         (csf_roi, tcc_tfm, [('eroded_mask', 'input_image')]),
-
+        # Mask ROIs with bold_mask
+        (inputnode, csf_msk, [('bold_mask', 'in_mask')]),
+        (inputnode, wm_msk, [('bold_mask', 'in_mask')]),
+        (inputnode, acc_msk, [('bold_mask', 'in_mask')]),
+        (inputnode, tcc_msk, [('bold_mask', 'in_mask')]),
         # connect inputnode to each non-anatomical confound node
         (inputnode, dvars, [('bold', 'in_file'),
                             ('bold_mask', 'in_mask')]),
@@ -234,17 +245,21 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
         # tCompCor
         (inputnode, tcompcor, [('bold', 'realigned_file')]),
         (non_steady_state, tcompcor, [('n_volumes_to_discard', 'ignore_initial_volumes')]),
-        (tcc_tfm, tcompcor, [('output_image', 'mask_files')]),
+        (tcc_tfm, tcc_msk, [('output_image', 'roi_file')]),
+        (tcc_msk, tcompcor, [('out', 'mask_files')]),
 
         # aCompCor
         (inputnode, acompcor, [('bold', 'realigned_file')]),
         (non_steady_state, acompcor, [('n_volumes_to_discard', 'ignore_initial_volumes')]),
-        (acc_tfm, acompcor, [('output_image', 'mask_files')]),
+        (acc_tfm, acc_msk, [('output_image', 'roi_file')]),
+        (acc_msk, acompcor, [('out', 'mask_files')]),
 
         # Global signals extraction (constrained by anatomy)
         (inputnode, signals, [('bold', 'in_file')]),
-        (csf_tfm, mrg_lbl, [('output_image', 'in1')]),
-        (wm_tfm, mrg_lbl, [('output_image', 'in2')]),
+        (csf_tfm, csf_msk, [('output_image', 'roi_file')]),
+        (csf_msk, mrg_lbl, [('out', 'in1')]),
+        (wm_tfm, wm_msk, [('output_image', 'roi_file')]),
+        (wm_msk, mrg_lbl, [('out', 'in2')]),
         (inputnode, mrg_lbl, [('bold_mask', 'in3')]),
         (mrg_lbl, signals, [('out', 'label_files')]),
 
@@ -402,3 +417,19 @@ def init_ica_aroma_wf(name='ica_aroma_wf', ignore_aroma_err=False):
     ])
 
     return workflow
+
+
+def _maskroi(in_mask, roi_file):
+    import numpy as np
+    import nibabel as nb
+    from niworkflows.nipype.utils.filemanip import fname_presuffix
+
+    roi = nb.load(roi_file)
+    roidata = roi.get_data().astype(np.uint8)
+    msk = nb.load(in_mask).get_data().astype(bool)
+    roidata[~msk] = 0
+    roi.set_data_dtype(np.uint8)
+
+    out = fname_presuffix(roi_file, suffix='_boldmsk')
+    roi.__class__(roidata, roi.affine, roi.header).to_filename(out)
+    return out
