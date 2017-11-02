@@ -77,7 +77,7 @@ Use `docker2singularity <https://github.com/singularityware/docker2singularity>`
 
 
 Beware of the back slashes, expected for Windows systems.
-For *nix users the command translates as follows: ::
+For \*nix users the command translates as follows: ::
 
     $ docker run --privileged -t --rm \
         -v /var/run/docker.sock:/var/run/docker.sock \

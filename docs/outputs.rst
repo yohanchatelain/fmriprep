@@ -8,7 +8,12 @@ Outputs of FMRIPREP
 
 FMRIPREP generates three broad classes of outcomes:
 
-  1. **Pre-processed imaging data** which are derivatives of the original
+  1. **Visual QA (quality assessment) reports**: 
+     one :abbr:`HTML (hypertext markup language)` per subject,
+     that allows the user a thorough visual assessment of the quality
+     of processing and ensures the transparency of fMRIPrep operation.
+
+  2. **Pre-processed imaging data** which are derivatives of the original
      anatomical and functional images after various preparation procedures
      have been applied. For example, 
      :abbr:`INU (intensity non-uniformity)`-corrected versions of the T1-weighted
@@ -16,25 +21,99 @@ FMRIPREP generates three broad classes of outcomes:
      images after head-motion correction, slice-timing correction and aligned into
      the same-subject's T1w space or into MNI space.
 
-  2. **Additional data for subsequent analysis**, for instance the transformations
+  3. **Additional data for subsequent analysis**, for instance the transformations
      between different spaces or the estimated confounds.
-
-  3. **Visual :abbr:`QA (quality assessment)` reports**: 
-     one :abbr:`HTML (hypertext markup language)` per subject,
-     that allows the user a thorough visual assessment of the quality
-     of processing.
 
 
 In general, FMRIPREP follows the current working draft of the
 :abbr:`BIDS (brain imaging data structure)`-derivatives extension.
 
 
-.. Pre-processed data
-.. ------------------
+Visual Reports
+--------------
+
+FMRIPREP outputs summary reports, written to ``<output dir>/fmriprep/sub-<subject_label>.html``.
+These reports provide a quick way to make visual inspection of the results easy.
+Each report is self contained and thus can be easily shared with collaborators (for example via email).
+`View a sample report. <_static/sample_report.html>`_
+
+
+Preprocessed data (fMRIPrep *derivatives*)
+------------------------------------------
+
+There are additional files, called "Derivatives", written to 
+``<output dir>/fmriprep/sub-<subject_label>/``. See the
+`BIDS Derivatives <https://docs.google.com/document/d/1Wwc4A6Mow4ZPPszDIWfCUCRNstn7d_zzaWPcfcHmgI4/edit?usp=sharing>`_
+spec for more information.
+
+Derivatives related to T1w files are in the ``anat`` subfolder:
+
+- ``*T1w_brainmask.nii.gz`` Brain mask derived using ANTS or AFNI, depending on the command flag ``--skull-strip-ants``
+- ``*T1w_space-MNI152NLin2009cAsym_brainmask.nii.gz`` Same as above, but in MNI space.
+- ``*T1w_dtissue.nii.gz`` Tissue class map derived using FAST.
+- ``*T1w_preproc.nii.gz`` Bias field corrected T1w file, using ANTS' N4BiasFieldCorrection
+- ``*T1w_smoothwm.[LR].surf.gii`` Smoothed GrayWhite surfaces
+- ``*T1w_pial.[LR].surf.gii`` Pial surfaces
+- ``*T1w_midthickness.[LR].surf.gii`` MidThickness surfaces
+- ``*T1w_inflated.[LR].surf.gii`` FreeSurfer inflated surfaces for visualization
+- ``*T1w_space-MNI152NLin2009cAsym_preproc.nii.gz`` Same as above, but in MNI space
+- ``*T1w_space-MNI152NLin2009cAsym_class-CSF_probtissue.nii.gz``
+- ``*T1w_space-MNI152NLin2009cAsym_class-GM_probtissue.nii.gz``
+- ``*T1w_space-MNI152NLin2009cAsym_class-WM_probtissue.nii.gz`` Probability tissue maps, transformed into MNI space
+- ``*T1w_target-MNI152NLin2009cAsym_warp.h5`` Composite (warp and affine) transform to transform T1w into MNI space
+- ``*T1w_target-fsnative_affine.txt`` Affine transform to transform T1w into ``fsnative`` space
+
+Derivatives related to EPI files are in the ``func`` subfolder.
+
+- ``*bold_confounds.tsv`` A tab-separated value file with one column per calculated confound and one row per timepoint/volume
+- ``*bold_AROMAnoiseICs.csv`` A comma-separated value file listing each MELODIC component classified as noise
+- ``*bold_MELODICmix.tsv`` A tab-separated value file with one column per MELODIC component
+
+Volumetric output spaces include ``T1w`` and ``MNI152NLin2009cAsym`` (default).
+
+- ``*bold_space-<space>_brainmask.nii.gz`` Brain mask for EPI files, calculated by nilearn on the average EPI volume, post-motion correction
+- ``*bold_space-<space>_preproc.nii.gz`` Motion-corrected (using MCFLIRT for estimation and ANTs for interpolation) EPI file
+- ``*bold_space-<space>_variant-smoothAROMAnonaggr_preproc.nii.gz`` Motion-corrected (using MCFLIRT for estimation and ANTs for interpolation),
+  smoothed (6mm), and non-aggressively denoised (using AROMA) EPI file - currently produced only for the ``MNI152NLin2009cAsym`` space
+
+Surface output spaces include ``fsnative`` (full density subject-specific mesh),
+``fsaverage`` and the down-sampled meshes ``fsaverage6`` (41k vertices) and
+``fsaverage5`` (10k vertices, default).
+
+- ``*bold_space-<space>.[LR].func.gii`` Motion-corrected EPI file sampled to surface ``<space>``
+
+
+.. _fsderivs:
+
+FreeSurfer Derivatives
+----------------------
+
+A FreeSurfer subjects directory is created in ``<output dir>/freesurfer``.
+
+::
+
+    freesurfer/
+        fsaverage{,5,6}/
+            mri/
+            surf/
+            ...
+        sub-<subject_label>/
+            mri/
+            surf/
+            ...
+        ...
+
+Copies of the ``fsaverage`` subjects distributed with the running version of
+FreeSurfer are copied into this subjects directory, if any functional data are
+sampled to those subject spaces.
+
 
 
 Confounds
 ---------
+
+See implementation on :mod:`~fmriprep.workflows.bold.confounds.init_bold_confs_wf`.
+
 
 For each :abbr:`BOLD (blood-oxygen level dependent)` run processed with FMRIPREP, a
 ``<output_folder>/fmriprep/sub-<sub_id>/func/sub-<sub_id>_task-<task_id>_run-<run_id>_confounds.tsv``
@@ -64,8 +143,9 @@ Each row of the file corresponds to one time point found in the
 corresponding :abbr:`BOLD (blood-oxygen level dependent)` time-series
 (stored in ``<output_folder>/fmriprep/sub-<sub_id>/func/sub-<sub_id>_task-<task_id>_run-<run_id>_bold_preproc.nii.gz``).
 
-Columns represent the different confounds: ``WhiteMatter`` is the average signal inside the white-matter mask across time;
-``GlobalSignal`` corresponds to the global-signal within the whole-brain masK; three columns relate to the
+Columns represent the different confounds: ``CSF`` and ``WhiteMatter`` are the average signal inside
+the :abbr:`CSF (cerebro-spinal fluid)` and :abbr:`WM (white matter)` mask across time;
+``GlobalSignal`` corresponds to the global-signal within the whole-brain mask; three columns relate to the
 derivative of RMS variance over voxels (or :abbr:`DVARS (D referring to difference, )`) that can be
 standardized (``stdDVARS``), non-standardized (``non-stdDVARS``), and voxel-wise standardized (``vx-wisestdDVARS``);
 the ``FrameDisplacement`` is a quantification of the estimated bulk-head motion; ``X``, ``Y``, ``Z``, ``RotX``,
@@ -79,6 +159,3 @@ and five noise components ``AROMAaggrCompXX`` if
 All these confounds can be used to perform *scrubbing* and *censoring* of outliers, 
 in the subsequent first-level analysis when building the design matrix,
 and in group level analysis.
-
-.. Visual reports
-.. --------------
