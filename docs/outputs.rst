@@ -48,7 +48,7 @@ spec for more information.
 
 Derivatives related to T1w files are in the ``anat`` subfolder:
 
-- ``*T1w_brainmask.nii.gz`` Brain mask derived using ANTS or AFNI, depending on the command flag ``--skull-strip-ants``
+- ``*T1w_brainmask.nii.gz`` Brain mask derived using ANTs' ``antsBrainExtraction.sh``.
 - ``*T1w_class-CSF_probtissue.nii.gz``
 - ``*T1w_class-GM_probtissue.nii.gz``
 - ``*T1w_class-WM_probtissue.nii.gz`` tissue-probability maps.
