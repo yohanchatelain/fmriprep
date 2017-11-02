@@ -19,7 +19,7 @@ from niworkflows.interfaces.masks import ACompCorRPT, TCompCorRPT
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
 
 from ...interfaces import (
-    TPM2ROI, ConcatROIs, CombineROIs, AddTSVHeader, GatherConfounds, ICAConfounds
+    TPM2ROI, AddTPMs, AddTSVHeader, GatherConfounds, ICAConfounds
 )
 
 
@@ -134,15 +134,26 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
                 'nonaggr_denoised_file']),
         name='outputnode')
 
-    # Map space-T1w objects into BOLD space
-    mask_t1w_tfm = pe.Node(
-        ApplyTransforms(interpolation='NearestNeighbor', float=True),
-        name='mask_t1w_tfm', mem_gb=0.1
-    )
+    # Get masks ready in T1w space
+    acc_tpm = pe.Node(AddTPMs(indexes=[0, 2]), name='tpms_add_csf_wm',
+                      run_without_submitting=True)  # acc stands for aCompCor
+    csf_roi = pe.Node(TPM2ROI(erode_mm=0, mask_erode_mm=30), name='csf_roi')
+    wm_roi = pe.Node(TPM2ROI(
+        erode_prop=0.6, mask_erode_prop=0.6**3),  # 0.6 = radius; 0.6^3 = volume
+        name='wm_roi')
+    acc_roi = pe.Node(TPM2ROI(
+        erode_prop=0.6, mask_erode_prop=0.6**3),  # 0.6 = radius; 0.6^3 = volume
+        name='acc_roi')
 
-    tpms_t1w_tfm = pe.MapNode(ApplyTransforms(float=True),
-                              name='tpms_t1w_tfm', mem_gb=0.1,
-                              iterfield=['input_image'])
+    # Map ROIs in T1w space into BOLD space
+    csf_tfm = pe.Node(ApplyTransforms(interpolation='NearestNeighbor', float=True),
+                      name='csf_tfm', mem_gb=0.1)
+    wm_tfm = pe.Node(ApplyTransforms(interpolation='NearestNeighbor', float=True),
+                     name='wm_tfm', mem_gb=0.1)
+    acc_tfm = pe.Node(ApplyTransforms(interpolation='NearestNeighbor', float=True),
+                      name='acc_tfm', mem_gb=0.1)
+    tcc_tfm = pe.Node(ApplyTransforms(interpolation='NearestNeighbor', float=True),
+                      name='tcc_tfm', mem_gb=0.1)
 
     # DVARS
     dvars = pe.Node(nac.ComputeDVARS(save_all=True, remove_zerovariance=True),
@@ -166,15 +177,13 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
                                    generate_report=True),
                        name="acompcor", mem_gb=mem_gb)
 
-    csf_roi = pe.Node(TPM2ROI(erode_mm=0, mask_erode_mm=30), name='csf_roi')
-    wm_roi = pe.Node(TPM2ROI(erode_prop=0.6,
-                             mask_erode_prop=0.6**3),  # 0.6 = radius; 0.6^3 = volume
-                     name='wm_roi')
-    merge_rois = pe.Node(niu.Merge(2), name='merge_rois', run_without_submitting=True, mem_gb=0.01)
-    combine_rois = pe.Node(CombineROIs(), name='combine_rois')
-    concat_rois = pe.Node(ConcatROIs(), name='concat_rois')
+    # Set TR if present
+    if 'RepetitionTime' in metadata:
+        tcompcor.inputs.repetition_time = metadata['RepetitionTime']
+        acompcor.inputs.repetition_time = metadata['RepetitionTime']
 
     # Global and segment regressors
+    mrg_lbl = pe.Node(niu.Merge(2), name='merge_rois', run_without_submitting=True)
     signals = pe.Node(SignalExtraction(detrend=True,
                                        class_labels=["WhiteMatter", "GlobalSignal"]),
                       name="signals", mem_gb=mem_gb)
@@ -184,13 +193,6 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
                          name="add_header", mem_gb=0.01, run_without_submitting=True)
     concat = pe.Node(GatherConfounds(), name="concat", mem_gb=0.01, run_without_submitting=True)
 
-    # Set TR if present
-    if 'RepetitionTime' in metadata:
-        tcompcor.inputs.repetition_time = metadata['RepetitionTime']
-        acompcor.inputs.repetition_time = metadata['RepetitionTime']
-
-    def _select(files):
-        return [files[0], files[2]]
 
     def _pick_csf(files):
         return files[0]
@@ -200,19 +202,27 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
 
     workflow = pe.Workflow(name=name)
     workflow.connect([
-        (inputnode, mask_t1w_tfm, [('t1_mask', 'input_image'),
-                                   ('bold_mask', 'reference_image'),
-                                   ('t1_bold_xform', 'transforms')]),
-        (inputnode, tpms_t1w_tfm, [(('t1_tpms', _select), 'input_image'),
-                                   ('bold_mask', 'reference_image'),
-                                   ('t1_bold_xform', 'transforms')]),
-        # Massage ROIs
-        (inputnode, csf_roi, [('bold_mask', 'bold_mask')]),
-        (inputnode, wm_roi, [('bold_mask', 'bold_mask')]),
-        (tpms_t1w_tfm, csf_roi, [(('output_image', _pick_csf), 't1_tpm')]),
-        (mask_t1w_tfm, csf_roi, [('output_image', 't1_mask')]),
-        (tpms_t1w_tfm, wm_roi, [(('output_image', _pick_wm), 't1_tpm')]),
-        (mask_t1w_tfm, wm_roi, [('output_image', 't1_mask')]),
+        # Massage ROIs (in T1w space)
+        (inputnode, acc_tpm, [('t1_tpms', 'in_files')]),
+        (inputnode, csf_roi, [(('t1_tpms', _pick_csf), 'in_tpm'),
+                              ('t1_mask', 'in_mask')]),
+        (inputnode, wm_roi, [(('t1_tpms', _pick_wm), 'in_tpm'),
+                             ('t1_mask', 'in_mask')]),
+        (inputnode, acc_roi, [('t1_mask', 'in_mask')]),
+        (acc_tpm, acc_roi, [('out_file', 'in_tpm')]),
+        # Map ROIs to BOLD
+        (inputnode, csf_tfm, [('bold_mask', 'reference_image'),
+                              ('t1_bold_xform', 'transforms')]),
+        (csf_roi, csf_tfm, [('roi_file', 'input_image')]),
+        (inputnode, wm_tfm, [('bold_mask', 'reference_image'),
+                             ('t1_bold_xform', 'transforms')]),
+        (wm_roi, wm_tfm, [('roi_file', 'input_image')]),
+        (inputnode, acc_tfm, [('bold_mask', 'reference_image'),
+                              ('t1_bold_xform', 'transforms')]),
+        (acc_roi, acc_tfm, [('roi_file', 'input_image')]),
+        (inputnode, tcc_tfm, [('bold_mask', 'reference_image'),
+                              ('t1_bold_xform', 'transforms')]),
+        (csf_roi, tcc_tfm, [('eroded_mask', 'input_image')]),
 
         # connect inputnode to each non-anatomical confound node
         (inputnode, dvars, [('bold', 'in_file'),
@@ -225,24 +235,18 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
         # tCompCor
         (inputnode, tcompcor, [('bold', 'realigned_file')]),
         (non_steady_state, tcompcor, [('n_volumes_to_discard', 'ignore_initial_volumes')]),
-        (csf_roi, tcompcor, [('eroded_mask', 'mask_files')]),
+        (tcc_tfm, tcompcor, [('output_image', 'mask_files')]),
 
         # aCompCor
         (inputnode, acompcor, [('bold', 'realigned_file')]),
         (non_steady_state, acompcor, [('n_volumes_to_discard', 'ignore_initial_volumes')]),
-        (inputnode, combine_rois, [('bold', 'ref_header')]),
-        (merge_rois, combine_rois, [('out', 'in_files')]),
-        (combine_rois, acompcor, [('out_file', 'mask_files')]),
+        (acc_tfm, acompcor, [('output_image', 'mask_files')]),
 
-        (csf_roi, merge_rois, [('roi_file', 'in1')]),
-        (wm_roi, merge_rois, [('roi_file', 'in2')]),
-
-        # Global signal extraction (constrained by anatomy)
+        # Global signals extraction (constrained by anatomy)
         (inputnode, signals, [('bold', 'in_file')]),
-        (inputnode, concat_rois, [('bold', 'ref_header'),
-                                  ('bold_mask', 'in_mask')]),
-        (wm_roi, concat_rois, [('roi_file', 'in_file')]),
-        (concat_rois, signals, [('out_file', 'label_files')]),
+        (wm_tfm, mrg_lbl, [('output_image', 'in1')]),
+        (inputnode, mrg_lbl, [('bold_mask', 'in2')]),
+        (mrg_lbl, signals, [('out', 'label_files')]),
 
         # Collate computed confounds together
         (inputnode, add_header, [('movpar_file', 'in_file')]),
