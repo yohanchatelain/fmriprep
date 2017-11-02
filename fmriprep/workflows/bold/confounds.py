@@ -193,7 +193,6 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
                          name="add_header", mem_gb=0.01, run_without_submitting=True)
     concat = pe.Node(GatherConfounds(), name="concat", mem_gb=0.01, run_without_submitting=True)
 
-
     def _pick_csf(files):
         return files[0]
 
