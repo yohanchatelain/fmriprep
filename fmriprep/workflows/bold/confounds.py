@@ -32,7 +32,7 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
 
     The following confounds are calculated, with column headings in parentheses:
 
-    #. White matter / global signals (``WhiteMatter``, ``GlobalSignal``)
+    #. Region-wise average signal (``CSF``, ``WhiteMatter``, ``GlobalSignal``)
     #. DVARS - standard, nonstandard, and voxel-wise standard variants
        (``stdDVARS``, ``non-stdDVARS``, ``vx-wisestdDVARS``)
     #. Framewise displacement, based on MCFLIRT motion parameters
@@ -183,10 +183,10 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
         acompcor.inputs.repetition_time = metadata['RepetitionTime']
 
     # Global and segment regressors
-    mrg_lbl = pe.Node(niu.Merge(2), name='merge_rois', run_without_submitting=True)
-    signals = pe.Node(SignalExtraction(detrend=True,
-                                       class_labels=["WhiteMatter", "GlobalSignal"]),
-                      name="signals", mem_gb=mem_gb)
+    mrg_lbl = pe.Node(niu.Merge(3), name='merge_rois', run_without_submitting=True)
+    signals = pe.Node(SignalExtraction(
+        detrend=True, class_labels=["CSF", "WhiteMatter", "GlobalSignal"]),
+        name="signals", mem_gb=mem_gb)
 
     # Arrange confounds
     add_header = pe.Node(AddTSVHeader(columns=["X", "Y", "Z", "RotX", "RotY", "RotZ"]),
@@ -243,8 +243,9 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
 
         # Global signals extraction (constrained by anatomy)
         (inputnode, signals, [('bold', 'in_file')]),
-        (wm_tfm, mrg_lbl, [('output_image', 'in1')]),
-        (inputnode, mrg_lbl, [('bold_mask', 'in2')]),
+        (csf_tfm, mrg_lbl, [('output_image', 'in1')]),
+        (wm_tfm, mrg_lbl, [('output_image', 'in2')]),
+        (inputnode, mrg_lbl, [('bold_mask', 'in3')]),
         (mrg_lbl, signals, [('out', 'label_files')]),
 
         # Collate computed confounds together
