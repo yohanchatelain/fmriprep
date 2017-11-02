@@ -49,38 +49,43 @@ spec for more information.
 Derivatives related to T1w files are in the ``anat`` subfolder:
 
 - ``*T1w_brainmask.nii.gz`` Brain mask derived using ANTS or AFNI, depending on the command flag ``--skull-strip-ants``
-- ``*T1w_space-MNI152NLin2009cAsym_brainmask.nii.gz`` Same as above, but in MNI space.
+- ``*T1w_class-CSF_probtissue.nii.gz``
+- ``*T1w_class-GM_probtissue.nii.gz``
+- ``*T1w_class-WM_probtissue.nii.gz`` tissue-probability maps.
 - ``*T1w_dtissue.nii.gz`` Tissue class map derived using FAST.
 - ``*T1w_preproc.nii.gz`` Bias field corrected T1w file, using ANTS' N4BiasFieldCorrection
-- ``*T1w_smoothwm.[LR].surf.gii`` Smoothed GrayWhite surfaces
-- ``*T1w_pial.[LR].surf.gii`` Pial surfaces
-- ``*T1w_midthickness.[LR].surf.gii`` MidThickness surfaces
-- ``*T1w_inflated.[LR].surf.gii`` FreeSurfer inflated surfaces for visualization
-- ``*T1w_space-MNI152NLin2009cAsym_preproc.nii.gz`` Same as above, but in MNI space
+- ``*T1w_space-MNI152NLin2009cAsym_brainmask.nii.gz`` Same as ``_brainmask`` above, but in MNI space.
 - ``*T1w_space-MNI152NLin2009cAsym_class-CSF_probtissue.nii.gz``
 - ``*T1w_space-MNI152NLin2009cAsym_class-GM_probtissue.nii.gz``
 - ``*T1w_space-MNI152NLin2009cAsym_class-WM_probtissue.nii.gz`` Probability tissue maps, transformed into MNI space
+- ``*T1w_space-MNI152NLin2009cAsym_dtissue.nii.gz`` Same as ``_dtissue`` above, but in MNI space
+- ``*T1w_space-MNI152NLin2009cAsym_preproc.nii.gz`` Same as ``_preproc`` above, but in MNI space
+- ``*T1w_space-MNI152NLin2009cAsym_target-T1w_warp.h5`` Composite (warp and affine) transform to map from MNI to T1 space
 - ``*T1w_target-MNI152NLin2009cAsym_warp.h5`` Composite (warp and affine) transform to transform T1w into MNI space
-- ``*T1w_target-fsnative_affine.txt`` Affine transform to transform T1w into ``fsnative`` space
+- (optional) ``*T1w_target-fsnative_affine.txt`` Affine transform to transform T1w into ``fsnative`` space
+- (optional) ``*T1w_smoothwm.[LR].surf.gii`` Smoothed GrayWhite surfaces
+- (optional) ``*T1w_pial.[LR].surf.gii`` Pial surfaces
+- (optional) ``*T1w_midthickness.[LR].surf.gii`` MidThickness surfaces
+- (optional) ``*T1w_inflated.[LR].surf.gii`` FreeSurfer inflated surfaces for visualization
 
 Derivatives related to EPI files are in the ``func`` subfolder.
 
 - ``*bold_confounds.tsv`` A tab-separated value file with one column per calculated confound and one row per timepoint/volume
-- ``*bold_AROMAnoiseICs.csv`` A comma-separated value file listing each MELODIC component classified as noise
-- ``*bold_MELODICmix.tsv`` A tab-separated value file with one column per MELODIC component
+- (optional) ``*bold_AROMAnoiseICs.csv`` A comma-separated value file listing each MELODIC component classified as noise
+- (optional) ``*bold_MELODICmix.tsv`` A tab-separated value file with one column per MELODIC component
 
 Volumetric output spaces include ``T1w`` and ``MNI152NLin2009cAsym`` (default).
 
 - ``*bold_space-<space>_brainmask.nii.gz`` Brain mask for EPI files, calculated by nilearn on the average EPI volume, post-motion correction
 - ``*bold_space-<space>_preproc.nii.gz`` Motion-corrected (using MCFLIRT for estimation and ANTs for interpolation) EPI file
-- ``*bold_space-<space>_variant-smoothAROMAnonaggr_preproc.nii.gz`` Motion-corrected (using MCFLIRT for estimation and ANTs for interpolation),
+- (optional) ``*bold_space-<space>_variant-smoothAROMAnonaggr_preproc.nii.gz`` Motion-corrected (using MCFLIRT for estimation and ANTs for interpolation),
   smoothed (6mm), and non-aggressively denoised (using AROMA) EPI file - currently produced only for the ``MNI152NLin2009cAsym`` space
 
 Surface output spaces include ``fsnative`` (full density subject-specific mesh),
 ``fsaverage`` and the down-sampled meshes ``fsaverage6`` (41k vertices) and
 ``fsaverage5`` (10k vertices, default).
 
-- ``*bold_space-<space>.[LR].func.gii`` Motion-corrected EPI file sampled to surface ``<space>``
+- (optional) ``*bold_space-<space>.[LR].func.gii`` Motion-corrected EPI file sampled to surface ``<space>``
 
 
 .. _fsderivs:
