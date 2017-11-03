@@ -219,7 +219,8 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
             flavor='testing' if debug else 'precise',
         ),
         name='t1_2_mni',
-        n_procs=omp_nthreads
+        n_procs=omp_nthreads,
+        mem_gb=2
     )
 
     # Resample the brain mask and the tissue probability maps into mni space
