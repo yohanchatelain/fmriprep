@@ -83,6 +83,7 @@ It is also possible to run ``fmriprep-docker`` with FreeSurfer processing: ::
     $ fmriprep-docker --fs-license-file $HOME/.licenses/freesurfer/license.txt \
         /path/to/data/dir /path/to/output/dir participant
     RUNNING: docker run --rm -it -v /path/to/data/dir:/data:ro \
+        -v /home/user/.licenses/freesurfer/license.txt:/etc/licenses/freesurfer/license.txt \
         -v /path/to_output/dir:/out poldracklab/fmriprep:1.0.0 \
         /data /out participant
     ...
@@ -94,6 +95,7 @@ would be equivalent to the latest example: ::
     $ export FS_LICENSE=$HOME/.licenses/freesurfer/license.txt
     $ fmriprep-docker /path/to/data/dir /path/to/output/dir participant
     RUNNING: docker run --rm -it -v /path/to/data/dir:/data:ro \
+        -v /home/user/.licenses/freesurfer/license.txt:/etc/licenses/freesurfer/license.txt \
         -v /path/to_output/dir:/out poldracklab/fmriprep:1.0.0 \
         /data /out participant
     ...

@@ -29,7 +29,7 @@ Command-Line Arguments
    :prog: fmriprep
    :nodefault:
    :nodefaultconst:
- 
+
 
 Debugging
 =========
