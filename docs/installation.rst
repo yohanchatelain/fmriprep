@@ -72,7 +72,7 @@ file on the host system: ::
     $ docker run -ti --rm \
         -v $HOME/fullds005:/data:ro \
         -v $HOME/dockerout:/out \
-        -v $HOME/.licenses/freesurfer:/etc/licenses/freesurfer \
+        -v $HOME/.licenses/freesurfer/license.txt:/etc/licenses/freesurfer/license.txt \
         poldracklab/fmriprep:latest \
         /data /out/out \
         participant \
@@ -80,7 +80,8 @@ file on the host system: ::
 
 It is also possible to run ``fmriprep-docker`` with FreeSurfer processing: ::
 
-    $ fmriprep-docker --fs-license $HOME/.licenses/freesurfer /path/to/data/dir /path/to/output/dir participant
+    $ fmriprep-docker --fs-license-file $HOME/.licenses/freesurfer/license.txt \
+        /path/to/data/dir /path/to/output/dir participant
     RUNNING: docker run --rm -it -v /path/to/data/dir:/data:ro \
         -v /path/to_output/dir:/out poldracklab/fmriprep:1.0.0 \
         /data /out participant
@@ -90,7 +91,7 @@ If the environment variable ``$FS_LICENSE`` is set in the host system, then
 it will automatically used by ``fmriprep-docker``. For instance, the following
 would be equivalent to the latest example: ::
 
-    $ export FS_LICENSE=$HOME/.licenses/freesurfer
+    $ export FS_LICENSE=$HOME/.licenses/freesurfer/license.txt
     $ fmriprep-docker /path/to/data/dir /path/to/output/dir participant
     RUNNING: docker run --rm -it -v /path/to/data/dir:/data:ro \
         -v /path/to_output/dir:/out poldracklab/fmriprep:1.0.0 \
