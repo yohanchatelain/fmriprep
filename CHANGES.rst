@@ -1,6 +1,29 @@
 Next release
 ============
 
+
+1.0.0-rc9 (2nd of November 2017)
+================================
+
+* [FIX] Fixed #776 (aCompCor - numpy.linalg.linalg.LinAlgError: SVD did not converge) via #807.
+* [ENH] Added `CSF` column to `_confounds.tsv` (included in #807)
+* [DOC] Add more details on the outputs of FMRIPREP and minor fixes (#811)
+* [ENH] Processing confounds in BOLD space (#807)
+* [ENH] Updated niworkflows and nipype, including the new feature to close all file descriptors (#810)
+* [REF] Refactored BOLD workflows module (#805)
+* [ENH] Improved memory annotations (#803, #807)
+
+1.0.0-rc8 (27th of October 2017)
+================================
+
+* [FIX] Allow missing magnitude2 in phasediff-type fieldmaps (#802)
+* [FIX] Lower tolerance deciding t1_merge shapes (#798)
+* [FIX] Be robust to 4D T1w images (#797)
+* [ENH] Resource annotations (#746)
+* [ENH] Use indexed_gzip with nibabel (#788)
+* [FIX] Reduce FoV of outputs in T1w space (#785)
+
+
 1.0.0-rc7 (20th of October 2017)
 ================================
 

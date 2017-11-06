@@ -445,6 +445,6 @@ def init_single_subject_wf(subject_id, task_id, name,
                'inputnode.t1_2_fsnative_forward_transform'),
               ('outputnode.t1_2_fsnative_reverse_transform',
                'inputnode.t1_2_fsnative_reverse_transform')]),
-            ])
+        ])
 
     return workflow
