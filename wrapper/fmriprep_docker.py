@@ -232,9 +232,11 @@ def get_parser():
                         type=os.path.abspath,
                         help='Grid reference image for resampling BOLD files to volume template '
                              'space.')
-    g_wrap.add_argument('--fs-license-file', metavar='PATH', type=os.path.abspath,
-                        default=os.getenv('FS_LICENSE', None),
-                        help='folder containing FreeSurfer\'s license.txt file')
+    g_wrap.add_argument(
+        '--fs-license-file', metavar='PATH', type=os.path.abspath,
+        default=os.getenv('FS_LICENSE', None),
+        help='Path to FreeSurfer license key file. Get it (for free) by registering'
+             ' at https://surfer.nmr.mgh.harvard.edu/registration.html')
 
     # Developer patch/shell options
     g_dev = parser.add_argument_group(

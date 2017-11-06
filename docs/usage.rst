@@ -29,17 +29,7 @@ Command-Line Arguments
    :prog: fmriprep
    :nodefault:
    :nodefaultconst:
-
-
-Using ``fmriprep-docker``
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. argparse::
-   :ref: fmriprep_docker.get_parser
-   :prog: fmriprep-docker
-   :nodefault:
-   :nodefaultconst:
-   
+ 
 
 Debugging
 =========
