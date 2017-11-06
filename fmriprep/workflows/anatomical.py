@@ -1002,12 +1002,12 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
                             suffix=suffix_fmt(template, 'T1w', 'warp')),
         name='ds_t1_mni_inv_warp', run_without_submitting=True)
 
-    suffix_fmt = 'target-{}_{}'.format
     ds_t1_template_transforms = pe.MapNode(
-        DerivativesDataSink(base_directory=output_dir, suffix=suffix_fmt('T1w', 'affine')),
+        DerivativesDataSink(base_directory=output_dir, suffix=suffix_fmt('orig', 'T1w', 'affine')),
         iterfield=['source_file', 'in_file'],
         name='ds_t1_template_transforms', run_without_submitting=True)
 
+    suffix_fmt = 'target-{}_{}'.format
     ds_t1_mni_warp = pe.Node(
         DerivativesDataSink(base_directory=output_dir, suffix=suffix_fmt(template, 'warp')),
         name='ds_t1_mni_warp', run_without_submitting=True)
