@@ -169,6 +169,10 @@ def get_parser():
                       help='disable FreeSurfer preprocessing')
     g_fs.add_argument('--no-submm-recon', action='store_false', dest='hires',
                       help='disable sub-millimeter (hires) reconstruction')
+    g_fs.add_argument(
+        '--fs-license-file', metavar='PATH', type=os.path.abspath,
+        help='Path to FreeSurfer license key file. Get it (for free) by registering'
+             ' at https://surfer.nmr.mgh.harvard.edu/registration.html')
 
     g_other = parser.add_argument_group('Other options')
     g_other.add_argument('-w', '--work-dir', action='store', default='work',
@@ -195,10 +199,14 @@ def main():
         logger.setLevel(logging.DEBUG)
 
     default_license = op.join(os.getenv('FREESURFER_HOME', ''), 'license.txt')
-    license_file = os.getenv('FS_LICENSE', default_license)
-    if opts.freesurfer and not os.path.exists(license_file):
-        raise RuntimeError('ERROR: when --no-freesurfer is not set, a valid '
-                           'license file is required for FreeSurfer to run.')
+    # Precedence: --fs-license-file, $FS_LICENSE, default_license
+    license_file = opts.fs_license_file or os.getenv('FS_LICENSE', default_license)
+    if opts.freesurfer:
+        if not os.path.exists(license_file):
+            raise RuntimeError('ERROR: when --no-freesurfer is not set, a valid '
+                               'license file is required for FreeSurfer to run.')
+        else:
+            os.environ['FS_LICENSE'] = license_file
 
     # Validity of some inputs - OE should be done in parse_args?
     # ERROR check if use_aroma was specified, but the correct template was not

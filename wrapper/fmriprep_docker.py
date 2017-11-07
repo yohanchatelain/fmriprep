@@ -153,7 +153,8 @@ def merge_help(wrapper_help, target_help):
 
     # Make sure we're not clobbering options we don't mean to
     overlap = set(w_flags).intersection(t_flags)
-    expected_overlap = set(['h', 'v', 'w', 'output-grid-reference'])
+    expected_overlap = set(['h', 'v', 'w', 'output-grid-reference',
+                            'fs-license-file'])
     assert overlap == expected_overlap, "Clobbering options: {}".format(
         ', '.join(overlap - expected_overlap))
 
@@ -193,7 +194,7 @@ def merge_help(wrapper_help, target_help):
     sections.append(w_groups[2])
 
     # All remaining sections, show target then wrapper (skipping duplicates)
-    sections.extend(t_groups[3:] + w_groups[5:])
+    sections.extend(t_groups[3:] + w_groups[6:])
     return '\n\n'.join(sections)
 
 
@@ -330,17 +331,8 @@ def main():
 
     if opts.fs_license_file:
         command.extend([
-            '-v', '{}:/etc/licenses/freesurfer/license.txt:ro'.format(
+            '-v', '{}:/opt/freesurfer/license.txt:ro'.format(
                 opts.fs_license_file)])
-    else:
-        # Check license if --no-freesurfer not present
-        if '--no-freesurfer' not in unknown_args:
-            print(
-                'No FreeSurfer license was provided, and it is mandatory '
-                'because "--no-freesurfer" is not set. Please try again '
-                'without freesurfer (adding --no-freesurfer) or provide '
-                'a license file.')
-            return 1
 
     main_args = []
     if opts.bids_dir:

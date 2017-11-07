@@ -66,7 +66,7 @@ If the flag ``--no-freesurfer`` is not set, then FreeSurfer will require a prope
 license file.
 It is possible to run the docker container pointing the image to a local path
 where a valid license file is stored.
-For example, if the license is stored in the ``$HOME/.licenses/freesurfer/license.txt`` 
+For example, if the license is stored in the ``$HOME/.licenses/freesurfer/license.txt``
 file on the host system: ::
 
     $ docker run -ti --rm \
