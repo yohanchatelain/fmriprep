@@ -2,7 +2,7 @@ Next release
 ============
 
 * [FIX] Adopt new FreeSurfer license mechanism (#787)
-
+* [FIX] Correct headers in AFNI-generated NIfTI files (#818)
 
 1.0.0-rc9 (2nd of November 2017)
 ================================
