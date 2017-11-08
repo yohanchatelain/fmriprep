@@ -1,6 +1,8 @@
 Next release
 ============
 
+* [FIX] Adopt new FreeSurfer license mechanism (#787)
+
 
 1.0.0-rc9 (2nd of November 2017)
 ================================

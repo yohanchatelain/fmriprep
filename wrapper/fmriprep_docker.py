@@ -5,7 +5,6 @@ from future import standard_library
 import sys
 import os
 import re
-import argparse
 import subprocess
 
 standard_library.install_aliases()
@@ -154,7 +153,8 @@ def merge_help(wrapper_help, target_help):
 
     # Make sure we're not clobbering options we don't mean to
     overlap = set(w_flags).intersection(t_flags)
-    expected_overlap = set(['h', 'v', 'w', 'output-grid-reference'])
+    expected_overlap = set(['h', 'v', 'w', 'output-grid-reference',
+                            'fs-license-file'])
     assert overlap == expected_overlap, "Clobbering options: {}".format(
         ', '.join(overlap - expected_overlap))
 
@@ -194,11 +194,13 @@ def merge_help(wrapper_help, target_help):
     sections.append(w_groups[2])
 
     # All remaining sections, show target then wrapper (skipping duplicates)
-    sections.extend(t_groups[3:] + w_groups[5:])
+    sections.extend(t_groups[3:] + w_groups[6:])
     return '\n\n'.join(sections)
 
 
-def main():
+def get_parser():
+    """Defines the command line interface of the wrapper"""
+    import argparse
     parser = argparse.ArgumentParser(
         description='fMRI Preprocessing workflow',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -231,6 +233,11 @@ def main():
                         type=os.path.abspath,
                         help='Grid reference image for resampling BOLD files to volume template '
                              'space.')
+    g_wrap.add_argument(
+        '--fs-license-file', metavar='PATH', type=os.path.abspath,
+        default=os.getenv('FS_LICENSE', None),
+        help='Path to FreeSurfer license key file. Get it (for free) by registering'
+             ' at https://surfer.nmr.mgh.harvard.edu/registration.html')
 
     # Developer patch/shell options
     g_dev = parser.add_argument_group(
@@ -250,6 +257,13 @@ def main():
     g_dev.add_argument('--config', metavar='PATH', action='store',
                        type=os.path.abspath, help='Use custom nipype.cfg file')
 
+    return parser
+
+
+def main():
+    """Entry point"""
+
+    parser = get_parser()
     # Capture additional arguments to pass inside container
     opts, unknown_args = parser.parse_known_args()
 
@@ -314,6 +328,11 @@ def main():
         pkg_path = '{}/{}'.format(PKG_PATH, pkg)  # Always POSIX path
         if repo_path is not None:
             command.extend(['-v', '{}:{}:ro'.format(repo_path, pkg_path)])
+
+    if opts.fs_license_file:
+        command.extend([
+            '-v', '{}:/opt/freesurfer/license.txt:ro'.format(
+                opts.fs_license_file)])
 
     main_args = []
     if opts.bids_dir:
