@@ -109,8 +109,8 @@ def init_bold_reference_wf(omp_nthreads, bold_file=None, name='bold_reference_wf
         (normalize_xform, enhance_and_skullstrip_bold_wf, [('out_file', 'inputnode.in_file')]),
         (validate, outputnode, [('out_file', 'bold_file'),
                                 ('out_report', 'validation_report')]),
-        (normalize_xform, outputnode, [('out_file', 'raw_ref_image'),
-                                       ('n_volumes_to_discard', 'skip_vols')]),
+        (gen_ref, outputnode, [('n_volumes_to_discard', 'skip_vols')]),
+        (normalize_xform, outputnode, [('out_file', 'raw_ref_image')]),
         (enhance_and_skullstrip_bold_wf, outputnode, [
             ('outputnode.bias_corrected_file', 'ref_image'),
             ('outputnode.mask_file', 'bold_mask'),
