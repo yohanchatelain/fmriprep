@@ -1,7 +1,7 @@
-Next release
-============
+1.0.0-rc10 (9th of November 2017)
+=================================
 
-* [FIX] Adopt new FreeSurfer license mechanism (#787)
+* [FIX] Adopt new FreeSurfer (v6.0.1) license mechanism (#787)
 * [ENH] Output affine transforms from original T1w images to preprocessed anatomical (#726)
 * [FIX] Correct headers in AFNI-generated NIfTI files (#818)
 * [FIX] Normalize T1w image qform/sform matrices (#820)
