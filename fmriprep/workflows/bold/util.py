@@ -16,7 +16,7 @@ from niworkflows.interfaces.utils import CopyXForm
 from niworkflows.interfaces.masks import SimpleShowMaskRPT
 from niworkflows.interfaces.registration import EstimateReferenceImage
 
-from ...interfaces import ValidateImage, NormalizeXform
+from ...interfaces import ValidateImage
 
 
 DEFAULT_MEMORY_MIN_GB = 0.01
@@ -29,11 +29,6 @@ def init_bold_reference_wf(omp_nthreads, bold_file=None, name='bold_reference_wf
     The raw reference image is the target of :abbr:`HMC (head motion correction)`, and a
     contrast-enhanced reference is the subject of distortion correction, as well as
     boundary-based registration to T1w and template spaces.
-
-    Note that this workflow generates images with synced qforms and sforms with no shear.
-    When applying transforms calculated using the generated reference image, the image
-    being transformed may need to have its qform and sform matrices synced by the same
-    method.
 
     .. workflow::
         :graph2use: orig
@@ -99,18 +94,16 @@ def init_bold_reference_wf(omp_nthreads, bold_file=None, name='bold_reference_wf
 
     gen_ref = pe.Node(EstimateReferenceImage(), name="gen_ref",
                       mem_gb=1)  # OE: 128x128x128x50 * 64 / 8 ~ 900MB.
-    normalize_xform = pe.Node(NormalizeXform(), name='normalize_xform', mem_gb=0.1)
     enhance_and_skullstrip_bold_wf = init_enhance_and_skullstrip_bold_wf(omp_nthreads=omp_nthreads)
 
     workflow.connect([
         (inputnode, validate, [('bold_file', 'in_file')]),
         (validate, gen_ref, [('out_file', 'in_file')]),
-        (gen_ref, normalize_xform, [('ref_image', 'in_file')]),
-        (normalize_xform, enhance_and_skullstrip_bold_wf, [('out_file', 'inputnode.in_file')]),
+        (gen_ref, enhance_and_skullstrip_bold_wf, [('ref_image', 'inputnode.in_file')]),
         (validate, outputnode, [('out_file', 'bold_file'),
                                 ('out_report', 'validation_report')]),
-        (gen_ref, outputnode, [('n_volumes_to_discard', 'skip_vols')]),
-        (normalize_xform, outputnode, [('out_file', 'raw_ref_image')]),
+        (gen_ref, outputnode, [('ref_image', 'raw_ref_image'),
+                               ('n_volumes_to_discard', 'skip_vols')]),
         (enhance_and_skullstrip_bold_wf, outputnode, [
             ('outputnode.bias_corrected_file', 'ref_image'),
             ('outputnode.mask_file', 'bold_mask'),
