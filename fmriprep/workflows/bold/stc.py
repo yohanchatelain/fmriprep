@@ -91,7 +91,7 @@ def init_bold_stc_wf(metadata, name='bold_stc_wf'):
         (create_custom_slice_timing_file, slice_timing_correction, [
             (('out', _prefix_at), 'tpattern')]),
         (slice_timing_correction, copy_xform, [('out_file', 'in_file')]),
-        (inputnode, copy_xform, [('out_file', 'hdr_file')]),
+        (inputnode, copy_xform, [('bold_file', 'hdr_file')]),
         (copy_xform, outputnode, [('out_file', 'stc_file')]),
     ])
 
