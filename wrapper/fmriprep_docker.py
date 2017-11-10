@@ -153,7 +153,7 @@ def merge_help(wrapper_help, target_help):
 
     # Make sure we're not clobbering options we don't mean to
     overlap = set(w_flags).intersection(t_flags)
-    expected_overlap = set(['h', 'v', 'w', 'output-grid-reference',
+    expected_overlap = set(['h', 'version', 'w', 'output-grid-reference',
                             'fs-license-file'])
     assert overlap == expected_overlap, "Clobbering options: {}".format(
         ', '.join(overlap - expected_overlap))
@@ -167,7 +167,7 @@ def merge_help(wrapper_help, target_help):
         w_options[:2],
         [opt for opt, flag in zip(t_options, t_flags) if flag not in overlap],
         w_options[2:]
-        ), [])
+    ), [])
     opt_line_length = 79 - len(start)
     length = 0
     opt_lines = [start]
