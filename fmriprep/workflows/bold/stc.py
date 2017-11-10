@@ -57,7 +57,7 @@ def init_bold_stc_wf(metadata, name='bold_stc_wf'):
     inputnode = pe.Node(niu.IdentityInterface(fields=['bold_file', 'skip_vols']), name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(fields=['stc_file']), name='outputnode')
 
-    LOGGER.info('Slice-timing correction will be included.')
+    LOGGER.log(25, 'Slice-timing correction will be included.')
 
     def create_custom_slice_timing_file_func(metadata):
         import os
