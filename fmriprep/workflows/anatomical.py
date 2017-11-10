@@ -202,7 +202,8 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
             flavor='testing' if debug else 'precise',
         ),
         name='t1_2_mni',
-        n_procs=omp_nthreads
+        n_procs=omp_nthreads,
+        mem_gb=2
     )
 
     # Resample the brain mask and the tissue probability maps into mni space
@@ -750,8 +751,7 @@ def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
 
     autorecon2_vol = pe.Node(
         fs.ReconAll(directive='autorecon2-volonly', openmp=omp_nthreads),
-        n_procs=omp_nthreads,
-        name='autorecon2_vol')
+        n_procs=omp_nthreads, mem_gb=5, name='autorecon2_vol')
 
     autorecon_surfs = pe.MapNode(
         fs.ReconAll(
