@@ -214,7 +214,7 @@ def get_parser():
 
     parser.add_argument('-h', '--help', action='store_true',
                         help="show this help message and exit")
-    parser.add_argument('-v', '--version', action='store_true',
+    parser.add_argument('--version', action='store_true',
                         help="show program's version number and exit")
 
     # Allow alternative images (semi-developer)
