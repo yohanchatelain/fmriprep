@@ -148,7 +148,7 @@ def merge_help(wrapper_help, target_help):
     t_flags = sum(map(flag_re.findall, t_options), [])
 
     # The following code makes this assumption
-    assert w_flags[:2] == ['h', 'v']
+    assert w_flags[:2] == ['h', 'version']
     assert w_posargs.replace(']', '').replace('[', '') == t_posargs
 
     # Make sure we're not clobbering options we don't mean to
@@ -370,7 +370,7 @@ def main():
         return 0
     elif opts.version:
         # Get version to be run and exit
-        command.append('-v')
+        command.append('--version')
         ret = subprocess.run(command)
         return ret.returncode
 
