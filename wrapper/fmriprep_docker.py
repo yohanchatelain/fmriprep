@@ -148,12 +148,12 @@ def merge_help(wrapper_help, target_help):
     t_flags = sum(map(flag_re.findall, t_options), [])
 
     # The following code makes this assumption
-    assert w_flags[:2] == ['h', 'v']
+    assert w_flags[:2] == ['h', 'version']
     assert w_posargs.replace(']', '').replace('[', '') == t_posargs
 
     # Make sure we're not clobbering options we don't mean to
     overlap = set(w_flags).intersection(t_flags)
-    expected_overlap = set(['h', 'v', 'w', 'output-grid-reference',
+    expected_overlap = set(['h', 'version', 'w', 'output-grid-reference',
                             'fs-license-file'])
     assert overlap == expected_overlap, "Clobbering options: {}".format(
         ', '.join(overlap - expected_overlap))
@@ -167,7 +167,7 @@ def merge_help(wrapper_help, target_help):
         w_options[:2],
         [opt for opt, flag in zip(t_options, t_flags) if flag not in overlap],
         w_options[2:]
-        ), [])
+    ), [])
     opt_line_length = 79 - len(start)
     length = 0
     opt_lines = [start]
@@ -214,7 +214,7 @@ def get_parser():
 
     parser.add_argument('-h', '--help', action='store_true',
                         help="show this help message and exit")
-    parser.add_argument('-v', '--version', action='store_true',
+    parser.add_argument('--version', action='store_true',
                         help="show program's version number and exit")
 
     # Allow alternative images (semi-developer)
@@ -370,7 +370,7 @@ def main():
         return 0
     elif opts.version:
         # Get version to be run and exit
-        command.append('-v')
+        command.append('--version')
         ret = subprocess.run(command)
         return ret.returncode
 

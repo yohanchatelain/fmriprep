@@ -220,9 +220,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             'largemem': (0.007 * max(bold_tlen, 100) + 1.5) * bold_size_gb,
         }
 
-    LOGGER.info('Creating bold processing workflow for "%s" '
-                '(%.2f GB / %d TRs).',
-                bold_file, mem_gb['filesize'], bold_tlen)
+    LOGGER.log(25, 'Creating bold processing workflow for "%s" (%.2f GB / %d TRs).',
+               bold_file, mem_gb['filesize'], bold_tlen)
     fname = split_filename(bold_file)[1]
     fname_nosub = '_'.join(fname.split("_")[1:])
     name = "func_preproc_" + fname_nosub.replace(
@@ -231,7 +230,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     # For doc building purposes
     if layout is None or bold_file == 'bold_preprocesing':
 
-        LOGGER.info('No valid layout: building empty workflow.')
+        LOGGER.log(25, 'No valid layout: building empty workflow.')
         metadata = {"RepetitionTime": 2.0,
                     "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]}
         fmaps = [{
@@ -413,7 +412,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         fmaps.sort(key=lambda fmap: {'epi': 0, 'fieldmap': 1, 'phasediff': 2}[fmap['type']])
         fmap = fmaps[0]
 
-        LOGGER.info('Fieldmap estimation: type "%s" found', fmap['type'])
+        LOGGER.log(25, 'Fieldmap estimation: type "%s" found', fmap['type'])
         summary.inputs.distortion_correction = fmap['type']
 
         if fmap['type'] == 'epi':
@@ -614,7 +613,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         ])
 
     if freesurfer and any(space.startswith('fs') for space in output_spaces):
-        LOGGER.info('Creating BOLD surface-sampling workflow.')
+        LOGGER.log(25, 'Creating BOLD surface-sampling workflow.')
         bold_surf_wf = init_bold_surf_wf(mem_gb=mem_gb['resampled'],
                                          output_spaces=output_spaces,
                                          medial_surface_nan=medial_surface_nan,
