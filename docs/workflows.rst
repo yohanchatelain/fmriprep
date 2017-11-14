@@ -298,7 +298,7 @@ Pre-processed BOLD in native space
 :mod:`fmriprep.workflows.bold.resampling.init_bold_preproc_trans_wf`
 
 .. workflow::
-    :graph2use: colored
+    :graph2use: orig
     :simple_form: yes
 
     from fmriprep.workflows.bold import init_bold_preproc_trans_wf
