@@ -201,7 +201,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         * :py:func:`~fmriprep.workflows.bold.resampling.init_bold_mni_trans_wf`
         * :py:func:`~fmriprep.workflows.bold.resampling.init_bold_preproc_trans_wf`
         * :py:func:`~fmriprep.workflows.bold.resampling.init_bold_surf_wf`
-        * :py:func:`~fmriprep.workflows.fieldmap.unwarp.init_pepolar_unwarp_wf`
+        * :py:func:`~fmriprep.workflows.fieldmap.pepolar.init_pepolar_unwarp_wf`
         * :py:func:`~fmriprep.workflows.fieldmap.init_fmap_estimator_wf`
         * :py:func:`~fmriprep.workflows.fieldmap.init_sdc_unwarp_wf`
         * :py:func:`~fmriprep.workflows.fieldmap.init_nonlinear_sdc_wf`

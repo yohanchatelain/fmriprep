@@ -284,13 +284,19 @@ Head-motion estimation
 FSL MCFLIRT is used to estimate motion transformations using an automatically
 estimated reference scan (see :ref:`bold_ref`).
 
+
 Susceptibility Distortion Correction (SDC)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: fmriprep.workflows.fieldmap
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. figure:: _static/unwarping.svg
+    :scale: 100%
+
+    Applying field correction warp using ANTs.
+
+One of the major problems that affects :abbr:`EPI (echo planar imaging)` data
+is the spatial distortion caused by the inhomogeneity of the field inside
+the scanner. Please check out :ref:`sdc` for details on the
+available workflows.
 
 
 Pre-processed BOLD in native space
