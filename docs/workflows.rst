@@ -209,7 +209,7 @@ BOLD preprocessing
                               use_aroma=False,
                               ignore_aroma_err=False)
 
-Preprocessing of BOLD files is split into multiple sub-workflows decribed below.
+Preprocessing of BOLD files is split into multiple sub-workflows described below.
 
 .. _bold_ref:
 
@@ -225,14 +225,14 @@ BOLD reference image estimation
     wf = init_bold_reference_wf(omp_nthreads=1)
 
 This workflow estimates a reference image for a BOLD series, which is used to
-:ref:`estimate head motion <bold_hmc>` and :ref:`register BOLD series to T1
+:ref:`estimate head motion <bold_hmc>` and :ref:`register BOLD series to T1w
 <bold_reg>`,
 and performs skull-stripping and contrast enhancement.
 If T1-saturation effects ("dummy scans" or non-steady state volumes) are
 detected they are used as reference due to their superior tissue contrast.
 Otherwise a median of motion corrected subset of volumes is used.
 
-Skullstripping of the reference image is performed using Nilearn.
+Skull-stripping of the reference image is performed using Nilearn.
 
 .. figure:: _static/brainextraction.svg
     :scale: 100%
@@ -414,7 +414,7 @@ segmentation, the `discover_wf` sub-workflow calculates potential
 confounds per volume.
 
 Calculated confounds include the mean global signal, mean tissue class signal,
-tCompCor, aCompCor, Framewise Displacement, 6 motion parameters, DVARS, and, if
+tCompCor, aCompCor, Frame-wise Displacement, 6 motion parameters, DVARS, and, if
 the ``--use-aroma`` flag is enabled, the noise components identified by ICA-AROMA
 (those to be removed by the "aggressive" denoising strategy).
 
@@ -434,7 +434,7 @@ be generated, so non-aggressive denoising can be manually performed in the T1w s
         -d sub-<subject_label>_task-<task_id>_bold_MELODICmix.tsv \
         -o sub-<subject_label>_task-<task_id>_bold_space-<space>_AromaNonAggressiveDenoised.nii.gz
 
-A visualisation of the AROMA component classification is also included in the HTML reports.
+A visualization of the AROMA component classification is also included in the HTML reports.
 
 .. figure:: _static/aroma.svg
     :scale: 100%

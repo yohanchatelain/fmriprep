@@ -6,8 +6,8 @@ Susceptibility Distortion Correction (SDC)
 Introduction
 ~~~~~~~~~~~~
 
-:abbr:`SDC (suceptibility-derived distortion correction)` methods usually try to
-make a good estimate of the field inhomoneity map. 
+:abbr:`SDC (susceptibility-derived distortion correction)` methods usually try to
+make a good estimate of the field inhomogeneity map. 
 The inhomogeneity map is directly related to the displacement of 
 a given pixel :math:`(x, y, z)` along the
 :abbr:`PE (phase-encoding)` direction (:math:`d_\text{PE}(x, y, z)`) is
@@ -24,7 +24,7 @@ as follows ([Jezzard1995]_, [Hutton2002]_):
 
 where :math:`\gamma` is the gyromagnetic ratio. Therefore, the
 displacements map :math:`d_\text{PE}(x, y, z)` can be estimated
-either via estimating the inhomoneity map :math:`\Delta B_0(x, y, z)`
+either via estimating the inhomogeneity map :math:`\Delta B_0(x, y, z)`
 (:ref:`sdc_phasediff` and :ref:`sdc_direct_b0`) or
 via image registration (:ref:`sdc_pepolar`, :ref:`sdc_fieldmapless`).
 
