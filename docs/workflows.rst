@@ -295,7 +295,7 @@ Susceptibility Distortion Correction (SDC)
 
 One of the major problems that affects :abbr:`EPI (echo planar imaging)` data
 is the spatial distortion caused by the inhomogeneity of the field inside
-the scanner. Please check out :ref:`sdc` for details on the
+the scanner. Please refer to :ref:`sdc` for details on the
 available workflows.
 
 

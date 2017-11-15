@@ -15,8 +15,12 @@ proportional to the slice readout time (:math:`T_\text{ro}`)
 and the field inhomogeneity (:math:`\Delta B_0(x, y, z)`)
 as follows ([Jezzard1995]_, [Hutton2002]_):
 
-  .. math:: d_\text{PE}(x, y, z) = \gamma \Delta B_0(x, y, z) T_\text{ro}
-      :label: fieldmap
+  .. _eq_fieldmap:
+
+  .. math::
+
+      d_\text{PE}(x, y, z) = \gamma \Delta B_0(x, y, z) T_\text{ro}
+
 
 where :math:`\gamma` is the gyromagnetic ratio. Therefore, the
 displacements map :math:`d_\text{PE}(x, y, z)` can be estimated
@@ -64,7 +68,7 @@ distortion can be accounted for (see :ref:`sdc_unwarp`).
 Calculating the effective echo-spacing and total-readout time
 .............................................................
 
-To solve :eq:`fieldmap`, all methods (with the exception of the
+To solve :ref:`the equation above <eq_fieldmap>`, all methods (with the exception of the
 fieldmap-less approach) will require information about the in-plane
 speed of the :abbr:`EPI (echo-planar imaging)` scheme used in 
 acquisition by reading either the :math:`T_\text{ro}` 
