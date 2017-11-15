@@ -6,7 +6,7 @@ Susceptibility Distortion Correction (SDC)
 Introduction
 ~~~~~~~~~~~~
 
-:abbr:`SDC (suceptibility-derived distortion correction) methods usually try to
+:abbr:`SDC (suceptibility-derived distortion correction)` methods usually try to
 make a good estimate of the field inhomoneity map. 
 The inhomogeneity map is directly related to the displacement of 
 a given pixel :math:`(x, y, z)` along the
