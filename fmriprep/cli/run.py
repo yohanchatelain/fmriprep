@@ -181,6 +181,9 @@ def get_parser():
     g_other.add_argument('-w', '--work-dir', action='store', default='work',
                          help='path where intermediate results should be stored')
     g_other.add_argument(
+        '--resource-monitor', action='store_true', default=False,
+        help='enable Nipype\'s resource monitoring to keep track of memory and CPU usage')
+    g_other.add_argument(
         '--reports-only', action='store_true', default=False,
         help='only generate reports, don\'t run workflows. This will only rerun report '
              'aggregation, not reportlet generation for specific nodes.')
@@ -306,6 +309,9 @@ def create_workflow(opts):
         'logging': {'log_directory': log_dir, 'log_to_file': True},
         'execution': {'crashdump_dir': log_dir, 'crashfile_format': 'txt'},
     })
+
+    if opts.resource_monitor:
+        ncfg.enable_resource_monitor()
 
     # Called with reports only
     if opts.reports_only:
