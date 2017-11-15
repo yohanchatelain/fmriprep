@@ -19,7 +19,7 @@ as follows ([Jezzard1995]_, [Hutton2002]_):
 
   .. math::
 
-      d_\text{PE}(x, y, z) = \gamma \Delta B_0(x, y, z) T_\text{ro}
+      d_\text{PE}(x, y, z) = \gamma \Delta B_0(x, y, z) T_\text{ro} \qquad (1) 
 
 
 where :math:`\gamma` is the gyromagnetic ratio. Therefore, the
@@ -68,7 +68,7 @@ distortion can be accounted for (see :ref:`sdc_unwarp`).
 Calculating the effective echo-spacing and total-readout time
 .............................................................
 
-To solve :ref:`the equation above <eq_fieldmap>`, all methods (with the exception of the
+To solve :ref:`(1) <eq_fieldmap>`, all methods (with the exception of the
 fieldmap-less approach) will require information about the in-plane
 speed of the :abbr:`EPI (echo-planar imaging)` scheme used in 
 acquisition by reading either the :math:`T_\text{ro}` 
