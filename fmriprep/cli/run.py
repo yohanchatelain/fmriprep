@@ -10,6 +10,7 @@ import os
 import os.path as op
 import logging
 import sys
+import gc
 import uuid
 import warnings
 from argparse import ArgumentParser
@@ -359,6 +360,8 @@ def create_workflow(opts):
     if opts.write_graph:
         fmriprep_wf.write_graph(graph2use="colored", format='svg', simple_form=True)
 
+    # Clean up master process before running workflow, which may create forks
+    gc.collect()
     try:
         fmriprep_wf.run(**plugin_settings)
     except RuntimeError as e:
