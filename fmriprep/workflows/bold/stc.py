@@ -80,7 +80,7 @@ def init_bold_stc_wf(metadata, name='bold_stc_wf'):
         afni.TShift(outputtype='NIFTI_GZ', tr='{}s'.format(metadata["RepetitionTime"])),
         name='slice_timing_correction')
 
-    copy_xform = pe.Node(CopyXForm(), name='copy_xform', mem_gb=0.1, run_without_submitting=True)
+    copy_xform = pe.Node(CopyXForm(), name='copy_xform', mem_gb=0.1)
 
     def _prefix_at(x):
         return "@" + x

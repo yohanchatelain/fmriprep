@@ -162,13 +162,11 @@ def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
     unifize = pe.Node(afni.Unifize(t2=True, outputtype='NIFTI_GZ',
                                    args='-clfrac 0.4',
                                    out_file="uni.nii.gz"), name='unifize')
-    fixhdr_unifize = pe.Node(CopyXForm(), name='fixhdr_unifize',
-                             mem_gb=0.1, run_without_submitting=True)
+    fixhdr_unifize = pe.Node(CopyXForm(), name='fixhdr_unifize', mem_gb=0.1)
     skullstrip_second_pass = pe.Node(afni.Automask(dilate=1,
                                                    outputtype='NIFTI_GZ'),
                                      name='skullstrip_second_pass')
-    fixhdr_skullstrip2 = pe.Node(CopyXForm(), name='fixhdr_skullstrip2',
-                                 mem_gb=0.1, run_without_submitting=True)
+    fixhdr_skullstrip2 = pe.Node(CopyXForm(), name='fixhdr_skullstrip2', mem_gb=0.1)
     combine_masks = pe.Node(fsl.BinaryMaths(operation='mul'),
                             name='combine_masks')
     apply_mask = pe.Node(fsl.ApplyMask(),
