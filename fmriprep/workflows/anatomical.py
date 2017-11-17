@@ -620,16 +620,14 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
                     'out_report']),
         name='outputnode')
 
-    recon_config = pe.Node(FSDetectInputs(hires_enabled=hires), name='recon_config',
-                           run_without_submitting=True)
+    recon_config = pe.Node(FSDetectInputs(hires_enabled=hires), name='recon_config')
 
     autorecon1 = pe.Node(
         fs.ReconAll(directive='autorecon1', flags='-noskullstrip', openmp=omp_nthreads),
         name='autorecon1', n_procs=omp_nthreads, mem_gb=5)
     autorecon1.interface._can_resume = False
 
-    skull_strip_extern = pe.Node(FSInjectBrainExtracted(), name='skull_strip_extern',
-                                 run_without_submitting=True)
+    skull_strip_extern = pe.Node(FSInjectBrainExtracted(), name='skull_strip_extern')
 
     fsnative_2_t1_xfm = pe.Node(fs.RobustRegister(auto_sens=True, est_int_scale=True),
                                 name='fsnative_2_t1_xfm')

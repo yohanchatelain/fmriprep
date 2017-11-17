@@ -135,8 +135,7 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
         name='outputnode')
 
     # Get masks ready in T1w space
-    acc_tpm = pe.Node(AddTPMs(indices=[0, 2]), name='tpms_add_csf_wm',
-                      run_without_submitting=True)  # acc stands for aCompCor
+    acc_tpm = pe.Node(AddTPMs(indices=[0, 2]), name='tpms_add_csf_wm')  # acc stands for aCompCor
     csf_roi = pe.Node(TPM2ROI(erode_mm=0, mask_erode_mm=30), name='csf_roi')
     wm_roi = pe.Node(TPM2ROI(
         erode_prop=0.6, mask_erode_prop=0.6**3),  # 0.6 = radius; 0.6^3 = volume

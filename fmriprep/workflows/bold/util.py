@@ -89,8 +89,7 @@ def init_bold_reference_wf(omp_nthreads, bold_file=None, name='bold_reference_wf
     if bold_file is not None:
         inputnode.inputs.bold_file = bold_file
 
-    validate = pe.Node(ValidateImage(), name='validate', mem_gb=DEFAULT_MEMORY_MIN_GB,
-                       run_without_submitting=True)
+    validate = pe.Node(ValidateImage(), name='validate', mem_gb=DEFAULT_MEMORY_MIN_GB)
 
     gen_ref = pe.Node(EstimateReferenceImage(), name="gen_ref",
                       mem_gb=1)  # OE: 128x128x128x50 * 64 / 8 ~ 900MB.
