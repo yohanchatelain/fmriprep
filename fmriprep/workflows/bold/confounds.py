@@ -156,10 +156,10 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
                       name='tcc_tfm', mem_gb=0.1)
 
     # Ensure ROIs don't go off-limits (reduced FoV)
-    csf_msk = pe.Node(niu.Function(function=_maskroi), name='csf_msk', run_without_submitting=True)
-    wm_msk = pe.Node(niu.Function(function=_maskroi), name='wm_msk', run_without_submitting=True)
-    acc_msk = pe.Node(niu.Function(function=_maskroi), name='acc_msk', run_without_submitting=True)
-    tcc_msk = pe.Node(niu.Function(function=_maskroi), name='tcc_msk', run_without_submitting=True)
+    csf_msk = pe.Node(niu.Function(function=_maskroi), name='csf_msk')
+    wm_msk = pe.Node(niu.Function(function=_maskroi), name='wm_msk')
+    acc_msk = pe.Node(niu.Function(function=_maskroi), name='acc_msk')
+    tcc_msk = pe.Node(niu.Function(function=_maskroi), name='tcc_msk')
 
     # DVARS
     dvars = pe.Node(nac.ComputeDVARS(save_all=True, remove_zerovariance=True),
