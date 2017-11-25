@@ -1,9 +1,15 @@
 Next release
 ============
 
+1.0.0-rc11 (24th of November 2017)
+----------------------------------
+
+* [ENH] Check for invalid qforms in validation (#847)
+* [FIX] Update pybids to include latest bugfixes (#838)
+* [FIX] MultiApplyTransforms failed with nthreads=1 (#835)
 
 1.0.0-rc10 (9th of November 2017)
-=================================
+---------------------------------
 
 * [FIX] Adopt new FreeSurfer (v6.0.1) license mechanism (#787)
 * [ENH] Output affine transforms from original T1w images to preprocessed anatomical (#726)
@@ -11,7 +17,7 @@ Next release
 * [FIX] Normalize T1w image qform/sform matrices (#820)
 
 1.0.0-rc9 (2nd of November 2017)
-================================
+--------------------------------
 
 * [FIX] Fixed #776 (aCompCor - numpy.linalg.linalg.LinAlgError: SVD did not converge) via #807.
 * [ENH] Added `CSF` column to `_confounds.tsv` (included in #807)
@@ -22,7 +28,7 @@ Next release
 * [ENH] Improved memory annotations (#803, #807)
 
 1.0.0-rc8 (27th of October 2017)
-================================
+--------------------------------
 
 * [FIX] Allow missing magnitude2 in phasediff-type fieldmaps (#802)
 * [FIX] Lower tolerance deciding t1_merge shapes (#798)
@@ -33,7 +39,7 @@ Next release
 
 
 1.0.0-rc7 (20th of October 2017)
-================================
+--------------------------------
 
 * [ENH] Update pinned version of nipype to latest master
 * [ENH] Added rX permissions to make life easier on Singularity users (#757)
@@ -46,7 +52,7 @@ Next release
 
 
 1.0.0-rc6 (11th of October 2017)
-================================
+--------------------------------
 
 * [ENH] Add inverse normalization transform (MNI -> T1w) to derivatives (#754)
 * [ENH] Fall back to initial registration if BBR fails (#694)
@@ -63,14 +69,14 @@ Next release
 * [DOC] Documentation updates (#748)
 
 1.0.0-rc5 (25th of September 2017)
-==================================
+----------------------------------
 
 * [FIX] Skip slice time correction on BOLD series < 5 volumes (#711)
 * [FIX] Skip AFNI check for new versions (#723)
 * [DOC] Documentation clarification and updates (#698, #711)
 
 1.0.0-rc4 (12th of September 2017)
-==================================
+----------------------------------
 
 With thanks to Mathias Goncalves for contributions.
 
@@ -80,7 +86,7 @@ With thanks to Mathias Goncalves for contributions.
 * [ENH] Replace medial wall values with NaNs (#687)
 
 1.0.0-rc3 (28th of August 2017)
-===============================
+-------------------------------
 
 With thanks to Anibal Sólon for contributions.
 
@@ -92,14 +98,14 @@ With thanks to Anibal Sólon for contributions.
 * [DOC] Add comprehensive documentation of workflow API (#638)
 
 1.0.0-rc2 (12th of August 2017)
-===============================
+-------------------------------
 
 * [ENH] Increased support for partial field-of-view BOLD datasets (#659)
 * [FIX] Slice time correction is now being applied to output data (not only to intermediate file used for motion estimation - #662)
 * [FIX] Fieldmap unwarping is now being applied to MNI space outputs (not only to T1w space outputs - #662)
 
 1.0.0-rc1 (8th of August 2017)
-==============================
+------------------------------
 
 * [ENH] Include ICA-AROMA confounds in report (#646)
 * [ENH] Save non-aggressively denoised BOLD series (#648)
