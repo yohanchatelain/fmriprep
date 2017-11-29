@@ -25,13 +25,6 @@ logging.addLevelName(25, 'IMPORTANT')  # Add a new level between INFO and WARNIN
 logging.addLevelName(15, 'VERBOSE')  # Add a new level between INFO and DEBUG
 logger = logging.getLogger('cli')
 
-INIT_MSG = """
-Running fMRIPREP version {version}:
-  * BIDS dataset path: {bids_dir}.
-  * Participant list: {subject_list}.
-  * Run identifier: {uuid}.
-""".format
-
 
 def _warn_redirect(message, category, filename, lineno, file=None, line=None):
     logger.warning('Captured warning (%s): %s', category, message)
@@ -215,6 +208,64 @@ def main():
     nlogging.getLogger('interface').setLevel(log_level)
     nlogging.getLogger('utils').setLevel(log_level)
 
+    errno = 0
+    fmriprep_wf, plugin_settings = create_workflow((opts, logger))
+
+    if opts.write_graph:
+        fmriprep_wf.write_graph(graph2use="colored", format='svg', simple_form=True)
+
+    # Clean up master process before running workflow, which may create forks
+    gc.collect()
+    try:
+        fmriprep_wf.run(**plugin_settings)
+    except RuntimeError as e:
+        if "Workflow did not execute cleanly" in str(e):
+            errno = 1
+        else:
+            raise
+
+    # Generate reports phase
+    errno += generate_reports(fmriprep_wf)
+    sys.exit(int(errno > 0))
+
+
+def generate_reports(fmriprep_wf):
+    from ..viz.reports import run_reports
+
+    # Extract values from workflow
+    output_dir = getattr(fmriprep_wf, 'output_dir')
+    work_dir = getattr(fmriprep_wf, 'work_dir')
+    subject_list = getattr(fmriprep_wf, 'subject_list')
+    run_uuid = getattr(fmriprep_wf, 'run_uuid')
+
+    report_errors = [run_reports(
+        op.join(work_dir, 'reportlets'), output_dir, subject_label,
+        run_uuid=run_uuid) for subject_label in subject_list]
+
+    errno = sum(report_errors)
+    if errno:
+        logger.warning('Errors occurred while generating reports for participants: %s.',
+                       ', '.join(['%s (%d)' % (subid, err)
+                                  for subid, err in zip(subject_list, report_errors)]))
+    return errno
+
+
+def create_workflow(args):
+    """Build workflow"""
+    from niworkflows.nipype import config as ncfg
+    from ..workflows.base import init_fmriprep_wf
+    from ..utils.bids import collect_participants
+    from ..info import __version__
+
+    INIT_MSG = """
+    Running fMRIPREP version {version}:
+      * BIDS dataset path: {bids_dir}.
+      * Participant list: {subject_list}.
+      * Run identifier: {uuid}.
+    """.format
+
+    opts, logger = args
+
     # FreeSurfer license
     default_license = op.join(os.getenv('FREESURFER_HOME', ''), 'license.txt')
     # Precedence: --fs-license-file, $FS_LICENSE, default_license
@@ -226,7 +277,7 @@ def main():
         else:
             os.environ['FS_LICENSE'] = license_file
 
-    # Validity of some inputs - OE should be done in parse_args?
+    # Validity of some inputs
     # ERROR check if use_aroma was specified, but the correct template was not
     if opts.use_aroma and (opts.template != 'MNI152NLin2009cAsym' or
                            'template' not in opts.output_space):
@@ -243,19 +294,7 @@ def main():
             raise RuntimeError(msg)
         logger.warning(msg)
 
-    create_workflow(opts)
-
-
-def create_workflow(opts):
-    """Build workflow"""
-    from niworkflows.nipype import config as ncfg
-    from ..viz.reports import run_reports
-    from ..workflows.base import init_fmriprep_wf
-    from ..utils.bids import collect_participants
-    from ..info import __version__
-
     # Set up some instrumental utilities
-    errno = 0
     run_uuid = strftime('%Y%m%d-%H%M%S_') + str(uuid.uuid4())
 
     # First check that bids_dir looks like a BIDS folder
@@ -360,31 +399,12 @@ def create_workflow(opts):
         ignore_aroma_err=opts.ignore_aroma_denoising_errors,
     )
 
-    if opts.write_graph:
-        fmriprep_wf.write_graph(graph2use="colored", format='svg', simple_form=True)
-
-    # Clean up master process before running workflow, which may create forks
-    gc.collect()
-    try:
-        fmriprep_wf.run(**plugin_settings)
-    except RuntimeError as e:
-        if "Workflow did not execute cleanly" in str(e):
-            errno = 1
-        else:
-            raise(e)
-
-    # Generate reports phase
-    report_errors = [run_reports(
-        op.join(work_dir, 'reportlets'), output_dir, subject_label, run_uuid=run_uuid)
-        for subject_label in subject_list]
-
-    if sum(report_errors):
-        logger.warning('Errors occurred while generating reports for participants: %s.',
-                       ', '.join(['%s (%d)' % (subid, err)
-                                  for subid, err in zip(subject_list, report_errors)]))
-
-    errno += sum(report_errors)
-    sys.exit(int(errno > 0))
+    # Stuff relevant fields before returning workflow
+    setattr(fmriprep_wf, 'output_dir', output_dir)
+    setattr(fmriprep_wf, 'work_dir', work_dir)
+    setattr(fmriprep_wf, 'subject_list', subject_list)
+    setattr(fmriprep_wf, 'run_uuid', run_uuid)
+    return fmriprep_wf, plugin_settings
 
 
 if __name__ == '__main__':
