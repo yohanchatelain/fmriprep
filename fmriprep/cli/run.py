@@ -192,6 +192,7 @@ def main():
     """Entry point"""
     from niworkflows.nipype import logging as nlogging
     from multiprocessing import set_start_method, Process, Manager
+    from ..vis.reports import generate_reports
     set_start_method('forkserver')
 
     warnings.showwarning = _warn_redirect
@@ -210,10 +211,10 @@ def main():
 
     errno = 0
 
-    # fmriprep_wf, plugin_settings = create_workflow((opts, logger))
+    # Call build_workflow(opts, retval)
     with Manager() as mgr:
         retval = mgr.dict()
-        p = Process(target=create_workflow, args=(opts, retval))
+        p = Process(target=build_workflow, args=(opts, retval))
         p.start()
         p.join()
 
@@ -242,28 +243,23 @@ def main():
     sys.exit(int(errno > 0))
 
 
-def generate_reports(subject_list, output_dir, work_dir, run_uuid):
-    from ..viz.reports import run_reports
+def build_workflow(opts, retval):
+    """
+    Create the Nipype Workflow that supports the whole execution
+    graph, given the inputs.
 
-    report_errors = [run_reports(
-        op.join(work_dir, 'reportlets'), output_dir, subject_label,
-        run_uuid=run_uuid) for subject_label in subject_list]
+    All the checks and the construction of the workflow are done
+    inside this function that has pickleable inputs and output
+    dictionary (``retval``) to allow isolation using a
+    ``multiprocessing.Process`` that allows fmriprep to enforce
+    a hard-limited memory-scope.
 
-    errno = sum(report_errors)
-    if errno:
-        logger.warning('Errors occurred while generating reports for participants: %s.',
-                       ', '.join(['%s (%d)' % (subid, err)
-                                  for subid, err in zip(subject_list, report_errors)]))
-    return errno
-
-
-def create_workflow(opts, retval):
-    """Build workflow"""
+    """
     from niworkflows.nipype import config as ncfg
     from ..info import __version__
     from ..workflows.base import init_fmriprep_wf
     from ..utils.bids import collect_participants
-    from ..viz.reports import run_reports
+    from ..viz.reports import generate_reports
 
     INIT_MSG = """
     Running fMRIPREP version {version}:
@@ -361,11 +357,9 @@ def create_workflow(opts, retval):
         logger.log(25, 'Running --reports-only on participants %s', ', '.join(subject_list))
         if opts.run_uuid is not None:
             run_uuid = opts.run_uuid
-        report_errors = [
-            run_reports(op.join(work_dir, 'reportlets'), output_dir, subject_label,
-                        run_uuid=run_uuid)
-            for subject_label in subject_list]
-        sys.exit(int(sum(report_errors) > 0))
+
+        reports_code = generate_reports(subject_list, output_dir, work_dir, run_uuid)
+        sys.exit(int(reports_code > 0))
 
     # Build main workflow
     logger.log(25, INIT_MSG(
