@@ -198,6 +198,8 @@ def get_parser():
 def main():
     """Entry point"""
     from niworkflows.nipype import logging as nlogging
+    from multiprocessing import set_start_method
+    set_start_method('forkserver')
 
     warnings.showwarning = _warn_redirect
     opts = get_parser().parse_args()
