@@ -101,6 +101,12 @@ def get_parser():
     g_conf.add_argument(
         '--longitudinal', action='store_true',
         help='treat dataset as longitudinal - may increase runtime')
+    g_conf.add_argument(
+        '--t2s_coreg', action='store_true',
+        help='If provided with multi-echo BOLD dataset, create T2*-map and perform '
+             'T2*-driven coregistration. When multi-echo data is provided and this '
+             'option is not enabled, standard EPI-T1 coregistration is performed '
+             'using the middle echo.')
     g_conf.add_argument('--bold2t1w-dof', action='store', default=9, choices=[6, 9, 12], type=int,
                         help='Degrees of freedom when registering BOLD to T1w images. '
                              '9 (rotation, translation, and scaling) is used by '
@@ -400,6 +406,7 @@ def build_workflow(opts, retval):
         low_mem=opts.low_mem,
         anat_only=opts.anat_only,
         longitudinal=opts.longitudinal,
+        t2s_coreg=opts.t2s_coreg,
         omp_nthreads=omp_nthreads,
         skull_strip_template=opts.skull_strip_template,
         work_dir=work_dir,

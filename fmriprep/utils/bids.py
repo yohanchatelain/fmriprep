@@ -166,5 +166,12 @@ def collect_data(dataset, participant_label, task=None):
     if task:
         queries['bold']['task'] = task
 
-    return {modality: [x.filename for x in layout.get(**query)]
-            for modality, query in queries.items()}, layout
+    subject_data = {modality: [x.filename for x in layout.get(**query)]
+                    for modality, query in queries.items()}
+
+    subject_data['echos'] = layout.get(subject=participant_label,
+                                       modality='func', type='bold',
+                                       extensions=['nii', 'nii.gz'],
+                                       return_type='id', target='echo')
+
+    return subject_data, layout

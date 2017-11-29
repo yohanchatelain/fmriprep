@@ -51,7 +51,7 @@ LOGGER = logging.getLogger('workflow')
 
 
 def init_func_preproc_wf(bold_file, ignore, freesurfer,
-                         use_bbr, bold2t1w_dof, reportlets_dir,
+                         use_bbr, t2s_coreg, bold2t1w_dof, reportlets_dir,
                          output_spaces, template, output_dir, omp_nthreads,
                          fmap_bspline, fmap_demean, use_syn, force_syn,
                          use_aroma, ignore_aroma_err, medial_surface_nan,
@@ -75,6 +75,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                                  'template', 'fsaverage5'],
                                   debug=False,
                                   use_bbr=True,
+                                  t2s_coreg=False,
                                   bold2t1w_dof=9,
                                   fmap_bspline=True,
                                   fmap_demean=True,
@@ -98,6 +99,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         use_bbr : bool or None
             Enable/disable boundary-based registration refinement.
             If ``None``, test BBR result for distortion before accepting.
+        t2s_coreg : bool
+            Use multiple BOLDS echos to create T2*-map for T2*-driven coregistration
         bold2t1w_dof : 6, 9 or 12
             Degrees-of-freedom for BOLD-T1w registration
         reportlets_dir : str
@@ -196,6 +199,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         * :py:func:`~fmriprep.workflows.bold.util.init_bold_reference_wf`
         * :py:func:`~fmriprep.workflows.bold.stc.init_bold_stc_wf`
         * :py:func:`~fmriprep.workflows.bold.hmc.init_bold_hmc_wf`
+        * :py:func:`~fmriprep.workflows.bold.t2s_map.init_bold_t2s_map_wf`
         * :py:func:`~fmriprep.workflows.bold.registration.init_bold_reg_wf`
         * :py:func:`~fmriprep.workflows.bold.confounds.init_bold_confounds_wf`
         * :py:func:`~fmriprep.workflows.bold.resampling.init_bold_mni_trans_wf`
