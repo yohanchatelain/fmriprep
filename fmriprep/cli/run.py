@@ -413,7 +413,6 @@ def create_workflow(opts, retval):
     retval['run_uuid'] = run_uuid
 
 
-
 if __name__ == '__main__':
     raise RuntimeError("fmriprep/cli/run.py should not be run directly;\n"
                        "Please `pip install` fmriprep and use the `fmriprep` command")
