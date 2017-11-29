@@ -297,35 +297,35 @@ def build_workflow(opts, retval):
         logger.warning(msg)
 
     # Set up some instrumental utilities
-    run_uuid = strftime('%Y%m%d-%H%M%S_') + str(uuid.uuid4())
+    run_uuid = '%s_%s' % (strftime('%Y%m%d-%H%M%S'), uuid.uuid4())
 
     # First check that bids_dir looks like a BIDS folder
     bids_dir = op.abspath(opts.bids_dir)
     subject_list = collect_participants(
         bids_dir, participant_label=opts.participant_label)
 
-    # Nipype plugin configuration
-    plugin_settings = {'plugin': 'Linear'}
+    # Setting up MultiProc
     nthreads = opts.nthreads
+    if nthreads < 1:
+        nthreads = cpu_count()
+
+    plugin_settings = {
+        'plugin': 'MultiProc',
+        'plugin_args': {
+            'n_procs': nthreads,
+            'raise_insufficient': False,
+            'maxtasksperchild': 1,
+        }
+    }
+
+    if opts.mem_mb:
+        plugin_settings['plugin_args']['memory_gb'] = opts.mem_mb / 1024
+
+    # Overload plugin_settings if --use-plugin
     if opts.use_plugin is not None:
         from yaml import load as loadyml
         with open(opts.use_plugin) as f:
             plugin_settings = loadyml(f)
-    else:
-        # Setup multiprocessing
-        nthreads = opts.nthreads
-        if nthreads == 0:
-            nthreads = cpu_count()
-
-        if nthreads > 1:
-            plugin_settings['plugin'] = 'MultiProc'
-            plugin_settings['plugin_args'] = {
-                'n_procs': nthreads,
-                'raise_insufficient': False,
-                'maxtasksperchild': 1,
-            }
-            if opts.mem_mb:
-                plugin_settings['plugin_args']['memory_gb'] = opts.mem_mb / 1024
 
     omp_nthreads = opts.omp_nthreads
     if omp_nthreads == 0:
