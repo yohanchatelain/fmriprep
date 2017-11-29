@@ -1,6 +1,16 @@
 Next release
 ============
 
+1.0.0-rc12 (29th of November 2017)
+----------------------------------
+
+* [ENH] Use Nipype MultiProc even for sequential execution (#856)
+* [REF] More memory annotations and considerations (#816)
+* [FIX] Controlling memory explosion (#854)
+* [WRAPPER] Mount nipype repositories as niworkflows submodule (#834)
+* [FIX] Reduce image loads in local memory (#839)
+* [ENH] Always sync qforms, refactor error messaging (#851)
+
 1.0.0-rc11 (24th of November 2017)
 ----------------------------------
 
