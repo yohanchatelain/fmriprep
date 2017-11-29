@@ -281,6 +281,7 @@ def create_workflow(opts):
             plugin_settings['plugin_args'] = {
                 'n_procs': nthreads,
                 'raise_insufficient': False,
+                'maxtasksperchild': 1,
             }
             if opts.mem_mb:
                 plugin_settings['plugin_args']['memory_gb'] = opts.mem_mb / 1024
@@ -290,9 +291,9 @@ def create_workflow(opts):
         omp_nthreads = min(nthreads - 1 if nthreads > 1 else cpu_count(), 8)
 
     if 1 < nthreads < omp_nthreads:
-        raise RuntimeError(
-            'Per-process threads (--omp-nthreads={:d}) cannot exceed total '
-            'threads (--nthreads/--n_cpus={:d})'.format(omp_nthreads, nthreads))
+        logger.warning(
+            'Per-process threads (--omp-nthreads=%d) exceed total '
+            'threads (--nthreads/--n_cpus=%d)', omp_nthreads, nthreads)
 
     # Set up directories
     output_dir = op.abspath(opts.output_dir)
