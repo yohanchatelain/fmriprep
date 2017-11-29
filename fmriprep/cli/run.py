@@ -253,9 +253,10 @@ def generate_reports(fmriprep_wf):
 def create_workflow(args):
     """Build workflow"""
     from niworkflows.nipype import config as ncfg
+    from ..info import __version__
     from ..workflows.base import init_fmriprep_wf
     from ..utils.bids import collect_participants
-    from ..info import __version__
+    from ..viz.reports import run_reports
 
     INIT_MSG = """
     Running fMRIPREP version {version}:
