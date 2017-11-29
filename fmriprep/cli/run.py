@@ -192,7 +192,7 @@ def main():
     """Entry point"""
     from niworkflows.nipype import logging as nlogging
     from multiprocessing import set_start_method, Process, Manager
-    from ..vis.reports import generate_reports
+    from ..viz.reports import generate_reports
     set_start_method('forkserver')
 
     warnings.showwarning = _warn_redirect
