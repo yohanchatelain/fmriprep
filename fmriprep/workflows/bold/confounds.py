@@ -135,8 +135,7 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
         name='outputnode')
 
     # Get masks ready in T1w space
-    acc_tpm = pe.Node(AddTPMs(indices=[0, 2]), name='tpms_add_csf_wm',
-                      run_without_submitting=True)  # acc stands for aCompCor
+    acc_tpm = pe.Node(AddTPMs(indices=[0, 2]), name='tpms_add_csf_wm')  # acc stands for aCompCor
     csf_roi = pe.Node(TPM2ROI(erode_mm=0, mask_erode_mm=30), name='csf_roi')
     wm_roi = pe.Node(TPM2ROI(
         erode_prop=0.6, mask_erode_prop=0.6**3),  # 0.6 = radius; 0.6^3 = volume
@@ -156,10 +155,10 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
                       name='tcc_tfm', mem_gb=0.1)
 
     # Ensure ROIs don't go off-limits (reduced FoV)
-    csf_msk = pe.Node(niu.Function(function=_maskroi), name='csf_msk', run_without_submitting=True)
-    wm_msk = pe.Node(niu.Function(function=_maskroi), name='wm_msk', run_without_submitting=True)
-    acc_msk = pe.Node(niu.Function(function=_maskroi), name='acc_msk', run_without_submitting=True)
-    tcc_msk = pe.Node(niu.Function(function=_maskroi), name='tcc_msk', run_without_submitting=True)
+    csf_msk = pe.Node(niu.Function(function=_maskroi), name='csf_msk')
+    wm_msk = pe.Node(niu.Function(function=_maskroi), name='wm_msk')
+    acc_msk = pe.Node(niu.Function(function=_maskroi), name='acc_msk')
+    tcc_msk = pe.Node(niu.Function(function=_maskroi), name='tcc_msk')
 
     # DVARS
     dvars = pe.Node(nac.ComputeDVARS(save_all=True, remove_zerovariance=True),
