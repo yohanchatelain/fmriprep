@@ -191,7 +191,7 @@ def get_parser():
 def main():
     """Entry point"""
     from niworkflows.nipype import logging as nlogging
-    from multiprocessing import set_start_method
+    from multiprocessing import set_start_method, Process, Manager
     set_start_method('forkserver')
 
     warnings.showwarning = _warn_redirect
@@ -209,7 +209,20 @@ def main():
     nlogging.getLogger('utils').setLevel(log_level)
 
     errno = 0
-    fmriprep_wf, plugin_settings = create_workflow((opts, logger))
+
+    # fmriprep_wf, plugin_settings = create_workflow((opts, logger))
+    with Manager() as mgr:
+        retval = mgr.dict()
+        p = Process(target=create_workflow, args=(opts, retval))
+        p.start()
+        p.join()
+
+        fmriprep_wf = retval['workflow']
+        plugin_settings = retval['plugin_settings']
+        output_dir = retval['output_dir']
+        work_dir = retval['work_dir']
+        subject_list = retval['subject_list']
+        run_uuid = retval['run_uuid']
 
     if opts.write_graph:
         fmriprep_wf.write_graph(graph2use="colored", format='svg', simple_form=True)
@@ -225,18 +238,12 @@ def main():
             raise
 
     # Generate reports phase
-    errno += generate_reports(fmriprep_wf)
+    errno += generate_reports(subject_list, output_dir, work_dir, run_uuid)
     sys.exit(int(errno > 0))
 
 
-def generate_reports(fmriprep_wf):
+def generate_reports(subject_list, output_dir, work_dir, run_uuid):
     from ..viz.reports import run_reports
-
-    # Extract values from workflow
-    output_dir = getattr(fmriprep_wf, 'output_dir')
-    work_dir = getattr(fmriprep_wf, 'work_dir')
-    subject_list = getattr(fmriprep_wf, 'subject_list')
-    run_uuid = getattr(fmriprep_wf, 'run_uuid')
 
     report_errors = [run_reports(
         op.join(work_dir, 'reportlets'), output_dir, subject_label,
@@ -250,7 +257,7 @@ def generate_reports(fmriprep_wf):
     return errno
 
 
-def create_workflow(args):
+def create_workflow(opts, retval):
     """Build workflow"""
     from niworkflows.nipype import config as ncfg
     from ..info import __version__
@@ -264,8 +271,6 @@ def create_workflow(args):
       * Participant list: {subject_list}.
       * Run identifier: {uuid}.
     """.format
-
-    opts, logger = args
 
     # FreeSurfer license
     default_license = op.join(os.getenv('FREESURFER_HOME', ''), 'license.txt')
@@ -400,12 +405,13 @@ def create_workflow(args):
         ignore_aroma_err=opts.ignore_aroma_denoising_errors,
     )
 
-    # Stuff relevant fields before returning workflow
-    setattr(fmriprep_wf, 'output_dir', output_dir)
-    setattr(fmriprep_wf, 'work_dir', work_dir)
-    setattr(fmriprep_wf, 'subject_list', subject_list)
-    setattr(fmriprep_wf, 'run_uuid', run_uuid)
-    return fmriprep_wf, plugin_settings
+    retval['workflow'] = fmriprep_wf
+    retval['plugin_settings'] = plugin_settings
+    retval['output_dir'] = output_dir
+    retval['work_dir'] = work_dir
+    retval['subject_list'] = subject_list
+    retval['run_uuid'] = run_uuid
+
 
 
 if __name__ == '__main__':
