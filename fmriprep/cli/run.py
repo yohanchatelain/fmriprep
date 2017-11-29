@@ -25,13 +25,6 @@ logging.addLevelName(25, 'IMPORTANT')  # Add a new level between INFO and WARNIN
 logging.addLevelName(15, 'VERBOSE')  # Add a new level between INFO and DEBUG
 logger = logging.getLogger('cli')
 
-INIT_MSG = """
-Running fMRIPREP version {version}:
-  * BIDS dataset path: {bids_dir}.
-  * Participant list: {subject_list}.
-  * Run identifier: {uuid}.
-""".format
-
 
 def _warn_redirect(message, category, filename, lineno, file=None, line=None):
     logger.warning('Captured warning (%s): %s', category, message)
@@ -198,6 +191,9 @@ def get_parser():
 def main():
     """Entry point"""
     from niworkflows.nipype import logging as nlogging
+    from multiprocessing import set_start_method, Process, Manager
+    from ..viz.reports import generate_reports
+    set_start_method('forkserver')
 
     warnings.showwarning = _warn_redirect
     opts = get_parser().parse_args()
@@ -213,6 +209,65 @@ def main():
     nlogging.getLogger('interface').setLevel(log_level)
     nlogging.getLogger('utils').setLevel(log_level)
 
+    errno = 0
+
+    # Call build_workflow(opts, retval)
+    with Manager() as mgr:
+        retval = mgr.dict()
+        p = Process(target=build_workflow, args=(opts, retval))
+        p.start()
+        p.join()
+
+        fmriprep_wf = retval['workflow']
+        plugin_settings = retval['plugin_settings']
+        output_dir = retval['output_dir']
+        work_dir = retval['work_dir']
+        subject_list = retval['subject_list']
+        run_uuid = retval['run_uuid']
+
+    if opts.write_graph:
+        fmriprep_wf.write_graph(graph2use="colored", format='svg', simple_form=True)
+
+    # Clean up master process before running workflow, which may create forks
+    gc.collect()
+    try:
+        fmriprep_wf.run(**plugin_settings)
+    except RuntimeError as e:
+        if "Workflow did not execute cleanly" in str(e):
+            errno = 1
+        else:
+            raise
+
+    # Generate reports phase
+    errno += generate_reports(subject_list, output_dir, work_dir, run_uuid)
+    sys.exit(int(errno > 0))
+
+
+def build_workflow(opts, retval):
+    """
+    Create the Nipype Workflow that supports the whole execution
+    graph, given the inputs.
+
+    All the checks and the construction of the workflow are done
+    inside this function that has pickleable inputs and output
+    dictionary (``retval``) to allow isolation using a
+    ``multiprocessing.Process`` that allows fmriprep to enforce
+    a hard-limited memory-scope.
+
+    """
+    from niworkflows.nipype import config as ncfg
+    from ..info import __version__
+    from ..workflows.base import init_fmriprep_wf
+    from ..utils.bids import collect_participants
+    from ..viz.reports import generate_reports
+
+    INIT_MSG = """
+    Running fMRIPREP version {version}:
+      * BIDS dataset path: {bids_dir}.
+      * Participant list: {subject_list}.
+      * Run identifier: {uuid}.
+    """.format
+
     # FreeSurfer license
     default_license = op.join(os.getenv('FREESURFER_HOME', ''), 'license.txt')
     # Precedence: --fs-license-file, $FS_LICENSE, default_license
@@ -224,7 +279,7 @@ def main():
         else:
             os.environ['FS_LICENSE'] = license_file
 
-    # Validity of some inputs - OE should be done in parse_args?
+    # Validity of some inputs
     # ERROR check if use_aroma was specified, but the correct template was not
     if opts.use_aroma and (opts.template != 'MNI152NLin2009cAsym' or
                            'template' not in opts.output_space):
@@ -241,19 +296,7 @@ def main():
             raise RuntimeError(msg)
         logger.warning(msg)
 
-    create_workflow(opts)
-
-
-def create_workflow(opts):
-    """Build workflow"""
-    from niworkflows.nipype import config as ncfg
-    from ..viz.reports import run_reports
-    from ..workflows.base import init_fmriprep_wf
-    from ..utils.bids import collect_participants
-    from ..info import __version__
-
     # Set up some instrumental utilities
-    errno = 0
     run_uuid = strftime('%Y%m%d-%H%M%S_') + str(uuid.uuid4())
 
     # First check that bids_dir looks like a BIDS folder
@@ -279,6 +322,7 @@ def create_workflow(opts):
             plugin_settings['plugin_args'] = {
                 'n_procs': nthreads,
                 'raise_insufficient': False,
+                'maxtasksperchild': 1,
             }
             if opts.mem_mb:
                 plugin_settings['plugin_args']['memory_gb'] = opts.mem_mb / 1024
@@ -288,9 +332,9 @@ def create_workflow(opts):
         omp_nthreads = min(nthreads - 1 if nthreads > 1 else cpu_count(), 8)
 
     if 1 < nthreads < omp_nthreads:
-        raise RuntimeError(
-            'Per-process threads (--omp-nthreads={:d}) cannot exceed total '
-            'threads (--nthreads/--n_cpus={:d})'.format(omp_nthreads, nthreads))
+        logger.warning(
+            'Per-process threads (--omp-nthreads=%d) exceed total '
+            'threads (--nthreads/--n_cpus=%d)', omp_nthreads, nthreads)
 
     # Set up directories
     output_dir = op.abspath(opts.output_dir)
@@ -304,8 +348,15 @@ def create_workflow(opts):
 
     # Nipype config (logs and execution)
     ncfg.update_config({
-        'logging': {'log_directory': log_dir, 'log_to_file': True},
-        'execution': {'crashdump_dir': log_dir, 'crashfile_format': 'txt'},
+        'logging': {
+            'log_directory': log_dir,
+            'log_to_file': True
+        },
+        'execution': {
+            'crashdump_dir': log_dir,
+            'crashfile_format': 'txt',
+            'get_linked_libs': False,
+        },
     })
 
     # Called with reports only
@@ -313,11 +364,9 @@ def create_workflow(opts):
         logger.log(25, 'Running --reports-only on participants %s', ', '.join(subject_list))
         if opts.run_uuid is not None:
             run_uuid = opts.run_uuid
-        report_errors = [
-            run_reports(op.join(work_dir, 'reportlets'), output_dir, subject_label,
-                        run_uuid=run_uuid)
-            for subject_label in subject_list]
-        sys.exit(int(sum(report_errors) > 0))
+
+        reports_code = generate_reports(subject_list, output_dir, work_dir, run_uuid)
+        sys.exit(int(reports_code > 0))
 
     # Build main workflow
     logger.log(25, INIT_MSG(
@@ -357,31 +406,12 @@ def create_workflow(opts):
         ignore_aroma_err=opts.ignore_aroma_denoising_errors,
     )
 
-    if opts.write_graph:
-        fmriprep_wf.write_graph(graph2use="colored", format='svg', simple_form=True)
-
-    # Clean up master process before running workflow, which may create forks
-    gc.collect()
-    try:
-        fmriprep_wf.run(**plugin_settings)
-    except RuntimeError as e:
-        if "Workflow did not execute cleanly" in str(e):
-            errno = 1
-        else:
-            raise(e)
-
-    # Generate reports phase
-    report_errors = [run_reports(
-        op.join(work_dir, 'reportlets'), output_dir, subject_label, run_uuid=run_uuid)
-        for subject_label in subject_list]
-
-    if sum(report_errors):
-        logger.warning('Errors occurred while generating reports for participants: %s.',
-                       ', '.join(['%s (%d)' % (subid, err)
-                                  for subid, err in zip(subject_list, report_errors)]))
-
-    errno += sum(report_errors)
-    sys.exit(int(errno > 0))
+    retval['workflow'] = fmriprep_wf
+    retval['plugin_settings'] = plugin_settings
+    retval['output_dir'] = output_dir
+    retval['work_dir'] = work_dir
+    retval['subject_list'] = subject_list
+    retval['run_uuid'] = run_uuid
 
 
 if __name__ == '__main__':
