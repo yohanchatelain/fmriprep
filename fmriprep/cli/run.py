@@ -348,8 +348,15 @@ def build_workflow(opts, retval):
 
     # Nipype config (logs and execution)
     ncfg.update_config({
-        'logging': {'log_directory': log_dir, 'log_to_file': True},
-        'execution': {'crashdump_dir': log_dir, 'crashfile_format': 'txt'},
+        'logging': {
+            'log_directory': log_dir,
+            'log_to_file': True
+        },
+        'execution': {
+            'crashdump_dir': log_dir,
+            'crashfile_format': 'txt',
+            'get_linked_libs': False,
+        },
     })
 
     # Called with reports only
