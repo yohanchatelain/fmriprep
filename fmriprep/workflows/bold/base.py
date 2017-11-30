@@ -37,6 +37,7 @@ from ..fieldmap import (
 from .confounds import init_bold_confs_wf
 from .hmc import init_bold_hmc_wf
 from .stc import init_bold_stc_wf
+from .t2s_map import init_bold_t2s_map_wf
 from .registration import init_bold_reg_wf
 from .resampling import (
     init_bold_surf_wf,
