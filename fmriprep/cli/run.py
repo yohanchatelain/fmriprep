@@ -172,7 +172,7 @@ def get_parser():
              ' at https://surfer.nmr.mgh.harvard.edu/registration.html')
 
     g_other = parser.add_argument_group('Other options')
-    g_other.add_argument('-w', '--work-dir', action='store', default='work',
+    g_other.add_argument('-w', '--work-dir', action='store',
                          help='path where intermediate results should be stored')
     g_other.add_argument(
         '--reports-only', action='store_true', default=False,
@@ -184,6 +184,9 @@ def get_parser():
              'No effect without --reports-only.')
     g_other.add_argument('--write-graph', action='store_true', default=False,
                          help='Write workflow graph.')
+    g_other.add_argument('--stop-on-first-crash', action='store_true', default=False,
+                         help='Force stopping on first crash, even if a work directory'
+                              ' was specified.')
 
     return parser
 
@@ -339,7 +342,7 @@ def build_workflow(opts, retval):
     # Set up directories
     output_dir = op.abspath(opts.output_dir)
     log_dir = op.join(output_dir, 'fmriprep', 'logs')
-    work_dir = op.abspath(opts.work_dir)
+    work_dir = op.abspath(opts.work_dir or 'work')  # Set work/ as default
 
     # Check and create output and working directories
     os.makedirs(output_dir, exist_ok=True)
@@ -356,6 +359,7 @@ def build_workflow(opts, retval):
             'crashdump_dir': log_dir,
             'crashfile_format': 'txt',
             'get_linked_libs': False,
+            'stop_on_first_crash': opts.stop_on_first_crash or opts.work_dir is not None,
         },
     })
 
