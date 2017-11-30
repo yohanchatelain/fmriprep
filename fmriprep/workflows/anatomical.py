@@ -76,7 +76,8 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
                                   freesurfer=True,
                                   longitudinal=False,
                                   debug=False,
-                                  hires=True)
+                                  hires=True,
+                                  num_t1w=1)
 
     **Parameters**
 
@@ -350,7 +351,7 @@ def init_anat_template_wf(longitudinal, omp_nthreads, num_t1w, name='anat_templa
         :simple_form: yes
 
         from fmriprep.workflows.anatomical import init_anat_template_wf
-        wf = init_anat_template_wf(longitudinal=False, omp_nthreads=1)
+        wf = init_anat_template_wf(longitudinal=False, omp_nthreads=1, num_t1w=1)
 
     **Parameters**
 
