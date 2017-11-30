@@ -316,7 +316,8 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
                                                    freesurfer=freesurfer)
 
     workflow.connect([
-        (inputnode, anat_derivatives_wf, [('t1w', 'inputnode.source_files')]),
+        (anat_template_wf, anat_derivatives_wf, [
+            ('outputnode.t1w_valid_list', 'inputnode.source_files')]),
         (outputnode, anat_derivatives_wf, [
             ('t1_template_transforms', 'inputnode.t1_template_transforms'),
             ('t1_preproc', 'inputnode.t1_preproc'),
@@ -381,7 +382,7 @@ def init_anat_template_wf(longitudinal, omp_nthreads, name='anat_template_wf'):
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['t1w']), name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['t1_template',  'template_transforms', 'out_report']),
+        fields=['t1_template', 't1w_valid_list', 'template_transforms', 'out_report']),
         name='outputnode')
 
     # 0. Reorient T1w image(s) to RAS and resample to common voxel space
@@ -433,11 +434,12 @@ def init_anat_template_wf(longitudinal, omp_nthreads, name='anat_template_wf'):
         (t1_conform, concat_affines, [('transform', 'mat_AtoB')]),
         (lta_to_fsl, concat_affines, [('out_fsl', 'mat_BtoC')]),
         (t1_reorient, concat_affines, [('transform', 'mat_CtoD')]),
-        (inputnode, fsl_to_itk, [('t1w', 'source_file')]),
+        (t1_template_dimensions, fsl_to_itk, [('t1w_valid_list', 'source_file')]),
         (t1_reorient, fsl_to_itk, [('out_file', 'reference_file')]),
         (concat_affines, fsl_to_itk, [('out_mat', 'transform_file')]),
         # Output
-        (t1_template_dimensions, outputnode, [('out_report', 'out_report')]),
+        (t1_template_dimensions, outputnode, [('out_report', 'out_report'),
+                                              ('t1w_valid_list', 't1w_valid_list')]),
         (t1_reorient, outputnode, [('out_file', 't1_template')]),
         (fsl_to_itk, outputnode, [('itk_transform', 'template_transforms')]),
     ])
