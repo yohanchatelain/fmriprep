@@ -384,7 +384,8 @@ def init_single_subject_wf(subject_id, task_id, name,
                                            freesurfer=freesurfer,
                                            hires=hires,
                                            reportlets_dir=reportlets_dir,
-                                           output_dir=output_dir)
+                                           output_dir=output_dir,
+                                           num_t1w=len(layout['t1w']))
 
     workflow.connect([
         (inputnode, anat_preproc_wf, [('subjects_dir', 'inputnode.subjects_dir')]),
