@@ -66,7 +66,8 @@ T1w/T2w preprocessing
                               freesurfer=True,
                               longitudinal=False,
                               debug=False,
-                              hires=True)
+                              hires=True,
+                              num_t1w=1)
 
 The anatomical sub-workflow begins by constructing a template image by
 :ref:`conforming <conformation>` any T1-weighted images to RAS orientation and

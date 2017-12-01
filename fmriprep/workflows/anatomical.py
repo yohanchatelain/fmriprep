@@ -47,7 +47,8 @@ from ..utils.misc import fix_multi_T1w_source_name, add_suffix
 
 #  pylint: disable=R0914
 def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
-                         freesurfer, longitudinal, omp_nthreads, hires, reportlets_dir, output_dir,
+                         freesurfer, longitudinal, omp_nthreads, hires, reportlets_dir,
+                         output_dir, num_t1w,
                          name='anat_preproc_wf'):
     r"""
     This workflow controls the anatomical preprocessing stages of FMRIPREP.
@@ -75,7 +76,8 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
                                   freesurfer=True,
                                   longitudinal=False,
                                   debug=False,
-                                  hires=True)
+                                  hires=True,
+                                  num_t1w=1)
 
     **Parameters**
 
@@ -180,7 +182,8 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
                 't1_2_fsnative_reverse_transform', 'surfaces']),
         name='outputnode')
 
-    anat_template_wf = init_anat_template_wf(longitudinal=longitudinal, omp_nthreads=omp_nthreads)
+    anat_template_wf = init_anat_template_wf(longitudinal=longitudinal, omp_nthreads=omp_nthreads,
+                                             num_t1w=num_t1w)
 
     # 3. Skull-stripping
     # Bias field correction is handled in skull strip workflows.
@@ -338,7 +341,7 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
     return workflow
 
 
-def init_anat_template_wf(longitudinal, omp_nthreads, name='anat_template_wf'):
+def init_anat_template_wf(longitudinal, omp_nthreads, num_t1w, name='anat_template_wf'):
     r"""
     This workflow generates a canonically oriented structural template from
     input T1w images.
@@ -349,7 +352,7 @@ def init_anat_template_wf(longitudinal, omp_nthreads, name='anat_template_wf'):
         :simple_form: yes
 
         from fmriprep.workflows.anatomical import init_anat_template_wf
-        wf = init_anat_template_wf(longitudinal=False, omp_nthreads=1)
+        wf = init_anat_template_wf(longitudinal=False, omp_nthreads=1, num_t1w=1)
 
     **Parameters**
 
@@ -400,6 +403,7 @@ def init_anat_template_wf(longitudinal, omp_nthreads, name='anat_template_wf'):
                             no_iteration=not longitudinal,
                             transform_outputs=True,
                             ),
+        mem_gb=2 * num_t1w - 1,
         name='t1_merge')
 
     # Reorient template to RAS, if needed (mri_robust_template may set to LIA)
