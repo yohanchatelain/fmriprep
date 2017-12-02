@@ -201,6 +201,17 @@ def main():
     warnings.showwarning = _warn_redirect
     opts = get_parser().parse_args()
 
+    # FreeSurfer license
+    default_license = op.join(os.getenv('FREESURFER_HOME', ''), 'license.txt')
+    # Precedence: --fs-license-file, $FS_LICENSE, default_license
+    license_file = opts.fs_license_file or os.getenv('FS_LICENSE', default_license)
+    if opts.freesurfer:
+        if not os.path.exists(license_file):
+            raise RuntimeError('ERROR: when --no-freesurfer is not set, a valid '
+                               'license file is required for FreeSurfer to run.')
+        else:
+            os.environ['FS_LICENSE'] = license_file
+
     # Retrieve logging level
     log_level = int(max(25 - 5 * opts.verbose_count, logging.DEBUG))
     if opts.debug:
@@ -270,17 +281,6 @@ def build_workflow(opts, retval):
       * Participant list: {subject_list}.
       * Run identifier: {uuid}.
     """.format
-
-    # FreeSurfer license
-    default_license = op.join(os.getenv('FREESURFER_HOME', ''), 'license.txt')
-    # Precedence: --fs-license-file, $FS_LICENSE, default_license
-    license_file = opts.fs_license_file or os.getenv('FS_LICENSE', default_license)
-    if opts.freesurfer:
-        if not os.path.exists(license_file):
-            raise RuntimeError('ERROR: when --no-freesurfer is not set, a valid '
-                               'license file is required for FreeSurfer to run.')
-        else:
-            os.environ['FS_LICENSE'] = license_file
 
     # Validity of some inputs
     # ERROR check if use_aroma was specified, but the correct template was not
