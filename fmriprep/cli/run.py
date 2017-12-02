@@ -360,6 +360,7 @@ def build_workflow(opts, retval):
             'crashdump_dir': log_dir,
             'crashfile_format': 'txt',
             'get_linked_libs': False,
+            'poll_sleep_duration': 0.2,
         },
     })
 

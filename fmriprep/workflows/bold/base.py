@@ -453,8 +453,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 ('outputnode.out_warp', 'inputnode.fieldwarp'),
                 ('outputnode.out_reference_brain', 'inputnode.ref_bold_brain'),
                 ('outputnode.out_mask', 'inputnode.ref_bold_mask')]),
-            (sdc_unwarp_wf, func_reports_wf, [
-                ('outputnode.out_mask_report', 'inputnode.bold_mask_report')])
         ])
 
         # Report on BOLD correction
@@ -476,8 +474,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                     'for dataset %s.', bold_file)
         summary.inputs.distortion_correction = 'None'
         workflow.connect([
-            (bold_reference_wf, func_reports_wf, [
-                ('outputnode.bold_mask_report', 'inputnode.bold_mask_report')]),
             (bold_reference_wf, bold_reg_wf, [
                 ('outputnode.ref_image_brain', 'inputnode.ref_bold_brain'),
                 ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
@@ -505,8 +501,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                         'nonlinear susceptibility correction for dataset %s.', bold_file)
             summary.inputs.distortion_correction = 'SyN'
             workflow.connect([
-                (nonlinear_sdc_wf, func_reports_wf, [
-                    ('outputnode.out_mask_report', 'inputnode.bold_mask_report')]),
                 (nonlinear_sdc_wf, bold_reg_wf, [
                     ('outputnode.out_warp', 'inputnode.fieldwarp'),
                     ('outputnode.out_reference_brain', 'inputnode.ref_bold_brain'),
@@ -638,7 +632,7 @@ def init_func_reports_wf(reportlets_dir, freesurfer, use_aroma, use_syn, name='f
 
     inputnode = pe.Node(
         niu.IdentityInterface(
-            fields=['source_file', 'summary_report', 'validation_report', 'bold_mask_report',
+            fields=['source_file', 'summary_report', 'validation_report',
                     'bold_reg_report', 'bold_reg_fallback', 'bold_rois_report',
                     'syn_sdc_report', 'ica_aroma_report']),
         name='inputnode')
