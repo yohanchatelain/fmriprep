@@ -238,9 +238,13 @@ def main():
         work_dir = retval['work_dir']
         subject_list = retval['subject_list']
         run_uuid = retval['run_uuid']
+        retcode = retval['return_code']
 
     if opts.write_graph:
         fmriprep_wf.write_graph(graph2use="colored", format='svg', simple_form=True)
+
+    if opts.reports_only:
+        sys.exit(int(retcode > 0))
 
     # Clean up master process before running workflow, which may create forks
     gc.collect()
@@ -363,14 +367,21 @@ def build_workflow(opts, retval):
         },
     })
 
+    retval['return_code'] = 0
+    retval['plugin_settings'] = plugin_settings
+    retval['output_dir'] = output_dir
+    retval['work_dir'] = work_dir
+    retval['subject_list'] = subject_list
+    retval['run_uuid'] = run_uuid
+
     # Called with reports only
     if opts.reports_only:
         logger.log(25, 'Running --reports-only on participants %s', ', '.join(subject_list))
         if opts.run_uuid is not None:
             run_uuid = opts.run_uuid
-
-        reports_code = generate_reports(subject_list, output_dir, work_dir, run_uuid)
-        sys.exit(int(reports_code > 0))
+        retval['return_code'] = generate_reports(subject_list, output_dir, work_dir, run_uuid)
+        retval['workflow'] = None
+        return retval
 
     # Build main workflow
     logger.log(25, INIT_MSG(
@@ -380,7 +391,7 @@ def build_workflow(opts, retval):
         uuid=run_uuid)
     )
 
-    fmriprep_wf = init_fmriprep_wf(
+    retval['workflow'] = init_fmriprep_wf(
         subject_list=subject_list,
         task_id=opts.task_id,
         run_uuid=run_uuid,
@@ -409,13 +420,8 @@ def build_workflow(opts, retval):
         use_aroma=opts.use_aroma,
         ignore_aroma_err=opts.ignore_aroma_denoising_errors,
     )
-
-    retval['workflow'] = fmriprep_wf
-    retval['plugin_settings'] = plugin_settings
-    retval['output_dir'] = output_dir
-    retval['work_dir'] = work_dir
-    retval['subject_list'] = subject_list
-    retval['run_uuid'] = run_uuid
+    retval['return_code'] = 0
+    return retval
 
 
 if __name__ == '__main__':
