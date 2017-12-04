@@ -356,7 +356,7 @@ def init_single_subject_wf(subject_id, task_id, name,
     # Confirm multi-echo data provided with `t2s_coreg` flag
     if t2s_coreg and subject_data['echos'] == []:
         raise Exception("No multi-echo BOLD data found for participant {}. "
-                        "Selected options require multiecho data".format(subject_id))
+                        "T2* coregistration requires multiple echos".format(subject_id))
 
     workflow = pe.Workflow(name=name)
 

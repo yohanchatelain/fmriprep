@@ -15,7 +15,6 @@ import os
 
 import nibabel as nb
 from niworkflows.nipype import logging
-from niworkflows.nipype.utils.filemanip import split_filename
 from niworkflows.nipype.pipeline import engine as pe
 from niworkflows.nipype.interfaces import utility as niu
 
@@ -217,20 +216,16 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         mem_gb = {'filesize': 1, 'resampled': 1, 'largemem': 1}
         bold_tlen = 10
     else:
-        bold_size_gb = os.path.getsize(bold_file) / (1024**3)
-        bold_tlen = nb.load(bold_file).shape[-1]
-        mem_gb = {
-            'filesize': bold_size_gb,
-            'resampled': bold_size_gb * 4,
-            'largemem': (0.007 * max(bold_tlen, 100) + 1.5) * bold_size_gb,
-        }
+        if isinstance(bold_file, list):  # if multi-echo data
+            multiecho = True
+            ref_file = bold_file[0]
+        else:
+            ref_file = bold_file
 
-    LOGGER.log(25, 'Creating bold processing workflow for "%s" (%.2f GB / %d TRs).',
-               bold_file, mem_gb['filesize'], bold_tlen)
-    fname = split_filename(bold_file)[1]
-    fname_nosub = '_'.join(fname.split("_")[1:])
-    name = "func_preproc_" + fname_nosub.replace(
-        ".", "_").replace(" ", "").replace("-", "_").replace("_bold", "_wf")
+        bold_tlen, mem_gb = _create_mem_gb(ref_file)
+        wf_name = _get_wf_name(ref_file)
+        LOGGER.log(25, 'Creating bold processing workflow for "%s" (%.2f GB / %d TRs).',
+                   ref_file, mem_gb['filesize'], bold_tlen)
 
     # For doc building purposes
     if layout is None or bold_file == 'bold_preprocesing':
@@ -247,7 +242,13 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         run_stc = True
         bold_pe = 'j'
     else:
-        metadata = layout.get_metadata(bold_file)
+        tes = []  # Set tes to empty so t2s node doesn't error
+        if multiecho:
+            for echo in bold_file:
+                tes.append(layout.get_metadata(echo)['EchoTime'])
+        # Since all other metadata is constant
+        metadata = layout.get_metadata(ref_file)
+
         # Find fieldmaps. Options: (phase1|phase2|phasediff|epi|fieldmap)
         fmaps = layout.get_fieldmap(bold_file, return_list=True) \
             if 'fieldmaps' not in ignore else []
@@ -266,18 +267,22 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     use_syn = force_syn or (use_syn and not fmaps)
 
     # Build workflow
-    workflow = pe.Workflow(name=name)
+    workflow = pe.Workflow(name=wf_name)
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_file', 't1_preproc', 't1_brain', 't1_mask', 't1_seg', 't1_tpms',
                 't1_2_mni_forward_transform', 't1_2_mni_reverse_transform',
                 'subjects_dir', 'subject_id', 't1_2_fsnative_forward_transform',
                 't1_2_fsnative_reverse_transform']),
         name='inputnode')
-    inputnode.inputs.bold_file = bold_file
+
+    if multiecho:
+        inputnode.inputs.iterables = ("bold_file", bold_file)
+    else:
+        inputnode.inputs.bold_file = bold_file
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_t1', 'bold_mask_t1', 'bold_mni', 'bold_mask_mni', 'confounds', 'surfaces',
-                'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file']),
+                't2s_map', 'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file']),
         name='outputnode')
 
     summary = pe.Node(
@@ -327,6 +332,12 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                    mem_gb=mem_gb['filesize'],
                                    omp_nthreads=omp_nthreads)
 
+    # T2* driven BOLD registration to T1w
+    bold_t2s_reg_wf = init_bold_t2s_reg_wf(name='bold_t2s_reg_wf',
+                                           tes=tes,
+                                           mem_gb=mem_gb['filesize'],
+                                           omp_nthreads=omp_nthreads)
+
     # mean BOLD registration to T1w
     bold_reg_wf = init_bold_reg_wf(name='bold_reg_wf',
                                    freesurfer=freesurfer,
@@ -345,6 +356,9 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         metadata=metadata,
         name='bold_confounds_wf')
     bold_confounds_wf.get_node('inputnode').inputs.t1_transform_flags = [False]
+### RESUME HERE
+    if multiecho:
+        pass
 
     workflow.connect([
         (inputnode, bold_reference_wf, [('bold_file', 'inputnode.bold_file')]),
@@ -633,7 +647,7 @@ def init_func_reports_wf(reportlets_dir, freesurfer, use_aroma, use_syn, name='f
     """
     Set up a battery of datasinks to store reports in the right location
     """
-    workflow = pe.Workflow(name=name)
+    workflow = pe.Workflow(name=wf_name)
 
     inputnode = pe.Node(
         niu.IdentityInterface(
@@ -716,7 +730,7 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     """
     Set up a battery of datasinks to store derivatives in the right location
     """
-    workflow = pe.Workflow(name=name)
+    workflow = pe.Workflow(name=wf_name)
 
     inputnode = pe.Node(
         niu.IdentityInterface(
@@ -828,3 +842,27 @@ def _get_series_len(bold_fname):
     skip_vols = _get_vols_to_discard(img)
 
     return img.shape[3] - skip_vols
+
+def _create_mem_gb(bold_fname):
+    import os
+    import nibabel as nb
+    bold_size_gb = os.path.getsize(bold_fname) / (1024**3)
+    bold_tlen = nb.load(bold_fname).shape[-1]
+    mem_gb = {
+        'filesize': bold_size_gb,
+        'resampled': bold_size_gb * 4,
+        'largemem': (0.007 * max(bold_tlen, 100) + 1.5) * bold_size_gb,
+    }
+
+    return bold_tlen, mem_gb
+
+def _get_wf_name(bold_fname):
+    from niworkflows.nipype.utils.filemanip import split_filename
+    fname = split_filename(bold_fname)[1]
+    fname_nosub = '_'.join(fname.split("_")[1:])
+    if 'echo' in fname_nosub:
+        fname_nosub = '_'.join(fname_nosub.split("_echo-")[:1]) + "_bold"
+    name = "func_preproc_" + fname_nosub.replace(
+        ".", "_").replace(" ", "").replace("-", "_").replace("_bold", "_wf")
+
+    return wf_name
