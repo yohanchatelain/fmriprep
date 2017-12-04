@@ -299,7 +299,8 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
             (('t1w', fix_multi_T1w_source_name), 'inputnode.source_file')]),
         (anat_template_wf, anat_reports_wf, [
             ('outputnode.out_report', 'inputnode.t1_conform_report')]),
-        (inputnode, seg_rpt, [('t1w', 'in_file')]),
+        (anat_template_wf, seg_rpt, [
+            ('outputnode.t1_template', 'in_file')]),
         (t1_seg, seg2msks, [('tissue_class_map', 'in_file')]),
         (seg2msks, seg_rpt, [('out', 'in_rois')]),
         (outputnode, seg_rpt, [('t1_mask', 'in_mask')]),
