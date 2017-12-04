@@ -1074,7 +1074,9 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
 
     return workflow
 
+
 def _seg2msks(in_file):
+    """Converts labels to masks"""
     import nibabel as nb
     import numpy as np
     from os import path as op

@@ -163,7 +163,6 @@ def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
                             name='combine_masks')
     apply_mask = pe.Node(fsl.ApplyMask(),
                          name='apply_mask')
-    mask_reportlet = pe.Node(SimpleShowMaskRPT(), name='mask_reportlet')
 
     workflow.connect([
         (inputnode, n4_correct, [('in_file', 'input_image')]),

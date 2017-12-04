@@ -17,7 +17,6 @@ from niworkflows.nipype.interfaces.base import (
     File, Directory, InputMultiPath, Str, isdefined,
     SimpleInterface)
 from niworkflows.nipype.interfaces import freesurfer as fs
-from niworkflows.interfaces import report_base as nrc
 
 from .bids import BIDS_NAME
 
