@@ -5,6 +5,11 @@ Next release
 1.0.0 (<TBD>)
 =============
 
+1.0.0-rc13 (1st of December 2017)
+---------------------------------
+
+* [FIX] Broken ``--fs-license-file`` argument (#869)
+
 1.0.0-rc12 (29th of November 2017)
 ----------------------------------
 

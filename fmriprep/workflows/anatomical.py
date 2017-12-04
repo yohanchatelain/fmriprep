@@ -50,7 +50,8 @@ from ..utils.misc import fix_multi_T1w_source_name, add_suffix
 
 #  pylint: disable=R0914
 def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
-                         freesurfer, longitudinal, omp_nthreads, hires, reportlets_dir, output_dir,
+                         freesurfer, longitudinal, omp_nthreads, hires, reportlets_dir,
+                         output_dir, num_t1w,
                          name='anat_preproc_wf'):
     r"""
     This workflow controls the anatomical preprocessing stages of FMRIPREP.
@@ -78,7 +79,8 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
                                   freesurfer=True,
                                   longitudinal=False,
                                   debug=False,
-                                  hires=True)
+                                  hires=True,
+                                  num_t1w=1)
 
     **Parameters**
 
@@ -183,7 +185,8 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
                 't1_2_fsnative_reverse_transform', 'surfaces']),
         name='outputnode')
 
-    anat_template_wf = init_anat_template_wf(longitudinal=longitudinal, omp_nthreads=omp_nthreads)
+    anat_template_wf = init_anat_template_wf(longitudinal=longitudinal, omp_nthreads=omp_nthreads,
+                                             num_t1w=num_t1w)
 
     # 3. Skull-stripping
     # Bias field correction is handled in skull strip workflows.
@@ -323,7 +326,8 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
                                                    freesurfer=freesurfer)
 
     workflow.connect([
-        (inputnode, anat_derivatives_wf, [('t1w', 'inputnode.source_files')]),
+        (anat_template_wf, anat_derivatives_wf, [
+            ('outputnode.t1w_valid_list', 'inputnode.source_files')]),
         (outputnode, anat_derivatives_wf, [
             ('t1_template_transforms', 'inputnode.t1_template_transforms'),
             ('t1_preproc', 'inputnode.t1_preproc'),
@@ -344,7 +348,7 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
     return workflow
 
 
-def init_anat_template_wf(longitudinal, omp_nthreads, name='anat_template_wf'):
+def init_anat_template_wf(longitudinal, omp_nthreads, num_t1w, name='anat_template_wf'):
     r"""
     This workflow generates a canonically oriented structural template from
     input T1w images.
@@ -355,7 +359,7 @@ def init_anat_template_wf(longitudinal, omp_nthreads, name='anat_template_wf'):
         :simple_form: yes
 
         from fmriprep.workflows.anatomical import init_anat_template_wf
-        wf = init_anat_template_wf(longitudinal=False, omp_nthreads=1)
+        wf = init_anat_template_wf(longitudinal=False, omp_nthreads=1, num_t1w=1)
 
     **Parameters**
 
@@ -388,7 +392,7 @@ def init_anat_template_wf(longitudinal, omp_nthreads, name='anat_template_wf'):
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['t1w']), name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['t1_template',  'template_transforms', 'out_report']),
+        fields=['t1_template', 't1w_valid_list', 'template_transforms', 'out_report']),
         name='outputnode')
 
     # 0. Reorient T1w image(s) to RAS and resample to common voxel space
@@ -406,6 +410,7 @@ def init_anat_template_wf(longitudinal, omp_nthreads, name='anat_template_wf'):
                             no_iteration=not longitudinal,
                             transform_outputs=True,
                             ),
+        mem_gb=2 * num_t1w - 1,
         name='t1_merge')
 
     # Reorient template to RAS, if needed (mri_robust_template may set to LIA)
@@ -440,11 +445,12 @@ def init_anat_template_wf(longitudinal, omp_nthreads, name='anat_template_wf'):
         (t1_conform, concat_affines, [('transform', 'mat_AtoB')]),
         (lta_to_fsl, concat_affines, [('out_fsl', 'mat_BtoC')]),
         (t1_reorient, concat_affines, [('transform', 'mat_CtoD')]),
-        (inputnode, fsl_to_itk, [('t1w', 'source_file')]),
+        (t1_template_dimensions, fsl_to_itk, [('t1w_valid_list', 'source_file')]),
         (t1_reorient, fsl_to_itk, [('out_file', 'reference_file')]),
         (concat_affines, fsl_to_itk, [('out_mat', 'transform_file')]),
         # Output
-        (t1_template_dimensions, outputnode, [('out_report', 'out_report')]),
+        (t1_template_dimensions, outputnode, [('out_report', 'out_report'),
+                                              ('t1w_valid_list', 't1w_valid_list')]),
         (t1_reorient, outputnode, [('out_file', 't1_template')]),
         (fsl_to_itk, outputnode, [('itk_transform', 'template_transforms')]),
     ])
