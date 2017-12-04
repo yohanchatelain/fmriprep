@@ -912,6 +912,10 @@ def init_anat_reports_wf(reportlets_dir, output_spaces,
         DerivativesDataSink(base_directory=reportlets_dir, suffix='t1_2_mni'),
         name='ds_t1_2_mni_report', run_without_submitting=True)
 
+    ds_seg_brainmask = pe.Node(
+        DerivativesDataSink(base_directory=reportlets_dir, suffix='seg_brainmask'),
+        name='ds_seg_brainmask', run_without_submitting=True)
+
     ds_recon_report = pe.Node(
         DerivativesDataSink(base_directory=reportlets_dir, suffix='reconall'),
         name='ds_recon_report', run_without_submitting=True)
@@ -919,6 +923,8 @@ def init_anat_reports_wf(reportlets_dir, output_spaces,
     workflow.connect([
         (inputnode, ds_t1_conform_report, [('source_file', 'source_file'),
                                            ('t1_conform_report', 'in_file')]),
+        (inputnode, ds_seg_brainmask, [('source_file', 'source_file'),
+                                       ('seg_report', 'in_file')]),
     ])
 
     if freesurfer:
