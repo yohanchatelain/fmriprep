@@ -376,8 +376,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         (bold_reg_wf, outputnode, [('outputnode.bold_t1', 'bold_t1'),
                                    ('outputnode.bold_mask_t1', 'bold_mask_t1')]),
         (bold_confounds_wf, func_reports_wf, [
-            ('outputnode.acompcor_report', 'inputnode.acompcor_report'),
-            ('outputnode.tcompcor_report', 'inputnode.tcompcor_report'),
+            ('outputnode.rois_report', 'inputnode.bold_rois_report'),
             ('outputnode.ica_aroma_report', 'inputnode.ica_aroma_report')]),
         (bold_confounds_wf, summary, [('outputnode.confounds_list', 'confounds')]),
         (bold_reg_wf, summary, [('outputnode.fallback', 'fallback')]),
@@ -454,8 +453,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 ('outputnode.out_warp', 'inputnode.fieldwarp'),
                 ('outputnode.out_reference_brain', 'inputnode.ref_bold_brain'),
                 ('outputnode.out_mask', 'inputnode.ref_bold_mask')]),
-            (sdc_unwarp_wf, func_reports_wf, [
-                ('outputnode.out_mask_report', 'inputnode.bold_mask_report')])
         ])
 
         # Report on BOLD correction
@@ -477,8 +474,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                     'for dataset %s.', bold_file)
         summary.inputs.distortion_correction = 'None'
         workflow.connect([
-            (bold_reference_wf, func_reports_wf, [
-                ('outputnode.bold_mask_report', 'inputnode.bold_mask_report')]),
             (bold_reference_wf, bold_reg_wf, [
                 ('outputnode.ref_image_brain', 'inputnode.ref_bold_brain'),
                 ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
@@ -506,8 +501,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                         'nonlinear susceptibility correction for dataset %s.', bold_file)
             summary.inputs.distortion_correction = 'SyN'
             workflow.connect([
-                (nonlinear_sdc_wf, func_reports_wf, [
-                    ('outputnode.out_mask_report', 'inputnode.bold_mask_report')]),
                 (nonlinear_sdc_wf, bold_reg_wf, [
                     ('outputnode.out_warp', 'inputnode.fieldwarp'),
                     ('outputnode.out_reference_brain', 'inputnode.ref_bold_brain'),
@@ -639,8 +632,8 @@ def init_func_reports_wf(reportlets_dir, freesurfer, use_aroma, use_syn, name='f
 
     inputnode = pe.Node(
         niu.IdentityInterface(
-            fields=['source_file', 'summary_report', 'validation_report', 'bold_mask_report',
-                    'bold_reg_report', 'bold_reg_fallback', 'acompcor_report', 'tcompcor_report',
+            fields=['source_file', 'summary_report', 'validation_report',
+                    'bold_reg_report', 'bold_reg_fallback', 'bold_rois_report',
                     'syn_sdc_report', 'ica_aroma_report']),
         name='inputnode')
 
@@ -656,10 +649,10 @@ def init_func_reports_wf(reportlets_dir, freesurfer, use_aroma, use_syn, name='f
         name='ds_validation_report', run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 
-    ds_bold_mask_report = pe.Node(
+    ds_bold_rois_report = pe.Node(
         DerivativesDataSink(base_directory=reportlets_dir,
-                            suffix='bold_mask'),
-        name='ds_bold_mask_report', run_without_submitting=True,
+                            suffix='rois'),
+        name='ds_bold_rois_report', run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 
     ds_syn_sdc_report = pe.Node(
@@ -679,18 +672,6 @@ def init_func_reports_wf(reportlets_dir, freesurfer, use_aroma, use_syn, name='f
         name='ds_bold_reg_report', run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 
-    ds_acompcor_report = pe.Node(
-        DerivativesDataSink(base_directory=reportlets_dir,
-                            suffix='acompcor'),
-        name='ds_acompcor_report', run_without_submitting=True,
-        mem_gb=DEFAULT_MEMORY_MIN_GB)
-
-    ds_tcompcor_report = pe.Node(
-        DerivativesDataSink(base_directory=reportlets_dir,
-                            suffix='tcompcor'),
-        name='ds_tcompcor_report', run_without_submitting=True,
-        mem_gb=DEFAULT_MEMORY_MIN_GB)
-
     ds_ica_aroma_report = pe.Node(
         DerivativesDataSink(base_directory=reportlets_dir,
                             suffix='ica_aroma'),
@@ -702,16 +683,12 @@ def init_func_reports_wf(reportlets_dir, freesurfer, use_aroma, use_syn, name='f
                                         ('summary_report', 'in_file')]),
         (inputnode, ds_validation_report, [('source_file', 'source_file'),
                                            ('validation_report', 'in_file')]),
-        (inputnode, ds_bold_mask_report, [('source_file', 'source_file'),
-                                          ('bold_mask_report', 'in_file')]),
+        (inputnode, ds_bold_rois_report, [('source_file', 'source_file'),
+                                          ('bold_rois_report', 'in_file')]),
         (inputnode, ds_bold_reg_report, [
             ('source_file', 'source_file'),
             ('bold_reg_report', 'in_file'),
             (('bold_reg_fallback', _bold_reg_suffix, freesurfer), 'suffix')]),
-        (inputnode, ds_acompcor_report, [('source_file', 'source_file'),
-                                         ('acompcor_report', 'in_file')]),
-        (inputnode, ds_tcompcor_report, [('source_file', 'source_file'),
-                                         ('tcompcor_report', 'in_file')]),
     ])
 
     if use_aroma:
