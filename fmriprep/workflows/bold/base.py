@@ -652,7 +652,7 @@ def init_func_reports_wf(reportlets_dir, freesurfer, use_aroma, use_syn, name='f
     """
     Set up a battery of datasinks to store reports in the right location
     """
-    workflow = pe.Workflow(name=wf_name)
+    workflow = pe.Workflow(name=name)
 
     inputnode = pe.Node(
         niu.IdentityInterface(
@@ -735,7 +735,7 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     """
     Set up a battery of datasinks to store derivatives in the right location
     """
-    workflow = pe.Workflow(name=wf_name)
+    workflow = pe.Workflow(name=name)
 
     inputnode = pe.Node(
         niu.IdentityInterface(
@@ -838,7 +838,6 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
 
 
 def _get_series_len(bold_fname):
-    import nibabel as nb
     from niworkflows.interfaces.registration import _get_vols_to_discard
     img = nb.load(bold_fname)
     if len(img.shape) < 4:
@@ -848,9 +847,8 @@ def _get_series_len(bold_fname):
 
     return img.shape[3] - skip_vols
 
+
 def _create_mem_gb(bold_fname):
-    import os
-    import nibabel as nb
     bold_size_gb = os.path.getsize(bold_fname) / (1024**3)
     bold_tlen = nb.load(bold_fname).shape[-1]
     mem_gb = {
@@ -861,6 +859,7 @@ def _create_mem_gb(bold_fname):
 
     return bold_tlen, mem_gb
 
+
 def _get_wf_name(bold_fname):
     from niworkflows.nipype.utils.filemanip import split_filename
     fname = split_filename(bold_fname)[1]
@@ -870,4 +869,4 @@ def _get_wf_name(bold_fname):
     name = "func_preproc_" + fname_nosub.replace(
         ".", "_").replace(" ", "").replace("-", "_").replace("_bold", "_wf")
 
-    return wf_name
+    return name

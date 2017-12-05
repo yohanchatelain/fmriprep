@@ -14,9 +14,10 @@ import numpy as np
 import nibabel as nb
 
 from niworkflows.nipype import logging
-from niworkflows.nipype.utils.filemanip import fname_presuffix
+from niworkflows.nipype.utils.filemanip import split_filename
 from niworkflows.nipype.interfaces.base import (
-    traits, TraitedSpec, File, InputMultiPath, SimpleInterface)
+    traits, TraitedSpec, File, InputMultiPath, SimpleInterface,
+    BaseInterfaceInputSpec)
 
 LOGGER = logging.getLogger('interface')
 
@@ -41,7 +42,7 @@ class T2SMap(SimpleInterface):
         last_emask, two_emask = echo_sampling_mask(self.in_files)
         t2s_map = define_t2s_map(self.in_files, self.tes,
                                  last_emask, two_emask)
-        _, fname, _  = split_filename(self.inputs.in_files[0])
+        _, fname, _ = split_filename(self.inputs.in_files[0])
         fname_preecho = fname.split('_echo-')[0]
         self._results['t2s_map'] = os.path.join(runtime.cwd, fname_preecho + '_t2smap' + ext)
         t2s_map.to_filename(self._results['out_file'])
@@ -72,12 +73,12 @@ def echo_sampling_mask(echo_list):
     # First, load each echo and average over time
     echos = []
     for e in echo_list:
-        echos.append(np.mean(nb.load(e).get_data(), axis = -1))
+        echos.append(np.mean(nb.load(e).get_data(), axis=-1))
 
     # In the first echo, find the 33rd percentile and the voxel(s)
     # whose average activity is equal to that value
-    perc33  = np.percentile(echos[0][echos[0].nonzero()],
-                            33, interpolation="higher")
+    perc33 = np.percentile(echos[0][echos[0].nonzero()],
+                           33, interpolation="higher")
     med_vox = (echos[0] == perc33)
 
     # For each (averaged) echo, extract the max signal in the
@@ -126,8 +127,9 @@ def define_t2s_map(echo_list, tes, last_emask, two_emask):
             the T2* map for the EPI run
     """
     # get some basic shape information
+    echo_stack = np.stack([nb.load(echo).get_data() for echo in echo_list],
+                          axis=-2)
     nx, ny, nz, necho, nt = echo_stack.shape
-    nvox = nx * ny * nz
 
     # create empty arrays to fill later
     t2ss = np.zeros([nx, ny, nz, necho - 1])
@@ -158,14 +160,14 @@ def define_t2s_map(echo_list, tes, last_emask, two_emask):
 
         # scale the echo-coefficients (ΔR2), intercept (s0)
         r2 = 1 / X[1, :].transpose()
-        s0  = np.exp(X[0, :]).transpose()
+        s0 = np.exp(X[0, :]).transpose()
 
         # fix any non-numerical values
         r2[np.isinf(r2)] = 500.
         s0[np.isnan(s0)] = 0.
 
         # reshape into arrays for mapping
-        t2s[:, :, :, echo - 2] = _unmask(r2, two_emask)
+        r2[:, :, :, echo - 2] = _unmask(r2, two_emask)
         s0vs[:, :, :, echo - 2] = _unmask(s0, two_emask)
 
     # limited T2* and S0 maps
@@ -175,8 +177,8 @@ def define_t2s_map(echo_list, tes, last_emask, two_emask):
         fl_[last_emask == echo + 2] = True
         fl[:, :, :, echo] = fl_
 
-    fl   = np.array(fl, dtype=bool)
-    t2s_map = np.squeeze(unmask(t2s[fl], last_emask > 1))
+    fl = np.array(fl, dtype=bool)
+    t2s_map = np.squeeze(_unmask(r2[fl], last_emask > 1))
     t2s_map[np.logical_or(np.isnan(t2s_map), t2s_map < 0)] = 0
 
     return t2s_map
