@@ -195,7 +195,7 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
 
     # Generate reportlet
     mrg_compcor = pe.Node(niu.Merge(2), name='merge_compcor', run_without_submitting=True)
-    rois_plot = pe.Node(ROIsPlot(compress_report=True, colors=['r', 'b', 'y'],
+    rois_plot = pe.Node(ROIsPlot(compress_report=True, colors=['r', 'b', 'magenta'],
                         generate_report=True), name='rois_plot')
 
     def _pick_csf(files):
