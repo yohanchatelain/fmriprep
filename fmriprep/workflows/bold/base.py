@@ -320,7 +320,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
     # Top-level BOLD splitter
     bold_split = pe.Node(FSLSplit(dimension='t'), name='bold_split',
-                         mem_gb=mem_gb * 3)
+                         mem_gb=mem_gb['filesize'] * 3)
 
     # HMC on the BOLD
     bold_hmc_wf = init_bold_hmc_wf(name='bold_hmc_wf',
