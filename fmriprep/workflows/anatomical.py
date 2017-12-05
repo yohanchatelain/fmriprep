@@ -293,7 +293,7 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
         ])
 
     seg2msks = pe.Node(niu.Function(function=_seg2msks), name='seg2msks')
-    seg_rpt = pe.Node(ROIsPlot(colors=['r', 'b', 'magenta', 'g']), name='seg_rpt')
+    seg_rpt = pe.Node(ROIsPlot(colors=['r', 'magenta', 'b', 'g']), name='seg_rpt')
     anat_reports_wf = init_anat_reports_wf(
         reportlets_dir=reportlets_dir, output_spaces=output_spaces, template=template,
         freesurfer=freesurfer)
