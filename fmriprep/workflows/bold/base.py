@@ -241,8 +241,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         run_stc = True
         bold_pe = 'j'
     else:
-        tes = []  # Set tes to empty so t2s node doesn't error
         if multiecho:
+            tes = []
             for echo in bold_file:
                 tes.append(layout.get_metadata(echo)['EchoTime'])
         # Since all other metadata is constant
@@ -331,6 +331,13 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                    mem_gb=mem_gb['filesize'],
                                    omp_nthreads=omp_nthreads)
 
+    # if doing T2*-driven coregistration, create T2* map
+    if t2s_coreg is True:
+        t2s_map = pe.Node(
+            T2SMap(input_files=bold_file, tes=tes),
+            name='t2s_map', mem_gb=DEFAULT_MEMORY_MIN_GB,
+            run_without_submitting=True)
+
     # mean BOLD registration to T1w
     bold_reg_wf = init_bold_reg_wf(name='bold_reg_wf',
                                    freesurfer=freesurfer,
@@ -363,12 +370,10 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             # Undefined if --no-freesurfer, but this is safe
             ('subjects_dir', 'inputnode.subjects_dir'),
             ('subject_id', 'inputnode.subject_id'),
-            ('t1_2_fsnative_reverse_transform', 'inputnode.t1_2_fsnative_reverse_transform')
-        ]),
+            ('t1_2_fsnative_reverse_transform', 'inputnode.t1_2_fsnative_reverse_transform')]),
         (inputnode, bold_confounds_wf, [('t1_tpms', 'inputnode.t1_tpms'),
                                         ('t1_mask', 'inputnode.t1_mask')]),
-        (bold_hmc_wf, bold_reg_wf, [('outputnode.bold_split', 'inputnode.bold_split'),
-                                    ('outputnode.xforms', 'inputnode.hmc_xforms')]),
+        (bold_hmc_wf, bold_reg_wf, [('outputnode.xforms', 'inputnode.hmc_xforms')]),
         (bold_hmc_wf, bold_confounds_wf, [('outputnode.movpar_file', 'inputnode.movpar_file')]),
         (bold_reference_wf, func_reports_wf, [
             ('outputnode.validation_report', 'inputnode.validation_report')]),
@@ -401,6 +406,16 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     else:
         workflow.connect([
             (bold_reference_wf, bold_hmc_wf, [('outputnode.bold_file', 'inputnode.bold_file')])])
+
+    if t2s_coreg is True:
+        workflow.connect([
+            (inputnode, t2s_map, [('bold_file', 'inputnode.in_files')]),
+            (t2s_map, bold_reg_wf, [('outputnode.t2s_map', 'inputnode.bold_split')])
+            ])
+    else:
+        workflow.connect([
+            (bold_hmc_wf, bold_reg_wf, [('outputnode.bold_split', 'inputnode.bold_split')])
+            ])
 
     # Cases:
     # fmaps | use_syn | force_syn  |  ACTION
