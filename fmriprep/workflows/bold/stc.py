@@ -62,7 +62,7 @@ def init_bold_stc_wf(metadata, name='bold_stc_wf'):
     def create_custom_slice_timing_file_func(metadata):
         import os
         slice_timings = metadata["SliceTiming"]
-        slice_timings_ms = [str(t) for t in slice_timings]
+        slice_timings_ms = ["%f" % t for t in slice_timings]
         out_file = "timings.1D"
         with open("timings.1D", "w") as fp:
             fp.write("\t".join(slice_timings_ms))
@@ -83,7 +83,7 @@ def init_bold_stc_wf(metadata, name='bold_stc_wf'):
     copy_xform = pe.Node(CopyXForm(), name='copy_xform', mem_gb=0.1)
 
     def _prefix_at(x):
-        return "@" + x
+        return "@%s" % x
 
     workflow.connect([
         (inputnode, slice_timing_correction, [('bold_file', 'in_file'),

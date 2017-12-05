@@ -16,6 +16,7 @@ import os
 import nibabel as nb
 from niworkflows.nipype import logging
 from niworkflows.nipype.utils.filemanip import split_filename
+from niworkflows.nipype.interfaces.fsl import Split as FSLSplit
 from niworkflows.nipype.pipeline import engine as pe
 from niworkflows.nipype.interfaces import utility as niu
 
@@ -317,6 +318,10 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     if run_stc is True:
         bold_stc_wf = init_bold_stc_wf(name='bold_stc_wf', metadata=metadata)
 
+    # Top-level BOLD splitter
+    bold_split = pe.Node(FSLSplit(dimension='t'), name='bold_split',
+                         mem_gb=mem_gb * 3)
+
     # HMC on the BOLD
     bold_hmc_wf = init_bold_hmc_wf(name='bold_hmc_wf',
                                    mem_gb=mem_gb['filesize'],
@@ -341,10 +346,21 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         name='bold_confounds_wf')
     bold_confounds_wf.get_node('inputnode').inputs.t1_transform_flags = [False]
 
+    # Apply transforms in 1 shot
+    # Only use uncompressed output if AROMA is to be run
+    bold_bold_trans_wf = init_bold_preproc_trans_wf(
+        mem_gb=mem_gb['resampled'],
+        omp_nthreads=omp_nthreads,
+        use_compression=not (low_mem and use_aroma),
+        use_fieldwarp=(fmaps is not None or use_syn),
+        name='bold_bold_trans_wf'
+    )
+
     workflow.connect([
         (inputnode, bold_reference_wf, [('bold_file', 'inputnode.bold_file')]),
         (bold_reference_wf, bold_hmc_wf, [
-            ('outputnode.raw_ref_image', 'inputnode.raw_ref_image')]),
+            ('outputnode.raw_ref_image', 'inputnode.raw_ref_image'),
+            ('outputnode.bold_file', 'inputnode.bold_file')]),
         (inputnode, bold_reg_wf, [
             ('bold_file', 'inputnode.name_source'),
             ('t1_preproc', 'inputnode.t1_preproc'),
@@ -358,8 +374,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         ]),
         (inputnode, bold_confounds_wf, [('t1_tpms', 'inputnode.t1_tpms'),
                                         ('t1_mask', 'inputnode.t1_mask')]),
-        (bold_hmc_wf, bold_reg_wf, [('outputnode.bold_split', 'inputnode.bold_split'),
-                                    ('outputnode.xforms', 'inputnode.hmc_xforms')]),
+        (bold_split, bold_reg_wf, [('out_files', 'inputnode.bold_split')]),
+        (bold_hmc_wf, bold_reg_wf, [('outputnode.xforms', 'inputnode.hmc_xforms')]),
         (bold_hmc_wf, bold_confounds_wf, [('outputnode.movpar_file', 'inputnode.movpar_file')]),
         (bold_reference_wf, func_reports_wf, [
             ('outputnode.validation_report', 'inputnode.validation_report')]),
@@ -381,6 +397,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         (bold_confounds_wf, summary, [('outputnode.confounds_list', 'confounds')]),
         (bold_reg_wf, summary, [('outputnode.fallback', 'fallback')]),
         (summary, func_reports_wf, [('out_report', 'inputnode.summary_report')]),
+        (bold_split, bold_bold_trans_wf, [
+            ('out_files', 'inputnode.bold_split')]),
     ])
 
     # bool('TooShort') == True, so check True explicitly
@@ -388,10 +406,13 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         workflow.connect([
             (bold_reference_wf, bold_stc_wf, [('outputnode.bold_file', 'inputnode.bold_file'),
                                               ('outputnode.skip_vols', 'inputnode.skip_vols')]),
-            (bold_stc_wf, bold_hmc_wf, [('outputnode.stc_file', 'inputnode.bold_file')])])
+            (bold_stc_wf, bold_split, [('outputnode.stc_file', 'in_file')]),
+        ])
     else:
         workflow.connect([
-            (bold_reference_wf, bold_hmc_wf, [('outputnode.bold_file', 'inputnode.bold_file')])])
+            (bold_reference_wf, bold_split, [
+                ('outputnode.bold_file', 'in_file')]),
+        ])
 
     # Cases:
     # fmaps | use_syn | force_syn  |  ACTION
@@ -524,8 +545,9 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             (inputnode, bold_mni_trans_wf, [
                 ('bold_file', 'inputnode.name_source'),
                 ('t1_2_mni_forward_transform', 'inputnode.t1_2_mni_forward_transform')]),
+            (bold_split, bold_mni_trans_wf, [
+                ('out_files', 'inputnode.bold_split')]),
             (bold_hmc_wf, bold_mni_trans_wf, [
-                ('outputnode.bold_split', 'inputnode.bold_split'),
                 ('outputnode.xforms', 'inputnode.hmc_xforms')]),
             (bold_reg_wf, bold_mni_trans_wf, [
                 ('outputnode.itk_bold_to_t1', 'inputnode.itk_bold_to_t1')]),
@@ -554,15 +576,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                     ('outputnode.bold_mask', 'inputnode.bold_mask')]),
             ])
 
-    # Apply transforms in 1 shot
-    # Only use uncompressed output if AROMA is to be run
-    bold_bold_trans_wf = init_bold_preproc_trans_wf(
-        mem_gb=mem_gb['resampled'],
-        omp_nthreads=omp_nthreads,
-        use_compression=not (low_mem and use_aroma),
-        use_fieldwarp=(fmaps is not None or use_syn),
-        name='bold_bold_trans_wf'
-    )
+    # REPORTING ############################################################
 
     bold_bold_report_wf = init_bold_preproc_report_wf(
         mem_gb=mem_gb['resampled'],
@@ -573,7 +587,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         (inputnode, bold_bold_trans_wf, [
             ('bold_file', 'inputnode.name_source')]),
         (bold_hmc_wf, bold_bold_trans_wf, [
-            ('outputnode.bold_split', 'inputnode.bold_split'),   # This should be after STC
             ('outputnode.xforms', 'inputnode.hmc_xforms')]),
         (bold_reg_wf, bold_confounds_wf, [
             ('outputnode.itk_t1_to_bold', 'inputnode.t1_bold_xform')]),
@@ -605,6 +618,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 ('outputnode.bold_mask', 'inputnode.bold_mask')]),
         ])
 
+    # SURFACES ##################################################################################
     if freesurfer and any(space.startswith('fs') for space in output_spaces):
         LOGGER.log(25, 'Creating BOLD surface-sampling workflow.')
         bold_surf_wf = init_bold_surf_wf(mem_gb=mem_gb['resampled'],
