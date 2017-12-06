@@ -23,7 +23,6 @@ from ...interfaces import (
     GiftiNameSource
 )
 
-from ...interfaces.multiecho import T2SMap
 from ...interfaces.reports import FunctionalSummary
 
 # Fieldmap workflows
@@ -37,6 +36,7 @@ from ..fieldmap import (
 from .confounds import init_bold_confs_wf
 from .hmc import init_bold_hmc_wf
 from .stc import init_bold_stc_wf
+from .t2s import init_bold_t2s_wf
 from .registration import init_bold_reg_wf
 from .resampling import (
     init_bold_surf_wf,
@@ -199,6 +199,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         * :py:func:`~fmriprep.workflows.bold.util.init_bold_reference_wf`
         * :py:func:`~fmriprep.workflows.bold.stc.init_bold_stc_wf`
         * :py:func:`~fmriprep.workflows.bold.hmc.init_bold_hmc_wf`
+        * :py:func:`~fmriprep.workflows.bold.t2s.init_bold_t2s_wf`
         * :py:func:`~fmriprep.workflows.bold.registration.init_bold_reg_wf`
         * :py:func:`~fmriprep.workflows.bold.confounds.init_bold_confounds_wf`
         * :py:func:`~fmriprep.workflows.bold.resampling.init_bold_mni_trans_wf`
@@ -334,10 +335,9 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
     # if doing T2*-driven coregistration, create T2* map
     if t2s_coreg is True:
-        t2s_map = pe.Node(
-            T2SMap(input_files=bold_file, tes=tes),
-            name='t2s_map', mem_gb=DEFAULT_MEMORY_MIN_GB,
-            run_without_submitting=True)
+        bold_t2s_wf = init_bold_t2s_wf(name='bold_t2s_wf',
+                                       mem_gb=mem_gb['filesize'],
+                                       omp_nthreads=omp_nthreads)
 
     # mean BOLD registration to T1w
     bold_reg_wf = init_bold_reg_wf(name='bold_reg_wf',
@@ -410,8 +410,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
     if t2s_coreg is True:
         workflow.connect([
-            (inputnode, t2s_map, [('bold_file', 'inputnode.in_files')]),
-            (t2s_map, bold_reg_wf, [('outputnode.t2s_map', 'inputnode.bold_split')])
+            (inputnode, bold_t2s_wf, [('bold_file', 'inputnode.in_files')]),
+            (bold_t2s_wf, bold_reg_wf, [('outputnode.t2s_map', 'inputnode.bold_split')])
             ])
     else:
         workflow.connect([

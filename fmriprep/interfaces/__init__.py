@@ -17,3 +17,4 @@ from .utils import TPM2ROI, AddTPMs, AddTSVHeader, ConcatAffines
 from .fmap import FieldEnhance
 from .confounds import GatherConfounds, ICAConfounds
 from .itk import MCFLIRT2ITK, MultiApplyTransforms
+from .multiecho import T2SMap
