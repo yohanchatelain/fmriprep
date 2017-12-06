@@ -176,6 +176,9 @@ def get_parser():
     g_other.add_argument('-w', '--work-dir', action='store',
                          help='path where intermediate results should be stored')
     g_other.add_argument(
+        '--resource-monitor', action='store_true', default=False,
+        help='enable Nipype\'s resource monitoring to keep track of memory and CPU usage')
+    g_other.add_argument(
         '--reports-only', action='store_true', default=False,
         help='only generate reports, don\'t run workflows. This will only rerun report '
              'aggregation, not reportlet generation for specific nodes.')
@@ -277,11 +280,13 @@ def build_workflow(opts, retval):
     a hard-limited memory-scope.
 
     """
-    from niworkflows.nipype import config as ncfg
+    from niworkflows.nipype import logging, config as ncfg
     from ..info import __version__
     from ..workflows.base import init_fmriprep_wf
     from ..utils.bids import collect_participants
     from ..viz.reports import generate_reports
+
+    logger = logging.getLogger('workflow')
 
     INIT_MSG = """
     Running fMRIPREP version {version}:
@@ -369,7 +374,15 @@ def build_workflow(opts, retval):
             'get_linked_libs': False,
             'stop_on_first_crash': opts.stop_on_first_crash or opts.work_dir is None,
         },
+        'monitoring': {
+            'enabled': opts.resource_monitor,
+            'sample_frequency': '0.5',
+            'summary_append': True,
+        }
     })
+
+    if opts.resource_monitor:
+        ncfg.enable_resource_monitor()
 
     retval['return_code'] = 0
     retval['plugin_settings'] = plugin_settings
