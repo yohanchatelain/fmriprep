@@ -2,8 +2,16 @@ Next release
 ============
 
 
-1.0.0 (<TBD>)
-=============
+1.0.0 (6th of December 2017)
+============================
+
+* [FIX] Collision between Multi-T1w and --no-freesurfer (#880)
+* [FIX] Setting use_compression on resampling workflows (#882)
+* [ENH] Estimate motion parameters before STC (#876)
+* [ENH] Add --stop-on-first-crash option (#865)
+* [FIX] Correctly handling xforms (#874)
+* [FIX] Combined ROI reportlets (#872)
+* [ENH] Strip reportlets out of full report (#867)
 
 1.0.0-rc13 (1st of December 2017)
 ---------------------------------
