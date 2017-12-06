@@ -5,7 +5,8 @@ Processing pipeline details
 ===========================
 
 ``fmriprep`` adapts its pipeline depending on what data and metadata are
-available and are used as the input. For example, slice timing correction will be
+available and are used as the input.
+For example, slice timing correction will be
 performed only if the ``SliceTiming`` metadata field is found for the input
 dataset.
 
@@ -261,9 +262,10 @@ Head-motion estimation
 
 Using the previously :ref:`estimated reference scan <bold_ref>`,
 FSL ``mcflirt`` is used to estimate head-motion.
-As a result, one rigid-body transform w.r.t. the reference image
-is written for each :abbr:`BOLD (blood-oxygen level-dependent)`
-time-step. Additionally, a list of 6-parameters (three rotations,
+As a result, one rigid-body transform with respect to
+the reference image is written for each :abbr:`BOLD (blood-oxygen level-dependent)`
+time-step.
+Additionally, a list of 6-parameters (three rotations,
 three translations) per time-step is written and fed to the
 :ref:`confounds workflow <bold_confounds>`.
 Motion parameters are therefore calculated before any time-domain
@@ -308,7 +310,8 @@ Susceptibility Distortion Correction (SDC)
 
 One of the major problems that affects :abbr:`EPI (echo planar imaging)` data
 is the spatial distortion caused by the inhomogeneity of the field inside
-the scanner. Please refer to :ref:`sdc` for details on the
+the scanner.
+Please refer to :ref:`sdc` for details on the
 available workflows.
 
 
@@ -331,7 +334,8 @@ All volumes in the :abbr:`BOLD (blood-oxygen level-dependent)` series are
 resampled in their native space by concatenating the mappings found in previous
 correction workflows (:abbr:`HMC (head-motion correction)` and
 :abbr:`SDC (susceptibility-derived distortion correction)` if excecuted)
-for a one-shot interpolation process. Interpolation uses a Lanczos kernel.
+for a one-shot interpolation process.
+Interpolation uses a Lanczos kernel.
 
 .. _bold_reg:
 
@@ -464,6 +468,7 @@ A visualization of the AROMA component classification is also included in the HT
     :scale: 100%
 
     Maps created with maximum intensity projection (glass brain) with a black
-    brain outline. Right hand side of each map: time series (top in seconds),
-    frequency spectrum (bottom in Hertz). Components classified as signal in
-    green; noise in red.
+    brain outline.
+    Right hand side of each map: time series (top in seconds),
+    frequency spectrum (bottom in Hertz).
+    Components classified as signal in green; noise in red.
