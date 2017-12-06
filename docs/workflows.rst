@@ -268,8 +268,9 @@ time-step.
 Additionally, a list of 6-parameters (three rotations,
 three translations) per time-step is written and fed to the
 :ref:`confounds workflow <bold_confounds>`.
-Motion parameters are therefore calculated before any time-domain
-filtering, as recently suggested by [Power2017]_.
+For a more accurate estimation of head-motion, we calculate its parameters
+before any time-domain filtering (i.e. :ref:`slice-timing correction <bold_stc>`),
+as recommended in [Power2017]_.
 
 .. _bold_stc:
 
@@ -296,7 +297,8 @@ All slices are realigned in time to the middle of each TR.
 Slice time correction can be disabled with the ``--ignore slicetiming``
 command line argument.
 If a :abbr:`BOLD (blood-oxygen level-dependent)` series has fewer than
-5 usable (steady-state) volumes, slice time correction will be disabled.
+5 usable (steady-state) volumes, slice time correction will be disabled
+for that run.
 
 
 Susceptibility Distortion Correction (SDC)
