@@ -259,7 +259,7 @@ Head-motion estimation
         mem_gb=1,
         omp_nthreads=1)
 
-Using the previous :ref:`estimated reference scan <bold_ref>`,
+Using the previously :ref:`estimated reference scan <bold_ref>`,
 FSL ``mcflirt`` is used to estimate head-motion.
 As a result, one rigid-body transform w.r.t. the reference image
 is written for each :abbr:`BOLD (blood-oxygen level-dependent)`
@@ -380,8 +380,8 @@ EPI to MNI transformation
         output_grid_ref=None)
 
 This sub-workflow concatenates the transforms calculated upstream (see
-`Head-motion estimation`_, `Susceptibility Distortion Correction (SDC)`_ (if
-fieldmaps are available), `EPI to T1w registration`_, and a T1w-to-MNI
+`Head-motion estimation`_, `Susceptibility Distortion Correction (SDC)`_ --if
+fieldmaps are available--, `EPI to T1w registration`_, and a T1w-to-MNI
 transform from `T1w/T2w preprocessing`_) to map the :abbr:`EPI (echo-planar imaging)`
 image to standard MNI space.
 It also maps the T1w-based mask to MNI space.
