@@ -197,7 +197,7 @@ def get_parser():
 
 def main():
     """Entry point"""
-    from niworkflows.nipype import logging as nlogging
+    from niworkflows.nipype import logging as nlogging, config as ncfg
     from multiprocessing import set_start_method, Process, Manager
     from ..viz.reports import generate_reports
     set_start_method('forkserver')
@@ -224,6 +224,9 @@ def main():
     if opts.debug:
         log_level = logging.DEBUG
 
+    if opts.resource_monitor:
+        ncfg.enable_resource_monitor()
+
     # Set logging
     logger.setLevel(log_level)
     nlogging.getLogger('workflow').setLevel(log_level)
@@ -246,6 +249,10 @@ def main():
         subject_list = retval['subject_list']
         run_uuid = retval['run_uuid']
         retcode = retval['return_code']
+        nipype_config = retval.get('config', None)
+
+    if nipype_config:
+        ncfg.update_config(nipype_config)
 
     if opts.write_graph:
         fmriprep_wf.write_graph(graph2use="colored", format='svg', simple_form=True)
@@ -280,7 +287,6 @@ def build_workflow(opts, retval):
     a hard-limited memory-scope.
 
     """
-    from niworkflows.nipype import config as ncfg
     from ..info import __version__
     from ..workflows.base import init_fmriprep_wf
     from ..utils.bids import collect_participants
@@ -361,7 +367,7 @@ def build_workflow(opts, retval):
     os.makedirs(work_dir, exist_ok=True)
 
     # Nipype config (logs and execution)
-    ncfg.update_config({
+    retval['config'] = {
         'logging': {
             'log_directory': log_dir,
             'log_to_file': True
@@ -372,10 +378,7 @@ def build_workflow(opts, retval):
             'get_linked_libs': False,
             'stop_on_first_crash': opts.stop_on_first_crash or opts.work_dir is None,
         },
-    })
-
-    if opts.resource_monitor:
-        ncfg.enable_resource_monitor()
+    }
 
     retval['return_code'] = 0
     retval['plugin_settings'] = plugin_settings
