@@ -162,7 +162,8 @@ def get_parser():
 
     # FreeSurfer options
     g_fs = parser.add_argument_group('Specific options for FreeSurfer preprocessing')
-    g_fs.add_argument('--no-freesurfer', action='store_false', dest='freesurfer',
+    g_fs.add_argument('--fs-no-reconall', '--no-freesurfer',
+                      action='store_false', dest='run_reconall',
                       help='disable FreeSurfer preprocessing')
     g_fs.add_argument('--no-submm-recon', action='store_false', dest='hires',
                       help='disable sub-millimeter (hires) reconstruction')
@@ -205,12 +206,15 @@ def main():
     default_license = op.join(os.getenv('FREESURFER_HOME', ''), 'license.txt')
     # Precedence: --fs-license-file, $FS_LICENSE, default_license
     license_file = opts.fs_license_file or os.getenv('FS_LICENSE', default_license)
-    if opts.freesurfer:
-        if not os.path.exists(license_file):
-            raise RuntimeError('ERROR: when --no-freesurfer is not set, a valid '
-                               'license file is required for FreeSurfer to run.')
-        else:
-            os.environ['FS_LICENSE'] = license_file
+    if not os.path.exists(license_file):
+        raise RuntimeError(
+            'ERROR: a valid license file is required for FreeSurfer to run. '
+            'FMRIPREP looked for an existing license file at several paths, in this '
+            'order: 1) command line argument ``--fs-license-file``; 2) ``$FS_LICENSE`` '
+            'environment variable; and 3) the ``$FREESURFER_HOME/license.txt`` path. '
+            'Get it (for free) by registering at https://'
+            'surfer.nmr.mgh.harvard.edu/registration.html')
+    os.environ['FS_LICENSE'] = license_file
 
     # Retrieve logging level
     log_level = int(max(25 - 5 * opts.verbose_count, logging.DEBUG))
@@ -405,7 +409,7 @@ def build_workflow(opts, retval):
         work_dir=work_dir,
         output_dir=output_dir,
         bids_dir=bids_dir,
-        freesurfer=opts.freesurfer,
+        freesurfer=opts.run_reconall,
         output_spaces=opts.output_space,
         template=opts.template,
         medial_surface_nan=opts.medial_surface_nan,
