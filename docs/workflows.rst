@@ -86,7 +86,7 @@ Finally, a non-linear registration to the MNI template space is estimated.
 .. figure:: _static/segmentation.svg
     :scale: 100%
 
-    Brain tissue segmentation (FAST).
+    Brain tissue segmentation (``fast``).
 
 .. figure:: _static/T1MNINormalization.svg
     :scale: 100%
@@ -351,18 +351,18 @@ EPI to T1w registration
         use_bbr=True,
         bold2t1w_dof=9)
 
-The reference EPI image of each run is aligned by the ``bbregister`` routine to the
-reconstructed subject using the gray/white matter boundary (FreeSurfer's
-``?h.white`` surfaces).
+The reference :abbr:`EPI (echo-planar imaging)` image of each run is aligned
+by the ``bbregister`` routine to the reconstructed subject using the gray/white
+matter boundary (FreeSurfer's ``?h.white`` surfaces).
 
 .. figure:: _static/EPIT1Normalization.svg
     :scale: 100%
 
-    Animation showing EPI to T1w registration (FreeSurfer bbregister)
+    Animation showing :abbr:`EPI (echo-planar imaging)` to T1w registration (FreeSurfer ``bbregister``)
 
-If FreeSurfer processing is disabled, FLIRT is performed with the BBR cost
-function, using the FAST segmentation to establish the gray/white matter
-boundary.
+If FreeSurfer processing is disabled, FSL ``flirt`` is run with the
+:abbr:`BBR (boundary-based registration)` cost function, using the
+``fast`` segmentation to establish the gray/white matter boundary.
 
 EPI to MNI transformation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -382,8 +382,8 @@ EPI to MNI transformation
 This sub-workflow concatenates the transforms calculated upstream (see
 `Head-motion estimation`_, `Susceptibility Distortion Correction (SDC)`_ (if
 fieldmaps are available), `EPI to T1w registration`_, and a T1w-to-MNI
-transform from `T1w/T2w preprocessing`_) to map the EPI image to standardized
-MNI space.
+transform from `T1w/T2w preprocessing`_) to map the :abbr:`EPI (echo-planar imaging)`
+image to standard MNI space.
 It also maps the T1w-based mask to MNI space.
 
 Transforms are concatenated and applied all at once, with one interpolation (Lanczos)
