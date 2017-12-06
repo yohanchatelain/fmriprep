@@ -214,17 +214,18 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     if bold_file == '/completely/made/up/path/sub-01_task-nback_bold.nii.gz':
         mem_gb = {'filesize': 1, 'resampled': 1, 'largemem': 1}
         bold_tlen = 10
+        ref_file = bold_file
     else:
         if isinstance(bold_file, list):  # if multi-echo data
-            multiecho = True
             ref_file = bold_file[0]
         else:
             ref_file = bold_file
 
         bold_tlen, mem_gb = _create_mem_gb(ref_file)
-        wf_name = _get_wf_name(ref_file)
-        LOGGER.log(25, 'Creating bold processing workflow for "%s" (%.2f GB / %d TRs).',
-                   ref_file, mem_gb['filesize'], bold_tlen)
+
+    wf_name = _get_wf_name(ref_file)
+    LOGGER.log(25, 'Creating bold processing workflow for "%s" (%.2f GB / %d TRs).',
+               ref_file, mem_gb['filesize'], bold_tlen)
 
     # For doc building purposes
     if layout is None or bold_file == 'bold_preprocesing':
@@ -241,7 +242,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         run_stc = True
         bold_pe = 'j'
     else:
-        if multiecho:
+        if isinstance(bold_file, list):
             tes = []
             for echo in bold_file:
                 tes.append(layout.get_metadata(echo)['EchoTime'])
@@ -274,7 +275,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 't1_2_fsnative_reverse_transform']),
         name='inputnode')
 
-    if multiecho:
+    if isinstance(bold_file, list):
         inputnode.inputs.iterables = ("bold_file", bold_file)
     else:
         inputnode.inputs.bold_file = bold_file
