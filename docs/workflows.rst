@@ -4,13 +4,14 @@
 Processing pipeline details
 ===========================
 
-``fmriprep`` adapts its pipeline depending on what data and metadata is
-available is used as the input. For example, slice timing correction will be
+``fmriprep`` adapts its pipeline depending on what data and metadata are
+available and are used as the input. For example, slice timing correction will be
 performed only if the ``SliceTiming`` metadata field is found for the input
 dataset.
 
-High-level view of the basic pipeline (for single-band datasets, without
-slice-timing information and no fieldmap acquisitions):
+A (very) high-level view of the simplest pipeline (for a single-band dataset with only
+one task, single-run, with no slice-timing information nor fieldmap acquisitions)
+is presented below:
 
 .. workflow::
     :graph2use: orig
@@ -210,7 +211,8 @@ BOLD preprocessing
                               use_aroma=False,
                               ignore_aroma_err=False)
 
-Preprocessing of BOLD files is split into multiple sub-workflows described below.
+Preprocessing of :abbr:`BOLD (blood-oxygen level-dependent)` files is
+split into multiple sub-workflows described below.
 
 .. _bold_ref:
 
@@ -225,20 +227,47 @@ BOLD reference image estimation
     from fmriprep.workflows.bold import init_bold_reference_wf
     wf = init_bold_reference_wf(omp_nthreads=1)
 
-This workflow estimates a reference image for a BOLD series, which is used to
-:ref:`estimate head motion <bold_hmc>` and :ref:`register BOLD series to T1w
-<bold_reg>`,
-and performs skull-stripping and contrast enhancement.
+This workflow estimates a reference image for a
+:abbr:`BOLD (blood-oxygen level-dependent)` series.
 If T1-saturation effects ("dummy scans" or non-steady state volumes) are
 detected they are used as reference due to their superior tissue contrast.
 Otherwise a median of motion corrected subset of volumes is used.
-
-Skull-stripping of the reference image is performed using Nilearn.
+The reference image is used to calculate a brain mask for the
+:abbr:`BOLD (blood-oxygen level-dependent)` signal using
+`Nilearn <http://nilearn.github.io/>`_.
+Further, the reference is fed to the :ref:`head-motion estimation
+workflow <bold_hmc>` and the :ref:`registration workflow to map
+BOLD series into the T1w image of the same subject <bold_reg>`.
 
 .. figure:: _static/brainextraction.svg
     :scale: 100%
 
-    Brain extraction (BET).
+    Calculation of a brain mask from the BOLD series.
+
+.. _bold_hmc:
+
+Head-motion estimation
+~~~~~~~~~~~~~~~~~~~~~~
+:mod:`fmriprep.workflows.bold.hmc.init_bold_hmc_wf`
+
+.. workflow::
+    :graph2use: colored
+    :simple_form: yes
+
+    from fmriprep.workflows.bold import init_bold_hmc_wf
+    wf = init_bold_hmc_wf(
+        mem_gb=1,
+        omp_nthreads=1)
+
+Using the previous :ref:`estimated reference scan <bold_ref>`,
+FSL ``mcflirt`` is used to estimate head-motion.
+As a result, one rigid-body transform w.r.t. the reference image
+is written for each :abbr:`BOLD (blood-oxygen level-dependent)`
+time-step. Additionally, a list of 6-parameters (three rotations,
+three translations) per time-step is written and fed to the
+:ref:`confounds workflow <bold_confounds>`.
+Motion parameters are therefore calculated before any time-domain
+filtering, as recently suggested by [Power2017]_.
 
 .. _bold_stc:
 
@@ -256,34 +285,16 @@ Slice time correction
                   'SliceTiming': [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]},
         )
 
-If the ``SliceTiming`` field is present in the input dataset metadata, this
-workflow will be included to perform slice time correction prior to head motion
-estimation.
-Slice time correction is performed using AFNI 3dTShift.
+If the ``SliceTiming`` field is available within the input dataset metadata,
+this workflow performs slice time correction prior to other signal resampling
+processes.
+Slice time correction is performed using AFNI ``3dTShift``.
 All slices are realigned in time to the middle of each TR.
 
-Slice time correction can be disabled with ``--ignore slicetiming`` command
-line argument.
-If a BOLD series has fewer than 5 usable (steady-state) volumes, slice time
-correction will be disabled.
-
-.. _bold_hmc:
-
-Head-motion estimation
-~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.bold.hmc.init_bold_hmc_wf`
-
-.. workflow::
-    :graph2use: colored
-    :simple_form: yes
-
-    from fmriprep.workflows.bold import init_bold_hmc_wf
-    wf = init_bold_hmc_wf(
-        mem_gb=1,
-        omp_nthreads=1)
-
-FSL MCFLIRT is used to estimate motion transformations using an automatically
-estimated reference scan (see :ref:`bold_ref`).
+Slice time correction can be disabled with the ``--ignore slicetiming``
+command line argument.
+If a :abbr:`BOLD (blood-oxygen level-dependent)` series has fewer than
+5 usable (steady-state) volumes, slice time correction will be disabled.
 
 
 Susceptibility Distortion Correction (SDC)
@@ -292,7 +303,8 @@ Susceptibility Distortion Correction (SDC)
 .. figure:: _static/unwarping.svg
     :scale: 100%
 
-    Applying field correction warp using ANTs.
+    Applying susceptibility-derived distortion correction, based on
+    fieldmap estimation.
 
 One of the major problems that affects :abbr:`EPI (echo planar imaging)` data
 is the spatial distortion caused by the inhomogeneity of the field inside
@@ -311,6 +323,15 @@ Pre-processed BOLD in native space
     from fmriprep.workflows.bold import init_bold_preproc_trans_wf
     wf = init_bold_preproc_trans_wf(mem_gb=3, omp_nthreads=1)
 
+A new *preproc* :abbr:`BOLD (blood-oxygen level-dependent)` series is generated
+from the slice-timing corrected or the original data (if
+:abbr:`STC (slice-timing correction)` was not applied) in the
+original space.
+All volumes in the :abbr:`BOLD (blood-oxygen level-dependent)` series are
+resampled in their native space by concatenating the mappings found in previous
+correction workflows (:abbr:`HMC (head-motion correction)` and
+:abbr:`SDC (susceptibility-derived distortion correction)` if excecuted)
+for a one-shot interpolation process. Interpolation uses a Lanczos kernel.
 
 .. _bold_reg:
 
@@ -393,6 +414,8 @@ Surfaces are generated for the "subject native" surface, as well as transformed 
 ``fsaverage`` template space.
 All surface outputs are in GIFTI format.
 
+.. _bold_confounds:
+
 Confounds estimation
 ~~~~~~~~~~~~~~~~~~~~
 :mod:`fmriprep.workflows.bold.confounds.init_bold_confs_wf`
@@ -410,7 +433,7 @@ Confounds estimation
         metadata={"RepetitionTime": 2.0,
                   "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]})
 
-Given a motion-corrected fMRI, a brain mask, MCFLIRT movement parameters and a
+Given a motion-corrected fMRI, a brain mask, ``mcflirt`` movement parameters and a
 segmentation, the `discover_wf` sub-workflow calculates potential
 confounds per volume.
 
