@@ -169,3 +169,10 @@ Posters
    :target: _static/OHBM2017-poster.png
 
 .. include:: license.rst
+
+Other relevant references
+-------------------------
+
+  .. [Power2017] Power JD, Plitt M, Kundu P, Bandettini PA, Martin A (2017) Temporal interpolation alters
+      motion in fMRI scans: Magnitudes and consequences for artifact detection. PLOS ONE 12(9): e0182939.
+      doi:`10.1371/journal.pone.0182939 <https://doi.org/10.1371/journal.pone.0182939>`_.
