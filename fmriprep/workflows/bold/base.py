@@ -334,7 +334,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                    bold2t1w_dof=bold2t1w_dof,
                                    mem_gb=mem_gb['largemem'],
                                    omp_nthreads=omp_nthreads,
-                                   use_compression=not low_mem,
+                                   use_compression=False,
                                    use_fieldwarp=(fmaps is not None or use_syn))
 
     # get confounds
@@ -351,7 +351,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     bold_bold_trans_wf = init_bold_preproc_trans_wf(
         mem_gb=mem_gb['resampled'],
         omp_nthreads=omp_nthreads,
-        use_compression=not (low_mem and use_aroma),
+        use_compression=not low_mem,
         use_fieldwarp=(fmaps is not None or use_syn),
         name='bold_bold_trans_wf'
     )
