@@ -243,10 +243,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         run_stc = True
         bold_pe = 'j'
     else:
-        if isinstance(bold_file, list):
-            tes = []
-            for echo in bold_file:
-                tes.append(layout.get_metadata(echo)['EchoTime'])
+        if isinstance(bold_file, list):  # For multiecho data, grab TEs
+            tes = [layout.get_metadata(echo)['EchoTime'] for echo in bold_file]
         # Since all other metadata is constant
         metadata = layout.get_metadata(ref_file)
 
@@ -335,7 +333,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
     # if doing T2*-driven coregistration, create T2* map
     if t2s_coreg is True:
-        bold_t2s_wf = init_bold_t2s_wf(name='bold_t2s_wf',
+        bold_t2s_wf = init_bold_t2s_wf(echo_times=tes,
+                                       name='bold_t2s_wf',
                                        mem_gb=mem_gb['filesize'],
                                        omp_nthreads=omp_nthreads)
 
@@ -374,6 +373,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             ('t1_2_fsnative_reverse_transform', 'inputnode.t1_2_fsnative_reverse_transform')]),
         (inputnode, bold_confounds_wf, [('t1_tpms', 'inputnode.t1_tpms'),
                                         ('t1_mask', 'inputnode.t1_mask')]),
+        # Maybe pull out this (following) line?
         (bold_hmc_wf, bold_reg_wf, [('outputnode.xforms', 'inputnode.hmc_xforms')]),
         (bold_hmc_wf, bold_confounds_wf, [('outputnode.movpar_file', 'inputnode.movpar_file')]),
         (bold_reference_wf, func_reports_wf, [
@@ -410,13 +410,12 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
     if t2s_coreg is True:
         workflow.connect([
-            (inputnode, bold_t2s_wf, [('bold_file', 'inputnode.in_files')]),
-            (bold_t2s_wf, bold_reg_wf, [('outputnode.t2s_map', 'inputnode.bold_split')])
+            (bold_hmc_wf, bold_t2s_wf, [('outputnode.bold_split', 'inputnode.echo_split'),
+                                       ('outputnode.xforms', 'inputnode.xforms')]),
             ])
-    else:
-        workflow.connect([
-            (bold_hmc_wf, bold_reg_wf, [('outputnode.bold_split', 'inputnode.bold_split')])
-            ])
+    workflow.connect([
+        (bold_hmc_wf, bold_reg_wf, [('outputnode.bold_split', 'inputnode.bold_split')])
+        ])
 
     # Cases:
     # fmaps | use_syn | force_syn  |  ACTION
@@ -476,9 +475,18 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 ('outputnode.bold_mask', 'inputnode.in_mask')]),
             (sdc_unwarp_wf, bold_reg_wf, [
                 ('outputnode.out_warp', 'inputnode.fieldwarp'),
-                ('outputnode.out_reference_brain', 'inputnode.ref_bold_brain'),
                 ('outputnode.out_mask', 'inputnode.ref_bold_mask')]),
         ])
+        if t2s_coreg is True:
+            workflow.connect([
+                (bold_t2s_wf, bold_reg_wf, [
+                    ('outputnode.t2s_map', 'inputnode.ref_bold_brain')]),
+            ])
+        else:
+            workflow.connect([
+                (sdc_unwarp_wf, bold_reg_wf, [
+                    ('outputnode.out_reference_brain', 'inputnode.ref_bold_brain')]),
+            ])
 
         # Report on BOLD correction
         fmap_unwarp_report_wf = init_fmap_unwarp_report_wf(reportlets_dir=reportlets_dir,
@@ -496,11 +504,21 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         ])
     elif not use_syn:
         LOGGER.warn('No fieldmaps found or they were ignored, building base workflow '
-                    'for dataset %s.', bold_file)
+                    'for dataset %s.', ref_file)
         summary.inputs.distortion_correction = 'None'
+        if t2s_coreg is True:
+            workflow.connect([
+                (bold_t2s_wf, bold_reg_wf, [
+                    ('outputnode.t2s_map', 'inputnode.ref_bold_brain')])
+            ])
+        else:
+            workflow.connect([
+                (bold_reference_wf, bold_reg_wf, [
+                    ('outputnode.ref_image_brain', 'inputnode.ref_bold_brain')]),
+            ])
+
         workflow.connect([
             (bold_reference_wf, bold_reg_wf, [
-                ('outputnode.ref_image_brain', 'inputnode.ref_bold_brain'),
                 ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
         ])
 
@@ -523,12 +541,21 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         # XXX Eliminate branch when forcing isn't an option
         if not fmaps:
             LOGGER.warn('No fieldmaps found or they were ignored. Using EXPERIMENTAL '
-                        'nonlinear susceptibility correction for dataset %s.', bold_file)
+                        'nonlinear susceptibility correction for dataset %s.', ref_file)
             summary.inputs.distortion_correction = 'SyN'
+            if t2s_coreg is True:
+                workflow.connect([
+                    (bold_t2s_wf, bold_reg_wf, [
+                        ('outputnode.t2s_map', 'inputnode.ref_bold_brain')]),
+                ])
+            else:
+                workflow.connect([
+                    (nonlinear_sdc_wf, bold_reg_wf, [
+                        ('outputnode.out_reference_brain', 'inputnode.ref_bold_brain')]),
+                ])
             workflow.connect([
                 (nonlinear_sdc_wf, bold_reg_wf, [
                     ('outputnode.out_warp', 'inputnode.fieldwarp'),
-                    ('outputnode.out_reference_brain', 'inputnode.ref_bold_brain'),
                     ('outputnode.out_mask', 'inputnode.ref_bold_mask')]),
             ])
 

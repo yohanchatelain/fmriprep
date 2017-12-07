@@ -11,28 +11,35 @@ Generate T2* map from multi-echo BOLD images
 from niworkflows.nipype import logging
 from niworkflows.nipype.pipeline import engine as pe
 from niworkflows.nipype.interfaces import utility as niu
-from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
 
+from ...interfaces.nilearn import Merge
 from ...interfaces.multiecho import T2SMap
+from ...interfaces import MultiApplyTransforms
 
 DEFAULT_MEMORY_MIN_GB = 0.01
 LOGGER = logging.getLogger('workflow')
 
 
 # pylint: disable=R0914
-def init_bold_t2s_wf(mem_gb, omp_nthreads, name='bold_t2s_wf'):
+def init_bold_t2s_wf(echo_times, mem_gb, omp_nthreads, name='bold_t2s_wf'):
     """
+    This workflow performs :abbr:`HMC (head motion correction)`
+    on individual echo_files, uses T2SMap to generate a T2* image
+    for coregistration instead of mean BOLD EPI.
 
     .. workflow::
         :graph2use: orig
         :simple_form: yes
 
         from fmriprep.workflows.bold import init_bold_t2s_wf
-        wf = init_bold_t2s_wf(mem_gb=3,
+        wf = init_bold_t2s_wf(echo_times=[13.6, 29.79, 46.59],
+                              mem_gb=3,
                               omp_nthreads=1)
 
     **Parameters**
 
+        echo_times
+            list of TEs associated with each echo
         mem_gb : float
             Size of BOLD file in GB
         omp_nthreads : int
@@ -44,8 +51,8 @@ def init_bold_t2s_wf(mem_gb, omp_nthreads, name='bold_t2s_wf'):
 
         xforms
             ITKTransform file aligning each volume to ``ref_image``
-        bold_file
-            list of multi-echo BOLD EPIs
+        echo_split
+            3D volumes of multi-echo BOLD EPI
 
     **Outputs**
 
@@ -53,21 +60,29 @@ def init_bold_t2s_wf(mem_gb, omp_nthreads, name='bold_t2s_wf'):
             the T2* map for the EPI run
     """
     workflow = pe.Workflow(name=name)
-    inputnode = pe.Node(niu.IdentityInterface(fields=['bold_file', 'xforms']), name='inputnode')
-    outputnode = pe.Node(niu.IdentityInterface(fields=['t2s_map']), name='outputnode')
+    inputnode = pe.Node(niu.IdentityInterface(fields=['echo_split', 'xforms']),
+                        name='inputnode')
+    outputnode = pe.Node(niu.IdentityInterface(fields=['t2s_map']),
+                         name='outputnode')
 
     LOGGER.log(25, 'Generating T2* map.')
 
     apply_hmc = pe.Node(
-        ApplyTransforms(interpolation='NearestNeighbor', float=True),
-        name='hmc_xforms', mem_gb=0.1)
+        MultiApplyTransforms(interpolation='NearestNeighbor', float=True, copy_dtype=True),
+        mem_gb=(mem_gb * 3 * omp_nthreads), n_procs=omp_nthreads, name='apply_hmc')
 
-    t2s_map = pe.Node(T2SMap(tes=tes), name='t2s_map')
+    merge = pe.Node(Merge(compress=True), name='merge', mem_gb=mem_gb)
+
+    t2s_map = pe.JoinNode(T2SMap(tes=echo_times),
+                          joinfield='in_files', joinsource='inputnode',
+                          name='t2s_map')
 
     workflow.connect([
-        (inputnode, apply_hmc, [('hmc_xforms', 'transforms')]),
-        (apply_hmc, t2s_map, [('output_image', 'input_files')]),
-        (t2s_map, outputnode, [('bold_file', 't2s_map')]),
+        (inputnode, apply_hmc, [('hmc_xforms', 'transforms'),
+                                ('echo_split', 'input_image')]),
+        (apply_hmc, merge, [('out_files', 'in_files')]),
+        (merge, t2s_map, [('out_file', 'in_files')]),
+        (t2s_map, outputnode, [('output_image', 't2s_map')]),
     ])
 
     return workflow

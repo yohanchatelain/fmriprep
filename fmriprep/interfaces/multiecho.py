@@ -30,7 +30,7 @@ class T2SMapInputSpec(BaseInterfaceInputSpec):
 
 
 class T2SMapOutputSpec(TraitedSpec):
-    t2s_map = File(exists=True, desc='T2* map')
+    output_image = File(exists=True, desc='T2* map')
 
 
 class T2SMap(SimpleInterface):
