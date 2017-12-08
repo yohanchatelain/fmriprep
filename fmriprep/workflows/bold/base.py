@@ -475,18 +475,9 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 ('outputnode.bold_mask', 'inputnode.in_mask')]),
             (sdc_unwarp_wf, bold_reg_wf, [
                 ('outputnode.out_warp', 'inputnode.fieldwarp'),
+                ('outputnode.out_reference_brain', 'inputnode.ref_bold_brain'),
                 ('outputnode.out_mask', 'inputnode.ref_bold_mask')]),
         ])
-        if t2s_coreg is True:
-            workflow.connect([
-                (bold_t2s_wf, bold_reg_wf, [
-                    ('outputnode.t2s_map', 'inputnode.ref_bold_brain')]),
-            ])
-        else:
-            workflow.connect([
-                (sdc_unwarp_wf, bold_reg_wf, [
-                    ('outputnode.out_reference_brain', 'inputnode.ref_bold_brain')]),
-            ])
 
         # Report on BOLD correction
         fmap_unwarp_report_wf = init_fmap_unwarp_report_wf(reportlets_dir=reportlets_dir,
@@ -506,19 +497,10 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         LOGGER.warn('No fieldmaps found or they were ignored, building base workflow '
                     'for dataset %s.', ref_file)
         summary.inputs.distortion_correction = 'None'
-        if t2s_coreg is True:
-            workflow.connect([
-                (bold_t2s_wf, bold_reg_wf, [
-                    ('outputnode.t2s_map', 'inputnode.ref_bold_brain')])
-            ])
-        else:
-            workflow.connect([
-                (bold_reference_wf, bold_reg_wf, [
-                    ('outputnode.ref_image_brain', 'inputnode.ref_bold_brain')]),
-            ])
 
         workflow.connect([
             (bold_reference_wf, bold_reg_wf, [
+                ('outputnode.ref_image_brain', 'inputnode.ref_bold_brain'),
                 ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
         ])
 
@@ -543,19 +525,11 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             LOGGER.warn('No fieldmaps found or they were ignored. Using EXPERIMENTAL '
                         'nonlinear susceptibility correction for dataset %s.', ref_file)
             summary.inputs.distortion_correction = 'SyN'
-            if t2s_coreg is True:
-                workflow.connect([
-                    (bold_t2s_wf, bold_reg_wf, [
-                        ('outputnode.t2s_map', 'inputnode.ref_bold_brain')]),
-                ])
-            else:
-                workflow.connect([
-                    (nonlinear_sdc_wf, bold_reg_wf, [
-                        ('outputnode.out_reference_brain', 'inputnode.ref_bold_brain')]),
-                ])
+
             workflow.connect([
                 (nonlinear_sdc_wf, bold_reg_wf, [
                     ('outputnode.out_warp', 'inputnode.fieldwarp'),
+                    ('outputnode.out_reference_brain', 'inputnode.ref_bold_brain'),
                     ('outputnode.out_mask', 'inputnode.ref_bold_mask')]),
             ])
 
