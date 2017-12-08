@@ -2,8 +2,17 @@ Next release
 ============
 
 
-1.0.0 (<TBD>)
-=============
+1.0.0 (6th of December 2017)
+============================
+
+* [ENH] Add ``--resource-monitor`` flag (#883)
+* [FIX] Collision between Multi-T1w and ``--no-freesurfer`` (#880)
+* [FIX] Setting ``use_compression`` on resampling workflows (#882)
+* [ENH] Estimate motion parameters before STC (#876)
+* [ENH] Add ``--stop-on-first-crash`` option (#865)
+* [FIX] Correctly handling xforms (#874)
+* [FIX] Combined ROI reportlets (#872)
+* [ENH] Strip reportlets out of full report (#867)
 
 1.0.0-rc13 (1st of December 2017)
 ---------------------------------
@@ -39,7 +48,7 @@ Next release
 --------------------------------
 
 * [FIX] Fixed #776 (aCompCor - numpy.linalg.linalg.LinAlgError: SVD did not converge) via #807.
-* [ENH] Added `CSF` column to `_confounds.tsv` (included in #807)
+* [ENH] Added ``CSF`` column to ``_confounds.tsv`` (included in #807)
 * [DOC] Add more details on the outputs of FMRIPREP and minor fixes (#811)
 * [ENH] Processing confounds in BOLD space (#807)
 * [ENH] Updated niworkflows and nipype, including the new feature to close all file descriptors (#810)
@@ -64,9 +73,9 @@ Next release
 * [ENH] Added rX permissions to make life easier on Singularity users (#757)
 * [DOC] Citation boilerplate (#779)
 * [FIX] Patch to remove long filenames after mri_concatenate_lta (#778)
-* [FIX] Only use unbiased template with --longitudinal (#771)
+* [FIX] Only use unbiased template with ``--longitudinal`` (#771)
 * [FIX] Use t1_2_fsnative registration when sampling to surface (#762)
-* [ENH] Remove --skull_strip_ants option (#761)
+* [ENH] Remove ``--skull_strip_ants`` option (#761)
 * [DOC] Add reference to beginners guide (#763)
 
 
@@ -109,10 +118,10 @@ With thanks to Mathias Goncalves for contributions.
 
 With thanks to Anibal Sólon for contributions.
 
-* [ENH] Add --low-mem option to reduce memory usage for large BOLD series (#663)
+* [ENH] Add ``--low-mem`` option to reduce memory usage for large BOLD series (#663)
 * [ENH] Parallelize anatomical conformation step (#666)
 * [FIX] Handle missing functional data in SubjectSummary node (#670)
-* [FIX] Disable --no-skull-strip-ants (AFNI skull-stripping) (#674)
+* [FIX] Disable ``--no-skull-strip-ants`` (AFNI skull-stripping) (#674)
 * [FIX] Initialize SyN SDC more robustly (#680)
 * [DOC] Add comprehensive documentation of workflow API (#638)
 
@@ -291,7 +300,7 @@ With thanks to Asier Erramuzpe for contributions.
 
 * [FIX] Downloads from OSF, remove data downloader (now in niworkflows)
 * [FIX] pybids was missing in the install_requires
-* [DEP] Deprecated -S/--subject-id tag
+* [DEP] Deprecated ``-S``/``--subject-id`` tag
 * [ENH] Accept subjects with several T1w images (#114)
 * [ENH] Documentation updates (#130, #131)
 * [TST] Re-enabled CircleCI tests on one subject from ds054 of OpenfMRI
