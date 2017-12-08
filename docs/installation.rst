@@ -107,7 +107,7 @@ For example: ::
         /work/04168/asdf/lonestar/ $WORK/lonestar/output \
         participant \
         --participant-label 387 --nthreads 16 -w $WORK/lonestar/work \
-        --ants-nthreads 16
+        --omp-nthreads 16
 
 .. note::
 
@@ -119,7 +119,7 @@ For example: ::
         /work/04168/asdf/lonestar/ $WORK/lonestar/output \
         participant \
         --participant-label 387 --nthreads 16 -w $WORK/lonestar/work \
-        --ants-nthreads 16
+        --omp-nthreads 16
 
 Manually Prepared Environment
 =============================
