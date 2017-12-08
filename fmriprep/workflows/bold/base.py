@@ -430,15 +430,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 ('outputnode.bold_file', 'in_file')]),
         ])
 
-    if t2s_coreg is True:
-        workflow.connect([
-            (bold_hmc_wf, bold_t2s_wf, [('outputnode.bold_split', 'inputnode.echo_split'),
-                                       ('outputnode.xforms', 'inputnode.xforms')]),
-            ])
-    workflow.connect([
-        (bold_hmc_wf, bold_reg_wf, [('outputnode.bold_split', 'inputnode.bold_split')])
-        ])
-
     # Cases:
     # fmaps | use_syn | force_syn  |  ACTION
     # ----------------------------------------------
@@ -516,15 +507,26 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 ('outputnode.itk_t1_to_bold', 'inputnode.in_xfm')]),
         ])
     elif not use_syn:
-        LOGGER.warn('No fieldmaps found or they were ignored, building base workflow '
-                    'for dataset %s.', ref_file)
-        summary.inputs.distortion_correction = 'None'
+        if t2s_coreg is True:
+            workflow.connect([
+                (bold_split, bold_t2s_wf, [
+                    ('outfiles', 'inputnode.echo_split')]),
+                (bold_hmc_wf, bold_t2s_wf, [
+                    ('outputnode.xforms', 'inputnode.xforms')])
+                (bold_t2s_wf, bold_reg_wf, [
+                    ('outputnode.t2s_map', 'inputnode.ref_bold_brain'),
+                    ('outputnode.t2s_mask', 'inputnode.ref_bold_mask')])
+                ])
+        else:
+            LOGGER.warn('No fieldmaps found or they were ignored, building base workflow '
+                        'for dataset %s.', ref_file)
+            summary.inputs.distortion_correction = 'None'
 
-        workflow.connect([
-            (bold_reference_wf, bold_reg_wf, [
-                ('outputnode.ref_image_brain', 'inputnode.ref_bold_brain'),
-                ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
-        ])
+            workflow.connect([
+                (bold_reference_wf, bold_reg_wf, [
+                    ('outputnode.ref_image_brain', 'inputnode.ref_bold_brain'),
+                    ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
+            ])
 
     if use_syn:
         nonlinear_sdc_wf = init_nonlinear_sdc_wf(
@@ -547,7 +549,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             LOGGER.warn('No fieldmaps found or they were ignored. Using EXPERIMENTAL '
                         'nonlinear susceptibility correction for dataset %s.', ref_file)
             summary.inputs.distortion_correction = 'SyN'
-
             workflow.connect([
                 (nonlinear_sdc_wf, bold_reg_wf, [
                     ('outputnode.out_warp', 'inputnode.fieldwarp'),

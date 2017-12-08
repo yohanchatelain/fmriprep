@@ -16,6 +16,8 @@ from ...interfaces.nilearn import Merge
 from ...interfaces.multiecho import T2SMap
 from ...interfaces import MultiApplyTransforms
 
+from .util import init_skullstrip_bold_wf
+
 DEFAULT_MEMORY_MIN_GB = 0.01
 LOGGER = logging.getLogger('workflow')
 
@@ -62,7 +64,7 @@ def init_bold_t2s_wf(echo_times, mem_gb, omp_nthreads, name='bold_t2s_wf'):
     workflow = pe.Workflow(name=name)
     inputnode = pe.Node(niu.IdentityInterface(fields=['echo_split', 'xforms']),
                         name='inputnode')
-    outputnode = pe.Node(niu.IdentityInterface(fields=['t2s_map']),
+    outputnode = pe.Node(niu.IdentityInterface(fields=['t2s_map', 't2s_mask']),
                          name='outputnode')
 
     LOGGER.log(25, 'Generating T2* map.')
@@ -77,12 +79,16 @@ def init_bold_t2s_wf(echo_times, mem_gb, omp_nthreads, name='bold_t2s_wf'):
                           joinfield='in_files', joinsource='inputnode',
                           name='t2s_map')
 
+    skullstrip_bold_wf = init_skullstrip_bold_wf()
+
     workflow.connect([
         (inputnode, apply_hmc, [('hmc_xforms', 'transforms'),
                                 ('echo_split', 'input_image')]),
         (apply_hmc, merge, [('out_files', 'in_files')]),
         (merge, t2s_map, [('out_file', 'in_files')]),
-        (t2s_map, outputnode, [('output_image', 't2s_map')]),
+        (t2s_map, skullstrip_bold_wf, [('output_image', 'inputnode.in_file')]),
+        (skullstrip_bold_wf, outputnode, [('outputnode.skull_stripped_file', 't2s_map'),
+                                          ('outputnode.mask_file', 't2s_mask')])
     ])
 
     return workflow
