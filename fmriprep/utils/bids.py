@@ -15,8 +15,10 @@ Fetch some test data
 
 """
 import os
+import re
 import os.path as op
 import warnings
+from itertools import groupby
 from bids.grabbids import BIDSLayout
 
 
@@ -166,5 +168,19 @@ def collect_data(dataset, participant_label, task=None):
     if task:
         queries['bold']['task'] = task
 
-    return {modality: [x.filename for x in layout.get(**query)]
-            for modality, query in queries.items()}, layout
+    subj_data = {modality: [x.filename for x in layout.get(**query)]
+                 for modality, query in queries.items()}
+
+    def _run_num(x):
+        return re.search("run-\\d*", x).group(0)
+
+    if subj_data["bold"] is not []:
+        all_runs = subj_data["bold"]
+        try:
+            runs = [list(run) for _, run in groupby(all_runs, key=_run_num)]
+            runs = list(map(lambda x: x[0] if len(x) == 1 else x, runs))
+            subj_data.update({"bold": runs})
+        except AttributeError:
+            pass
+
+    return subj_data, layout
