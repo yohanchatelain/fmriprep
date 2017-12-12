@@ -302,6 +302,25 @@ If a :abbr:`BOLD (blood-oxygen level-dependent)` series has fewer than
 5 usable (steady-state) volumes, slice time correction will be disabled
 for that run.
 
+.. _bold_t2s:
+
+T2* Driven Coregistration
+~~~~~~~~~~~~~~~~~~~~~~~~~
+:mod:`fmriprep.workflows.bold.t2s.init_bold_t2s_wf`
+
+.. workflow::
+    :graph2use: colored
+    :simple_form: yes
+
+    from fmriprep.workflows.bold import init_bold_t2s_wf
+    wf = init_bold_t2s_wf(echo_times=[13.6, 29.79, 46.59],
+                          mem_gb=3,
+                          omp_nthreads=1)
+
+If the ``--t2s-coreg`` command line argument is supplied with multi-echo
+:abbr:`BOLD (blood-oxygen level-dependent)` data, a T2* map is generated.
+This T2* map is then used in place of the :ref:`BOLD reference image <bold_ref>`
+to ref:`register the BOLD series to the T1w image of the same subject <bold_reg>`.
 
 Susceptibility Distortion Correction (SDC)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
