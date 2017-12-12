@@ -99,7 +99,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
             Treat multiple sessions as longitudinal (may increase runtime)
             See sub-workflows for specific differences
         t2s_coreg : bool
-            Use multiple BOLDS echos to create T2*-map for T2*-driven coregistration
+            Use multiple BOLD echos to create T2*-map for T2*-driven coregistration
         omp_nthreads : int
             Maximum number of threads an individual process may use
         skull_strip_template : str
@@ -353,7 +353,7 @@ def init_single_subject_wf(subject_id, task_id, name,
         raise Exception("No T1w images found for participant {}. "
                         "All workflows require T1w images.".format(subject_id))
 
-    if t2s_coreg and layout.get_echos() == []:
+    if t2s_coreg and not layout.get_echos():
         raise Exception("No multiecho BOLD images found for participant {}. "
                         "T2* coregistration requires multiecho BOLD.").format(
                             subject_id)

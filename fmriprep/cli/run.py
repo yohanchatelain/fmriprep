@@ -102,7 +102,7 @@ def get_parser():
         '--longitudinal', action='store_true',
         help='treat dataset as longitudinal - may increase runtime')
     g_conf.add_argument(
-        '--t2s_coreg', action='store_true',
+        '--t2s-coreg', action='store_true',
         help='If provided with multi-echo BOLD dataset, create T2*-map and perform '
              'T2*-driven coregistration. When multi-echo data is provided and this '
              'option is not enabled, standard EPI-T1 coregistration is performed '

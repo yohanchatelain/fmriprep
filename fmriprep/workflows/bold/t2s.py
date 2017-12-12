@@ -75,7 +75,7 @@ def init_bold_t2s_wf(echo_times, mem_gb, omp_nthreads, name='bold_t2s_wf'):
 
     merge = pe.Node(Merge(compress=True), name='merge', mem_gb=mem_gb)
 
-    t2s_map = pe.JoinNode(T2SMap(tes=echo_times),
+    t2s_map = pe.JoinNode(T2SMap(te_list=echo_times),
                           joinfield='in_files', joinsource='inputnode',
                           name='t2s_map')
 

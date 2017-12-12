@@ -102,7 +102,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             Enable/disable boundary-based registration refinement.
             If ``None``, test BBR result for distortion before accepting.
         t2s_coreg : bool
-            Use multiple BOLDS echos to create T2*-map for T2*-driven coregistration
+            Use multiple BOLD echos to create T2*-map for T2*-driven coregistration
         bold2t1w_dof : 6, 9 or 12
             Degrees-of-freedom for BOLD-T1w registration
         reportlets_dir : str
@@ -879,6 +879,14 @@ def _create_mem_gb(bold_fname):
 
 
 def _get_wf_name(bold_fname):
+    """
+    Derives the workflow name for supplied BOLD file.
+
+    >>> _get_wf_name('/completely/made/up/path/sub-01_task-nback_bold.nii.gz')
+    'func_preproc_task_nback_wf'
+    >>> _get_wf_name('/completely/made/up/path/sub-01_task-nback_run-01_echo-1_bold.nii.gz')
+    'func_preproc_task_nback_run_01_wf'
+    """
     from niworkflows.nipype.utils.filemanip import split_filename
     fname = split_filename(bold_fname)[1]
     fname_nosub = '_'.join(fname.split("_")[1:])

@@ -25,7 +25,7 @@ LOGGER = logging.getLogger('interface')
 class T2SMapInputSpec(BaseInterfaceInputSpec):
     in_files = InputMultiPath(File(exists=True), mandatory=True,
                               desc='multi-echo BOLD EPIs')
-    tes = traits.List(traits.Float, mandatory=True, desc='echo times')
+    te_list = traits.List(traits.Float, mandatory=True, desc='echo times')
     compress = traits.Bool(True, usedefault=True, desc='use gzip compression on .nii output')
 
 
@@ -39,8 +39,8 @@ class T2SMap(SimpleInterface):
 
     def _run_interface(self, runtime):
         ext = '.nii.gz' if self.inputs.compress else '.nii'
-        last_emask, two_emask = echo_sampling_mask(self.in_files)
-        t2s_map = define_t2s_map(self.in_files, self.tes,
+        last_emask, two_emask = echo_sampling_mask(self.inputs.in_files)
+        t2s_map = define_t2s_map(self.inputs.in_files, self.inputs.te_list,
                                  last_emask, two_emask)
         _, fname, _ = split_filename(self.inputs.in_files[0])
         fname_preecho = fname.split('_echo-')[0]
@@ -71,9 +71,7 @@ def echo_sampling_mask(echo_list):
 
     """
     # First, load each echo and average over time
-    echos = []
-    for e in echo_list:
-        echos.append(np.mean(nb.load(e).get_data(), axis=-1))
+    echos = [np.mean(nb.load(e).get_data(), axis=-1) for e in echo_list]
 
     # In the first echo, find the 33rd percentile and the voxel(s)
     # whose average activity is equal to that value
@@ -90,9 +88,8 @@ def echo_sampling_mask(echo_list):
 
     # Now, we want to find all voxels (in each echo) that show
     # absolute signal greater than our echo-specific threshold
-    mthr = np.ones(emeans.shape)
-    for i in range(emeans.shape[-1]):
-        mthr[:, :, :, i] *= thrs[i]
+    mthr = np.ones_like(emeans)
+    mthr *= thrs[np.newaxis, np.newaxis, np.newaxis, :]
     voxels = np.abs(emeans) > mthr
 
     # We save those voxel indices out to an array
