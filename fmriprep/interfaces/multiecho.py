@@ -22,11 +22,43 @@ from niworkflows.nipype.interfaces.base import (
 LOGGER = logging.getLogger('interface')
 
 
+class FirstEchoInputSpec(BaseInterfaceInputSpec):
+    in_files = InputMultiPath(File(exists=True), mandatory=True,
+                              desc='multi-echo BOLD EPIs')
+    ref_imgs = InputMultiPath(File(exists=True), mandatory=True,
+                              desc='generated reference image for each '
+                              'multi-echo BOLD EPI')
+
+
+class FirstEchoOutputSpec(TraitedSpec):
+    first_image = File(exists=True,
+                       desc='BOLD EPI series for the first echo')
+    first_ref_image = File(exists=True, desc='generated reference image for '
+                                             'the first echo')
+
+
+class FirstEcho(SimpleInterface):
+    input_spec = FirstEchoInputSpec
+    output_spec = FirstEchoOutputSpec
+
+    def _run_interface(self, runtime):
+        echos = self.inputs.in_files
+        gen_refs = self.inputs.ref_imgs
+
+        first_echo = echos[0]
+
+        self._results['middle_image'] = echos[first_echo]
+        self._results['middle_ref_image'] = gen_refs[first_echo]
+
+        return runtime
+
+
 class T2SMapInputSpec(BaseInterfaceInputSpec):
     in_files = InputMultiPath(File(exists=True), mandatory=True,
                               desc='multi-echo BOLD EPIs')
     te_list = traits.List(traits.Float, mandatory=True, desc='echo times')
-    compress = traits.Bool(True, usedefault=True, desc='use gzip compression on .nii output')
+    compress = traits.Bool(True, usedefault=True,
+                           desc='use gzip compression on .nii output')
 
 
 class T2SMapOutputSpec(TraitedSpec):
@@ -44,8 +76,8 @@ class T2SMap(SimpleInterface):
                                  last_emask, two_emask)
         _, fname, _ = split_filename(self.inputs.in_files[0])
         fname_preecho = fname.split('_echo-')[0]
-        self._results['t2s_map'] = os.path.join(runtime.cwd, fname_preecho + '_t2smap' + ext)
-        t2s_map.to_filename(self._results['out_file'])
+        self._results['output_image'] = os.path.join(runtime.cwd, fname_preecho + '_t2smap' + ext)
+        t2s_map.to_filename(self._results['output_image'])
         return runtime
 
 

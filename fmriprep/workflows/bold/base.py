@@ -22,7 +22,8 @@ from niworkflows.nipype.interfaces import utility as niu
 
 from ...interfaces import (
     DerivativesDataSink,
-    GiftiNameSource
+    GiftiNameSource,
+    FirstEcho
 )
 
 from ...interfaces.reports import FunctionalSummary
@@ -220,8 +221,10 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         ref_file = bold_file
     else:
         if isinstance(bold_file, list):  # if multi-echo data
+            multiecho = True
             ref_file = bold_file[0]
         else:
+            multiecho = False
             ref_file = bold_file
 
         bold_tlen, mem_gb = _create_mem_gb(ref_file)
@@ -243,9 +246,10 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             'magnitude2': 'sub-03/ses-2/fmap/sub-03_ses-2_run-1_magnitude2.nii.gz'
         }]
         run_stc = True
+        multiecho = False
         bold_pe = 'j'
     else:
-        if isinstance(bold_file, list):  # For multiecho data, grab TEs
+        if multiecho is True:  # For multiecho data, grab TEs
             tes = [layout.get_metadata(echo)['EchoTime'] for echo in bold_file]
         # Since all other metadata is constant
         metadata = layout.get_metadata(ref_file)
@@ -276,8 +280,15 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 't1_2_fsnative_reverse_transform']),
         name='inputnode')
 
-    if isinstance(bold_file, list):
-        inputnode.inputs.iterables = ("bold_file", bold_file)
+    if multiecho:  # if multi-echo data
+        # iterate most preprocessing steps over each echo
+        inputnode.inputs.iterables = ('bold_file', bold_file)
+
+        me_first_echo = pe.JoinNode(interface=FirstEcho(),
+                                    joinfield=['in_files',
+                                               'ref_imgs'],
+                                    joinsource='inputnode',
+                                    name='me_first_echo')
     else:
         inputnode.inputs.bold_file = bold_file
 
@@ -375,9 +386,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
     workflow.connect([
         (inputnode, bold_reference_wf, [('bold_file', 'inputnode.bold_file')]),
-        (bold_reference_wf, bold_hmc_wf, [
-            ('outputnode.raw_ref_image', 'inputnode.raw_ref_image'),
-            ('outputnode.bold_file', 'inputnode.bold_file')]),
         (inputnode, bold_reg_wf, [
             ('bold_file', 'inputnode.name_source'),
             ('t1_preproc', 'inputnode.t1_preproc'),
@@ -416,6 +424,23 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         (bold_split, bold_bold_trans_wf, [
             ('out_files', 'inputnode.bold_split')]),
     ])
+
+    # if multiecho data, select middle echo for hmc correction
+    if multiecho is True:
+        workflow.connect([
+            (bold_reference_wf, me_first_echo, [
+                ('outputnode.bold_file', 'in_files'),
+                ('outputnode.raw_ref_image', 'ref_imgs')])
+            (me_first_echo, bold_hmc_wf, [
+                ('first_image', 'inputnode.bold_file'),
+                ('first_ref_image', 'inputnode.raw_ref_image')])
+        ])
+    else:
+        workflow.connect([
+            (bold_reference_wf, bold_hmc_wf, [
+                ('outputnode.raw_ref_image', 'inputnode.raw_ref_image'),
+                ('outputnode.bold_file', 'inputnode.bold_file')])
+        ])
 
     # bool('TooShort') == True, so check True explicitly
     if run_stc is True:
@@ -459,7 +484,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                                    omp_nthreads=omp_nthreads,
                                                    name='pepolar_unwarp_wf')
         else:
-            # Import specific workflows here, so we don't brake everything with one
+            # Import specific workflows here, so we don't break everything with one
             # unused workflow.
             from ..fieldmap import init_fmap_estimator_wf, init_sdc_unwarp_wf
             fmap_estimator_wf = init_fmap_estimator_wf(fmap_bids=fmap,

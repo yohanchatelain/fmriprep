@@ -355,7 +355,7 @@ def init_single_subject_wf(subject_id, task_id, name,
 
     if t2s_coreg and not layout.get_echos():
         raise Exception("No multiecho BOLD images found for participant {}. "
-                        "T2* coregistration requires multiecho BOLD.").format(
+                        "T2* coregistration requires multi-echo BOLD.").format(
                             subject_id)
 
     workflow = pe.Workflow(name=name)
