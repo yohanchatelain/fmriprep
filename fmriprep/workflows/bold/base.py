@@ -15,7 +15,7 @@ import os
 
 import nibabel as nb
 from niworkflows.nipype import logging
-from niworkflows.nipype.utils.filemanip import split_filename
+
 from niworkflows.nipype.interfaces.fsl import Split as FSLSplit
 from niworkflows.nipype.pipeline import engine as pe
 from niworkflows.nipype.interfaces import utility as niu
@@ -38,6 +38,7 @@ from ..fieldmap import (
 from .confounds import init_bold_confs_wf
 from .hmc import init_bold_hmc_wf
 from .stc import init_bold_stc_wf
+from .t2s import init_bold_t2s_wf
 from .registration import init_bold_reg_wf
 from .resampling import (
     init_bold_surf_wf,
@@ -52,7 +53,7 @@ LOGGER = logging.getLogger('workflow')
 
 
 def init_func_preproc_wf(bold_file, ignore, freesurfer,
-                         use_bbr, bold2t1w_dof, reportlets_dir,
+                         use_bbr, t2s_coreg, bold2t1w_dof, reportlets_dir,
                          output_spaces, template, output_dir, omp_nthreads,
                          fmap_bspline, fmap_demean, use_syn, force_syn,
                          use_aroma, ignore_aroma_err, medial_surface_nan,
@@ -76,6 +77,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                                  'template', 'fsaverage5'],
                                   debug=False,
                                   use_bbr=True,
+                                  t2s_coreg=False,
                                   bold2t1w_dof=9,
                                   fmap_bspline=True,
                                   fmap_demean=True,
@@ -99,6 +101,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         use_bbr : bool or None
             Enable/disable boundary-based registration refinement.
             If ``None``, test BBR result for distortion before accepting.
+        t2s_coreg : bool
+            Use multiple BOLD echos to create T2*-map for T2*-driven coregistration
         bold2t1w_dof : 6, 9 or 12
             Degrees-of-freedom for BOLD-T1w registration
         reportlets_dir : str
@@ -197,6 +201,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         * :py:func:`~fmriprep.workflows.bold.util.init_bold_reference_wf`
         * :py:func:`~fmriprep.workflows.bold.stc.init_bold_stc_wf`
         * :py:func:`~fmriprep.workflows.bold.hmc.init_bold_hmc_wf`
+        * :py:func:`~fmriprep.workflows.bold.t2s.init_bold_t2s_wf`
         * :py:func:`~fmriprep.workflows.bold.registration.init_bold_reg_wf`
         * :py:func:`~fmriprep.workflows.bold.confounds.init_bold_confounds_wf`
         * :py:func:`~fmriprep.workflows.bold.resampling.init_bold_mni_trans_wf`
@@ -212,21 +217,18 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     if bold_file == '/completely/made/up/path/sub-01_task-nback_bold.nii.gz':
         mem_gb = {'filesize': 1, 'resampled': 1, 'largemem': 1}
         bold_tlen = 10
+        ref_file = bold_file
     else:
-        bold_size_gb = os.path.getsize(bold_file) / (1024**3)
-        bold_tlen = nb.load(bold_file).shape[-1]
-        mem_gb = {
-            'filesize': bold_size_gb,
-            'resampled': bold_size_gb * 4,
-            'largemem': (0.007 * max(bold_tlen, 100) + 1.5) * bold_size_gb,
-        }
+        if isinstance(bold_file, list):  # if multi-echo data
+            ref_file = bold_file[0]
+        else:
+            ref_file = bold_file
 
+        bold_tlen, mem_gb = _create_mem_gb(ref_file)
+
+    wf_name = _get_wf_name(ref_file)
     LOGGER.log(25, 'Creating bold processing workflow for "%s" (%.2f GB / %d TRs).',
-               bold_file, mem_gb['filesize'], bold_tlen)
-    fname = split_filename(bold_file)[1]
-    fname_nosub = '_'.join(fname.split("_")[1:])
-    name = "func_preproc_" + fname_nosub.replace(
-        ".", "_").replace(" ", "").replace("-", "_").replace("_bold", "_wf")
+               ref_file, mem_gb['filesize'], bold_tlen)
 
     # For doc building purposes
     if layout is None or bold_file == 'bold_preprocesing':
@@ -243,7 +245,11 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         run_stc = True
         bold_pe = 'j'
     else:
-        metadata = layout.get_metadata(bold_file)
+        if isinstance(bold_file, list):  # For multiecho data, grab TEs
+            tes = [layout.get_metadata(echo)['EchoTime'] for echo in bold_file]
+        # Since all other metadata is constant
+        metadata = layout.get_metadata(ref_file)
+
         # Find fieldmaps. Options: (phase1|phase2|phasediff|epi|fieldmap)
         fmaps = layout.get_fieldmap(bold_file, return_list=True) \
             if 'fieldmaps' not in ignore else []
@@ -262,18 +268,22 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     use_syn = force_syn or (use_syn and not fmaps)
 
     # Build workflow
-    workflow = pe.Workflow(name=name)
+    workflow = pe.Workflow(name=wf_name)
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_file', 't1_preproc', 't1_brain', 't1_mask', 't1_seg', 't1_tpms',
                 't1_2_mni_forward_transform', 't1_2_mni_reverse_transform',
                 'subjects_dir', 'subject_id', 't1_2_fsnative_forward_transform',
                 't1_2_fsnative_reverse_transform']),
         name='inputnode')
-    inputnode.inputs.bold_file = bold_file
+
+    if isinstance(bold_file, list):
+        inputnode.inputs.iterables = ("bold_file", bold_file)
+    else:
+        inputnode.inputs.bold_file = bold_file
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_t1', 'bold_mask_t1', 'bold_mni', 'bold_mask_mni', 'confounds', 'surfaces',
-                'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file']),
+                't2s_map', 'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file']),
         name='outputnode')
 
     summary = pe.Node(
@@ -327,6 +337,13 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                    mem_gb=mem_gb['filesize'],
                                    omp_nthreads=omp_nthreads)
 
+    # if doing T2*-driven coregistration, create T2* map
+    if t2s_coreg is True:
+        bold_t2s_wf = init_bold_t2s_wf(echo_times=tes,
+                                       name='bold_t2s_wf',
+                                       mem_gb=mem_gb['filesize'],
+                                       omp_nthreads=omp_nthreads)
+
     # mean BOLD registration to T1w
     bold_reg_wf = init_bold_reg_wf(name='bold_reg_wf',
                                    freesurfer=freesurfer,
@@ -370,8 +387,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             # Undefined if --no-freesurfer, but this is safe
             ('subjects_dir', 'inputnode.subjects_dir'),
             ('subject_id', 'inputnode.subject_id'),
-            ('t1_2_fsnative_reverse_transform', 'inputnode.t1_2_fsnative_reverse_transform')
-        ]),
+            ('t1_2_fsnative_reverse_transform', 'inputnode.t1_2_fsnative_reverse_transform')]),
         (inputnode, bold_confounds_wf, [('t1_tpms', 'inputnode.t1_tpms'),
                                         ('t1_mask', 'inputnode.t1_mask')]),
         (bold_split, bold_reg_wf, [('out_files', 'inputnode.bold_split')]),
@@ -491,14 +507,26 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 ('outputnode.itk_t1_to_bold', 'inputnode.in_xfm')]),
         ])
     elif not use_syn:
-        LOGGER.warn('No fieldmaps found or they were ignored, building base workflow '
-                    'for dataset %s.', bold_file)
-        summary.inputs.distortion_correction = 'None'
-        workflow.connect([
-            (bold_reference_wf, bold_reg_wf, [
-                ('outputnode.ref_image_brain', 'inputnode.ref_bold_brain'),
-                ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
-        ])
+        if t2s_coreg is True:
+            workflow.connect([
+                (bold_split, bold_t2s_wf, [
+                    ('outfiles', 'inputnode.echo_split')]),
+                (bold_hmc_wf, bold_t2s_wf, [
+                    ('outputnode.xforms', 'inputnode.xforms')])
+                (bold_t2s_wf, bold_reg_wf, [
+                    ('outputnode.t2s_map', 'inputnode.ref_bold_brain'),
+                    ('outputnode.t2s_mask', 'inputnode.ref_bold_mask')])
+                ])
+        else:
+            LOGGER.warn('No fieldmaps found or they were ignored, building base workflow '
+                        'for dataset %s.', ref_file)
+            summary.inputs.distortion_correction = 'None'
+
+            workflow.connect([
+                (bold_reference_wf, bold_reg_wf, [
+                    ('outputnode.ref_image_brain', 'inputnode.ref_bold_brain'),
+                    ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
+            ])
 
     if use_syn:
         nonlinear_sdc_wf = init_nonlinear_sdc_wf(
@@ -519,7 +547,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         # XXX Eliminate branch when forcing isn't an option
         if not fmaps:
             LOGGER.warn('No fieldmaps found or they were ignored. Using EXPERIMENTAL '
-                        'nonlinear susceptibility correction for dataset %s.', bold_file)
+                        'nonlinear susceptibility correction for dataset %s.', ref_file)
             summary.inputs.distortion_correction = 'SyN'
             workflow.connect([
                 (nonlinear_sdc_wf, bold_reg_wf, [
@@ -828,7 +856,6 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
 
 
 def _get_series_len(bold_fname):
-    import nibabel as nb
     from niworkflows.interfaces.registration import _get_vols_to_discard
     img = nb.load(bold_fname)
     if len(img.shape) < 4:
@@ -837,3 +864,35 @@ def _get_series_len(bold_fname):
     skip_vols = _get_vols_to_discard(img)
 
     return img.shape[3] - skip_vols
+
+
+def _create_mem_gb(bold_fname):
+    bold_size_gb = os.path.getsize(bold_fname) / (1024**3)
+    bold_tlen = nb.load(bold_fname).shape[-1]
+    mem_gb = {
+        'filesize': bold_size_gb,
+        'resampled': bold_size_gb * 4,
+        'largemem': (0.007 * max(bold_tlen, 100) + 1.5) * bold_size_gb,
+    }
+
+    return bold_tlen, mem_gb
+
+
+def _get_wf_name(bold_fname):
+    """
+    Derives the workflow name for supplied BOLD file.
+
+    >>> _get_wf_name('/completely/made/up/path/sub-01_task-nback_bold.nii.gz')
+    'func_preproc_task_nback_wf'
+    >>> _get_wf_name('/completely/made/up/path/sub-01_task-nback_run-01_echo-1_bold.nii.gz')
+    'func_preproc_task_nback_run_01_wf'
+    """
+    from niworkflows.nipype.utils.filemanip import split_filename
+    fname = split_filename(bold_fname)[1]
+    fname_nosub = '_'.join(fname.split("_")[1:])
+    if 'echo' in fname_nosub:
+        fname_nosub = '_'.join(fname_nosub.split("_echo-")[:1]) + "_bold"
+    name = "func_preproc_" + fname_nosub.replace(
+        ".", "_").replace(" ", "").replace("-", "_").replace("_bold", "_wf")
+
+    return name

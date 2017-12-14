@@ -31,8 +31,8 @@ from .bold import init_func_preproc_wf
 
 
 def init_fmriprep_wf(subject_list, task_id, run_uuid,
-                     ignore, debug, low_mem, anat_only, longitudinal, omp_nthreads,
-                     skull_strip_template, work_dir, output_dir, bids_dir,
+                     ignore, debug, low_mem, anat_only, longitudinal, t2s_coreg,
+                     omp_nthreads, skull_strip_template, work_dir, output_dir, bids_dir,
                      freesurfer, output_spaces, template, medial_surface_nan, hires,
                      use_bbr, bold2t1w_dof, fmap_bspline, fmap_demean, use_syn, force_syn,
                      use_aroma, ignore_aroma_err, output_grid_ref):
@@ -56,6 +56,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
                               low_mem=False,
                               anat_only=False,
                               longitudinal=False,
+                              t2s_coreg=False,
                               omp_nthreads=1,
                               skull_strip_template='OASIS',
                               work_dir='.',
@@ -97,6 +98,8 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
         longitudinal : bool
             Treat multiple sessions as longitudinal (may increase runtime)
             See sub-workflows for specific differences
+        t2s_coreg : bool
+            Use multiple BOLD echos to create T2*-map for T2*-driven coregistration
         omp_nthreads : int
             Maximum number of threads an individual process may use
         skull_strip_template : str
@@ -168,6 +171,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
                                                    low_mem=low_mem,
                                                    anat_only=anat_only,
                                                    longitudinal=longitudinal,
+                                                   t2s_coreg=t2s_coreg,
                                                    omp_nthreads=omp_nthreads,
                                                    skull_strip_template=skull_strip_template,
                                                    reportlets_dir=reportlets_dir,
@@ -203,8 +207,8 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
 
 
 def init_single_subject_wf(subject_id, task_id, name,
-                           ignore, debug, low_mem, anat_only, longitudinal, omp_nthreads,
-                           skull_strip_template, reportlets_dir, output_dir,
+                           ignore, debug, low_mem, anat_only, longitudinal, t2s_coreg,
+                           omp_nthreads, skull_strip_template, reportlets_dir, output_dir,
                            bids_dir, freesurfer, output_spaces, template, medial_surface_nan,
                            hires, use_bbr, bold2t1w_dof, fmap_bspline, fmap_demean, use_syn,
                            force_syn, output_grid_ref, use_aroma, ignore_aroma_err):
@@ -227,6 +231,7 @@ def init_single_subject_wf(subject_id, task_id, name,
                                     name='single_subject_wf',
                                     task_id='',
                                     longitudinal=False,
+                                    t2s_coreg=False,
                                     omp_nthreads=1,
                                     freesurfer=True,
                                     reportlets_dir='.',
@@ -271,6 +276,8 @@ def init_single_subject_wf(subject_id, task_id, name,
         longitudinal : bool
             Treat multiple sessions as longitudinal (may increase runtime)
             See sub-workflows for specific differences
+        t2s_coreg : bool
+            Use multiple BOLDS echos to create T2*-map for T2*-driven coregistration
         omp_nthreads : int
             Maximum number of threads an individual process may use
         skull_strip_template : str
@@ -346,6 +353,11 @@ def init_single_subject_wf(subject_id, task_id, name,
         raise Exception("No T1w images found for participant {}. "
                         "All workflows require T1w images.".format(subject_id))
 
+    if t2s_coreg and not layout.get_echos():
+        raise Exception("No multiecho BOLD images found for participant {}. "
+                        "T2* coregistration requires multiecho BOLD.").format(
+                            subject_id)
+
     workflow = pe.Workflow(name=name)
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['subjects_dir']),
@@ -413,6 +425,7 @@ def init_single_subject_wf(subject_id, task_id, name,
                                                ignore=ignore,
                                                freesurfer=freesurfer,
                                                use_bbr=use_bbr,
+                                               t2s_coreg=t2s_coreg,
                                                bold2t1w_dof=bold2t1w_dof,
                                                reportlets_dir=reportlets_dir,
                                                output_spaces=output_spaces,
