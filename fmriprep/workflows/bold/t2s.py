@@ -64,20 +64,22 @@ def init_bold_t2s_wf(echo_times, mem_gb, omp_nthreads, name='bold_t2s_wf'):
     workflow = pe.Workflow(name=name)
     inputnode = pe.Node(niu.IdentityInterface(fields=['echo_split', 'xforms']),
                         name='inputnode')
+
     outputnode = pe.Node(niu.IdentityInterface(fields=['t2s_map', 't2s_mask']),
                          name='outputnode')
 
     LOGGER.log(25, 'Generating T2* map.')
 
-    apply_hmc = pe.Node(
+    apply_hmc = pe.MapNode(
         MultiApplyTransforms(interpolation='NearestNeighbor', float=True, copy_dtype=True),
-        mem_gb=(mem_gb * 3 * omp_nthreads), n_procs=omp_nthreads, name='apply_hmc')
+        mem_gb=(mem_gb * 3 * omp_nthreads), n_procs=omp_nthreads, name='apply_hmc',
+        iterfield=['input_image'])
 
-    merge = pe.Node(Merge(compress=True), name='merge', mem_gb=mem_gb)
+    merge = pe.MapNode(Merge(compress=True), mem_gb=mem_gb,
+                       name='merge', iterfield=['in_files'])
 
-    t2s_map = pe.JoinNode(T2SMap(te_list=echo_times),
-                          joinfield='in_files', joinsource='inputnode',
-                          name='t2s_map')
+    t2s_map = pe.Node(T2SMap(te_list=echo_times),
+                      name='t2s_map')
 
     skullstrip_bold_wf = init_skullstrip_bold_wf()
 

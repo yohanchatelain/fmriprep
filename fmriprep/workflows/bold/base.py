@@ -350,6 +350,13 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
     # if doing T2*-driven coregistration, create T2* map
     if t2s_coreg is True:
+        # use a joinNode to gather all preprocessed echos
+        join_split_echos = pe.JoinNode(niu.IdentityInterface(fields=['split_echo_files']),
+                                       joinsource='inputnode',
+                                       joinfield='echo_files',
+                                       name='join_split_echos')
+
+        # create a T2* map
         bold_t2s_wf = init_bold_t2s_wf(echo_times=tes,
                                        name='bold_t2s_wf',
                                        mem_gb=mem_gb['filesize'],
@@ -534,8 +541,10 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     elif not use_syn:
         if t2s_coreg is True:
             workflow.connect([
-                (bold_split, bold_t2s_wf, [
-                    ('outfiles', 'inputnode.echo_split')]),
+                (bold_split, join_split_echos, [
+                    ('outfiles', 'echo_files')])
+                (join_split_echos, bold_t2s_wf, [
+                    ('echo_files', 'inputnode.echo_split')]),
                 (bold_hmc_wf, bold_t2s_wf, [
                     ('outputnode.xforms', 'inputnode.xforms')])
                 (bold_t2s_wf, bold_reg_wf, [
