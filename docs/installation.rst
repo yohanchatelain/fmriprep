@@ -37,7 +37,7 @@ print it out for reporting purposes, and then run the command, e.g.::
     $ fmriprep-docker /path/to/data/dir /path/to/output/dir participant
     RUNNING: docker run --rm -it -v /path/to/data/dir:/data:ro \
         -v /path/to_output/dir:/out poldracklab/fmriprep:1.0.0 \
-        /data /out participant --no-freesurfer
+        /data /out participant
     ...
 
 You may also invoke ``docker`` directly::
@@ -47,7 +47,7 @@ You may also invoke ``docker`` directly::
         -v filepath/to/output/dir:/out \
         poldracklab/fmriprep:latest \
         /data /out/out \
-        participant --no-freesurfer
+        participant
 
 For example: ::
 
@@ -57,13 +57,10 @@ For example: ::
         poldracklab/fmriprep:latest \
         /data /out/out \
         participant \
-        --ignore fieldmaps --no-freesurfer
+        --ignore fieldmaps
 
 See `External Dependencies`_ for more information (e.g., specific versions) on
 what is included in the latest Docker images.
-
-If the flag ``--no-freesurfer`` is not set, then FreeSurfer will require a proper
-license file (see :ref:`fs_license`).
 
 
 Singularity Container
@@ -130,7 +127,8 @@ Manually Prepared Environment
 
 Make sure all of fmriprep's `External Dependencies`_ are installed.
 These tools must be installed and their binaries available in the
-system's ``$PATH``.
+system's ``$PATH``. In particular, FreeSurfer requires a license
+file (see :ref:`fs_license`).
 
 If you have pip installed, install fmriprep ::
 
@@ -146,11 +144,10 @@ If you have your data on hand, you are ready to run fmriprep: ::
 The FreeSurfer license
 ======================
 
-FMRIPREP will run FreeSurfer unless the ``--no-freesurfer`` command-line argument is
-provided. Therefore, make sure there is a valid FreeSurfer available to FMRIPREP
-or opt-out otherwise.
+FMRIPREP will requires Freesurfer to run. Therefore, make sure there is a
+valid FreeSurfer available to FMRIPREP.
 
-Getting a FreeSurfer license is free, register a new key at
+Getting a FreeSurfer license is free, simply register a new key at
 https://surfer.nmr.mgh.harvard.edu/registration.html.
 
 When using manually-prepared environments, FreeSurfer will search for a license key

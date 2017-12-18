@@ -52,7 +52,7 @@ DEFAULT_MEMORY_MIN_GB = 0.01
 LOGGER = logging.getLogger('workflow')
 
 
-def init_func_preproc_wf(bold_file, ignore, freesurfer,
+def init_func_preproc_wf(bold_file, ignore, reconall,
                          use_bbr, t2s_coreg, bold2t1w_dof, reportlets_dir,
                          output_spaces, template, output_dir, omp_nthreads,
                          fmap_bspline, fmap_demean, use_syn, force_syn,
@@ -69,7 +69,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         wf = init_func_preproc_wf('/completely/made/up/path/sub-01_task-nback_bold.nii.gz',
                                   omp_nthreads=1,
                                   ignore=[],
-                                  freesurfer=True,
+                                  reconall=True,
                                   reportlets_dir='.',
                                   output_dir='.',
                                   template='MNI152NLin2009cAsym',
@@ -95,7 +95,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             BOLD series NIfTI file
         ignore : list
             Preprocessing steps to skip (may include "slicetiming", "fieldmaps")
-        freesurfer : bool
+        reconall : bool
             Enable FreeSurfer functional registration (bbregister) and resampling
             BOLD series to FreeSurfer surface meshes.
         use_bbr : bool or None
@@ -289,20 +289,20 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     summary = pe.Node(
         FunctionalSummary(output_spaces=output_spaces,
                           slice_timing=run_stc,
-                          registration='FreeSurfer' if freesurfer else 'FSL',
+                          registration='FreeSurfer' if reconall else 'FSL',
                           registration_dof=bold2t1w_dof,
                           pe_direction=bold_pe),
         name='summary', mem_gb=DEFAULT_MEMORY_MIN_GB, run_without_submitting=True)
 
     func_reports_wf = init_func_reports_wf(reportlets_dir=reportlets_dir,
-                                           freesurfer=freesurfer,
+                                           freesurfer=reconall,
                                            use_aroma=use_aroma,
                                            use_syn=use_syn)
 
     func_derivatives_wf = init_func_derivatives_wf(output_dir=output_dir,
                                                    output_spaces=output_spaces,
                                                    template=template,
-                                                   freesurfer=freesurfer,
+                                                   freesurfer=reconall,
                                                    use_aroma=use_aroma)
 
     workflow.connect([
@@ -346,7 +346,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
     # mean BOLD registration to T1w
     bold_reg_wf = init_bold_reg_wf(name='bold_reg_wf',
-                                   freesurfer=freesurfer,
+                                   freesurfer=reconall,
                                    use_bbr=use_bbr,
                                    bold2t1w_dof=bold2t1w_dof,
                                    mem_gb=mem_gb['largemem'],
@@ -530,7 +530,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
     if use_syn:
         nonlinear_sdc_wf = init_nonlinear_sdc_wf(
-            bold_file=bold_file, bold_pe=bold_pe, freesurfer=freesurfer, bold2t1w_dof=bold2t1w_dof,
+            bold_file=bold_file, bold_pe=bold_pe, freesurfer=reconall, bold2t1w_dof=bold2t1w_dof,
             template=template, omp_nthreads=omp_nthreads)
 
         workflow.connect([
@@ -647,7 +647,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         ])
 
     # SURFACES ##################################################################################
-    if freesurfer and any(space.startswith('fs') for space in output_spaces):
+    if reconall and any(space.startswith('fs') for space in output_spaces):
         LOGGER.log(25, 'Creating BOLD surface-sampling workflow.')
         bold_surf_wf = init_bold_surf_wf(mem_gb=mem_gb['resampled'],
                                          output_spaces=output_spaces,

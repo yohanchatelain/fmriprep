@@ -50,7 +50,7 @@ from ..utils.misc import fix_multi_T1w_source_name, add_suffix
 
 #  pylint: disable=R0914
 def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
-                         freesurfer, longitudinal, omp_nthreads, hires, reportlets_dir,
+                         reconall, longitudinal, omp_nthreads, hires, reportlets_dir,
                          output_dir, num_t1w,
                          name='anat_preproc_wf'):
     r"""
@@ -76,7 +76,7 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
                                   output_spaces=['T1w', 'fsnative',
                                                  'template', 'fsaverage5'],
                                   skull_strip_template='OASIS',
-                                  freesurfer=True,
+                                  reconall=True,
                                   longitudinal=False,
                                   debug=False,
                                   hires=True,
@@ -101,7 +101,7 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
             Name of template targeted by `'template'` output space
         debug : bool
             Enable debugging outputs
-        freesurfer : bool
+        reconall : bool
             Enable FreeSurfer surface reconstruction (may increase runtime)
         longitudinal : bool
             Create unbiased structural template, regardless of number of inputs
@@ -272,7 +272,7 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
         ])
 
     # 6. FreeSurfer reconstruction
-    if freesurfer:
+    if reconall:
         surface_recon_wf = init_surface_recon_wf(name='surface_recon_wf',
                                                  omp_nthreads=omp_nthreads, hires=hires)
 
@@ -296,7 +296,7 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
     seg_rpt = pe.Node(ROIsPlot(colors=['r', 'magenta', 'b', 'g']), name='seg_rpt')
     anat_reports_wf = init_anat_reports_wf(
         reportlets_dir=reportlets_dir, output_spaces=output_spaces, template=template,
-        freesurfer=freesurfer)
+        freesurfer=reconall)
     workflow.connect([
         (inputnode, anat_reports_wf, [
             (('t1w', fix_multi_T1w_source_name), 'inputnode.source_file')]),
@@ -310,7 +310,7 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
         (seg_rpt, anat_reports_wf, [('out_report', 'inputnode.seg_report')]),
     ])
 
-    if freesurfer:
+    if reconall:
         workflow.connect([
             (surface_recon_wf, anat_reports_wf, [
                 ('outputnode.out_report', 'inputnode.recon_report')])
@@ -323,7 +323,7 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
     anat_derivatives_wf = init_anat_derivatives_wf(output_dir=output_dir,
                                                    output_spaces=output_spaces,
                                                    template=template,
-                                                   freesurfer=freesurfer)
+                                                   freesurfer=reconall)
 
     workflow.connect([
         (anat_template_wf, anat_derivatives_wf, [

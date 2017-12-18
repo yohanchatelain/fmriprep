@@ -25,7 +25,7 @@ is presented below:
                                 longitudinal=False,
                                 t2s_coreg=False,
                                 omp_nthreads=1,
-                                freesurfer=True,
+                                reconall=True,
                                 reportlets_dir='.',
                                 output_dir='.',
                                 bids_dir='.',
@@ -66,7 +66,7 @@ T1w/T2w preprocessing
                               output_spaces=['T1w', 'fsnative',
                                              'template', 'fsaverage5'],
                               skull_strip_template='OASIS',
-                              freesurfer=True,
+                              reconall=True,
                               longitudinal=False,
                               debug=False,
                               hires=True,
@@ -133,7 +133,7 @@ Surface preprocessing
 ``fmriprep`` uses FreeSurfer_ to reconstruct surfaces from T1w/T2w
 structural images.
 If enabled, several steps in the ``fmriprep`` pipeline are added or replaced.
-All surface preprocessing may be disabled with the ``--no-freesurfer`` flag.
+All surface preprocessing may be disabled with the ``--fs-no-reconall`` flag.
 
 If FreeSurfer reconstruction is performed, the reconstructed subject is placed in
 ``<output dir>/freesurfer/sub-<subject_label>/`` (see :ref:`fsderivs`).
@@ -194,7 +194,7 @@ BOLD preprocessing
     wf = init_func_preproc_wf('/completely/made/up/path/sub-01_task-nback_bold.nii.gz',
                               omp_nthreads=1,
                               ignore=[],
-                              freesurfer=True,
+                              reconall=True,
                               reportlets_dir='.',
                               output_dir='.',
                               template='MNI152NLin2009cAsym',
