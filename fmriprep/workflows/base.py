@@ -33,14 +33,14 @@ from .bold import init_func_preproc_wf
 def init_fmriprep_wf(subject_list, task_id, run_uuid,
                      ignore, debug, low_mem, anat_only, longitudinal, t2s_coreg,
                      omp_nthreads, skull_strip_template, work_dir, output_dir, bids_dir,
-                     reconall, output_spaces, template, medial_surface_nan, hires,
+                     freesurfer, output_spaces, template, medial_surface_nan, hires,
                      use_bbr, bold2t1w_dof, fmap_bspline, fmap_demean, use_syn, force_syn,
                      use_aroma, ignore_aroma_err, output_grid_ref):
     """
     This workflow organizes the execution of FMRIPREP, with a sub-workflow for
     each subject.
 
-    If FreeSurfer's recon-all is to be used, a FreeSurfer derivatives folder is
+    If FreeSurfer's recon-all is to be run, a FreeSurfer derivatives folder is
     created and populated with any needed template subjects.
 
     .. workflow::
@@ -62,7 +62,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
                               work_dir='.',
                               output_dir='.',
                               bids_dir='.',
-                              reconall=True,
+                              freesurfer=True,
                               output_spaces=['T1w', 'fsnative',
                                             'template', 'fsaverage5'],
                               template='MNI152NLin2009cAsym',
@@ -110,7 +110,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
             Directory in which to save derivatives
         bids_dir : str
             Root directory of BIDS dataset
-        reconall : bool
+        freesurfer : bool
             Enable FreeSurfer surface reconstruction (may increase runtime)
         output_spaces : list
             List of output spaces functional images are to be resampled to.
@@ -153,7 +153,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
     fmriprep_wf = pe.Workflow(name='fmriprep_wf')
     fmriprep_wf.base_dir = work_dir
 
-    if reconall:
+    if freesurfer:
         fsdir = pe.Node(
             BIDSFreeSurferDir(
                 derivatives=output_dir,
@@ -177,7 +177,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
                                                    reportlets_dir=reportlets_dir,
                                                    output_dir=output_dir,
                                                    bids_dir=bids_dir,
-                                                   reconall=reconall,
+                                                   freesurfer=freesurfer,
                                                    output_spaces=output_spaces,
                                                    template=template,
                                                    medial_surface_nan=medial_surface_nan,
@@ -197,7 +197,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
         )
         for node in single_subject_wf._get_all_nodes():
             node.config = deepcopy(single_subject_wf.config)
-        if reconall:
+        if freesurfer:
             fmriprep_wf.connect(fsdir, 'subjects_dir',
                                 single_subject_wf, 'inputnode.subjects_dir')
         else:
@@ -209,7 +209,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
 def init_single_subject_wf(subject_id, task_id, name,
                            ignore, debug, low_mem, anat_only, longitudinal, t2s_coreg,
                            omp_nthreads, skull_strip_template, reportlets_dir, output_dir,
-                           bids_dir, reconall, output_spaces, template, medial_surface_nan,
+                           bids_dir, freesurfer, output_spaces, template, medial_surface_nan,
                            hires, use_bbr, bold2t1w_dof, fmap_bspline, fmap_demean, use_syn,
                            force_syn, output_grid_ref, use_aroma, ignore_aroma_err):
     """
@@ -233,7 +233,7 @@ def init_single_subject_wf(subject_id, task_id, name,
                                     longitudinal=False,
                                     t2s_coreg=False,
                                     omp_nthreads=1,
-                                    reconall=True,
+                                    freesurfer=True,
                                     reportlets_dir='.',
                                     output_dir='.',
                                     bids_dir='.',
@@ -288,7 +288,7 @@ def init_single_subject_wf(subject_id, task_id, name,
             Directory in which to save derivatives
         bids_dir : str
             Root directory of BIDS dataset
-        reconall : bool
+        freesurfer : bool
             Enable FreeSurfer surface reconstruction (may increase runtime)
         output_spaces : list
             List of output spaces functional images are to be resampled to.
@@ -393,7 +393,7 @@ def init_single_subject_wf(subject_id, task_id, name,
                                            debug=debug,
                                            longitudinal=longitudinal,
                                            omp_nthreads=omp_nthreads,
-                                           reconall=reconall,
+                                           freesurfer=freesurfer,
                                            hires=hires,
                                            reportlets_dir=reportlets_dir,
                                            output_dir=output_dir,
@@ -423,7 +423,7 @@ def init_single_subject_wf(subject_id, task_id, name,
         func_preproc_wf = init_func_preproc_wf(bold_file=bold_file,
                                                layout=layout,
                                                ignore=ignore,
-                                               reconall=reconall,
+                                               freesurfer=freesurfer,
                                                use_bbr=use_bbr,
                                                t2s_coreg=t2s_coreg,
                                                bold2t1w_dof=bold2t1w_dof,

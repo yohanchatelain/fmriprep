@@ -168,9 +168,11 @@ def get_parser():
 
     # FreeSurfer options
     g_fs = parser.add_argument_group('Specific options for FreeSurfer preprocessing')
-    g_fs.add_argument('--fs-no-reconall',
+    g_fs.add_argument('--fs-no-reconall', '--no-freesurfer',
                       action='store_false', dest='run_reconall',
-                      help='disable FreeSurfer recon-all preprocessing')
+                      help='disable FreeSurfer surface preprocessing.'
+                      ' Note : `--no-freesurfer` is deprecated and will be removed in 1.2.'
+                      ' Use `--fs-no-reconall` instead.')
     g_fs.add_argument('--no-submm-recon', action='store_false', dest='hires',
                       help='disable sub-millimeter (hires) reconstruction')
     g_fs.add_argument(
@@ -432,7 +434,7 @@ def build_workflow(opts, retval):
         work_dir=work_dir,
         output_dir=output_dir,
         bids_dir=bids_dir,
-        reconall=opts.run_reconall,
+        freesurfer=opts.run_reconall,
         output_spaces=opts.output_space,
         template=opts.template,
         medial_surface_nan=opts.medial_surface_nan,

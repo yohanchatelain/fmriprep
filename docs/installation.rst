@@ -127,8 +127,8 @@ Manually Prepared Environment
 
 Make sure all of fmriprep's `External Dependencies`_ are installed.
 These tools must be installed and their binaries available in the
-system's ``$PATH``. In particular, FreeSurfer requires a license
-file (see :ref:`fs_license`).
+system's ``$PATH``.
+In particular, FreeSurfer requires a license file (see :ref:`fs_license`).
 
 If you have pip installed, install fmriprep ::
 
@@ -144,10 +144,9 @@ If you have your data on hand, you are ready to run fmriprep: ::
 The FreeSurfer license
 ======================
 
-FMRIPREP will requires Freesurfer to run. Therefore, make sure there is a
-valid FreeSurfer available to FMRIPREP.
+FMRIPREP uses FreeSurfer tools, which require a license to run.
 
-Getting a FreeSurfer license is free, simply register a new key at
+To obtain a FreeSurfer license, simply register for free at
 https://surfer.nmr.mgh.harvard.edu/registration.html.
 
 When using manually-prepared environments, FreeSurfer will search for a license key
