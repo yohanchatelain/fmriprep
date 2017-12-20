@@ -133,7 +133,7 @@ Surface preprocessing
 ``fmriprep`` uses FreeSurfer_ to reconstruct surfaces from T1w/T2w
 structural images.
 If enabled, several steps in the ``fmriprep`` pipeline are added or replaced.
-All surface preprocessing may be disabled with the ``--no-freesurfer`` flag.
+All surface preprocessing may be disabled with the ``--fs-no-reconall`` flag.
 
 If FreeSurfer reconstruction is performed, the reconstructed subject is placed in
 ``<output dir>/freesurfer/sub-<subject_label>/`` (see :ref:`fsderivs`).

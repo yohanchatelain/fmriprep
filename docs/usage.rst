@@ -19,11 +19,8 @@ The common parts of the command follow the `BIDS-Apps
 <https://github.com/BIDS-Apps>`_ definition.
 Example: ::
 
-    fmriprep data/bids_root/ out/ participant -w work/ --no-freesurfer
+    fmriprep data/bids_root/ out/ participant -w work/
 
-Please note the ``--no-freesurfer`` flag, which is necessary unless you 
-have a valid license file installed in your system. More information
-is found in :ref:`fs_license`.
 
 Command-Line Arguments
 ======================
