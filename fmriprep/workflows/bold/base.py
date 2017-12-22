@@ -251,11 +251,14 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     else:
         if multiecho is True:  # For multiecho data, grab TEs
             tes = [layout.get_metadata(echo)['EchoTime'] for echo in bold_file]
+            fmap_file = bold_file[0]
+        else:
+            fmap_file = bold_file
         # Since all other metadata is constant
         metadata = layout.get_metadata(ref_file)
 
         # Find fieldmaps. Options: (phase1|phase2|phasediff|epi|fieldmap)
-        fmaps = layout.get_fieldmap(bold_file, return_list=True) \
+        fmaps = layout.get_fieldmap(fmap_file, return_list=True) \
             if 'fieldmaps' not in ignore else []
 
         # Short circuits: (True and True and (False or 'TooShort')) == 'TooShort'
@@ -282,7 +285,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
     if multiecho:  # if multi-echo data
         # iterate most preprocessing steps over each echo
-        inputnode.inputs.iterables = ('bold_file', bold_file)
+        inputnode.iterables = ('bold_file', bold_file)
 
         me_first_echo = pe.JoinNode(interface=FirstEcho(),
                                     joinfield=['in_files',
@@ -290,7 +293,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                     joinsource='inputnode',
                                     name='me_first_echo')
     else:
-        inputnode.inputs.bold_file = bold_file
+        inputnode.bold_file = bold_file
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_t1', 'bold_mask_t1', 'bold_mni', 'bold_mask_mni', 'confounds', 'surfaces',
@@ -891,6 +894,8 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
 
 def _get_series_len(bold_fname):
     from niworkflows.interfaces.registration import _get_vols_to_discard
+    if isinstance(bold_fname, list):  # Multi-echo data
+        bold_fname = bold_fname[0]
     img = nb.load(bold_fname)
     if len(img.shape) < 4:
         return 1
