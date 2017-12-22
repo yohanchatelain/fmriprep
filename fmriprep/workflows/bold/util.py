@@ -122,19 +122,21 @@ def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
 
     Steps of this workflow are:
 
+
       1. Calculate a conservative mask using Nilearn's ``create_epi_mask``.
       2. Run ANTs' ``N4BiasFieldCorrection`` on the input
-        :abbr:`BOLD (blood-oxygen level-dependant)` average, using the
-        mask generated in 1) instead of the internal Otsu thresholding.
+         :abbr:`BOLD (blood-oxygen level-dependant)` average, using the
+         mask generated in 1) instead of the internal Otsu thresholding.
       3. Calculate a loose mask using BET, with one mathematical morphology
-        dilation of one iteration and a sphere of 6mm as structuring element.
+         dilation of one iteration and a sphere of 6mm as structuring element.
       4. Mask the :abbr:`INU (intensity non-uniformity)`-corrected image
-        with the latest mask calculated in 3), then use AFNI's ``3dUnifize``
-        to *standardize* the T2* contrast distribution.
+         with the latest mask calculated in 3), then use AFNI's ``3dUnifize``
+         to *standardize* the T2* contrast distribution.
       5. Calculate a mask using AFNI's ``3dAutomask`` after the contrast
-        enhancement of 4).
+         enhancement of 4).
       6. Calculate a final mask as the intersection of 3) and 5).
       7. Apply final mask on the enhanced reference.
+
 
 
     .. workflow ::
@@ -187,9 +189,12 @@ def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
     bet_mask = pe.Node(fsl.ApplyMask(), name='skullstrip_first_mask')
 
     # Use AFNI's unifize for T2 constrast & fix header
-    unifize = pe.Node(afni.Unifize(t2=True, outputtype='NIFTI_GZ',
-                                   args='-clfrac 0.4',
-                                   out_file="uni.nii.gz"), name='unifize')
+    unifize = pe.Node(afni.Unifize(
+        t2=True, outputtype='NIFTI_GZ',
+        # Default -clfrac is 0.1, 0.4 was too conservative
+        # -rbt because I'm a Jedi AFNI Master (see 3dUnifize's documentation)
+        args='-clfrac 0.2 -rbt 18.3 65.0 90.0',
+        out_file="uni.nii.gz"), name='unifize')
     fixhdr_unifize = pe.Node(CopyXForm(), name='fixhdr_unifize', mem_gb=0.1)
 
     # Run ANFI's 3dAutomask to extract a refined brain mask
