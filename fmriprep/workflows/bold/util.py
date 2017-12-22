@@ -16,6 +16,7 @@ from niworkflows.interfaces.utils import CopyXForm
 from niworkflows.interfaces.masks import SimpleShowMaskRPT
 from niworkflows.interfaces.registration import EstimateReferenceImage
 
+from ...interfaces.nilearn import MaskEPI
 from ...interfaces import ValidateImage
 
 
@@ -112,8 +113,29 @@ def init_bold_reference_wf(omp_nthreads, bold_file=None, name='bold_reference_wf
 def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
                                         omp_nthreads=1):
     """
-    This workflow takes in a BOLD volume, and attempts to enhance the contrast
-    between gray and white matter, and skull-stripping the result.
+    This workflow takes in a :abbr:`BOLD (blood-oxygen level-dependant)`
+    :abbr:`fMRI (functional MRI)` average/summary (e.g. a reference image
+    averaging non-steady-state timepoints), and sharpens the histogram
+    with the application of the N4 algorithm for removing the
+    :abbr:`INU (intensity non-uniformity)` bias field and calculates a signal
+    mask.
+
+    Steps of this workflow are:
+
+      1. Calculate a conservative mask using Nilearn's ``create_epi_mask``.
+      2. Run ANTs' ``N4BiasFieldCorrection`` on the input
+        :abbr:`BOLD (blood-oxygen level-dependant)` average, using the
+        mask generated in 1) instead of the internal Otsu thresholding.
+      3. Calculate a loose mask using BET, with one mathematical morphology
+        dilation of one iteration and a sphere of 6mm as structuring element.
+      4. Mask the :abbr:`INU (intensity non-uniformity)`-corrected image
+        with the latest mask calculated in 3), then use AFNI's ``3dUnifize``
+        to *standardize* the T2* contrast distribution.
+      5. Calculate a mask using AFNI's ``3dAutomask`` after the contrast
+        enhancement of 4).
+      6. Calculate a final mask as the intersection of 3) and 5).
+      7. Apply final mask on the enhanced reference.
+
 
     .. workflow ::
         :graph2use: orig
@@ -147,29 +169,53 @@ def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
                         name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(fields=[
         'mask_file', 'skull_stripped_file', 'bias_corrected_file']), name='outputnode')
+
+    # Create a rough mask to avoid N4 internal's Otsu mask
+    n4_mask = pe.Node(MaskEPI(upper_cutoff=0.95, opening=1, no_sanitize=True),
+                      name='n4_mask')
+
+    # Run N4 normally, force num_threads=1 for stability (images are small, no need for >1)
     n4_correct = pe.Node(ants.N4BiasFieldCorrection(dimension=3, copy_header=True),
-                         name='n4_correct', n_procs=omp_nthreads)
+                         name='n4_correct', n_procs=1)
+
+    # Create a generous BET mask out of the bias-corrected EPI
     skullstrip_first_pass = pe.Node(fsl.BET(frac=0.2, mask=True),
                                     name='skullstrip_first_pass')
+    bet_dilate = pe.Node(fsl.DilateImage(
+        operation='max', kernel_shape='sphere', kernel_size=6.0,
+        internal_datatype='char'), name='skullstrip_first_dilate')
+    bet_mask = pe.Node(fsl.ApplyMask(), name='skullstrip_first_mask')
+
+    # Use AFNI's unifize for T2 constrast & fix header
     unifize = pe.Node(afni.Unifize(t2=True, outputtype='NIFTI_GZ',
                                    args='-clfrac 0.4',
                                    out_file="uni.nii.gz"), name='unifize')
     fixhdr_unifize = pe.Node(CopyXForm(), name='fixhdr_unifize', mem_gb=0.1)
+
+    # Run ANFI's 3dAutomask to extract a refined brain mask
     skullstrip_second_pass = pe.Node(afni.Automask(dilate=1,
                                                    outputtype='NIFTI_GZ'),
                                      name='skullstrip_second_pass')
     fixhdr_skullstrip2 = pe.Node(CopyXForm(), name='fixhdr_skullstrip2', mem_gb=0.1)
+
+    # Take intersection of both masks
     combine_masks = pe.Node(fsl.BinaryMaths(operation='mul'),
                             name='combine_masks')
-    apply_mask = pe.Node(fsl.ApplyMask(),
-                         name='apply_mask')
+
+    # Compute masked brain
+    apply_mask = pe.Node(fsl.ApplyMask(), name='apply_mask')
 
     workflow.connect([
+        (inputnode, n4_mask, [('in_file', 'in_files')]),
         (inputnode, n4_correct, [('in_file', 'input_image')]),
         (inputnode, fixhdr_unifize, [('in_file', 'hdr_file')]),
         (inputnode, fixhdr_skullstrip2, [('in_file', 'hdr_file')]),
+        (n4_mask, n4_correct, [('out_mask', 'mask_image')]),
         (n4_correct, skullstrip_first_pass, [('output_image', 'in_file')]),
-        (skullstrip_first_pass, unifize, [('out_file', 'in_file')]),
+        (skullstrip_first_pass, bet_dilate, [('mask_file', 'in_file')]),
+        (bet_dilate, bet_mask, [('out_file', 'mask_file')]),
+        (skullstrip_first_pass, bet_mask, [('out_file', 'in_file')]),
+        (bet_mask, unifize, [('out_file', 'in_file')]),
         (unifize, fixhdr_unifize, [('out_file', 'in_file')]),
         (fixhdr_unifize, skullstrip_second_pass, [('out_file', 'in_file')]),
         (skullstrip_first_pass, combine_masks, [('mask_file', 'in_file')]),
