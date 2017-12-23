@@ -127,7 +127,7 @@ def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
       2. Run ANTs' ``N4BiasFieldCorrection`` on the input
          :abbr:`BOLD (blood-oxygen level-dependant)` average, using the
          mask generated in 1) instead of the internal Otsu thresholding.
-      3. Calculate a loose mask using BET, with one mathematical morphology
+      3. Calculate a loose mask using FSL's ``bet``, with one mathematical morphology
          dilation of one iteration and a sphere of 6mm as structuring element.
       4. Mask the :abbr:`INU (intensity non-uniformity)`-corrected image
          with the latest mask calculated in 3), then use AFNI's ``3dUnifize``
