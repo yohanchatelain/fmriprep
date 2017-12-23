@@ -232,12 +232,14 @@ BOLD reference image estimation
 
 This workflow estimates a reference image for a
 :abbr:`BOLD (blood-oxygen level-dependent)` series.
-If T1-saturation effects ("dummy scans" or non-steady state volumes) are
-detected they are used as reference due to their superior tissue contrast.
-Otherwise a median of motion corrected subset of volumes is used.
-The reference image is used to calculate a brain mask for the
-:abbr:`BOLD (blood-oxygen level-dependent)` signal using
-`Nilearn <http://nilearn.github.io/>`_.
+When T1-saturation effects ("dummy scans" or non-steady state volumes) are
+detected, they are averaged and used as reference due to their
+superior tissue contrast.
+Otherwise, a median of motion corrected subset of volumes is used.
+
+The reference image is then used to calculate a brain mask for the
+:abbr:`BOLD (blood-oxygen level-dependent)` signal using the
+:mod:`fmriprep.workflows.bold.util.init_enhance_and_skullstrip_bold_wf`.
 Further, the reference is fed to the :ref:`head-motion estimation
 workflow <bold_hmc>` and the :ref:`registration workflow to map
 BOLD series into the T1w image of the same subject <bold_reg>`.
