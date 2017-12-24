@@ -42,13 +42,10 @@ class FirstEcho(SimpleInterface):
     output_spec = FirstEchoOutputSpec
 
     def _run_interface(self, runtime):
-        echos = self.inputs.in_files
-        gen_refs = self.inputs.ref_imgs
-
-        first_echo = echos[0]
-
-        self._results['middle_image'] = echos[first_echo]
-        self._results['middle_ref_image'] = gen_refs[first_echo]
+        self.inputs.in_files.sort()
+        self.inputs.ref_imgs.sort()
+        self._results['first_image'] = self.inputs.in_files[0]
+        self._results['first_ref_image'] = self.inputs.ref_imgs[0]
 
         return runtime
 
@@ -71,13 +68,16 @@ class T2SMap(SimpleInterface):
 
     def _run_interface(self, runtime):
         ext = '.nii.gz' if self.inputs.compress else '.nii'
+        e1_nii = nb.load(self.inputs.in_files[0])
+
         last_emask, two_emask = echo_sampling_mask(self.inputs.in_files)
         t2s_map = define_t2s_map(self.inputs.in_files, self.inputs.te_list,
                                  last_emask, two_emask)
         _, fname, _ = split_filename(self.inputs.in_files[0])
         fname_preecho = fname.split('_echo-')[0]
         self._results['output_image'] = os.path.join(runtime.cwd, fname_preecho + '_t2smap' + ext)
-        t2s_map.to_filename(self._results['output_image'])
+        nb.Nifti1Image(t2s_map, e1_nii.affine, e1_nii.header).to_filename(
+            self._results['output_image'])
         return runtime
 
 
@@ -171,8 +171,9 @@ def define_t2s_map(echo_list, tes, last_emask, two_emask):
     # for the second echo on, do log linear fit
     for echo in range(2, necho + 1):
 
+        # multiply by 1000, so in ms rather than s
         # ΔS/S = ΔS0/S0 − ΔR2 * TE, so take neg TEs
-        neg_tes = [-1 * te for te in tes[:echo]]
+        neg_tes = [-1000 * te for te in tes[:echo]]
 
         # Create coefficient matrix
         a = np.array([np.ones(echo), neg_tes])
@@ -196,7 +197,7 @@ def define_t2s_map(echo_list, tes, last_emask, two_emask):
         s0[np.isnan(s0)] = 0.
 
         # reshape into arrays for mapping
-        r2[:, :, :, echo - 2] = _unmask(r2, two_emask)
+        t2ss[:, :, :, echo - 2] = _unmask(r2, two_emask)
         s0vs[:, :, :, echo - 2] = _unmask(s0, two_emask)
 
     # limited T2* and S0 maps
@@ -207,7 +208,7 @@ def define_t2s_map(echo_list, tes, last_emask, two_emask):
         fl[:, :, :, echo] = fl_
 
     fl = np.array(fl, dtype=bool)
-    t2s_map = np.squeeze(_unmask(r2[fl], last_emask > 1))
+    t2s_map = np.squeeze(_unmask(t2ss[fl], last_emask > 1))
     t2s_map[np.logical_or(np.isnan(t2s_map), t2s_map < 0)] = 0
 
     return t2s_map

@@ -51,7 +51,7 @@ def init_bold_t2s_wf(echo_times, mem_gb, omp_nthreads, name='bold_t2s_wf'):
 
     **Inputs**
 
-        xforms
+        hmc_xforms
             ITKTransform file aligning each volume to ``ref_image``
         echo_split
             3D volumes of multi-echo BOLD EPI
@@ -62,7 +62,7 @@ def init_bold_t2s_wf(echo_times, mem_gb, omp_nthreads, name='bold_t2s_wf'):
             the T2* map for the EPI run
     """
     workflow = pe.Workflow(name=name)
-    inputnode = pe.Node(niu.IdentityInterface(fields=['echo_split', 'xforms']),
+    inputnode = pe.Node(niu.IdentityInterface(fields=['echo_split', 'hmc_xforms']),
                         name='inputnode')
 
     outputnode = pe.Node(niu.IdentityInterface(fields=['t2s_map', 't2s_mask']),
@@ -85,7 +85,8 @@ def init_bold_t2s_wf(echo_times, mem_gb, omp_nthreads, name='bold_t2s_wf'):
 
     workflow.connect([
         (inputnode, apply_hmc, [('hmc_xforms', 'transforms'),
-                                ('echo_split', 'input_image')]),
+                                ('echo_split', 'input_image'),
+                                (('echo_split', _first), 'reference_image')]),
         (apply_hmc, merge, [('out_files', 'in_files')]),
         (merge, t2s_map, [('out_file', 'in_files')]),
         (t2s_map, skullstrip_bold_wf, [('output_image', 'inputnode.in_file')]),
@@ -94,3 +95,7 @@ def init_bold_t2s_wf(echo_times, mem_gb, omp_nthreads, name='bold_t2s_wf'):
     ])
 
     return workflow
+
+
+def _first(inlist):
+    return inlist[0][0]

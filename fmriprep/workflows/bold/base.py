@@ -293,7 +293,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                     joinsource='inputnode',
                                     name='me_first_echo')
     else:
-        inputnode.bold_file = bold_file
+        inputnode.inputs.bold_file = bold_file
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_t1', 'bold_mask_t1', 'bold_mni', 'bold_mask_mni', 'confounds', 'surfaces',
@@ -354,7 +354,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     # if doing T2*-driven coregistration, create T2* map
     if t2s_coreg is True:
         # use a joinNode to gather all preprocessed echos
-        join_split_echos = pe.JoinNode(niu.IdentityInterface(fields=['split_echo_files']),
+        join_split_echos = pe.JoinNode(niu.IdentityInterface(fields=['echo_files']),
                                        joinsource='inputnode',
                                        joinfield='echo_files',
                                        name='join_split_echos')
@@ -440,7 +440,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         workflow.connect([
             (bold_reference_wf, me_first_echo, [
                 ('outputnode.bold_file', 'in_files'),
-                ('outputnode.raw_ref_image', 'ref_imgs')])
+                ('outputnode.raw_ref_image', 'ref_imgs')]),
             (me_first_echo, bold_hmc_wf, [
                 ('first_image', 'inputnode.bold_file'),
                 ('first_ref_image', 'inputnode.raw_ref_image')])
@@ -545,11 +545,11 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         if t2s_coreg is True:
             workflow.connect([
                 (bold_split, join_split_echos, [
-                    ('outfiles', 'echo_files')])
+                    ('out_files', 'echo_files')]),
                 (join_split_echos, bold_t2s_wf, [
                     ('echo_files', 'inputnode.echo_split')]),
                 (bold_hmc_wf, bold_t2s_wf, [
-                    ('outputnode.xforms', 'inputnode.xforms')])
+                    ('outputnode.xforms', 'inputnode.hmc_xforms')]),
                 (bold_t2s_wf, bold_reg_wf, [
                     ('outputnode.t2s_map', 'inputnode.ref_bold_brain'),
                     ('outputnode.t2s_mask', 'inputnode.ref_bold_mask')])
