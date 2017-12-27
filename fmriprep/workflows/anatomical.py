@@ -615,6 +615,8 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
             List of T2-weighted structural images (only first used)
         skullstripped_t1
             Skull-stripped T1-weighted image (or mask of image)
+        ants_segs
+            Brain tissue segmentation from ANTS ``antsBrainExtraction.sh``
         corrected_t1
             INU-corrected, merged T1-weighted image
         subjects_dir
@@ -928,8 +930,35 @@ def init_gifti_surface_wf(name='gifti_surface_wf'):
 
 def init_refine_brainmask_wf(name='refine_brainmask'):
     """
-    This workflow makes some amends to the FreeSurfer brainmask,
-    trying to refine ANTs' mask injected previously.
+    This workflow refines the brainmask implicit in the FreeSurfer's ``aseg.mgz``
+    brain tissue segmentation to reconcile ANTs' and FreeSurfer's brain masks.
+
+    First, the ``aseg.mgz`` mask from FreeSurfer is refined in two
+    steps, using binary morphological operations:
+
+      1. With a binary closing operation the sulci are included
+         into the mask. This results in a smoother brain mask
+         that does not exclude deep, wide sulci.
+
+      2. Fill any holes (typically, there could be a hole next to
+         the pineal gland and the corpora quadrigemina if the great
+         cerebral brain is segmented out).
+
+    Second, the brain mask is grown, including pixels that have a high likelihood
+    to the GM tissue distribution:
+
+      3. Dilate and substract the brain mask, defining the region to search for candidate
+         pixels that likely belong to cortical GM.
+
+      4. Pixels found in the search region that are labeled as GM by ANTs
+         (during ``antsBrainExtraction.sh``) are directly added to the new mask.
+
+      5. Otherwise, estimate GM tissue parameters locally in  patches of ``ww`` size,
+         and test the likelihood of the pixel to belong in the GM distribution.
+
+
+    This procedure is inspired on mindboggle's solution to the problem:
+    https://github.com/nipy/mindboggle/blob/master/mindboggle/guts/segment.py#L1660
 
 
     .. workflow::
@@ -943,6 +972,8 @@ def init_refine_brainmask_wf(name='refine_brainmask'):
 
         in_file
             Anatomical, merged T1w image after INU correction
+        ants_segs
+            Brain tissue segmentation from ANTS ``antsBrainExtraction.sh``
         subjects_dir
             FreeSurfer SUBJECTS_DIR
         subject_id
@@ -952,7 +983,7 @@ def init_refine_brainmask_wf(name='refine_brainmask'):
     **Outputs**
 
         out_file
-            New brain mask
+            New, refined brain mask
 
     """
     workflow = pe.Workflow(name=name)
