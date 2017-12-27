@@ -9,7 +9,8 @@ from .images import (
     IntraModalMerge, InvertT1w, ValidateImage, TemplateDimensions, Conform, Reorient
 )
 from .freesurfer import (
-    StructuralReference, MakeMidthickness, FSInjectBrainExtracted, FSDetectInputs
+    StructuralReference, MakeMidthickness, FSInjectBrainExtracted,
+    FSDetectInputs, RefineBrainMask,
 )
 from .surf import NormalizeSurf, GiftiNameSource, GiftiSetAnatomicalStructure
 from .reports import SubjectSummary, FunctionalSummary, AboutSummary
