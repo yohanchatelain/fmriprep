@@ -292,6 +292,8 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
                 ('outputnode.surfaces', 'surfaces')]),
         ])
 
+        # Refine brain mask
+
     seg2msks = pe.Node(niu.Function(function=_seg2msks), name='seg2msks')
     seg_rpt = pe.Node(ROIsPlot(colors=['r', 'magenta', 'b', 'g']), name='seg_rpt')
     anat_reports_wf = init_anat_reports_wf(
