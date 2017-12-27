@@ -704,7 +704,7 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
             ('out_reg_file', 'inputnode.t1_2_fsnative_reverse_transform')]),
         (fsnative_2_t1_xfm, t1_2_fsnative_xfm, [('out_reg_file', 'in_lta')]),
         # Refine ANTs mask, deriving new mask from FS' aseg
-        (inputnode, refine_brainmask_wf, [('corrected_t1', 'in_brain')]),
+        (inputnode, refine_brainmask_wf, [('corrected_t1', 'inputnode.in_file')]),
         (autorecon_resume_wf, refine_brainmask_wf, [
             ('outputnode.subjects_dir', 'inputnode.subjects_dir'),
             ('outputnode.subject_id', 'inputnode.subject_id')]),
@@ -715,7 +715,7 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         (gifti_surface_wf, outputnode, [('outputnode.surfaces', 'surfaces')]),
         (t1_2_fsnative_xfm, outputnode, [('out_lta', 't1_2_fsnative_forward_transform')]),
         (fsnative_2_t1_xfm, outputnode, [('out_reg_file', 't1_2_fsnative_reverse_transform')]),
-        (refine_brainmask_wf, outputnode, ['outputnode.out_file', 'out_brainmask'])
+        (refine_brainmask_wf, outputnode, [('outputnode.out_file', 'out_brainmask')]),
     ])
 
     return workflow
@@ -967,7 +967,7 @@ def init_refine_brainmask_wf(name='refine_brainmask'):
         (get_aseg, tonii, [('aseg', 'seg_file'),
                            ('rawavg', 'template_file'),
                            ('aseg', 'reg_header')]),
-        (tonii, refine, ['vol_label_file', 'in_aseg']),
+        (tonii, refine, [('vol_label_file', 'in_aseg')]),
         (refine, outputnode, [('out_file', 'out_file')]),
     ])
 
