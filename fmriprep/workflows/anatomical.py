@@ -221,6 +221,7 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
             (anat_template_wf, surface_recon_wf, [('outputnode.t1_template', 'inputnode.t1w')]),
             (skullstrip_ants_wf, surface_recon_wf, [
                 ('outputnode.out_file', 'inputnode.skullstripped_t1'),
+                ('outputnode.out_segs', 'inputnode.ants_segs'),
                 ('outputnode.bias_corrected', 'inputnode.corrected_t1')]),
             (skullstrip_ants_wf, applyrefined, [
                 ('outputnode.bias_corrected', 'in_file')]),
@@ -539,7 +540,8 @@ def init_skullstrip_ants_wf(skull_strip_template, debug, omp_nthreads, name='sku
     inputnode = pe.Node(niu.IdentityInterface(fields=['in_file']),
                         name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['bias_corrected', 'out_file', 'out_mask', 'out_report']), name='outputnode')
+        fields=['bias_corrected', 'out_file', 'out_mask', 'out_segs', 'out_report']),
+        name='outputnode')
 
     t1_skull_strip = pe.Node(
         BrainExtraction(dimension=3, use_floatingpoint_precision=1, debug=debug,
@@ -554,6 +556,7 @@ def init_skullstrip_ants_wf(skull_strip_template, debug, omp_nthreads, name='sku
         (inputnode, t1_skull_strip, [('in_file', 'anatomical_image')]),
         (t1_skull_strip, outputnode, [('BrainExtractionMask', 'out_mask'),
                                       ('BrainExtractionBrain', 'out_file'),
+                                      ('BrainExtractionSegmentation', 'out_segs'),
                                       ('N4Corrected0', 'bias_corrected')])
     ])
 
@@ -647,7 +650,7 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
 
     inputnode = pe.Node(
         niu.IdentityInterface(
-            fields=['t1w', 't2w', 'skullstripped_t1', 'corrected_t1',
+            fields=['t1w', 't2w', 'skullstripped_t1', 'corrected_t1', 'ants_segs',
                     'subjects_dir', 'subject_id']), name='inputnode')
     outputnode = pe.Node(
         niu.IdentityInterface(
@@ -704,7 +707,8 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
             ('out_reg_file', 'inputnode.t1_2_fsnative_reverse_transform')]),
         (fsnative_2_t1_xfm, t1_2_fsnative_xfm, [('out_reg_file', 'in_lta')]),
         # Refine ANTs mask, deriving new mask from FS' aseg
-        (inputnode, refine_brainmask_wf, [('corrected_t1', 'inputnode.in_file')]),
+        (inputnode, refine_brainmask_wf, [('corrected_t1', 'inputnode.in_file'),
+                                          ('ants_segs', 'inputnode.ants_segs')]),
         (autorecon_resume_wf, refine_brainmask_wf, [
             ('outputnode.subjects_dir', 'inputnode.subjects_dir'),
             ('outputnode.subject_id', 'inputnode.subject_id')]),
@@ -954,7 +958,7 @@ def init_refine_brainmask_wf(name='refine_brainmask'):
     workflow = pe.Workflow(name=name)
 
     inputnode = pe.Node(niu.IdentityInterface([
-        'in_file', 'subjects_dir', 'subject_id']), name='inputnode')
+        'in_file', 'ants_segs', 'subjects_dir', 'subject_id']), name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(['out_file']), name='outputnode')
     get_aseg = pe.Node(nio.FreeSurferSource(), name='get_aseg')
     tonative = pe.Node(fs.Label2Vol(), name='tonative')
@@ -962,7 +966,8 @@ def init_refine_brainmask_wf(name='refine_brainmask'):
     refine = pe.Node(RefineBrainMask(), name='refine')
 
     workflow.connect([
-        (inputnode, refine, [('in_file', 'in_anat')]),
+        (inputnode, refine, [('in_file', 'in_anat'),
+                             ('ants_segs', 'in_ants')]),
         (inputnode, get_aseg, [('subjects_dir', 'subjects_dir'),
                                ('subject_id', 'subject_id')]),
         (inputnode, tonii, [('in_file', 'reslice_like')]),
