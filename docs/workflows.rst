@@ -132,6 +132,8 @@ flag, which forces the estimation of an unbiased template.
     ``T1w`` space, and not to the input images.
 
 
+.. _workflows_surface:
+
 Surface preprocessing
 ~~~~~~~~~~~~~~~~~~~~~
 :mod:`fmriprep.workflows.anatomical.init_surface_recon_wf`
@@ -205,9 +207,9 @@ Typically, the original brain mask calculated with ``antsBrainExtraction.sh``
 will contain some innaccuracies including small amounts of MR signal from
 outside the brain.
 Based on the tissue segmentation of FreeSurfer (located in ``mri/aseg.mgz``)
-and only when the `Surface Processing`_ step has been executed,
-FMRIPREP replaces the brain mask with a refined one that derives from the
-``aseg.mgz`` file as described in
+and only when the :ref:`Surface Processing <workflows_surface>` step has been
+executed, FMRIPREP replaces the brain mask with a refined one that derives
+from the ``aseg.mgz`` file as described in
 :mod:`fmriprep.workflows.anatomical.init_refine_brainmask_wf`.
 
 
