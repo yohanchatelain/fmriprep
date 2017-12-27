@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
@@ -8,6 +7,7 @@ Anatomical reference preprocessing workflows
 
 .. autofunction:: init_anat_preproc_wf
 .. autofunction:: init_skullstrip_ants_wf
+.. autofunction:: init_refine_brainmask_wf
 
 Surface preprocessing
 +++++++++++++++++++++
@@ -967,8 +967,8 @@ def init_refine_brainmask_wf(name='refine_brainmask'):
                                ('subject_id', 'subject_id')]),
         (inputnode, tonii, [('in_file', 'reslice_like')]),
         (get_aseg, tonative, [('aseg', 'seg_file'),
-                           ('rawavg', 'template_file'),
-                           ('aseg', 'reg_header')]),
+                              ('rawavg', 'template_file'),
+                              ('aseg', 'reg_header')]),
         (tonative, tonii, [('vol_label_file', 'in_file')]),
         (tonii, refine, [('out_file', 'in_aseg')]),
         (refine, outputnode, [('out_file', 'out_file')]),
