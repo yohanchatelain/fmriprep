@@ -957,17 +957,20 @@ def init_refine_brainmask_wf(name='refine_brainmask'):
         'in_file', 'subjects_dir', 'subject_id']), name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(['out_file']), name='outputnode')
     get_aseg = pe.Node(nio.FreeSurferSource(), name='get_aseg')
-    tonii = pe.Node(fs.Label2Vol(vol_label_file='aseg_native.nii.gz'), name='tonii')
+    tonative = pe.Node(fs.Label2Vol(), name='tonative')
+    tonii = pe.Node(fs.MRIConvert(out_type='niigz', resample_type='nearest'), name='tonii')
     refine = pe.Node(RefineBrainMask(), name='refine')
 
     workflow.connect([
         (inputnode, refine, [('in_file', 'in_anat')]),
         (inputnode, get_aseg, [('subjects_dir', 'subjects_dir'),
                                ('subject_id', 'subject_id')]),
-        (get_aseg, tonii, [('aseg', 'seg_file'),
+        (inputnode, tonii, [('in_file', 'reslice_like')]),
+        (get_aseg, tonative, [('aseg', 'seg_file'),
                            ('rawavg', 'template_file'),
                            ('aseg', 'reg_header')]),
-        (tonii, refine, [('vol_label_file', 'in_aseg')]),
+        (tonative, tonii, [('vol_label_file', 'in_file')]),
+        (tonii, refine, [('out_file', 'in_aseg')]),
         (refine, outputnode, [('out_file', 'out_file')]),
     ])
 
