@@ -95,7 +95,7 @@ we recommend to include in your paper.
      tool of ANTs v2.1.0 [7], using brain-extracted versions of both T1w volume and template.
      Brain tissue segmentation of cerebrospinal fluid (CSF), white-matter (WM) and
      gray-matter (GM) was performed on the brain-extracted T1w using
-     <code>fast</code> [16]. (FSL v5.0.9).
+     <code>fast</code> [16] (FSL v5.0.9).
    </p>
 
    <p style="font-style: italic;">
@@ -149,7 +149,7 @@ we recommend to include in your paper.
 
    <p>
      <span id="fmriprep_citation">FMRIPREP</span> Available from: <a id="fmriprep_doi_url" href="https://doi.org/10.5281/zenodo.852659">10.5281/zenodo.852659</a>.
-     <img src onerror='fillCitation()'>
+     <img src onerror='fillCitation()' alt="" />
    </p>
    <p>
      2. 	Gorgolewski K, Burns CD, Madison C, Clark D, Halchenko YO, Waskom ML, Ghosh SS. Nipype: a flexible, lightweight and extensible neuroimaging data processing framework in python. Front Neuroinform. 2011 Aug 22;5(August):13. doi:<a href="https://doi.org/10.3389/fninf.2011.00013">10.3389/fninf.2011.00013</a>.
