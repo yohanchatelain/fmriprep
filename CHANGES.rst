@@ -1,11 +1,12 @@
 Next release
 ============
 
-1.0.1 (<TBD>)
-=============
+1.0.1 (1st of January 2018)
+===========================
 
 With thanks to @emdupre for contributions.
 
+* [PIN] Update required niworkflows version to 0.2.3
 * [FIX] Refine ``antsBrainExtraction`` if ``recon-all`` is run (#912)
   With thanks to Arno Klein for his helpful comments here
   (https://github.com/poldracklab/fmriprep/issues/431#issuecomment-299583391)
