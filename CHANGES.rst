@@ -10,10 +10,10 @@ With thanks to @emdupre for contributions.
 * [FIX] Refine ``antsBrainExtraction`` if ``recon-all`` is run (#912)
   With thanks to Arno Klein for his helpful comments here
   (https://github.com/poldracklab/fmriprep/issues/431#issuecomment-299583391)
-* [ENH] Use thinner contours in reportlets (#910)
+* [FIX] Use thinner contours in reportlets (#910)
 * [FIX] Robuster EPI mask (#911)
-* [DOC] Documentation about FreeSurfer and ``--fs-no-reconall`` (#894)
 * [FIX] Set workflow return value before potential error (#887)
+* [DOC] Documentation about FreeSurfer and ``--fs-no-reconall`` (#894)
 * [DOC] Fix example in installation ants-nthreads -> omp-nthreads (#885)
   With thanks to @mvdoc.
 * [ENH] Allow for multiecho data (#875)
