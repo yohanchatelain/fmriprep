@@ -172,7 +172,7 @@ def collect_data(dataset, participant_label, task=None):
                  for modality, query in queries.items()}
 
     def _run_num(x):
-        return re.search("run-\\d*", x).group(0)
+        return re.search("task-\\w*_run-\\d*", x).group(0)
 
     if subj_data["bold"] is not []:
         all_runs = subj_data["bold"]
