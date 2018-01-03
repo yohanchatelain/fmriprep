@@ -171,16 +171,21 @@ def collect_data(dataset, participant_label, task=None):
     subj_data = {modality: [x.filename for x in layout.get(**query)]
                  for modality, query in queries.items()}
 
-    def _run_num(x):
-        return re.search("task-\\w*_run-\\d*", x).group(0)
+    # OE: temporary disabled (#914)
+    # This bit of code should:
+    # 1. identify multi-echo scans (must contain echo-<index> identifier)
+    # 2. group echoes belonging to the same run, same task or 
+    #    same run and task, always: within same session
+    # def _run_num(x):
+    #     return re.search("task-\\w*_run-\\d*", x).group(0)
 
-    if subj_data["bold"] is not []:
-        all_runs = subj_data["bold"]
-        try:
-            runs = [list(run) for _, run in groupby(all_runs, key=_run_num)]
-            runs = list(map(lambda x: x[0] if len(x) == 1 else x, runs))
-            subj_data.update({"bold": runs})
-        except AttributeError:
-            pass
+    # if subj_data["bold"] is not []:
+    #     all_runs = subj_data["bold"]
+    #     try:
+    #         runs = [list(run) for _, run in groupby(all_runs, key=_run_num)]
+    #         runs = list(map(lambda x: x[0] if len(x) == 1 else x, runs))
+    #         subj_data.update({"bold": runs})
+    #     except AttributeError:
+    #         pass
 
     return subj_data, layout
