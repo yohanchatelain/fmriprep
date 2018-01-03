@@ -171,16 +171,21 @@ def collect_data(dataset, participant_label, task=None):
     subj_data = {modality: [x.filename for x in layout.get(**query)]
                  for modality, query in queries.items()}
 
-    def _run_num(x):
-        return re.search("run-\\d*", x).group(0)
+    def _hide_echo(x):
+        if '_echo-' not in x:
+            return x
+        echo = re.search("_echo-\\d*", x).group(0)
+        return x.replace(echo, "_echo-?")
 
     if subj_data["bold"] is not []:
-        all_runs = subj_data["bold"]
-        try:
-            runs = [list(run) for _, run in groupby(all_runs, key=_run_num)]
+        bold_sess = subj_data["bold"]
+
+        if any(['_echo-' in bold for bold in bold_sess]):
+            runs = [list(bold) for _, bold in groupby(bold_sess, key=_hide_echo)]
             runs = list(map(lambda x: x[0] if len(x) == 1 else x, runs))
-            subj_data.update({"bold": runs})
-        except AttributeError:
-            pass
+        else:
+            runs = bold_sess
+
+        subj_data.update({"bold": runs})
 
     return subj_data, layout

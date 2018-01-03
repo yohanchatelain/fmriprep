@@ -542,6 +542,10 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 ('outputnode.itk_t1_to_bold', 'inputnode.in_xfm')]),
         ])
     elif not use_syn:
+        LOGGER.warn('No fieldmaps found or they were ignored, building base workflow '
+                    'for dataset %s.', ref_file)
+        summary.inputs.distortion_correction = 'None'
+
         if t2s_coreg is True:
             workflow.connect([
                 (bold_split, join_split_echos, [
@@ -552,13 +556,9 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                     ('outputnode.xforms', 'inputnode.hmc_xforms')]),
                 (bold_t2s_wf, bold_reg_wf, [
                     ('outputnode.t2s_map', 'inputnode.ref_bold_brain'),
-                    ('outputnode.t2s_mask', 'inputnode.ref_bold_mask')])
+                    ('outputnode.oc_mask', 'inputnode.ref_bold_mask')])
                 ])
         else:
-            LOGGER.warn('No fieldmaps found or they were ignored, building base workflow '
-                        'for dataset %s.', ref_file)
-            summary.inputs.distortion_correction = 'None'
-
             workflow.connect([
                 (bold_reference_wf, bold_reg_wf, [
                     ('outputnode.ref_image_brain', 'inputnode.ref_bold_brain'),
