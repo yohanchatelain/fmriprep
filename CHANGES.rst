@@ -1,5 +1,9 @@
-Next release
-============
+1.0.2 (2nd of January 2018)
+===========================
+
+* [FIX] Grouping runs broke FMRIPREP on some datasets (#916)
+  Thanks to @emdupre
+
 
 1.0.1 (1st of January 2018)
 ===========================
