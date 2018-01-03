@@ -545,7 +545,7 @@ def init_skullstrip_ants_wf(skull_strip_template, debug, omp_nthreads, name='sku
 
     t1_skull_strip = pe.Node(
         BrainExtraction(dimension=3, use_floatingpoint_precision=1, debug=debug,
-                        keep_temporary_files=1),
+                        keep_temporary_files=1, use_random_seeding=False),
         name='t1_skull_strip', n_procs=omp_nthreads)
 
     t1_skull_strip.inputs.brain_template = brain_template
