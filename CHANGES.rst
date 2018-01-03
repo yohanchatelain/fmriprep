@@ -1,6 +1,7 @@
 1.0.3 (3rd of January 2018)
 ===========================
 
+* [FIX] Pin niworkflows-0.2.4 to fix #868.
 * [FIX] Roll back run/task groupings after BIDS query (#918).
   Groupings for the multi-echo extension will be reenabled soon.
 
