@@ -1,3 +1,9 @@
+1.0.3 (3rd of January 2018)
+===========================
+
+* [FIX] Roll back run/task groupings after BIDS query (#918).
+  Groupings for the multi-echo extension will be reenabled soon.
+
 1.0.2 (2nd of January 2018)
 ===========================
 
