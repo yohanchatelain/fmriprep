@@ -72,28 +72,42 @@ T1w/T2w preprocessing
                               hires=True,
                               num_t1w=1)
 
-The anatomical sub-workflow begins by constructing a template image by
-:ref:`conforming <conformation>` any T1-weighted images to RAS orientation and
-a common voxel size, and, in the case of multiple images, merges them into a
-single template (see `Longitudinal processing`_).
-This template is then skull-stripped, and the white matter/gray
-matter/cerebrospinal fluid segments are found.
-Finally, a non-linear registration to the MNI template space is estimated.
+The anatomical sub-workflow begins by constructing an average image by
+:ref:`conforming <conformation>` all found T1w images to RAS orientation and
+a common voxel size, and, in the case of multiple images, averages them into a
+single reference template (see `Longitudinal processing`_).
+
+.. _t1preproc_steps:
+
+Brain extraction, brain tissue segmentation and spatial normalization
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Then, the T1w image/average is skull-stripped using ANTs' ``antsBrainExtraction.sh``,
+which is an atlas-based brain extraction workflow.
 
 .. figure:: _static/brainextraction_t1.svg
     :scale: 100%
 
-    Brain extraction (ANTs).
+    Brain extraction
+
+
+Once the brain mask is computed, FSL ``fast`` is utilized for brain tissue segmentation.
 
 .. figure:: _static/segmentation.svg
     :scale: 100%
 
-    Brain tissue segmentation (``fast``).
+    Brain tissue segmentation.
+
+
+Finally, spatial normalization to MNI-space is performed using ANTs' ``antsRegistration``
+in a multiscale, mutual-information based, nonlinear registration scheme.
+In particular, spatial normalization is done using the `ICBM 2009c Nonlinear
+Asymmetric template (1×1×1mm) <http://nist.mni.mcgill.ca/?p=904>`_ [Fonov2011]_.
 
 .. figure:: _static/T1MNINormalization.svg
     :scale: 100%
 
-    Animation showing T1w to MNI normalization (ANTs)
+    Animation showing T1w to MNI normalization
 
 
 Longitudinal processing
@@ -118,6 +132,8 @@ flag, which forces the estimation of an unbiased template.
     ``T1w`` space, and not to the input images.
 
 
+.. _workflows_surface:
+
 Surface preprocessing
 ~~~~~~~~~~~~~~~~~~~~~
 :mod:`fmriprep.workflows.anatomical.init_surface_recon_wf`
@@ -133,7 +149,7 @@ Surface preprocessing
 ``fmriprep`` uses FreeSurfer_ to reconstruct surfaces from T1w/T2w
 structural images.
 If enabled, several steps in the ``fmriprep`` pipeline are added or replaced.
-All surface preprocessing may be disabled with the ``--no-freesurfer`` flag.
+All surface preprocessing may be disabled with the ``--fs-no-reconall`` flag.
 
 If FreeSurfer reconstruction is performed, the reconstructed subject is placed in
 ``<output dir>/freesurfer/sub-<subject_label>/`` (see :ref:`fsderivs`).
@@ -142,6 +158,8 @@ Surface reconstruction is performed in three phases.
 The first phase initializes the subject with T1w and T2w (if available)
 structural images and performs basic reconstruction (``autorecon1``) with the
 exception of skull-stripping.
+Skull-stripping is skipped since the brain mask :ref:`calculated previously
+<t1preproc_steps>` is injected into the appropriate location for FreeSurfer.
 For example, a subject with only one session with T1w and T2w images
 would be processed by the following command::
 
@@ -180,6 +198,19 @@ boundary and the pial surface.
 The ``smoothwm``, ``midthickness``, ``pial`` and ``inflated`` surfaces are also
 converted to GIFTI_ format and adjusted to be compatible with multiple software
 packages, including FreeSurfer and the `Connectome Workbench`_.
+
+
+Refinement of the brain mask
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Typically, the original brain mask calculated with ``antsBrainExtraction.sh``
+will contain some innaccuracies including small amounts of MR signal from
+outside the brain.
+Based on the tissue segmentation of FreeSurfer (located in ``mri/aseg.mgz``)
+and only when the :ref:`Surface Processing <workflows_surface>` step has been
+executed, FMRIPREP replaces the brain mask with a refined one that derives
+from the ``aseg.mgz`` file as described in
+:mod:`fmriprep.workflows.anatomical.init_refine_brainmask_wf`.
 
 
 BOLD preprocessing
@@ -241,12 +272,14 @@ BOLD reference image estimation
 
 This workflow estimates a reference image for a
 :abbr:`BOLD (blood-oxygen level-dependent)` series.
-If T1-saturation effects ("dummy scans" or non-steady state volumes) are
-detected they are used as reference due to their superior tissue contrast.
-Otherwise a median of motion corrected subset of volumes is used.
-The reference image is used to calculate a brain mask for the
-:abbr:`BOLD (blood-oxygen level-dependent)` signal using
-`Nilearn <http://nilearn.github.io/>`_.
+When T1-saturation effects ("dummy scans" or non-steady state volumes) are
+detected, they are averaged and used as reference due to their
+superior tissue contrast.
+Otherwise, a median of motion corrected subset of volumes is used.
+
+The reference image is then used to calculate a brain mask for the
+:abbr:`BOLD (blood-oxygen level-dependent)` signal using the
+:mod:`fmriprep.workflows.bold.util.init_enhance_and_skullstrip_bold_wf`.
 Further, the reference is fed to the :ref:`head-motion estimation
 workflow <bold_hmc>` and the :ref:`registration workflow to map
 BOLD series into the T1w image of the same subject <bold_reg>`.

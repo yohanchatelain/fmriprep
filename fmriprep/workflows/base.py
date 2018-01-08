@@ -40,8 +40,8 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
     This workflow organizes the execution of FMRIPREP, with a sub-workflow for
     each subject.
 
-    If FreeSurfer is to be used, a FreeSurfer derivatives folder is created and
-    populated with any needed template subjects.
+    If FreeSurfer's recon-all is to be run, a FreeSurfer derivatives folder is
+    created and populated with any needed template subjects.
 
     .. workflow::
         :graph2use: orig

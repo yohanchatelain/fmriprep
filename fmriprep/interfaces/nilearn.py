@@ -31,8 +31,11 @@ class MaskEPIInputSpec(BaseInterfaceInputSpec):
     opening = traits.Int(2, usedefault=True)
     exclude_zeros = traits.Bool(False, usedefault=True)
     ensure_finite = traits.Bool(True, usedefault=True)
-    target_affine = traits.File()
-    target_shape = traits.File()
+    target_affine = traits.Either(None, traits.File(exists=True),
+                                  default=None, usedefault=True)
+    target_shape = traits.Either(None, traits.File(exists=True),
+                                 default=None, usedefault=True)
+    no_sanitize = traits.Bool(False, usedefault=True)
 
 
 class MaskEPIOutputSpec(TraitedSpec):
@@ -44,14 +47,6 @@ class MaskEPI(SimpleInterface):
     output_spec = MaskEPIOutputSpec
 
     def _run_interface(self, runtime):
-        target_affine = None
-        target_shape = None
-
-        if isdefined(self.inputs.target_affine):
-            target_affine = self.inputs.target_affine
-        if isdefined(self.inputs.target_shape):
-            target_shape = self.inputs.target_shape
-
         masknii = compute_epi_mask(
             self.inputs.in_files,
             lower_cutoff=self.inputs.lower_cutoff,
@@ -60,9 +55,19 @@ class MaskEPI(SimpleInterface):
             opening=self.inputs.opening,
             exclude_zeros=self.inputs.exclude_zeros,
             ensure_finite=self.inputs.ensure_finite,
-            target_affine=target_affine,
-            target_shape=target_shape
+            target_affine=self.inputs.target_affine,
+            target_shape=self.inputs.target_shape
         )
+
+        if self.inputs.no_sanitize:
+            in_file = self.inputs.in_files
+            if isinstance(in_file, list):
+                in_file = in_file[0]
+            nii = nb.load(in_file)
+            qform, code = nii.get_qform(coded=True)
+            masknii.set_qform(qform, int(code))
+            sform, code = nii.get_sform(coded=True)
+            masknii.set_sform(sform, int(code))
 
         self._results['out_mask'] = fname_presuffix(
             self.inputs.in_files[0], suffix='_mask', newpath=runtime.cwd)

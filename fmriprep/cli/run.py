@@ -170,7 +170,9 @@ def get_parser():
     g_fs = parser.add_argument_group('Specific options for FreeSurfer preprocessing')
     g_fs.add_argument('--fs-no-reconall', '--no-freesurfer',
                       action='store_false', dest='run_reconall',
-                      help='disable FreeSurfer preprocessing')
+                      help='disable FreeSurfer surface preprocessing.'
+                      ' Note : `--no-freesurfer` is deprecated and will be removed in 1.2.'
+                      ' Use `--fs-no-reconall` instead.')
     g_fs.add_argument('--no-submm-recon', action='store_false', dest='hires',
                       help='disable sub-millimeter (hires) reconstruction')
     g_fs.add_argument(
@@ -252,6 +254,9 @@ def main():
         subject_list = retval['subject_list']
         run_uuid = retval['run_uuid']
         retcode = retval['return_code']
+
+    if fmriprep_wf is None:
+        sys.exit(1)
 
     if opts.write_graph:
         fmriprep_wf.write_graph(graph2use="colored", format='svg', simple_form=True)
@@ -396,6 +401,7 @@ def build_workflow(opts, retval):
     retval['work_dir'] = work_dir
     retval['subject_list'] = subject_list
     retval['run_uuid'] = run_uuid
+    retval['workflow'] = None
 
     # Called with reports only
     if opts.reports_only:
@@ -403,7 +409,6 @@ def build_workflow(opts, retval):
         if opts.run_uuid is not None:
             run_uuid = opts.run_uuid
         retval['return_code'] = generate_reports(subject_list, output_dir, work_dir, run_uuid)
-        retval['workflow'] = None
         return retval
 
     # Build main workflow

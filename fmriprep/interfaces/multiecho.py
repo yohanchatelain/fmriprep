@@ -71,7 +71,6 @@ class MaskT2SMap(SimpleInterface):
         ext = '.nii.gz' if self.inputs.compress else '.nii'
         flat_mask = apply_mask(self.inputs.image, self.inputs.mask)
         masked_image = unmask(flat_mask, self.inputs.mask)
-        orig_img = nb.load(self.inputs.image)
         self._results['masked_t2s'] = fname_presuffix(
             self.inputs.image, suffix='_masked' + ext, newpath=runtime.cwd, use_ext=False)
         masked_image.to_filename(self._results['masked_t2s'])

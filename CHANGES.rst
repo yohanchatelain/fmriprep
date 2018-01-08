@@ -1,5 +1,33 @@
-Next release
-============
+1.0.3 (3rd of January 2018)
+===========================
+
+* [FIX] Pin niworkflows-0.2.4 to fix #868.
+* [FIX] Roll back run/task groupings after BIDS query (#918).
+  Groupings for the multi-echo extension will be reenabled soon.
+
+1.0.2 (2nd of January 2018)
+===========================
+
+* [FIX] Grouping runs broke FMRIPREP on some datasets (#916)
+  Thanks to @emdupre
+
+
+1.0.1 (1st of January 2018)
+===========================
+
+With thanks to @emdupre for contributions.
+
+* [PIN] Update required niworkflows version to 0.2.3
+* [FIX] Refine ``antsBrainExtraction`` if ``recon-all`` is run (#912)
+  With thanks to Arno Klein for his helpful comments here
+  (https://github.com/poldracklab/fmriprep/issues/431#issuecomment-299583391)
+* [FIX] Use thinner contours in reportlets (#910)
+* [FIX] Robuster EPI mask (#911)
+* [FIX] Set workflow return value before potential error (#887)
+* [DOC] Documentation about FreeSurfer and ``--fs-no-reconall`` (#894)
+* [DOC] Fix example in installation ants-nthreads -> omp-nthreads (#885)
+  With thanks to @mvdoc.
+* [ENH] Allow for multiecho data (#875)
 
 
 1.0.0 (6th of December 2017)
