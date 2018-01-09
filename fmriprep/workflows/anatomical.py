@@ -471,21 +471,19 @@ def init_anat_template_wf(longitudinal, omp_nthreads, num_t1w, name='anat_templa
     t1_reorient = pe.Node(Reorient(), name='t1_reorient')
 
     concat_affines = pe.MapNode(
-        ConcatAffines(1 + min(num_t1w, 2), invert=True),
-        iterfield=['mat_AtoB', 'mat_BtoC'],
+        ConcatAffines(3, invert=True), iterfield=['mat_AtoB', 'mat_BtoC'],
         name='concat_affines', run_without_submitting=True)
-
-    lta_to_fsl = pe.MapNode(fs.utils.LTAConvert(out_fsl=True), iterfield=['in_lta'],
-                            name='lta_to_fsl')
 
     fsl_to_itk = pe.MapNode(c3.C3dAffineTool(fsl2ras=True, itk_transform=True),
                             iterfield=['transform_file', 'source_file'], name='fsl_to_itk')
+
+    lta_to_fsl = pe.MapNode(fs.utils.LTAConvert(out_fsl=True), iterfield=['in_lta'],
+                            name='lta_to_fsl')
 
     def _set_threads(in_list, maximum):
         return min(len(in_list), maximum)
 
     workflow.connect([
-        (t1_conform, concat_affines, [('transform', 'mat_AtoB')]),
         (t1_conform, n4_correct, [('out_file', 'input_image')]),
         (t1_conform, t1_merge, [
             (('out_file', _set_threads, omp_nthreads), 'num_threads'),
@@ -494,14 +492,15 @@ def init_anat_template_wf(longitudinal, omp_nthreads, num_t1w, name='anat_templa
         (t1_merge, t1_reorient, [('out_file', 'in_file')]),
         # Combine orientation and template transforms
         (t1_merge, lta_to_fsl, [('transform_outputs', 'in_lta')]),
+        (t1_conform, concat_affines, [('transform', 'mat_AtoB')]),
         (lta_to_fsl, concat_affines, [('out_fsl', 'mat_BtoC')]),
         (t1_reorient, concat_affines, [('transform', 'mat_CtoD')]),
         (t1_template_dimensions, fsl_to_itk, [('t1w_valid_list', 'source_file')]),
         (t1_reorient, fsl_to_itk, [('out_file', 'reference_file')]),
         (concat_affines, fsl_to_itk, [('out_mat', 'transform_file')]),
         # Output
-        (fsl_to_itk, outputnode, [('itk_transform', 'template_transforms')]),
         (t1_reorient, outputnode, [('out_file', 't1_template')]),
+        (fsl_to_itk, outputnode, [('itk_transform', 'template_transforms')]),
     ])
 
     return workflow
