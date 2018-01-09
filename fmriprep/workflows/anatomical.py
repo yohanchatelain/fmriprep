@@ -469,8 +469,12 @@ def init_anat_template_wf(longitudinal, omp_nthreads, num_t1w, name='anat_templa
             (t1_reorient, concat_affines, [('transform', 'mat_CtoD')]),
         ])
     else:
+
+        def _get_first(in_list):
+            return in_list[0]
+
         workflow.connect([
-            (t1_conform, t1_reorient, [('out_file', 'in_file')]),
+            (t1_conform, t1_reorient, [(('out_file', _get_first), 'in_file')]),
             (t1_reorient, concat_affines, [('transform', 'mat_BtoC')]),
         ])
 
