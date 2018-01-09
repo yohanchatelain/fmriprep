@@ -24,11 +24,6 @@
       "orcid": "0000-0003-0867-1469"
     },
     {
-      "name": "DuPre, Elizabeth",
-      "affiliation": "Montreal Neurological Institute, McGill University",
-      "orcid": "0000-0003-1358-196X"
-    },
-    {
       "name": "Ma, Feilong",
       "affiliation": "Dartmouth College",
       "orcid": "0000-0002-6838-3971"
@@ -52,6 +47,11 @@
       "name": "Goncalves, Mathias",
       "affiliation": "MIT",
       "orcid": "0000-0002-7252-7771"
+    },
+    {
+      "name": "DuPre, Elizabeth",
+      "affiliation": "Montreal Neurological Institute, McGill University",
+      "orcid": "0000-0003-1358-196X"
     },
     {
       "name": "Poldrack, Russell A.",
