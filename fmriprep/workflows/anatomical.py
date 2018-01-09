@@ -420,25 +420,48 @@ def init_anat_template_wf(longitudinal, omp_nthreads, num_t1w, name='anat_templa
     t1_template_dimensions = pe.Node(TemplateDimensions(), name='t1_template_dimensions')
     t1_conform = pe.MapNode(Conform(), iterfield='in_file', name='t1_conform')
 
-    # 1. Align and merge if several T1w images are provided
-    t1_merge = pe.Node(
-        # StructuralReference is fs.RobustTemplate if > 1 volume, copying otherwise
-        StructuralReference(auto_detect_sensitivity=True,
-                            initial_timepoint=1,      # For deterministic behavior
-                            intensity_scaling=True,   # 7-DOF (rigid + intensity)
-                            subsample_threshold=200,
-                            fixed_timepoint=not longitudinal,
-                            no_iteration=not longitudinal,
-                            transform_outputs=True,
-                            ),
-        mem_gb=2 * num_t1w - 1,
-        name='t1_merge')
-
-    # Reorient template to RAS, if needed (mri_robust_template may set to LIA)
+    # 1. Template (only if several T1w images)
+    # 2. Reorient template to RAS, if needed (mri_robust_template may set to LIA)
     t1_reorient = pe.Node(Reorient(), name='t1_reorient')
 
-    lta_to_fsl = pe.MapNode(fs.utils.LTAConvert(out_fsl=True), iterfield=['in_lta'],
-                            name='lta_to_fsl')
+    if num_t1w > 1:
+        # 1a. Correct for bias field: the bias field is an additive factor
+        #     in log-transformed intensity units. Therefore, it is not a linear
+        #     combination of fields and N4 fails with merged images.
+        # 1b. Align and merge if several T1w images are provided
+        n4_correct = pe.MapNode(
+            ants.N4BiasFieldCorrection(dimension=3, copy_header=True),
+            iterfield='input_image', name='n4_correct',
+            n_procs=1)  # n_procs=1 for reproducibility
+        t1_merge = pe.Node(
+            # StructuralReference is fs.RobustTemplate if > 1 volume, copying otherwise
+            StructuralReference(auto_detect_sensitivity=True,
+                                initial_timepoint=1,      # For deterministic behavior
+                                intensity_scaling=True,   # 7-DOF (rigid + intensity)
+                                subsample_threshold=200,
+                                fixed_timepoint=not longitudinal,
+                                no_iteration=not longitudinal,
+                                transform_outputs=True,
+                                ),
+            mem_gb=2 * num_t1w - 1,
+            name='t1_merge')
+        lta_to_fsl = pe.MapNode(fs.utils.LTAConvert(out_fsl=True), iterfield=['in_lta'],
+                                name='lta_to_fsl')
+
+        workflow.connect([
+            (t1_conform, n4_correct, [('out_file', 'input_image')]),
+            (n4_correct, t1_merge, [('output_image', 'in_files')]),
+            (t1_conform, t1_merge, [
+                (('out_file', set_threads, omp_nthreads), 'num_threads'),
+                (('out_file', add_suffix, '_template'), 'out_file')]),
+            (t1_merge, t1_reorient, [('out_file', 'in_file')]),
+            # Combine orientation and template transforms
+            (t1_merge, lta_to_fsl, [('transform_outputs', 'in_lta')]),
+        ])
+    else:
+        workflow.connect([
+            (t1_conform, t1_reorient, [('out_file', 'in_file')]),
+        ])
 
     concat_affines = pe.MapNode(
         ConcatAffines(3, invert=True), iterfield=['mat_AtoB', 'mat_BtoC'],
@@ -456,13 +479,6 @@ def init_anat_template_wf(longitudinal, omp_nthreads, num_t1w, name='anat_templa
             ('t1w_valid_list', 'in_file'),
             ('target_zooms', 'target_zooms'),
             ('target_shape', 'target_shape')]),
-        (t1_conform, t1_merge, [
-            ('out_file', 'in_files'),
-            (('out_file', set_threads, omp_nthreads), 'num_threads'),
-            (('out_file', add_suffix, '_template'), 'out_file')]),
-        (t1_merge, t1_reorient, [('out_file', 'in_file')]),
-        # Combine orientation and template transforms
-        (t1_merge, lta_to_fsl, [('transform_outputs', 'in_lta')]),
         (t1_conform, concat_affines, [('transform', 'mat_AtoB')]),
         (lta_to_fsl, concat_affines, [('out_fsl', 'mat_BtoC')]),
         (t1_reorient, concat_affines, [('transform', 'mat_CtoD')]),
