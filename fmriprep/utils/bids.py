@@ -15,10 +15,10 @@ Fetch some test data
 
 """
 import os
-import re
+# import re
 import os.path as op
 import warnings
-from itertools import groupby
+# from itertools import groupby
 from bids.grabbids import BIDSLayout
 
 
