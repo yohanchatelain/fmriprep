@@ -31,7 +31,7 @@ from niworkflows.nipype.interfaces import (
     freesurfer as fs,
     fsl
 )
-from niworkflows.nipype.interfaces.ants import BrainExtraction
+from niworkflows.nipype.interfaces.ants import BrainExtraction, N4BiasFieldCorrection
 
 from niworkflows.interfaces.registration import RobustMNINormalizationRPT
 import niworkflows.data as nid
@@ -41,7 +41,7 @@ from niworkflows.interfaces.segmentation import ReconAllRPT
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
 
 from ..interfaces import (
-    DerivativesDataSink, StructuralReference, MakeMidthickness, FSInjectBrainExtracted,
+    DerivativesDataSink, MakeMidthickness, FSInjectBrainExtracted,
     FSDetectInputs, NormalizeSurf, GiftiNameSource, TemplateDimensions, Conform, Reorient,
     ConcatAffines, RefineBrainMask,
 )
@@ -424,54 +424,58 @@ def init_anat_template_wf(longitudinal, omp_nthreads, num_t1w, name='anat_templa
     # 2. Reorient template to RAS, if needed (mri_robust_template may set to LIA)
     t1_reorient = pe.Node(Reorient(), name='t1_reorient')
 
+    concat_affines = pe.MapNode(
+        ConcatAffines(1 + min(num_t1w, 2), invert=True),
+        iterfield=['mat_AtoB', 'mat_BtoC'] if num_t1w > 1 else 'mat_AtoB',
+        name='concat_affines', run_without_submitting=True)
+
     if num_t1w > 1:
         # 1a. Correct for bias field: the bias field is an additive factor
         #     in log-transformed intensity units. Therefore, it is not a linear
         #     combination of fields and N4 fails with merged images.
         # 1b. Align and merge if several T1w images are provided
         n4_correct = pe.MapNode(
-            ants.N4BiasFieldCorrection(dimension=3, copy_header=True),
+            N4BiasFieldCorrection(dimension=3, copy_header=True),
             iterfield='input_image', name='n4_correct',
             n_procs=1)  # n_procs=1 for reproducibility
         t1_merge = pe.Node(
-            # StructuralReference is fs.RobustTemplate if > 1 volume, copying otherwise
-            StructuralReference(auto_detect_sensitivity=True,
-                                initial_timepoint=1,      # For deterministic behavior
-                                intensity_scaling=True,   # 7-DOF (rigid + intensity)
-                                subsample_threshold=200,
-                                fixed_timepoint=not longitudinal,
-                                no_iteration=not longitudinal,
-                                transform_outputs=True,
-                                ),
+            fs.RobustTemplate(auto_detect_sensitivity=True,
+                              initial_timepoint=1,      # For deterministic behavior
+                              intensity_scaling=True,   # 7-DOF (rigid + intensity)
+                              subsample_threshold=200,
+                              fixed_timepoint=not longitudinal,
+                              no_iteration=not longitudinal,
+                              transform_outputs=True,
+                              ),
             mem_gb=2 * num_t1w - 1,
             name='t1_merge')
+
         lta_to_fsl = pe.MapNode(fs.utils.LTAConvert(out_fsl=True), iterfield=['in_lta'],
                                 name='lta_to_fsl')
+
+        def _set_threads(in_list, maximum):
+            return min(len(in_list), maximum)
 
         workflow.connect([
             (t1_conform, n4_correct, [('out_file', 'input_image')]),
             (n4_correct, t1_merge, [('output_image', 'in_files')]),
             (t1_conform, t1_merge, [
-                (('out_file', set_threads, omp_nthreads), 'num_threads'),
+                (('out_file', _set_threads, omp_nthreads), 'num_threads'),
                 (('out_file', add_suffix, '_template'), 'out_file')]),
             (t1_merge, t1_reorient, [('out_file', 'in_file')]),
             # Combine orientation and template transforms
             (t1_merge, lta_to_fsl, [('transform_outputs', 'in_lta')]),
+            (lta_to_fsl, concat_affines, [('out_fsl', 'mat_BtoC')]),
+            (t1_reorient, concat_affines, [('transform', 'mat_CtoD')]),
         ])
     else:
         workflow.connect([
             (t1_conform, t1_reorient, [('out_file', 'in_file')]),
+            (t1_reorient, concat_affines, [('transform', 'mat_BtoC')]),
         ])
-
-    concat_affines = pe.MapNode(
-        ConcatAffines(3, invert=True), iterfield=['mat_AtoB', 'mat_BtoC'],
-        name='concat_affines', run_without_submitting=True)
 
     fsl_to_itk = pe.MapNode(c3.C3dAffineTool(fsl2ras=True, itk_transform=True),
                             iterfield=['transform_file', 'source_file'], name='fsl_to_itk')
-
-    def set_threads(in_list, maximum):
-        return min(len(in_list), maximum)
 
     workflow.connect([
         (inputnode, t1_template_dimensions, [('t1w', 't1w_list')]),
@@ -480,8 +484,6 @@ def init_anat_template_wf(longitudinal, omp_nthreads, num_t1w, name='anat_templa
             ('target_zooms', 'target_zooms'),
             ('target_shape', 'target_shape')]),
         (t1_conform, concat_affines, [('transform', 'mat_AtoB')]),
-        (lta_to_fsl, concat_affines, [('out_fsl', 'mat_BtoC')]),
-        (t1_reorient, concat_affines, [('transform', 'mat_CtoD')]),
         (t1_template_dimensions, fsl_to_itk, [('t1w_valid_list', 'source_file')]),
         (t1_reorient, fsl_to_itk, [('out_file', 'reference_file')]),
         (concat_affines, fsl_to_itk, [('out_mat', 'transform_file')]),
