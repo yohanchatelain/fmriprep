@@ -470,15 +470,15 @@ def init_anat_template_wf(longitudinal, omp_nthreads, num_t1w, name='anat_templa
     # 2. Reorient template to RAS, if needed (mri_robust_template may set to LIA)
     t1_reorient = pe.Node(Reorient(), name='t1_reorient')
 
+    lta_to_fsl = pe.MapNode(fs.utils.LTAConvert(out_fsl=True), iterfield=['in_lta'],
+                            name='lta_to_fsl')
+
     concat_affines = pe.MapNode(
         ConcatAffines(3, invert=True), iterfield=['mat_AtoB', 'mat_BtoC'],
         name='concat_affines', run_without_submitting=True)
 
     fsl_to_itk = pe.MapNode(c3.C3dAffineTool(fsl2ras=True, itk_transform=True),
                             iterfield=['transform_file', 'source_file'], name='fsl_to_itk')
-
-    lta_to_fsl = pe.MapNode(fs.utils.LTAConvert(out_fsl=True), iterfield=['in_lta'],
-                            name='lta_to_fsl')
 
     def _set_threads(in_list, maximum):
         return min(len(in_list), maximum)
