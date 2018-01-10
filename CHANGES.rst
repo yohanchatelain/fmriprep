@@ -1,3 +1,9 @@
+Next release
+============
+
+* [FIX] INU correction before merging several T1w (#925).
+
+
 1.0.3 (3rd of January 2018)
 ===========================
 

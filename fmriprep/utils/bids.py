@@ -174,7 +174,7 @@ def collect_data(dataset, participant_label, task=None):
     # OE: temporary disabled (#914)
     # This bit of code should:
     # 1. identify multi-echo scans (must contain echo-<index> identifier)
-    # 2. group echoes belonging to the same run, same task or 
+    # 2. group echoes belonging to the same run, same task or
     #    same run and task, always: within same session
     # def _run_num(x):
     #     return re.search("task-\\w*_run-\\d*", x).group(0)
