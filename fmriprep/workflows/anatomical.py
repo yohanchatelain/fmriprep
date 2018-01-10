@@ -438,7 +438,7 @@ def init_anat_template_wf(longitudinal, omp_nthreads, num_t1w, name='anat_templa
                 return in_list[0]
             return in_list
 
-        outputnode.inputs.template_transforms = [pkgr('fmriprep', 'data/itkIdentityTransform.tfm')]
+        outputnode.inputs.template_transforms = [pkgr('fmriprep', 'data/itkIdentityTransform.txt')]
 
         workflow.connect([
             (t1_conform, outputnode, [(('out_file', _get_first), 't1_template')]),
