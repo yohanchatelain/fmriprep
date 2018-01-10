@@ -885,13 +885,13 @@ def _get_wf_name(bold_fname):
     >>> _get_wf_name('/completely/made/up/path/sub-01_task-nback_bold.nii.gz')
     'func_preproc_task_nback_wf'
     >>> _get_wf_name('/completely/made/up/path/sub-01_task-nback_run-01_echo-1_bold.nii.gz')
-    'func_preproc_task_nback_run_01_wf'
+    'func_preproc_task_nback_run_01_echo_1_wf'
     """
     from niworkflows.nipype.utils.filemanip import split_filename
     fname = split_filename(bold_fname)[1]
     fname_nosub = '_'.join(fname.split("_")[1:])
-    if 'echo' in fname_nosub:
-        fname_nosub = '_'.join(fname_nosub.split("_echo-")[:1]) + "_bold"
+    # if 'echo' in fname_nosub:
+    #     fname_nosub = '_'.join(fname_nosub.split("_echo-")[:1]) + "_bold"
     name = "func_preproc_" + fname_nosub.replace(
         ".", "_").replace(" ", "").replace("-", "_").replace("_bold", "_wf")
 
