@@ -116,12 +116,11 @@ class SubjectSummary(SummaryInterface):
         # Add list of tasks with number of runs
         bold_series = self.inputs.bold if isdefined(self.inputs.bold) else []
 
-        counts = {}
-        for series in bold_series:
-            if isinstance(series, list):
-                counts.update(Counter(BIDS_NAME.search(series[0]).groupdict()['task_id'][5:]))
-            else:
-                counts.update(Counter(BIDS_NAME.search(series).groupdict()['task_id'][5:]))
+        if any(isinstance(series, list) for series in bold_series):
+            bold_series = map(lambda x: x[0] if isinstance(x, list) else x,
+                              bold_series)
+        counts = Counter(BIDS_NAME.search(series).groupdict()['task_id'][5:]
+                         for series in bold_series)
 
         tasks = ''
         if counts:
