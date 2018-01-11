@@ -1,6 +1,7 @@
 Next release
 ============
 
+* [FIX] RuntimeWarning: divide by zero encountered in float_scalars (#931).
 * [FIX] INU correction before merging several T1w (#925).
 
 
