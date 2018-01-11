@@ -227,8 +227,9 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         bold_tlen, mem_gb = _create_mem_gb(ref_file)
 
     wf_name = _get_wf_name(ref_file)
-    LOGGER.log(25, 'Creating bold processing workflow for "%s" (%.2f GB / %d TRs).',
-               ref_file, mem_gb['filesize'], bold_tlen)
+    LOGGER.log(25, ('Creating bold processing workflow for "%s" (%.2f GB / %d TRs). '
+                    'Memory resampled/largemem=%.2f/%.2f GB.'),
+               ref_file, mem_gb['filesize'], bold_tlen, mem_gb['resampled'], mem_gb['largemem'])
 
     # For doc building purposes
     if layout is None or bold_file == 'bold_preprocesing':
@@ -349,7 +350,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                    freesurfer=freesurfer,
                                    use_bbr=use_bbr,
                                    bold2t1w_dof=bold2t1w_dof,
-                                   mem_gb=mem_gb['largemem'],
+                                   mem_gb=mem_gb['resampled'],
                                    omp_nthreads=omp_nthreads,
                                    use_compression=False,
                                    use_fieldwarp=(fmaps is not None or use_syn))
@@ -872,7 +873,7 @@ def _create_mem_gb(bold_fname):
     mem_gb = {
         'filesize': bold_size_gb,
         'resampled': bold_size_gb * 4,
-        'largemem': (0.007 * max(bold_tlen, 100) + 1.5) * bold_size_gb,
+        'largemem': bold_size_gb * (max(bold_tlen / 100, 1.0) + 4),
     }
 
     return bold_tlen, mem_gb

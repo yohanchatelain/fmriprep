@@ -21,6 +21,7 @@ from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransf
 from ...interfaces import (
     TPM2ROI, AddTPMs, AddTSVHeader, GatherConfounds, ICAConfounds
 )
+from ...interfaces.patches import RobustACompCor as ACompCor
 
 
 def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
@@ -173,7 +174,7 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
         components_file='tcompcor.tsv', pre_filter='cosine', save_pre_filter=True,
         percentile_threshold=.05), name="tcompcor", mem_gb=mem_gb)
 
-    acompcor = pe.Node(nac.ACompCor(
+    acompcor = pe.Node(ACompCor(
         components_file='acompcor.tsv', pre_filter='cosine', save_pre_filter=True),
         name="acompcor", mem_gb=mem_gb)
 
