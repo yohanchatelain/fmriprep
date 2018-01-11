@@ -1,6 +1,7 @@
 Next release
 ============
 
+* [FIX] Heuristics to prevent memory errors during aCompCor (#930).
 * [FIX] INU correction before merging several T1w (#925).
 
 

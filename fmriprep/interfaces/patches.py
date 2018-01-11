@@ -26,11 +26,12 @@ class RobustACompCor(nac.ACompCor):
         while True:
             try:
                 runtime = super(RobustACompCor, self)._run_interface(runtime)
+                break
             except LinAlgError:
                 failures += 1
                 if failures > 10:
                     raise
                 start = (failures - 1) * 10
                 sleep(randint(start + 4, start + 10))
-            else:
-                return runtime
+
+        return runtime
