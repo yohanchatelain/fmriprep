@@ -197,7 +197,7 @@ we recommend to include in your paper.
      16. 	Zhang Y, Brady M, Smith S. Segmentation of brain MR images through a hidden Markov random field model and the expectation-maximization algorithm. IEEE Trans Med Imaging. 2001 Jan;20(1):45–57. doi:<a href="https://doi.org/10.1109/42.906424">10.1109/42.906424</a>.
    </p>
    <p>
-     17. 	Behzadi Y, Restom K, Liau J, Liu TT. A component based noise correction method (CompCor) for BOLD and perfusion based fMRI. Neuroimage. 2007 Aug 1;37(1):90–101. doi:<a href="https://doi.org/10.1109/42.906424">10.1016/j.neuroimage.2007.04.042</a>.
+     17. 	Behzadi Y, Restom K, Liau J, Liu TT. A component based noise correction method (CompCor) for BOLD and perfusion based fMRI. Neuroimage. 2007 Aug 1;37(1):90–101. doi:<a href="https://doi.org/10.1016/j.neuroimage.2007.04.042">10.1016/j.neuroimage.2007.04.042</a>.
    </p>
    <p>
      18. 	Power JD, Mitra A, Laumann TO, Snyder AZ, Schlaggar BL, Petersen SE. Methods to detect, characterize, and remove motion artifact in resting state fMRI. Neuroimage. 2013 Aug 29;84:320–41. doi:<a href="https://doi.org/10.1016/j.neuroimage.2013.08.048">10.1016/j.neuroimage.2013.08.048</a>.
