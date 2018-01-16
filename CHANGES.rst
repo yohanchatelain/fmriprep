@@ -2,6 +2,7 @@
 ============================
 
 * [FIX] Pin niworkflows-0.2.6 to fix several MultiProc errors (nipy/nipype#2368)
+* [DOC] Fix DOI in citation boilerplate (#933)
 * [FIX] Heuristics to prevent memory errors during aCompCor (#930).
 * [FIX] RuntimeWarning: divide by zero encountered in float_scalars (#931).
 * [FIX] INU correction before merging several T1w (#925).
