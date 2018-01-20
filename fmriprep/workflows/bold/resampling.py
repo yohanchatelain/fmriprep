@@ -22,8 +22,11 @@ from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransf
 
 from ...interfaces import GiftiSetAnatomicalStructure, MultiApplyTransforms
 from ...interfaces.nilearn import Merge
-# See https://github.com/poldracklab/fmriprep/issues/768
-from ...interfaces.freesurfer import PatchedConcatenateLTA as ConcatenateLTA
+from ...interfaces.freesurfer import (
+    MedialNaNs,
+    # See https://github.com/poldracklab/fmriprep/issues/768
+    PatchedConcatenateLTA as ConcatenateLTA
+)
 
 from .util import init_bold_reference_wf
 
@@ -116,31 +119,8 @@ def init_bold_surf_wf(mem_gb, output_spaces, medial_surface_nan, name='bold_surf
         iterables=('hemi', ['lh', 'rh']),
         name='sampler', mem_gb=mem_gb * 3)
 
-    def medial_wall_to_nan(in_file, subjects_dir, target_subject):
-        """ Convert values on medial wall to NaNs
-        """
-        import nibabel as nb
-        import numpy as np
-        import os
-
-        fn = os.path.basename(in_file)
-        if not target_subject.startswith('fs'):
-            return in_file
-
-        cortex = nb.freesurfer.read_label(os.path.join(
-            subjects_dir, target_subject, 'label', '{}.cortex.label'.format(fn[:2])))
-        func = nb.load(in_file)
-        medial = np.delete(np.arange(len(func.darrays[0].data)), cortex)
-        for darray in func.darrays:
-            darray.data[medial] = np.nan
-
-        out_file = os.path.join(os.getcwd(), fn)
-        func.to_filename(out_file)
-        return out_file
-
-    medial_nans = pe.MapNode(niu.Function(function=medial_wall_to_nan),
-                             iterfield=['in_file', 'target_subject'], name='medial_nans',
-                             mem_gb=DEFAULT_MEMORY_MIN_GB)
+    medial_nans = pe.MapNode(MedialNaNs(), iterfield=['in_file', 'target_subject'],
+                             name='medial_nans', mem_gb=DEFAULT_MEMORY_MIN_GB)
 
     merger = pe.JoinNode(niu.Merge(1, ravel_inputs=True), name='merger',
                          joinsource='sampler', joinfield=['in1'], run_without_submitting=True,

@@ -1224,11 +1224,11 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     return workflow
 
 
-def _seg2msks(in_file):
+def _seg2msks(in_file, newpath=None):
     """Converts labels to masks"""
     import nibabel as nb
     import numpy as np
-    from os import path as op
+    from niworkflows.nipype.utils.filemanip import fname_presuffix
 
     nii = nb.load(in_file)
     labels = nii.get_data()
@@ -1237,7 +1237,8 @@ def _seg2msks(in_file):
     for i in range(1, 4):
         ldata = np.zeros_like(labels)
         ldata[labels == i] = 1
-        out_files.append(op.abspath('label%d.nii.gz' % i))
+        out_files.append(fname_presuffix(
+            in_file, suffix='_label%03d' % i), newpath=newpath)
         nii.__class__(ldata, nii.affine, nii.header).to_filename(out_files[-1])
 
     return out_files
