@@ -1238,7 +1238,7 @@ def _seg2msks(in_file, newpath=None):
         ldata = np.zeros_like(labels)
         ldata[labels == i] = 1
         out_files.append(fname_presuffix(
-            in_file, suffix='_label%03d' % i), newpath=newpath)
+            in_file, suffix='_label%03d' % i, newpath=newpath))
         nii.__class__(ldata, nii.affine, nii.header).to_filename(out_files[-1])
 
     return out_files
