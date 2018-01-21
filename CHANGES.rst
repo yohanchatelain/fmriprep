@@ -1,6 +1,7 @@
-1.0.5 (<TBD>)
-=============
+1.0.5 (21st of January 2018)
+============================
 
+* [PIN] niworkflows-0.2.8 to fix several execution issues.
 * [ENH] Code cleanup (#938)
 
 1.0.4 (15th of January 2018)
