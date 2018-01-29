@@ -1,3 +1,11 @@
+1.0.6 (29th of January 2018)
+============================
+
+* [PIN] niworkflows-0.3.1-dev (including Nipype 1.0.0!)
+* [ENH] Migrate to CircleCI 2.0 and workflows (#943)
+* [ENH] Improvements to CLIs (native & wrapper) (#944)
+* [FIX] Rerun tCompCor interface in case of MemoryError (#942)
+
 1.0.5 (21st of January 2018)
 ============================
 
