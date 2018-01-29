@@ -1,0 +1,482 @@
+version: 2
+jobs:
+
+  build:
+    environment:
+      TZ: "/usr/share/zoneinfo/America/Los_Angeles"
+      SCRATCH: "/scratch"
+    docker:
+      - image: docker:18.01.0-ce-git
+    working_directory: /tmp/src/fmriprep
+    steps:
+      - run:
+          name: Install parallel gzip
+          command: |
+            apk add --no-cache pigz
+      - restore_cache:
+          keys:
+            - docker-v2-{{ .Branch }}-{{ epoch }}
+            - docker-v2-{{ .Branch }}-
+            - docker-v2-
+          paths:
+            - /tmp/cache/docker.tar.gz
+            - /tmp/cache/ubuntu.tar.gz
+      - checkout
+
+      - run:
+          name: Update fMRIPrep version
+          command: |
+            if [ "${CIRCLE_TAG}" != "" ]; then
+              sed -i -E "s/(__version__ = )'[A-Za-z0-9.-]+'/\1'${CIRCLE_TAG}'/" fmriprep/info.py
+              sed -i -E "s/(__version__ = )'[A-Za-z0-9.-]+'/\1'${CIRCLE_TAG}'/" wrapper/fmriprep_docker.py
+              sed -i -E "s/(var version = )'[A-Za-z0-9.-]+'/\1'${CIRCLE_TAG}'/" docs/citing.rst
+            fi
+      - setup_remote_docker
+      - run:
+          name: Load Docker image layer cache
+          no_output_timeout: 30m
+          command: |
+            docker info
+            set +o pipefail
+            if [ -f /tmp/cache/docker.tar.gz ]; then
+              pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
+              docker images
+            fi
+      - run:
+          name: Build Docker image
+          no_output_timeout: 60m
+          command: |
+            e=1 && for i in {1..5}; do
+              docker build \
+                --cache-from=poldracklab/fmriprep \
+                --rm=false \
+                -t poldracklab/fmriprep:latest \
+                --build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
+                --build-arg VCS_REF=`git rev-parse --short HEAD` \
+                --build-arg VERSION=${CIRCLE_TAG:-latest} . \
+              && e=0 && break || sleep 15
+            done && [ "$e" -eq "0" ]
+
+      - run:
+          name: Docker save
+          no_output_timeout: 40m
+          command: |
+            mkdir -p /tmp/cache
+            docker save ubuntu:xenial-20161213 poldracklab/fmriprep:latest \
+            | pigz -8 -p 3 > /tmp/cache/docker.tar.gz
+
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - cache/docker.tar.gz
+            - src/fmriprep
+
+  get_data:
+    machine:
+      # Ubuntu 14.04 with Docker 17.10.0-ce
+      image: circleci/classic:201711-01
+    working_directory: /home/circleci/data
+    steps:
+      - restore_cache:
+          keys:
+            - data-v4-{{ epoch }}
+            - data-v4-
+      - run:
+          name: Get test data from ds000005
+          command: |
+            mkdir -p /tmp/data
+            if [[ ! -d /tmp/data/ds005 ]]; then
+              wget --retry-connrefused --waitretry=5 --read-timeout=20 --timeout=15 -t 0 -q \
+                -O ds005_downsampled.tar.gz "https://files.osf.io/v1/resources/fvuh8/providers/osfstorage/57f32a429ad5a101f977eb75"
+              tar xvzf ds005_downsampled.tar.gz -C /tmp/data/
+            else
+              echo "Dataset ds000005 was cached"
+            fi
+      - run:
+          name: Get test data from ds000054
+          command: |
+            if [[ ! -d /tmp/data/ds054 ]]; then
+              wget --retry-connrefused --waitretry=5 --read-timeout=20 --timeout=15 -t 0 -q \
+                -O ds054_downsampled.tar.gz "https://files.osf.io/v1/resources/fvuh8/providers/osfstorage/57f32c22594d9001ef91bf9e"
+              tar xvzf ds054_downsampled.tar.gz -C /tmp/data/
+            else
+              echo "Dataset ds000054 was cached"
+            fi
+      - run:
+          name: Get FreeSurfer derivatives for ds000005
+          command: |
+            if [[ ! -d /tmp/ds005/derivatives/freesurfer ]]; then
+              mkdir -p /tmp/ds005/derivatives
+              wget --retry-connrefused --waitretry=5 --read-timeout=20 --timeout=15 -t 0 -q \
+                -O ds005_derivatives_freesurfer.tar.gz "https://files.osf.io/v1/resources/fvuh8/providers/osfstorage/58fe59eb594d900250960180"
+              tar xvzf ds005_derivatives_freesurfer.tar.gz -C /tmp/ds005/derivatives
+            else
+              echo "FreeSurfer derivatives of ds000005 were cached"
+            fi
+      - run:
+          name: Store FreeSurfer license file
+          command: |
+            mkdir -p /tmp/fslicense
+            cd /tmp/fslicense
+            echo "cHJpbnRmICJrcnp5c3p0b2YuZ29yZ29sZXdza2lAZ21haWwuY29tXG41MTcyXG4gKkN2dW12RVYzelRmZ1xuRlM1Si8yYzFhZ2c0RVxuIiA+IGxpY2Vuc2UudHh0Cg==" | base64 -d | sh
+      - run:
+          name: Create Nipype config files
+          command: |
+            mkdir -p /tmp/ds005 /tmp/ds054
+            printf "[execution]\nstop_on_first_crash = true\nremove_unnecessary_outputs = false\n" > /tmp/ds005/nipype.cfg
+            echo "poll_sleep_duration = 0.2" >> /tmp/ds005/nipype.cfg
+            echo "hash_method = content" >> /tmp/ds005/nipype.cfg
+            cp /tmp/ds005/nipype.cfg /tmp/ds054/nipype.cfg
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - data
+            - fslicense
+            - ds005/nipype.cfg
+            - ds005/derivatives
+            - ds054/nipype.cfg
+      - save_cache:
+         key: data-v4-{{ epoch }}
+         paths:
+            - /tmp/data
+            - /tmp/ds005/derivatives/freesurfer
+
+  update_cache:
+    machine:
+      # Ubuntu 14.04 with Docker 17.10.0-ce
+      image: circleci/classic:201711-01
+    working_directory: /tmp/src/fmriprep
+    steps:
+      - attach_workspace:
+          at: /tmp
+      - save_cache:
+         key: docker-v2-{{ .Branch }}-{{ epoch }}
+         paths:
+            - /tmp/cache/docker.tar.gz
+
+  test_pytest:
+    machine:
+      image: circleci/classic:201711-01
+    working_directory: /tmp/src/fmriprep
+    steps:
+      - attach_workspace:
+          at: /tmp
+      - run:
+          name: Load Docker image layer cache
+          no_output_timeout: 30m
+          command: |
+            docker info
+            set +o pipefail
+            if [ -f /tmp/cache/docker.tar.gz ]; then
+              sudo apt update && sudo apt -y install pigz
+              pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
+              docker images
+            fi
+      - run:
+          name: Run fMRIPrep tests
+          no_output_timeout: 2h
+          command: |
+            docker run -ti --rm=false \
+              --entrypoint="/usr/local/miniconda/bin/py.test" \
+              poldracklab/fmriprep:latest . \
+              --doctest-modules --ignore=docs --ignore=setup.py
+      - run:
+          name: Test fmriprep-wrapper
+          command: |
+            pip install future numpy
+            pip install --upgrade wrapper/
+            fmriprep-docker -i poldracklab/fmriprep:latest --help
+            fmriprep-docker -i poldracklab/fmriprep:latest --version
+      - store_artifacts:
+          path: /home/circleci/out/tests
+
+
+  build_docs:
+    machine:
+      image: circleci/classic:201711-01
+    working_directory: /home/circleci/out/docs
+    steps:
+      - attach_workspace:
+          at: /tmp
+      - run:
+          name: Load Docker image layer cache
+          no_output_timeout: 30m
+          command: |
+            docker info
+            set +o pipefail
+            if [ -f /tmp/cache/docker.tar.gz ]; then
+              sudo apt update && sudo apt -y install pigz
+              pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
+              docker images
+            fi
+      - run:
+          name: Build fMRIPrep documentation
+          no_output_timeout: 2h
+          command: |
+            docker run -ti --rm=false -v $PWD:/_build_html \
+              --entrypoint=sphinx-build poldracklab/fmriprep:latest \
+              -T -E -b html -d _build/doctrees-readthedocs -W -D \
+              language=en docs/ /_build_html 2>&1 \
+              | tee $PWD/builddocs.log
+            cat $PWD/builddocs.log
+            grep -qv "ERROR" $PWD/builddocs.log
+      - store_artifacts:
+          path: /home/circleci/out/docs
+
+  ds005:
+    machine:
+      image: circleci/classic:201711-01
+    working_directory: /tmp/ds005
+    environment:
+      - FS_LICENSE: /tmp/fslicense/license.txt
+    steps:
+      - attach_workspace:
+          at: /tmp
+      - restore_cache:
+          keys:
+            - ds005-anat-v2-{{ epoch }}
+            - ds005-anat-v2-
+      - run:
+          name: Setting up test
+          command: |
+            mkdir -p /tmp/ds005/derivatives && sudo setfacl -d -m group:$(id -gn):rwx /tmp/ds005/derivatives && sudo setfacl -m group:$(id -gn):rwx /tmp/ds005/derivatives
+            pip install future numpy
+            pip install --upgrade /tmp/src/fmriprep/wrapper/
+      - run:
+          name: Load Docker image layer cache
+          no_output_timeout: 30m
+          command: |
+            docker info
+            set +o pipefail
+            if [ -f /tmp/cache/docker.tar.gz ]; then
+              sudo apt update && sudo apt -y install pigz
+              pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
+              docker images
+            fi
+      - run:
+          name: Run anatomical workflow on ds005
+          no_output_timeout: 2h
+          command: |
+            mkdir -p /tmp/ds005/work /tmp/ds005/derivatives
+            sudo setfacl -d -m group:$(id -gn):rwx /tmp/ds005/derivatives && \
+                sudo setfacl -m group:$(id -gn):rwx /tmp/ds005/derivatives
+            sudo setfacl -d -m group:$(id -gn):rwx /tmp/ds005/work && \
+                sudo setfacl -m group:$(id -gn):rwx /tmp/ds005/work
+            fmriprep-docker -i poldracklab/fmriprep:latest \
+                --config $PWD/nipype.cfg -w /tmp/ds005/work \
+                /tmp/data/ds005 /tmp/ds005/derivatives participant \
+                --debug --write-graph --mem_mb 4096 \
+                --nthreads 2 --anat-only -vv
+      - save_cache:
+         key: ds005-anat-v2-{{ epoch }}
+         paths:
+            - /tmp/ds005/work
+            - /tmp/ds005/derivatives/fmriprep
+
+      - run:
+          name: Run full fMRIPrep on ds005
+          no_output_timeout: 2h
+          command: |
+            fmriprep-docker -i poldracklab/fmriprep:latest \
+                --config $PWD/nipype.cfg -w /tmp/ds005/work \
+                /tmp/data/ds005 /tmp/ds005/derivatives participant \
+                --debug --write-graph --use-syn-sdc --use-aroma \
+                --ignore-aroma-denoising-errors --mem_mb 4096 \
+                --nthreads 2 -vv
+            sudo find /tmp/ds005/work -not -name "*.svg" -not -name "*.html" -not -name "*.rst" \
+                -not -name "*.mat" -not -name "*.lta" -type f -delete
+      - run:
+          name: Checking outputs of fMRIPrep
+          command: |
+            mkdir -p /tmp/ds005/test
+            find /tmp/ds005/derivatives | sed s+/tmp/ds005/derivatives/++ | sort > /tmp/ds005/test/outputs.out
+            diff /tmp/src/fmriprep/.circleci/ds005_outputs.txt /tmp/ds005/test/outputs.out
+            exit $?
+
+      - store_artifacts:
+          path: /tmp/ds005
+
+  ds054:
+    machine:
+      image: circleci/classic:201711-01
+    working_directory: /tmp/ds054
+    environment:
+      - FS_LICENSE: /tmp/fslicense/license.txt
+    steps:
+      - attach_workspace:
+          at: /tmp
+      - restore_cache:
+          keys:
+            - ds054-anat-v2-{{ epoch }}
+            - ds054-anat-v2-
+      - run:
+          name: Setting up test
+          command: |
+            mkdir -p /tmp/ds054/derivatives && sudo setfacl -d -m group:$(id -gn):rwx /tmp/ds054/derivatives && sudo setfacl -m group:$(id -gn):rwx /tmp/ds054/derivatives
+            pip install future numpy
+            pip install --upgrade /tmp/src/fmriprep/wrapper/
+      - run:
+          name: Load Docker image layer cache
+          no_output_timeout: 30m
+          command: |
+            docker info
+            set +o pipefail
+            if [ -f /tmp/cache/docker.tar.gz ]; then
+              sudo apt update && sudo apt -y install pigz
+              pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
+              docker images
+            fi
+      - run:
+          name: Run anatomical workflow on ds054
+          no_output_timeout: 2h
+          command: |
+            mkdir -p /tmp/ds054/work /tmp/ds054/derivatives
+            sudo setfacl -d -m group:$(id -gn):rwx /tmp/ds054/derivatives && \
+                sudo setfacl -m group:$(id -gn):rwx /tmp/ds054/derivatives
+            sudo setfacl -d -m group:$(id -gn):rwx /tmp/ds054/work && \
+                sudo setfacl -m group:$(id -gn):rwx /tmp/ds054/work
+            fmriprep-docker -i poldracklab/fmriprep:latest \
+                --config $PWD/nipype.cfg -w /tmp/ds054/work \
+                /tmp/data/ds054 /tmp/ds054/derivatives participant \
+                --fs-no-reconall --debug --write-graph --force-syn \
+                --mem_mb 4096 --nthreads 2 --anat-only -vv
+      - save_cache:
+         key: ds054-anat-v2-{{ epoch }}
+         paths:
+            - /tmp/ds054/work
+            - /tmp/ds054/derivatives
+
+      - run:
+          name: Run full fMRIPrep on ds054
+          no_output_timeout: 2h
+          command: |
+            fmriprep-docker -i poldracklab/fmriprep:latest \
+                --config $PWD/nipype.cfg -w /tmp/ds054/work \
+                /tmp/data/ds054 /tmp/ds054/derivatives participant \
+                --fs-no-reconall --debug --write-graph --force-syn \
+                --mem_mb 4096 --nthreads 2 -vv
+      - run:
+          name: Checking outputs of fMRIPrep
+          command: |
+            mkdir -p /tmp/ds054/test
+            find /tmp/ds054/derivatives  | sed s+/tmp/ds054/derivatives/++ | sort > /tmp/ds054/test/outputs.out
+            diff /tmp/src/fmriprep/.circleci/ds054_outputs.txt /tmp/ds054/test/outputs.out
+            exit $?
+      - run:
+          name: Generate report with one artificial error
+          command: |
+            sudo mv /tmp/ds054/derivatives/fmriprep/sub-100185.html \
+                    /tmp/ds054/derivatives/fmriprep/sub-100185_noerror.html
+            UUID="$(date '+%Y%m%d-%H%M%S_')$(uuidgen)"
+            mkdir -p /tmp/ds054/derivatives/fmriprep/sub-100185/log/$UUID/
+            cp /tmp/src/fmriprep/fmriprep/data/tests/crash_files/*.txt \
+                /tmp/ds054/derivatives/fmriprep/sub-100185/log/$UUID/
+            set +e
+            fmriprep-docker -i poldracklab/fmriprep:latest \
+                --config $PWD/nipype.cfg -w /tmp/ds054/work \
+                /tmp/data/ds054 /tmp/ds054/derivatives participant \
+                --fs-no-reconall --debug --write-graph --force-syn \
+                --reports-only --run-uuid $UUID
+            RET=$?
+            set -e
+            [[ "$RET" -eq "1" ]]
+      - run:
+          name: Clean-up work work directory
+          command: |
+            sudo find /tmp/ds054/work -not -name "*.svg" -not -name "*.html" -not -name "*.rst" \
+                -not -name "*.mat" -not -name "*.lta" -type f -delete
+      - store_artifacts:
+          path: /tmp/ds054
+
+  deploy:
+    machine:
+      image: circleci/classic:201711-01
+    working_directory: /tmp/src/fmriprep
+    steps:
+      - attach_workspace:
+          at: /tmp
+      - run:
+          name: Load Docker image layer cache
+          no_output_timeout: 30m
+          command: |
+            docker info
+            set +o pipefail
+            if [ -f /tmp/cache/docker.tar.gz ]; then
+              sudo apt update && sudo apt -y install pigz
+              pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
+              docker images
+            fi
+      - run:
+          name: Deploy to Docker Hub
+          no_output_timeout: 40m
+          command: |
+            if [[ -n "$DOCKER_PASS" ]]; then
+              docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+              docker push poldracklab/fmriprep:latest
+              docker tag poldracklab/fmriprep poldracklab/fmriprep:$CIRCLE_TAG
+              docker push poldracklab/fmriprep:$CIRCLE_TAG
+            fi
+      - run:
+          name: Deploy to PyPi
+          command: |
+            printf "[distutils]\nindex-servers =\n    pypi\n\n[pypi]\nusername:$PYPI_USER\npassword:$PYPI_PASS\n" > ~/.pypirc
+            python setup.py sdist upload -r pypi
+            cd wrapper && python setup.py sdist upload -r pypi
+
+workflows:
+  version: 2
+  build_test_deploy:
+    jobs:
+      - build
+
+      - get_data:
+          filters:
+            branches:
+              ignore: /docs+\/.*/
+
+      - build_docs:
+          requires:
+            - build
+
+      - update_cache:
+          requires:
+            - build
+          filters:
+            branches:
+              ignore: /docs+\/.*/
+
+      - test_pytest:
+          requires:
+            - build
+          filters:
+            branches:
+              ignore: /docs+\/.*/
+
+      - ds005:
+          requires:
+            - get_data
+            - build
+          filters:
+            branches:
+              ignore: /docs+\/.*/
+
+      - ds054:
+          requires:
+            - get_data
+            - build
+          filters:
+            branches:
+              ignore: /docs+\/.*/
+
+      - deploy:
+          requires:
+            - build
+            - test_pytest
+            - build_docs
+            - ds005
+            - ds054
+          filters:
+            tags:
+              ignore: /^\d+\.\d+\.\d+\.-dev.*/
+            branches:
+              ignore: /.*/
