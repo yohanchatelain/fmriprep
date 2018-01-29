@@ -479,5 +479,3 @@ workflows:
           filters:
             tags:
               ignore: /^\d+\.\d+\.\d+\.-dev.*/
-            branches:
-              ignore: /.*/
