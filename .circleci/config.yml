@@ -479,3 +479,5 @@ workflows:
           filters:
             tags:
               only: /^\d+\.\d+\.\d+\.-.*/
+            branches:
+              only: /master/
