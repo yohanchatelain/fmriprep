@@ -478,4 +478,4 @@ workflows:
             - ds054
           filters:
             tags:
-              ignore: /^\d+\.\d+\.\d+\.-dev.*/
+              only: /^\d+\.\d+\.\d+\.-.*/
