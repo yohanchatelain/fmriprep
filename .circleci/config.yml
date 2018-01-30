@@ -437,10 +437,15 @@ workflows:
           filters:
             branches:
               ignore: /docs+\/.*/
+            tags:
+              only: /.*/
 
       - build_docs:
           requires:
             - build
+          filters:
+            tags:
+              only: /.*/
 
       - update_cache:
           requires:
@@ -448,6 +453,8 @@ workflows:
           filters:
             branches:
               ignore: /docs+\/.*/
+            tags:
+              only: /.*/
 
       - test_pytest:
           requires:
@@ -455,6 +462,8 @@ workflows:
           filters:
             branches:
               ignore: /docs+\/.*/
+            tags:
+              only: /.*/
 
       - ds005:
           requires:
@@ -463,6 +472,8 @@ workflows:
           filters:
             branches:
               ignore: /docs+\/.*/
+            tags:
+              only: /.*/
 
       - ds054:
           requires:
@@ -471,6 +482,8 @@ workflows:
           filters:
             branches:
               ignore: /docs+\/.*/
+            tags:
+              only: /.*/
 
       - deploy:
           requires:
