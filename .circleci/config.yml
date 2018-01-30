@@ -494,4 +494,4 @@ workflows:
             - ds054
           filters:
             tags:
-              only: /^\d+\.\d+\.\d+\.-.*/
+              only: /.*/
