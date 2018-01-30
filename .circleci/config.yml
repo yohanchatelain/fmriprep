@@ -420,6 +420,7 @@ jobs:
       - run:
           name: Deploy to PyPi
           command: |
+            pip install "setuptools>=18.0" cython numpy
             printf "[distutils]\nindex-servers =\n    pypi\n\n[pypi]\nusername:$PYPI_USER\npassword:$PYPI_PASS\n" > ~/.pypirc
             python setup.py sdist upload -r pypi
             cd wrapper && python setup.py sdist upload -r pypi
