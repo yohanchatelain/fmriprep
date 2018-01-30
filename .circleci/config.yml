@@ -412,7 +412,7 @@ jobs:
           no_output_timeout: 40m
           command: |
             if [[ -n "$DOCKER_PASS" ]]; then
-              docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+              docker login -u $DOCKER_USER -p $DOCKER_PASS
               docker push poldracklab/fmriprep:latest
               docker tag poldracklab/fmriprep poldracklab/fmriprep:$CIRCLE_TAG
               docker push poldracklab/fmriprep:$CIRCLE_TAG
