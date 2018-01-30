@@ -495,5 +495,7 @@ workflows:
             - ds005
             - ds054
           filters:
+            branches:
+              ignore: /.*/
             tags:
               only: /.*/
