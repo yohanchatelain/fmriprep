@@ -1048,6 +1048,15 @@ def init_segs_to_native_wf(name='segs_to_native', segmentation='aseg'):
     tonative = pe.Node(fs.Label2Vol(), name='tonative')
     tonii = pe.Node(fs.MRIConvert(out_type='niigz', resample_type='nearest'), name='tonii')
 
+    if segmentation.startswith('aparc'):
+        if segmentation == 'aparc_aseg':
+            def _sel(x): return x[0]
+        elif segmentation == 'aparc_a2009s':
+            def _sel(x): return x[1]
+        elif segmentation == 'aparc_dkt':
+            def _sel(x): return x[2]
+        segmentation = (segmentation, _sel)
+
     workflow.connect([
         (inputnode, fssource, [
             ('subjects_dir', 'subjects_dir'),
@@ -1143,13 +1152,6 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
         DerivativesDataSink(base_directory=output_dir, suffix='dtissue'),
         name='ds_t1_seg', run_without_submitting=True)
 
-    ds_t1_fsaseg = pe.Node(
-        DerivativesDataSink(base_directory=output_dir, suffix='rois-fsaseg'),
-        name='ds_t1_fsaseg', run_without_submitting=True)
-    ds_t1_fsparc = pe.Node(
-        DerivativesDataSink(base_directory=output_dir, suffix='rois-fsaparcaseg'),
-        name='ds_t1_fsparc', run_without_submitting=True)
-
     ds_t1_tpms = pe.Node(
         DerivativesDataSink(base_directory=output_dir,
                             suffix='class-{extra_value}_probtissue'),
@@ -1226,6 +1228,12 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     ])
 
     if freesurfer:
+        ds_t1_fsaseg = pe.Node(
+            DerivativesDataSink(base_directory=output_dir, suffix='rois-fsaseg'),
+            name='ds_t1_fsaseg', run_without_submitting=True)
+        ds_t1_fsparc = pe.Node(
+            DerivativesDataSink(base_directory=output_dir, suffix='rois-fsaparcaseg'),
+            name='ds_t1_fsparc', run_without_submitting=True)
         workflow.connect([
             (inputnode, lta_2_itk, [('t1_2_fsnative_forward_transform', 'in_lta')]),
             (t1_name, ds_t1_fsnative, [('out', 'source_file')]),
@@ -1234,10 +1242,10 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
             (inputnode, ds_surfs, [('surfaces', 'in_file')]),
             (t1_name, ds_surfs, [('out', 'source_file')]),
             (name_surfs, ds_surfs, [('out_name', 'suffix')]),
-            (inputnode, ds_t1_fsaseg, [('source_files', 'source_file'),
-                                       ('t1_fs_aseg', 'in_file')]),
-            (inputnode, ds_t1_fsparc, [('source_files', 'source_file'),
-                                       ('t1_fs_aparc', 'in_file')]),
+            (inputnode, ds_t1_fsaseg, [('t1_fs_aseg', 'in_file')]),
+            (inputnode, ds_t1_fsparc, [('t1_fs_aparc', 'in_file')]),
+            (t1_name, ds_t1_fsaseg, [('out', 'source_file')]),
+            (t1_name, ds_t1_fsparc, [('out', 'source_file')]),
         ])
     if 'template' in output_spaces:
         workflow.connect([
