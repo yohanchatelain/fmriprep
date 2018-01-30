@@ -412,7 +412,7 @@ jobs:
           no_output_timeout: 40m
           command: |
             if [[ -n "$DOCKER_PASS" ]]; then
-              docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+              docker login -u $DOCKER_USER -p $DOCKER_PASS
               docker push poldracklab/fmriprep:latest
               docker tag poldracklab/fmriprep poldracklab/fmriprep:$CIRCLE_TAG
               docker push poldracklab/fmriprep:$CIRCLE_TAG
@@ -428,16 +428,24 @@ workflows:
   version: 2
   build_test_deploy:
     jobs:
-      - build
+      - build:
+          filters:
+            tags:
+              only: /.*/
 
       - get_data:
           filters:
             branches:
               ignore: /docs+\/.*/
+            tags:
+              only: /.*/
 
       - build_docs:
           requires:
             - build
+          filters:
+            tags:
+              only: /.*/
 
       - update_cache:
           requires:
@@ -445,6 +453,8 @@ workflows:
           filters:
             branches:
               ignore: /docs+\/.*/
+            tags:
+              only: /.*/
 
       - test_pytest:
           requires:
@@ -452,6 +462,8 @@ workflows:
           filters:
             branches:
               ignore: /docs+\/.*/
+            tags:
+              only: /.*/
 
       - ds005:
           requires:
@@ -460,6 +472,8 @@ workflows:
           filters:
             branches:
               ignore: /docs+\/.*/
+            tags:
+              only: /.*/
 
       - ds054:
           requires:
@@ -468,6 +482,8 @@ workflows:
           filters:
             branches:
               ignore: /docs+\/.*/
+            tags:
+              only: /.*/
 
       - deploy:
           requires:
@@ -478,6 +494,4 @@ workflows:
             - ds054
           filters:
             tags:
-              ignore: /^\d+\.\d+\.\d+\.-dev.*/
-            branches:
-              ignore: /.*/
+              only: /.*/
