@@ -421,7 +421,7 @@ jobs:
           name: Deploy to PyPi
           command: |
             pip install "setuptools>=27.0" cython numpy twine
-            printf "[distutils]\nindex-servers =\n    pypi\n\n[pypi]\nrepository:https://pypi.python.org/pypi\nusername:$PYPI_USER\npassword:$PYPI_PASS\n" > ~/.pypirc
+            printf "[distutils]\nindex-servers =\n    pypi\n\n[pypi]\nusername:$PYPI_USER\npassword:$PYPI_PASS\n" > ~/.pypirc
             python setup.py sdist
             twine upload dist/*
             cd wrapper && python setup.py sdist
