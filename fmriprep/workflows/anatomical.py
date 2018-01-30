@@ -335,7 +335,7 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
     if freesurfer:
         workflow.connect([
             (surface_recon_wf, anat_reports_wf, [
-                ('outputnode.out_report', 'inputnode.recon_report')])
+                ('outputnode.out_report', 'inputnode.recon_report')]),
         ])
     if 'template' in output_spaces:
         workflow.connect([
@@ -365,11 +365,15 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
             ('t1_2_fsnative_forward_transform', 'inputnode.t1_2_fsnative_forward_transform'),
             ('surfaces', 'inputnode.surfaces'),
         ]),
-        (surface_recon_wf, anat_derivatives_wf, [
-            ('outputnode.out_aseg', 'inputnode.t1_fs_aseg'),
-            ('outputnode.out_aparc', 'inputnode.t1_fs_aparc'),
-        ]),
     ])
+
+    if freesurfer:
+        workflow.connect([
+            (surface_recon_wf, anat_derivatives_wf, [
+                ('outputnode.out_aseg', 'inputnode.t1_fs_aseg'),
+                ('outputnode.out_aparc', 'inputnode.t1_fs_aparc'),
+            ]),
+        ])
 
     return workflow
 
