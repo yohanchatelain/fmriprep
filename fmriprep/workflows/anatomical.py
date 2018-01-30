@@ -1050,8 +1050,8 @@ def init_segs_to_native_wf(name='segs_to_native', segmentation='aseg'):
 
     workflow.connect([
         (inputnode, fssource, [
-            ('outputnode.subjects_dir', 'subjects_dir'),
-            ('outputnode.subject_id', 'subject_id')]),
+            ('subjects_dir', 'subjects_dir'),
+            ('subject_id', 'subject_id')]),
         (inputnode, tonii, [('in_file', 'reslice_like')]),
         (fssource, tonative, [(segmentation, 'seg_file'),
                               ('rawavg', 'template_file'),
