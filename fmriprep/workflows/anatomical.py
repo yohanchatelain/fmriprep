@@ -183,7 +183,7 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
                 'mni_mask', 'mni_seg', 'mni_tpms',
                 'template_transforms',
                 'subjects_dir', 'subject_id', 't1_2_fsnative_forward_transform',
-                't1_2_fsnative_reverse_transform', 'surfaces']),
+                't1_2_fsnative_reverse_transform', 'surfaces', 't1_aseg', 't1_aparc']),
         name='outputnode')
 
     buffernode = pe.Node(niu.IdentityInterface(
@@ -233,7 +233,9 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
                 ('outputnode.subject_id', 'subject_id'),
                 ('outputnode.t1_2_fsnative_forward_transform', 't1_2_fsnative_forward_transform'),
                 ('outputnode.t1_2_fsnative_reverse_transform', 't1_2_fsnative_reverse_transform'),
-                ('outputnode.surfaces', 'surfaces')]),
+                ('outputnode.surfaces', 'surfaces'),
+                ('outputnode.out_aseg', 't1_aseg'),
+                ('outputnode.out_aparc', 't1_aparc')]),
             (applyrefined, buffernode, [('out_file', 't1_brain')]),
             (surface_recon_wf, buffernode, [
                 ('outputnode.out_brainmask', 't1_mask')]),
