@@ -1,4 +1,19 @@
 #!/usr/bin/env python
+"""
+The fMRIPrep on Docker wrapper
+
+
+This is a lightweight Python wrapper to run fMRIPrep.
+Docker must be installed and running. This can be checked
+running ::
+
+  docker info
+
+Please report any feedback to our GitHub repository
+(https://github.com/poldracklab/fmriprep) and do not
+forget to credit all the authors of software that fMRIPrep
+uses (http://fmriprep.rtfd.io/en/latest/citing.html).
+"""
 from __future__ import print_function, unicode_literals, division, absolute_import
 from builtins import int, map, input, zip
 from future import standard_library
@@ -202,7 +217,7 @@ def get_parser():
     """Defines the command line interface of the wrapper"""
     import argparse
     parser = argparse.ArgumentParser(
-        description='fMRI Preprocessing workflow',
+        description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         add_help=False)
 
@@ -308,17 +323,18 @@ def main():
         print('Could not detect memory capacity of Docker container.\n'
               'Do you have permission to run docker?')
         return 1
-    if mem_total < 8000:
+    if not (opts.help or opts.version or '--reports-only' in unknown_args) and mem_total < 8000:
         print('Warning: <8GB of RAM is available within your Docker '
-              'environment.\nSome parts of fMRIprep may fail to complete.')
-        resp = 'N'
-        try:
-            resp = input('Continue anyway? [y/N]')
-        except KeyboardInterrupt:
-            print()
-            return 1
-        if resp not in ('y', 'Y', ''):
-            return 0
+              'environment.\nSome parts of fMRIPrep may fail to complete.')
+        if '--mem_mb' not in unknown_args:
+            resp = 'N'
+            try:
+                resp = input('Continue anyway? [y/N]')
+            except KeyboardInterrupt:
+                print()
+                return 1
+            if resp not in ('y', 'Y', ''):
+                return 0
 
     command = ['docker', 'run', '--rm', '-it']
 
@@ -384,7 +400,7 @@ def main():
     print("RUNNING: " + ' '.join(command))
     ret = subprocess.run(command)
     if ret.returncode:
-        print("fmriprep: Please report errors to {}".format(__bugreports__))
+        print("fMRIPrep: Please report errors to {}".format(__bugreports__))
     return ret.returncode
 
 

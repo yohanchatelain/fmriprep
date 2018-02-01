@@ -52,6 +52,7 @@ def main():
         extras_require=ldict['EXTRA_REQUIRES'],
         dependency_links=ldict['LINKS_REQUIRES'],
         package_data={'fmriprep': ['data/*.json', 'data/*.nii.gz', 'data/*.mat',
+                                   'data/itkIdentityTransform.txt',
                                    'viz/*.tpl', 'viz/*.json']},
         entry_points={'console_scripts': [
             'fmriprep=fmriprep.cli.run:main',

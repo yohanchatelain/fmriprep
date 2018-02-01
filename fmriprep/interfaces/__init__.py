@@ -9,12 +9,12 @@ from .images import (
 )
 from .freesurfer import (
     StructuralReference, MakeMidthickness, FSInjectBrainExtracted,
-    FSDetectInputs, RefineBrainMask,
+    FSDetectInputs, RefineBrainMask, MedialNaNs
 )
 from .surf import NormalizeSurf, GiftiNameSource, GiftiSetAnatomicalStructure
 from .reports import SubjectSummary, FunctionalSummary, AboutSummary
 from .utils import TPM2ROI, AddTPMs, AddTSVHeader, ConcatAffines
-from .fmap import FieldEnhance
+from .fmap import FieldEnhance, FieldToRadS, FieldToHz, Phasediff2Fieldmap
 from .confounds import GatherConfounds, ICAConfounds
 from .itk import MCFLIRT2ITK, MultiApplyTransforms
 from .multiecho import FirstEcho

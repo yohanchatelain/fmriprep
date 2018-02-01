@@ -59,12 +59,10 @@ class SummaryInterface(SimpleInterface):
 
     def _run_interface(self, runtime):
         segment = self._generate_segment()
-        fname = os.path.abspath('report.html')
+        fname = os.path.join(runtime.cwd, 'report.html')
         with open(fname, 'w') as fobj:
             fobj.write(segment)
-
         self._results['out_report'] = fname
-
         return runtime
 
 

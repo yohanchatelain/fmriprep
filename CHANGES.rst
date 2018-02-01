@@ -1,7 +1,32 @@
+1.0.6 (29th of January 2018)
+============================
+
+* [FIX] Bad connection in phasediff-fieldmap workflow (#950)
+* [PIN] niworkflows-0.3.1-dev (including Nipype 1.0.0!)
+* [ENH] Migrate to CircleCI 2.0 and workflows (#943)
+* [ENH] Improvements to CLIs (native & wrapper) (#944)
+* [FIX] Rerun tCompCor interface in case of MemoryError (#942)
+
+1.0.5 (21st of January 2018)
+============================
+
+* [PIN] niworkflows-0.2.8 to fix several execution issues.
+* [ENH] Code cleanup (#938)
+
+1.0.4 (15th of January 2018)
+============================
+
+* [FIX] Pin niworkflows-0.2.6 to fix several MultiProc errors (nipy/nipype#2368)
+* [DOC] Fix DOI in citation boilerplate (#933)
+* [FIX] Heuristics to prevent memory errors during aCompCor (#930).
+* [FIX] RuntimeWarning: divide by zero encountered in float_scalars (#931).
+* [FIX] INU correction before merging several T1w (#925).
+
+
 1.0.3 (3rd of January 2018)
 ===========================
 
-* [FIX] Pin niworkflows-0.2.4 to fix #868.
+* [FIX] Pin niworkflows-0.2.4 to fix (#868).
 * [FIX] Roll back run/task groupings after BIDS query (#918).
   Groupings for the multi-echo extension will be reenabled soon.
 
@@ -19,8 +44,8 @@ With thanks to @emdupre for contributions.
 
 * [PIN] Update required niworkflows version to 0.2.3
 * [FIX] Refine ``antsBrainExtraction`` if ``recon-all`` is run (#912)
-  With thanks to Arno Klein for his helpful comments here
-  (https://github.com/poldracklab/fmriprep/issues/431#issuecomment-299583391)
+  With thanks to Arno Klein for his [helpful comments
+  here](https://github.com/poldracklab/fmriprep/issues/431#issuecomment-299583391)
 * [FIX] Use thinner contours in reportlets (#910)
 * [FIX] Robuster EPI mask (#911)
 * [FIX] Set workflow return value before potential error (#887)
