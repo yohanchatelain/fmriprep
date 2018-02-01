@@ -300,7 +300,7 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata, freesurfer
         (rois_plot, outputnode, [('out_report', 'rois_report')]),
     ])
 
-    if freesurfer:
+    if freesurfer:  # Aseg/aparc resampling
         aseg_tfm = pe.Node(ApplyTransforms(interpolation='NearestNeighbor', float=True),
                            name='aseg_tfm', mem_gb=0.1)
         aparc_tfm = pe.Node(ApplyTransforms(interpolation='NearestNeighbor', float=True),
@@ -317,9 +317,7 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata, freesurfer
             (aparc_tfm, outputnode, [('output_image', 'bold_aparc')]),
         ])
 
-
-    if use_aroma:
-        # ICA-AROMA
+    if use_aroma:  # ICA-AROMA
         ica_aroma_wf = init_ica_aroma_wf(name='ica_aroma_wf',
                                          ignore_aroma_err=ignore_aroma_err)
         workflow.connect([

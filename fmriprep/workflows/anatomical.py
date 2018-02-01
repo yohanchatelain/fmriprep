@@ -785,9 +785,11 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         # Refine ANTs mask, deriving new mask from FS' aseg
         (inputnode, refine, [('corrected_t1', 'in_anat'),
                              ('ants_segs', 'in_ants')]),
+        (inputnode, asegnat, [('corrected_t1', 'inputnode.in_file')]),
         (autorecon_resume_wf, asegnat, [
             ('outputnode.subjects_dir', 'inputnode.subjects_dir'),
             ('outputnode.subject_id', 'inputnode.subject_id')]),
+        (inputnode, aparcnat, [('corrected_t1', 'inputnode.in_file')]),
         (autorecon_resume_wf, aparcnat, [
             ('outputnode.subjects_dir', 'inputnode.subjects_dir'),
             ('outputnode.subject_id', 'inputnode.subject_id')]),
