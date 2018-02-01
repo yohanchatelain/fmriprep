@@ -220,13 +220,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         bold_tlen = 10
         ref_file = bold_file
     else:
-        if isinstance(bold_file, list):  # if multi-echo data
-            multiecho = True
-            ref_file = bold_file[0]
-        else:
-            multiecho = False
-            ref_file = bold_file
-
+        multiecho = isinstance(bold_file, list)
+        ref_file = bold_file[0] if multiecho else bold_file
         bold_tlen, mem_gb = _create_mem_gb(ref_file)
 
     wf_name = _get_wf_name(ref_file)
@@ -252,14 +247,11 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     else:
         if multiecho is True:  # For multiecho data, grab TEs
             tes = [layout.get_metadata(echo)['EchoTime'] for echo in bold_file]
-            fmap_file = bold_file[0]
-        else:
-            fmap_file = bold_file
         # Since all other metadata is constant
         metadata = layout.get_metadata(ref_file)
 
         # Find fieldmaps. Options: (phase1|phase2|phasediff|epi|fieldmap)
-        fmaps = layout.get_fieldmap(fmap_file, return_list=True) \
+        fmaps = layout.get_fieldmap(ref_file, return_list=True) \
             if 'fieldmaps' not in ignore else []
 
         # Short circuits: (True and True and (False or 'TooShort')) == 'TooShort'
@@ -547,7 +539,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                     'for dataset %s.', ref_file)
         summary.inputs.distortion_correction = 'None'
 
-        if t2s_coreg is True:
+        if t2s_coreg:
             workflow.connect([
                 (bold_split, join_split_echos, [
                     ('out_files', 'echo_files')]),

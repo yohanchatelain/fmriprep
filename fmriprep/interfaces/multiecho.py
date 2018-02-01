@@ -8,6 +8,13 @@ T2* map generation
 
 Using multi-echo EPI data, generates a T2*-map
 for use in T2*-driven EPI->T1 coregistration
+
+Change directory to provide relative paths for doctests
+>>> import os
+>>> filepath = os.path.dirname( os.path.realpath( __file__ ) )
+>>> datadir = os.path.realpath(os.path.join(filepath, '../data/'))
+>>> os.chdir(datadir)
+
 """
 import os
 import numpy as np
@@ -24,9 +31,9 @@ LOGGER = logging.getLogger('interface')
 
 
 class FirstEchoInputSpec(BaseInterfaceInputSpec):
-    in_files = InputMultiPath(File(exists=True), mandatory=True,
+    in_files = InputMultiPath(File(exists=True), mandatory=True, minlen=2,
                               desc='multi-echo BOLD EPIs')
-    ref_imgs = InputMultiPath(File(exists=True), mandatory=True,
+    ref_imgs = InputMultiPath(File(exists=True), mandatory=True, minlen=2,
                               desc='generated reference image for each '
                               'multi-echo BOLD EPI')
 
@@ -39,14 +46,28 @@ class FirstEchoOutputSpec(TraitedSpec):
 
 
 class FirstEcho(SimpleInterface):
+    """
+    Finds the first echo in a multi-echo series and its associated reference
+    image.
+
+    Example
+    =======
+    >>> from fmriprep.interfaces import multiecho
+    >>> first_echo = multiecho.FirstEcho()
+    >>> first_echo.inputs.in_files = ['sub-01_run-01_echo-1_bold.nii.gz', \
+                                      'sub-01_run-01_echo-2_bold.nii.gz', \
+                                      'sub-01_run-01_echo-3_bold.nii.gz']
+    >>> first_echo.inputs.ref_imgs = ['sub-01_run-01_echo-1_bold.nii.gz', \
+                                      'sub-01_run-01_echo-2_bold.nii.gz', \
+                                      'sub-01_run-01_echo-3_bold.nii.gz']
+    >>> res = first_echo.run() # doctest: +SKIP
+    """
     input_spec = FirstEchoInputSpec
     output_spec = FirstEchoOutputSpec
 
     def _run_interface(self, runtime):
-        self.inputs.in_files.sort()
-        self.inputs.ref_imgs.sort()
-        self._results['first_image'] = self.inputs.in_files[0]
-        self._results['first_ref_image'] = self.inputs.ref_imgs[0]
+        self._results['first_image'] = sorted(self.inputs.in_files)[0]
+        self._results['first_ref_image'] = sorted(self.inputs.ref_imgs)[0]
 
         return runtime
 
@@ -64,6 +85,19 @@ class MaskT2SMapOutputSpec(TraitedSpec):
 
 
 class MaskT2SMap(SimpleInterface):
+    """
+    Masks an existing T2* map using the skull-stripped optimally combined
+    volume (i.e., a weighted combination of multi-echo data).
+
+    Example
+    =======
+    >>> from fmriprep.interfaces import multiecho
+    >>> mask_t2s = multiecho.MaskT2SMap()
+    >>> mask_t2s.inputs.image = 'sub-01_run-01_t2smap.nii.gz'
+    >>> mask_t2s.inputs.mask = 'sub-01_run-01_optcomb.nii.gz'
+    >>> res = mask_t2s.run() # doctest: +SKIP
+    """
+
     input_spec = MaskT2SMapInputSpec
     output_spec = MaskT2SMapOutputSpec
 
@@ -91,6 +125,20 @@ class T2SMapOutputSpec(TraitedSpec):
 
 
 class T2SMap(SimpleInterface):
+    """
+    Generates a T2* map and optimally combined average volume (i.e., a weighted
+    combination) for multi-echo data, for use in coregistration.
+
+    Example
+    =======
+    >>> from fmriprep.interfaces import multiecho
+    >>> t2s_map = multiecho.T2SMap()
+    >>> t2s_map.inputs.in_files = ['sub-01_run-01_echo-1_bold.nii.gz', \
+                                   'sub-01_run-01_echo-2_bold.nii.gz', \
+                                   'sub-01_run-01_echo-3_bold.nii.gz']
+    >>> t2s_map.inputs.te_list = [0.013, 0.027, 0.040]
+    >>> res = t2s_map.run() # doctest: +SKIP
+    """
     input_spec = T2SMapInputSpec
     output_spec = T2SMapOutputSpec
 
@@ -301,14 +349,7 @@ def _fmask(data, mask):
     ndarray
         Array of shape (nx, ny, nz[, Ne[, nt]])
     """
-    s = data.shape
-
-    N = s[0]*s[1]*s[2]
-    new_s = []
-    new_s.append(N)
-
-    if len(s) > 3:
-        new_s.extend(s[3:])
+    new_s = tuple([np.prod(data.shape[:3])] + list(data.shape[3:]))
 
     tmp1 = np.reshape(data, new_s)
     fdata = tmp1.compress((mask > 0).ravel(), axis=0)

@@ -253,9 +253,9 @@ each echo is processed independently. The two exceptions to this occur for
 :ref:`head-motion estimation <bold_hmc>` and :ref:`T2* map creation <bold_t2s>`.
 
 For the :ref:`head-motion estimation workflow <bold_hmc>`, only the first echo
-is submitted as this echo is expected to have the highest contrast. For
-:ref:`T2* map creation <bold_t2s>`, all echos are considered jointly to
-look at voxel-wise T2* decay across echos.
+is submitted as this echo is expected to have the highest contrast between gray
+and white matter. For :ref:`T2* map creation <bold_t2s>`, all echos are
+considered jointly to look at voxel-wise T2* decay.
 
 .. _bold_ref:
 
