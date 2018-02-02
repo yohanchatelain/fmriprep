@@ -234,8 +234,8 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - ds005-anat-v2-{{ epoch }}
-            - ds005-anat-v2-
+            - ds005-anat-v3-{{ epoch }}
+            - ds005-anat-v3-
       - run:
           name: Setting up test
           command: |
@@ -268,7 +268,7 @@ jobs:
                 --debug --write-graph --mem_mb 4096 \
                 --nthreads 2 --anat-only -vv
       - save_cache:
-         key: ds005-anat-v2-{{ epoch }}
+         key: ds005-anat-v3-{{ epoch }}
          paths:
             - /tmp/ds005/work
             - /tmp/ds005/derivatives/fmriprep
