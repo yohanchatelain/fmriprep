@@ -749,8 +749,8 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
     autorecon_resume_wf = init_autorecon_resume_wf(omp_nthreads=omp_nthreads)
     gifti_surface_wf = init_gifti_surface_wf()
 
-    asegnat = init_segs_to_native_wf()
-    aparcnat = init_segs_to_native_wf(segmentation='aparc_aseg')
+    aseg_to_native_wf = init_segs_to_native_wf()
+    aparc_to_native_wf = init_segs_to_native_wf(segmentation='aparc_aseg')
     refine = pe.Node(RefineBrainMask(), name='refine')
 
     workflow.connect([
@@ -785,15 +785,15 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         # Refine ANTs mask, deriving new mask from FS' aseg
         (inputnode, refine, [('corrected_t1', 'in_anat'),
                              ('ants_segs', 'in_ants')]),
-        (inputnode, asegnat, [('corrected_t1', 'inputnode.in_file')]),
-        (autorecon_resume_wf, asegnat, [
+        (inputnode, aseg_to_native_wf, [('corrected_t1', 'inputnode.in_file')]),
+        (autorecon_resume_wf, aseg_to_native_wf, [
             ('outputnode.subjects_dir', 'inputnode.subjects_dir'),
             ('outputnode.subject_id', 'inputnode.subject_id')]),
-        (inputnode, aparcnat, [('corrected_t1', 'inputnode.in_file')]),
-        (autorecon_resume_wf, aparcnat, [
+        (inputnode, aparc_to_native_wf, [('corrected_t1', 'inputnode.in_file')]),
+        (autorecon_resume_wf, aparc_to_native_wf, [
             ('outputnode.subjects_dir', 'inputnode.subjects_dir'),
             ('outputnode.subject_id', 'inputnode.subject_id')]),
-        (asegnat, refine, [('outputnode.out_file', 'in_aseg')]),
+        (aseg_to_native_wf, refine, [('outputnode.out_file', 'in_aseg')]),
 
         # Output
         (autorecon_resume_wf, outputnode, [('outputnode.subjects_dir', 'subjects_dir'),
@@ -803,8 +803,8 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         (t1_2_fsnative_xfm, outputnode, [('out_lta', 't1_2_fsnative_forward_transform')]),
         (fsnative_2_t1_xfm, outputnode, [('out_reg_file', 't1_2_fsnative_reverse_transform')]),
         (refine, outputnode, [('out_file', 'out_brainmask')]),
-        (asegnat, outputnode, [('outputnode.out_file', 'out_aseg')]),
-        (aparcnat, outputnode, [('outputnode.out_file', 'out_aparc')]),
+        (aseg_to_native_wf, outputnode, [('outputnode.out_file', 'out_aseg')]),
+        (aparc_to_native_wf, outputnode, [('outputnode.out_file', 'out_aparc')]),
     ])
 
     return workflow
@@ -1233,10 +1233,10 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
 
     if freesurfer:
         ds_t1_fsaseg = pe.Node(
-            DerivativesDataSink(base_directory=output_dir, suffix='rois-fsaseg'),
+            DerivativesDataSink(base_directory=output_dir, suffix='label-aseg_roi'),
             name='ds_t1_fsaseg', run_without_submitting=True)
         ds_t1_fsparc = pe.Node(
-            DerivativesDataSink(base_directory=output_dir, suffix='rois-fsaparcaseg'),
+            DerivativesDataSink(base_directory=output_dir, suffix='label-aparcaseg_roi'),
             name='ds_t1_fsparc', run_without_submitting=True)
         workflow.connect([
             (inputnode, lta_2_itk, [('t1_2_fsnative_forward_transform', 'in_lta')]),

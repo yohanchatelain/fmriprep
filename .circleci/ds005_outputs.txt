@@ -14,8 +14,8 @@ fmriprep/sub-01/anat/sub-01_T1w_midthickness.R.surf.gii
 fmriprep/sub-01/anat/sub-01_T1w_pial.L.surf.gii
 fmriprep/sub-01/anat/sub-01_T1w_pial.R.surf.gii
 fmriprep/sub-01/anat/sub-01_T1w_preproc.nii.gz
-fmriprep/sub-01/anat/sub-01_T1w_rois-fsaparcaseg.nii.gz
-fmriprep/sub-01/anat/sub-01_T1w_rois-fsaseg.nii.gz
+fmriprep/sub-01/anat/sub-01_T1w_label-aparcaseg_roi.nii.gz
+fmriprep/sub-01/anat/sub-01_T1w_label-aseg_roi.nii.gz
 fmriprep/sub-01/anat/sub-01_T1w_smoothwm.L.surf.gii
 fmriprep/sub-01/anat/sub-01_T1w_smoothwm.R.surf.gii
 fmriprep/sub-01/anat/sub-01_T1w_space-MNI152NLin2009cAsym_brainmask.nii.gz
@@ -44,8 +44,8 @@ fmriprep/sub-01/func
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_AROMAnoiseICs.csv
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_confounds.tsv
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_MELODICmix.tsv
-fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_rois-fsaparc.nii.gz
-fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_rois-fsaseg.nii.gz
+fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_label-aparcaseg_roi.nii.gz
+fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_label-aseg_roi.nii.gz
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_space-fsaverage5.L.func.gii
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_space-fsaverage5.R.func.gii
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_space-MNI152NLin2009cAsym_brainmask.nii.gz
@@ -54,8 +54,8 @@ fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_space-MNI152NLin20
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_AROMAnoiseICs.csv
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_confounds.tsv
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_MELODICmix.tsv
-fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_rois-fsaparc.nii.gz
-fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_rois-fsaseg.nii.gz
+fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_label-aparcaseg_roi.nii.gz
+fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_label-aseg_roi.nii.gz
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_space-fsaverage5.L.func.gii
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_space-fsaverage5.R.func.gii
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_space-MNI152NLin2009cAsym_brainmask.nii.gz
