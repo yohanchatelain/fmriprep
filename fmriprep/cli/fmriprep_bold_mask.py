@@ -22,7 +22,7 @@ def main():
     from fmriprep.workflows.bold.util import init_bold_reference_wf
     opts = get_parser().parse_args()
 
-    wf = init_bold_reference_wf(1, name=hash_infile(opts.input_file))
+    wf = init_bold_reference_wf(1, name=hash_infile(opts.input_file), gen_report=True)
     wf.inputs.inputnode.bold_file = opts.input_file
     wf.base_dir = os.getcwd()
     wf.run()

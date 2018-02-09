@@ -23,7 +23,8 @@ from ...interfaces import ValidateImage
 DEFAULT_MEMORY_MIN_GB = 0.01
 
 
-def init_bold_reference_wf(omp_nthreads, bold_file=None, name='bold_reference_wf'):
+def init_bold_reference_wf(omp_nthreads, bold_file=None, name='bold_reference_wf',
+                           gen_report=False):
     """
     This workflow generates reference BOLD images for a series
 
@@ -80,7 +81,8 @@ def init_bold_reference_wf(omp_nthreads, bold_file=None, name='bold_reference_wf
     inputnode = pe.Node(niu.IdentityInterface(fields=['bold_file']), name='inputnode')
     outputnode = pe.Node(
         niu.IdentityInterface(fields=['bold_file', 'raw_ref_image', 'skip_vols', 'ref_image',
-                                      'ref_image_brain', 'bold_mask', 'validation_report']),
+                                      'ref_image_brain', 'bold_mask', 'validation_report',
+                                      'mask_report']),
         name='outputnode')
 
     # Simplify manually setting input image
@@ -106,6 +108,15 @@ def init_bold_reference_wf(omp_nthreads, bold_file=None, name='bold_reference_wf
             ('outputnode.mask_file', 'bold_mask'),
             ('outputnode.skull_stripped_file', 'ref_image_brain')]),
     ])
+
+    if gen_report:
+        mask_reportlet = pe.Node(SimpleShowMaskRPT(), name='mask_reportlet')
+        workflow.connect([
+            (enhance_and_skullstrip_bold_wf, mask_reportlet, [
+                ('outputnode.bias_corrected_file', 'background_file'),
+                ('outputnode.mask_file', 'mask_file'),
+            ]),
+        ])
 
     return workflow
 
