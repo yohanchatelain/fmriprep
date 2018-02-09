@@ -140,7 +140,7 @@ def _enhance_t2_contrast(in_file, newpath=None, offset=0.5):
     """
     Performs a logarithmic transformation of intensity that
     effectively splits brain and background and makes the
-    overal distribution more Gaussian.
+    overall distribution more Gaussian.
     """
     out_file = fname_presuffix(in_file, suffix='_t1enh',
                                newpath=newpath)

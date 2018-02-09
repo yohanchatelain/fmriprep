@@ -24,7 +24,7 @@ DEFAULT_MEMORY_MIN_GB = 0.01
 
 
 def init_bold_reference_wf(omp_nthreads, bold_file=None, name='bold_reference_wf',
-                           gen_report=False):
+                           gen_report=False, enhance_t2=False):
     """
     This workflow generates reference BOLD images for a series
 
@@ -47,6 +47,11 @@ def init_bold_reference_wf(omp_nthreads, bold_file=None, name='bold_reference_wf
             Maximum number of threads an individual process may use
         name : str
             Name of workflow (default: ``bold_reference_wf``)
+        gen_report : bool
+            Whether a mask report node should be appended in the end
+        enhance_t2 : bool
+            Perform logarithmic transform of input BOLD image to improve contrast
+            before calculating the preliminary mask
 
     **Inputs**
 
@@ -122,7 +127,7 @@ def init_bold_reference_wf(omp_nthreads, bold_file=None, name='bold_reference_wf
 
 
 def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
-                                        omp_nthreads=1):
+                                        omp_nthreads=1, enhance_t2=False):
     """
     This workflow takes in a :abbr:`BOLD (blood-oxygen level-dependant)`
     :abbr:`fMRI (functional MRI)` average/summary (e.g. a reference image
@@ -157,14 +162,23 @@ def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
         from fmriprep.workflows.bold.util import init_enhance_and_skullstrip_bold_wf
         wf = init_enhance_and_skullstrip_bold_wf(omp_nthreads=1)
 
+    **Parameters**
+        name : str
+            Name of workflow (default: ``enhance_and_skullstrip_bold_wf``)
+        omp_nthreads : int
+            number of threads available to parallel nodes
+        enhance_t2 : bool
+            perform logarithmic transform of input BOLD image to improve contrast
+            before calculating the preliminary mask
 
-    Inputs
+
+    **Inputs**
 
         in_file
             BOLD image (single volume)
 
 
-    Outputs
+    **Outputs**
 
         bias_corrected_file
             the ``in_file`` after `N4BiasFieldCorrection`_
@@ -184,7 +198,7 @@ def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
         'mask_file', 'skull_stripped_file', 'bias_corrected_file']), name='outputnode')
 
     # Create a loose mask to avoid N4 internal's Otsu mask
-    n4_mask = pe.Node(MaskEPI(upper_cutoff=0.75, enhance_t2=True, opening=1,
+    n4_mask = pe.Node(MaskEPI(upper_cutoff=0.75, enhance_t2=enhance_t2, opening=1,
                       no_sanitize=True), name='n4_mask')
 
     # Run N4 normally, force num_threads=1 for stability (images are small, no need for >1)
