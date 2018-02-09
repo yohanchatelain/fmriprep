@@ -3,6 +3,7 @@
 # vi: set ft=python sts=4 ts=4 sw=4 et:
 """Run the BOLD reference+mask workflow"""
 import os
+from niworkflows.nipype.utils.filemanip import hash_infile
 
 
 def get_parser():
@@ -21,7 +22,7 @@ def main():
     from fmriprep.workflows.bold.util import init_bold_reference_wf
     opts = get_parser().parse_args()
 
-    wf = init_bold_reference_wf(1)
+    wf = init_bold_reference_wf(1, name=hash_infile(opts.input_file))
     wf.inputs.inputnode.bold_file = opts.input_file
     wf.base_dir = os.getcwd()
     wf.run()
