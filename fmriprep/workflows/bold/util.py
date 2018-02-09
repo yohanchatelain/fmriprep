@@ -172,9 +172,9 @@ def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
     outputnode = pe.Node(niu.IdentityInterface(fields=[
         'mask_file', 'skull_stripped_file', 'bias_corrected_file']), name='outputnode')
 
-    # Create a rough mask to avoid N4 internal's Otsu mask
-    n4_mask = pe.Node(MaskEPI(upper_cutoff=0.95, opening=1, no_sanitize=True),
-                      name='n4_mask')
+    # Create a loose mask to avoid N4 internal's Otsu mask
+    n4_mask = pe.Node(MaskEPI(upper_cutoff=0.75, enhance_t2=True, opening=1,
+                      no_sanitize=True), name='n4_mask')
 
     # Run N4 normally, force num_threads=1 for stability (images are small, no need for >1)
     n4_correct = pe.Node(ants.N4BiasFieldCorrection(dimension=3, copy_header=True),
