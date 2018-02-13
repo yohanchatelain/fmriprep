@@ -523,14 +523,14 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 (bold_split, bold_t2s_wf, [
                     ('outfiles', 'inputnode.echo_split')]),
                 (bold_hmc_wf, bold_t2s_wf, [
-                    ('outputnode.xforms', 'inputnode.xforms')])
+                    ('outputnode.xforms', 'inputnode.xforms')]),
                 (bold_t2s_wf, bold_reg_wf, [
                     ('outputnode.t2s_map', 'inputnode.ref_bold_brain'),
                     ('outputnode.t2s_mask', 'inputnode.ref_bold_mask')])
             ])
         else:
-            LOGGER.warn('No fieldmaps found or they were ignored, building base workflow '
-                        'for dataset %s.', ref_file)
+            LOGGER.warning('No fieldmaps found or they were ignored, building base workflow '
+                           'for dataset %s.', ref_file)
             summary.inputs.distortion_correction = 'None'
 
             workflow.connect([

@@ -195,8 +195,8 @@ def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
         (bbr_wf, mask_t1w_tfm, [('outputnode.itk_bold_to_t1', 'transforms')]),
         (gen_ref, aseg_t1w_tfm, [('out_file', 'reference_image')]),
         (gen_ref, aparc_t1w_tfm, [('out_file', 'reference_image')]),
-        (mask_t1w_tfm, outputnode, [('output_image', 'bold_mask_t1')])
-        (aseg_t1w_tfm, outputnode, [('output_image', 'bold_mask_t1')])
+        (mask_t1w_tfm, outputnode, [('output_image', 'bold_mask_t1')]),
+        (aseg_t1w_tfm, outputnode, [('output_image', 'bold_mask_t1')]),
         (aparc_t1w_tfm, outputnode, [('output_image', 'bold_mask_t1')])
     ])
 
