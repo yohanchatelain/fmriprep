@@ -27,7 +27,7 @@ from ...interfaces.patches import (
 )
 
 
-def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata, freesurfer=False,
+def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata,
                        name="bold_confs_wf"):
     """
     This workflow calculates confounds for a BOLD series, and aggregates them
@@ -66,7 +66,6 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata, freesurfer
             mem_gb=1,
             use_aroma=True,
             ignore_aroma_err=True,
-            freesurfer=True,
             metadata={})
 
     **Parameters**
@@ -81,8 +80,6 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata, freesurfer
             Do not fail on ICA-AROMA errors
         metadata : dict
             BIDS metadata for BOLD file
-        freesurfer : bool
-            whether the workflow included surface reconstruction
 
     **Inputs**
 
@@ -100,10 +97,6 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata, freesurfer
         t1_bold_xform
             Affine matrix that maps the T1w space into alignment with
             the native BOLD space
-        t1_aseg
-            FreeSurfer's Aseg atlas mapped to T1w reference space
-        t1_aparc
-            FreeSurfer's parcellation atlas mapped to T1w reference space
         bold_mni
             BOLD image resampled in MNI space (only if ``use_aroma`` enabled)
         bold_mask_mni
@@ -128,10 +121,6 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata, freesurfer
             FSL MELODIC mixing matrix
         nonaggr_denoised_file
             BOLD series with non-aggressive ICA-AROMA denoising applied
-        bold_aseg
-            FreeSurfer's Aseg atlas mapped to BOLD native space
-        bold_aparc
-            FreeSurfer's parcellation mapped to BOLD native space
 
     **Subworkflows**
 
@@ -141,13 +130,11 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata, freesurfer
 
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['bold', 'bold_mask', 'movpar_file', 't1_mask', 't1_tpms',
-                't1_bold_xform', 'bold_mni', 'bold_mask_mni',
-                't1_aseg', 't1_aparc']),
+                't1_bold_xform', 'bold_mni', 'bold_mask_mni']),
         name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['confounds_file', 'confounds_list', 'rois_report', 'ica_aroma_report',
-                'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file',
-                'bold_aseg', 'bold_aparc']),
+                'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file']),
         name='outputnode')
 
     # Get masks ready in T1w space
@@ -244,7 +231,6 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata, freesurfer
         (inputnode, tcc_tfm, [('bold_mask', 'reference_image'),
                               ('t1_bold_xform', 'transforms')]),
         (csf_roi, tcc_tfm, [('eroded_mask', 'input_image')]),
-
         # Mask ROIs with bold_mask
         (inputnode, csf_msk, [('bold_mask', 'in_mask')]),
         (inputnode, wm_msk, [('bold_mask', 'in_mask')]),
@@ -300,24 +286,8 @@ def init_bold_confs_wf(mem_gb, use_aroma, ignore_aroma_err, metadata, freesurfer
         (rois_plot, outputnode, [('out_report', 'rois_report')]),
     ])
 
-    if freesurfer:  # Aseg/aparc resampling
-        aseg_tfm = pe.Node(ApplyTransforms(interpolation='NearestNeighbor', float=True),
-                           name='aseg_tfm', mem_gb=0.1)
-        aparc_tfm = pe.Node(ApplyTransforms(interpolation='NearestNeighbor', float=True),
-                            name='aparc_tfm', mem_gb=0.1)
-        workflow.connect([
-            # FreeSurfer ROIs
-            (inputnode, aseg_tfm, [('bold_mask', 'reference_image'),
-                                   ('t1_aseg', 'input_image'),
-                                   ('t1_bold_xform', 'transforms')]),
-            (inputnode, aparc_tfm, [('bold_mask', 'reference_image'),
-                                    ('t1_aparc', 'input_image'),
-                                    ('t1_bold_xform', 'transforms')]),
-            (aseg_tfm, outputnode, [('output_image', 'bold_aseg')]),
-            (aparc_tfm, outputnode, [('output_image', 'bold_aparc')]),
-        ])
-
-    if use_aroma:  # ICA-AROMA
+    if use_aroma:
+        # ICA-AROMA
         ica_aroma_wf = init_ica_aroma_wf(name='ica_aroma_wf',
                                          ignore_aroma_err=ignore_aroma_err)
         workflow.connect([
