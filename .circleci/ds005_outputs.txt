@@ -43,8 +43,6 @@ fmriprep/sub-01/figures/sub-01_task-mixedgamblestask_run-02_bold_syn_sdc.svg
 fmriprep/sub-01/func
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_AROMAnoiseICs.csv
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_confounds.tsv
-fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_label-aparcaseg_roi.nii.gz
-fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_label-aseg_roi.nii.gz
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_MELODICmix.tsv
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_space-fsaverage5.L.func.gii
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_space-fsaverage5.R.func.gii
@@ -52,11 +50,11 @@ fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_space-MNI152NLin20
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_space-MNI152NLin2009cAsym_preproc.nii.gz
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_space-MNI152NLin2009cAsym_variant-smoothAROMAnonaggr_preproc.nii.gz
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_space-T1w_brainmask.nii.gz
+fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_space-T1w_label-aparcaseg_roi.nii.gz
+fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_space-T1w_label-aseg_roi.nii.gz
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_space-T1w_preproc.nii.gz
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_AROMAnoiseICs.csv
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_confounds.tsv
-fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_label-aparcaseg_roi.nii.gz
-fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_label-aseg_roi.nii.gz
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_MELODICmix.tsv
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_space-fsaverage5.L.func.gii
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_space-fsaverage5.R.func.gii
@@ -64,6 +62,8 @@ fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_space-MNI152NLin20
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_space-MNI152NLin2009cAsym_preproc.nii.gz
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_space-MNI152NLin2009cAsym_variant-smoothAROMAnonaggr_preproc.nii.gz
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_space-T1w_brainmask.nii.gz
+fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_space-T1w_label-aparcaseg_roi.nii.gz
+fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_space-T1w_label-aseg_roi.nii.gz
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_space-T1w_preproc.nii.gz
 fmriprep/sub-01.html
 /tmp/ds005/derivatives

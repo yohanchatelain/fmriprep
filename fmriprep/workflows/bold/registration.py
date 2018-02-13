@@ -134,8 +134,8 @@ def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
     inputnode = pe.Node(
         niu.IdentityInterface(
             fields=['name_source', 'ref_bold_brain', 'ref_bold_mask',
-                    't1_preproc', 't1_brain', 't1_mask',
-                    't1_seg', 'bold_split', 'hmc_xforms',
+                    't1_preproc', 't1_brain', 't1_mask', 't1_seg',
+                    't1_aseg', 't1_aparc', 'bold_split', 'hmc_xforms',
                     'subjects_dir', 'subject_id', 't1_2_fsnative_reverse_transform', 'fieldwarp']),
         name='inputnode'
     )
@@ -170,18 +170,34 @@ def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
                       mem_gb=0.3)  # 256x256x256 * 64 / 8 ~ 150MB
 
     mask_t1w_tfm = pe.Node(
-        ApplyTransforms(interpolation='NearestNeighbor', float=True),
+        ApplyTransforms(interpolation='MultiLabel', float=True),
         name='mask_t1w_tfm', mem_gb=0.1
+    )
+
+    # Resample aseg and aparc in T1w space (no transforms needed)
+    aseg_t1w_tfm = pe.Node(
+        ApplyTransforms(interpolation='MultiLabel', transforms='identity', float=True),
+        name='aseg_t1w_tfm', mem_gb=0.1
+    )
+    aparc_t1w_tfm = pe.Node(
+        ApplyTransforms(interpolation='MultiLabel', transforms='identity', float=True),
+        name='aparc_t1w_tfm', mem_gb=0.1
     )
 
     workflow.connect([
         (inputnode, gen_ref, [('ref_bold_brain', 'moving_image'),
                               ('t1_brain', 'fixed_image'),
                               ('t1_mask', 'fov_mask')]),
+        (inputnode, mask_t1w_tfm, [('ref_bold_mask', 'input_image')]),
+        (inputnode, aparc_t1w_tfm, [('t1_aseg', 'input_image')]),
+        (inputnode, aparc_t1w_tfm, [('t1_aparc', 'input_image')]),
         (gen_ref, mask_t1w_tfm, [('out_file', 'reference_image')]),
         (bbr_wf, mask_t1w_tfm, [('outputnode.itk_bold_to_t1', 'transforms')]),
-        (inputnode, mask_t1w_tfm, [('ref_bold_mask', 'input_image')]),
+        (gen_ref, aseg_t1w_tfm, [('out_file', 'reference_image')]),
+        (gen_ref, aparc_t1w_tfm, [('out_file', 'reference_image')]),
         (mask_t1w_tfm, outputnode, [('output_image', 'bold_mask_t1')])
+        (aseg_t1w_tfm, outputnode, [('output_image', 'bold_mask_t1')])
+        (aparc_t1w_tfm, outputnode, [('output_image', 'bold_mask_t1')])
     ])
 
     # Merge transforms placing the head motion correction last

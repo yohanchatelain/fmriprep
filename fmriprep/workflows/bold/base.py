@@ -284,8 +284,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         inputnode.inputs.bold_file = bold_file
 
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['bold_t1', 'bold_mask_t1', 'bold_mni', 'bold_mask_mni',
-                'bold_aseg', 'bold_aparc', 'confounds', 'surfaces',
+        fields=['bold_t1', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1',
+                'bold_mni', 'bold_mask_mni', 'confounds', 'surfaces',
                 't2s_map', 'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file']),
         name='outputnode')
 
@@ -313,8 +313,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         (inputnode, func_derivatives_wf, [('bold_file', 'inputnode.source_file')]),
         (outputnode, func_derivatives_wf, [
             ('bold_t1', 'inputnode.bold_t1'),
-            ('bold_aseg', 'inputnode.bold_aseg'),
-            ('bold_aparc', 'inputnode.bold_aparc'),
+            ('bold_aseg_t1', 'inputnode.bold_aseg_t1'),
+            ('bold_aparc_t1', 'inputnode.bold_aparc_t1'),
             ('bold_mask_t1', 'inputnode.bold_mask_t1'),
             ('bold_mni', 'inputnode.bold_mni'),
             ('bold_mask_mni', 'inputnode.bold_mask_mni'),
@@ -367,7 +367,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         use_aroma=use_aroma,
         ignore_aroma_err=ignore_aroma_err,
         metadata=metadata,
-        freesurfer=freesurfer,
         name='bold_confounds_wf')
     bold_confounds_wf.get_node('inputnode').inputs.t1_transform_flags = [False]
 
@@ -392,14 +391,14 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             ('t1_brain', 'inputnode.t1_brain'),
             ('t1_mask', 'inputnode.t1_mask'),
             ('t1_seg', 'inputnode.t1_seg'),
+            ('t1_aseg', 'inputnode.t1_aseg'),
+            ('t1_aparc', 'inputnode.t1_aparc'),
             # Undefined if --no-freesurfer, but this is safe
             ('subjects_dir', 'inputnode.subjects_dir'),
             ('subject_id', 'inputnode.subject_id'),
             ('t1_2_fsnative_reverse_transform', 'inputnode.t1_2_fsnative_reverse_transform')]),
         (inputnode, bold_confounds_wf, [('t1_tpms', 'inputnode.t1_tpms'),
-                                        ('t1_mask', 'inputnode.t1_mask'),
-                                        ('t1_aseg', 'inputnode.t1_aseg'),
-                                        ('t1_aparc', 'inputnode.t1_aparc')]),
+                                        ('t1_mask', 'inputnode.t1_mask')]),
         (bold_split, bold_reg_wf, [('out_files', 'inputnode.bold_split')]),
         (bold_hmc_wf, bold_reg_wf, [('outputnode.xforms', 'inputnode.hmc_xforms')]),
         (bold_hmc_wf, bold_confounds_wf, [('outputnode.movpar_file', 'inputnode.movpar_file')]),
@@ -411,14 +410,14 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         ]),
         (bold_confounds_wf, outputnode, [
             ('outputnode.confounds_file', 'confounds'),
-            ('outputnode.bold_aseg', 'bold_aseg'),
-            ('outputnode.bold_aparc', 'bold_aparc'),
             ('outputnode.aroma_noise_ics', 'aroma_noise_ics'),
             ('outputnode.melodic_mix', 'melodic_mix'),
             ('outputnode.nonaggr_denoised_file', 'nonaggr_denoised_file'),
         ]),
         (bold_reg_wf, outputnode, [('outputnode.bold_t1', 'bold_t1'),
-                                   ('outputnode.bold_mask_t1', 'bold_mask_t1')]),
+                                   ('outputnode.bold_mask_t1', 'bold_mask_t1'),
+                                   ('outputnode.bold_aseg_t1', 'bold_aseg_t1'),
+                                   ('outputnode.bold_aparc_t1', 'bold_aparc_t1')]),
         (bold_confounds_wf, func_reports_wf, [
             ('outputnode.rois_report', 'inputnode.bold_rois_report'),
             ('outputnode.ica_aroma_report', 'inputnode.ica_aroma_report')]),
@@ -720,8 +719,7 @@ def init_func_reports_wf(reportlets_dir, freesurfer, use_aroma, use_syn, name='f
     def _bold_reg_suffix(fallback, freesurfer):
         if fallback:
             return 'coreg' if freesurfer else 'flirt'
-        else:
-            return 'bbr' if freesurfer else 'flt_bbr'
+        return 'bbr' if freesurfer else 'flt_bbr'
 
     ds_bold_reg_report = pe.Node(
         DerivativesDataSink(base_directory=reportlets_dir),
@@ -772,7 +770,7 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     inputnode = pe.Node(
         niu.IdentityInterface(
             fields=['source_file', 'bold_t1', 'bold_mask_t1', 'bold_mni', 'bold_mask_mni',
-                    'bold_aseg', 'bold_aparc',
+                    'bold_aseg_t1', 'bold_aparc_t1',
                     'confounds', 'surfaces', 'aroma_noise_ics', 'melodic_mix',
                     'nonaggr_denoised_file']),
         name='inputnode')
@@ -825,19 +823,19 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
         ])
 
     if freesurfer:
-        ds_bold_aseg = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix='label-aseg_roi'),
-            name='ds_bold_aseg', run_without_submitting=True,
+        ds_bold_aseg_t1 = pe.Node(DerivativesDataSink(
+            base_directory=output_dir, suffix='space-T1w_label-aseg_roi'),
+            name='ds_bold_aseg_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
-        ds_bold_aparc = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix='label-aparcaseg_roi'),
-            name='ds_bold_aparc', run_without_submitting=True,
+        ds_bold_aparc_t1 = pe.Node(DerivativesDataSink(
+            base_directory=output_dir, suffix='space-T1w_label-aparcaseg_roi'),
+            name='ds_bold_aparc_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         workflow.connect([
-            (inputnode, ds_bold_aseg, [('source_file', 'source_file'),
-                                       ('bold_aseg', 'in_file')]),
-            (inputnode, ds_bold_aparc, [('source_file', 'source_file'),
-                                        ('bold_aparc', 'in_file')]),
+            (inputnode, ds_bold_aseg_t1, [('source_file', 'source_file'),
+                                          ('bold_aseg_t1', 'in_file')]),
+            (inputnode, ds_bold_aparc_t1, [('source_file', 'source_file'),
+                                           ('bold_aparc_t1', 'in_file')]),
         ])
 
     # fsaverage space
