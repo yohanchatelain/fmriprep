@@ -578,6 +578,16 @@ workflows:
             tags:
               only: /.*/
 
+      - ds000210:
+          requires:
+            - get_data
+            - build
+          filters:
+            branches:
+              ignore: /docs?\/.*/
+            tags:
+              only: /.*/
+
       - deploy:
           requires:
             - build
