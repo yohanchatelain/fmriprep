@@ -1,3 +1,10 @@
+1.0.7 (February 13, 2018)
+=========================
+
+  * [FIX] Write latest BOLD mask out (space-T1w) (#978)
+  * [PIN] Updating niworkflows to 0.3.1 (#962)
+  * [FIX] Robuster BOLD mask (#966)
+
 1.0.6 (29th of January 2018)
 ============================
 
