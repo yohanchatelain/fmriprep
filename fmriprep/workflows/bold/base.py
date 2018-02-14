@@ -271,10 +271,11 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     # Build workflow
     workflow = pe.Workflow(name=wf_name)
     inputnode = pe.Node(niu.IdentityInterface(
-        fields=['bold_file', 't1_preproc', 't1_brain', 't1_mask', 't1_seg', 't1_tpms',
+        fields=['bold_file', 'subjects_dir', 'subject_id',
+                't1_preproc', 't1_brain', 't1_mask', 't1_seg', 't1_tpms',
+                't1_aseg', 't1_aparc',
                 't1_2_mni_forward_transform', 't1_2_mni_reverse_transform',
-                'subjects_dir', 'subject_id', 't1_2_fsnative_forward_transform',
-                't1_2_fsnative_reverse_transform']),
+                't1_2_fsnative_forward_transform', 't1_2_fsnative_reverse_transform']),
         name='inputnode')
 
     if isinstance(bold_file, list):
@@ -283,7 +284,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         inputnode.inputs.bold_file = bold_file
 
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['bold_t1', 'bold_mask_t1', 'bold_mni', 'bold_mask_mni', 'confounds', 'surfaces',
+        fields=['bold_t1', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1',
+                'bold_mni', 'bold_mask_mni', 'confounds', 'surfaces',
                 't2s_map', 'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file']),
         name='outputnode')
 
@@ -311,6 +313,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         (inputnode, func_derivatives_wf, [('bold_file', 'inputnode.source_file')]),
         (outputnode, func_derivatives_wf, [
             ('bold_t1', 'inputnode.bold_t1'),
+            ('bold_aseg_t1', 'inputnode.bold_aseg_t1'),
+            ('bold_aparc_t1', 'inputnode.bold_aparc_t1'),
             ('bold_mask_t1', 'inputnode.bold_mask_t1'),
             ('bold_mni', 'inputnode.bold_mni'),
             ('bold_mask_mni', 'inputnode.bold_mask_mni'),
@@ -387,6 +391,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             ('t1_brain', 'inputnode.t1_brain'),
             ('t1_mask', 'inputnode.t1_mask'),
             ('t1_seg', 'inputnode.t1_seg'),
+            ('t1_aseg', 'inputnode.t1_aseg'),
+            ('t1_aparc', 'inputnode.t1_aparc'),
             # Undefined if --no-freesurfer, but this is safe
             ('subjects_dir', 'inputnode.subjects_dir'),
             ('subject_id', 'inputnode.subject_id'),
@@ -409,7 +415,9 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             ('outputnode.nonaggr_denoised_file', 'nonaggr_denoised_file'),
         ]),
         (bold_reg_wf, outputnode, [('outputnode.bold_t1', 'bold_t1'),
-                                   ('outputnode.bold_mask_t1', 'bold_mask_t1')]),
+                                   ('outputnode.bold_mask_t1', 'bold_mask_t1'),
+                                   ('outputnode.bold_aseg_t1', 'bold_aseg_t1'),
+                                   ('outputnode.bold_aparc_t1', 'bold_aparc_t1')]),
         (bold_confounds_wf, func_reports_wf, [
             ('outputnode.rois_report', 'inputnode.bold_rois_report'),
             ('outputnode.ica_aroma_report', 'inputnode.ica_aroma_report')]),
@@ -515,14 +523,14 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 (bold_split, bold_t2s_wf, [
                     ('outfiles', 'inputnode.echo_split')]),
                 (bold_hmc_wf, bold_t2s_wf, [
-                    ('outputnode.xforms', 'inputnode.xforms')])
+                    ('outputnode.xforms', 'inputnode.xforms')]),
                 (bold_t2s_wf, bold_reg_wf, [
                     ('outputnode.t2s_map', 'inputnode.ref_bold_brain'),
                     ('outputnode.t2s_mask', 'inputnode.ref_bold_mask')])
             ])
         else:
-            LOGGER.warn('No fieldmaps found or they were ignored, building base workflow '
-                        'for dataset %s.', ref_file)
+            LOGGER.warning('No fieldmaps found or they were ignored, building base workflow '
+                           'for dataset %s.', ref_file)
             summary.inputs.distortion_correction = 'None'
 
             workflow.connect([
@@ -549,8 +557,10 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
         # XXX Eliminate branch when forcing isn't an option
         if not fmaps:
-            LOGGER.warn('No fieldmaps found or they were ignored. Using EXPERIMENTAL '
-                        'nonlinear susceptibility correction for dataset %s.', ref_file)
+            LOGGER.warning(
+                'Susceptibility distortion correction (SDC): no fieldmaps found or they '
+                'were ignored. Using EXPERIMENTAL "fieldmap-less" correction for dataset %s.',
+                ref_file)
             summary.inputs.distortion_correction = 'SyN'
             workflow.connect([
                 (nonlinear_sdc_wf, bold_reg_wf, [
@@ -709,8 +719,7 @@ def init_func_reports_wf(reportlets_dir, freesurfer, use_aroma, use_syn, name='f
     def _bold_reg_suffix(fallback, freesurfer):
         if fallback:
             return 'coreg' if freesurfer else 'flirt'
-        else:
-            return 'bbr' if freesurfer else 'flt_bbr'
+        return 'bbr' if freesurfer else 'flt_bbr'
 
     ds_bold_reg_report = pe.Node(
         DerivativesDataSink(base_directory=reportlets_dir),
@@ -761,53 +770,106 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     inputnode = pe.Node(
         niu.IdentityInterface(
             fields=['source_file', 'bold_t1', 'bold_mask_t1', 'bold_mni', 'bold_mask_mni',
+                    'bold_aseg_t1', 'bold_aparc_t1',
                     'confounds', 'surfaces', 'aroma_noise_ics', 'melodic_mix',
                     'nonaggr_denoised_file']),
         name='inputnode')
 
-    ds_bold_t1 = pe.Node(DerivativesDataSink(
-        base_directory=output_dir, suffix='space-T1w_preproc'),
-        name='ds_bold_t1', run_without_submitting=True,
-        mem_gb=DEFAULT_MEMORY_MIN_GB)
-
-    ds_bold_mask_t1 = pe.Node(DerivativesDataSink(base_directory=output_dir,
-                                                  suffix='space-T1w_brainmask'),
-                              name='ds_bold_mask_t1', run_without_submitting=True,
-                              mem_gb=DEFAULT_MEMORY_MIN_GB)
-
     suffix_fmt = 'space-{}_{}'.format
-    ds_bold_mni = pe.Node(DerivativesDataSink(base_directory=output_dir,
-                                              suffix=suffix_fmt(template, 'preproc')),
-                          name='ds_bold_mni', run_without_submitting=True,
-                          mem_gb=DEFAULT_MEMORY_MIN_GB)
-
     variant_suffix_fmt = 'space-{}_variant-{}_{}'.format
-    ds_aroma_mni = pe.Node(DerivativesDataSink(base_directory=output_dir,
-                                               suffix=variant_suffix_fmt(template,
-                                                                         'smoothAROMAnonaggr',
-                                                                         'preproc')),
-                           name='ds_aroma_mni', run_without_submitting=True,
-                           mem_gb=DEFAULT_MEMORY_MIN_GB)
 
-    ds_bold_mask_mni = pe.Node(DerivativesDataSink(base_directory=output_dir,
-                                                   suffix=suffix_fmt(template, 'brainmask')),
-                               name='ds_bold_mask_mni', run_without_submitting=True,
-                               mem_gb=DEFAULT_MEMORY_MIN_GB)
+    ds_confounds = pe.Node(DerivativesDataSink(
+        base_directory=output_dir, suffix='confounds'),
+        name="ds_confounds", run_without_submitting=True,
+        mem_gb=DEFAULT_MEMORY_MIN_GB)
+    workflow.connect([
+        (inputnode, ds_confounds, [('source_file', 'source_file'),
+                                   ('confounds', 'in_file')]),
+    ])
 
-    ds_confounds = pe.Node(DerivativesDataSink(base_directory=output_dir, suffix='confounds'),
-                           name="ds_confounds", run_without_submitting=True,
-                           mem_gb=DEFAULT_MEMORY_MIN_GB)
+    # Resample to T1w space
+    if 'T1w' in output_spaces:
+        ds_bold_t1 = pe.Node(DerivativesDataSink(
+            base_directory=output_dir, suffix=suffix_fmt('T1w', 'preproc')),
+            name='ds_bold_t1', run_without_submitting=True,
+            mem_gb=DEFAULT_MEMORY_MIN_GB)
 
-    ds_aroma_noise_ics = pe.Node(DerivativesDataSink(base_directory=output_dir,
-                                                     suffix='AROMAnoiseICs'),
-                                 name="ds_aroma_noise_ics", run_without_submitting=True,
-                                 mem_gb=DEFAULT_MEMORY_MIN_GB)
+        ds_bold_mask_t1 = pe.Node(DerivativesDataSink(
+            base_directory=output_dir, suffix=suffix_fmt('T1w', 'brainmask')),
+            name='ds_bold_mask_t1', run_without_submitting=True,
+            mem_gb=DEFAULT_MEMORY_MIN_GB)
+        workflow.connect([
+            (inputnode, ds_bold_t1, [('source_file', 'source_file'),
+                                     ('bold_t1', 'in_file')]),
+            (inputnode, ds_bold_mask_t1, [('source_file', 'source_file'),
+                                          ('bold_mask_t1', 'in_file')]),
+        ])
 
-    ds_melodic_mix = pe.Node(DerivativesDataSink(base_directory=output_dir, suffix='MELODICmix'),
-                             name="ds_melodic_mix", run_without_submitting=True,
-                             mem_gb=DEFAULT_MEMORY_MIN_GB)
+    # Resample to template (default: MNI)
+    if 'template' in output_spaces:
+        ds_bold_mni = pe.Node(DerivativesDataSink(
+            base_directory=output_dir, suffix=suffix_fmt(template, 'preproc')),
+            name='ds_bold_mni', run_without_submitting=True,
+            mem_gb=DEFAULT_MEMORY_MIN_GB)
+        ds_bold_mask_mni = pe.Node(DerivativesDataSink(
+            base_directory=output_dir, suffix=suffix_fmt(template, 'brainmask')),
+            name='ds_bold_mask_mni', run_without_submitting=True,
+            mem_gb=DEFAULT_MEMORY_MIN_GB)
+        workflow.connect([
+            (inputnode, ds_bold_mni, [('source_file', 'source_file'),
+                                      ('bold_mni', 'in_file')]),
+            (inputnode, ds_bold_mask_mni, [('source_file', 'source_file'),
+                                           ('bold_mask_mni', 'in_file')]),
+        ])
+
+    if freesurfer:
+        ds_bold_aseg_t1 = pe.Node(DerivativesDataSink(
+            base_directory=output_dir, suffix='space-T1w_label-aseg_roi'),
+            name='ds_bold_aseg_t1', run_without_submitting=True,
+            mem_gb=DEFAULT_MEMORY_MIN_GB)
+        ds_bold_aparc_t1 = pe.Node(DerivativesDataSink(
+            base_directory=output_dir, suffix='space-T1w_label-aparcaseg_roi'),
+            name='ds_bold_aparc_t1', run_without_submitting=True,
+            mem_gb=DEFAULT_MEMORY_MIN_GB)
+        workflow.connect([
+            (inputnode, ds_bold_aseg_t1, [('source_file', 'source_file'),
+                                          ('bold_aseg_t1', 'in_file')]),
+            (inputnode, ds_bold_aparc_t1, [('source_file', 'source_file'),
+                                           ('bold_aparc_t1', 'in_file')]),
+        ])
+
+    # fsaverage space
+    if freesurfer and any(space.startswith('fs') for space in output_spaces):
+        name_surfs = pe.MapNode(GiftiNameSource(
+            pattern=r'(?P<LR>[lr])h.(?P<space>\w+).gii', template='space-{space}.{LR}.func'),
+            iterfield='in_file', name='name_surfs', mem_gb=DEFAULT_MEMORY_MIN_GB,
+            run_without_submitting=True)
+        ds_bold_surfs = pe.MapNode(DerivativesDataSink(base_directory=output_dir),
+                                   iterfield=['in_file', 'suffix'], name='ds_bold_surfs',
+                                   run_without_submitting=True,
+                                   mem_gb=DEFAULT_MEMORY_MIN_GB)
+        workflow.connect([
+            (inputnode, name_surfs, [('surfaces', 'in_file')]),
+            (inputnode, ds_bold_surfs, [('source_file', 'source_file'),
+                                        ('surfaces', 'in_file')]),
+            (name_surfs, ds_bold_surfs, [('out_name', 'suffix')]),
+        ])
 
     if use_aroma:
+        ds_aroma_noise_ics = pe.Node(DerivativesDataSink(
+            base_directory=output_dir, suffix='AROMAnoiseICs'),
+            name="ds_aroma_noise_ics", run_without_submitting=True,
+            mem_gb=DEFAULT_MEMORY_MIN_GB)
+        ds_melodic_mix = pe.Node(DerivativesDataSink(
+            base_directory=output_dir, suffix='MELODICmix'),
+            name="ds_melodic_mix", run_without_submitting=True,
+            mem_gb=DEFAULT_MEMORY_MIN_GB)
+        ds_aroma_mni = pe.Node(DerivativesDataSink(
+            base_directory=output_dir, suffix=variant_suffix_fmt(
+                template, 'smoothAROMAnonaggr', 'preproc')),
+            name='ds_aroma_mni', run_without_submitting=True,
+            mem_gb=DEFAULT_MEMORY_MIN_GB)
+
         workflow.connect([
             (inputnode, ds_aroma_noise_ics, [('source_file', 'source_file'),
                                              ('aroma_noise_ics', 'in_file')]),
@@ -815,44 +877,6 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
                                          ('melodic_mix', 'in_file')]),
             (inputnode, ds_aroma_mni, [('source_file', 'source_file'),
                                        ('nonaggr_denoised_file', 'in_file')]),
-        ])
-
-    name_surfs = pe.MapNode(GiftiNameSource(pattern=r'(?P<LR>[lr])h.(?P<space>\w+).gii',
-                                            template='space-{space}.{LR}.func'),
-                            iterfield='in_file',
-                            name='name_surfs',
-                            mem_gb=DEFAULT_MEMORY_MIN_GB,
-                            run_without_submitting=True)
-    ds_bold_surfs = pe.MapNode(DerivativesDataSink(base_directory=output_dir),
-                               iterfield=['in_file', 'suffix'], name='ds_bold_surfs',
-                               run_without_submitting=True,
-                               mem_gb=DEFAULT_MEMORY_MIN_GB)
-
-    workflow.connect([
-        (inputnode, ds_confounds, [('source_file', 'source_file'),
-                                   ('confounds', 'in_file')]),
-    ])
-
-    if 'T1w' in output_spaces:
-        workflow.connect([
-            (inputnode, ds_bold_t1, [('source_file', 'source_file'),
-                                     ('bold_t1', 'in_file')]),
-            (inputnode, ds_bold_mask_t1, [('source_file', 'source_file'),
-                                          ('bold_mask_t1', 'in_file')]),
-        ])
-    if 'template' in output_spaces:
-        workflow.connect([
-            (inputnode, ds_bold_mni, [('source_file', 'source_file'),
-                                      ('bold_mni', 'in_file')]),
-            (inputnode, ds_bold_mask_mni, [('source_file', 'source_file'),
-                                           ('bold_mask_mni', 'in_file')]),
-        ])
-    if freesurfer and any(space.startswith('fs') for space in output_spaces):
-        workflow.connect([
-            (inputnode, name_surfs, [('surfaces', 'in_file')]),
-            (inputnode, ds_bold_surfs, [('source_file', 'source_file'),
-                                        ('surfaces', 'in_file')]),
-            (name_surfs, ds_bold_surfs, [('out_name', 'suffix')]),
         ])
 
     return workflow
