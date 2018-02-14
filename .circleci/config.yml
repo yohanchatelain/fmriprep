@@ -584,7 +584,8 @@ workflows:
             - build
           filters:
             branches:
-              only: /meepi.*/
+              # only: /meepi.*/
+              ignore: /docs?\/.*/
             tags:
               only: /.*/
 
