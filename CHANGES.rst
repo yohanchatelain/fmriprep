@@ -1,6 +1,7 @@
 1.0.7 (February 13, 2018)
 =========================
 
+  * [ENH] Output ``aseg`` and ``aparc`` in T1w and BOLD spaces (#957)
   * [FIX] Write latest BOLD mask out (space-T1w) (#978)
   * [PIN] Updating niworkflows to 0.3.1 (#962)
   * [FIX] Robuster BOLD mask (#966)
