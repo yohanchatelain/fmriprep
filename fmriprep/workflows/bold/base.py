@@ -351,7 +351,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                    omp_nthreads=omp_nthreads)
 
     # if doing T2*-driven coregistration, create T2* map
-    if t2s_coreg is True:
+    if t2s_coreg:
         # use a joinNode to gather all preprocessed echos
         join_split_echos = pe.JoinNode(niu.IdentityInterface(fields=['echo_files']),
                                        joinsource='inputnode',
@@ -556,7 +556,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 (join_split_echos, bold_t2s_wf, [
                     ('echo_files', 'inputnode.echo_split')]),
                 (bold_hmc_wf, bold_t2s_wf, [
-                    ('outputnode.xforms', 'inputnode.xforms')]),
+                    ('outputnode.xforms', 'inputnode.hmc_xforms')]),
                 (bold_t2s_wf, bold_reg_wf, [
                     ('outputnode.t2s_map', 'inputnode.ref_bold_brain'),
                     ('outputnode.oc_mask', 'inputnode.ref_bold_mask')])
