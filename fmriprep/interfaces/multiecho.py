@@ -60,7 +60,11 @@ class FirstEcho(SimpleInterface):
     >>> first_echo.inputs.ref_imgs = ['sub-01_run-01_echo-1_bold.nii.gz', \
                                       'sub-01_run-01_echo-2_bold.nii.gz', \
                                       'sub-01_run-01_echo-3_bold.nii.gz']
-    >>> res = first_echo.run() # doctest: +SKIP
+    >>> res = first_echo.run()
+    >>> res.outputs.first_image
+    'sub-01_run-01_echo-1_bold.nii.gz'
+    >>> res.outputs.first_ref_image
+    'sub-01_run-01_echo-1_bold.nii.gz'
     """
     input_spec = FirstEchoInputSpec
     output_spec = FirstEchoOutputSpec

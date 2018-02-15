@@ -245,7 +245,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         multiecho = False
         bold_pe = 'j'
     else:
-        if multiecho is True:  # For multiecho data, grab TEs
+        if multiecho:  # For multiecho data, grab TEs
             tes = [layout.get_metadata(echo)['EchoTime'] for echo in bold_file]
         # Since all other metadata is constant
         metadata = layout.get_metadata(ref_file)
@@ -431,7 +431,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     ])
 
     # if multiecho data, select middle echo for hmc correction
-    if multiecho is True:
+    if multiecho:
         workflow.connect([
             (bold_reference_wf, me_first_echo, [
                 ('outputnode.bold_file', 'in_files'),
