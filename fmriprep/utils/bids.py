@@ -182,7 +182,7 @@ def collect_data(dataset, participant_label, task=None):
 
         if any(['_echo-' in bold for bold in bold_sess]):
             ses_uids = [list(bold) for _, bold in groupby(bold_sess, key=_grp_echos)]
-            ses_uids = list(map(lambda x: x[0] if len(x) == 1 else x, ses_uids))
+            ses_uids = [x[0] if len(x) == 1 else x for x in ses_uids]
         else:
             ses_uids = bold_sess
 

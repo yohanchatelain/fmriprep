@@ -353,8 +353,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     # if doing T2*-driven coregistration, create T2* map
     if t2s_coreg:
         if not multiecho:
-            LOGGER.warn("No multiecho BOLD images found for T2* coregistration. "
-                        "Using standard EPI-T1 coregistration.")
+            LOGGER.warning("No multiecho BOLD images found for T2* coregistration. "
+                           "Using standard EPI-T1 coregistration.")
             t2s_coreg = False
 
         else:
@@ -566,7 +566,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 (bold_t2s_wf, bold_reg_wf, [
                     ('outputnode.t2s_map', 'inputnode.ref_bold_brain'),
                     ('outputnode.oc_mask', 'inputnode.ref_bold_mask')])
-                ])
+            ])
         else:
             workflow.connect([
                 (bold_reference_wf, bold_reg_wf, [
