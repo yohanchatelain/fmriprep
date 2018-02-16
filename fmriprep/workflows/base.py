@@ -353,11 +353,6 @@ def init_single_subject_wf(subject_id, task_id, name,
         raise Exception("No T1w images found for participant {}. "
                         "All workflows require T1w images.".format(subject_id))
 
-    # if t2s_coreg and not layout.get_echos():
-    #     raise Exception("No multiecho BOLD images found for participant {}. "
-    #                     "T2* coregistration requires multi-echo BOLD.").format(
-    #                         subject_id)
-
     workflow = pe.Workflow(name=name)
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['subjects_dir']),

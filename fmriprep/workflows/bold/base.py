@@ -352,17 +352,23 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
     # if doing T2*-driven coregistration, create T2* map
     if t2s_coreg:
-        # use a joinNode to gather all preprocessed echos
-        join_split_echos = pe.JoinNode(niu.IdentityInterface(fields=['echo_files']),
-                                       joinsource='inputnode',
-                                       joinfield='echo_files',
-                                       name='join_split_echos')
+        if not multiecho:
+            LOGGER.warn("No multiecho BOLD images found for T2* coregistration. "
+                        "Using standard EPI-T1 coregistration.")
+            t2s_coreg = False
 
-        # create a T2* map
-        bold_t2s_wf = init_bold_t2s_wf(echo_times=tes,
-                                       name='bold_t2s_wf',
-                                       mem_gb=mem_gb['filesize'],
-                                       omp_nthreads=omp_nthreads)
+        else:
+            # use a joinNode to gather all preprocessed echos
+            join_split_echos = pe.JoinNode(niu.IdentityInterface(fields=['echo_files']),
+                                           joinsource='inputnode',
+                                           joinfield='echo_files',
+                                           name='join_split_echos')
+
+            # create a T2* map
+            bold_t2s_wf = init_bold_t2s_wf(echo_times=tes,
+                                           name='bold_t2s_wf',
+                                           mem_gb=mem_gb['filesize'],
+                                           omp_nthreads=omp_nthreads)
 
     # mean BOLD registration to T1w
     bold_reg_wf = init_bold_reg_wf(name='bold_reg_wf',
