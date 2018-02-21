@@ -94,8 +94,6 @@ def init_bold_confs_wf(mem_gb, metadata, name="bold_confs_wf"):
 
         confounds_file
             TSV of all aggregated confounds
-        confounds_list
-            List of calculated confounds for reporting
         rois_report
             Reportlet visualizing white-matter/CSF mask used for aCompCor,
             the ROI for tCompCor and the BOLD brain mask.
@@ -107,7 +105,7 @@ def init_bold_confs_wf(mem_gb, metadata, name="bold_confs_wf"):
                 't1_bold_xform']),
         name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['confounds_file', 'confounds_list', 'rois_report']),
+        fields=['confounds_file', 'rois_report']),
         name='outputnode')
 
     # Get masks ready in T1w space
@@ -249,8 +247,7 @@ def init_bold_confs_wf(mem_gb, metadata, name="bold_confs_wf"):
         (add_header, concat, [('out_file', 'motion')]),
 
         # Set outputs
-        (concat, outputnode, [('confounds_file', 'confounds_file'),
-                              ('confounds_list', 'confounds_list')]),
+        (concat, outputnode, [('confounds_file', 'confounds_file')]),
         (inputnode, rois_plot, [('bold', 'in_file'),
                                 ('bold_mask', 'in_mask')]),
         (tcompcor, mrg_compcor, [('high_variance_masks', 'in1')]),
