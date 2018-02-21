@@ -423,7 +423,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             ('outputnode.fallback', 'inputnode.bold_reg_fallback'),
         ]),
         (bold_reg_wf, outputnode, [('outputnode.bold_t1', 'bold_t1'),
-                                   ('outputnode.bold_mask_t1', 'bold_mask_t1'),
                                    ('outputnode.bold_aseg_t1', 'bold_aseg_t1'),
                                    ('outputnode.bold_aparc_t1', 'bold_aparc_t1')]),
         (bold_reg_wf, summary, [('outputnode.fallback', 'fallback')]),
@@ -593,6 +592,26 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         workflow.connect([
             (bold_reference_wf, bold_bold_trans_wf, [
                 ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+        ])
+
+    # Map final BOLD mask into T1w space (if required)
+    if 'T1w' in output_spaces:
+        from niworkflows.interfaces.fixes import (
+            FixHeaderApplyTransforms as ApplyTransforms
+        )
+
+        boldmask_to_t1w = pe.Node(
+            ApplyTransforms(interpolation='MultiLabel', float=True),
+            name='boldmask_to_t1w', mem_gb=0.1
+        )
+        workflow.connect([
+            (bold_bold_trans_wf, boldmask_to_t1w, [
+                ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+            (bold_reg_wf, boldmask_to_t1w, [
+                ('outputnode.bold_t1', 'reference_image'),
+                ('outputnode.bold_mask_t1', 'transforms')]),
+            (boldmask_to_t1w, outputnode, [
+                ('output_image', 'bold_mask_t1')]),
         ])
 
     if 'template' in output_spaces:
