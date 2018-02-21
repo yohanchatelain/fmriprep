@@ -26,6 +26,7 @@ from ...interfaces import (
 )
 
 from ...interfaces.reports import FunctionalSummary
+from ...interfaces.cifti import GenerateCifti
 
 # Fieldmap workflows
 from ..fieldmap import (
@@ -56,7 +57,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                          use_bbr, t2s_coreg, bold2t1w_dof, reportlets_dir,
                          output_spaces, template, output_dir, omp_nthreads,
                          fmap_bspline, fmap_demean, use_syn, force_syn,
-                         use_aroma, ignore_aroma_err, medial_surface_nan,
+                         use_aroma, ignore_aroma_err, medial_surface_nan, cifti_output,
                          debug, low_mem, output_grid_ref, layout=None):
     """
     This workflow controls the functional preprocessing stages of FMRIPREP.
@@ -138,6 +139,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             Do not fail on ICA-AROMA errors
         medial_surface_nan : bool
             Replace medial wall values with NaNs on functional GIFTI files
+        cifti_output : bool
+            Generate bold CIFTI file in output spaces
         debug : bool
             Enable debugging outputs
         low_mem : bool
@@ -194,6 +197,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             Noise components identified by ICA-AROMA
         melodic_mix
             FSL MELODIC mixing matrix
+        bold_cifti
+            BOLD CIFTI image
 
 
     **Subworkflows**
@@ -675,6 +680,18 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             (bold_reg_wf, bold_surf_wf, [('outputnode.bold_t1', 'inputnode.source_file')]),
             (bold_surf_wf, outputnode, [('outputnode.surfaces', 'surfaces')]),
         ])
+
+        # CIFTI output
+        if cifti_output and 'template' in output_spaces:
+            cifti = pe.MapNode(GenerateCifti(), iterfields=["surface_target"], name="gen_cifti")
+            cifti.inputs.TR = metadata.get("RepetitionTime")
+            workflow.connect([
+                (bold_surf_wf, cifti, [
+                    ('targets.out', 'surface_target'),
+                    ('outputnode.surfaces', 'gifti_files')]),
+                (inputnode, cifti, [('subjects_dir', 'subjects_dir')]),
+                (bold_mni_trans_wf, outputnode, [('outputnode.bold_mni', 'bold_mni')]),
+            ])
 
     return workflow
 

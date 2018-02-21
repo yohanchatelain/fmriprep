@@ -33,7 +33,7 @@ from .bold import init_func_preproc_wf
 def init_fmriprep_wf(subject_list, task_id, run_uuid,
                      ignore, debug, low_mem, anat_only, longitudinal, t2s_coreg,
                      omp_nthreads, skull_strip_template, work_dir, output_dir, bids_dir,
-                     freesurfer, output_spaces, template, medial_surface_nan, hires,
+                     freesurfer, output_spaces, template, medial_surface_nan, cifti_output, hires,
                      use_bbr, bold2t1w_dof, fmap_bspline, fmap_demean, use_syn, force_syn,
                      use_aroma, ignore_aroma_err, output_grid_ref):
     """
@@ -67,6 +67,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
                                             'template', 'fsaverage5'],
                               template='MNI152NLin2009cAsym',
                               medial_surface_nan=False,
+                              cifti_output=False,
                               hires=True,
                               use_bbr=True,
                               bold2t1w_dof=9,
@@ -126,6 +127,8 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
             Name of template targeted by `'template'` output space
         medial_surface_nan : bool
             Replace medial wall values with NaNs on functional GIFTI files
+        cifti_output : bool
+            Generate bold CIFTI file in output spaces
         hires : bool
             Enable sub-millimeter preprocessing in FreeSurfer
         use_bbr : bool or None
@@ -181,6 +184,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
                                                    output_spaces=output_spaces,
                                                    template=template,
                                                    medial_surface_nan=medial_surface_nan,
+                                                   cifti_output=cifti_output,
                                                    hires=hires,
                                                    use_bbr=use_bbr,
                                                    bold2t1w_dof=bold2t1w_dof,
@@ -210,8 +214,8 @@ def init_single_subject_wf(subject_id, task_id, name,
                            ignore, debug, low_mem, anat_only, longitudinal, t2s_coreg,
                            omp_nthreads, skull_strip_template, reportlets_dir, output_dir,
                            bids_dir, freesurfer, output_spaces, template, medial_surface_nan,
-                           hires, use_bbr, bold2t1w_dof, fmap_bspline, fmap_demean, use_syn,
-                           force_syn, output_grid_ref, use_aroma, ignore_aroma_err):
+                           cifti_output, hires, use_bbr, bold2t1w_dof, fmap_bspline, fmap_demean,
+                           use_syn, force_syn, output_grid_ref, use_aroma, ignore_aroma_err):
     """
     This workflow organizes the preprocessing pipeline for a single subject.
     It collects and reports information about the subject, and prepares
@@ -242,6 +246,7 @@ def init_single_subject_wf(subject_id, task_id, name,
                                     output_spaces=['T1w', 'fsnative',
                                                   'template', 'fsaverage5'],
                                     medial_surface_nan=False,
+                                    cifti_output=False,
                                     ignore=[],
                                     debug=False,
                                     low_mem=False,
@@ -304,6 +309,8 @@ def init_single_subject_wf(subject_id, task_id, name,
             Name of template targeted by `'template'` output space
         medial_surface_nan : bool
             Replace medial wall values with NaNs on functional GIFTI files
+        cifti_output : bool
+            Generate bold CIFTI file in output spaces
         hires : bool
             Enable sub-millimeter preprocessing in FreeSurfer
         use_bbr : bool or None
@@ -431,6 +438,7 @@ def init_single_subject_wf(subject_id, task_id, name,
                                                output_spaces=output_spaces,
                                                template=template,
                                                medial_surface_nan=medial_surface_nan,
+                                               cifti_output=cifti_output,
                                                output_dir=output_dir,
                                                omp_nthreads=omp_nthreads,
                                                low_mem=low_mem,

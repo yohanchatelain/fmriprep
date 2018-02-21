@@ -140,6 +140,9 @@ def get_parser():
         '--medial-surface-nan', required=False, action='store_true', default=False,
         help='Replace medial wall values with NaNs on functional GIFTI files. Only '
         'performed for GIFTI files mapped to a freesurfer subject (fsaverage or fsnative).')
+    g_conf.add_argument(
+        '--cifti-output', required=False, action='store_true', default=False,
+        help='output CIFTI dtseries')
 
     # ICA_AROMA options
     g_aroma = parser.add_argument_group('Specific options for running ICA_AROMA')
@@ -435,6 +438,7 @@ def build_workflow(opts, retval):
         output_spaces=opts.output_space,
         template=opts.template,
         medial_surface_nan=opts.medial_surface_nan,
+        cifti_output=opts.cifti_output,
         output_grid_ref=opts.output_grid_reference,
         hires=opts.hires,
         use_bbr=opts.use_bbr,
