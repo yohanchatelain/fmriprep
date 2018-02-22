@@ -386,7 +386,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             (bold_reference_wf, bold_stc_wf, [('outputnode.bold_file', 'inputnode.bold_file'),
                                               ('outputnode.skip_vols', 'inputnode.skip_vols')]),
         ])
-    else:  # bypass STD from original BOLD to the splitter through boldbuffer
+    else:  # bypass STC from original BOLD to the splitter through boldbuffer
         workflow.connect([
             (bold_reference_wf, boldbuffer, [
                 ('outputnode.bold_file', 'bold_file')]),
