@@ -182,7 +182,7 @@ class FunctionalSummary(SummaryInterface):
                 conflist = cfh.readline().strip('\n').strip()
         return FUNCTIONAL_TEMPLATE.format(pedir=pedir, stc=stc, sdc=sdc, registration=reg,
                                           output_spaces=', '.join(self.inputs.output_spaces),
-                                          confounds=re.sub(' +', ', ', conflist))
+                                          confounds=re.sub(r'[\t ]+', ', ', conflist))
 
 
 class AboutSummaryInputSpec(BaseInterfaceInputSpec):
