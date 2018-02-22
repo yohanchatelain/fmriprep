@@ -290,7 +290,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_t1', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1',
-                'bold_mni', 'bold_mask_mni', 'confounds', 'surfaces',
+                'bold_mni', 'bold_mask_mni', 'bold_cifti', 'confounds', 'surfaces',
                 't2s_map', 'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file']),
         name='outputnode')
 
@@ -683,14 +683,16 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
         # CIFTI output
         if cifti_output and 'template' in output_spaces:
-            cifti = pe.MapNode(GenerateCifti(), iterfields=["surface_target"], name="gen_cifti")
+            cifti = pe.MapNode(GenerateCifti(), iterfields=["surface_target", "gifti_files"],
+                               name="gen_cifti")
             cifti.inputs.TR = metadata.get("RepetitionTime")
             workflow.connect([
                 (bold_surf_wf, cifti, [
                     ('targets.out', 'surface_target'),
                     ('outputnode.surfaces', 'gifti_files')]),
                 (inputnode, cifti, [('subjects_dir', 'subjects_dir')]),
-                (bold_mni_trans_wf, outputnode, [('outputnode.bold_mni', 'bold_mni')]),
+                (bold_mni_trans_wf, cifti, [('outputnode.bold_mni', 'bold_file')]),
+                (cifti, outputnode, ['out_file', 'bold_cifti'])
             ])
 
     return workflow
