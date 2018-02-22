@@ -606,7 +606,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         )
         workflow.connect([
             (bold_bold_trans_wf, boldmask_to_t1w, [
-                ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+                ('outputnode.bold_mask', 'input_image')]),
             (bold_reg_wf, boldmask_to_t1w, [
                 ('outputnode.bold_t1', 'reference_image'),
                 ('outputnode.bold_mask_t1', 'transforms')]),
