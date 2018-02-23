@@ -286,7 +286,7 @@ jobs:
                 --debug --write-graph --use-syn-sdc --use-aroma \
                 --ignore-aroma-denoising-errors --mem_mb 4096 \
                 --output-space T1w template fsaverage5 \
-                --nthreads 2 -vv
+                --nthreads 2 --cifti-output -vv
             sudo find /tmp/ds005/work -not -name "*.svg" -not -name "*.html" -not -name "*.rst" \
                 -not -name "*.mat" -not -name "*.lta" -type f -delete
       - run:
