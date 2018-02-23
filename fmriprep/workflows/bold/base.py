@@ -221,7 +221,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         ref_file = bold_file
     else:
         multiecho = isinstance(bold_file, list)
-        ref_file = bold_file[0] if multiecho else bold_file
+        ref_file = sorted(bold_file)[0] if multiecho else bold_file
         bold_tlen, mem_gb = _create_mem_gb(ref_file)
 
     wf_name = _get_wf_name(ref_file)
@@ -289,6 +289,11 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     else:
         inputnode.inputs.bold_file = bold_file
 
+    if t2s_coreg and not multiecho:
+        LOGGER.warning("No multiecho BOLD images found for T2* coregistration. "
+                       "Using standard EPI-T1 coregistration.")
+        t2s_coreg = False
+
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_t1', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1',
                 'bold_mni', 'bold_mask_mni', 'confounds', 'surfaces',
@@ -306,7 +311,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     func_reports_wf = init_func_reports_wf(reportlets_dir=reportlets_dir,
                                            freesurfer=freesurfer,
                                            use_aroma=use_aroma,
-                                           use_syn=use_syn)
+                                           use_syn=use_syn,
+                                           t2s_coreg=t2s_coreg)
 
     func_derivatives_wf = init_func_derivatives_wf(output_dir=output_dir,
                                                    output_spaces=output_spaces,
@@ -352,23 +358,31 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
     # if doing T2*-driven coregistration, create T2* map
     if t2s_coreg:
-        if not multiecho:
-            LOGGER.warning("No multiecho BOLD images found for T2* coregistration. "
-                           "Using standard EPI-T1 coregistration.")
-            t2s_coreg = False
+        # use a joinNode to gather all preprocessed echos
+        join_split_echos = pe.JoinNode(niu.IdentityInterface(fields=['echo_files']),
+                                       joinsource='inputnode',
+                                       joinfield='echo_files',
+                                       name='join_split_echos')
 
-        else:
-            # use a joinNode to gather all preprocessed echos
-            join_split_echos = pe.JoinNode(niu.IdentityInterface(fields=['echo_files']),
-                                           joinsource='inputnode',
-                                           joinfield='echo_files',
-                                           name='join_split_echos')
+        # create a T2* map
+        bold_t2s_wf = init_bold_t2s_wf(echo_times=tes,
+                                       name='bold_t2s_wf',
+                                       mem_gb=mem_gb['filesize'],
+                                       omp_nthreads=omp_nthreads)
 
-            # create a T2* map
-            bold_t2s_wf = init_bold_t2s_wf(echo_times=tes,
-                                           name='bold_t2s_wf',
-                                           mem_gb=mem_gb['filesize'],
-                                           omp_nthreads=omp_nthreads)
+        subset_reg_reports = pe.JoinNode(niu.Select(index=0),
+                                         name='subset_reg_reports',
+                                         joinsource=inputnode,
+                                         joinfield=['inlist'])
+
+        subset_reg_fallbacks = pe.JoinNode(niu.Select(index=0),
+                                           name='subset_reg_fallbacks',
+                                           joinsource=inputnode,
+                                           joinfield=['inlist'])
+
+        first_echo = pe.Node(niu.IdentityInterface(fields=['first_echo']),
+                             name='first_echo')
+        first_echo.inputs.first_echo = ref_file
 
     # mean BOLD registration to T1w
     bold_reg_wf = init_bold_reg_wf(name='bold_reg_wf',
@@ -556,7 +570,17 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         summary.inputs.distortion_correction = 'None'
 
         if t2s_coreg:
+
+            # remove duplicate registration reports
+            workflow.disconnect([
+                (bold_reg_wf, func_reports_wf, [
+                    ('outputnode.out_report', 'inputnode.bold_reg_report'),
+                    ('outputnode.fallback', 'inputnode.bold_reg_fallback')])
+            ])
+
             workflow.connect([
+                (first_echo, func_reports_wf, [
+                    ('first_echo', 'inputnode.first_echo')]),
                 (bold_split, join_split_echos, [
                     ('out_files', 'echo_files')]),
                 (join_split_echos, bold_t2s_wf, [
@@ -565,8 +589,17 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                     ('outputnode.xforms', 'inputnode.hmc_xforms')]),
                 (bold_t2s_wf, bold_reg_wf, [
                     ('outputnode.t2s_map', 'inputnode.ref_bold_brain'),
-                    ('outputnode.oc_mask', 'inputnode.ref_bold_mask')])
+                    ('outputnode.oc_mask', 'inputnode.ref_bold_mask')]),
+                (bold_reg_wf, subset_reg_reports, [
+                    ('outputnode.out_report', 'inlist')]),
+                (bold_reg_wf, subset_reg_fallbacks, [
+                    ('outputnode.fallback', 'inlist')]),
+                (subset_reg_reports, func_reports_wf, [
+                    ('out', 'inputnode.bold_reg_report')]),
+                (subset_reg_fallbacks, func_reports_wf, [
+                    ('out', 'inputnode.bold_reg_fallback')]),
             ])
+
         else:
             workflow.connect([
                 (bold_reference_wf, bold_reg_wf, [
@@ -714,7 +747,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     return workflow
 
 
-def init_func_reports_wf(reportlets_dir, freesurfer, use_aroma, use_syn, name='func_reports_wf'):
+def init_func_reports_wf(reportlets_dir, freesurfer, use_aroma,
+                         use_syn, t2s_coreg, name='func_reports_wf'):
     """
     Set up a battery of datasinks to store reports in the right location
     """
@@ -724,7 +758,7 @@ def init_func_reports_wf(reportlets_dir, freesurfer, use_aroma, use_syn, name='f
         niu.IdentityInterface(
             fields=['source_file', 'summary_report', 'validation_report',
                     'bold_reg_report', 'bold_reg_fallback', 'bold_rois_report',
-                    'syn_sdc_report', 'ica_aroma_report']),
+                    'syn_sdc_report', 'ica_aroma_report', 'first_echo']),
         name='inputnode')
 
     ds_summary_report = pe.Node(
@@ -775,10 +809,18 @@ def init_func_reports_wf(reportlets_dir, freesurfer, use_aroma, use_syn, name='f
         (inputnode, ds_bold_rois_report, [('source_file', 'source_file'),
                                           ('bold_rois_report', 'in_file')]),
         (inputnode, ds_bold_reg_report, [
-            ('source_file', 'source_file'),
             ('bold_reg_report', 'in_file'),
             (('bold_reg_fallback', _bold_reg_suffix, freesurfer), 'suffix')]),
     ])
+
+    if t2s_coreg:
+        workflow.connect([
+            (inputnode, ds_bold_reg_report, [('first_echo', 'source_file')]),
+        ])
+    else:
+        workflow.connect([
+            (inputnode, ds_bold_reg_report, [('source_file', 'source_file')]),
+        ])
 
     if use_aroma:
         workflow.connect([
