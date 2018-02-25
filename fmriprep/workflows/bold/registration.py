@@ -495,7 +495,8 @@ def init_fsl_bbr_wf(use_bbr, bold2t1w_dof, name='fsl_bbr_wf'):
         name='outputnode')
 
     wm_mask = pe.Node(niu.Function(function=extract_wm), name='wm_mask')
-    flt_bbr_init = pe.Node(FLIRTRPT(dof=6, generate_report=not use_bbr), name='flt_bbr_init')
+    flt_bbr_init = pe.Node(FLIRTRPT(dof=6, generate_report=not use_bbr,
+                                    uses_qform=True), name='flt_bbr_init')
 
     invt_bbr = pe.Node(fsl.ConvertXFM(invert_xfm=True), name='invt_bbr',
                        mem_gb=DEFAULT_MEMORY_MIN_GB)
