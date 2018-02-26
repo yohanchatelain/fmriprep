@@ -356,34 +356,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                    mem_gb=mem_gb['filesize'],
                                    omp_nthreads=omp_nthreads)
 
-    # if doing T2*-driven coregistration, create T2* map
-    if t2s_coreg:
-        # use a joinNode to gather all preprocessed echos
-        join_split_echos = pe.JoinNode(niu.IdentityInterface(fields=['echo_files']),
-                                       joinsource='inputnode',
-                                       joinfield='echo_files',
-                                       name='join_split_echos')
-
-        # create a T2* map
-        bold_t2s_wf = init_bold_t2s_wf(echo_times=tes,
-                                       name='bold_t2s_wf',
-                                       mem_gb=mem_gb['filesize'],
-                                       omp_nthreads=omp_nthreads)
-
-        subset_reg_reports = pe.JoinNode(niu.Select(index=0),
-                                         name='subset_reg_reports',
-                                         joinsource=inputnode,
-                                         joinfield=['inlist'])
-
-        subset_reg_fallbacks = pe.JoinNode(niu.Select(index=0),
-                                           name='subset_reg_fallbacks',
-                                           joinsource=inputnode,
-                                           joinfield=['inlist'])
-
-        first_echo = pe.Node(niu.IdentityInterface(fields=['first_echo']),
-                             name='first_echo')
-        first_echo.inputs.first_echo = ref_file
-
     # mean BOLD registration to T1w
     bold_reg_wf = init_bold_reg_wf(name='bold_reg_wf',
                                    freesurfer=freesurfer,
@@ -576,6 +548,31 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         summary.inputs.distortion_correction = 'None'
 
         if t2s_coreg:
+            # use a joinNode to gather all preprocessed echos
+            join_split_echos = pe.JoinNode(niu.IdentityInterface(fields=['echo_files']),
+                                           joinsource='inputnode',
+                                           joinfield='echo_files',
+                                           name='join_split_echos')
+
+            # create a T2* map
+            bold_t2s_wf = init_bold_t2s_wf(echo_times=tes,
+                                           name='bold_t2s_wf',
+                                           mem_gb=mem_gb['filesize'],
+                                           omp_nthreads=omp_nthreads)
+
+            subset_reg_reports = pe.JoinNode(niu.Select(index=0),
+                                             name='subset_reg_reports',
+                                             joinsource=inputnode,
+                                             joinfield=['inlist'])
+
+            subset_reg_fallbacks = pe.JoinNode(niu.Select(index=0),
+                                               name='subset_reg_fallbacks',
+                                               joinsource=inputnode,
+                                               joinfield=['inlist'])
+
+            first_echo = pe.Node(niu.IdentityInterface(fields=['first_echo']),
+                                 name='first_echo')
+            first_echo.inputs.first_echo = ref_file
 
             # remove duplicate registration reports
             workflow.disconnect([
