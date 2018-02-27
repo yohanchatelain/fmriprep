@@ -164,7 +164,7 @@ RUN pip install -r requirements.txt && \
 COPY . /root/src/fmriprep
 ARG VERSION
 # Force static versioning within container
-RUN echo "${VERSION}" > fmriprep/VERSION && \
+RUN echo "${VERSION}" > /root/src/fmriprep/fmriprep/VERSION && \
     cd /root/src/fmriprep && \
     pip install .[all] && \
     rm -rf ~/.cache/pip
