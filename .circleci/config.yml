@@ -51,7 +51,7 @@ jobs:
           name: Build Docker image
           no_output_timeout: 60m
           command: |
-            THISVERSION=$( python get_version.py )
+            THISVERSION=$( python3 get_version.py )
             e=1 && for i in {1..5}; do
               docker build \
                 --cache-from=poldracklab/fmriprep \
