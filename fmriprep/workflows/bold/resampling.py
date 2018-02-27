@@ -266,7 +266,7 @@ def init_bold_mni_trans_wf(template, mem_gb, omp_nthreads,
         workflow.connect([(inputnode, merge_xforms, [('fieldwarp', 'in3')])])
 
     workflow.connect([
-        (inputnode, gen_ref, [('bold_mask', 'moving_image')]),
+        (inputnode, gen_ref, [(('bold_split', _first), 'moving_image')]),
         (inputnode, mask_merge_tfms, [('t1_2_mni_forward_transform', 'in1'),
                                       (('itk_bold_to_t1', _aslist), 'in2')]),
         (mask_merge_tfms, mask_mni_tfm, [('out', 'transforms')]),

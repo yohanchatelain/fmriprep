@@ -248,6 +248,15 @@ BOLD preprocessing
 Preprocessing of :abbr:`BOLD (blood-oxygen level-dependent)` files is
 split into multiple sub-workflows described below.
 
+In the case of multi-echo :abbr:`BOLD (blood-oxygen level-dependent)` data,
+each echo is processed independently. The two exceptions to this occur for
+:ref:`head-motion estimation <bold_hmc>` and :ref:`T2* map creation <bold_t2s>`.
+
+For the :ref:`head-motion estimation workflow <bold_hmc>`, only the first echo
+is submitted as this echo is expected to have the highest contrast between gray
+and white matter. For :ref:`T2* map creation <bold_t2s>`, all echos are
+considered jointly to look at voxel-wise T2* decay.
+
 .. _bold_ref:
 
 BOLD reference image estimation
@@ -487,8 +496,6 @@ Confounds estimation
     from fmriprep.workflows.bold.confounds import init_bold_confs_wf
     wf = init_bold_confs_wf(
         name="discover_wf",
-        use_aroma=False,
-        ignore_aroma_err=False,
         mem_gb=1,
         metadata={"RepetitionTime": 2.0,
                   "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]})
