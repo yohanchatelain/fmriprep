@@ -445,7 +445,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         (summary, func_reports_wf, [('out_report', 'inputnode.summary_report')]),
     ])
 
-    # if multiecho data, select middle echo for hmc correction
+    # if multiecho data, select first echo for hmc correction
     if multiecho:
         inputnode.iterables = ('bold_file', bold_file)
 
