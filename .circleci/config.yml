@@ -27,7 +27,8 @@ jobs:
       - run:
           name: Update fMRIPrep version
           command: |
-            THISVERSION=$( python get_version.py )
+            "[[ ! -s \"$(git rev-parse --git-dir)/shallow\" ]] || git fetch --unshallow"
+            THISVERSION=$( python3 get_version.py )
             sed -i -E "s/(__version__ = )'[A-Za-z0-9.-]+'/\1'${CIRCLE_TAG:-$THISVERSION}'/" wrapper/fmriprep_docker.py
             sed -i -E "s/(var version = )'[A-Za-z0-9.-]+'/\1'${CIRCLE_TAG:-$THISVERSION}'/" docs/citing.rst
       - setup_remote_docker
