@@ -278,17 +278,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 't1_2_fsnative_forward_transform', 't1_2_fsnative_reverse_transform']),
         name='inputnode')
 
-    if multiecho:  # if multi-echo data
-        # iterate most preprocessing steps over each echo
-        inputnode.iterables = ('bold_file', bold_file)
-
-        me_first_echo = pe.JoinNode(interface=FirstEcho(),
-                                    joinfield=['in_files',
-                                               'ref_imgs'],
-                                    joinsource='inputnode',
-                                    name='me_first_echo')
-    else:
-        inputnode.inputs.bold_file = bold_file
+    inputnode.inputs.bold_file = bold_file
 
     if t2s_coreg and not multiecho:
         LOGGER.warning("No multiecho BOLD images found for T2* coregistration. "
@@ -457,6 +447,13 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
     # if multiecho data, select middle echo for hmc correction
     if multiecho:
+        inputnode.iterables = ('bold_file', bold_file)
+
+        me_first_echo = pe.JoinNode(interface=FirstEcho(),
+                                    joinfield=['in_files',
+                                               'ref_imgs'],
+                                    joinsource='inputnode',
+                                    name='me_first_echo')
         workflow.connect([
             (bold_reference_wf, me_first_echo, [
                 ('outputnode.bold_file', 'in_files'),
@@ -850,6 +847,8 @@ def init_func_reports_wf(reportlets_dir, freesurfer, use_aroma,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 
     workflow.connect([
+        (inputnode, ds_bold_reg_report, [
+            ('first_echo' if t2s_coreg else 'source_file', 'source_file')]),
         (inputnode, ds_summary_report, [('source_file', 'source_file'),
                                         ('summary_report', 'in_file')]),
         (inputnode, ds_validation_report, [('source_file', 'source_file'),
@@ -860,15 +859,6 @@ def init_func_reports_wf(reportlets_dir, freesurfer, use_aroma,
             ('bold_reg_report', 'in_file'),
             (('bold_reg_fallback', _bold_reg_suffix, freesurfer), 'suffix')]),
     ])
-
-    if t2s_coreg:
-        workflow.connect([
-            (inputnode, ds_bold_reg_report, [('first_echo', 'source_file')]),
-        ])
-    else:
-        workflow.connect([
-            (inputnode, ds_bold_reg_report, [('source_file', 'source_file')]),
-        ])
 
     if use_aroma:
         workflow.connect([
