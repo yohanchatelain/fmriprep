@@ -793,7 +793,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                     ('outputnode.surfaces', 'gifti_files')]),
                 (inputnode, cifti, [('subjects_dir', 'subjects_dir')]),
                 (bold_mni_trans_wf, cifti, [('outputnode.bold_mni', 'bold_file')]),
-                (cifti, outputnode, ['out_file', 'bold_cifti'])
+                (cifti, outputnode, [('out_file', 'bold_cifti')]),
             ])
 
     # REPORTING ############################################################
