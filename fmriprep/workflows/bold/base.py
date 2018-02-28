@@ -88,6 +88,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                   low_mem=False,
                                   output_grid_ref=None,
                                   medial_surface_nan=False,
+                                  cifti_output=False,
                                   use_aroma=False,
                                   ignore_aroma_err=False)
 
