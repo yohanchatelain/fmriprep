@@ -47,6 +47,8 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
         :graph2use: orig
         :simple_form: yes
 
+        import os
+        os.environ['FREESURFER_HOME'] = os.getcwd()
         from fmriprep.workflows.base import init_fmriprep_wf
         wf = init_fmriprep_wf(subject_list=['fmripreptest'],
                               task_id='',
