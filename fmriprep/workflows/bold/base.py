@@ -782,9 +782,10 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
         # CIFTI output
         if cifti_output and 'template' in output_spaces:
-            cifti = pe.MapNode(GenerateCifti(), iterfields=["surface_target", "gifti_files"],
+            cifti = pe.MapNode(GenerateCifti(), iterfield=["surface_target", "gifti_files"],
                                name="gen_cifti")
             cifti.inputs.TR = metadata.get("RepetitionTime")
+
             workflow.connect([
                 (bold_surf_wf, cifti, [
                     ('targets.out', 'surface_target'),
