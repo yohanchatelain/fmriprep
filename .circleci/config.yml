@@ -10,9 +10,9 @@ jobs:
     working_directory: /tmp/src/fmriprep
     steps:
       - run:
-          name: Install parallel gzip
+          name: Install parallel gzip and python3
           command: |
-            apk add --no-cache pigz
+            apk add --no-cache pigz python3
       - restore_cache:
           keys:
             - docker-v2-{{ .Branch }}-{{ epoch }}
@@ -23,15 +23,6 @@ jobs:
             - /tmp/cache/docker.tar.gz
             - /tmp/cache/ubuntu.tar.gz
       - checkout
-
-      - run:
-          name: Update fMRIPrep version
-          command: |
-            if [ "${CIRCLE_TAG}" != "" ]; then
-              sed -i -E "s/(__version__ = )'[A-Za-z0-9.-]+'/\1'${CIRCLE_TAG}'/" fmriprep/info.py
-              sed -i -E "s/(__version__ = )'[A-Za-z0-9.-]+'/\1'${CIRCLE_TAG}'/" wrapper/fmriprep_docker.py
-              sed -i -E "s/(var version = )'[A-Za-z0-9.-]+'/\1'${CIRCLE_TAG}'/" docs/citing.rst
-            fi
       - setup_remote_docker
       - run:
           name: Load Docker image layer cache
@@ -47,6 +38,17 @@ jobs:
           name: Build Docker image
           no_output_timeout: 60m
           command: |
+            # Get version, update files.
+            THISVERSION=$( python3 get_version.py )
+            if [[ ${THISVERSION:0:1} == "0" ]] ; then
+              echo "WARNING: latest git tag could not be found"
+              echo "Please, make sure you fetch all tags from upstream with"
+              echo "the command ``git fetch --tags --verbose`` and push"
+              echo "them to your fork with ``git push origin --tags``"
+            fi
+            sed -i -E "s/(__version__ = )'[A-Za-z0-9.-]+'/\1'${CIRCLE_TAG:-$THISVERSION}'/" wrapper/fmriprep_docker.py
+            sed -i -E "s/(var version = )'[A-Za-z0-9.-]+'/\1'${CIRCLE_TAG:-$THISVERSION}'/" docs/citing.rst
+            # Build docker image
             e=1 && for i in {1..5}; do
               docker build \
                 --cache-from=poldracklab/fmriprep \
@@ -54,7 +56,7 @@ jobs:
                 -t poldracklab/fmriprep:latest \
                 --build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
                 --build-arg VCS_REF=`git rev-parse --short HEAD` \
-                --build-arg VERSION=${CIRCLE_TAG:-latest} . \
+                --build-arg VERSION="${CIRCLE_TAG:-$THISVERSION}" . \
               && e=0 && break || sleep 15
             done && [ "$e" -eq "0" ]
 
@@ -515,6 +517,7 @@ jobs:
           name: Deploy to PyPi
           command: |
             pip install "setuptools>=27.0" cython numpy twine future
+            echo "${CIRCLE_TAG}" > fmriprep/VERSION
             python setup.py sdist
             twine upload dist/*
             cd wrapper && python setup.py sdist
