@@ -228,17 +228,19 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     # For doc building purposes
     if layout is None or bold_file == 'bold_preprocesing':
         LOGGER.log(25, 'No valid layout: building empty workflow.')
-        metadata = {"RepetitionTime": 2.0,
-                    "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]}
+        metadata = {
+            'RepetitionTime': 2.0,
+            'SliceTiming': [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+            'PhaseEncodingDirection': 'j',
+        }
         fmaps = [{
             'type': 'phasediff',
             'phasediff': 'sub-03/ses-2/fmap/sub-03_ses-2_run-1_phasediff.nii.gz',
             'magnitude1': 'sub-03/ses-2/fmap/sub-03_ses-2_run-1_magnitude1.nii.gz',
-            'magnitude2': 'sub-03/ses-2/fmap/sub-03_ses-2_run-1_magnitude2.nii.gz'
+            'magnitude2': 'sub-03/ses-2/fmap/sub-03_ses-2_run-1_magnitude2.nii.gz',
         }]
         run_stc = True
         multiecho = False
-        bold_pe = 'j'
     else:
         if multiecho:  # For multiecho data, grab TEs
             tes = [layout.get_metadata(echo)['EchoTime'] for echo in bold_file]
@@ -249,6 +251,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         fmaps = []
         if 'fieldmaps' not in ignore:
             fmaps = layout.get_fieldmap(ref_file, return_list=True)
+            for fmap in fmaps:
+                fmap['metadata'] = layout.get_metadata(fmap[fmap['type']])
 
         # Run SyN if forced or in the absence of fieldmap correction
         if force_syn or (use_syn and not fmaps):
@@ -258,7 +262,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         run_stc = ("SliceTiming" in metadata and
                    'slicetiming' not in ignore and
                    (_get_series_len(bold_file) > 4 or "TooShort"))
-        bold_pe = metadata.get("PhaseEncodingDirection")
 
     # Use T2* as target for ME-EPI in co-registration
     if t2s_coreg and not multiecho:
@@ -292,7 +295,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                           slice_timing=run_stc,
                           registration='FreeSurfer' if freesurfer else 'FSL',
                           registration_dof=bold2t1w_dof,
-                          pe_direction=bold_pe),
+                          pe_direction=metadata.get("PhaseEncodingDirection")),
         name='summary', mem_gb=DEFAULT_MEMORY_MIN_GB, run_without_submitting=True)
 
     func_reports_wf = init_func_reports_wf(reportlets_dir=reportlets_dir,
@@ -380,11 +383,9 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         ])
 
     # SDC (SUSCEPTIBILITY DISTORTION CORRECTION) or bypass ##########################
-    bold_sdc_wf = init_sdc_wf(layout,
-                              fmaps,
-                              template=template,
-                              bold_file=bold_file,
-                              omp_nthreads=omp_nthreads)
+    bold_sdc_wf = init_sdc_wf(
+        fmaps, metadata, template=template, omp_nthreads=omp_nthreads,
+        debug=debug, fmap_demean=fmap_demean, fmap_bspline=fmap_bspline)
     sdc_method = getattr(bold_sdc_wf, 'sdc_method', 'None')
     summary.inputs.distortion_correction = sdc_method
 
