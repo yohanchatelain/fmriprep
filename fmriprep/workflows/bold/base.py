@@ -442,7 +442,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             ('outputnode.ref_image_brain', 'inputnode.bold_ref_brain'),
             ('outputnode.bold_mask', 'inputnode.bold_mask')]),
         (bold_sdc_wf, bold_reg_wf, [
-            ('outputnode.out_warp', 'inputnode.fieldwarp'),
             ('outputnode.bold_ref_brain', 'inputnode.ref_bold_brain'),
             ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
         (bold_sdc_wf, bold_bold_trans_wf, [
@@ -478,6 +477,13 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     if fmaps:
         from ..fieldmap.unwarp import init_fmap_unwarp_report_wf
         sdc_type = fmaps[0]['type']
+
+        # Connect the warping
+        workflow.connect([
+            (bold_sdc_wf, bold_reg_wf, [
+                ('outputnode.out_warp', 'inputnode.fieldwarp')])
+        ])
+
         # Report on BOLD correction
         fmap_unwarp_report_wf = init_fmap_unwarp_report_wf(
             suffix='sdc_%s' % sdc_type)
@@ -562,6 +568,10 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 (bold_reg_wf, func_reports_wf, [
                     ('outputnode.out_report', 'inputnode.bold_reg_report'),
                     ('outputnode.fallback', 'inputnode.bold_reg_fallback')])
+                (bold_sdc_wf, bold_reg_wf, [
+                    ('outputnode.out_warp', 'inputnode.fieldwarp'),
+                    ('outputnode.bold_ref_brain', 'inputnode.ref_bold_brain'),
+                    ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
             ])
 
             workflow.connect([
@@ -584,13 +594,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                     ('out', 'inputnode.bold_reg_report')]),
                 (subset_reg_fallbacks, func_reports_wf, [
                     ('out', 'inputnode.bold_reg_fallback')]),
-            ])
-
-        else:
-            workflow.connect([
-                (bold_reference_wf, bold_reg_wf, [
-                    ('outputnode.ref_image_brain', 'inputnode.ref_bold_brain'),
-                    ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
             ])
     else:
         workflow.connect([
