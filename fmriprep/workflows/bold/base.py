@@ -503,11 +503,11 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                     ('outputnode.syn_bold_ref', 'inputnode.in_post')]),
             ])
 
-    # Fill-in datasinks seen so far
-    for node in bold_sdc_wf.list_node_names():
+    # Fill-in datasinks of reportlets seen so far
+    for node in workflow.list_node_names():
         if node.split('.')[-1].startswith('ds_report'):
-            bold_sdc_wf.get_node(node).inputs.base_directory = reportlets_dir
-            bold_sdc_wf.get_node(node).inputs.source_file = bold_file
+            workflow.get_node(node).inputs.base_directory = reportlets_dir
+            workflow.get_node(node).inputs.source_file = bold_file
 
     # if multiecho data, select first echo for hmc correction
     if multiecho:
