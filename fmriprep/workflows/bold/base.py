@@ -500,7 +500,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
         if force_syn and sdc_type != 'syn':
             syn_unwarp_report_wf = init_fmap_unwarp_report_wf(
-                suffix='syn_sdc', name='syn_unwarp_report_wf')
+                suffix='forcedsyn', name='syn_unwarp_report_wf')
             workflow.connect([
                 (inputnode, syn_unwarp_report_wf, [
                     ('t1_seg', 'inputnode.in_seg')]),
