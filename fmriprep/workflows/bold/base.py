@@ -28,18 +28,13 @@ from ...interfaces import (
 
 from ...interfaces.reports import FunctionalSummary
 
-# Fieldmap workflows
-from ..fieldmap import (
-    init_pepolar_unwarp_wf,
-    init_nonlinear_sdc_wf,
-    init_fmap_unwarp_report_wf
-)
 
 # BOLD workflows
 from .confounds import init_bold_confs_wf
 from .hmc import init_bold_hmc_wf
 from .stc import init_bold_stc_wf
 from .t2s import init_bold_t2s_wf
+from ..fieldmap import init_sdc_wf
 from .registration import init_bold_reg_wf
 from .resampling import (
     init_bold_surf_wf,
@@ -232,7 +227,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
     # For doc building purposes
     if layout is None or bold_file == 'bold_preprocesing':
-
         LOGGER.log(25, 'No valid layout: building empty workflow.')
         metadata = {"RepetitionTime": 2.0,
                     "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]}
@@ -251,9 +245,14 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         # Since all other metadata is constant
         metadata = layout.get_metadata(ref_file)
 
-        # Find fieldmaps. Options: (phase1|phase2|phasediff|epi|fieldmap)
-        fmaps = layout.get_fieldmap(ref_file, return_list=True) \
-            if 'fieldmaps' not in ignore else []
+        # Find fieldmaps. Options: (phase1|phase2|phasediff|epi|fieldmap|syn)
+        fmaps = []
+        if 'fieldmaps' not in ignore:
+            fmaps = layout.get_fieldmap(ref_file, return_list=True)
+
+        # Run SyN if forced or in the absence of fieldmap correction
+        if force_syn or (use_syn and not fmaps):
+            fmaps.append({'type': 'syn'})
 
         # Short circuits: (True and True and (False or 'TooShort')) == 'TooShort'
         run_stc = ("SliceTiming" in metadata and
@@ -261,12 +260,11 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                    (_get_series_len(bold_file) > 4 or "TooShort"))
         bold_pe = metadata.get("PhaseEncodingDirection")
 
-    # TODO: To be removed (supported fieldmaps):
-    if not set([fmap['type'] for fmap in fmaps]).intersection(['phasediff', 'fieldmap', 'epi']):
-        fmaps = None
-
-    # Run SyN if forced or in the absence of fieldmap correction
-    use_syn = force_syn or (use_syn and not fmaps)
+    # Use T2* as target for ME-EPI in co-registration
+    if t2s_coreg and not multiecho:
+        LOGGER.warning("No multiecho BOLD images found for T2* coregistration. "
+                       "Using standard EPI-T1 coregistration.")
+        t2s_coreg = False
 
     # Build workflow
     workflow = pe.Workflow(name=wf_name)
@@ -277,13 +275,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 't1_2_mni_forward_transform', 't1_2_mni_reverse_transform',
                 't1_2_fsnative_forward_transform', 't1_2_fsnative_reverse_transform']),
         name='inputnode')
-
     inputnode.inputs.bold_file = bold_file
-
-    if t2s_coreg and not multiecho:
-        LOGGER.warning("No multiecho BOLD images found for T2* coregistration. "
-                       "Using standard EPI-T1 coregistration.")
-        t2s_coreg = False
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_t1', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1',
@@ -387,6 +379,27 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 ('outputnode.bold_file', 'bold_file')]),
         ])
 
+    # SDC (SUSCEPTIBILITY DISTORTION CORRECTION) or bypass ##########################
+    bold_sdc_wf = init_sdc_wf(layout,
+                              fmaps,
+                              template=template,
+                              bold_file=bold_file,
+                              omp_nthreads=omp_nthreads)
+    sdc_method = getattr(bold_sdc_wf, 'sdc_method', 'None')
+    summary.inputs.distortion_correction = sdc_method
+
+    if sdc_method == 'None':
+        LOGGER.warning('SDC: no fieldmaps found or they were ignored (%s).',
+                       ref_file)
+    elif sdc_method.startswith('FLB'):
+        LOGGER.warning(
+            'SDC: no fieldmaps found or they were ignored. '
+            'Using EXPERIMENTAL "fieldmap-less SyN" correction '
+            'for dataset %s.', ref_file)
+    else:
+        LOGGER.log(25, 'SDC: fieldmap estimation of type "%s" intended for %s found.',
+                   sdc_method, ref_file)
+
     # MAIN WORKFLOW STRUCTURE #######################################################
     workflow.connect([
         # BOLD buffer has slice-time corrected if it was run, original otherwise
@@ -418,6 +431,23 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                    ('outputnode.bold_aseg_t1', 'bold_aseg_t1'),
                                    ('outputnode.bold_aparc_t1', 'bold_aparc_t1')]),
         (bold_reg_wf, summary, [('outputnode.fallback', 'fallback')]),
+        # SDC (or pass-through workflow)
+        (inputnode, bold_sdc_wf, [
+            ('bold_file', 'inputnode.name_source'),
+            ('t1_brain', 'inputnode.t1_brain'),
+            ('t1_seg', 'inputnode.t1_seg'),
+            ('t1_2_mni_reverse_transform', 'inputnode.t1_2_mni_reverse_transform')]),
+        (bold_reference_wf, bold_sdc_wf, [
+            ('outputnode.ref_image', 'inputnode.bold_ref'),
+            ('outputnode.ref_image_brain', 'inputnode.bold_ref_brain'),
+            ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+        (bold_sdc_wf, bold_reg_wf, [
+            ('outputnode.out_warp', 'inputnode.fieldwarp'),
+            ('outputnode.out_reference_brain', 'inputnode.ref_bold_brain'),
+            ('outputnode.out_mask', 'inputnode.ref_bold_mask')]),
+        (bold_sdc_wf, bold_bold_trans_wf, [
+            ('outputnode.out_warp', 'inputnode.fieldwarp'),
+            ('outputnode.out_mask', 'inputnode.bold_mask')]),
         # Connect bold_confounds_wf
         (inputnode, bold_confounds_wf, [('t1_tpms', 'inputnode.t1_tpms'),
                                         ('t1_mask', 'inputnode.t1_mask')]),
@@ -462,87 +492,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 ('first_image', 'inputnode.bold_file'),
                 ('first_ref_image', 'inputnode.raw_ref_image')])
         ])
-    else:
-        workflow.connect([
-            (bold_reference_wf, bold_hmc_wf, [
-                ('outputnode.raw_ref_image', 'inputnode.raw_ref_image'),
-                ('outputnode.bold_file', 'inputnode.bold_file')])
-        ])
-
-    # FIELDMAPS ################################################################
-    # Table of behavior is now found under workflows/fieldmap/base.py
-
-    # Predefine to pacify the lintian checks about
-    # "could be used before defined" - logic was tested to be sound
-    nonlinear_sdc_wf = sdc_unwarp_wf = None
-
-    if fmaps:
-        # In case there are multiple fieldmaps prefer EPI
-        fmaps.sort(key=lambda fmap: {'epi': 0, 'fieldmap': 1, 'phasediff': 2}[fmap['type']])
-        fmap = fmaps[0]
-
-        LOGGER.log(25, 'Fieldmap estimation: type "%s" found', fmap['type'])
-        summary.inputs.distortion_correction = fmap['type']
-
-        if fmap['type'] == 'epi':
-            epi_fmaps = [fmap_['epi'] for fmap_ in fmaps if fmap_['type'] == 'epi']
-            sdc_unwarp_wf = init_pepolar_unwarp_wf(fmaps=epi_fmaps,
-                                                   layout=layout,
-                                                   bold_file=bold_file,
-                                                   omp_nthreads=omp_nthreads,
-                                                   name='pepolar_unwarp_wf')
-        else:
-            # Import specific workflows here, so we don't break everything with one
-            # unused workflow.
-            from ..fieldmap import init_fmap_estimator_wf, init_sdc_unwarp_wf
-            fmap_estimator_wf = init_fmap_estimator_wf(fmap_bids=fmap,
-                                                       reportlets_dir=reportlets_dir,
-                                                       omp_nthreads=omp_nthreads,
-                                                       fmap_bspline=fmap_bspline)
-            sdc_unwarp_wf = init_sdc_unwarp_wf(reportlets_dir=reportlets_dir,
-                                               omp_nthreads=omp_nthreads,
-                                               fmap_bspline=fmap_bspline,
-                                               fmap_demean=fmap_demean,
-                                               debug=debug,
-                                               name='sdc_unwarp_wf')
-            workflow.connect([
-                (fmap_estimator_wf, sdc_unwarp_wf, [
-                    ('outputnode.fmap', 'inputnode.fmap'),
-                    ('outputnode.fmap_ref', 'inputnode.fmap_ref'),
-                    ('outputnode.fmap_mask', 'inputnode.fmap_mask')]),
-            ])
-
-        # Connections and workflows common for all types of fieldmaps
-        workflow.connect([
-            (inputnode, sdc_unwarp_wf, [('bold_file', 'inputnode.name_source')]),
-            (bold_reference_wf, sdc_unwarp_wf, [
-                ('outputnode.ref_image', 'inputnode.in_reference'),
-                ('outputnode.ref_image_brain', 'inputnode.in_reference_brain'),
-                ('outputnode.bold_mask', 'inputnode.in_mask')]),
-            (sdc_unwarp_wf, bold_reg_wf, [
-                ('outputnode.out_warp', 'inputnode.fieldwarp'),
-                ('outputnode.out_reference_brain', 'inputnode.ref_bold_brain'),
-                ('outputnode.out_mask', 'inputnode.ref_bold_mask')]),
-        ])
-
-        # Report on BOLD correction
-        fmap_unwarp_report_wf = init_fmap_unwarp_report_wf(reportlets_dir=reportlets_dir,
-                                                           name='fmap_unwarp_report_wf')
-        workflow.connect([
-            (inputnode, fmap_unwarp_report_wf, [
-                ('t1_seg', 'inputnode.in_seg'),
-                ('bold_file', 'inputnode.name_source')]),
-            (bold_reference_wf, fmap_unwarp_report_wf, [
-                ('outputnode.ref_image', 'inputnode.in_pre')]),
-            (sdc_unwarp_wf, fmap_unwarp_report_wf, [
-                ('outputnode.out_reference', 'inputnode.in_post')]),
-            (bold_reg_wf, fmap_unwarp_report_wf, [
-                ('outputnode.itk_t1_to_bold', 'inputnode.in_xfm')]),
-        ])
-    elif not use_syn:
-        LOGGER.warn('No fieldmaps found or they were ignored, building base workflow '
-                    'for dataset %s.', ref_file)
-        summary.inputs.distortion_correction = 'None'
 
         if t2s_coreg:
             # use a joinNode to gather all preprocessed echos
@@ -606,54 +555,11 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                     ('outputnode.ref_image_brain', 'inputnode.ref_bold_brain'),
                     ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
             ])
-
-    if use_syn:
-        nonlinear_sdc_wf = init_nonlinear_sdc_wf(
-            bold_file=bold_file, bold_pe=bold_pe, freesurfer=freesurfer, bold2t1w_dof=bold2t1w_dof,
-            template=template, omp_nthreads=omp_nthreads)
-
-        workflow.connect([
-            (inputnode, nonlinear_sdc_wf, [
-                ('t1_brain', 'inputnode.t1_brain'),
-                ('t1_seg', 'inputnode.t1_seg'),
-                ('t1_2_mni_reverse_transform', 'inputnode.t1_2_mni_reverse_transform')]),
-            (bold_reference_wf, nonlinear_sdc_wf, [
-                ('outputnode.ref_image_brain', 'inputnode.bold_ref')]),
-            (nonlinear_sdc_wf, func_reports_wf, [
-                ('outputnode.out_warp_report', 'inputnode.syn_sdc_report')]),
-        ])
-
-        # XXX Eliminate branch when forcing isn't an option
-        if not fmaps:
-            LOGGER.warning(
-                'Susceptibility distortion correction (SDC): no fieldmaps found or they '
-                'were ignored. Using EXPERIMENTAL "fieldmap-less" correction for dataset %s.',
-                ref_file)
-            summary.inputs.distortion_correction = 'SyN'
-            workflow.connect([
-                (nonlinear_sdc_wf, bold_reg_wf, [
-                    ('outputnode.out_warp', 'inputnode.fieldwarp'),
-                    ('outputnode.out_reference_brain', 'inputnode.ref_bold_brain'),
-                    ('outputnode.out_mask', 'inputnode.ref_bold_mask')]),
-            ])
-
-    # BOLD in native BOLD space
-    if fmaps:
-        workflow.connect([
-            (sdc_unwarp_wf, bold_bold_trans_wf, [
-                ('outputnode.out_warp', 'inputnode.fieldwarp'),
-                ('outputnode.out_mask', 'inputnode.bold_mask')]),
-        ])
-    elif use_syn:
-        workflow.connect([
-            (nonlinear_sdc_wf, bold_bold_trans_wf, [
-                ('outputnode.out_warp', 'inputnode.fieldwarp'),
-                ('outputnode.out_mask', 'inputnode.bold_mask')]),
-        ])
     else:
         workflow.connect([
-            (bold_reference_wf, bold_bold_trans_wf, [
-                ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+            (bold_reference_wf, bold_hmc_wf, [
+                ('outputnode.raw_ref_image', 'inputnode.raw_ref_image'),
+                ('outputnode.bold_file', 'inputnode.bold_file')])
         ])
 
     # Map final BOLD mask into T1w space (if required)
@@ -705,14 +611,9 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                              ('outputnode.bold_mask_mni', 'bold_mask_mni')]),
         ])
 
-        if fmaps:
+        if sdc_method != 'None':
             workflow.connect([
-                (sdc_unwarp_wf, bold_mni_trans_wf, [
-                    ('outputnode.out_warp', 'inputnode.fieldwarp')]),
-            ])
-        elif use_syn:
-            workflow.connect([
-                (nonlinear_sdc_wf, bold_mni_trans_wf, [
+                (bold_sdc_wf, bold_mni_trans_wf, [
                     ('outputnode.out_warp', 'inputnode.fieldwarp')]),
             ])
 
