@@ -567,7 +567,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             workflow.disconnect([
                 (bold_reg_wf, func_reports_wf, [
                     ('outputnode.out_report', 'inputnode.bold_reg_report'),
-                    ('outputnode.fallback', 'inputnode.bold_reg_fallback')])
+                    ('outputnode.fallback', 'inputnode.bold_reg_fallback')]),
                 (bold_sdc_wf, bold_reg_wf, [
                     ('outputnode.out_warp', 'inputnode.fieldwarp'),
                     ('outputnode.bold_ref_brain', 'inputnode.ref_bold_brain'),
