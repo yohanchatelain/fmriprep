@@ -400,11 +400,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         LOGGER.log(25, 'SDC: fieldmap estimation of type "%s" intended for %s found.',
                    sdc_method, ref_file)
 
-    for node in bold_sdc_wf.list_node_names():
-        if node.split('.')[-1].startswith('ds_report'):
-            bold_sdc_wf.get_node(node).inputs.base_directory = reportlets_dir
-            bold_sdc_wf.get_node(node).inputs.source_file = bold_file
-
     # MAIN WORKFLOW STRUCTURE #######################################################
     workflow.connect([
         # BOLD buffer has slice-time corrected if it was run, original otherwise
@@ -440,7 +435,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         (inputnode, bold_sdc_wf, [
             ('bold_file', 'inputnode.name_source'),
             ('t1_brain', 'inputnode.t1_brain'),
-            ('t1_seg', 'inputnode.t1_seg'),
             ('t1_2_mni_reverse_transform', 'inputnode.t1_2_mni_reverse_transform')]),
         (bold_reference_wf, bold_sdc_wf, [
             ('outputnode.ref_image', 'inputnode.bold_ref'),
@@ -479,6 +473,41 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         (outputnode, summary, [('confounds', 'confounds_file')]),
         (summary, func_reports_wf, [('out_report', 'inputnode.summary_report')]),
     ])
+
+    if fmaps:
+        from ..fieldmap.unwarp import init_fmap_unwarp_report_wf
+        # Report on BOLD correction
+        fmap_unwarp_report_wf = init_fmap_unwarp_report_wf()
+        workflow.connect([
+            (inputnode, fmap_unwarp_report_wf, [
+                ('t1_seg', 'inputnode.in_seg')]),
+            (bold_reference_wf, fmap_unwarp_report_wf, [
+                ('outputnode.ref_image', 'inputnode.in_pre')]),
+            (bold_reg_wf, fmap_unwarp_report_wf, [
+                ('outputnode.itk_t1_to_bold', 'inputnode.in_xfm')]),
+            (bold_sdc_wf, fmap_unwarp_report_wf, [
+                ('outputnode.bold_ref', 'inputnode.in_post')]),
+        ])
+
+        if force_syn and fmaps[0]['type'] != 'syn':
+            syn_unwarp_report_wf = init_fmap_unwarp_report_wf(
+                suffix='syn_sdc', name='syn_unwarp_report_wf')
+            workflow.connect([
+                (inputnode, syn_unwarp_report_wf, [
+                    ('t1_seg', 'inputnode.in_seg')]),
+                (bold_reference_wf, syn_unwarp_report_wf, [
+                    ('outputnode.ref_image', 'inputnode.in_pre')]),
+                (bold_reg_wf, syn_unwarp_report_wf, [
+                    ('outputnode.itk_t1_to_bold', 'inputnode.in_xfm')]),
+                (bold_sdc_wf, syn_unwarp_report_wf, [
+                    ('outputnode.syn_bold_ref', 'inputnode.in_post')]),
+            ])
+
+    # Fill-in datasinks seen so far
+    for node in bold_sdc_wf.list_node_names():
+        if node.split('.')[-1].startswith('ds_report'):
+            bold_sdc_wf.get_node(node).inputs.base_directory = reportlets_dir
+            bold_sdc_wf.get_node(node).inputs.source_file = bold_file
 
     # if multiecho data, select first echo for hmc correction
     if multiecho:
