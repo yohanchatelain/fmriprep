@@ -476,8 +476,10 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
     if fmaps:
         from ..fieldmap.unwarp import init_fmap_unwarp_report_wf
+        sdc_type = fmaps[0]['type']
         # Report on BOLD correction
-        fmap_unwarp_report_wf = init_fmap_unwarp_report_wf()
+        fmap_unwarp_report_wf = init_fmap_unwarp_report_wf(
+            suffix='sdc_%s' % sdc_type)
         workflow.connect([
             (inputnode, fmap_unwarp_report_wf, [
                 ('t1_seg', 'inputnode.in_seg')]),
@@ -489,7 +491,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 ('outputnode.bold_ref', 'inputnode.in_post')]),
         ])
 
-        if force_syn and fmaps[0]['type'] != 'syn':
+        if force_syn and sdc_type != 'syn':
             syn_unwarp_report_wf = init_fmap_unwarp_report_wf(
                 suffix='syn_sdc', name='syn_unwarp_report_wf')
             workflow.connect([
