@@ -450,9 +450,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     if multiecho:
         inputnode.iterables = ('bold_file', bold_file)
 
-        me_first_echo = pe.JoinNode(interface=FirstEcho(),
-                                    joinfield=['in_files',
-                                               'ref_imgs'],
+        me_first_echo = pe.JoinNode(interface=FirstEcho(te_list=tes),
+                                    joinfield=['in_files', 'ref_imgs'],
                                     joinsource='inputnode',
                                     name='me_first_echo')
         workflow.connect([
