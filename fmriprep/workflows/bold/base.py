@@ -222,7 +222,11 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         ref_file = bold_file
     else:
         multiecho = isinstance(bold_file, list)
-        ref_file = sorted(bold_file)[0] if multiecho else bold_file
+        if multiecho:
+            tes = [layout.get_metadata(echo)['EchoTime'] for echo in bold_file]
+            ref_file = dict(zip(tes, bold_file))[min(tes)]
+        else:
+            ref_file = bold_file
         bold_tlen, mem_gb = _create_mem_gb(ref_file)
 
     wf_name = _get_wf_name(ref_file)
@@ -246,9 +250,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         multiecho = False
         bold_pe = 'j'
     else:
-        if multiecho:  # For multiecho data, grab TEs
-            tes = [layout.get_metadata(echo)['EchoTime'] for echo in bold_file]
-        # Since all other metadata is constant
         metadata = layout.get_metadata(ref_file)
 
         # Find fieldmaps. Options: (phase1|phase2|phasediff|epi|fieldmap)
