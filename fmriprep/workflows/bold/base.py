@@ -400,6 +400,11 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         LOGGER.log(25, 'SDC: fieldmap estimation of type "%s" intended for %s found.',
                    sdc_method, ref_file)
 
+    for node in bold_sdc_wf.list_node_names():
+        if node.split('.')[-1].startswith('ds_report'):
+            bold_sdc_wf.get_node(node).inputs.base_directory = reportlets_dir
+            bold_sdc_wf.get_node(node).inputs.source_file = bold_file
+
     # MAIN WORKFLOW STRUCTURE #######################################################
     workflow.connect([
         # BOLD buffer has slice-time corrected if it was run, original otherwise
@@ -443,11 +448,11 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             ('outputnode.bold_mask', 'inputnode.bold_mask')]),
         (bold_sdc_wf, bold_reg_wf, [
             ('outputnode.out_warp', 'inputnode.fieldwarp'),
-            ('outputnode.out_reference_brain', 'inputnode.ref_bold_brain'),
-            ('outputnode.out_mask', 'inputnode.ref_bold_mask')]),
+            ('outputnode.bold_ref_brain', 'inputnode.ref_bold_brain'),
+            ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
         (bold_sdc_wf, bold_bold_trans_wf, [
             ('outputnode.out_warp', 'inputnode.fieldwarp'),
-            ('outputnode.out_mask', 'inputnode.bold_mask')]),
+            ('outputnode.bold_mask', 'inputnode.bold_mask')]),
         # Connect bold_confounds_wf
         (inputnode, bold_confounds_wf, [('t1_tpms', 'inputnode.t1_tpms'),
                                         ('t1_mask', 'inputnode.t1_mask')]),
@@ -725,12 +730,6 @@ def init_func_reports_wf(reportlets_dir, freesurfer, use_aroma,
         name='ds_bold_rois_report', run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 
-    ds_syn_sdc_report = pe.Node(
-        DerivativesDataSink(base_directory=reportlets_dir,
-                            suffix='syn_sdc'),
-        name='ds_syn_sdc_report', run_without_submitting=True,
-        mem_gb=DEFAULT_MEMORY_MIN_GB)
-
     def _bold_reg_suffix(fallback, freesurfer):
         if fallback:
             return 'coreg' if freesurfer else 'flirt'
@@ -765,12 +764,6 @@ def init_func_reports_wf(reportlets_dir, freesurfer, use_aroma,
         workflow.connect([
             (inputnode, ds_ica_aroma_report, [('source_file', 'source_file'),
                                               ('ica_aroma_report', 'in_file')]),
-        ])
-
-    if use_syn:
-        workflow.connect([
-            (inputnode, ds_syn_sdc_report, [('source_file', 'source_file'),
-                                            ('syn_sdc_report', 'in_file')]),
         ])
 
     return workflow
