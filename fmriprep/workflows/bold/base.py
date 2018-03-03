@@ -211,13 +211,16 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
     """
 
-    if bold_file == '/completely/made/up/path/sub-01_task-nback_bold.nii.gz':
-        mem_gb = {'filesize': 1, 'resampled': 1, 'largemem': 1}
-        bold_tlen = 10
-        ref_file = bold_file
-    else:
-        multiecho = isinstance(bold_file, list)
-        ref_file = sorted(bold_file)[0] if multiecho else bold_file
+    ref_file = bold_file
+    mem_gb = {'filesize': 1, 'resampled': 1, 'largemem': 1}
+    bold_tlen = 10
+    multiecho = isinstance(bold_file, list)
+
+    if multiecho:
+        tes = [layout.get_metadata(echo)['EchoTime'] for echo in bold_file]
+        ref_file = dict(zip(tes, bold_file))[min(tes)]
+
+    if os.path.isfile(ref_file):
         bold_tlen, mem_gb = _create_mem_gb(ref_file)
 
     wf_name = _get_wf_name(ref_file)
@@ -242,9 +245,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         run_stc = True
         multiecho = False
     else:
-        if multiecho:  # For multiecho data, grab TEs
-            tes = [layout.get_metadata(echo)['EchoTime'] for echo in bold_file]
-        # Since all other metadata is constant
         metadata = layout.get_metadata(ref_file)
 
         # Find fieldmaps. Options: (phase1|phase2|phasediff|epi|fieldmap|syn)
@@ -522,9 +522,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     if multiecho:
         inputnode.iterables = ('bold_file', bold_file)
 
-        me_first_echo = pe.JoinNode(interface=FirstEcho(),
-                                    joinfield=['in_files',
-                                               'ref_imgs'],
+        me_first_echo = pe.JoinNode(interface=FirstEcho(te_list=tes),
+                                    joinfield=['in_files', 'ref_imgs'],
                                     joinsource='inputnode',
                                     name='me_first_echo')
         workflow.connect([
