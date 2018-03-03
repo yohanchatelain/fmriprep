@@ -39,7 +39,6 @@ from .resampling import (
     init_bold_surf_wf,
     init_bold_mni_trans_wf,
     init_bold_preproc_trans_wf,
-    init_bold_preproc_report_wf,
 )
 from .util import init_bold_reference_wf
 
