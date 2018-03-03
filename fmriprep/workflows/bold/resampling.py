@@ -404,6 +404,19 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
             (inputnode, bold_transform, [(('hmc_xforms', _aslist), 'transforms')]),
         ])
 
+    # Code ready to generate a pre/post processing report
+    # bold_bold_report_wf = init_bold_preproc_report_wf(
+    #     mem_gb=mem_gb['resampled'],
+    #     reportlets_dir=reportlets_dir
+    # )
+    # workflow.connect([
+    #     (inputnode, bold_bold_report_wf, [
+    #         ('bold_file', 'inputnode.name_source'),
+    #         ('bold_file', 'inputnode.in_pre')]),  # This should be after STC
+    #     (bold_bold_trans_wf, bold_bold_report_wf, [
+    #         ('outputnode.bold', 'inputnode.in_post')]),
+    # ])
+
     return workflow
 
 
