@@ -701,7 +701,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 
     workflow.connect([
-        (summary, ds_report_summary, [('summary_report', 'in_file')]),
+        (summary, ds_report_summary, [('out_report', 'in_file')]),
         (bold_reference_wf, ds_report_validation, [
             ('outputnode.validation_report', 'in_file')]),
     ])
