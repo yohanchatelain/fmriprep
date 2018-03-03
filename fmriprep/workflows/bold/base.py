@@ -710,7 +710,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     for node in workflow.list_node_names():
         if node.split('.')[-1].startswith('ds_report'):
             workflow.get_node(node).inputs.base_directory = reportlets_dir
-            workflow.get_node(node).inputs.source_file = bold_file
+            workflow.get_node(node).inputs.source_file = ref_file
 
     return workflow
 
