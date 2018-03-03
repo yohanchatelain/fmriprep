@@ -216,17 +216,16 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
     """
 
-    if bold_file == '/completely/made/up/path/sub-01_task-nback_bold.nii.gz':
-        mem_gb = {'filesize': 1, 'resampled': 1, 'largemem': 1}
-        bold_tlen = 10
-        ref_file = bold_file
-    else:
-        multiecho = isinstance(bold_file, list)
-        if multiecho:
-            tes = [layout.get_metadata(echo)['EchoTime'] for echo in bold_file]
-            ref_file = dict(zip(tes, bold_file))[min(tes)]
-        else:
-            ref_file = bold_file
+    ref_file = bold_file
+    mem_gb = {'filesize': 1, 'resampled': 1, 'largemem': 1}
+    bold_tlen = 10
+    multiecho = isinstance(bold_file, list)
+
+    if multiecho:
+        tes = [layout.get_metadata(echo)['EchoTime'] for echo in bold_file]
+        ref_file = dict(zip(tes, bold_file))[min(tes)]
+
+    if os.path.isfile(ref_file):
         bold_tlen, mem_gb = _create_mem_gb(ref_file)
 
     wf_name = _get_wf_name(ref_file)
