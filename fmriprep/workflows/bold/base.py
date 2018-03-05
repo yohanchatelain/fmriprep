@@ -384,8 +384,9 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
     # SDC (SUSCEPTIBILITY DISTORTION CORRECTION) or bypass ##########################
     bold_sdc_wf = init_sdc_wf(
-        fmaps, metadata, template=template, omp_nthreads=omp_nthreads,
+        fmaps, metadata, omp_nthreads=omp_nthreads,
         debug=debug, fmap_demean=fmap_demean, fmap_bspline=fmap_bspline)
+    bold_sdc_wf.inputs.inputnode.template = template
     sdc_method = getattr(bold_sdc_wf, 'sdc_method', 'None')
     summary.inputs.distortion_correction = sdc_method
 
