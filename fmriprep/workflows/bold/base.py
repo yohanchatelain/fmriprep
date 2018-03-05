@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+    1# -*- coding: utf-8 -*-
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
 """
@@ -544,8 +544,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                     ('outputnode.xforms', 'inputnode.hmc_xforms')]),
                 (bold_t2s_wf, bold_sdc_wf, [
                     ('outputnode.t2s_map', 'inputnode.bold_ref'),
-                    ('outputnode.t2s_map', 'inputnode.bold_brain'),
-                    ('outputnode.oc_mask', 'inputnode.ref_bold_mask')]),
+                    ('outputnode.t2s_map', 'inputnode.bold_ref_brain'),
+                    ('outputnode.oc_mask', 'inputnode.bold_mask')]),
                 (bold_reg_wf, subset_reg_fallbacks, [
                     ('outputnode.fallback', 'inlist')]),
             ])
