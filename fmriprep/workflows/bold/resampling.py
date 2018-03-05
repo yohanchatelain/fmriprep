@@ -20,6 +20,7 @@ from niworkflows import data as nid
 from niworkflows.interfaces.utils import GenerateSamplingReference
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
 
+from ...engine import Workflow
 from ...interfaces import GiftiSetAnatomicalStructure, MultiApplyTransforms
 from ...interfaces.nilearn import Merge
 from ...interfaces.freesurfer import (
@@ -82,7 +83,7 @@ def init_bold_surf_wf(mem_gb, output_spaces, medial_surface_nan, name='bold_surf
             BOLD series, resampled to FreeSurfer surfaces
 
     """
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
     inputnode = pe.Node(
         niu.IdentityInterface(fields=['source_file', 't1_preproc', 'subject_id', 'subjects_dir',
                                       't1_2_fsnative_forward_transform']),
@@ -219,7 +220,7 @@ def init_bold_mni_trans_wf(template, mem_gb, omp_nthreads,
             BOLD series mask in template space
 
     """
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
     inputnode = pe.Node(
         niu.IdentityInterface(fields=[
             'itk_bold_to_t1',
@@ -356,7 +357,7 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
             Same as ``bold_ref``, but once the brain mask has been applied
 
     """
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
     inputnode = pe.Node(niu.IdentityInterface(fields=[
         'name_source', 'bold_split', 'bold_mask', 'hmc_xforms', 'fieldwarp']),
         name='inputnode'
@@ -444,7 +445,7 @@ def init_bold_preproc_report_wf(mem_gb, reportlets_dir, name='bold_preproc_repor
     from niworkflows.interfaces import SimpleBeforeAfter
     from ...interfaces import DerivativesDataSink
 
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
 
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['in_pre', 'in_post', 'name_source']), name='inputnode')

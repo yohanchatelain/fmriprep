@@ -18,6 +18,7 @@ from niworkflows.interfaces.segmentation import ICA_AROMARPT
 from niworkflows.interfaces.masks import ROIsPlot
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
 
+from ...engine import Workflow
 from ...interfaces import (
     TPM2ROI, AddTPMs, AddTSVHeader, GatherConfounds, ICAConfounds
 )
@@ -179,7 +180,7 @@ def init_bold_confs_wf(mem_gb, metadata, name="bold_confs_wf"):
     def _pick_wm(files):
         return files[-1]
 
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
     workflow.connect([
         # Massage ROIs (in T1w space)
         (inputnode, acc_tpm, [('t1_tpms', 'in_files')]),
@@ -314,7 +315,7 @@ def init_ica_aroma_wf(name='ica_aroma_wf', ignore_aroma_err=False):
 
     .. _ICA-AROMA: https://github.com/rhr-pruim/ICA-AROMA
     '''
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
 
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_mni', 'movpar_file', 'bold_mask_mni']), name='inputnode')

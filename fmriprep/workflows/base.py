@@ -18,6 +18,7 @@ from copy import deepcopy
 from niworkflows.nipype.pipeline import engine as pe
 from niworkflows.nipype.interfaces import utility as niu
 
+from ..engine import Workflow
 from ..interfaces import (
     BIDSDataGrabber, BIDSFreeSurferDir, BIDSInfo, SubjectSummary, AboutSummary,
     DerivativesDataSink
@@ -152,7 +153,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
             Path of custom reference image for normalization
 
     """
-    fmriprep_wf = pe.Workflow(name='fmriprep_wf')
+    fmriprep_wf = Workflow(name='fmriprep_wf')
     fmriprep_wf.base_dir = work_dir
 
     if freesurfer:
@@ -355,7 +356,7 @@ def init_single_subject_wf(subject_id, task_id, name,
         raise Exception("No T1w images found for participant {}. "
                         "All workflows require T1w images.".format(subject_id))
 
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['subjects_dir']),
                         name='inputnode')

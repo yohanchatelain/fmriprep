@@ -12,6 +12,7 @@ from niworkflows.nipype import logging
 from niworkflows.nipype.pipeline import engine as pe
 from niworkflows.nipype.interfaces import utility as niu
 
+from ...engine import Workflow
 from ...interfaces.nilearn import Merge
 from ...interfaces.multiecho import (T2SMap, MaskT2SMap)
 from ...interfaces import MultiApplyTransforms
@@ -63,7 +64,7 @@ def init_bold_t2s_wf(echo_times, mem_gb, omp_nthreads, name='bold_t2s_wf'):
         oc_mask
             the skull-stripped optimal combination mask
     """
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
     inputnode = pe.Node(niu.IdentityInterface(fields=['echo_split', 'hmc_xforms']),
                         name='inputnode')
 

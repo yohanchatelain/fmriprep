@@ -447,6 +447,11 @@ def build_workflow(opts, retval):
         ignore_aroma_err=opts.ignore_aroma_denoising_errors,
     )
     retval['return_code'] = 0
+    retval['boilerplate'] = retval['workflow'].visit_desc()
+
+    logger.log(25, 'Works derived from this fMRIPrep execution should '
+               'include the following "citation boilerplate":\n\n%s',
+               retval['boilerplate'])
     return retval
 
 

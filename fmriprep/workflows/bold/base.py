@@ -25,7 +25,7 @@ from ...interfaces import (
     GiftiNameSource,
     FirstEcho
 )
-
+from ...engine import Workflow
 from ...interfaces.reports import FunctionalSummary
 
 
@@ -270,7 +270,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         t2s_coreg = False
 
     # Build workflow
-    workflow = pe.Workflow(name=wf_name)
+    workflow = Workflow(name=wf_name)
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_file', 'subjects_dir', 'subject_id',
                 't1_preproc', 't1_brain', 't1_mask', 't1_seg', 't1_tpms',
@@ -727,7 +727,7 @@ def init_func_reports_wf(reportlets_dir, freesurfer, use_aroma,
     """
     Set up a battery of datasinks to store reports in the right location
     """
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
 
     inputnode = pe.Node(
         niu.IdentityInterface(
@@ -798,7 +798,7 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     """
     Set up a battery of datasinks to store derivatives in the right location
     """
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
 
     inputnode = pe.Node(
         niu.IdentityInterface(

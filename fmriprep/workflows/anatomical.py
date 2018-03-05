@@ -41,6 +41,7 @@ from niworkflows.interfaces.masks import ROIsPlot
 from niworkflows.interfaces.segmentation import ReconAllRPT
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
 
+from ..engine import Workflow
 from ..interfaces import (
     DerivativesDataSink, MakeMidthickness, FSInjectBrainExtracted,
     FSDetectInputs, NormalizeSurf, GiftiNameSource, TemplateDimensions, Conform, Reorient,
@@ -172,7 +173,18 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
 
     """
 
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
+    workflow.__postdesc__ = """\
+Spatial normalization to the ICBM 152 Nonlinear Asymmetrical template version \
+2009c [6] was performed through nonlinear registration with the antsRegistration \
+tool of ANTs v{ants_ver} [7], using brain-extracted versions of both T1w volume and \
+template. Brain tissue segmentation of cerebrospinal fluid (CSF), \
+white-matter (WM) and gray-matter (GM) was performed on the brain-extracted \
+T1w using fast [16] (FSL v{fsl_ver}).
+""".format(
+        ants_ver=BrainExtraction().version,
+        fsl_ver=fsl.FAST().version,
+    )
 
     inputnode = pe.Node(
         niu.IdentityInterface(fields=['t1w', 't2w', 'subjects_dir', 'subject_id']),
@@ -420,7 +432,11 @@ def init_anat_template_wf(longitudinal, omp_nthreads, num_t1w, name='anat_templa
             Conformation report
     """
 
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
+    workflow.__desc__ = """\
+Since several T1w images per subject were found, they were fused in a single T1w-reference
+map using mri_robust_template ([25], FreeSurfer) after INU-correction.\
+"""
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['t1w']), name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
@@ -552,26 +568,32 @@ def init_skullstrip_ants_wf(skull_strip_template, debug, omp_nthreads, name='sku
             Reportlet visualizing quality of skull-stripping
 
     """
+    from niworkflows.data.getters import get_dataset
+
+    if skull_strip_template not in ['OASIS', 'NKI']:
+        raise ValueError("Unknown skull-stripping template; select from {OASIS, NKI}")
+
+    workflow = Workflow(name=name)
+    workflow.__desc__ = """\
+Each T1w (T1-weighted) volume was corrected for INU (intensity non-uniformity) \
+using N4BiasFieldCorrection v{ants_ver} [4] and skull-stripped using antsBrainExtraction.sh \
+v{ants_ver} (using the {skullstrip_tpl} template).\
+""".format(ants_ver=BrainExtraction().version, skullstrip_tpl=skull_strip_template)
+
+    # Grabbing the appropriate template elements
+    template_dir = get_dataset('ants_%s_template_ras' % skull_strip_template.lower())
+    brain_probability_mask = op.join(
+        template_dir, 'T_template0_BrainCerebellumProbabilityMask.nii.gz')
+
+    # TODO: normalize these names so this is not necessary
     if skull_strip_template == 'OASIS':
-        from niworkflows.data import get_ants_oasis_template_ras
-        template_dir = get_ants_oasis_template_ras()
         brain_template = op.join(template_dir, 'T_template0.nii.gz')
-        brain_probability_mask = op.join(
-            template_dir, 'T_template0_BrainCerebellumProbabilityMask.nii.gz')
         extraction_registration_mask = op.join(
             template_dir, 'T_template0_BrainCerebellumRegistrationMask.nii.gz')
     elif skull_strip_template == 'NKI':
-        from niworkflows.data.getters import get_ants_nki_template_ras
-        template_dir = get_ants_nki_template_ras()
         brain_template = op.join(template_dir, 'T_template.nii.gz')
-        brain_probability_mask = op.join(
-            template_dir, 'T_template_BrainCerebellumProbabilityMask.nii.gz')
         extraction_registration_mask = op.join(
             template_dir, 'T_template_BrainCerebellumExtractionMask.nii.gz')
-    else:
-        raise ValueError("Unknown skull-stripping template; select from {OASIS, NKI}")
-
-    workflow = pe.Workflow(name=name)
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['in_file']),
                         name='inputnode')
@@ -719,7 +741,13 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         * :py:func:`~fmriprep.workflows.anatomical.init_gifti_surface_wf`
     """
 
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
+    workflow.__desc__ = """\
+Brain surfaces were reconstructed \
+using recon-all from FreeSurfer v{fs_ver} [5], and the brain mask estimated previously \
+was refined with a custom variation of the method to reconcile ANTs-derived and
+FreeSurfer-derived segmentations of the cortical gray-matter of Mindboggle [20]. \
+""".format(fs_ver=fs.ReconAll().version)
 
     inputnode = pe.Node(
         niu.IdentityInterface(
@@ -867,7 +895,7 @@ def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
             Reportlet visualizing quality of surface alignment
 
     """
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
 
     inputnode = pe.Node(
         niu.IdentityInterface(
@@ -966,7 +994,7 @@ def init_gifti_surface_wf(name='gifti_surface_wf'):
             midthickness (or graymid) surface, and inflated surfaces
 
     """
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
 
     inputnode = pe.Node(niu.IdentityInterface(['subjects_dir', 'subject_id',
                                                't1_2_fsnative_reverse_transform']),
@@ -1043,7 +1071,7 @@ def init_segs_to_native_wf(name='segs_to_native', segmentation='aseg'):
         out_file
             The selected segmentation, after resampling in native space
     """
-    workflow = pe.Workflow(name='%s_%s' % (name, segmentation))
+    workflow = Workflow(name='%s_%s' % (name, segmentation))
     inputnode = pe.Node(niu.IdentityInterface([
         'in_file', 'subjects_dir', 'subject_id']), name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(['out_file']), name='outputnode')
@@ -1080,7 +1108,7 @@ def init_anat_reports_wf(reportlets_dir, output_spaces,
     """
     Set up a battery of datasinks to store reports in the right location
     """
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
 
     inputnode = pe.Node(
         niu.IdentityInterface(
@@ -1130,7 +1158,7 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     """
     Set up a battery of datasinks to store derivatives in the right location
     """
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
 
     inputnode = pe.Node(
         niu.IdentityInterface(
