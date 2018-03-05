@@ -518,11 +518,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                            mem_gb=mem_gb['filesize'],
                                            omp_nthreads=omp_nthreads)
 
-            # subset_reg_reports = pe.JoinNode(niu.Select(index=0),
-            #                                  name='subset_reg_reports',
-            #                                  joinsource=inputnode,
-            #                                  joinfield=['inlist'])
-
             subset_reg_fallbacks = pe.JoinNode(niu.Select(index=0),
                                                name='subset_reg_fallbacks',
                                                joinsource=inputnode,
@@ -532,34 +527,27 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                  name='first_echo')
             first_echo.inputs.first_echo = ref_file
 
-            # remove duplicate registration reports
+            # Replace SDC workflow input
             workflow.disconnect([
-                (bold_sdc_wf, bold_reg_wf, [
-                    ('outputnode.out_warp', 'inputnode.fieldwarp'),
-                    ('outputnode.bold_ref_brain', 'inputnode.ref_bold_brain'),
-                    ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
+                (bold_reference_wf, bold_sdc_wf, [
+                    ('outputnode.ref_image', 'inputnode.bold_ref'),
+                    ('outputnode.ref_image_brain', 'inputnode.bold_ref_brain'),
+                    ('outputnode.bold_mask', 'inputnode.bold_mask')]),
             ])
 
             workflow.connect([
-                # (first_echo, func_reports_wf, [
-                #     ('first_echo', 'inputnode.first_echo')]),
                 (bold_split, join_split_echos, [
                     ('out_files', 'echo_files')]),
                 (join_split_echos, bold_t2s_wf, [
                     ('echo_files', 'inputnode.echo_split')]),
                 (bold_hmc_wf, bold_t2s_wf, [
                     ('outputnode.xforms', 'inputnode.hmc_xforms')]),
-                (bold_t2s_wf, bold_reg_wf, [
-                    ('outputnode.t2s_map', 'inputnode.ref_bold_brain'),
+                (bold_t2s_wf, bold_sdc_wf, [
+                    ('outputnode.t2s_map', 'inputnode.bold_ref'),
+                    ('outputnode.t2s_map', 'inputnode.bold_brain'),
                     ('outputnode.oc_mask', 'inputnode.ref_bold_mask')]),
-                # (bold_reg_wf, subset_reg_reports, [
-                #     ('outputnode.out_report', 'inlist')]),
                 (bold_reg_wf, subset_reg_fallbacks, [
                     ('outputnode.fallback', 'inlist')]),
-                # (subset_reg_reports, func_reports_wf, [
-                #     ('out', 'inputnode.bold_reg_report')]),
-                # (subset_reg_fallbacks, func_reports_wf, [
-                #     ('out', 'inputnode.bold_reg_fallback')]),
             ])
     else:
         workflow.connect([
