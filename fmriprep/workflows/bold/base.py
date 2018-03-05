@@ -387,20 +387,18 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         fmaps, metadata, omp_nthreads=omp_nthreads,
         debug=debug, fmap_demean=fmap_demean, fmap_bspline=fmap_bspline)
     bold_sdc_wf.inputs.inputnode.template = template
-    sdc_method = getattr(bold_sdc_wf, 'sdc_method', 'None')
-    summary.inputs.distortion_correction = sdc_method
 
-    if sdc_method == 'None':
+    if not fmaps:
         LOGGER.warning('SDC: no fieldmaps found or they were ignored (%s).',
                        ref_file)
-    elif sdc_method.startswith('FLB'):
+    elif fmaps[0]['type'] == 'syn':
         LOGGER.warning(
             'SDC: no fieldmaps found or they were ignored. '
             'Using EXPERIMENTAL "fieldmap-less SyN" correction '
             'for dataset %s.', ref_file)
     else:
         LOGGER.log(25, 'SDC: fieldmap estimation of type "%s" intended for %s found.',
-                   sdc_method, ref_file)
+                   fmaps[0]['type'], ref_file)
 
     # MAIN WORKFLOW STRUCTURE #######################################################
     workflow.connect([
@@ -435,7 +433,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         (bold_reg_wf, summary, [('outputnode.fallback', 'fallback')]),
         # SDC (or pass-through workflow)
         (inputnode, bold_sdc_wf, [
-            ('bold_file', 'inputnode.name_source'),
             ('t1_brain', 'inputnode.t1_brain'),
             ('t1_2_mni_reverse_transform', 'inputnode.t1_2_mni_reverse_transform')]),
         (bold_reference_wf, bold_sdc_wf, [
@@ -444,10 +441,12 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             ('outputnode.bold_mask', 'inputnode.bold_mask')]),
         (bold_sdc_wf, bold_reg_wf, [
             ('outputnode.bold_ref_brain', 'inputnode.ref_bold_brain'),
-            ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
+            ('outputnode.bold_mask', 'inputnode.ref_bold_mask'),
+            ('outputnode.out_warp', 'inputnode.fieldwarp')]),
         (bold_sdc_wf, bold_bold_trans_wf, [
             ('outputnode.out_warp', 'inputnode.fieldwarp'),
             ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+        (bold_sdc_wf, summary, [('outputnode.method', 'distortion_correction')]),
         # Connect bold_confounds_wf
         (inputnode, bold_confounds_wf, [('t1_tpms', 'inputnode.t1_tpms'),
                                         ('t1_mask', 'inputnode.t1_mask')]),
@@ -478,12 +477,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     if fmaps:
         from ..fieldmap.unwarp import init_fmap_unwarp_report_wf
         sdc_type = fmaps[0]['type']
-
-        # Connect the warping
-        workflow.connect([
-            (bold_sdc_wf, bold_reg_wf, [
-                ('outputnode.out_warp', 'inputnode.fieldwarp')])
-        ])
 
         # Report on BOLD correction
         fmap_unwarp_report_wf = init_fmap_unwarp_report_wf(
@@ -631,7 +624,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             omp_nthreads=omp_nthreads,
             output_grid_ref=output_grid_ref,
             use_compression=not (low_mem and use_aroma),
-            use_fieldwarp=(fmaps is not None or use_syn),
+            use_fieldwarp=fmaps is not None,
             name='bold_mni_trans_wf'
         )
 
@@ -647,15 +640,11 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 ('outputnode.itk_bold_to_t1', 'inputnode.itk_bold_to_t1')]),
             (bold_bold_trans_wf, bold_mni_trans_wf, [
                 ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+            (bold_sdc_wf, bold_mni_trans_wf, [
+                ('outputnode.out_warp', 'inputnode.fieldwarp')]),
             (bold_mni_trans_wf, outputnode, [('outputnode.bold_mni', 'bold_mni'),
                                              ('outputnode.bold_mask_mni', 'bold_mask_mni')]),
         ])
-
-        if sdc_method != 'None':
-            workflow.connect([
-                (bold_sdc_wf, bold_mni_trans_wf, [
-                    ('outputnode.out_warp', 'inputnode.fieldwarp')]),
-            ])
 
         if use_aroma:  # ICA-AROMA workflow
             """
