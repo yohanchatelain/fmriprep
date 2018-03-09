@@ -319,7 +319,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                                    output_spaces=output_spaces,
                                                    template=template,
                                                    freesurfer=freesurfer,
-                                                   use_aroma=use_aroma)
+                                                   use_aroma=use_aroma,
+                                                   cifti_output=cifti_output)
 
     workflow.connect([
         (inputnode, func_reports_wf, [('bold_file', 'inputnode.source_file')]),
