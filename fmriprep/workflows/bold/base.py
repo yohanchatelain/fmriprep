@@ -336,6 +336,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             ('aroma_noise_ics', 'inputnode.aroma_noise_ics'),
             ('melodic_mix', 'inputnode.melodic_mix'),
             ('nonaggr_denoised_file', 'inputnode.nonaggr_denoised_file'),
+            ('bold_cifti', 'inputnode.bold_cifti'),
         ]),
     ])
 
@@ -897,7 +898,7 @@ def init_func_reports_wf(reportlets_dir, freesurfer, use_aroma,
 
 
 def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
-                             use_aroma, name='func_derivatives_wf'):
+                             use_aroma, cifti_output, name='func_derivatives_wf'):
     """
     Set up a battery of datasinks to store derivatives in the right location
     """
@@ -908,7 +909,7 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
             fields=['source_file', 'bold_t1', 'bold_mask_t1', 'bold_mni', 'bold_mask_mni',
                     'bold_aseg_t1', 'bold_aparc_t1',
                     'confounds', 'surfaces', 'aroma_noise_ics', 'melodic_mix',
-                    'nonaggr_denoised_file']),
+                    'nonaggr_denoised_file', 'bold_cifti']),
         name='inputnode')
 
     suffix_fmt = 'space-{}_{}'.format
@@ -984,6 +985,14 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
                                    iterfield=['in_file', 'suffix'], name='ds_bold_surfs',
                                    run_without_submitting=True,
                                    mem_gb=DEFAULT_MEMORY_MIN_GB)
+        # CIFTI output
+        if cifti_output and 'template' in output_spaces:
+            cifti_bolds = pe.MapNode(DerivativesDataSink(base_directory=output_dir,
+                suffix=suffix_fmt(template, 'preproc.dtseries'), force_uncompress=True),
+                iterfield=['in_file'], name='cifti_bolds', run_without_submitting=True,
+                mem_gb=DEFAULT_MEMORY_MIN_GB)
+            workflow.connect(inputnode, 'bold_cifti', cifti_bolds, 'in_file')
+
         workflow.connect([
             (inputnode, name_surfs, [('surfaces', 'in_file')]),
             (inputnode, ds_bold_surfs, [('source_file', 'source_file'),
