@@ -987,10 +987,10 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
                                    mem_gb=DEFAULT_MEMORY_MIN_GB)
         # CIFTI output
         if cifti_output and 'template' in output_spaces:
-            cifti_bolds = pe.MapNode(DerivativesDataSink(base_directory=output_dir,
-                suffix=suffix_fmt(template, 'preproc.dtseries'), force_uncompress=True),
-                iterfield=['in_file'], name='cifti_bolds', run_without_submitting=True,
-                mem_gb=DEFAULT_MEMORY_MIN_GB)
+            cifti_bolds = pe.MapNode(DerivativesDataSink(
+                base_directory=output_dir, suffix=suffix_fmt(template, 'preproc.dtseries'),
+                force_uncompress=True), iterfield=['in_file'], name='cifti_bolds',
+                run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
             workflow.connect(inputnode, 'bold_cifti', cifti_bolds, 'in_file')
 
         workflow.connect([
