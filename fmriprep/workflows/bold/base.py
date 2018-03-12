@@ -992,7 +992,10 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
                 base_directory=output_dir, suffix=suffix_fmt(template, 'preproc.dtseries'),
                 compress=False), iterfield=['in_file'], name='cifti_bolds',
                 run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
-            workflow.connect(inputnode, 'bold_cifti', cifti_bolds, 'in_file')
+            workflow.connect([
+                (inputnode, cifti_bolds, [('bold_cifti', 'in_file'),
+                                          ('source_file', 'source_file')]),
+            ])
 
         workflow.connect([
             (inputnode, name_surfs, [('surfaces', 'in_file')]),
