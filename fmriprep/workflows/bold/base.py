@@ -373,7 +373,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             (bold_reference_wf, bold_stc_wf, [('outputnode.bold_file', 'inputnode.bold_file'),
                                               ('outputnode.skip_vols', 'inputnode.skip_vols')]),
         ])
-    elif not multiecho:  # bypass STC from original BOLD to the splitter through boldbuffer
+    else:  # bypass STC from original BOLD to the splitter through boldbuffer
         workflow.connect([
             (bold_reference_wf, boldbuffer, [
                 ('outputnode.bold_file', 'bold_file')]),
@@ -532,10 +532,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                                name='subset_reg_fallbacks',
                                                joinsource=inputnode,
                                                joinfield=['inlist'])
-
-            first_echo = pe.Node(niu.IdentityInterface(fields=['first_echo']),
-                                 name='first_echo')
-            first_echo.inputs.first_echo = ref_file
 
             workflow.connect([
                 (bold_split, join_split_echos, [
