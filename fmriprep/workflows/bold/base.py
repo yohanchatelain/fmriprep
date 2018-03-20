@@ -267,6 +267,12 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                        "Using standard EPI-T1 coregistration.")
         t2s_coreg = False
 
+    # Switch stc off
+    if multiecho and run_stc is True:
+        LOGGER.warning('Slice-timing correction is not available for '
+                       'multiecho BOLD data (not implemented).')
+        run_stc = False
+
     # Build workflow
     workflow = pe.Workflow(name=wf_name)
     inputnode = pe.Node(niu.IdentityInterface(
@@ -367,7 +373,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             (bold_reference_wf, bold_stc_wf, [('outputnode.bold_file', 'inputnode.bold_file'),
                                               ('outputnode.skip_vols', 'inputnode.skip_vols')]),
         ])
-    else:  # bypass STC from original BOLD to the splitter through boldbuffer
+    elif not multiecho:  # bypass STC from original BOLD to the splitter through boldbuffer
         workflow.connect([
             (bold_reference_wf, boldbuffer, [
                 ('outputnode.bold_file', 'bold_file')]),
@@ -397,6 +403,10 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         (boldbuffer, bold_split, [('bold_file', 'in_file')]),
         # Generate early reference
         (inputnode, bold_reference_wf, [('bold_file', 'inputnode.bold_file')]),
+        # HMC
+        (bold_reference_wf, bold_hmc_wf, [
+            ('outputnode.raw_ref_image', 'inputnode.raw_ref_image'),
+            ('outputnode.bold_file', 'inputnode.bold_file')]),
         # EPI-T1 registration workflow
         (inputnode, bold_reg_wf, [
             ('bold_file', 'inputnode.name_source'),
@@ -492,17 +502,17 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     if multiecho:
         inputnode.iterables = ('bold_file', bold_file)
 
-        me_first_echo = pe.JoinNode(interface=FirstEcho(te_list=tes),
-                                    joinfield=['in_files', 'ref_imgs'],
-                                    joinsource='inputnode',
-                                    name='me_first_echo')
+        me_first_echo = pe.Node(FirstEcho(
+            te_list=tes, in_files=bold_file, ref_imgs=bold_file),
+            name='me_first_echo')
+        # Replace reference with the echo selected with FirstEcho
+        workflow.disconnect([
+            (inputnode, bold_reference_wf, [
+                ('bold_file', 'inputnode.bold_file')]),
+        ])
         workflow.connect([
-            (bold_reference_wf, me_first_echo, [
-                ('outputnode.bold_file', 'in_files'),
-                ('outputnode.raw_ref_image', 'ref_imgs')]),
-            (me_first_echo, bold_hmc_wf, [
-                ('first_image', 'inputnode.bold_file'),
-                ('first_ref_image', 'inputnode.raw_ref_image')])
+            (me_first_echo, bold_reference_wf, [
+                ('first_image', 'inputnode.bold_file')])
         ])
 
         if t2s_coreg:
@@ -527,14 +537,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                  name='first_echo')
             first_echo.inputs.first_echo = ref_file
 
-            # Replace SDC workflow input
-            workflow.disconnect([
-                (bold_reference_wf, bold_sdc_wf, [
-                    ('outputnode.ref_image', 'inputnode.bold_ref'),
-                    ('outputnode.ref_image_brain', 'inputnode.bold_ref_brain'),
-                    ('outputnode.bold_mask', 'inputnode.bold_mask')]),
-            ])
-
             workflow.connect([
                 (bold_split, join_split_echos, [
                     ('out_files', 'echo_files')]),
@@ -542,19 +544,9 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                     ('echo_files', 'inputnode.echo_split')]),
                 (bold_hmc_wf, bold_t2s_wf, [
                     ('outputnode.xforms', 'inputnode.hmc_xforms')]),
-                (bold_t2s_wf, bold_sdc_wf, [
-                    ('outputnode.t2s_map', 'inputnode.bold_ref'),
-                    ('outputnode.t2s_map', 'inputnode.bold_ref_brain'),
-                    ('outputnode.oc_mask', 'inputnode.bold_mask')]),
                 (bold_reg_wf, subset_reg_fallbacks, [
                     ('outputnode.fallback', 'inlist')]),
             ])
-    else:
-        workflow.connect([
-            (bold_reference_wf, bold_hmc_wf, [
-                ('outputnode.raw_ref_image', 'inputnode.raw_ref_image'),
-                ('outputnode.bold_file', 'inputnode.bold_file')])
-        ])
 
     # Map final BOLD mask into T1w space (if required)
     if 'T1w' in output_spaces:
