@@ -404,7 +404,7 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
             (inputnode, bold_split, [('bold_file', 'in_file')]),
             (bold_split, bold_transform, [
                 ('out_files', 'input_image'),
-                (('out_files', _first), 'input_image'),
+                (('out_files', _first), 'reference_image'),
             ])
         ])
     else:
