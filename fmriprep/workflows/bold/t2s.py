@@ -86,7 +86,7 @@ def init_bold_t2s_wf(bold_echos, echo_times, mem_gb, omp_nthreads,
 
     # Apply transforms in 1 shot
     bold_bold_trans_wf = init_bold_preproc_trans_wf(
-        mem_gb=mem_gb['resampled'],
+        mem_gb=mem_gb,
         omp_nthreads=omp_nthreads,
         use_compression=use_compression,
         use_fieldwarp=use_fieldwarp,
