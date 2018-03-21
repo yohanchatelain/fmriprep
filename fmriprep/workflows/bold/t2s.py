@@ -12,9 +12,7 @@ from niworkflows.nipype import logging
 from niworkflows.nipype.pipeline import engine as pe
 from niworkflows.nipype.interfaces import utility as niu
 
-from ...interfaces.nilearn import Merge
 from ...interfaces.multiecho import (T2SMap, MaskT2SMap)
-from ...interfaces import MultiApplyTransforms
 from .resampling import init_bold_preproc_trans_wf
 
 from .util import init_skullstrip_bold_wf
@@ -38,12 +36,16 @@ def init_bold_t2s_wf(bold_echos, echo_times, mem_gb, omp_nthreads,
         :simple_form: yes
 
         from fmriprep.workflows.bold import init_bold_t2s_wf
-        wf = init_bold_t2s_wf(echo_times=[13.6, 29.79, 46.59],
-                              mem_gb=3,
-                              omp_nthreads=1)
+        wf = init_bold_t2s_wf(
+            bold_echos=['echo1', 'echo2', 'echo3'],
+            echo_times=[13.6, 29.79, 46.59],
+            mem_gb=3,
+            omp_nthreads=1)
 
     **Parameters**
 
+        bold_echos
+            list of ME-BOLD files
         echo_times
             list of TEs associated with each echo
         mem_gb : float
@@ -52,13 +54,18 @@ def init_bold_t2s_wf(bold_echos, echo_times, mem_gb, omp_nthreads,
             Maximum number of threads an individual process may use
         name : str
             Name of workflow (default: ``bold_t2s_wf``)
+        use_compression : bool
+            Save registered BOLD series as ``.nii.gz``
+        use_fieldwarp : bool
+            Include SDC warp in single-shot transform from BOLD to MNI
 
     **Inputs**
 
+        name_source
+            (one echo of) the original BOLD series NIfTI file
+            Used to recover original information lost during processing
         hmc_xforms
             ITKTransform file aligning each volume to ``ref_image``
-        echo_split
-            3D volumes of multi-echo BOLD EPI
 
     **Outputs**
 
@@ -69,7 +76,7 @@ def init_bold_t2s_wf(bold_echos, echo_times, mem_gb, omp_nthreads,
     """
     workflow = pe.Workflow(name=name)
     inputnode = pe.Node(niu.IdentityInterface(
-        fields=['name_source', 'echo_split', 'hmc_xforms']),
+        fields=['name_source', 'hmc_xforms']),
         name='inputnode')
 
     outputnode = pe.Node(niu.IdentityInterface(fields=['t2s_map', 'oc_mask']),

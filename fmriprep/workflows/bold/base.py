@@ -522,7 +522,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                            mem_gb=mem_gb['filesize'],
                                            omp_nthreads=omp_nthreads,
                                            name='bold_t2s_wf',
-                                           split_files=True)
+                                           split_file=True)
             bold_t2s_wf.inputs.inputnode.name_source = ref_file
             workflow.connect([
                 (bold_hmc_wf, bold_t2s_wf, [
