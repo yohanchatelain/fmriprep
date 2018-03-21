@@ -519,7 +519,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             # create a T2* map
             bold_t2s_wf = init_bold_t2s_wf(bold_echos=bold_file,
                                            echo_times=tes,
-                                           mem_gb=mem_gb['largemem'],
+                                           mem_gb=mem_gb['resampled'],
                                            omp_nthreads=omp_nthreads,
                                            name='bold_t2s_wf')
             bold_t2s_wf.inputs.inputnode.name_source = ref_file

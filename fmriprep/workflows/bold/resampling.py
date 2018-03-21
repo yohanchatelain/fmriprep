@@ -399,7 +399,7 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
     # Input file is not splitted
     if split_file:
         bold_split = pe.Node(FSLSplit(dimension='t'), name='bold_split',
-                             mem_gb=mem_gb['filesize'] * 3)
+                             mem_gb=mem_gb * 3)
         workflow.connect([
             (inputnode, bold_split, [('bold_file', 'in_file')]),
             (bold_split, bold_transform, [
