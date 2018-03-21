@@ -76,8 +76,9 @@ def init_bold_t2s_wf(bold_echos, echo_times, mem_gb, omp_nthreads,
     """
     workflow = pe.Workflow(name=name)
     inputnode = pe.Node(niu.IdentityInterface(
-        fields=['name_source', 'hmc_xforms']),
+        fields=['bold_echos', 'name_source', 'hmc_xforms']),
         name='inputnode')
+    inputnode.iterables = ('bold_echos', bold_echos)
 
     outputnode = pe.Node(niu.IdentityInterface(fields=['t2s_map', 'oc_mask']),
                          name='outputnode')
@@ -91,12 +92,13 @@ def init_bold_t2s_wf(bold_echos, echo_times, mem_gb, omp_nthreads,
         use_compression=use_compression,
         use_fieldwarp=use_fieldwarp,
         name='bold_bold_trans_wf',
-        split_file=True
+        split_file=True,
+        interpolation='NearestNeighbor'
     )
-    bold_bold_trans_wf.inputs.inputnode.iterables = ('bold_file', bold_echos)
 
-    t2s_map = pe.Node(T2SMap(te_list=echo_times),
-                      name='t2s_map')
+    t2s_map = pe.JoinNode(T2SMap(
+        te_list=echo_times), joinsource='inputnode', joinfield=['in_files'],
+        name='t2s_map')
 
     skullstrip_bold_wf = init_skullstrip_bold_wf()
 
@@ -104,6 +106,7 @@ def init_bold_t2s_wf(bold_echos, echo_times, mem_gb, omp_nthreads,
 
     workflow.connect([
         (inputnode, bold_bold_trans_wf, [
+            ('bold_echos', 'inputnode.bold_file'),
             ('name_source', 'inputnode.name_source'),
             ('hmc_xforms', 'inputnode.hmc_xforms')]),
         (bold_bold_trans_wf, t2s_map, [('outputnode.bold', 'in_files')]),

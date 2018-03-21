@@ -523,6 +523,13 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                            omp_nthreads=omp_nthreads,
                                            name='bold_t2s_wf')
             bold_t2s_wf.inputs.inputnode.name_source = ref_file
+
+            # Replace EPI-to-T1w registration inputs
+            workflow.disconnect([
+                (bold_sdc_wf, bold_reg_wf, [
+                    ('outputnode.bold_ref_brain', 'inputnode.ref_bold_brain'),
+                    ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
+            ])
             workflow.connect([
                 (bold_hmc_wf, bold_t2s_wf, [
                     ('outputnode.xforms', 'inputnode.hmc_xforms')]),
