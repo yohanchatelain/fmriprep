@@ -456,7 +456,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         (inputnode, bold_bold_trans_wf, [
             ('bold_file', 'inputnode.name_source')]),
         (bold_split, bold_bold_trans_wf, [
-            ('out_files', 'inputnode.bold_split')]),
+            ('out_files', 'inputnode.bold_file')]),
         (bold_hmc_wf, bold_bold_trans_wf, [
             ('outputnode.xforms', 'inputnode.hmc_xforms')]),
         (bold_bold_trans_wf, bold_confounds_wf, [
@@ -516,32 +516,20 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         ])
 
         if t2s_coreg:
-            # use a joinNode to gather all preprocessed echos
-            join_split_echos = pe.JoinNode(niu.IdentityInterface(fields=['echo_files']),
-                                           joinsource='inputnode',
-                                           joinfield='echo_files',
-                                           name='join_split_echos')
-
             # create a T2* map
-            bold_t2s_wf = init_bold_t2s_wf(echo_times=tes,
-                                           name='bold_t2s_wf',
+            bold_t2s_wf = init_bold_t2s_wf(bold_echos=bold_file,
+                                           echo_times=tes,
                                            mem_gb=mem_gb['filesize'],
-                                           omp_nthreads=omp_nthreads)
-
-            subset_reg_fallbacks = pe.JoinNode(niu.Select(index=0),
-                                               name='subset_reg_fallbacks',
-                                               joinsource=inputnode,
-                                               joinfield=['inlist'])
-
+                                           omp_nthreads=omp_nthreads,
+                                           name='bold_t2s_wf',
+                                           split_files=True)
+            bold_t2s_wf.inputs.inputnode.name_source = ref_file
             workflow.connect([
-                (bold_split, join_split_echos, [
-                    ('out_files', 'echo_files')]),
-                (join_split_echos, bold_t2s_wf, [
-                    ('echo_files', 'inputnode.echo_split')]),
                 (bold_hmc_wf, bold_t2s_wf, [
                     ('outputnode.xforms', 'inputnode.hmc_xforms')]),
-                (bold_reg_wf, subset_reg_fallbacks, [
-                    ('outputnode.fallback', 'inlist')]),
+                (bold_t2s_wf, bold_reg_wf, [
+                    ('outputnode.t2s_map', 'inputnode.ref_bold_brain'),
+                    ('outputnode.oc_mask', 'inputnode.ref_bold_mask')]),
             ])
 
     # Map final BOLD mask into T1w space (if required)
