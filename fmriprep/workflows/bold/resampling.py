@@ -332,6 +332,12 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
             Save registered BOLD series as ``.nii.gz``
         use_fieldwarp : bool
             Include SDC warp in single-shot transform from BOLD to MNI
+        split_file : bool
+            Whether the input file should be splitted (it is a 4D file)
+            or it is a list of 3D files (default ``False``, do not split)
+        interpolation : str
+            Interpolation type to be used by ANTs' ``applyTransforms``
+            (default ``'LanczosWindowedSinc'``)
 
     **Inputs**
 
