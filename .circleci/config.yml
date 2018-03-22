@@ -174,6 +174,16 @@ jobs:
       image: circleci/classic:201711-01
     working_directory: /tmp/src/fmriprep
     steps:
+      - checkout:
+          path: /home/circleci/src/fmriprep
+      - run:
+          name: Check whether build should be skipped
+          command: |
+            cd /home/circleci/src/fmriprep
+            if [[ "$( git log --format=oneline -n 1 $CIRCLE_SHA1 | grep -i -E '\[skip[ _]?tests\]' )" != "" ]]; then
+              echo "Skipping pytest job"
+              circleci step halt
+            fi
       - attach_workspace:
           at: /tmp
       - run:
@@ -211,6 +221,16 @@ jobs:
       image: circleci/classic:201711-01
     working_directory: /home/circleci/out/docs
     steps:
+      - checkout:
+          path: /home/circleci/src/fmriprep
+      - run:
+          name: Check whether build should be skipped
+          command: |
+            cd /home/circleci/src/fmriprep
+            if [[ "$( git log --format=oneline -n 1 $CIRCLE_SHA1 | grep -i -E '\[skip[ _]?docs\]' )" != "" ]]; then
+              echo "Skipping pytest job"
+              circleci step halt
+            fi
       - attach_workspace:
           at: /tmp
       - run:
@@ -245,14 +265,24 @@ jobs:
     environment:
       - FS_LICENSE: /tmp/fslicense/license.txt
     steps:
+      - checkout:
+          path: /home/circleci/src/fmriprep
+      - run:
+          name: Check whether build should be skipped
+          command: |
+            cd /home/circleci/src/fmriprep
+            if [[ "$( git log --format=oneline -n 1 $CIRCLE_SHA1 | grep -i -E '\[skip[ _]?ds005\]' )" != "" ]]; then
+              echo "Skipping ds000005 build"
+              circleci step halt
+            fi
       - attach_workspace:
           at: /tmp
       - restore_cache:
           keys:
-            - ds005-anat-v4-{{ .Branch }}-{{ epoch }}
-            - ds005-anat-v4-{{ .Branch }}
-            - ds005-anat-v4-master
-            - ds005-anat-v4-
+            - ds005-anat-v5-{{ .Branch }}-{{ epoch }}
+            - ds005-anat-v5-{{ .Branch }}
+            - ds005-anat-v5-master
+            - ds005-anat-v5-
       - run:
           name: Setting up test
           command: |
@@ -285,7 +315,7 @@ jobs:
                 --debug --write-graph --mem_mb 4096 \
                 --nthreads 2 --anat-only -vv
       - save_cache:
-         key: ds005-anat-v4-{{ .Branch }}-{{ epoch }}
+         key: ds005-anat-v5-{{ .Branch }}-{{ epoch }}
          paths:
             - /tmp/ds005/work
             - /tmp/ds005/derivatives/fmriprep
@@ -322,6 +352,16 @@ jobs:
     environment:
       - FS_LICENSE: /tmp/fslicense/license.txt
     steps:
+      - checkout:
+          path: /home/circleci/src/fmriprep
+      - run:
+          name: Check whether build should be skipped
+          command: |
+            cd /home/circleci/src/fmriprep
+            if [[ "$( git log --format=oneline -n 1 $CIRCLE_SHA1 | grep -i -E '\[skip[ _]?ds054\]' )" != "" ]]; then
+              echo "Skipping ds000054 build"
+              circleci step halt
+            fi
       - attach_workspace:
           at: /tmp
       - restore_cache:
@@ -411,13 +451,23 @@ jobs:
       - store_artifacts:
           path: /tmp/ds054
 
-  ds000210:
+  ds210:
     machine:
       image: circleci/classic:201711-01
     working_directory: /tmp/ds000210
     environment:
       - FS_LICENSE: /tmp/fslicense/license.txt
     steps:
+      - checkout:
+          path: /home/circleci/src/fmriprep
+      - run:
+          name: Check whether build should be skipped
+          command: |
+            cd /home/circleci/src/fmriprep
+            if [[ "$( git log --format=oneline -n 1 $CIRCLE_SHA1 | grep -i -E '\[skip[ _]?ds210\]' )" != "" ]]; then
+              echo "Skipping ds000210 build"
+              circleci step halt
+            fi
       - attach_workspace:
           at: /tmp
       - restore_cache:
@@ -468,8 +518,8 @@ jobs:
             fmriprep-docker -i poldracklab/fmriprep:latest \
                 --config $PWD/nipype.cfg -w /tmp/ds000210/work \
                 /tmp/data/ds000210 /tmp/ds000210/derivatives participant \
-                --fs-no-reconall --t2s-coreg --debug --write-graph \
-                --mem_mb 4096 --nthreads 2 -vv
+                --fs-no-reconall --t2s-coreg --use-syn-sdc \
+                --debug --write-graph --mem_mb 4096 --nthreads 2 -vv 
       - run:
           name: Checking outputs of fMRIPrep
           command: |
@@ -584,7 +634,7 @@ workflows:
             tags:
               only: /.*/
 
-      - ds000210:
+      - ds210:
           requires:
             - get_data
             - build
@@ -602,7 +652,7 @@ workflows:
             - build_docs
             - ds005
             - ds054
-            - ds000210
+            - ds210
           filters:
             branches:
               ignore: /.*/

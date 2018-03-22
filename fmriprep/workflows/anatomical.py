@@ -126,6 +126,8 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
             List of T1-weighted structural images
         t2w
             List of T2-weighted structural images
+        flair
+            List of FLAIR images
         subjects_dir
             FreeSurfer SUBJECTS_DIR
 
@@ -187,7 +189,7 @@ T1w using fast [16] (FSL v{fsl_ver}).
     )
 
     inputnode = pe.Node(
-        niu.IdentityInterface(fields=['t1w', 't2w', 'subjects_dir', 'subject_id']),
+        niu.IdentityInterface(fields=['t1w', 't2w', 'flair', 'subjects_dir', 'subject_id']),
         name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['t1_preproc', 't1_brain', 't1_mask', 't1_seg', 't1_tpms',
@@ -229,6 +231,7 @@ T1w using fast [16] (FSL v{fsl_ver}).
         workflow.connect([
             (inputnode, surface_recon_wf, [
                 ('t2w', 'inputnode.t2w'),
+                ('flair', 'inputnode.flair'),
                 ('subjects_dir', 'inputnode.subjects_dir'),
                 ('subject_id', 'inputnode.subject_id')]),
             (anat_template_wf, surface_recon_wf, [('outputnode.t1_template', 'inputnode.t1w')]),
@@ -702,6 +705,8 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
             List of T1-weighted structural images
         t2w
             List of T2-weighted structural images (only first used)
+        flair
+            List of FLAIR images
         skullstripped_t1
             Skull-stripped T1-weighted image (or mask of image)
         ants_segs
@@ -751,7 +756,7 @@ FreeSurfer-derived segmentations of the cortical gray-matter of Mindboggle [20].
 
     inputnode = pe.Node(
         niu.IdentityInterface(
-            fields=['t1w', 't2w', 'skullstripped_t1', 'corrected_t1', 'ants_segs',
+            fields=['t1w', 't2w', 'flair', 'skullstripped_t1', 'corrected_t1', 'ants_segs',
                     'subjects_dir', 'subject_id']), name='inputnode')
     outputnode = pe.Node(
         niu.IdentityInterface(
@@ -784,7 +789,8 @@ FreeSurfer-derived segmentations of the cortical gray-matter of Mindboggle [20].
     workflow.connect([
         # Configuration
         (inputnode, recon_config, [('t1w', 't1w_list'),
-                                   ('t2w', 't2w_list')]),
+                                   ('t2w', 't2w_list'),
+                                   ('flair', 'flair_list')]),
         # Passing subjects_dir / subject_id enforces serial order
         (inputnode, autorecon1, [('subjects_dir', 'subjects_dir'),
                                  ('subject_id', 'subject_id')]),
@@ -798,11 +804,13 @@ FreeSurfer-derived segmentations of the cortical gray-matter of Mindboggle [20].
         # Reconstruction phases
         (inputnode, autorecon1, [('t1w', 'T1_files')]),
         (recon_config, autorecon1, [('t2w', 'T2_file'),
+                                    ('flair', 'FLAIR_file'),
                                     ('hires', 'hires'),
                                     # First run only (recon-all saves expert options)
                                     ('mris_inflate', 'mris_inflate')]),
         (inputnode, skull_strip_extern, [('skullstripped_t1', 'in_brain')]),
-        (recon_config, autorecon_resume_wf, [('use_t2w', 'inputnode.use_T2')]),
+        (recon_config, autorecon_resume_wf, [('use_t2w', 'inputnode.use_T2'),
+                                             ('use_flair', 'inputnode.use_FLAIR')]),
         # Construct transform from FreeSurfer conformed image to FMRIPREP
         # reoriented image
         (inputnode, fsnative_2_t1_xfm, [('t1w', 'target_file')]),
@@ -883,7 +891,9 @@ def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
         subject_id
             FreeSurfer subject ID
         use_T2
-            Refine pial surface using T2w images
+            Refine pial surface using T2w image
+        use_FLAIR
+            Refine pial surface using FLAIR image
 
     **Outputs**
 
@@ -899,7 +909,7 @@ def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
 
     inputnode = pe.Node(
         niu.IdentityInterface(
-            fields=['subjects_dir', 'subject_id', 'use_T2']),
+            fields=['subjects_dir', 'subject_id', 'use_T2', 'use_FLAIR']),
         name='inputnode')
 
     outputnode = pe.Node(
@@ -942,7 +952,8 @@ def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
         return vals.pop()
 
     workflow.connect([
-        (inputnode, autorecon3, [('use_T2', 'use_T2')]),
+        (inputnode, autorecon3, [('use_T2', 'use_T2'),
+                                 ('use_FLAIR', 'use_FLAIR')]),
         (inputnode, autorecon2_vol, [('subjects_dir', 'subjects_dir'),
                                      ('subject_id', 'subject_id')]),
         (autorecon2_vol, autorecon_surfs, [('subjects_dir', 'subjects_dir'),
