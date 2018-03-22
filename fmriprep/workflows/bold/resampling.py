@@ -15,6 +15,7 @@ import os.path as op
 
 from niworkflows.nipype.pipeline import engine as pe
 from niworkflows.nipype.interfaces import utility as niu, freesurfer as fs
+from niworkflows.nipype.interfaces.fsl import Split as FSLSplit
 
 from niworkflows import data as nid
 from niworkflows.interfaces.utils import GenerateSamplingReference
@@ -305,7 +306,9 @@ def init_bold_mni_trans_wf(template, mem_gb, omp_nthreads,
 def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
                                name='bold_preproc_trans_wf',
                                use_compression=True,
-                               use_fieldwarp=False):
+                               use_fieldwarp=False,
+                               split_file=False,
+                               interpolation='LanczosWindowedSinc'):
     """
     This workflow resamples the input fMRI in its native (original)
     space in a "single shot" from the original BOLD series.
@@ -329,10 +332,16 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
             Save registered BOLD series as ``.nii.gz``
         use_fieldwarp : bool
             Include SDC warp in single-shot transform from BOLD to MNI
+        split_file : bool
+            Whether the input file should be splitted (it is a 4D file)
+            or it is a list of 3D files (default ``False``, do not split)
+        interpolation : str
+            Interpolation type to be used by ANTs' ``applyTransforms``
+            (default ``'LanczosWindowedSinc'``)
 
     **Inputs**
 
-        bold_split
+        bold_file
             Individual 3D volumes, not motion corrected
         bold_mask
             Skull-stripping mask of reference image
@@ -358,7 +367,7 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
     """
     workflow = pe.Workflow(name=name)
     inputnode = pe.Node(niu.IdentityInterface(fields=[
-        'name_source', 'bold_split', 'bold_mask', 'hmc_xforms', 'fieldwarp']),
+        'name_source', 'bold_file', 'bold_mask', 'hmc_xforms', 'fieldwarp']),
         name='inputnode'
     )
 
@@ -367,7 +376,7 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
         name='outputnode')
 
     bold_transform = pe.Node(
-        MultiApplyTransforms(interpolation="LanczosWindowedSinc", float=True, copy_dtype=True),
+        MultiApplyTransforms(interpolation=interpolation, float=True, copy_dtype=True),
         name='bold_transform', mem_gb=mem_gb * 3 * omp_nthreads, n_procs=omp_nthreads)
 
     merge = pe.Node(Merge(compress=use_compression), name='merge',
@@ -378,8 +387,6 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
 
     workflow.connect([
         (inputnode, merge, [('name_source', 'header_source')]),
-        (inputnode, bold_transform, [('bold_split', 'input_image'),
-                                     (('bold_split', _first), 'reference_image')]),
         (bold_transform, merge, [('out_files', 'in_files')]),
         (merge, bold_reference_wf, [('out_file', 'inputnode.bold_file')]),
         (merge, outputnode, [('out_file', 'bold')]),
@@ -388,6 +395,23 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
             ('outputnode.ref_image_brain', 'bold_ref_brain'),
             ('outputnode.bold_mask', 'bold_mask')]),
     ])
+
+    # Input file is not splitted
+    if split_file:
+        bold_split = pe.Node(FSLSplit(dimension='t'), name='bold_split',
+                             mem_gb=mem_gb * 3)
+        workflow.connect([
+            (inputnode, bold_split, [('bold_file', 'in_file')]),
+            (bold_split, bold_transform, [
+                ('out_files', 'input_image'),
+                (('out_files', _first), 'reference_image'),
+            ])
+        ])
+    else:
+        workflow.connect([
+            (inputnode, bold_transform, [('bold_file', 'input_image'),
+                                         (('bold_file', _first), 'reference_image')]),
+        ])
 
     if use_fieldwarp:
         merge_xforms = pe.Node(niu.Merge(2), name='merge_xforms',
@@ -403,6 +427,19 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
         workflow.connect([
             (inputnode, bold_transform, [(('hmc_xforms', _aslist), 'transforms')]),
         ])
+
+    # Code ready to generate a pre/post processing report
+    # bold_bold_report_wf = init_bold_preproc_report_wf(
+    #     mem_gb=mem_gb['resampled'],
+    #     reportlets_dir=reportlets_dir
+    # )
+    # workflow.connect([
+    #     (inputnode, bold_bold_report_wf, [
+    #         ('bold_file', 'inputnode.name_source'),
+    #         ('bold_file', 'inputnode.in_pre')]),  # This should be after STC
+    #     (bold_bold_trans_wf, bold_bold_report_wf, [
+    #         ('outputnode.bold', 'inputnode.in_post')]),
+    # ])
 
     return workflow
 
