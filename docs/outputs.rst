@@ -89,8 +89,8 @@ Surface output spaces include ``fsnative`` (full density subject-specific mesh),
 
 EPIs can be saved as a CIFTI dtseries file.
 
-- (optional) ``*bold_space-<space>_preproc.dtseries.nii`` Motion-corrected EPI converted to CIFTI standards. Sub-cortical representations are volumetric
-  (supported spaces: ``MNI152NLin2009cAsym``), while cortical representations are sampled to surface (supported spaces: ``fsaverage5``, ``fsaverage6``)
+- (optional) ``*bold_space-cifti_variant-<variant>_preproc.dtseries.nii`` Motion-corrected EPI converted to CIFTI filetype. Sub-cortical representations
+  are volumetric (supported spaces: ``MNI152NLin2009cAsym``), while cortical representations are sampled to surface (supported spaces: ``fsaverage5``, ``fsaverage6``)
 
 
 .. _fsderivs:

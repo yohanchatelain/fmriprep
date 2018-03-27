@@ -47,7 +47,7 @@ fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_MELODICmix.tsv
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_space-fsaverage5.L.func.gii
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_space-fsaverage5.R.func.gii
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_space-MNI152NLin2009cAsym_brainmask.nii.gz
-fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_space-MNI152NLin2009cAsym_preproc.dtseries.nii
+fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_space-cifti_variant-space1_preproc.dtseries.nii
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_space-MNI152NLin2009cAsym_preproc.nii.gz
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_space-MNI152NLin2009cAsym_variant-smoothAROMAnonaggr_preproc.nii.gz
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold_space-T1w_brainmask.nii.gz
@@ -60,7 +60,7 @@ fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_MELODICmix.tsv
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_space-fsaverage5.L.func.gii
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_space-fsaverage5.R.func.gii
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_space-MNI152NLin2009cAsym_brainmask.nii.gz
-fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_space-MNI152NLin2009cAsym_preproc.dtseries.nii
+fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_space-cifti_variant-space1_preproc.dtseries.nii
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_space-MNI152NLin2009cAsym_preproc.nii.gz
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_space-MNI152NLin2009cAsym_variant-smoothAROMAnonaggr_preproc.nii.gz
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold_space-T1w_brainmask.nii.gz

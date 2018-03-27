@@ -27,7 +27,7 @@ from ...interfaces import (
 )
 
 from ...interfaces.reports import FunctionalSummary
-from ...interfaces.cifti import GenerateCifti
+from ...interfaces.cifti import GenerateCifti, CiftiNameSource
 
 
 # BOLD workflows
@@ -333,6 +333,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             ('melodic_mix', 'inputnode.melodic_mix'),
             ('nonaggr_denoised_file', 'inputnode.nonaggr_denoised_file'),
             ('bold_cifti', 'inputnode.bold_cifti'),
+            ('cifti_variant', 'inputnode.cifti_variant')
         ]),
     ])
 
@@ -725,7 +726,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                     ('outputnode.surfaces', 'gifti_files')]),
                 (inputnode, cifti, [('subjects_dir', 'subjects_dir')]),
                 (bold_mni_trans_wf, cifti, [('outputnode.bold_mni', 'bold_file')]),
-                (cifti, outputnode, [('out_file', 'bold_cifti')]),
+                (cifti, outputnode, [('out_file', 'bold_cifti'),
+                                     ('variant', 'cifti_variant')]),
             ])
 
     # REPORTING ############################################################
@@ -828,7 +830,7 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
             fields=['source_file', 'bold_t1', 'bold_mask_t1', 'bold_mni', 'bold_mask_mni',
                     'bold_aseg_t1', 'bold_aparc_t1',
                     'confounds', 'surfaces', 'aroma_noise_ics', 'melodic_mix',
-                    'nonaggr_denoised_file', 'bold_cifti']),
+                    'nonaggr_denoised_file', 'bold_cifti', 'cifti_variant']),
         name='inputnode')
 
     suffix_fmt = 'space-{}_{}'.format
@@ -904,16 +906,6 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
                                    iterfield=['in_file', 'suffix'], name='ds_bold_surfs',
                                    run_without_submitting=True,
                                    mem_gb=DEFAULT_MEMORY_MIN_GB)
-        # CIFTI output
-        if cifti_output and 'template' in output_spaces:
-            cifti_bolds = pe.MapNode(DerivativesDataSink(
-                base_directory=output_dir, suffix=suffix_fmt(template, 'preproc.dtseries'),
-                compress=False), iterfield=['in_file'], name='cifti_bolds',
-                run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
-            workflow.connect([
-                (inputnode, cifti_bolds, [('bold_cifti', 'in_file'),
-                                          ('source_file', 'source_file')]),
-            ])
 
         workflow.connect([
             (inputnode, name_surfs, [('surfaces', 'in_file')]),
@@ -921,6 +913,22 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
                                         ('surfaces', 'in_file')]),
             (name_surfs, ds_bold_surfs, [('out_name', 'suffix')]),
         ])
+
+        # CIFTI output
+        if cifti_output and 'template' in output_spaces:
+            name_cifti = pe.MapNode(
+                CiftiNameSource(), iterfield=['variant'], name='name_cifti',
+                mem_gb=DEFAULT_MEMORY_MIN_GB, run_without_submitting=True)
+            cifti_bolds = pe.MapNode(DerivativesDataSink(
+                base_directory=output_dir, compress=False),
+                iterfield=['in_file', 'suffix'], name='cifti_bolds',
+                run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
+            workflow.connect([
+                (inputnode, name_cifti, [('cifti_variant', 'variant')]),
+                (inputnode, cifti_bolds, [('bold_cifti', 'in_file'),
+                                          ('source_file', 'source_file')]),
+                (name_cifti, cifti_bolds, [('out_name', 'suffix')]),
+            ])
 
     if use_aroma:
         ds_aroma_noise_ics = pe.Node(DerivativesDataSink(
