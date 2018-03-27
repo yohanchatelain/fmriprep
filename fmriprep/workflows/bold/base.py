@@ -194,6 +194,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             FSL MELODIC mixing matrix
         bold_cifti
             BOLD CIFTI image
+        cifti_variant
+            combination of target spaces for `bold_cifti`
 
 
     **Subworkflows**
@@ -291,7 +293,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     inputnode.inputs.bold_file = bold_file
 
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['bold_t1', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1',
+        fields=['bold_t1', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1', 'cifti_variant',
                 'bold_mni', 'bold_mask_mni', 'bold_cifti', 'confounds', 'surfaces',
                 't2s_map', 'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file']),
         name='outputnode')
