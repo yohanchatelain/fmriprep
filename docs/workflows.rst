@@ -357,9 +357,11 @@ T2* Driven Coregistration
     :simple_form: yes
 
     from fmriprep.workflows.bold import init_bold_t2s_wf
-    wf = init_bold_t2s_wf(echo_times=[13.6, 29.79, 46.59],
-                          mem_gb=3,
-                          omp_nthreads=1)
+    wf = init_bold_t2s_wf(
+        bold_echos=['echo1', 'echo2', 'echo3'],
+        echo_times=[13.6, 29.79, 46.59],
+        mem_gb=3,
+        omp_nthreads=1)
 
 If the ``--t2s-coreg`` command line argument is supplied with multi-echo
 :abbr:`BOLD (blood-oxygen level-dependent)` data, a T2* map is generated.

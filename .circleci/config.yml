@@ -518,8 +518,8 @@ jobs:
             fmriprep-docker -i poldracklab/fmriprep:latest \
                 --config $PWD/nipype.cfg -w /tmp/ds000210/work \
                 /tmp/data/ds000210 /tmp/ds000210/derivatives participant \
-                --fs-no-reconall --t2s-coreg --debug --write-graph \
-                --mem_mb 4096 --nthreads 2 -vv
+                --fs-no-reconall --t2s-coreg --use-syn-sdc \
+                --debug --write-graph --mem_mb 4096 --nthreads 2 -vv 
       - run:
           name: Checking outputs of fMRIPrep
           command: |
