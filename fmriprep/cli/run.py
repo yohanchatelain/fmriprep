@@ -132,7 +132,7 @@ def get_parser():
         choices=['MNI152NLin2009cAsym'], default='MNI152NLin2009cAsym',
         help='volume template space (default: MNI152NLin2009cAsym)')
     g_conf.add_argument(
-        '--output-grid-reference', required=False, action='store', default=None,
+        '--template-resampling-grid', required=False, action='store', default='2mm',
         help='Grid reference image for resampling BOLD files to volume template space. '
              'It determines the field of view and resolution of the output images, '
              'but is not used in normalization.')
@@ -435,7 +435,7 @@ def build_workflow(opts, retval):
         output_spaces=opts.output_space,
         template=opts.template,
         medial_surface_nan=opts.medial_surface_nan,
-        output_grid_ref=opts.output_grid_reference,
+        output_grid_ref=opts.template_resampling_grid,
         hires=opts.hires,
         use_bbr=opts.use_bbr,
         bold2t1w_dof=opts.bold2t1w_dof,

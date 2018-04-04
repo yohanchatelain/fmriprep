@@ -78,7 +78,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
                               force_syn=True,
                               use_aroma=False,
                               ignore_aroma_err=False,
-                              output_grid_ref=None)
+                              output_grid_ref='native')
 
 
     Parameters
@@ -148,7 +148,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
             Perform ICA-AROMA on MNI-resampled functional series
         ignore_aroma_err : bool
             Do not fail on ICA-AROMA errors
-        output_grid_ref : str or None
+        output_grid_ref : str
             Path of custom reference image for normalization
 
     """
@@ -255,7 +255,7 @@ def init_single_subject_wf(subject_id, task_id, name,
                                     fmap_demean=True,
                                     use_syn=True,
                                     force_syn=True,
-                                    output_grid_ref=None,
+                                    output_grid_ref='native',
                                     use_aroma=False,
                                     ignore_aroma_err=False)
 
@@ -322,7 +322,7 @@ def init_single_subject_wf(subject_id, task_id, name,
             If fieldmaps are present and enabled, this is not run, by default.
         force_syn : bool
             **Temporary**: Always run SyN-based SDC
-        output_grid_ref : str or None
+        output_grid_ref : str
             Path of custom reference image for normalization
         use_aroma : bool
             Perform ICA-AROMA on MNI-resampled functional series

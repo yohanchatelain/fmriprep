@@ -161,7 +161,8 @@ def init_bold_surf_wf(mem_gb, output_spaces, medial_surface_nan, name='bold_surf
 
 def init_bold_mni_trans_wf(template, mem_gb, omp_nthreads,
                            name='bold_mni_trans_wf',
-                           output_grid_ref=None, use_compression=True,
+                           output_grid_ref='2mm',
+                           use_compression=True,
                            use_fieldwarp=False):
     """
     This workflow samples functional images to the MNI template in a "single shot"
@@ -175,7 +176,7 @@ def init_bold_mni_trans_wf(template, mem_gb, omp_nthreads,
         wf = init_bold_mni_trans_wf(template='MNI152NLin2009cAsym',
                                     mem_gb=3,
                                     omp_nthreads=1,
-                                    output_grid_ref=None)
+                                    output_grid_ref='native')
 
     **Parameters**
 
@@ -187,8 +188,9 @@ def init_bold_mni_trans_wf(template, mem_gb, omp_nthreads,
             Maximum number of threads an individual process may use
         name : str
             Name of workflow (default: ``bold_mni_trans_wf``)
-        output_grid_ref : str or None
-            Path of custom reference image for normalization
+        output_grid_ref : str
+            Path of custom reference image for normalization.
+            Special values of 'native', '1mm', '2mm' are accepted.
         use_compression : bool
             Save registered BOLD series as ``.nii.gz``
         use_fieldwarp : bool
@@ -292,11 +294,16 @@ def init_bold_mni_trans_wf(template, mem_gb, omp_nthreads,
         (merge, outputnode, [('out_file', 'bold_mni')]),
     ])
 
-    if output_grid_ref is None:
+    if output_grid_ref == 'native':
         workflow.connect([
             (gen_ref, mask_mni_tfm, [('out_file', 'reference_image')]),
             (gen_ref, bold_to_mni_transform, [('out_file', 'reference_image')]),
         ])
+    elif output_grid_ref == '1mm' or output_grid_ref == '2mm':
+        mask_mni_tfm.inputs.reference_image = op.join(
+            nid.get_dataset(template_str), '%s_brainmask.nii.gz' % output_grid_ref)
+        bold_to_mni_transform.inputs.reference_image = op.join(
+            nid.get_dataset(template_str), '%s_T1.nii.gz' % output_grid_ref)
     else:
         mask_mni_tfm.inputs.reference_image = output_grid_ref
         bold_to_mni_transform.inputs.reference_image = output_grid_ref
