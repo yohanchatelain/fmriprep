@@ -244,10 +244,15 @@ def get_parser():
         'Standard options that require mapping files into the container')
     g_wrap.add_argument('-w', '--work-dir', action='store',
                         help='path where intermediate results should be stored')
-    g_wrap.add_argument('--template-resampling-grid', required=False, action='store',
-                        type=str,
-                        help='Grid reference image for resampling BOLD files to volume template '
-                             'space.')
+    g_wrap.add_argument(
+        '--template-resampling-grid', required=False, action='store', type=str,
+        help='Keyword ("native", "1mm", or "2mm") or path to an existing file. '
+             'Allows to define a reference grid for the resampling of BOLD images in template '
+             'space. Keyword "native" will use the original BOLD grid as reference. '
+             'Keywords "1mm" and "2mm" will use the corresponding isotropic template '
+             'resolutions. If a path is given, the grid of that image will be used. '
+             'It determines the field of view and resolution of the output images, '
+             'but is not used in normalization.')
     g_wrap.add_argument(
         '--fs-license-file', metavar='PATH', type=os.path.abspath,
         default=os.getenv('FS_LICENSE', None),

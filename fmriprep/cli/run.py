@@ -133,7 +133,11 @@ def get_parser():
         help='volume template space (default: MNI152NLin2009cAsym)')
     g_conf.add_argument(
         '--template-resampling-grid', required=False, action='store', default='2mm',
-        help='Grid reference image for resampling BOLD files to volume template space. '
+        help='Keyword ("native", "1mm", or "2mm") or path to an existing file. '
+             'Allows to define a reference grid for the resampling of BOLD images in template '
+             'space. Keyword "native" will use the original BOLD grid as reference. '
+             'Keywords "1mm" and "2mm" will use the corresponding isotropic template '
+             'resolutions. If a path is given, the grid of that image will be used. '
              'It determines the field of view and resolution of the output images, '
              'but is not used in normalization.')
     g_conf.add_argument(
