@@ -78,7 +78,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                   use_syn=True,
                                   force_syn=True,
                                   low_mem=False,
-                                  output_grid_ref=None,
+                                  output_grid_ref='native',
                                   medial_surface_nan=False,
                                   use_aroma=False,
                                   ignore_aroma_err=False)
