@@ -384,12 +384,11 @@ def main():
         if opts.output_grid_reference is not None:
             warn('Option --output-grid-reference is deprecated, please use '
                  '--template-resampling-grid', DeprecationWarning)
-        target = opts.template_resampling_grid
-        if target not in ['native', '2mm' '1mm']:
-            target = '/imports/' + os.path.basename(target)
+        if template_target not in ['native', '2mm' '1mm']:
+            target = '/imports/' + os.path.basename(template_target)
             command.extend(['-v', ':'.join((os.path.abspath(
-                opts.template_resampling_grid), target, 'ro'))])
-        unknown_args.extend(['--template-resampling-grid', target])
+                template_target), target, 'ro'))])
+        unknown_args.extend(['--template-resampling-grid', template_target])
 
     if opts.shell:
         command.append('--entrypoint=bash')
