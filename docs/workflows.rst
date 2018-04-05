@@ -45,7 +45,7 @@ is presented below:
                                 fmap_demean=True,
                                 use_syn=True,
                                 force_syn=True,
-                                output_grid_ref=None,
+                                template_out_grid='native',
                                 use_aroma=False,
                                 ignore_aroma_err=False)
 
@@ -241,7 +241,7 @@ BOLD preprocessing
                               fmap_demean=True,
                               use_syn=True,
                               force_syn=True,
-                              output_grid_ref=None,
+                              template_out_grid='native',
                               use_aroma=False,
                               ignore_aroma_err=False)
 
@@ -449,7 +449,7 @@ EPI to MNI transformation
         template='MNI152NLin2009cAsym',
         mem_gb=1,
         omp_nthreads=1,
-        output_grid_ref=None)
+        template_out_grid='native')
 
 This sub-workflow concatenates the transforms calculated upstream (see
 `Head-motion estimation`_, `Susceptibility Distortion Correction (SDC)`_ --if
@@ -460,6 +460,16 @@ It also maps the T1w-based mask to MNI space.
 
 Transforms are concatenated and applied all at once, with one interpolation (Lanczos)
 step, so as little information is lost as possible.
+
+The output space grid can be specified using the ``template_out_grid`` argument.
+This option accepts the following (``str``) values:
+
+  * ``'native'``: the original resolution of the BOLD image will be used.
+  * ``'1mm'``: uses the 1:math:`\times`1:math:`\times`1 [mm] version of the template.
+  * ``'2mm'``: uses the 2:math:`\times`2:math:`\times`2 [mm] version of the template.
+  * **Path to arbitrary reference file**: the output will be resampled on a grid with
+    same resolution as this reference.
+
 
 EPI sampled to FreeSurfer surfaces
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
