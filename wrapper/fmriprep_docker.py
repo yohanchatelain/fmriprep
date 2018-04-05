@@ -245,7 +245,7 @@ def get_parser():
     g_wrap.add_argument('-w', '--work-dir', action='store',
                         help='path where intermediate results should be stored')
     g_wrap.add_argument('--template-resampling-grid', required=False, action='store',
-                        type=os.path.abspath,
+                        type=str,
                         help='Grid reference image for resampling BOLD files to volume template '
                              'space.')
     g_wrap.add_argument(
@@ -371,8 +371,11 @@ def main():
                                         '/root/.nipype/nipype.cfg', 'ro'))])
 
     if opts.template_resampling_grid:
-        target = '/imports/' + os.path.basename(opts.template_resampling_grid)
-        command.extend(['-v', ':'.join((opts.template_resampling_grid, target, 'ro'))])
+        target = opts.template_resampling_grid
+        if target not in ['native', '2mm' '1mm']:
+            target = '/imports/' + os.path.basename(target)
+            command.extend(['-v', ':'.join((os.path.abspath(
+                opts.template_resampling_grid), target, 'ro'))])
         unknown_args.extend(['--template-resampling-grid', target])
 
     if opts.shell:
