@@ -330,6 +330,11 @@ def build_workflow(opts, retval):
             raise RuntimeError(msg)
         logger.warning(msg)
 
+    # Cannot output CIFTI if no freesurfer surfaces
+    if opts.cifti_output and not opts.run_reconall:
+        logger.warning('CIFTI output will not be generated without FreeSurfer surfaces')
+        opts.cifti_output = False
+
     # Set up some instrumental utilities
     run_uuid = '%s_%s' % (strftime('%Y%m%d-%H%M%S'), uuid.uuid4())
 
