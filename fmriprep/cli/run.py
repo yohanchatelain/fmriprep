@@ -435,7 +435,7 @@ def build_workflow(opts, retval):
         output_spaces=opts.output_space,
         template=opts.template,
         medial_surface_nan=opts.medial_surface_nan,
-        output_grid_ref=opts.template_resampling_grid,
+        template_out_grid=opts.template_resampling_grid,
         hires=opts.hires,
         use_bbr=opts.use_bbr,
         bold2t1w_dof=opts.bold2t1w_dof,

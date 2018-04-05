@@ -51,7 +51,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                          output_spaces, template, output_dir, omp_nthreads,
                          fmap_bspline, fmap_demean, use_syn, force_syn,
                          use_aroma, ignore_aroma_err, medial_surface_nan,
-                         debug, low_mem, output_grid_ref, layout=None):
+                         debug, low_mem, template_out_grid, layout=None):
     """
     This workflow controls the functional preprocessing stages of FMRIPREP.
 
@@ -78,7 +78,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                   use_syn=True,
                                   force_syn=True,
                                   low_mem=False,
-                                  output_grid_ref='native',
+                                  template_out_grid='native',
                                   medial_surface_nan=False,
                                   use_aroma=False,
                                   ignore_aroma_err=False)
@@ -136,7 +136,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             Enable debugging outputs
         low_mem : bool
             Write uncompressed .nii files in some cases to reduce memory usage
-        output_grid_ref : str or None
+        template_out_grid : str or None
             Path of custom reference image for normalization
         layout : BIDSLayout
             BIDSLayout structure to enable metadata retrieval
@@ -565,7 +565,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             template=template,
             mem_gb=mem_gb['resampled'],
             omp_nthreads=omp_nthreads,
-            output_grid_ref=output_grid_ref,
+            template_out_grid=template_out_grid,
             use_compression=not (low_mem and use_aroma),
             use_fieldwarp=fmaps is not None,
             name='bold_mni_trans_wf'

@@ -45,7 +45,7 @@ is presented below:
                                 fmap_demean=True,
                                 use_syn=True,
                                 force_syn=True,
-                                output_grid_ref='native',
+                                template_out_grid='native',
                                 use_aroma=False,
                                 ignore_aroma_err=False)
 
@@ -241,7 +241,7 @@ BOLD preprocessing
                               fmap_demean=True,
                               use_syn=True,
                               force_syn=True,
-                              output_grid_ref='native',
+                              template_out_grid='native',
                               use_aroma=False,
                               ignore_aroma_err=False)
 
@@ -449,7 +449,7 @@ EPI to MNI transformation
         template='MNI152NLin2009cAsym',
         mem_gb=1,
         omp_nthreads=1,
-        output_grid_ref='native')
+        template_out_grid='native')
 
 This sub-workflow concatenates the transforms calculated upstream (see
 `Head-motion estimation`_, `Susceptibility Distortion Correction (SDC)`_ --if
@@ -461,7 +461,7 @@ It also maps the T1w-based mask to MNI space.
 Transforms are concatenated and applied all at once, with one interpolation (Lanczos)
 step, so as little information is lost as possible.
 
-The output space grid can be specified using the ``output_grid_ref`` argument.
+The output space grid can be specified using the ``template_out_grid`` argument.
 This option accepts the following (``str``) values:
 
   * ``'native'``: the original resolution of the BOLD image will be used.
