@@ -135,7 +135,7 @@ def get_parser():
         '--output-grid-reference', required=False, action='store',
         help='Deprecated after FMRIPREP 1.0.8. Please use --template-resampling-grid instead.')
     g_conf.add_argument(
-        '--template-resampling-grid', required=False, action='store', default='2mm',
+        '--template-resampling-grid', required=False, action='store', default='native',
         help='Keyword ("native", "1mm", or "2mm") or path to an existing file. '
              'Allows to define a reference grid for the resampling of BOLD images in template '
              'space. Keyword "native" will use the original BOLD grid as reference. '

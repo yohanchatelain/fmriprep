@@ -330,7 +330,7 @@ jobs:
                 --debug --write-graph --use-syn-sdc --use-aroma \
                 --ignore-aroma-denoising-errors --mem_mb 4096 \
                 --output-space T1w template fsaverage5 \
-                --template-resampling-grid native \
+                --template-resampling-grid 2mm \
                 --nthreads 2 -vv
             sudo find /tmp/ds005/work -not -name "*.svg" -not -name "*.html" -not -name "*.rst" \
                 -not -name "*.mat" -not -name "*.lta" -type f -delete
