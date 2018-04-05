@@ -189,8 +189,8 @@ def init_bold_mni_trans_wf(template, mem_gb, omp_nthreads,
         name : str
             Name of workflow (default: ``bold_mni_trans_wf``)
         template_out_grid : str
-            Path of custom reference image for normalization.
-            Special values of 'native', '1mm', '2mm' are accepted.
+            Keyword ('native', '1mm' or '2mm') or path of custom reference
+            image for normalization.
         use_compression : bool
             Save registered BOLD series as ``.nii.gz``
         use_fieldwarp : bool

@@ -136,8 +136,9 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             Enable debugging outputs
         low_mem : bool
             Write uncompressed .nii files in some cases to reduce memory usage
-        template_out_grid : str or None
-            Path of custom reference image for normalization
+        template_out_grid : str
+            Keyword ('native', '1mm' or '2mm') or path of custom reference
+            image for normalization
         layout : BIDSLayout
             BIDSLayout structure to enable metadata retrieval
 

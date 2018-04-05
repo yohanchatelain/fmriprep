@@ -149,7 +149,8 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
         ignore_aroma_err : bool
             Do not fail on ICA-AROMA errors
         template_out_grid : str
-            Path of custom reference image for normalization
+            Keyword ('native', '1mm' or '2mm') or path of custom reference
+            image for normalization
 
     """
     fmriprep_wf = pe.Workflow(name='fmriprep_wf')
@@ -323,7 +324,8 @@ def init_single_subject_wf(subject_id, task_id, name,
         force_syn : bool
             **Temporary**: Always run SyN-based SDC
         template_out_grid : str
-            Path of custom reference image for normalization
+            Keyword ('native', '1mm' or '2mm') or path of custom reference
+            image for normalization
         use_aroma : bool
             Perform ICA-AROMA on MNI-resampled functional series
         ignore_aroma_err : bool
