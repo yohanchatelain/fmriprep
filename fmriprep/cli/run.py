@@ -173,15 +173,25 @@ def get_parser():
                        help='EXPERIMENTAL/TEMPORARY: Use SyN correction in addition to '
                        'fieldmap correction, if available')
 
-    # Surface generation
-    g_surfs = parser.add_mutually_exclusive_group()
-    g_surfs.add_argument('--cifti-output', action='store_true', default=False,
-                         help='output BOLD files as CIFTI dtseries')
-    g_surfs.add_argument('--fs-no-reconall', '--no-freesurfer',
-                         action='store_false', dest='run_reconall',
-                         help='disable FreeSurfer surface preprocessing.'
-                         ' Note : `--no-freesurfer` is deprecated and will be removed in 1.2.'
-                         ' Use `--fs-no-reconall` instead.')
+    # FreeSurfer options
+    g_fs = parser.add_argument_group('Specific options for FreeSurfer preprocessing')
+    g_fs.add_argument(
+        '--fs-license-file', metavar='PATH', type=os.path.abspath,
+        help='Path to FreeSurfer license key file. Get it (for free) by registering'
+             ' at https://surfer.nmr.mgh.harvard.edu/registration.html')
+
+    # Surface generation xor
+    g_surfs = parser.add_argument_group('Surface preprocessing options')
+    g_surfs.add_argument('--no-submm-recon', action='store_false', dest='hires',
+                         help='disable sub-millimeter (hires) reconstruction')
+    g_surfs_xor = g_surfs.add_mutually_exclusive_group()
+    g_surfs_xor.add_argument('--cifti-output', action='store_true', default=False,
+                             help='output BOLD files as CIFTI dtseries')
+    g_surfs_xor.add_argument('--fs-no-reconall', '--no-freesurfer',
+                             action='store_false', dest='run_reconall',
+                             help='disable FreeSurfer surface preprocessing.'
+                             ' Note : `--no-freesurfer` is deprecated and will be removed in 1.2.'
+                             ' Use `--fs-no-reconall` instead.')
 
     # FreeSurfer options
     g_fs = parser.add_argument_group('Specific options for FreeSurfer preprocessing')
