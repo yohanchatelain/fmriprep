@@ -193,15 +193,6 @@ def get_parser():
                              ' Note : `--no-freesurfer` is deprecated and will be removed in 1.2.'
                              ' Use `--fs-no-reconall` instead.')
 
-    # FreeSurfer options
-    g_fs = parser.add_argument_group('Specific options for FreeSurfer preprocessing')
-    g_fs.add_argument('--no-submm-recon', action='store_false', dest='hires',
-                      help='disable sub-millimeter (hires) reconstruction')
-    g_fs.add_argument(
-        '--fs-license-file', metavar='PATH', type=os.path.abspath,
-        help='Path to FreeSurfer license key file. Get it (for free) by registering'
-             ' at https://surfer.nmr.mgh.harvard.edu/registration.html')
-
     g_other = parser.add_argument_group('Other options')
     g_other.add_argument('-w', '--work-dir', action='store',
                          help='path where intermediate results should be stored')
