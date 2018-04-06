@@ -436,7 +436,7 @@ matter boundary (FreeSurfer's ``?h.white`` surfaces).
 
 If FreeSurfer processing is disabled, FSL ``flirt`` is run with the
 :abbr:`BBR (boundary-based registration)` cost function, using the
-``fast`` segmentation to establish the gray/white matter boundary.
+``fast`` segmentation to establish the gray/white matter boundary. After :abbr:`BBR (boundary-based registration)` is run, the resulting affine transform will be compared to the initial transform found by FLIRT. Excessive deviation will result in rejecting the BBR refinement and accepting the original, affine registration.
 
 EPI to MNI transformation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
