@@ -178,10 +178,10 @@ def get_parser():
     g_surfs.add_argument('--cifti-output', action='store_true', default=False,
                          help='output BOLD files as CIFTI dtseries')
     g_surfs.add_argument('--fs-no-reconall', '--no-freesurfer',
-                      action='store_false', dest='run_reconall',
-                      help='disable FreeSurfer surface preprocessing.'
-                      ' Note : `--no-freesurfer` is deprecated and will be removed in 1.2.'
-                      ' Use `--fs-no-reconall` instead.')
+                         action='store_false', dest='run_reconall',
+                         help='disable FreeSurfer surface preprocessing.'
+                         ' Note : `--no-freesurfer` is deprecated and will be removed in 1.2.'
+                         ' Use `--fs-no-reconall` instead.')
 
     # FreeSurfer options
     g_fs = parser.add_argument_group('Specific options for FreeSurfer preprocessing')
