@@ -147,9 +147,6 @@ def get_parser():
         '--medial-surface-nan', required=False, action='store_true', default=False,
         help='Replace medial wall values with NaNs on functional GIFTI files. Only '
         'performed for GIFTI files mapped to a freesurfer subject (fsaverage or fsnative).')
-    g_conf.add_argument(
-        '--cifti-output', required=False, action='store_true', default=False,
-        help='output CIFTI dtseries')
 
     # ICA_AROMA options
     g_aroma = parser.add_argument_group('Specific options for running ICA_AROMA')
@@ -176,13 +173,18 @@ def get_parser():
                        help='EXPERIMENTAL/TEMPORARY: Use SyN correction in addition to '
                        'fieldmap correction, if available')
 
-    # FreeSurfer options
-    g_fs = parser.add_argument_group('Specific options for FreeSurfer preprocessing')
-    g_fs.add_argument('--fs-no-reconall', '--no-freesurfer',
+    # Surface generation
+    g_surfs = parser.add_mutually_exclusive_group()
+    g_surfs.add_argument('--cifti-output', action='store_true', default=False,
+                         help='output BOLD files as CIFTI dtseries')
+    g_surfs.add_argument('--fs-no-reconall', '--no-freesurfer',
                       action='store_false', dest='run_reconall',
                       help='disable FreeSurfer surface preprocessing.'
                       ' Note : `--no-freesurfer` is deprecated and will be removed in 1.2.'
                       ' Use `--fs-no-reconall` instead.')
+
+    # FreeSurfer options
+    g_fs = parser.add_argument_group('Specific options for FreeSurfer preprocessing')
     g_fs.add_argument('--no-submm-recon', action='store_false', dest='hires',
                       help='disable sub-millimeter (hires) reconstruction')
     g_fs.add_argument(
@@ -329,11 +331,6 @@ def build_workflow(opts, retval):
         if opts.force_syn:
             raise RuntimeError(msg)
         logger.warning(msg)
-
-    # Cannot output CIFTI if no freesurfer surfaces
-    if opts.cifti_output and not opts.run_reconall:
-        logger.warning('CIFTI output will not be generated without FreeSurfer surfaces')
-        opts.cifti_output = False
 
     # Set up some instrumental utilities
     run_uuid = '%s_%s' % (strftime('%Y%m%d-%H%M%S'), uuid.uuid4())
