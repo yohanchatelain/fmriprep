@@ -580,7 +580,7 @@ def init_skullstrip_ants_wf(skull_strip_template, debug, omp_nthreads, name='sku
     workflow.__desc__ = """\
 Each T1w (T1-weighted) volume was corrected for INU (intensity non-uniformity) \
 using N4BiasFieldCorrection v{ants_ver} [4] and skull-stripped using antsBrainExtraction.sh \
-v{ants_ver} (using the {skullstrip_tpl} template).\
+v{ants_ver} (using the {skullstrip_tpl} template). \
 """.format(ants_ver=BrainExtraction().version, skullstrip_tpl=skull_strip_template)
 
     # Grabbing the appropriate template elements
