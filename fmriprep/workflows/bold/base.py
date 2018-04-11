@@ -296,7 +296,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_t1', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1', 'cifti_variant',
                 'bold_mni', 'bold_mask_mni', 'bold_cifti', 'confounds', 'surfaces',
-                't2s_map', 'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file']),
+                't2s_map', 'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file',
+                'cifti_variant_key']),
         name='outputnode')
 
     # BOLD buffer: an identity used as a pointer to either the original BOLD
@@ -333,7 +334,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             ('melodic_mix', 'inputnode.melodic_mix'),
             ('nonaggr_denoised_file', 'inputnode.nonaggr_denoised_file'),
             ('bold_cifti', 'inputnode.bold_cifti'),
-            ('cifti_variant', 'inputnode.cifti_variant')
+            ('cifti_variant', 'inputnode.cifti_variant'),
+            ('cifti_variant_key', 'inputnode.cifti_variant_key')
         ]),
     ])
 
@@ -671,7 +673,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 (inputnode, gen_cifti, [('subjects_dir', 'subjects_dir')]),
                 (bold_mni_trans_wf, gen_cifti, [('outputnode.bold_mni', 'bold_file')]),
                 (gen_cifti, outputnode, [('out_file', 'bold_cifti'),
-                                         ('variant', 'cifti_variant')]),
+                                         ('variant', 'cifti_variant'),
+                                         ('variant_key', 'cifti_variant_key')]),
             ])
 
     # REPORTING ############################################################
@@ -711,7 +714,7 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     inputnode = pe.Node(
         niu.IdentityInterface(
             fields=['source_file', 'bold_t1', 'bold_mask_t1', 'bold_mni', 'bold_mask_mni',
-                    'bold_aseg_t1', 'bold_aparc_t1',
+                    'bold_aseg_t1', 'bold_aparc_t1', 'cifti_variant_key'
                     'confounds', 'surfaces', 'aroma_noise_ics', 'melodic_mix',
                     'nonaggr_denoised_file', 'bold_cifti', 'cifti_variant']),
         name='inputnode')
@@ -806,11 +809,16 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
                 base_directory=output_dir, compress=False),
                 iterfield=['in_file', 'suffix'], name='cifti_bolds',
                 run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
+            cifti_key = pe.MapNode(DerivativesDataSink(
+                base_directory=output_dir), iterfield='in_file', name='cifti_key',
+                run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
             workflow.connect([
                 (inputnode, name_cifti, [('cifti_variant', 'variant')]),
                 (inputnode, cifti_bolds, [('bold_cifti', 'in_file'),
                                           ('source_file', 'source_file')]),
                 (name_cifti, cifti_bolds, [('out_name', 'suffix')]),
+                (name_cifti, cifti_key, [('out_name', 'suffix')]),
+                (inputnode, cifti_key, [('cifti_variant_key', 'in_file')])
             ])
 
     if use_aroma:
