@@ -332,16 +332,48 @@ jobs:
                 --output-space T1w template fsaverage5 \
                 --template-resampling-grid native \
                 --nthreads 2 -vv
-            sudo find /tmp/ds005/work -not -name "*.svg" -not -name "*.html" -not -name "*.rst" \
-                -not -name "*.mat" -not -name "*.lta" -type f -delete
       - run:
-          name: Checking outputs of fMRIPrep
+          name: Move intermediate results for second run
+          command: |
+            mkdir -p /tmp/ds005/derivatives_partial
+            mv /tmp/ds005/derivatives/freesurfer /tmp/ds005/derivatives_partial
+            cp -al /tmp/ds005/work /tmp/ds005/work_partial
+      - run:
+          name: Checking outputs of full fMRIPrep run
           command: |
             mkdir -p /tmp/ds005/test
-            sudo rm -rf /tmp/ds005/derivatives/freesurfer
             find /tmp/ds005/derivatives | sed s+/tmp/ds005/derivatives/++ | sort > /tmp/ds005/test/outputs.out
             diff /tmp/src/fmriprep/.circleci/ds005_outputs.txt /tmp/ds005/test/outputs.out
             exit $?
+      - run:
+          name: Re-run fMRIPrep on single run of task data
+          no_output_timeout: 2h
+          command: |
+            rm /tmp/data/ds005/sub-01/func/*_run-02_*
+            cp -al /tmp/ds005/work /tmp/ds005/work_partial
+            fmriprep-docker -i poldracklab/fmriprep:latest \
+                --config $PWD/nipype.cfg -w /tmp/ds005/work \
+                /tmp/data/ds005 /tmp/ds005/derivatives_partial participant \
+                --debug --write-graph --use-syn-sdc --use-aroma \
+                --ignore-aroma-denoising-errors --mem_mb 4096 \
+                --output-space T1w template fsaverage5 \
+                --template-resampling-grid native \
+                --nthreads 2 -vv
+      - run:
+          name: Checking outputs of partial fMRIPrep run
+          command: |
+            mkdir -p /tmp/ds005/test
+            sudo rm -rf /tmp/ds005/derivatives_partial/freesurfer
+            find /tmp/ds005/derivatives_partial | sed s+/tmp/ds005/derivatives_partial/++ | sort > /tmp/ds005/test/outputs.out
+            diff /tmp/src/fmriprep/.circleci/ds005_partial_outputs.txt /tmp/ds005/test/outputs.out
+            exit $?
+      - run:
+          name: Clean working directory
+          command: |
+            sudo find /tmp/ds005/work -not -name "*.svg" -not -name "*.html" -not -name "*.rst" \
+                -not -name "*.mat" -not -name "*.lta" -type f -delete
+            sudo find /tmp/ds005/work_partial -not -name "*.svg" -not -name "*.html" -not -name "*.rst" \
+                -not -name "*.mat" -not -name "*.lta" -type f -delete
 
       - store_artifacts:
           path: /tmp/ds005
