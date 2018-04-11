@@ -337,7 +337,7 @@ jobs:
           command: |
             mkdir -p /tmp/ds005/derivatives_partial
             mv /tmp/ds005/derivatives/freesurfer /tmp/ds005/derivatives_partial
-            cp -al /tmp/ds005/work /tmp/ds005/work_partial
+            cp -a /tmp/ds005/work /tmp/ds005/work_partial
       - run:
           name: Checking outputs of full fMRIPrep run
           command: |
@@ -350,7 +350,6 @@ jobs:
           no_output_timeout: 2h
           command: |
             rm /tmp/data/ds005/sub-01/func/*_run-02_*
-            cp -al /tmp/ds005/work /tmp/ds005/work_partial
             fmriprep-docker -i poldracklab/fmriprep:latest \
                 --config $PWD/nipype.cfg -w /tmp/ds005/work \
                 /tmp/data/ds005 /tmp/ds005/derivatives_partial participant \
