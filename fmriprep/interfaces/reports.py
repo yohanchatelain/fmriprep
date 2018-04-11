@@ -73,7 +73,7 @@ class SubjectSummaryInputSpec(BaseInterfaceInputSpec):
     t2w = InputMultiPath(File(exists=True), desc='T2w structural images')
     subjects_dir = Directory(desc='FreeSurfer subjects directory')
     subject_id = Str(desc='Subject ID')
-    bold = traits.List(desc='BOLD functional series')
+    bold = InputMultiPath(desc='BOLD functional series')
     output_spaces = traits.List(desc='Target spaces')
     template = traits.Enum('MNI152NLin2009cAsym', desc='Template space')
 
