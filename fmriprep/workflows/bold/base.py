@@ -268,7 +268,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         # Short circuits: (True and True and (False or 'TooShort')) == 'TooShort'
         run_stc = ("SliceTiming" in metadata and
                    'slicetiming' not in ignore and
-                   (_get_series_len(bold_file) > 4 or "TooShort"))
+                   (_get_series_len(ref_file) > 4 or "TooShort"))
 
     # Use T2* as target for ME-EPI in co-registration
     if t2s_coreg and not multiecho:
@@ -842,8 +842,6 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
 
 def _get_series_len(bold_fname):
     from niworkflows.interfaces.registration import _get_vols_to_discard
-    if isinstance(bold_fname, list):  # Multi-echo data
-        bold_fname = bold_fname[0]
     img = nb.load(bold_fname)
     if len(img.shape) < 4:
         return 1
