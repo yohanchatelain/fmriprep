@@ -809,8 +809,8 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
                 base_directory=output_dir, compress=False),
                 iterfield=['in_file', 'suffix'], name='cifti_bolds',
                 run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
-            cifti_key = pe.MapNode(DerivativesDataSink(
-                base_directory=output_dir), iterfield='in_file', name='cifti_key',
+            cifti_key = pe.MapNode(DerivativesDataSink(base_directory=output_dir),
+                iterfield=['in_file', 'suffix'], name='cifti_key',
                 run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
             workflow.connect([
                 (inputnode, name_cifti, [('cifti_variant', 'variant')]),
