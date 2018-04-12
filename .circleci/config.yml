@@ -336,8 +336,8 @@ jobs:
           name: Move intermediate results for second run
           command: |
             mkdir -p /tmp/ds005/derivatives_partial
-            mv /tmp/ds005/derivatives/freesurfer /tmp/ds005/derivatives_partial
-            cp -a /tmp/ds005/work /tmp/ds005/work_partial
+            sudo mv /tmp/ds005/derivatives/freesurfer /tmp/ds005/derivatives_partial
+            sudo cp -a /tmp/ds005/work /tmp/ds005/work_partial
       - run:
           name: Checking outputs of full fMRIPrep run
           command: |
