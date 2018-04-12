@@ -819,7 +819,8 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
                                           ('source_file', 'source_file')]),
                 (name_cifti, cifti_bolds, [('out_name', 'suffix')]),
                 (name_cifti, cifti_key, [('out_name', 'suffix')]),
-                (inputnode, cifti_key, [('cifti_variant_key', 'in_file')])
+                (inputnode, cifti_key, [('source_file', 'source_file'),
+                                        ('cifti_variant_key', 'in_file')]),
             ])
 
     if use_aroma:
