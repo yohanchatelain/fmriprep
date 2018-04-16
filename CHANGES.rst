@@ -1,3 +1,9 @@
+1.0.10 (April 16, 2018)
+=======================
+
+  * [TST] Re-run ds005 with only one BOLD run (#1048)
+  * [FIX] Patch subject_summary in reports (#1047)
+
 1.0.9 (April 10, 2018)
 ======================
 
