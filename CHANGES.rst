@@ -1,3 +1,8 @@
+1.0.11 (April 16, 2018)
+=======================
+
+* [FIX] Do not detrend CSF/WhiteMatter/GlobalSignal (#1058)
+
 1.0.10 (April 16, 2018)
 =======================
 
