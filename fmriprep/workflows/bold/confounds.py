@@ -162,9 +162,8 @@ def init_bold_confs_wf(mem_gb, metadata, name="bold_confs_wf"):
 
     # Global and segment regressors
     mrg_lbl = pe.Node(niu.Merge(3), name='merge_rois', run_without_submitting=True)
-    signals = pe.Node(SignalExtraction(
-        detrend=True, class_labels=["CSF", "WhiteMatter", "GlobalSignal"]),
-        name="signals", mem_gb=mem_gb)
+    signals = pe.Node(SignalExtraction(class_labels=["CSF", "WhiteMatter", "GlobalSignal"]),
+                      name="signals", mem_gb=mem_gb)
 
     # Arrange confounds
     add_header = pe.Node(AddTSVHeader(columns=["X", "Y", "Z", "RotX", "RotY", "RotZ"]),
