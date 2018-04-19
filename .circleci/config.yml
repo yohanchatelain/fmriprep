@@ -357,7 +357,7 @@ jobs:
                 --ignore-aroma-denoising-errors --mem_mb 4096 \
                 --output-space T1w template fsaverage5 \
                 --template-resampling-grid native \
-                --nthreads 2 -vv
+                --nthreads 2 --cifti-output -vv
       - run:
           name: Checking outputs of partial fMRIPrep run
           command: |
