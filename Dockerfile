@@ -94,7 +94,7 @@ RUN npm install -g svgo
 
 # Installing and setting up ICA_AROMA
 RUN mkdir -p /opt/ICA-AROMA && \
-  curl -sSL "https://github.com/rhr-pruim/ICA-AROMA/archive/v0.4.1-beta.tar.gz" \
+  curl -sSL "https://github.com/maartenmennes/ICA-AROMA/archive/v0.4.4-beta.tar.gz" \
   | tar -xzC /opt/ICA-AROMA --strip-components 1 && \
   chmod +x /opt/ICA-AROMA/ICA_AROMA.py
 

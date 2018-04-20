@@ -590,45 +590,45 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                              ('outputnode.bold_mask_mni', 'bold_mask_mni')]),
         ])
 
-        if use_aroma:  # ICA-AROMA workflow
-            """
-            ica_aroma_report
-                Reportlet visualizing MELODIC ICs, with ICA-AROMA signal/noise labels
-            aroma_noise_ics
-                CSV of noise components identified by ICA-AROMA
-            melodic_mix
-                FSL MELODIC mixing matrix
-            nonaggr_denoised_file
-                BOLD series with non-aggressive ICA-AROMA denoising applied
+    if use_aroma:
+        # ICA-AROMA workflow
+        # Internally resamples to MNI152 Linear (2006)
+        from .confounds import init_ica_aroma_wf
+        from ...interfaces import JoinTSVColumns
+        ica_aroma_wf = init_ica_aroma_wf(name='ica_aroma_wf',
+                                         ignore_aroma_err=ignore_aroma_err)
+        join = pe.Node(JoinTSVColumns(), name='aroma_confounds')
 
-            """
-            from .confounds import init_ica_aroma_wf
-            from ...interfaces import JoinTSVColumns
-            ica_aroma_wf = init_ica_aroma_wf(name='ica_aroma_wf',
-                                             ignore_aroma_err=ignore_aroma_err)
-            join = pe.Node(JoinTSVColumns(), name='aroma_confounds')
-
-            workflow.disconnect([
-                (bold_confounds_wf, outputnode, [
-                    ('outputnode.confounds_file', 'confounds'),
-                ]),
-            ])
-            workflow.connect([
-                (bold_hmc_wf, ica_aroma_wf, [
-                    ('outputnode.movpar_file', 'inputnode.movpar_file')]),
-                (bold_mni_trans_wf, ica_aroma_wf, [
-                    ('outputnode.bold_mask_mni', 'inputnode.bold_mask_mni'),
-                    ('outputnode.bold_mni', 'inputnode.bold_mni')]),
-                (bold_confounds_wf, join, [
-                    ('outputnode.confounds_file', 'in_file')]),
-                (ica_aroma_wf, join,
-                    [('outputnode.aroma_confounds', 'join_file')]),
-                (ica_aroma_wf, outputnode,
-                    [('outputnode.aroma_noise_ics', 'aroma_noise_ics'),
-                     ('outputnode.melodic_mix', 'melodic_mix'),
-                     ('outputnode.nonaggr_denoised_file', 'nonaggr_denoised_file')]),
-                (join, outputnode, [('out_file', 'confounds')]),
-            ])
+        workflow.disconnect([
+            (bold_confounds_wf, outputnode, [
+                ('outputnode.confounds_file', 'confounds'),
+            ]),
+        ])
+        workflow.connect([
+            (inputnode, ica_aroma_wf, [
+                ('bold_file', 'inputnode.name_source'),
+                ('t1_2_mni_forward_transform', 'inputnode.t1_2_mni_forward_transform')]),
+            (bold_split, ica_aroma_wf, [
+                ('out_files', 'inputnode.bold_split')]),
+            (bold_hmc_wf, ica_aroma_wf, [
+                ('outputnode.movpar_file', 'inputnode.movpar_file'),
+                ('outputnode.xforms', 'inputnode.hmc_xforms')]),
+            (bold_reg_wf, ica_aroma_wf, [
+                ('outputnode.itk_bold_to_t1', 'inputnode.itk_bold_to_t1')]),
+            (bold_bold_trans_wf, ica_aroma_wf, [
+                ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+            (bold_sdc_wf, ica_aroma_wf, [
+                ('outputnode.out_warp', 'inputnode.fieldwarp')]),
+            (bold_confounds_wf, join, [
+                ('outputnode.confounds_file', 'in_file')]),
+            (ica_aroma_wf, join,
+                [('outputnode.aroma_confounds', 'join_file')]),
+            (ica_aroma_wf, outputnode,
+                [('outputnode.aroma_noise_ics', 'aroma_noise_ics'),
+                 ('outputnode.melodic_mix', 'melodic_mix'),
+                 ('outputnode.nonaggr_denoised_file', 'nonaggr_denoised_file')]),
+            (join, outputnode, [('out_file', 'confounds')]),
+        ])
 
     # SURFACES ##################################################################################
     if freesurfer and any(space.startswith('fs') for space in output_spaces):
@@ -780,7 +780,7 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_aroma_mni = pe.Node(DerivativesDataSink(
             base_directory=output_dir, suffix=variant_suffix_fmt(
-                template, 'smoothAROMAnonaggr', 'preproc')),
+                'MNI152Lin', 'smoothAROMAnonaggr', 'preproc')),
             name='ds_aroma_mni', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
 

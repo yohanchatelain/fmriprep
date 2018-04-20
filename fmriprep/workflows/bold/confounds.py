@@ -9,6 +9,8 @@ Calculate BOLD confounds
 .. autofunction:: init_ica_aroma_wf
 
 """
+import os
+from niworkflows.data import get_mni_icbm152_linear
 from niworkflows.nipype.pipeline import engine as pe
 from niworkflows.nipype.interfaces import utility as niu, fsl
 from niworkflows.nipype.interfaces.nilearn import SignalExtraction
@@ -26,6 +28,8 @@ from ...interfaces.patches import (
     RobustACompCor as ACompCor,
     RobustTCompCor as TCompCor
 )
+
+from .resampling import init_bold_mni_trans_wf
 
 DEFAULT_MEMORY_MIN_GB = 0.01
 
@@ -266,7 +270,11 @@ def init_bold_confs_wf(mem_gb, metadata, name="bold_confs_wf"):
     return workflow
 
 
-def init_ica_aroma_wf(name='ica_aroma_wf', ignore_aroma_err=False):
+def init_ica_aroma_wf(template, mem_gb, omp_nthreads,
+                      name='ica_aroma_wf',
+                      ignore_aroma_err=False,
+                      use_compression=True,
+                      use_fieldwarp=True):
     '''
     This workflow wraps `ICA-AROMA`_ to identify and remove motion-related
     independent components from a BOLD time series.
@@ -290,12 +298,27 @@ def init_ica_aroma_wf(name='ica_aroma_wf', ignore_aroma_err=False):
         :simple_form: yes
 
         from fmriprep.workflows.bold.confounds import init_ica_aroma_wf
-        wf = init_ica_aroma_wf()
+        wf = init_ica_aroma_wf(template='MNI152NLin2009cAsym',
+                               mem_gb=3,
+                               omp_nthreads=1)
 
     **Parameters**
 
+        template : str
+            Name of template targeted by `'template'` output space
         ignore_aroma_err : bool
             Do not fail on ICA-AROMA errors
+        mem_gb : float
+            Size of BOLD file in GB
+        omp_nthreads : int
+            Maximum number of threads an individual process may use
+        name : str
+            Name of workflow (default: ``bold_mni_trans_wf``)
+        use_compression : bool
+            Save registered BOLD series as ``.nii.gz``
+        use_fieldwarp : bool
+            Include SDC warp in single-shot transform from BOLD to MNI
+
 
     **Inputs**
 
@@ -322,11 +345,30 @@ def init_ica_aroma_wf(name='ica_aroma_wf', ignore_aroma_err=False):
     workflow = pe.Workflow(name=name)
 
     inputnode = pe.Node(niu.IdentityInterface(
-        fields=['bold_mni', 'movpar_file', 'bold_mask_mni']), name='inputnode')
+        fields=[
+            'itk_bold_to_t1',
+            't1_2_mni_forward_transform',
+            'name_source',
+            'bold_split',
+            'bold_mask',
+            'hmc_xforms',
+            'fieldwarp',
+            'movpar_file']), name='inputnode')
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['aroma_confounds', 'aroma_noise_ics', 'melodic_mix',
                 'nonaggr_denoised_file']), name='outputnode')
+
+    bold_mni_trans_wf = init_bold_mni_trans_wf(
+        template=template,
+        mem_gb=mem_gb['resampled'],
+        omp_nthreads=omp_nthreads,
+        template_out_grid=os.path.join(get_mni_icbm152_linear(),
+                                       '2mm_T1.nii.gz'),
+        use_compression=use_compression,
+        use_fieldwarp=use_fieldwarp,
+        name='bold_mni_trans_wf'
+    )
 
     calc_median_val = pe.Node(fsl.ImageStats(op_string='-k %s -p 50'), name='calc_median_val')
     calc_bold_mean = pe.Node(fsl.MeanImage(), name='calc_bold_mean')
@@ -359,22 +401,35 @@ def init_ica_aroma_wf(name='ica_aroma_wf', ignore_aroma_err=False):
 
     # connect the nodes
     workflow.connect([
-        # Connect input nodes to complete smoothing
-        (inputnode, calc_median_val, [('bold_mni', 'in_file'),
-                                      ('bold_mask_mni', 'mask_file')]),
-        (inputnode, calc_bold_mean, [('bold_mni', 'in_file')]),
+        (inputnode, bold_mni_trans_wf, [
+            ('name_source', 'inputnode.name_source'),
+            ('bold_split', 'inputnode.bold_split'),
+            ('bold_mask', 'inputnode.bold_mask'),
+            ('hmc_xforms', 'inputnode.hmc_xforms'),
+            ('itk_bold_to_t1', 'inputnode.itk_bold_to_t1'),
+            ('t1_2_mni_forward_transform', 'inputnode.t1_2_mni_forward_transform'),
+            ('fieldwarp', 'inputnode.fieldwarp')]),
+        (inputnode, ica_aroma, [('movpar_file', 'motion_parameters')]),
+        (bold_mni_trans_wf, calc_median_val, [
+            ('outputnode.bold_mni', 'in_file'),
+            ('outputnode.bold_mask_mni', 'mask_file')]),
+        (bold_mni_trans_wf, calc_bold_mean, [
+            ('outputnode.bold_mni', 'in_file')]),
         (calc_bold_mean, getusans, [('out_file', 'image')]),
         (calc_median_val, getusans, [('out_stat', 'thresh')]),
-        (inputnode, smooth, [('bold_mni', 'in_file')]),
+        # Connect input nodes to complete smoothing
+        (bold_mni_trans_wf, smooth, [
+            ('outputnode.bold_mni', 'in_file')]),
         (getusans, smooth, [('usans', 'usans')]),
         (calc_median_val, smooth, [(('out_stat', _getbtthresh), 'brightness_threshold')]),
         # connect smooth to melodic
         (smooth, melodic, [('smoothed_file', 'in_files')]),
-        (inputnode, melodic, [('bold_mask_mni', 'mask')]),
+        (bold_mni_trans_wf, melodic, [
+            ('outputnode.bold_mask_mni', 'mask')]),
         # connect nodes to ICA-AROMA
         (smooth, ica_aroma, [('smoothed_file', 'in_file')]),
-        (inputnode, ica_aroma, [('bold_mask_mni', 'report_mask'),
-                                ('movpar_file', 'motion_parameters')]),
+        (bold_mni_trans_wf, ica_aroma, [
+            ('outputnode.bold_mask_mni', 'report_mask')]),
         (melodic, ica_aroma, [('out_dir', 'melodic_dir')]),
         # generate tsvs from ICA-AROMA
         (ica_aroma, ica_aroma_confound_extraction, [('out_dir', 'in_directory')]),
