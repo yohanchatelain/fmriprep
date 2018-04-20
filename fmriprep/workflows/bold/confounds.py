@@ -361,7 +361,7 @@ def init_ica_aroma_wf(template, mem_gb, omp_nthreads,
 
     bold_mni_trans_wf = init_bold_mni_trans_wf(
         template=template,
-        mem_gb=mem_gb['resampled'],
+        mem_gb=mem_gb,
         omp_nthreads=omp_nthreads,
         template_out_grid=os.path.join(get_mni_icbm152_linear(),
                                        '2mm_T1.nii.gz'),
