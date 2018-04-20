@@ -93,14 +93,14 @@ Transfer the resulting Singularity image to the HPC, for example, using ``scp``.
 
 If the data to be preprocessed is also on the HPC, you are ready to run fmriprep. ::
 
-    $ singularity run path/to/singularity/image.img \
+    $ singularity run --clearenv path/to/singularity/image.img \
         path/to/data/dir path/to/output/dir \
         participant \
         --participant-label label
 
 For example: ::
 
-    $ singularity run ~/poldracklab_fmriprep_latest-2016-12-04-5b74ad9a4c4d.img \
+    $ singularity run --clearenv ~/poldracklab_fmriprep_latest-2016-12-04-5b74ad9a4c4d.img \
         /work/04168/asdf/lonestar/ $WORK/lonestar/output \
         participant \
         --participant-label 387 --nthreads 16 -w $WORK/lonestar/work \
@@ -110,9 +110,9 @@ For example: ::
 
    Singularity by default `exposes all environment variables from the host inside the container <https://github.com/singularityware/singularity/issues/445>`_.
    Because of this your host libraries (such as nipype) could be accidentally used instead of the ones inside the container - if they are included in PYTHONPATH.
-   To avoid such situation we recommend unsetting PYTHONPATH in production use. For example: ::
+   To avoid such situation we recommend using the ``--clearenv`` singualrity flag in production use. For example: ::
 
-      $ PYTHONPATH="" singularity run ~/poldracklab_fmriprep_latest-2016-12-04-5b74ad9a4c4d.img \
+      $ singularity run --clearenv ~/poldracklab_fmriprep_latest-2016-12-04-5b74ad9a4c4d.img \
         /work/04168/asdf/lonestar/ $WORK/lonestar/output \
         participant \
         --participant-label 387 --nthreads 16 -w $WORK/lonestar/work \
@@ -149,9 +149,11 @@ FMRIPREP uses FreeSurfer tools, which require a license to run.
 To obtain a FreeSurfer license, simply register for free at
 https://surfer.nmr.mgh.harvard.edu/registration.html.
 
-When using manually-prepared environments, FreeSurfer will search for a license key
-file first using the ``$FS_LICENSE`` environment variable and then in the default
-path to the license key file (``$FREESURFER_HOME/license.txt``).
+When using manually-prepared environments or singularity, FreeSurfer will search 
+for a license key file first using the ``$FS_LICENSE`` environment variable and then 
+in the default path to the license key file (``$FREESURFER_HOME/license.txt``). If you want
+to use ``$FS_LICENSE`` to point to your license file with singularity remember not to 
+use the ``--clearenv`` flag.
 
 It is possible to run the docker container pointing the image to a local path
 where a valid license file is stored.
