@@ -595,8 +595,14 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         # Internally resamples to MNI152 Linear (2006)
         from .confounds import init_ica_aroma_wf
         from ...interfaces import JoinTSVColumns
-        ica_aroma_wf = init_ica_aroma_wf(name='ica_aroma_wf',
-                                         ignore_aroma_err=ignore_aroma_err)
+        ica_aroma_wf = init_ica_aroma_wf(
+            template=template,
+            mem_gb=mem_gb['resampled'],
+            omp_nthreads=omp_nthreads,
+            use_compression=not (low_mem and use_aroma),
+            use_fieldwarp=fmaps is not None,
+            ignore_aroma_err=ignore_aroma_err,
+            name='ica_aroma_wf')
         join = pe.Node(JoinTSVColumns(), name='aroma_confounds')
 
         workflow.disconnect([
