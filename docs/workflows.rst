@@ -34,6 +34,7 @@ is presented below:
                                 output_spaces=['T1w', 'fsnative',
                                               'template', 'fsaverage5'],
                                 medial_surface_nan=False,
+                                cifti_output=False,
                                 ignore=[],
                                 debug=False,
                                 low_mem=False,
@@ -232,6 +233,7 @@ BOLD preprocessing
                               output_spaces=['T1w', 'fsnative',
                                              'template', 'fsaverage5'],
                               medial_surface_nan=False,
+                              cifti_output=False,
                               debug=False,
                               low_mem=False,
                               use_bbr=True,
@@ -526,10 +528,9 @@ the ``--use-aroma`` flag is enabled, the noise components identified by ICA-AROM
 from its "aggressive" counterpart and cannot be performed only by using a set of noise
 regressors (a separate GLM with both noise and signal regressors needs to be used).
 Therefore instead of regressors FMRIPREP produces *non*-aggressive denoised 4D NIFTI
-files in the ``MNI152Lin`` space (please note that ICA-AROMA may fail if the image
-is in a different space):
+files in the MNI space:
 
-``*bold_space-MNI152Lin_variant-smoothAROMAnonaggr_brainmask.nii.gz``
+``*bold_space-MNI152NLin2009cAsym_variant-smoothAROMAnonaggr_brainmask.nii.gz``
 
 Additionally, the MELODIC mix and noise component indices will
 be generated, so non-aggressive denoising can be manually performed in the T1w space with ``fsl_regfilt``, *e.g.*::
