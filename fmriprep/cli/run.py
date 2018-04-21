@@ -317,6 +317,14 @@ def build_workflow(opts, retval):
     """.format
 
     # Validity of some inputs
+    # ERROR check if use_aroma was specified, but the correct template was not
+    if opts.use_aroma and (opts.template != 'MNI152NLin2009cAsym' or
+                           'template' not in opts.output_space):
+        raise RuntimeError('ERROR: --use-aroma requires functional images to be resampled to '
+                           'MNI152NLin2009cAsym.\n'
+                           '\t--template must be set to "MNI152NLin2009cAsym" (was: "{}")\n'
+                           '\t--output-space list must include "template" (was: "{}")'.format(
+                               opts.template, ' '.join(opts.output_space)))
     # Check output_space
     if 'template' not in opts.output_space and (opts.use_syn_sdc or opts.force_syn):
         msg = ('SyN SDC correction requires T1 to MNI registration, but '

@@ -273,7 +273,6 @@ def init_bold_confs_wf(mem_gb, metadata, name="bold_confs_wf"):
 def init_ica_aroma_wf(template, mem_gb, omp_nthreads,
                       name='ica_aroma_wf',
                       ignore_aroma_err=False,
-                      use_compression=True,
                       use_fieldwarp=True):
     '''
     This workflow wraps `ICA-AROMA`_ to identify and remove motion-related
@@ -365,7 +364,7 @@ def init_ica_aroma_wf(template, mem_gb, omp_nthreads,
         omp_nthreads=omp_nthreads,
         template_out_grid=os.path.join(get_mni_icbm152_linear(),
                                        '2mm_T1.nii.gz'),
-        use_compression=use_compression,
+        use_compression=False,
         use_fieldwarp=use_fieldwarp,
         name='bold_mni_trans_wf'
     )
