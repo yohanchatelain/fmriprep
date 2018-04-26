@@ -257,6 +257,9 @@ def main():
         p.start()
         p.join()
 
+        if p.exitcode != 0:
+            sys.exit(p.exitcode)
+
         fmriprep_wf = retval['workflow']
         plugin_settings = retval['plugin_settings']
         output_dir = retval['output_dir']
