@@ -124,8 +124,9 @@ RUN conda install -y mkl=2017.0.1 mkl-service;  sync &&\
     conda clean --all -y; sync && \
     conda clean -tipsy && sync
 
-# Precaching fonts
-RUN python -c "from matplotlib import font_manager"
+# Precaching fonts, set 'Agg' as default backend for matplotlib
+RUN python -c "from matplotlib import font_manager" && \
+    sed -i 's/\(backend *: \).*$/\1Agg/g' $( python -c "import matplotlib; print(matplotlib.matplotlib_fname())" )
 
 # Installing Ubuntu packages and cleaning up
 RUN apt-get update && \
