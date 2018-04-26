@@ -27,7 +27,7 @@ open-source software distribution.
 About
 -----
 
-.. image:: /_static/fmriprep-workflow-all.png
+.. image:: https://github.com/oesteban/fmriprep/raw/38a63e9504ab67812b63813c5fe9af882109408e/docs/_static/fmriprep-workflow-all.png
 
 
 ``fmriprep`` is a functional magnetic resonance imaging (fMRI) data
