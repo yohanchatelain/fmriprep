@@ -35,7 +35,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
                      omp_nthreads, skull_strip_template, work_dir, output_dir, bids_dir,
                      freesurfer, output_spaces, template, medial_surface_nan, cifti_output, hires,
                      use_bbr, bold2t1w_dof, fmap_bspline, fmap_demean, use_syn, force_syn,
-                     use_aroma, ignore_aroma_err, template_out_grid):
+                     use_aroma, ignore_aroma_err, aroma_melodic_dim, template_out_grid):
     """
     This workflow organizes the execution of FMRIPREP, with a sub-workflow for
     each subject.
@@ -79,6 +79,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
                               force_syn=True,
                               use_aroma=False,
                               ignore_aroma_err=False,
+                              aroma_melodic_dim=None,
                               template_out_grid='native')
 
 
@@ -197,6 +198,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
                                                    force_syn=force_syn,
                                                    template_out_grid=template_out_grid,
                                                    use_aroma=use_aroma,
+                                                   aroma_melodic_dim=aroma_melodic_dim,
                                                    ignore_aroma_err=ignore_aroma_err)
 
         single_subject_wf.config['execution']['crashdump_dir'] = (
@@ -218,7 +220,8 @@ def init_single_subject_wf(subject_id, task_id, name,
                            omp_nthreads, skull_strip_template, reportlets_dir, output_dir,
                            bids_dir, freesurfer, output_spaces, template, medial_surface_nan,
                            cifti_output, hires, use_bbr, bold2t1w_dof, fmap_bspline, fmap_demean,
-                           use_syn, force_syn, template_out_grid, use_aroma, ignore_aroma_err):
+                           use_syn, force_syn, template_out_grid,
+                           use_aroma, aroma_melodic_dim, ignore_aroma_err):
     """
     This workflow organizes the preprocessing pipeline for a single subject.
     It collects and reports information about the subject, and prepares
@@ -263,6 +266,7 @@ def init_single_subject_wf(subject_id, task_id, name,
                                     force_syn=True,
                                     template_out_grid='native',
                                     use_aroma=False,
+                                    aroma_melodic_dim=None,
                                     ignore_aroma_err=False)
 
     Parameters
@@ -449,6 +453,7 @@ def init_single_subject_wf(subject_id, task_id, name,
                                                debug=debug,
                                                template_out_grid=template_out_grid,
                                                use_aroma=use_aroma,
+                                               aroma_melodic_dim=aroma_melodic_dim,
                                                ignore_aroma_err=ignore_aroma_err)
 
         workflow.connect([
