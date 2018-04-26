@@ -27,6 +27,9 @@ open-source software distribution.
 About
 -----
 
+.. image:: /_static/fmriprep-workflow-all.png
+
+
 ``fmriprep`` is a functional magnetic resonance imaging (fMRI) data
 preprocessing pipeline that is designed to provide an easily accessible,
 state-of-the-art interface that is robust to variations in scan acquisition
