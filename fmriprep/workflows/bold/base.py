@@ -616,7 +616,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 ignore_aroma_err=ignore_aroma_err,
                 name='ica_aroma_wf')
             join = pe.Node(JoinTSVColumns(), name='aroma_confounds')
-    
+
             workflow.disconnect([
                 (bold_confounds_wf, outputnode, [
                     ('outputnode.confounds_file', 'confounds'),
