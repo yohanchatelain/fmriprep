@@ -172,8 +172,8 @@ def init_bold_confs_wf(mem_gb, metadata, name="bold_confs_wf"):
 
     # Generate reportlet
     mrg_compcor = pe.Node(niu.Merge(2), name='merge_compcor', run_without_submitting=True)
-    rois_plot = pe.Node(ROIsPlot(compress_report=True, colors=['r', 'b', 'magenta'],
-                        generate_report=True), name='rois_plot')
+    rois_plot = pe.Node(ROIsPlot(colors=['r', 'b', 'magenta'], generate_report=True),
+                        name='rois_plot')
 
     ds_report_bold_rois = pe.Node(
         DerivativesDataSink(suffix='rois'),
