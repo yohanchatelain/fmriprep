@@ -152,6 +152,11 @@ def get_parser():
     g_aroma = parser.add_argument_group('Specific options for running ICA_AROMA')
     g_aroma.add_argument('--use-aroma', action='store_true', default=False,
                          help='add ICA_AROMA to your preprocessing stream')
+    g_aroma.add_argument('--aroma-melodic-dimensionality', action='store',
+                         default=None, type=int,
+                         help='set the dimensionality of MELODIC before running'
+                         'ICA-AROMA')
+
     #  ANTs options
     g_ants = parser.add_argument_group('Specific options for ANTs registrations')
     g_ants.add_argument('--skull-strip-template', action='store', default='OASIS',
@@ -468,6 +473,7 @@ def build_workflow(opts, retval):
         use_syn=opts.use_syn_sdc,
         force_syn=opts.force_syn,
         use_aroma=opts.use_aroma,
+        aroma_melodic_dim=opts.aroma_melodic_dimensionality,
         ignore_aroma_err=opts.ignore_aroma_denoising_errors,
     )
     retval['return_code'] = 0

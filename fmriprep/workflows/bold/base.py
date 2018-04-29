@@ -51,7 +51,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                          use_bbr, t2s_coreg, bold2t1w_dof, reportlets_dir,
                          output_spaces, template, output_dir, omp_nthreads,
                          fmap_bspline, fmap_demean, use_syn, force_syn,
-                         use_aroma, ignore_aroma_err, medial_surface_nan, cifti_output,
+                         use_aroma, ignore_aroma_err, aroma_melodic_dim,
+                         medial_surface_nan, cifti_output,
                          debug, low_mem, template_out_grid, layout=None):
     """
     This workflow controls the functional preprocessing stages of FMRIPREP.
@@ -83,7 +84,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                   medial_surface_nan=False,
                                   cifti_output=False,
                                   use_aroma=False,
-                                  ignore_aroma_err=False)
+                                  ignore_aroma_err=False,
+                                  aroma_melodic_dim=None)
 
     **Parameters**
 
@@ -618,6 +620,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             from .confounds import init_ica_aroma_wf
             from ...interfaces import JoinTSVColumns
             ica_aroma_wf = init_ica_aroma_wf(name='ica_aroma_wf',
+                                             aroma_melodic_dim=aroma_melodic_dim,
                                              ignore_aroma_err=ignore_aroma_err)
             join = pe.Node(JoinTSVColumns(), name='aroma_confounds')
 

@@ -266,7 +266,7 @@ def init_bold_confs_wf(mem_gb, metadata, name="bold_confs_wf"):
     return workflow
 
 
-def init_ica_aroma_wf(name='ica_aroma_wf', ignore_aroma_err=False):
+def init_ica_aroma_wf(name='ica_aroma_wf', ignore_aroma_err=False, aroma_melodic_dim=None):
     '''
     This workflow wraps `ICA-AROMA`_ to identify and remove motion-related
     independent components from a BOLD time series.
@@ -296,6 +296,9 @@ def init_ica_aroma_wf(name='ica_aroma_wf', ignore_aroma_err=False):
 
         ignore_aroma_err : bool
             Do not fail on ICA-AROMA errors
+        aroma_melodic_dim: int or None
+            Set the dimensionality of the Melodic ICA decomposition
+            If None, MELODIC automatically estimates dimensionality.
 
     **Inputs**
 
@@ -340,6 +343,8 @@ def init_ica_aroma_wf(name='ica_aroma_wf', ignore_aroma_err=False):
 
     # melodic node
     melodic = pe.Node(fsl.MELODIC(no_bet=True, no_mm=True), name="melodic")
+    if aroma_melodic_dim is not None:
+        melodic.inputs.dim = aroma_melodic_dim
 
     # ica_aroma node
     ica_aroma = pe.Node(ICA_AROMARPT(denoise_type='nonaggr', generate_report=True),
