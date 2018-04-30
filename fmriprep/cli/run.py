@@ -345,7 +345,7 @@ def build_workflow(opts, retval):
         if opts.force_syn:
             output_spaces.append('template')
             msg[1] = (' Since --force-syn has been requested, "template" has been added to'
-                      ' the list of "--output-space" list.')
+                      ' the "--output-space" list.')
         logger.warning(' '.join(msg))
 
     # Set up some instrumental utilities
