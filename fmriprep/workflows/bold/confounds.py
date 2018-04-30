@@ -305,7 +305,11 @@ def init_ica_aroma_wf(template, mem_gb, omp_nthreads,
     **Parameters**
 
         template : str
-            Name of template targeted by `'template'` output space
+            Spatial normalization template used as target when that
+            registration step was previously calculated with
+            :py:func:`~fmriprep.workflows.bold.registration.init_bold_reg_wf`.
+            The template must be one of the MNI templates (fMRIPrep uses
+            ``MNI152NLin2009cAsym`` by default).
         mem_gb : float
             Size of BOLD file in GB
         omp_nthreads : int
