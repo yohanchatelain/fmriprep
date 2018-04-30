@@ -116,7 +116,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 - fsnative
                 - fsaverage (or other pre-existing FreeSurfer templates)
         template : str
-            Name of template targeted by `'template'` output space
+            Name of template targeted by ``template`` output space
         output_dir : str
             Directory in which to save derivatives
         omp_nthreads : int

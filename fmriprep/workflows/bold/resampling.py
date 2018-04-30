@@ -181,7 +181,7 @@ def init_bold_mni_trans_wf(template, mem_gb, omp_nthreads,
     **Parameters**
 
         template : str
-            Name of template targeted by `'template'` output space
+            Name of template targeted by ``template`` output space
         mem_gb : float
             Size of BOLD file in GB
         omp_nthreads : int

@@ -99,7 +99,7 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
               - fsnative
               - fsaverage (or other pre-existing FreeSurfer templates)
         template : str
-            Name of template targeted by `'template'` output space
+            Name of template targeted by ``template`` output space
         debug : bool
             Enable debugging outputs
         freesurfer : bool
