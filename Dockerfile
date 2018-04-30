@@ -82,11 +82,6 @@ RUN mkdir -p $ANTSPATH && \
     | tar -xzC $ANTSPATH --strip-components 1
 ENV PATH=$ANTSPATH:$PATH
 
-# Installing WEBP tools
-RUN curl -sSLO "http://downloads.webmproject.org/releases/webp/libwebp-0.5.2-linux-x86-64.tar.gz" && \
-  tar -xf libwebp-0.5.2-linux-x86-64.tar.gz && cd libwebp-0.5.2-linux-x86-64/bin && \
-  mv cwebp /usr/local/bin/ && rm -rf libwebp-0.5.2-linux-x86-64
-
 # Installing SVGO
 RUN curl -sL https://deb.nodesource.com/setup_7.x | bash -
 RUN apt-get install -y nodejs
