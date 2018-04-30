@@ -444,6 +444,24 @@ def build_workflow(opts, retval):
         uuid=run_uuid)
     )
 
+    try:
+        from raven import Client
+        dev_user = bool(int(os.getenv('FMRIPREP_DEV', 0)))
+        msg = 'fMRIPrep running%s' % (int(dev_user) * ' [dev]')
+        client = Client(
+            'https://d5a16b0c38d84d1584dfc93b9fb1ade6:'
+            '21f3c516491847af8e4ed249b122c4af@sentry.io/1137693',
+            release=__version__)
+        client.captureMessage(message=msg,
+                              level='debug' if dev_user else 'info',
+                              tags={
+                                  'run_id': run_uuid,
+                                  'npart': len(subject_list),
+                                  'type': 'ping',
+                                  'dev': dev_user})
+    except Exception:
+        pass
+
     template_out_grid = opts.template_resampling_grid
     if opts.output_grid_reference is not None:
         logger.warning(
