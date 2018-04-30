@@ -324,22 +324,29 @@ def build_workflow(opts, retval):
       * Run identifier: {uuid}.
     """.format
 
+    output_spaces = opts.output_space or []
+
     # Validity of some inputs
     # ERROR check if use_aroma was specified, but the correct template was not
     if opts.use_aroma and (opts.template != 'MNI152NLin2009cAsym' or
-                           'template' not in opts.output_space):
-        raise RuntimeError('ERROR: --use-aroma requires functional images to be resampled to '
-                           'MNI152NLin2009cAsym.\n'
-                           '\t--template must be set to "MNI152NLin2009cAsym" (was: "{}")\n'
-                           '\t--output-space list must include "template" (was: "{}")'.format(
-                               opts.template, ' '.join(opts.output_space)))
+                           'template' not in output_spaces):
+        output_spaces.append('template')
+        logger.warning(
+            'Option "--use-aroma" requires functional images to be resampled to MNI space. '
+            'The argument "template" has been automatically added to the list of output '
+            'spaces (option "--output-space").'
+        )
+
     # Check output_space
-    if 'template' not in opts.output_space and (opts.use_syn_sdc or opts.force_syn):
-        msg = ('SyN SDC correction requires T1 to MNI registration, but '
-               '"template" is not specified in "--output-space" arguments')
+    if 'template' not in output_spaces and (opts.use_syn_sdc or opts.force_syn):
+        msg = ['SyN SDC correction requires T1 to MNI registration, but '
+               '"template" is not specified in "--output-space" arguments.',
+               'Option --use-syn will be cowardly dismissed.']
         if opts.force_syn:
-            raise RuntimeError(msg)
-        logger.warning(msg)
+            output_spaces.append('template')
+            msg[1] = (' Since --force-syn has been requested, "template" has been added to'
+                      ' the "--output-space" list.')
+        logger.warning(' '.join(msg))
 
     # Set up some instrumental utilities
     run_uuid = '%s_%s' % (strftime('%Y%m%d-%H%M%S'), uuid.uuid4())
@@ -460,7 +467,7 @@ def build_workflow(opts, retval):
         output_dir=output_dir,
         bids_dir=bids_dir,
         freesurfer=opts.run_reconall,
-        output_spaces=opts.output_space,
+        output_spaces=output_spaces,
         template=opts.template,
         medial_surface_nan=opts.medial_surface_nan,
         cifti_output=opts.cifti_output,
