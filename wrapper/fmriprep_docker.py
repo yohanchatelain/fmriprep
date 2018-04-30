@@ -280,6 +280,8 @@ def get_parser():
                        help='open shell in image instead of running FMRIPREP')
     g_dev.add_argument('--config', metavar='PATH', action='store',
                        type=os.path.abspath, help='Use custom nipype.cfg file')
+    g_dev.add_argument('-e', '--env', action='append', nargs=2, metavar=('ENV_VAR', 'value'),
+                       help='Set custom environment variable within container')
 
     return parser
 
@@ -356,6 +358,10 @@ def main():
                 pkg = 'niworkflows/nipype'
             command.extend(['-v',
                             '{}:{}/{}:ro'.format(repo_path, PKG_PATH, pkg)])
+
+    if opts.env:
+        for envvar in opts.env:
+            command.extend(['-e', '%s=%s' % tuple(envvar)])
 
     if opts.fs_license_file:
         command.extend([

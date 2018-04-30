@@ -226,6 +226,7 @@ def main():
     from niworkflows.nipype import logging as nlogging
     from multiprocessing import set_start_method, Process, Manager
     from ..viz.reports import generate_reports
+    from ..info import __version__
     set_start_method('forkserver')
 
     warnings.showwarning = _warn_redirect
@@ -281,6 +282,25 @@ def main():
 
     if opts.reports_only:
         sys.exit(int(retcode > 0))
+
+    # Sentry tracking
+    try:
+        from raven import Client
+        dev_user = bool(int(os.getenv('FMRIPREP_DEV', 0)))
+        msg = 'fMRIPrep running%s' % (int(dev_user) * ' [dev]')
+        client = Client(
+            'https://d5a16b0c38d84d1584dfc93b9fb1ade6:'
+            '21f3c516491847af8e4ed249b122c4af@sentry.io/1137693',
+            release=__version__)
+        client.captureMessage(message=msg,
+                              level='debug' if dev_user else 'info',
+                              tags={
+                                  'run_id': run_uuid,
+                                  'npart': len(subject_list),
+                                  'type': 'ping',
+                                  'dev': dev_user})
+    except Exception:
+        pass
 
     # Clean up master process before running workflow, which may create forks
     gc.collect()
@@ -443,24 +463,6 @@ def build_workflow(opts, retval):
         subject_list=subject_list,
         uuid=run_uuid)
     )
-
-    try:
-        from raven import Client
-        dev_user = bool(int(os.getenv('FMRIPREP_DEV', 0)))
-        msg = 'fMRIPrep running%s' % (int(dev_user) * ' [dev]')
-        client = Client(
-            'https://d5a16b0c38d84d1584dfc93b9fb1ade6:'
-            '21f3c516491847af8e4ed249b122c4af@sentry.io/1137693',
-            release=__version__)
-        client.captureMessage(message=msg,
-                              level='debug' if dev_user else 'info',
-                              tags={
-                                  'run_id': run_uuid,
-                                  'npart': len(subject_list),
-                                  'type': 'ping',
-                                  'dev': dev_user})
-    except Exception:
-        pass
 
     template_out_grid = opts.template_resampling_grid
     if opts.output_grid_reference is not None:
