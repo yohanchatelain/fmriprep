@@ -273,8 +273,9 @@ def init_bold_confs_wf(mem_gb, metadata, name="bold_confs_wf"):
 def init_ica_aroma_wf(template, mem_gb, omp_nthreads,
                       name='ica_aroma_wf',
                       ignore_aroma_err=False,
+                      aroma_melodic_dim=None,
                       use_fieldwarp=True):
-    '''
+    """
     This workflow wraps `ICA-AROMA`_ to identify and remove motion-related
     independent components from a BOLD time series.
 
@@ -305,18 +306,19 @@ def init_ica_aroma_wf(template, mem_gb, omp_nthreads,
 
         template : str
             Name of template targeted by `'template'` output space
-        ignore_aroma_err : bool
-            Do not fail on ICA-AROMA errors
         mem_gb : float
             Size of BOLD file in GB
         omp_nthreads : int
             Maximum number of threads an individual process may use
         name : str
             Name of workflow (default: ``bold_mni_trans_wf``)
-        use_compression : bool
-            Save registered BOLD series as ``.nii.gz``
         use_fieldwarp : bool
             Include SDC warp in single-shot transform from BOLD to MNI
+        ignore_aroma_err : bool
+            Do not fail on ICA-AROMA errors
+        aroma_melodic_dim: int or None
+            Set the dimensionality of the Melodic ICA decomposition
+            If None, MELODIC automatically estimates dimensionality.
 
 
     **Inputs**
@@ -340,7 +342,7 @@ def init_ica_aroma_wf(template, mem_gb, omp_nthreads,
             BOLD series with non-aggressive ICA-AROMA denoising applied
 
     .. _ICA-AROMA: https://github.com/rhr-pruim/ICA-AROMA
-    '''
+    """
     workflow = pe.Workflow(name=name)
 
     inputnode = pe.Node(niu.IdentityInterface(
@@ -381,6 +383,8 @@ def init_ica_aroma_wf(template, mem_gb, omp_nthreads,
 
     # melodic node
     melodic = pe.Node(fsl.MELODIC(no_bet=True, no_mm=True), name="melodic")
+    if aroma_melodic_dim is not None:
+        melodic.inputs.dim = aroma_melodic_dim
 
     # ica_aroma node
     ica_aroma = pe.Node(ICA_AROMARPT(denoise_type='nonaggr', generate_report=True),

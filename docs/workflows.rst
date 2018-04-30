@@ -48,6 +48,7 @@ is presented below:
                                 force_syn=True,
                                 template_out_grid='native',
                                 use_aroma=False,
+                                aroma_melodic_dim=None,
                                 ignore_aroma_err=False)
 
 
@@ -245,6 +246,7 @@ BOLD preprocessing
                               force_syn=True,
                               template_out_grid='native',
                               use_aroma=False,
+                              aroma_melodic_dim=None,
                               ignore_aroma_err=False)
 
 Preprocessing of :abbr:`BOLD (blood-oxygen level-dependent)` files is
@@ -523,6 +525,12 @@ Calculated confounds include the mean global signal, mean tissue class signal,
 tCompCor, aCompCor, Frame-wise Displacement, 6 motion parameters, DVARS, and, if
 the ``--use-aroma`` flag is enabled, the noise components identified by ICA-AROMA
 (those to be removed by the "aggressive" denoising strategy).
+The number of ICA-AROMA components depends on a dimensionality estimate
+made by MELODIC.
+For datasets with a very short TR and a large number of timepoints, this may
+result in an unusually high number of components.
+In such cases, it may be useful to specify the number of components to be
+extracted with ``--aroma-melodic-dimensionality``.
 
 *Note*: *non*-aggressive AROMA denoising is a fundamentally different procedure
 from its "aggressive" counterpart and cannot be performed only by using a set of noise
