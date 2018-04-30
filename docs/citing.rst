@@ -148,8 +148,9 @@ we recommend to include in your paper.
    </p>
 
    <p>
-     <span id="fmriprep_citation">FMRIPREP</span> Available from: <a id="fmriprep_doi_url" href="https://doi.org/10.5281/zenodo.852659">10.5281/zenodo.852659</a>.
-     <img src onerror='fillCitation()' alt="" />
+     1. Esteban O, Markiewicz CJ, Blair RW, Moodie CA, Isik AI, Erramuzpe A, Kent JD, Goncalves M,
+        DuPre E, Snyder M, Oya H, Ghosh SS, Wright J, Durnez J, Poldrack RA, Gorgolewski KJ,
+        bioRxiv. 2018. 306951; doi:<a href="https://doi.org/10.1101/306951">10.1101/306951</a>.
    </p>
    <p>
      2. 	Gorgolewski K, Burns CD, Madison C, Clark D, Halchenko YO, Waskom ML, Ghosh SS. Nipype: a flexible, lightweight and extensible neuroimaging data processing framework in python. Front Neuroinform. 2011 Aug 22;5(August):13. doi:<a href="https://doi.org/10.3389/fninf.2011.00013">10.3389/fninf.2011.00013</a>.
