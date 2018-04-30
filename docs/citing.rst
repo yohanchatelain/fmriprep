@@ -153,7 +153,7 @@ we recommend to include in your paper.
         bioRxiv. 2018. 306951; doi:<a href="https://doi.org/10.1101/306951">10.1101/306951</a>
    </p>
    <p>
-     <span id="fmriprep_citation">FMRIPREP</span> Available from: <a id="fmriprep_doi_url" href="https://doi.org/10.5281/zenodo.852659">10.5281/zenodo.852659</a>.
+     2. <span id="fmriprep_citation">FMRIPREP</span> Available from: <a id="fmriprep_doi_url" href="https://doi.org/10.5281/zenodo.852659">10.5281/zenodo.852659</a>.
      <img src onerror='fillCitation()' alt="" />
    </p>
    <p>
