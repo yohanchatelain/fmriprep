@@ -206,9 +206,18 @@ jobs:
               poldracklab/fmriprep:latest . \
               --doctest-modules --ignore=docs --ignore=setup.py
       - run:
-          name: Test fmriprep-wrapper
+          name: Test fmriprep-wrapper (Python 2)
           command: |
-            pip install future numpy
+            conda create -n py2 python=2.7
+            source activate py2
+            pip install --upgrade wrapper/
+            fmriprep-docker -i poldracklab/fmriprep:latest --help
+            fmriprep-docker -i poldracklab/fmriprep:latest --version
+      - run:
+          name: Test fmriprep-wrapper (Python 3)
+          command: |
+            conda create -n py3 python=3.6
+            source activate py3
             pip install --upgrade wrapper/
             fmriprep-docker -i poldracklab/fmriprep:latest --help
             fmriprep-docker -i poldracklab/fmriprep:latest --version
