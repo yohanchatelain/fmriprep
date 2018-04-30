@@ -127,7 +127,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
              - fsnative
              - fsaverage (or other pre-existing FreeSurfer templates)
         template : str
-            Name of template targeted by `'template'` output space
+            Name of template targeted by ``template`` output space
         medial_surface_nan : bool
             Replace medial wall values with NaNs on functional GIFTI files
         cifti_output : bool
@@ -313,7 +313,7 @@ def init_single_subject_wf(subject_id, task_id, name,
              - fsnative
              - fsaverage (or other pre-existing FreeSurfer templates)
         template : str
-            Name of template targeted by `'template'` output space
+            Name of template targeted by ``template`` output space
         medial_surface_nan : bool
             Replace medial wall values with NaNs on functional GIFTI files
         cifti_output : bool
