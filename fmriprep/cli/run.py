@@ -219,7 +219,9 @@ def get_parser():
                               ' was specified.')
     g_other.add_argument('--notrack', action='store_true', default=False,
                          help='Opt-out of sending tracking information of this run to '
-                              'the FMRIPREP developers.')
+                              'the FMRIPREP developers. This information helps to '
+                              'improve FMRIPREP and provides an indicator of real '
+                              'world usage crucial for obtaining funding.')
 
     return parser
 
