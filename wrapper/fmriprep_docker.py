@@ -223,8 +223,10 @@ def get_parser():
         add_help=False)
 
     # Standard FMRIPREP arguments
-    parser.add_argument('bids_dir', nargs='?', type=str, default='')
-    parser.add_argument('output_dir', nargs='?', type=str, default='')
+    parser.add_argument('bids_dir', nargs='?', type=os.path.abspath,
+                        default='')
+    parser.add_argument('output_dir', nargs='?', type=os.path.abspath,
+                        default='')
     parser.add_argument('analysis_level', nargs='?', choices=['participant'],
                         default='participant')
 
@@ -243,7 +245,7 @@ def get_parser():
     g_wrap = parser.add_argument_group(
         'Wrapper options',
         'Standard options that require mapping files into the container')
-    g_wrap.add_argument('-w', '--work-dir', action='store',
+    g_wrap.add_argument('-w', '--work-dir', action='store', type=os.path.abspath,
                         help='path where intermediate results should be stored')
     g_wrap.add_argument(
         '--output-grid-reference', required=False, action='store', type=os.path.abspath,
