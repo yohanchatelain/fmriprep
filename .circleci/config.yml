@@ -136,8 +136,8 @@ jobs:
           name: Create Nipype config files
           command: |
             mkdir -p /tmp/ds005 /tmp/ds054 /tmp/ds210
-            printf "[execution]\nstop_on_first_crash = true\nremove_unnecessary_outputs = false\n" > /tmp/ds005/nipype.cfg
-            echo "poll_sleep_duration = 0.2" >> /tmp/ds005/nipype.cfg
+            printf "[execution]\nstop_on_first_crash = true\n" > /tmp/ds005/nipype.cfg
+            echo "poll_sleep_duration = 0.01" >> /tmp/ds005/nipype.cfg
             echo "hash_method = content" >> /tmp/ds005/nipype.cfg
             cp /tmp/ds005/nipype.cfg /tmp/ds054/nipype.cfg
             cp /tmp/ds005/nipype.cfg /tmp/ds210/nipype.cfg
