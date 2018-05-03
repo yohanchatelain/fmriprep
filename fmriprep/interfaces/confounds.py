@@ -219,7 +219,7 @@ def _get_ica_confounds(ica_out_dir, newpath=None):
     shutil.copyfile(motion_ics, motion_ics_out)
 
     # -1 since python lists start at index 0
-    motion_ic_indices = np.loadtxt(motion_ics, dtype=int, delimiter=',') - 1
+    motion_ic_indices = np.loadtxt(motion_ics, dtype=int, delimiter=',', ndmin=1) - 1
     melodic_mix_arr = np.loadtxt(melodic_mix, ndmin=2)
 
     # Return dummy list of ones if no noise compnents were found
