@@ -1,3 +1,27 @@
+1.0.12 (May 03, 2018)
+=====================
+
+* [MAINT] fmriprep-docker: Ensure data/output/work paths are absolute (#1089)
+* [ENH] Add usage tracking and centralized error reporting (#1088)
+* [FIX] Ensure one motion IC index is loaded as list (#1096)
+* [TST] Refactoring CircleCI setup (#1098)
+* [FIX] Compression in DataSinks (#1095)
+* [MAINT] fmriprep-docker: Support Python 2/3 without future or other helpers (#1082)
+* [MAINT] Update npm to 10.x (#1087)
+* [DOC] Prefer pre-print over Zenodo doi in boilerplate (#1086)
+* [DOC] Stylistic fix (\`'template'\`) (#1083)
+* [FIX] Run ICA-AROMA in ``MNI152Lin`` 2mm resampling grid (91x109x91 vox) (#1064)
+* [MAINT] Remove cwebp to revert to png (#1081)
+* [ENH] Allow changing the dimensionality of Melodic for AROMA. (#1052)
+* [FIX] Derivatives datasink handling of compression (#1077)
+* [FIX] Check for invalid sform matrices (#1072)
+* [FIX] Check exit code from subprocess (#1073)
+* [DOC] Add preprint fig. 1 to About (#1070)
+* [FIX] Always strip session from T1w for derivative naming (#1071)
+* [DOC] Add RRIDs in the citation boilerplate (#1061)
+* [ENH] Generate CIFTI derivatives (#1001)
+
+
 1.0.11 (April 16, 2018)
 =======================
 
