@@ -396,9 +396,9 @@ jobs:
           command: |
             sudo chown $(id -un):$(id -gn) -R /tmp/ds005
             find /tmp/ds005/work -not -name "*.svg" -not -name "*.html" -not -name "*.rst" \
-                -not -name "*.mat" -not -name "*.lta" -type f -delete
+                -not -name "*.mat" -not -name "*.lta" -not -name "*.json" -not -name "*.txt" -not -name "*.pklz" -type f -delete
             find /tmp/ds005/work_partial -not -name "*.svg" -not -name "*.html" -not -name "*.rst" \
-                -not -name "*.mat" -not -name "*.lta" -type f -delete
+                -not -name "*.mat" -not -name "*.lta" -not -name "*.json" -not -name "*.txt" -not -name "*.pklz" -type f -delete
             # tar cf - work_partial/ | pigz -2 -p 2 > ds005_workdir.tar.gz && sudo rm -fr work work_partial
 
       - store_artifacts:
@@ -517,7 +517,7 @@ jobs:
           command: |
             sudo chown $(id -un):$(id -gn) -R /tmp/ds054
             find /tmp/ds054/work -not -name "*.svg" -not -name "*.html" -not -name "*.rst" \
-                -not -name "*.mat" -not -name "*.lta" -type f -delete
+                -not -name "*.mat" -not -name "*.lta" -not -name "*.json" -not -name "*.txt" -not -name "*.pklz" -type f -delete
             # tar cf - work/ | pigz -2 -p 2 > ds054_workdir.tar.gz && sudo rm -fr work
       - store_artifacts:
           path: /tmp/ds054
@@ -607,7 +607,7 @@ jobs:
           command: |
             sudo chown $(id -un):$(id -gn) -R /tmp/ds210
             find /tmp/ds210/work -not -name "*.svg" -not -name "*.html" -not -name "*.rst" \
-                -not -name "*.mat" -not -name "*.lta" -type f -delete
+                -not -name "*.mat" -not -name "*.lta" -not -name "*.json" -not -name "*.txt" -not -name "*.pklz" -type f -delete
             # tar cf - work/ | pigz -2 -p 2 > ds054_workdir.tar.gz && sudo rm -fr work
       - store_artifacts:
           path: /tmp/ds210
