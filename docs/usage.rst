@@ -3,6 +3,12 @@
 Usage
 -----
 
+.. warning::
+   As of FMRIPREP 1.0.12, the software includes a tracking system
+   to report usage statistics and errors. Users can opt-out using
+   the ``--notrack`` command line argument.
+   
+
 Execution and the BIDS format
 =============================
 
