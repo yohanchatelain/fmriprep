@@ -102,7 +102,8 @@ RUN curl -sSLO https://repo.continuum.io/miniconda/Miniconda3-4.3.11-Linux-x86_6
 
 ENV PATH=/usr/local/miniconda/bin:$PATH \
     LANG=C.UTF-8 \
-    LC_ALL=C.UTF-8
+    LC_ALL=C.UTF-8 \
+    PYTHONNOUSERSITE=1
 
 # Installing precomputed python packages
 RUN conda install -y mkl=2017.0.1 mkl-service;  sync &&\
