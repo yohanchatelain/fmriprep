@@ -30,7 +30,7 @@ from ...interfaces.cifti import GenerateCifti, CiftiNameSource
 
 
 # BOLD workflows
-from .confounds import init_bold_confs_wf
+from .confounds import init_bold_confs_wf, init_carpetplot_wf
 from .hmc import init_bold_hmc_wf
 from .stc import init_bold_stc_wf
 from .t2s import init_bold_t2s_wf
@@ -586,6 +586,10 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             use_fieldwarp=fmaps is not None,
             name='bold_mni_trans_wf'
         )
+        carpetplot_wf = init_carpetplot_wf(
+            mem_gb=mem_gb['resampled'],
+            metadata=metadata,
+            name='carpetplot_wf')
 
         workflow.connect([
             (inputnode, bold_mni_trans_wf, [
@@ -603,6 +607,13 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 ('outputnode.out_warp', 'inputnode.fieldwarp')]),
             (bold_mni_trans_wf, outputnode, [('outputnode.bold_mni', 'bold_mni'),
                                              ('outputnode.bold_mask_mni', 'bold_mask_mni')]),
+            (bold_bold_trans_wf, carpetplot_wf, [
+                ('outputnode.bold', 'inputnode.bold'),
+                ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+            (bold_mni_trans_wf, carpetplot_wf, [
+                ('outputnode.bold_mni_transforms', 'inputnode.bold_mni_transforms')]),
+            (bold_confounds_wf, carpetplot_wf, [
+                ('outputnode.confounds_file', 'inputnode.confounds_file')]),
         ])
 
         if use_aroma:
