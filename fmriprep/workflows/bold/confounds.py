@@ -10,7 +10,7 @@ Calculate BOLD confounds
 
 """
 import os
-from niworkflows.data import get_mni_icbm152_linear
+from niworkflows.data import get_mni_icbm152_linear, get_mni_icbm152_nlin_asym_09c
 from niworkflows.nipype.pipeline import engine as pe
 from niworkflows.nipype.interfaces import utility as niu, fsl
 from niworkflows.nipype.interfaces.nilearn import SignalExtraction
@@ -22,7 +22,7 @@ from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransf
 
 from ...interfaces import (
     TPM2ROI, AddTPMs, AddTSVHeader, GatherConfounds, ICAConfounds,
-    DerivativesDataSink
+    FMRISummary, DerivativesDataSink
 )
 from ...interfaces.patches import (
     RobustACompCor as ACompCor,
@@ -267,6 +267,59 @@ def init_bold_confs_wf(mem_gb, metadata, name="bold_confs_wf"):
         (rois_plot, ds_report_bold_rois, [('out_report', 'in_file')]),
     ])
 
+    return workflow
+
+
+def init_carpetplot_wf(mem_gb, metadata, name="bold_confs_wf"):
+
+    inputnode = pe.Node(niu.IdentityInterface(
+        fields=['bold', 'bold_mask', 'confounds_file', 'bold_mni_transforms']),
+        name='inputnode')
+
+    # Warp segmentation into EPI space
+    resample_parc = pe.Node(ApplyTransforms(
+        float=True,
+        input_image=os.path.join(
+            get_mni_icbm152_nlin_asym_09c(), '1mm_parc.nii.gz'),
+        dimension=3, default_value=0, interpolation='MultiLabel'),
+        name='resample_parc')
+
+    # Carpetplot and confounds plot
+    conf_plot = pe.Node(FMRISummary(
+        tr=metadata['RepetitionTime'],
+        confounds_list=[
+            ('GlobalSignal', None, 'GS'),
+            ('CSF', None, 'GSCSF'),
+            ('WhiteMatter', None, 'GSWM'),
+            ('stdDVARS', None, 'DVARS'),
+            ('FramewiseDisplacement', 'mm', 'FD')]),
+        name='conf_plot', mem_gb=mem_gb)
+    ds_report_bold_conf = pe.Node(
+        DerivativesDataSink(suffix='carpetplot'),
+        name='ds_report_bold_conf', run_without_submitting=True,
+        mem_gb=DEFAULT_MEMORY_MIN_GB)
+
+    def _reversed(inlist):
+        return list(reversed(inlist))
+
+    def _flags(inlist):
+        return [True] * len(inlist)
+
+    workflow = pe.Workflow(name=name)
+    workflow.connect([
+        (inputnode, resample_parc, [
+            ('bold_mask', 'reference_image'),
+            (('bold_mni_transforms', _reversed), 'transforms'),
+            (('bold_mni_transforms', _flags), 'invert_transform_flags')]),
+        # Carpetplot
+        (inputnode, conf_plot, [
+            ('bold', 'in_func'),
+            ('bold_mask', 'in_mask'),
+            ('confounds_file', 'confounds_file')]),
+        (resample_parc, conf_plot, [('output_image', 'in_segm')]),
+        (conf_plot, ds_report_bold_conf, [('out_file', 'in_file')]),
+
+    ])
     return workflow
 
 

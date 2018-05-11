@@ -385,15 +385,15 @@ def init_single_subject_wf(subject_id, task_id, name,
                                  command=' '.join(sys.argv)),
                     name='about', run_without_submitting=True)
 
-    ds_summary_report = pe.Node(
+    ds_report_summary = pe.Node(
         DerivativesDataSink(base_directory=reportlets_dir,
                             suffix='summary'),
-        name='ds_summary_report', run_without_submitting=True)
+        name='ds_report_summary', run_without_submitting=True)
 
-    ds_about_report = pe.Node(
+    ds_report_about = pe.Node(
         DerivativesDataSink(base_directory=reportlets_dir,
                             suffix='about'),
-        name='ds_about_report', run_without_submitting=True)
+        name='ds_report_about', run_without_submitting=True)
 
     # Preprocessing of T1w (includes registration to MNI)
     anat_preproc_wf = init_anat_preproc_wf(name="anat_preproc_wf",
@@ -422,10 +422,10 @@ def init_single_subject_wf(subject_id, task_id, name,
                                     ('roi', 'inputnode.roi'),
                                     ('flair', 'inputnode.flair')]),
         (summary, anat_preproc_wf, [('subject_id', 'inputnode.subject_id')]),
-        (bidssrc, ds_summary_report, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
-        (summary, ds_summary_report, [('out_report', 'in_file')]),
-        (bidssrc, ds_about_report, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
-        (about, ds_about_report, [('out_report', 'in_file')]),
+        (bidssrc, ds_report_summary, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
+        (summary, ds_report_summary, [('out_report', 'in_file')]),
+        (bidssrc, ds_report_about, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
+        (about, ds_report_about, [('out_report', 'in_file')]),
     ])
 
     if anat_only:
