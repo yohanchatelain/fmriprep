@@ -260,7 +260,8 @@ class FMRISummaryInputSpec(BaseInterfaceInputSpec):
 
     str_or_tuple = traits.Either(
         traits.Str,
-        traits.Tuple(traits.Str, traits.Either(None, traits.Str)))
+        traits.Tuple(traits.Str, traits.Either(None, traits.Str)),
+        traits.Tuple(traits.Str, traits.Either(None, traits.Str), traits.Either(None, traits.Str)))
     confounds_list = traits.List(
         str_or_tuple, minlen=1,
         desc='list of headers to extract from the confounds_file')
@@ -293,12 +294,16 @@ class FMRISummary(SimpleInterface):
 
         headers = []
         units = {}
+        names = {}
 
         for conf_el in self.inputs.confounds_list:
             if isinstance(conf_el, (list, tuple)):
                 headers.append(conf_el[0])
                 if conf_el[1] is not None:
                     units[conf_el[0]] = conf_el[1]
+
+                if len(conf_el) > 2 and conf_el[2] is not None:
+                    names[conf_el[0]] = conf_el[2]
             else:
                 headers.append(conf_el)
 
@@ -307,6 +312,13 @@ class FMRISummary(SimpleInterface):
             units = None
         else:
             data = dataframe[headers]
+
+        colnames = data.columns.ravel().tolist()
+
+        for name, newname in list(names.items()):
+            colnames[colnames.index(name)] = newname
+
+        data.columns = colnames
 
         fig = fMRIPlot(
             self.inputs.in_func,

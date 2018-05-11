@@ -287,8 +287,12 @@ def init_carpetplot_wf(mem_gb, metadata, name="bold_confs_wf"):
     # Carpetplot and confounds plot
     conf_plot = pe.Node(FMRISummary(
         tr=metadata['RepetitionTime'],
-        confounds_list=['GlobalSignal', 'CSF', 'WhiteMatter', 'stdDVARS',
-                        ('FramewiseDisplacement', 'mm')]),
+        confounds_list=[
+            ('GlobalSignal', None, 'GS'),
+            ('CSF', None, 'GSCSF'),
+            ('WhiteMatter', None, 'GSWM'),
+            ('stdDVARS', None, 'DVARS'),
+            ('FramewiseDisplacement', 'mm', 'FD')]),
         name='conf_plot', mem_gb=mem_gb)
     ds_report_bold_conf = pe.Node(
         DerivativesDataSink(suffix='carpetplot'),
