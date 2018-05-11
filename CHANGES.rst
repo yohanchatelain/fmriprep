@@ -1,3 +1,15 @@
+1.0.13 (May 11, 2018)
+=====================
+
+With thanks to @danlurie for the outstanding contribution of #1106
+
+* [ENH] Some nit picks on reports (#1123)
+* [ENH] Carpetplot + confounds plot (#1114)
+* [ENH] Add constrained cost-function masking to T1-MNI registration (#1106)
+* [FIX] Circular dependency (#1104)
+* [ENH] Set ``PYTHONNOUSERSITE`` in containers (#1103)
+
+
 1.0.12 (May 03, 2018)
 =====================
 
