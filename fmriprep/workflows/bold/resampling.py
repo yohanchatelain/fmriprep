@@ -151,7 +151,7 @@ def init_bold_surf_wf(mem_gb, output_spaces, medial_surface_nan, name='bold_surf
             (inputnode, medial_nans, [('subjects_dir', 'subjects_dir')]),
             (sampler, medial_nans, [('out_file', 'in_file')]),
             (targets, medial_nans, [('out', 'target_subject')]),
-            (medial_nans, merger, [('out', 'in1')]),
+            (medial_nans, merger, [('out_file', 'in1')]),
         ])
     else:
         workflow.connect(sampler, 'out_file', merger, 'in1')
