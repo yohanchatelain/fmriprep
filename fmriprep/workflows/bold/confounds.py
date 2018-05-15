@@ -272,6 +272,10 @@ def init_bold_confs_wf(mem_gb, metadata, name="bold_confs_wf"):
 
 def init_carpetplot_wf(mem_gb, metadata, name="bold_confs_wf"):
     """
+
+    Resamples the MNI parcellation (ad-hoc parcellation derived from the
+    Harvard-Oxford template and others).
+
     **Parameters**
 
         mem_gb : float
@@ -330,8 +334,8 @@ def init_carpetplot_wf(mem_gb, metadata, name="bold_confs_wf"):
 
     workflow = pe.Workflow(name=name)
     workflow.connect([
-        (inputnode, mrg_xfms, [('t1_2_mni_reverse_transform', 'in1'),
-                               ('t1_bold_xform', 'in2')]),
+        (inputnode, mrg_xfms, [('t1_bold_xform', 'in1'),
+                               ('t1_2_mni_reverse_transform', 'in2')]),
         (inputnode, resample_parc, [('bold_mask', 'reference_image')]),
         (mrg_xfms, resample_parc, [('out', 'transforms')]),
         # Carpetplot
