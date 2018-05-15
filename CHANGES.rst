@@ -1,3 +1,11 @@
+1.0.14 (May 15, 2018)
+=====================
+
+With thanks to @ZhifangYe for contributions
+
+* [FIX] Non-invertible transforms bringing parcellation to BOLD (#1130)
+* [FIX] Bad connection for ``--medial-surface-nan`` option (#1128)
+
 1.0.13 (May 11, 2018)
 =====================
 
