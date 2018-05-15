@@ -79,6 +79,8 @@ def init_bold_confs_wf(mem_gb, metadata, name="bold_confs_wf"):
             the FoV
         metadata : dict
             BIDS metadata for BOLD file
+        name : str
+            Name of workflow (default: ``bold_confs_wf``)
 
     **Inputs**
 
@@ -270,11 +272,54 @@ def init_bold_confs_wf(mem_gb, metadata, name="bold_confs_wf"):
     return workflow
 
 
-def init_carpetplot_wf(mem_gb, metadata, name="bold_confs_wf"):
+def init_carpetplot_wf(mem_gb, metadata, name="bold_carpet_wf"):
+    """
 
+    Resamples the MNI parcellation (ad-hoc parcellation derived from the
+    Harvard-Oxford template and others).
+
+    **Parameters**
+
+        mem_gb : float
+            Size of BOLD file in GB - please note that this size
+            should be calculated after resamplings that may extend
+            the FoV
+        metadata : dict
+            BIDS metadata for BOLD file
+        name : str
+            Name of workflow (default: ``bold_carpet_wf``)
+
+    **Inputs**
+
+        bold
+            BOLD image, after the prescribed corrections (STC, HMC and SDC)
+            when available.
+        bold_mask
+            BOLD series mask
+        confounds_file
+            TSV of all aggregated confounds
+        t1_bold_xform
+            Affine matrix that maps the T1w space into alignment with
+            the native BOLD space
+        t1_2_mni_reverse_transform
+            ANTs-compatible affine-and-warp transform file
+
+    **Outputs**
+
+        out_carpetplot
+            Path of the generated SVG file
+
+    """
     inputnode = pe.Node(niu.IdentityInterface(
-        fields=['bold', 'bold_mask', 'confounds_file', 'bold_mni_transforms']),
+        fields=['bold', 'bold_mask', 'confounds_file',
+                't1_bold_xform', 't1_2_mni_reverse_transform']),
         name='inputnode')
+
+    outputnode = pe.Node(niu.IdentityInterface(
+        fields=['out_carpetplot']), name='outputnode')
+
+    # List transforms
+    mrg_xfms = pe.Node(niu.Merge(2), name='mrg_xfms')
 
     # Warp segmentation into EPI space
     resample_parc = pe.Node(ApplyTransforms(
@@ -299,18 +344,12 @@ def init_carpetplot_wf(mem_gb, metadata, name="bold_confs_wf"):
         name='ds_report_bold_conf', run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 
-    def _reversed(inlist):
-        return list(reversed(inlist))
-
-    def _flags(inlist):
-        return [True] * len(inlist)
-
     workflow = pe.Workflow(name=name)
     workflow.connect([
-        (inputnode, resample_parc, [
-            ('bold_mask', 'reference_image'),
-            (('bold_mni_transforms', _reversed), 'transforms'),
-            (('bold_mni_transforms', _flags), 'invert_transform_flags')]),
+        (inputnode, mrg_xfms, [('t1_bold_xform', 'in1'),
+                               ('t1_2_mni_reverse_transform', 'in2')]),
+        (inputnode, resample_parc, [('bold_mask', 'reference_image')]),
+        (mrg_xfms, resample_parc, [('out', 'transforms')]),
         # Carpetplot
         (inputnode, conf_plot, [
             ('bold', 'in_func'),
@@ -318,7 +357,7 @@ def init_carpetplot_wf(mem_gb, metadata, name="bold_confs_wf"):
             ('confounds_file', 'confounds_file')]),
         (resample_parc, conf_plot, [('output_image', 'in_segm')]),
         (conf_plot, ds_report_bold_conf, [('out_file', 'in_file')]),
-
+        (conf_plot, outputnode, [('out_file', 'out_carpetplot')]),
     ])
     return workflow
 

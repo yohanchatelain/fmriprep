@@ -610,8 +610,10 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             (bold_bold_trans_wf, carpetplot_wf, [
                 ('outputnode.bold', 'inputnode.bold'),
                 ('outputnode.bold_mask', 'inputnode.bold_mask')]),
-            (bold_mni_trans_wf, carpetplot_wf, [
-                ('outputnode.bold_mni_transforms', 'inputnode.bold_mni_transforms')]),
+            (inputnode, carpetplot_wf, [
+                ('t1_2_mni_reverse_transform', 'inputnode.t1_2_mni_reverse_transform')]),
+            (bold_reg_wf, carpetplot_wf, [
+                ('outputnode.itk_t1_to_bold', 'inputnode.t1_bold_xform')]),
             (bold_confounds_wf, carpetplot_wf, [
                 ('outputnode.confounds_file', 'inputnode.confounds_file')]),
         ])

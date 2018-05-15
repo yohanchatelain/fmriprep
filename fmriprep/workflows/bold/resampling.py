@@ -237,8 +237,7 @@ def init_bold_mni_trans_wf(template, mem_gb, omp_nthreads,
     )
 
     outputnode = pe.Node(
-        niu.IdentityInterface(fields=[
-            'bold_mni', 'bold_mask_mni', 'bold_mni_transforms']),
+        niu.IdentityInterface(fields=['bold_mni', 'bold_mask_mni']),
         name='outputnode')
 
     def _aslist(in_value):
@@ -271,11 +270,10 @@ def init_bold_mni_trans_wf(template, mem_gb, omp_nthreads,
 
     workflow.connect([
         (inputnode, gen_ref, [(('bold_split', _first), 'moving_image')]),
+        (inputnode, mask_mni_tfm, [('bold_mask', 'input_image')]),
         (inputnode, mask_merge_tfms, [('t1_2_mni_forward_transform', 'in1'),
                                       (('itk_bold_to_t1', _aslist), 'in2')]),
         (mask_merge_tfms, mask_mni_tfm, [('out', 'transforms')]),
-        (inputnode, mask_mni_tfm, [('bold_mask', 'input_image')]),
-        (mask_merge_tfms, outputnode, [('out', 'bold_mni_transforms')]),
         (mask_mni_tfm, outputnode, [('output_image', 'bold_mask_mni')]),
     ])
 
