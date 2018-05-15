@@ -79,6 +79,8 @@ def init_bold_confs_wf(mem_gb, metadata, name="bold_confs_wf"):
             the FoV
         metadata : dict
             BIDS metadata for BOLD file
+        name : str
+            Name of workflow (default: ``bold_confs_wf``)
 
     **Inputs**
 
@@ -270,7 +272,7 @@ def init_bold_confs_wf(mem_gb, metadata, name="bold_confs_wf"):
     return workflow
 
 
-def init_carpetplot_wf(mem_gb, metadata, name="bold_confs_wf"):
+def init_carpetplot_wf(mem_gb, metadata, name="bold_carpet_wf"):
     """
 
     Resamples the MNI parcellation (ad-hoc parcellation derived from the
@@ -284,6 +286,8 @@ def init_carpetplot_wf(mem_gb, metadata, name="bold_confs_wf"):
             the FoV
         metadata : dict
             BIDS metadata for BOLD file
+        name : str
+            Name of workflow (default: ``bold_carpet_wf``)
 
     **Inputs**
 
@@ -300,11 +304,19 @@ def init_carpetplot_wf(mem_gb, metadata, name="bold_confs_wf"):
         t1_2_mni_reverse_transform
             ANTs-compatible affine-and-warp transform file
 
+    **Outputs**
+
+        out_carpetplot
+            Path of the generated SVG file
+
     """
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['bold', 'bold_mask', 'confounds_file',
                 't1_bold_xform', 't1_2_mni_reverse_transform']),
         name='inputnode')
+
+    outputnode = pe.Node(niu.IdentityInterface(
+        fields=['out_carpetplot']), name='outputnode')
 
     # List transforms
     mrg_xfms = pe.Node(niu.Merge(2), name='mrg_xfms')
@@ -345,7 +357,7 @@ def init_carpetplot_wf(mem_gb, metadata, name="bold_confs_wf"):
             ('confounds_file', 'confounds_file')]),
         (resample_parc, conf_plot, [('output_image', 'in_segm')]),
         (conf_plot, ds_report_bold_conf, [('out_file', 'in_file')]),
-
+        (conf_plot, outputnode, [('out_file', 'out_carpetplot')]),
     ])
     return workflow
 
