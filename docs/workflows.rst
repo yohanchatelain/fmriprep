@@ -106,15 +106,16 @@ in a multiscale, mutual-information based, nonlinear registration scheme.
 In particular, spatial normalization is done using the `ICBM 2009c Nonlinear
 Asymmetric template (1×1×1mm) <http://nist.mni.mcgill.ca/?p=904>`_ [Fonov2011]_.
 
-When processing images from patients with focal brain lesions (e.g. stroke, tumor
-resection), it is possible to provide a lesion mask to be used during spatial
-normalization to MNI-space. ANTs will use this mask to minimize warping of 
-healthy tissue into damaged areas (or vice-versa). Lesion masks should be binary 
-NIfTI images (damaged areas = 1, everywhere else = 0) in the same space and
-resolution as the T1 image, and follow the naming convention specified in
+When processing images from patients with focal brain lesions (e.g. stroke, tumor 
+resection), it is possible to provide a lesion mask to be used during spatial 
+normalization to MNI-space [Brett2011]_. ANTs will use this mask to minimize warping of 
+healthy tissue into damaged areas (or vice-versa). 
+Lesion masks should be binary NIfTI images (damaged areas = 1, everywhere else = 0) 
+in the same space and resolution as the T1 image, and follow the naming convention specified in
 `BIDS Extension Proposal 3: Common Derivatives <https://docs.google.com/document/d/1Wwc4A6Mow4ZPPszDIWfCUCRNstn7d_zzaWPcfcHmgI4/edit#heading=h.9146wuepclkt>`_
-(e.g. ``sub-001_T1w_label-lesion_roi.nii.gz``). This file should be placed in
-the ``sub-*/anat`` directory of the BIDS dataset to be run through ``fmriprep``.
+(e.g. ``sub-001_T1w_label-lesion_roi.nii.gz``). 
+This file should be placed in the ``sub-*/anat`` directory of the BIDS dataset 
+to be run through ``fmriprep``.
 
 .. figure:: _static/T1MNINormalization.svg
     :scale: 100%
