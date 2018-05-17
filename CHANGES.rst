@@ -1,3 +1,9 @@
+1.0.15 (May 17, 2018)
+=====================
+
+* [DOC] Add lesion masking during registration (#1113)
+* [FIX] Patch ``boldbuffer`` for ME (#1134)
+
 1.0.14 (May 15, 2018)
 =====================
 
