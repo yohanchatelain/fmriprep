@@ -385,9 +385,9 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     if run_stc is True:  # bool('TooShort') == True, so check True explicitly
         bold_stc_wf = init_bold_stc_wf(name='bold_stc_wf', metadata=metadata)
         workflow.connect([
-            (bold_stc_wf, boldbuffer, [('outputnode.stc_file', 'bold_file')]),
             (bold_reference_wf, bold_stc_wf, [('outputnode.bold_file', 'inputnode.bold_file'),
                                               ('outputnode.skip_vols', 'inputnode.skip_vols')]),
+            (bold_stc_wf, boldbuffer, [('outputnode.stc_file', 'bold_file')]),
         ])
     else:  # bypass STC from original BOLD to the splitter through boldbuffer
         workflow.connect([
@@ -415,10 +415,10 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
     # MAIN WORKFLOW STRUCTURE #######################################################
     workflow.connect([
-        # BOLD buffer has slice-time corrected if it was run, original otherwise
-        (boldbuffer, bold_split, [('bold_file', 'in_file')]),
         # Generate early reference
         (inputnode, bold_reference_wf, [('bold_file', 'inputnode.bold_file')]),
+        # BOLD buffer has slice-time corrected if it was run, original otherwise
+        (boldbuffer, bold_split, [('bold_file', 'in_file')]),
         # HMC
         (bold_reference_wf, bold_hmc_wf, [
             ('outputnode.raw_ref_image', 'inputnode.raw_ref_image'),
@@ -525,10 +525,14 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         workflow.disconnect([
             (inputnode, bold_reference_wf, [
                 ('bold_file', 'inputnode.bold_file')]),
+            (bold_reference_wf, boldbuffer, [
+                ('outputnode.bold_file', 'bold_file')]),
         ])
         workflow.connect([
             (me_first_echo, bold_reference_wf, [
-                ('first_image', 'inputnode.bold_file')])
+                ('first_image', 'inputnode.bold_file')]),
+            (inputnode, boldbuffer, [
+                ('bold_file', 'bold_file')]),
         ])
 
         if t2s_coreg:
