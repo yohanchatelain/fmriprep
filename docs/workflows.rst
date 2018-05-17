@@ -108,8 +108,9 @@ Asymmetric template (1×1×1mm) <http://nist.mni.mcgill.ca/?p=904>`_ [Fonov2011]
 
 When processing images from patients with focal brain lesions (e.g. stroke, tumor 
 resection), it is possible to provide a lesion mask to be used during spatial 
-normalization to MNI-space [Brett2011]_. ANTs will use this mask to minimize warping of 
-healthy tissue into damaged areas (or vice-versa). 
+normalization to MNI-space [Brett2001]_.
+ANTs will use this mask to minimize warping of healthy tissue into damaged
+areas (or vice-versa). 
 Lesion masks should be binary NIfTI images (damaged areas = 1, everywhere else = 0) 
 in the same space and resolution as the T1 image, and follow the naming convention specified in
 `BIDS Extension Proposal 3: Common Derivatives <https://docs.google.com/document/d/1Wwc4A6Mow4ZPPszDIWfCUCRNstn7d_zzaWPcfcHmgI4/edit#heading=h.9146wuepclkt>`_
