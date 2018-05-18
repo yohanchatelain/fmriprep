@@ -160,8 +160,8 @@ derivative of RMS variance over voxels (or :abbr:`DVARS (D referring to differen
 standardized (``stdDVARS``), non-standardized (``non-stdDVARS``), and voxel-wise standardized (``vx-wisestdDVARS``);
 the ``FrameDisplacement`` is a quantification of the estimated bulk-head motion; ``X``, ``Y``, ``Z``, ``RotX``,
 ``RotY``, ``RotZ`` are the actual 6 rigid-body transform parameters estimated by FMRIPREP;
-the ``NonSteadyStateOutlier00`` column is ``1`` when a non-steady state was found (typically at the beginning of
-the scan) and ``0`` elsewhere; and finally six noise components ``aCompCorXX`` calculated using
+the ``NonSteadyStateOutlierXX`` columns indicate non-steady state volumes with a single ``1`` value and ``0`` elsewhere (there 
+is one ``NonSteadyStateOutlierXX`` column per outlier/volume); and finally six noise components ``aCompCorXX`` calculated using
 :abbr:`CompCor (Component Based Noise Correction Method)`
 and five noise components ``AROMAaggrCompXX`` if
 :abbr:`ICA (independent components analysis)`-:abbr:`AROMA (Automatic Removal Of Motion Artifacts)` was enabled.
