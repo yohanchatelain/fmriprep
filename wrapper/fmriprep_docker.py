@@ -356,9 +356,6 @@ def main():
     for pkg in ('fmriprep', 'niworkflows', 'nipype'):
         repo_path = getattr(opts, 'patch_' + pkg)
         if repo_path is not None:
-            # nipype is now a submodule of niworkflows
-            if pkg == 'nipype':
-                pkg = 'niworkflows/nipype'
             command.extend(['-v',
                             '{}:{}/{}:ro'.format(repo_path, PKG_PATH, pkg)])
 
