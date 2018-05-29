@@ -15,8 +15,8 @@ Registration workflows
 import os
 import os.path as op
 
-from niworkflows.nipype.pipeline import engine as pe
-from niworkflows.nipype.interfaces import utility as niu, fsl, c3, freesurfer as fs
+from nipype.pipeline import engine as pe
+from nipype.interfaces import utility as niu, fsl, c3, freesurfer as fs
 from niworkflows.interfaces.registration import FLIRTRPT, BBRegisterRPT, MRICoregRPT
 from niworkflows.interfaces.utils import GenerateSamplingReference
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
@@ -640,7 +640,7 @@ def compare_xforms(lta_list, norm_threshold=15):
 
     """
     from fmriprep.interfaces.surf import load_transform
-    from niworkflows.nipype.algorithms.rapidart import _calc_norm_affine
+    from nipype.algorithms.rapidart import _calc_norm_affine
 
     bbr_affine = load_transform(lta_list[0])
     fallback_affine = load_transform(lta_list[1])

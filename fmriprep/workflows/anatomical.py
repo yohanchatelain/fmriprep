@@ -24,15 +24,15 @@ import os.path as op
 
 from pkg_resources import resource_filename as pkgr
 
-from niworkflows.nipype.pipeline import engine as pe
-from niworkflows.nipype.interfaces import (
+from nipype.pipeline import engine as pe
+from nipype.interfaces import (
     io as nio,
     utility as niu,
     c3,
     freesurfer as fs,
     fsl
 )
-from niworkflows.nipype.interfaces.ants import BrainExtraction, N4BiasFieldCorrection
+from nipype.interfaces.ants import BrainExtraction, N4BiasFieldCorrection
 
 from niworkflows.interfaces.registration import RobustMNINormalizationRPT
 import niworkflows.data as nid
@@ -1286,7 +1286,7 @@ def _seg2msks(in_file, newpath=None):
     """Converts labels to masks"""
     import nibabel as nb
     import numpy as np
-    from niworkflows.nipype.utils.filemanip import fname_presuffix
+    from nipype.utils.filemanip import fname_presuffix
 
     nii = nb.load(in_file)
     labels = nii.get_data()

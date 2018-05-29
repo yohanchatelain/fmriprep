@@ -228,7 +228,7 @@ def get_parser():
 
 def main():
     """Entry point"""
-    from niworkflows.nipype import logging as nlogging
+    from nipype import logging as nlogging
     from multiprocessing import set_start_method, Process, Manager
     from ..viz.reports import generate_reports
     from ..info import __version__
@@ -335,7 +335,7 @@ def build_workflow(opts, retval):
     a hard-limited memory-scope.
 
     """
-    from niworkflows.nipype import logging, config as ncfg
+    from nipype import logging, config as ncfg
     from ..info import __version__
     from ..workflows.base import init_fmriprep_wf
     from ..utils.bids import collect_participants

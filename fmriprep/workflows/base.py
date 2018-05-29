@@ -15,8 +15,8 @@ import sys
 import os
 from copy import deepcopy
 
-from niworkflows.nipype.pipeline import engine as pe
-from niworkflows.nipype.interfaces import utility as niu
+from nipype.pipeline import engine as pe
+from nipype.interfaces import utility as niu
 
 from ..interfaces import (
     BIDSDataGrabber, BIDSFreeSurferDir, BIDSInfo, SubjectSummary, AboutSummary,

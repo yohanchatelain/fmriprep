@@ -9,7 +9,7 @@ import nibabel as nb
 from scipy.interpolate import interpn
 from datetime import datetime as dt
 
-from niworkflows.nipype import logging
+from nipype import logging
 LOGGER = logging.getLogger('interfaces')
 
 

@@ -8,9 +8,9 @@ Slice-Timing Correction (STC) of BOLD images
 .. autofunction:: init_bold_stc_wf
 
 """
-from niworkflows.nipype import logging
-from niworkflows.nipype.pipeline import engine as pe
-from niworkflows.nipype.interfaces import utility as niu, afni
+from nipype import logging
+from nipype.pipeline import engine as pe
+from nipype.interfaces import utility as niu, afni
 from niworkflows.interfaces.utils import CopyXForm
 
 DEFAULT_MEMORY_MIN_GB = 0.01

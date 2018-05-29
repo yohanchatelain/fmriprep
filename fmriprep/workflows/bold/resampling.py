@@ -13,9 +13,9 @@ Resampling workflows
 import os.path as op
 
 
-from niworkflows.nipype.pipeline import engine as pe
-from niworkflows.nipype.interfaces import utility as niu, freesurfer as fs
-from niworkflows.nipype.interfaces.fsl import Split as FSLSplit
+from nipype.pipeline import engine as pe
+from nipype.interfaces import utility as niu, freesurfer as fs
+from nipype.interfaces.fsl import Split as FSLSplit
 
 from niworkflows import data as nid
 from niworkflows.interfaces.utils import GenerateSamplingReference
@@ -484,7 +484,7 @@ def init_bold_preproc_report_wf(mem_gb, reportlets_dir, name='bold_preproc_repor
 
     """
 
-    from niworkflows.nipype.algorithms.confounds import TSNR
+    from nipype.algorithms.confounds import TSNR
     from niworkflows.interfaces import SimpleBeforeAfter
     from ...interfaces import DerivativesDataSink
 
