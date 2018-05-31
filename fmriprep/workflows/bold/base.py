@@ -13,11 +13,11 @@ Orchestrating the BOLD-preprocessing workflow
 import os
 
 import nibabel as nb
-from niworkflows.nipype import logging
+from nipype import logging
 
-from niworkflows.nipype.interfaces.fsl import Split as FSLSplit
-from niworkflows.nipype.pipeline import engine as pe
-from niworkflows.nipype.interfaces import utility as niu
+from nipype.interfaces.fsl import Split as FSLSplit
+from nipype.pipeline import engine as pe
+from nipype.interfaces import utility as niu
 
 from ...interfaces import (
     DerivativesDataSink,
@@ -910,7 +910,7 @@ def _get_wf_name(bold_fname):
     >>> _get_wf_name('/completely/made/up/path/sub-01_task-nback_run-01_echo-1_bold.nii.gz')
     'func_preproc_task_nback_run_01_echo_1_wf'
     """
-    from niworkflows.nipype.utils.filemanip import split_filename
+    from nipype.utils.filemanip import split_filename
     fname = split_filename(bold_fname)[1]
     fname_nosub = '_'.join(fname.split("_")[1:])
     # if 'echo' in fname_nosub:

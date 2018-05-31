@@ -11,10 +11,10 @@ Calculate BOLD confounds
 """
 import os
 from niworkflows.data import get_mni_icbm152_linear, get_mni_icbm152_nlin_asym_09c
-from niworkflows.nipype.pipeline import engine as pe
-from niworkflows.nipype.interfaces import utility as niu, fsl
-from niworkflows.nipype.interfaces.nilearn import SignalExtraction
-from niworkflows.nipype.algorithms import confounds as nac
+from nipype.pipeline import engine as pe
+from nipype.interfaces import utility as niu, fsl
+from nipype.interfaces.nilearn import SignalExtraction
+from nipype.algorithms import confounds as nac
 
 from niworkflows.interfaces.segmentation import ICA_AROMARPT
 from niworkflows.interfaces.masks import ROIsPlot
@@ -554,7 +554,7 @@ def init_ica_aroma_wf(template, metadata, mem_gb, omp_nthreads,
 def _maskroi(in_mask, roi_file):
     import numpy as np
     import nibabel as nb
-    from niworkflows.nipype.utils.filemanip import fname_presuffix
+    from nipype.utils.filemanip import fname_presuffix
 
     roi = nb.load(roi_file)
     roidata = roi.get_data().astype(np.uint8)

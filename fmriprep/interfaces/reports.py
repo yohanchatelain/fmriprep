@@ -14,11 +14,11 @@ import time
 import re
 
 from collections import Counter
-from niworkflows.nipype.interfaces.base import (
+from nipype.interfaces.base import (
     traits, TraitedSpec, BaseInterfaceInputSpec,
     File, Directory, InputMultiPath, Str, isdefined,
     SimpleInterface)
-from niworkflows.nipype.interfaces import freesurfer as fs
+from nipype.interfaces import freesurfer as fs
 
 from .bids import BIDS_NAME
 
