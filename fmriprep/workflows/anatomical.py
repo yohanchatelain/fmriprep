@@ -30,7 +30,8 @@ from nipype.interfaces import (
     utility as niu,
     c3,
     freesurfer as fs,
-    fsl
+    fsl,
+    image,
 )
 from nipype.interfaces.ants import BrainExtraction, N4BiasFieldCorrection
 
@@ -43,7 +44,7 @@ from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransf
 
 from ..interfaces import (
     DerivativesDataSink, MakeMidthickness, FSInjectBrainExtracted,
-    FSDetectInputs, NormalizeSurf, GiftiNameSource, TemplateDimensions, Conform, Reorient,
+    FSDetectInputs, NormalizeSurf, GiftiNameSource, TemplateDimensions, Conform,
     ConcatAffines, RefineBrainMask,
 )
 from ..utils.misc import fix_multi_T1w_source_name, add_suffix
@@ -481,7 +482,7 @@ def init_anat_template_wf(longitudinal, omp_nthreads, num_t1w, name='anat_templa
         name='t1_merge')
 
     # 2. Reorient template to RAS, if needed (mri_robust_template may set to LIA)
-    t1_reorient = pe.Node(Reorient(), name='t1_reorient')
+    t1_reorient = pe.Node(image.Reorient(), name='t1_reorient')
 
     lta_to_fsl = pe.MapNode(fs.utils.LTAConvert(out_fsl=True), iterfield=['in_lta'],
                             name='lta_to_fsl')
