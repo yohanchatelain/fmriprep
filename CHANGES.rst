@@ -1,3 +1,11 @@
+1.1.0 (June 4, 2018)
+====================
+
+* [ENH] Use Reorient interface included upstream in nipype (#1153)
+* [FIX] Refine BIDS queries to avoid indexing derivatives (#1141)
+* [DOC] Clarify outlier columns (#1138)
+* [PIN] Update to niworkflows 0.4.0 and nipype 1.0.4 (#1133)
+
 1.0.15 (May 17, 2018)
 =====================
 
