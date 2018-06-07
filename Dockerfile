@@ -106,10 +106,10 @@ ENV PATH=/usr/local/miniconda/bin:$PATH \
     PYTHONNOUSERSITE=1
 
 # Installing precomputed python packages
-RUN conda install -y mkl=2017.0.1 mkl-service;  sync &&\
-    conda install -y numpy=1.12.0 \
-                     scipy=0.18.1 \
-                     scikit-learn=0.18.1 \
+RUN conda install -y mkl=2018.0.3 mkl-service;  sync &&\
+    conda install -y numpy=1.14.3 \
+                     scipy=1.1.0 \
+                     scikit-learn=0.19.1 \
                      matplotlib=2.2.0 \
                      pandas=0.19.2 \
                      libxml2=2.9.4 \
