@@ -96,9 +96,9 @@ RUN mkdir -p /opt/ICA-AROMA && \
 ENV PATH=/opt/ICA-AROMA:$PATH
 
 # Installing and setting up miniconda
-RUN curl -sSLO https://repo.continuum.io/miniconda/Miniconda3-4.3.11-Linux-x86_64.sh && \
-    bash Miniconda3-4.3.11-Linux-x86_64.sh -b -p /usr/local/miniconda && \
-    rm Miniconda3-4.3.11-Linux-x86_64.sh
+RUN curl -sSLO https://repo.continuum.io/miniconda/Miniconda3-4.5.4-Linux-x86_64.sh && \
+    bash Miniconda3-4.5.4-Linux-x86_64.sh -b -p /usr/local/miniconda && \
+    rm Miniconda3-4.5.4-Linux-x86_64.sh
 
 ENV PATH=/usr/local/miniconda/bin:$PATH \
     LANG=C.UTF-8 \
@@ -106,12 +106,12 @@ ENV PATH=/usr/local/miniconda/bin:$PATH \
     PYTHONNOUSERSITE=1
 
 # Installing precomputed python packages
-RUN conda install -y mkl=2017.0.1 mkl-service;  sync &&\
-    conda install -y numpy=1.12.0 \
-                     scipy=0.18.1 \
-                     scikit-learn=0.18.1 \
+RUN conda install -y mkl=2018.0.3 mkl-service;  sync &&\
+    conda install -y numpy=1.14.3 \
+                     scipy=1.1.0 \
+                     scikit-learn=0.19.1 \
                      matplotlib=2.2.0 \
-                     pandas=0.19.2 \
+                     pandas=0.23.0 \
                      libxml2=2.9.4 \
                      libxslt=1.1.29\
                      traits=4.6.0; sync &&  \
