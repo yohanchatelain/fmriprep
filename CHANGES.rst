@@ -1,3 +1,9 @@
+1.1.1 (June 7, 2018)
+====================
+
+* [ENH] Pre-cache DKT31 template in Docker image (#1159)
+* [MAINT] Update core dependencies (#1163)
+
 1.1.0 (June 4, 2018)
 ====================
 
