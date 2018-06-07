@@ -96,9 +96,9 @@ RUN mkdir -p /opt/ICA-AROMA && \
 ENV PATH=/opt/ICA-AROMA:$PATH
 
 # Installing and setting up miniconda
-RUN curl -sSLO https://repo.continuum.io/miniconda/Miniconda3-4.3.11-Linux-x86_64.sh && \
-    bash Miniconda3-4.3.11-Linux-x86_64.sh -b -p /usr/local/miniconda && \
-    rm Miniconda3-4.3.11-Linux-x86_64.sh
+RUN curl -sSLO https://repo.continuum.io/miniconda/Miniconda2-4.5.4-Linux-x86_64.sh && \
+    bash Miniconda3-4.5.4-Linux-x86_64.sh -b -p /usr/local/miniconda && \
+    rm Miniconda3-4.5.4-Linux-x86_64.sh
 
 ENV PATH=/usr/local/miniconda/bin:$PATH \
     LANG=C.UTF-8 \
