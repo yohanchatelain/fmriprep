@@ -151,7 +151,7 @@ def collect_data(dataset, participant_label, task=None):
 
 
     """
-    layout = BIDSLayout(dataset, exclude='derivatives')
+    layout = BIDSLayout(dataset, exclude=['derivatives', 'sourcedata'])
     queries = {
         'fmap': {'subject': participant_label, 'modality': 'fmap',
                  'extensions': ['nii', 'nii.gz']},
