@@ -119,7 +119,9 @@ def get_parser():
              ' - T1w: subject anatomical volume\n'
              ' - template: normalization target specified by --template\n'
              ' - fsnative: individual subject surface\n'
-             ' - fsaverage*: FreeSurfer average meshes'
+             ' - fsaverage*: FreeSurfer average meshes\n'
+             'this argument can be single value or a space delimited list,\n'
+             'for example: --output-space T1w fsnative'
     )
     g_conf.add_argument(
         '--force-bbr', action='store_true', dest='use_bbr', default=None,
