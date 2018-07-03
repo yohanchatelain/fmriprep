@@ -1,6 +1,11 @@
-# Contributing to FMRIPREP
+# Contributing to fMRIPrep
 
-Welcome to the FMRIPREP repository! We're excited you're here and want to contribute.  
+Welcome to the fMRIPrep repository! We're excited you're here and want to contribute.
+But before getting into the details of how to contribute, it is important that we establish
+certain elements for the collaboration, ensuring the healthy development of the project and
+the collaborators.
+
+## Practical guide to submitting your contribution
 
 These guidelines are designed to make it as easy as possible to get involved. If you have any questions that aren't discussed below, please let us know by opening an [issue][link_issues]!
 
