@@ -106,16 +106,16 @@ in a multiscale, mutual-information based, nonlinear registration scheme.
 In particular, spatial normalization is done using the `ICBM 2009c Nonlinear
 Asymmetric template (1×1×1mm) <http://nist.mni.mcgill.ca/?p=904>`_ [Fonov2011]_.
 
-When processing images from patients with focal brain lesions (e.g. stroke, tumor 
-resection), it is possible to provide a lesion mask to be used during spatial 
+When processing images from patients with focal brain lesions (e.g. stroke, tumor
+resection), it is possible to provide a lesion mask to be used during spatial
 normalization to MNI-space [Brett2001]_.
 ANTs will use this mask to minimize warping of healthy tissue into damaged
-areas (or vice-versa). 
-Lesion masks should be binary NIfTI images (damaged areas = 1, everywhere else = 0) 
+areas (or vice-versa).
+Lesion masks should be binary NIfTI images (damaged areas = 1, everywhere else = 0)
 in the same space and resolution as the T1 image, and follow the naming convention specified in
 `BIDS Extension Proposal 3: Common Derivatives <https://docs.google.com/document/d/1Wwc4A6Mow4ZPPszDIWfCUCRNstn7d_zzaWPcfcHmgI4/edit#heading=h.9146wuepclkt>`_
-(e.g. ``sub-001_T1w_label-lesion_roi.nii.gz``). 
-This file should be placed in the ``sub-*/anat`` directory of the BIDS dataset 
+(e.g. ``sub-001_T1w_label-lesion_roi.nii.gz``).
+This file should be placed in the ``sub-*/anat`` directory of the BIDS dataset
 to be run through ``fmriprep``.
 
 .. figure:: _static/T1MNINormalization.svg
@@ -165,6 +165,15 @@ structural images.
 If enabled, several steps in the ``fmriprep`` pipeline are added or replaced.
 All surface preprocessing may be disabled with the ``--fs-no-reconall`` flag.
 
+.. note::
+    Surface processing will be skipped if the outputs already exist.
+
+    In order to bypass reconstruction in ``fmriprep``, place existing reconstructed
+    subjects in ``<output dir>/freesurfer`` prior to the run.
+    ``fmriprep`` will perform any missing ``recon-all`` steps, but will not perform
+    any steps whose outputs already exist.
+
+
 If FreeSurfer reconstruction is performed, the reconstructed subject is placed in
 ``<output dir>/freesurfer/sub-<subject_label>/`` (see :ref:`fsderivs`).
 
@@ -200,11 +209,6 @@ Reconstructed white and pial surfaces are included in the report.
 If T1w voxel sizes are less than 1mm in all dimensions (rounding to nearest
 .1mm), `submillimeter reconstruction`_ is used, unless disabled with
 ``--no-submm-recon``.
-
-In order to bypass reconstruction in ``fmriprep``, place existing reconstructed
-subjects in ``<output dir>/freesurfer`` prior to the run.
-``fmriprep`` will perform any missing ``recon-all`` steps, but will not perform
-any steps whose outputs already exist.
 
 ``lh.midthickness`` and ``rh.midthickness`` surfaces are created in the subject
 ``surf/`` directory, corresponding to the surface half-way between the gray/white
