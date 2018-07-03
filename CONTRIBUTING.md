@@ -37,7 +37,7 @@ This allows other members of the FMRIPREP development team to confirm that you a
 **2. [Fork][link_fork] the [FMRIPREP repository][link_fmriprep] to your profile.**
 
 This is now your own unique copy of FMRIPREP.
-Changes here won't effect anyone else's work, so it's a safe space to explore edits to the code!
+Changes here won't affect anyone else's work, so it's a safe space to explore edits to the code!
 
 Make sure to [keep your fork up to date][link_updateupstreamwiki] with the master repository.
 
