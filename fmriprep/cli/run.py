@@ -120,7 +120,7 @@ def get_parser():
              ' - template: normalization target specified by --template\n'
              ' - fsnative: individual subject surface\n'
              ' - fsaverage*: FreeSurfer average meshes\n'
-             'this argument can be single value or a space delimited list\n'
+             'this argument can be single value or a space delimited list,\n'
              'for example: --output-space T1w fsnative'
     )
     g_conf.add_argument(
