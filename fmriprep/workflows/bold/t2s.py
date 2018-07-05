@@ -18,7 +18,7 @@ from .resampling import init_bold_preproc_trans_wf
 from .util import init_skullstrip_bold_wf
 
 DEFAULT_MEMORY_MIN_GB = 0.01
-LOGGER = logging.getLogger('workflow')
+LOGGER = logging.getLogger('nipype.workflow')
 
 
 # pylint: disable=R0914

@@ -21,7 +21,7 @@ from nipype.interfaces.base import (
 )
 from niworkflows.viz.plots import fMRIPlot
 
-LOGGER = logging.getLogger('interface')
+LOGGER = logging.getLogger('nipype.interface')
 
 
 class GatherConfoundsInputSpec(BaseInterfaceInputSpec):

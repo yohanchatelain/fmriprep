@@ -255,9 +255,9 @@ def main():
     log_level = int(max(25 - 5 * opts.verbose_count, logging.DEBUG))
     # Set logging
     logger.setLevel(log_level)
-    nlogging.getLogger('workflow').setLevel(log_level)
-    nlogging.getLogger('interface').setLevel(log_level)
-    nlogging.getLogger('utils').setLevel(log_level)
+    nlogging.getLogger('nipype.workflow').setLevel(log_level)
+    nlogging.getLogger('nipype.interface').setLevel(log_level)
+    nlogging.getLogger('nipype.utils').setLevel(log_level)
 
     errno = 0
 
@@ -341,7 +341,7 @@ def build_workflow(opts, retval):
     from ..utils.bids import collect_participants
     from ..viz.reports import generate_reports
 
-    logger = logging.getLogger('workflow')
+    logger = logging.getLogger('nipype.workflow')
 
     INIT_MSG = """
     Running fMRIPREP version {version}:

@@ -14,7 +14,7 @@ from nipype.interfaces import utility as niu, afni
 from niworkflows.interfaces.utils import CopyXForm
 
 DEFAULT_MEMORY_MIN_GB = 0.01
-LOGGER = logging.getLogger('workflow')
+LOGGER = logging.getLogger('nipype.workflow')
 
 
 # pylint: disable=R0914
