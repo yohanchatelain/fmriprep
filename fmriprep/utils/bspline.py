@@ -10,7 +10,7 @@ from scipy.interpolate import interpn
 from datetime import datetime as dt
 
 from nipype import logging
-LOGGER = logging.getLogger('interfaces')
+LOGGER = logging.getLogger('nipype.interfaces')
 
 
 class BSplineFieldmap(object):

@@ -27,7 +27,7 @@ from nipype.interfaces.base import (
     traits, TraitedSpec, File, InputMultiPath, SimpleInterface,
     BaseInterfaceInputSpec)
 
-LOGGER = logging.getLogger('interface')
+LOGGER = logging.getLogger('nipype.interface')
 
 
 class FirstEchoInputSpec(BaseInterfaceInputSpec):
