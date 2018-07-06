@@ -541,12 +541,23 @@ Calculated confounds include the mean global signal, mean tissue class signal,
 tCompCor, aCompCor, Frame-wise Displacement, 6 motion parameters, DVARS, and, if
 the ``--use-aroma`` flag is enabled, the noise components identified by ICA-AROMA
 (those to be removed by the "aggressive" denoising strategy).
+Particular details about ICA-AROMA are given below.
+
+
+ICA-AROMA
+~~~~~~~~~
+:mod:`fmriprep.workflows.bold.confounds.init_ica_aroma_wf`
+
+When one of the `--output-spaces` selected is in MNI space, ICA-AROMA denoising
+can be automatically appended to the workflow.
 The number of ICA-AROMA components depends on a dimensionality estimate
 made by MELODIC.
 For datasets with a very short TR and a large number of timepoints, this may
 result in an unusually high number of components.
 In such cases, it may be useful to specify the number of components to be
 extracted with ``--aroma-melodic-dimensionality``.
+Further details on the implementation are given within the workflow generation
+function (:mod:`fmriprep.workflows.bold.confounds.init_ica_aroma_wf`).
 
 *Note*: *non*-aggressive AROMA denoising is a fundamentally different procedure
 from its "aggressive" counterpart and cannot be performed only by using a set of noise
