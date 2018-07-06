@@ -3,7 +3,7 @@ import pytest
 
 import numpy as np
 from nilearn.image import load_img
-from ..utils import init_bold_reference_wf
+from ..util import init_bold_reference_wf
 
 
 def symmetric_overlap(img1, img2):
