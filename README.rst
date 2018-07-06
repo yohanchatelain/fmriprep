@@ -107,7 +107,7 @@ Limitations and reasons not to use ``fmriprep``
 4. If you really want unlimited flexibility (which is obviously a double-edged sword).
 5. If you want students to suffer through implementing each step for didactic purposes,
    or to learn shell-scripting or Python along the way.
-6. If you’re trying to reproduce some in-house lab pipeline.
+6. If you are trying to reproduce some *in-house* lab pipeline.
 
 (reasons 4-6 were kindly provided by S. Nastase in his
 `open-review <http://academickarma.org/review/j7d5501n779n>_`
