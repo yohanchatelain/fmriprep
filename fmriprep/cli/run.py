@@ -57,8 +57,8 @@ def get_parser():
 
     g_bids = parser.add_argument_group('Options for filtering BIDS queries')
     g_bids.add_argument('--participant_label', '--participant-label', action='store', nargs='+',
-                        help='one or more participant identifiers (the sub- prefix can be '
-                             'removed)')
+                        help='a space delimited list of participant identifiers or a single '
+                             'identifier (the sub- prefix can be removed)')
     # Re-enable when option is actually implemented
     # g_bids.add_argument('-s', '--session-id', action='store', default='single_session',
     #                     help='select a specific session to be processed')
@@ -97,7 +97,7 @@ def get_parser():
         '--ignore', required=False, action='store', nargs="+", default=[],
         choices=['fieldmaps', 'slicetiming'],
         help='ignore selected aspects of the input dataset to disable corresponding '
-             'parts of the workflow')
+             'parts of the workflow (a space delimited list)')
     g_conf.add_argument(
         '--longitudinal', action='store_true',
         help='treat dataset as longitudinal - may increase runtime')
