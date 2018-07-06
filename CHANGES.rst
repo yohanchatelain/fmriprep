@@ -1,3 +1,15 @@
+1.1.2 (July 6, 2018)
+====================
+
+This release incorporates Nipype improvements that should reduce the
+chance of hanging if tasks are killed for excessive resource consumption.
+
+Thanks to Elizabeth DuPre for documentation updates.
+
+* [DOC] Clarify how to reuse FreeSurfer derivatives (#1189)
+* [DOC] Improve command line option documentation (#1186, #1080)
+* [MAINT] Update core dependencies (#1179, #1180)
+
 1.1.1 (June 7, 2018)
 ====================
 
