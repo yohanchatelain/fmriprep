@@ -226,6 +226,10 @@ jobs:
             fi
       - attach_workspace:
           at: /tmp
+      - restore_cache:
+          keys:
+            - regression-v0-{{ epoch }}
+            - regression-v0-
       - run:
           name: Load Docker image layer cache
           no_output_timeout: 30m
@@ -313,28 +317,6 @@ jobs:
             grep -qv "ERROR" $PWD/builddocs.log
       - store_artifacts:
           path: /home/circleci/out/docs
-
-  regression_test:
-    machine:
-      image: circleci/classic:201711-01
-    working_directory: /tmp/regression
-    steps:
-      - checkout:
-          path: /home/circleci/src/fmriprep
-      - run:
-          name: Check whether build should be skipped
-          command: |
-            cd /home/circleci/src/fmriprep
-            if [[ "$( git log --format=oneline -n 1 $CIRCLE_SHA1 | grep -i -E '\[skip[ _]?reg\]' )" != "" ]]; then
-              echo "Skipping regression tests"
-              circleci step halt
-            fi
-      - attach_workspace:
-          at: /tmp
-      - restore_cache:
-          keys:
-            - regression-v0-{{ epoch }}
-            - regression-v0-
 
   ds005:
     machine:
@@ -751,6 +733,7 @@ workflows:
       - test_pytest:
           requires:
             - build
+            - get_regression_data
           filters:
             branches:
               ignore: /docs?\/.*/
@@ -787,15 +770,6 @@ workflows:
               ignore: /docs?\/.*/
             tags:
               only: /.*/
-
-      - regression_test:
-          requires:
-            - build
-            - get_regression_data
-          filters:
-            branches:
-              # only: /meepi.*/
-              ignore: /docs?\/.*/
 
       - deploy:
           requires:
