@@ -67,6 +67,19 @@ Singularity Container
 =====================
 
 For security reasons, many HPCs (e.g., TACC) do not allow Docker containers, but do allow `Singularity <https://github.com/singularityware/singularity>`_ containers.
+
+Preparing a Singularity image (Singualrity version >= 2.5)
+----------------------------------------------------------
+If the version of Singularity on your HPC is modern enough you can create Singularity image directly on the HCP.
+This is as simple as
+
+    $ singularity build /my_images/fmriprep-<version>.simg docker://poldracklab/mriqc:<version>
+    
+Where ``<version>`` should be replaced with the desired version of FMRIPREP that you want to download.
+
+
+Preparing a Singularity image (Singualrity version < 2.5)
+---------------------------------------------------------
 In this case, start with a machine (e.g., your personal computer) with Docker installed.
 Use `docker2singularity <https://github.com/singularityware/docker2singularity>`_ to create a singularity image. You will need an active internet connection and some time. ::
 
@@ -74,8 +87,9 @@ Use `docker2singularity <https://github.com/singularityware/docker2singularity>`
         -v /var/run/docker.sock:/var/run/docker.sock \
         -v D:\host\path\where\to\output\singularity\image:/output \
         singularityware/docker2singularity \
-        poldracklab/fmriprep:latest
+        poldracklab/fmriprep:<version>
 
+Where ``<version>`` should be replaced with the desired version of FMRIPREP that you want to download.
 
 Beware of the back slashes, expected for Windows systems.
 For \*nix users the command translates as follows: ::
@@ -84,38 +98,47 @@ For \*nix users the command translates as follows: ::
         -v /var/run/docker.sock:/var/run/docker.sock \
         -v /absolute/path/to/output/folder:/output \
         singularityware/docker2singularity \
-        poldracklab/fmriprep:latest
+        poldracklab/fmriprep:<version>
 
 
 Transfer the resulting Singularity image to the HPC, for example, using ``scp``. ::
 
-    $ scp poldracklab_fmriprep_latest-*.img user@hcpserver.edu:/path/to/downloads
+    $ scp poldracklab_fmriprep*.img user@hcpserver.edu:/my_images
+
+Running a Singularity Image
+---------------------------
 
 If the data to be preprocessed is also on the HPC, you are ready to run fmriprep. ::
 
-    $ singularity run --clearenv path/to/singularity/image.img \
+    $ singularity run --clearenv /my_images/fmriprep-1.1.2.simg \
         path/to/data/dir path/to/output/dir \
         participant \
         --participant-label label
-
-For example: ::
-
-    $ singularity run --clearenv ~/poldracklab_fmriprep_latest-2016-12-04-5b74ad9a4c4d.img \
-        /work/04168/asdf/lonestar/ $WORK/lonestar/output \
-        participant \
-        --participant-label 387 --nthreads 16 -w $WORK/lonestar/work \
-        --omp-nthreads 16
 
 .. note::
 
    Singularity by default `exposes all environment variables from the host inside the container <https://github.com/singularityware/singularity/issues/445>`_.
    Because of this your host libraries (such as nipype) could be accidentally used instead of the ones inside the container - if they are included in PYTHONPATH.
-   To avoid such situation we recommend using the ``--clearenv`` singualrity flag in production use. For example: ::
+   To avoid such situation we recommend using the ``--clearenv`` singularity flag in production use. For example: ::
 
       $ singularity run --clearenv ~/poldracklab_fmriprep_latest-2016-12-04-5b74ad9a4c4d.img \
         /work/04168/asdf/lonestar/ $WORK/lonestar/output \
         participant \
         --participant-label 387 --nthreads 16 -w $WORK/lonestar/work \
+        --omp-nthreads 16
+        
+.. note::
+
+   Depending on how Singualrity is configured on your cluster it might or might not automatically bind (mount or expose)
+host folders to the container. 
+   If this is not done automatically you will need to bind the necessary folders using the ``-B <host_folder>:<container_folder``
+Singularity flag.
+   For example: ::
+
+      $ singularity run --clearenv -B /work:/work ~/poldracklab_fmriprep_latest-2016-12-04-5b74ad9a4c4d.simg \
+        /work/my_dataset/ /work/my_dataset/derivatives/fmriprep \
+        participant \
+        --participant-label 387 --nthreads 16 \
         --omp-nthreads 16
 
 Manually Prepared Environment
