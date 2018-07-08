@@ -151,9 +151,9 @@ https://surfer.nmr.mgh.harvard.edu/registration.html.
 
 When using manually-prepared environments or singularity, FreeSurfer will search 
 for a license key file first using the ``$FS_LICENSE`` environment variable and then 
-in the default path to the license key file (``$FREESURFER_HOME/license.txt``). If you want
-to use ``$FS_LICENSE`` to point to your license file with singularity remember not to 
-use the ``--clearenv`` flag.
+in the default path to the license key file (``$FREESURFER_HOME/license.txt``). 
+If using the ``--clearenv`` flag and ``$FS_LICENSE`` is set, use ``--fs-license-file $FS_LICENSE`` 
+to pass the license file location to fMRIPrep.
 
 It is possible to run the docker container pointing the image to a local path
 where a valid license file is stored.
