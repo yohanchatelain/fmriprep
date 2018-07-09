@@ -148,7 +148,7 @@ If the data to be preprocessed is also on the HPC, you are ready to run fmriprep
    Depending on how Singularity is configured on your cluster it might or might not 
    automatically bind (mount or expose) host folders to the container. 
    If this is not done automatically you will need to bind the necessary folders using 
-   the ``-B <host_folder>:<container_folder`` Singularity flag.
+   the ``-B <host_folder>:<container_folder>`` Singularity flag.
    For example: ::
 
       $ singularity run --clearenv -B /work:/work ~/poldracklab_fmriprep_latest-2016-12-04-5b74ad9a4c4d.simg \
