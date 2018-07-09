@@ -389,7 +389,7 @@ def init_ica_aroma_wf(template, metadata, mem_gb, omp_nthreads,
     There is a current discussion on whether other confounds should be extracted
     before or after denoising `here <http://nbviewer.jupyter.org/github/poldracklab/\
     fmriprep-notebooks/blob/922e436429b879271fa13e76767a6e73443e74d9/issue-817_\
-    aroma_confounds.ipynb>`_.
+    aroma_confounds.ipynb>`__.
 
     .. workflow::
         :graph2use: orig
