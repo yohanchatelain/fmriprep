@@ -227,7 +227,7 @@ Posters
 
 * Organization for Human Brain Mapping 2018
   (`Abstract <https://ww5.aievolution.com/hbm1801/index.cfm?do=abs.viewAbs&abs=1321>`_;
-   `PDF <https://files.aievolution.com/hbm1801/abstracts/31779/2035_Markiewicz.pdf>`_)
+  `PDF <https://files.aievolution.com/hbm1801/abstracts/31779/2035_Markiewicz.pdf>`_)
 
 .. image:: _static/OHBM2018-poster_thumb.png
    :target: _static/OHBM2018-poster.png
