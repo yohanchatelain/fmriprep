@@ -225,10 +225,25 @@ we recommend to include in your paper.
 Posters
 -------
 
-* Organization for Human Brain Mapping 2017 (`pdf <https://f1000research.com/posters/6-1129>`_)
+* Organization for Human Brain Mapping 2018
+  (`Abstract <https://ww5.aievolution.com/hbm1801/index.cfm?do=abs.viewAbs&abs=1321>`_;
+   `PDF <https://files.aievolution.com/hbm1801/abstracts/31779/2035_Markiewicz.pdf>`_)
+
+.. image:: _static/OHBM2018-poster_thumb.png
+   :target: _static/OHBM2018-poster.png
+
+* Organization for Human Brain Mapping 2017
+  (`Abstract <https://ww5.aievolution.com/hbm1701/index.cfm?do=abs.viewAbs&abs=4111>`_;
+   `PDF <https://f1000research.com/posters/6-1129>`_)
 
 .. image:: _static/OHBM2017-poster_thumb.png
    :target: _static/OHBM2017-poster.png
+
+Presentations
+-------------
+
+* Organization for Human Brain Mapping 2018
+  `Software Demonstration <https://effigies.github.io/fmriprep-demo/>`_.
 
 .. include:: license.rst
 
