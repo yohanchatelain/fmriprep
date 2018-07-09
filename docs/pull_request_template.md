@@ -5,7 +5,9 @@ Please make sure you have read the PR guidelines below, and checked all boxes th
 **Please describe here the main features / changes proposed for review and integration in fMRIPrep**
 
 If this PR addresses some existing problem, please use GitHub's citing tools (eg. ``ref #``, ``closes #`` or ``fixes #``).
-
+If there is not an existing issue open describing the problem, please consider opening a new
+issue first and then link it from here (so the *fMRIPrep* has a better understanding of ongoing development
+efforts and possible overlaps between contributions).
 
 
 ## Documentation that should be reviewed
@@ -50,10 +52,10 @@ Please summarize the main changes to the documentation that the reviewers should
 
 **Please check what corresponds**:
 
-  - [ ] I have read the [community rules for contributions](https://github.com/poldracklab/fmriprep/blob/master/CONTRIBUTING.md).
+  - [ ] I have read the [guidelines for contributions](https://github.com/poldracklab/fmriprep/blob/master/CONTRIBUTING.md).
   - [ ] I understand that my contributions will not be merged unless the work is
         finished (i.e. no ``[WIP]`` tag remains in the title of my PR) and tests pass.
   - [ ] The proposed code follows the
-        [coding guidelines](https://github.com/poldracklab/fmriprep/blob/master/CONTRIBUTING.md#fmriprep-coding-style-guide),
+        [coding style](https://github.com/poldracklab/fmriprep/blob/master/CONTRIBUTING.md#fmriprep-coding-style-guide),
         to the extent I understood them (and I will address any comments raised by the PR's reviewers in this regard).
   - [ ] \(Optional\) I opt-out from being listed in the `.zenodo.json` file.
