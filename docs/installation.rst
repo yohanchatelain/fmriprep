@@ -66,22 +66,26 @@ what is included in the latest Docker images.
 Singularity Container
 =====================
 
-For security reasons, many HPCs (e.g., TACC) do not allow Docker containers, but do allow `Singularity <https://github.com/singularityware/singularity>`_ containers.
+For security reasons, many HPCs (e.g., TACC) do not allow Docker containers, but do
+allow `Singularity <https://github.com/singularityware/singularity>`_ containers.
 
 Preparing a Singularity image (Singualrity version >= 2.5)
 ----------------------------------------------------------
-If the version of Singularity on your HPC is modern enough you can create Singularity image directly on the HCP.
+If the version of Singularity on your HPC is modern enough you can create Singularity
+image directly on the HCP.
 This is as simple as
 
     $ singularity build /my_images/fmriprep-<version>.simg docker://poldracklab/mriqc:<version>
     
-Where ``<version>`` should be replaced with the desired version of FMRIPREP that you want to download.
+Where ``<version>`` should be replaced with the desired version of fMRIPrep that you want to download.
 
 
 Preparing a Singularity image (Singualrity version < 2.5)
 ---------------------------------------------------------
 In this case, start with a machine (e.g., your personal computer) with Docker installed.
-Use `docker2singularity <https://github.com/singularityware/docker2singularity>`_ to create a singularity image. You will need an active internet connection and some time. ::
+Use `docker2singularity <https://github.com/singularityware/docker2singularity>`_ to 
+create a singularity image.
+You will need an active internet connection and some time. ::
 
     $ docker run --privileged -t --rm \
         -v /var/run/docker.sock:/var/run/docker.sock \
@@ -89,7 +93,8 @@ Use `docker2singularity <https://github.com/singularityware/docker2singularity>`
         singularityware/docker2singularity \
         poldracklab/fmriprep:<version>
 
-Where ``<version>`` should be replaced with the desired version of FMRIPREP that you want to download.
+Where ``<version>`` should be replaced with the desired version of fMRIPrep that you want 
+to download.
 
 Beware of the back slashes, expected for Windows systems.
 For \*nix users the command translates as follows: ::
@@ -117,11 +122,22 @@ If the data to be preprocessed is also on the HPC, you are ready to run fmriprep
 
 .. note::
 
-   Singularity by default `exposes all environment variables from the host inside the container <https://github.com/singularityware/singularity/issues/445>`_.
-   Because of this your host libraries (such as nipype) could be accidentally used instead of the ones inside the container - if they are included in PYTHONPATH.
-   To avoid such situation we recommend using the ``--clearenv`` singularity flag in production use. For example: ::
+   Singularity by default `exposes all environment variables from the host inside 
+   the container <https://github.com/singularityware/singularity/issues/445>`_.
+   Because of this your host libraries (such as nipype) could be accidentally used 
+   instead of the ones inside the container - if they are included in ``PYTHONPATH``.
+   To avoid such situation we recommend using the ``--clearenv`` singularity flag 
+   in production use. For example: ::
 
       $ singularity run --clearenv ~/poldracklab_fmriprep_latest-2016-12-04-5b74ad9a4c4d.img \
+        /work/04168/asdf/lonestar/ $WORK/lonestar/output \
+        participant \
+        --participant-label 387 --nthreads 16 -w $WORK/lonestar/work \
+        --omp-nthreads 16
+    
+    or, unset the ``PYTHONPATH`` variable before running:
+        
+      $ unset PYTHONPATH; singularity run ~/poldracklab_fmriprep_latest-2016-12-04-5b74ad9a4c4d.img \
         /work/04168/asdf/lonestar/ $WORK/lonestar/output \
         participant \
         --participant-label 387 --nthreads 16 -w $WORK/lonestar/work \
@@ -129,10 +145,10 @@ If the data to be preprocessed is also on the HPC, you are ready to run fmriprep
         
 .. note::
 
-   Depending on how Singualrity is configured on your cluster it might or might not automatically bind (mount or expose)
-host folders to the container. 
-   If this is not done automatically you will need to bind the necessary folders using the ``-B <host_folder>:<container_folder``
-Singularity flag.
+   Depending on how Singularity is configured on your cluster it might or might not 
+   automatically bind (mount or expose) host folders to the container. 
+   If this is not done automatically you will need to bind the necessary folders using 
+   the ``-B <host_folder>:<container_folder`` Singularity flag.
    For example: ::
 
       $ singularity run --clearenv -B /work:/work ~/poldracklab_fmriprep_latest-2016-12-04-5b74ad9a4c4d.simg \
@@ -144,9 +160,10 @@ Singularity flag.
 Manually Prepared Environment
 =============================
 
-.. note::
+.. warning::
 
-   This method is not recommended! Make sure you would rather do this than use a `Docker Container`_ or a `Singularity Container`_.
+   This method is not recommended! Make sure you would rather do this than 
+   use a `Docker Container`_ or a `Singularity Container`_.
 
 Make sure all of fmriprep's `External Dependencies`_ are installed.
 These tools must be installed and their binaries available in the
@@ -218,7 +235,7 @@ would be equivalent to the latest example: ::
 External Dependencies
 =====================
 
-``fmriprep`` is implemented using nipype_, but it requires some other neuroimaging
+FMRIPrep is implemented using nipype_, but it requires some other neuroimaging
 software tools:
 
 - FSL_ (version 5.0.9)
