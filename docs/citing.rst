@@ -234,7 +234,7 @@ Posters
 
 * Organization for Human Brain Mapping 2017
   (`Abstract <https://ww5.aievolution.com/hbm1701/index.cfm?do=abs.viewAbs&abs=4111>`_;
-   `PDF <https://f1000research.com/posters/6-1129>`_)
+  `PDF <https://f1000research.com/posters/6-1129>`_)
 
 .. image:: _static/OHBM2017-poster_thumb.png
    :target: _static/OHBM2017-poster.png
