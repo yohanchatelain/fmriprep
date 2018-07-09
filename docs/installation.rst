@@ -69,18 +69,18 @@ Singularity Container
 For security reasons, many HPCs (e.g., TACC) do not allow Docker containers, but do
 allow `Singularity <https://github.com/singularityware/singularity>`_ containers.
 
-Preparing a Singularity image (Singualrity version >= 2.5)
+Preparing a Singularity image (Singularity version >= 2.5)
 ----------------------------------------------------------
 If the version of Singularity on your HPC is modern enough you can create Singularity
 image directly on the HCP.
-This is as simple as
+This is as simple as: ::
 
     $ singularity build /my_images/fmriprep-<version>.simg docker://poldracklab/mriqc:<version>
     
 Where ``<version>`` should be replaced with the desired version of fMRIPrep that you want to download.
 
 
-Preparing a Singularity image (Singualrity version < 2.5)
+Preparing a Singularity image (Singularity version < 2.5)
 ---------------------------------------------------------
 In this case, start with a machine (e.g., your personal computer) with Docker installed.
 Use `docker2singularity <https://github.com/singularityware/docker2singularity>`_ to 
@@ -134,15 +134,17 @@ If the data to be preprocessed is also on the HPC, you are ready to run fmriprep
         participant \
         --participant-label 387 --nthreads 16 -w $WORK/lonestar/work \
         --omp-nthreads 16
-    
-    or, unset the ``PYTHONPATH`` variable before running:
-        
+
+
+    or, unset the ``PYTHONPATH`` variable before running: ::
+
       $ unset PYTHONPATH; singularity run ~/poldracklab_fmriprep_latest-2016-12-04-5b74ad9a4c4d.img \
         /work/04168/asdf/lonestar/ $WORK/lonestar/output \
         participant \
         --participant-label 387 --nthreads 16 -w $WORK/lonestar/work \
         --omp-nthreads 16
-        
+
+
 .. note::
 
    Depending on how Singularity is configured on your cluster it might or might not 
