@@ -110,7 +110,7 @@ Limitations and reasons not to use ``fmriprep``
 6. If you are trying to reproduce some *in-house* lab pipeline.
 
 (reasons 4-6 were kindly provided by S. Nastase in his
-`open-review <http://academickarma.org/review/j7d5501n779n>_`
+`open-review <http://academickarma.org/review/j7d5501n779n>`__
 of our pre-print)
 
 
