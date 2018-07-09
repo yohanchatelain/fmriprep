@@ -80,7 +80,7 @@ Please add *[fmriprep]* to the subject line when posting on the mailing list.
 Not running on a local machine? - Data transfer
 ===============================================
 
-If intend to run ``fmriprep`` on a remote system, you will need to
+If you intend to run ``fmriprep`` on a remote system, you will need to
 make your data available within that system first.
 
 For instance, here at the Poldrack Lab we use Stanford's
