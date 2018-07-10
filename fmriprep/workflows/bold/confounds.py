@@ -364,6 +364,7 @@ def init_carpetplot_wf(mem_gb, metadata, name="bold_carpet_wf"):
 
 def init_ica_aroma_wf(template, metadata, mem_gb, omp_nthreads,
                       name='ica_aroma_wf',
+                      susan_fwhm=6.0,
                       ignore_aroma_err=False,
                       aroma_melodic_dim=None,
                       use_fieldwarp=True):
@@ -373,17 +374,22 @@ def init_ica_aroma_wf(template, metadata, mem_gb, omp_nthreads,
 
     The following steps are performed:
 
-    #. Smooth data using SUSAN
-    #. Run MELODIC outside of ICA-AROMA to generate the report
+    #. Smooth data using FSL `susan`, with a kernel width FWHM=6.0mm.
+    #. Run FSL `melodic` outside of ICA-AROMA to generate the report
     #. Run ICA-AROMA
     #. Aggregate identified motion components (aggressive) to TSV
-    #. Return classified_motion_ICs and melodic_mix for user to complete
-        non-aggressive denoising in T1w space
+    #. Return ``classified_motion_ICs`` and ``melodic_mix`` for user to complete
+       non-aggressive denoising in T1w space
     #. Calculate ICA-AROMA-identified noise components
-        (columns named ``AROMAAggrCompXX``)
+       (columns named ``AROMAAggrCompXX``)
 
     Additionally, non-aggressive denoising is performed on the BOLD series
     resampled into MNI space.
+
+    There is a current discussion on whether other confounds should be extracted
+    before or after denoising `here <http://nbviewer.jupyter.org/github/poldracklab/\
+    fmriprep-notebooks/blob/922e436429b879271fa13e76767a6e73443e74d9/issue-817_\
+    aroma_confounds.ipynb>`__.
 
     .. workflow::
         :graph2use: orig
@@ -411,6 +417,9 @@ def init_ica_aroma_wf(template, metadata, mem_gb, omp_nthreads,
             Maximum number of threads an individual process may use
         name : str
             Name of workflow (default: ``bold_mni_trans_wf``)
+        susan_fwhm : float
+            Kernel width (FWHM in mm) for the smoothing step with
+            FSL ``susan`` (default: 6.0mm)
         use_fieldwarp : bool
             Include SDC warp in single-shot transform from BOLD to MNI
         ignore_aroma_err : bool
@@ -478,7 +487,7 @@ def init_ica_aroma_wf(template, metadata, mem_gb, omp_nthreads,
     getusans = pe.Node(niu.Function(function=_getusans_func, output_names=['usans']),
                        name='getusans', mem_gb=0.01)
 
-    smooth = pe.Node(fsl.SUSAN(fwhm=6.0), name='smooth')
+    smooth = pe.Node(fsl.SUSAN(fwhm=susan_fwhm), name='smooth')
 
     # melodic node
     melodic = pe.Node(fsl.MELODIC(
