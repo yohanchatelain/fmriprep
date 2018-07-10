@@ -109,9 +109,9 @@ Limitations and reasons not to use ``fmriprep``
    or to learn shell-scripting or Python along the way.
 6. If you are trying to reproduce some *in-house* lab pipeline.
 
-(reasons 4-6 were kindly provided by S. Nastase in his
-`open-review <http://academickarma.org/review/j7d5501n779n>`__
-of our pre-print)
+(Reasons 4-6 were kindly provided by S. Nastase in his
+`open review <http://academickarma.org/review/j7d5501n779n>`__
+of our `pre-print <https://www.biorxiv.org/content/early/2018/05/06/306951>`__).
 
 
 Acknowledgements
