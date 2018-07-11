@@ -1,21 +1,25 @@
-Please make sure you have read the PR guidelines below, and checked all boxes that apply at the bottom.
-
 ## Changes proposed in this pull request
 
-**Please describe here the main features / changes proposed for review and integration in fMRIPrep**
-
-If this PR addresses some existing problem, please use GitHub's citing tools (eg. ``ref #``, ``closes #`` or ``fixes #``).
+<!--
+Please describe here the main features / changes proposed for review and integration in fMRIPrep
+If this PR addresses some existing problem, please use GitHub's citing tools 
+(eg. ref #, closes # or fixes #).
 If there is not an existing issue open describing the problem, please consider opening a new
-issue first and then link it from here (so the *fMRIPrep* has a better understanding of ongoing development
-efforts and possible overlaps between contributions).
+issue first and then link it from here (so the *fMRIPrep* community has a better understanding
+of ongoing development efforts and possible overlaps between contributions).
+-->
 
 
 ## Documentation that should be reviewed
-
-Please summarize the main changes to the documentation that the reviewers should be aware of.
+<!--
+Please summarize here the main changes to the documentation that the reviewers should be aware of.
+-->
 
 ## Pull-request guidelines:
-
+<!--
+Please make sure you have read the PR guidelines below, and checked 
+all boxes that apply at the bottom.
+-->
 1. We invite you to list yourself as a *fMRIPrep* contributor, so if your name 
    is not already mentioned, please modify the 
    [``.zenodo.json``](https://github.com/poldracklab/fmriprep/blob/master/.zenodo.json)
@@ -36,13 +40,14 @@ Please summarize the main changes to the documentation that the reviewers should
 2. By submitting this request you acknowledge that your contributions are available under the BSD 3-Clause license.
 
 3. Use a descriptive prefix, between brackets for your PR: ``ENH`` (enhancement), ``FIX``, ``TST``, ``DOC``, ``STY``,
-   ``REF`` (refactor), ``WIP`` (Work in progress), ``MAINT`` (maintenance). Example:
+   ``REF`` (refactor), ``CI`` (continous integration), ``MAINT`` (maintenance). Example:
    ```
    [ENH] Support for SB-reference in multi-band datasets
    ```
+   For works-in-progress, add the ``WIP`` tag in addition to the descriptive prefix. 
    Pull-requests tagged with ``[WIP]`` will not merged in until the tag is removed.
 
-4. Your PR will be reviewed following the following
+4. Your PR will be reviewed according to the following
    [template](https://github.com/poldracklab/fmriprep/wiki/Reviewing-a-Pull-Request).
 
 5. Documentation is a fundamental aspect to the *glass-box* philosophy that *fMRIPrep* abides by.
@@ -50,7 +55,8 @@ Please summarize the main changes to the documentation that the reviewers should
    provided with this PR, within the PR or in future PRs.
    
 
-**Please check what corresponds**:
+**Please review and check the following**:
+<!-- replace the empty checkboxes [ ] below with checked ones [x] accordingly -->
 
   - [ ] I have read the [guidelines for contributions](https://github.com/poldracklab/fmriprep/blob/master/CONTRIBUTING.md).
   - [ ] I understand that my contributions will not be merged unless the work is
