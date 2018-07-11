@@ -43,7 +43,7 @@ from .resampling import (
 from .util import init_bold_reference_wf
 
 DEFAULT_MEMORY_MIN_GB = 0.01
-LOGGER = logging.getLogger('workflow')
+LOGGER = logging.getLogger('nipype.workflow')
 
 
 def init_func_preproc_wf(bold_file, ignore, freesurfer,

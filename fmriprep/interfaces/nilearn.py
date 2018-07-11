@@ -23,7 +23,7 @@ from nipype.interfaces.base import (
     File, InputMultiPath, SimpleInterface
 )
 
-LOGGER = logging.getLogger('interface')
+LOGGER = logging.getLogger('nipype.interface')
 
 
 class MaskEPIInputSpec(BaseInterfaceInputSpec):
