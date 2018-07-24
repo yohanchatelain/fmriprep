@@ -201,8 +201,9 @@ jobs:
           name: Run fMRIPrep tests
           no_output_timeout: 2h
           command: |
-            py.test /home/circleci/src/fmriprep \
-              --doctest-modules --ignore=docs --ignore=setup.py
+            docker run -ti --rm=false \
+              --entrypoint="py.test" poldracklab/fmriprep:latest \
+              /root/src/fmriprep/ --doctest-modules --ignore=docs --ignore=setup.py
       - run:
           name: Test fmriprep-wrapper (Python 2)
           command: |
