@@ -161,7 +161,7 @@ RUN echo "${VERSION}" > /root/src/fmriprep/fmriprep/VERSION && \
 
 RUN ldconfig
 
-WORKDIR /root/src/fmriprep
+WORKDIR /tmp/
 
 ENTRYPOINT ["/usr/local/miniconda/bin/fmriprep"]
 
