@@ -286,6 +286,8 @@ def get_parser():
                        type=os.path.abspath, help='Use custom nipype.cfg file')
     g_dev.add_argument('-e', '--env', action='append', nargs=2, metavar=('ENV_VAR', 'value'),
                        help='Set custom environment variable within container')
+    g_dev.add_argument('-u', '--user', action='store',
+                       help='Run container as a given user/uid')
 
     return parser
 
@@ -362,6 +364,9 @@ def main():
     if opts.env:
         for envvar in opts.env:
             command.extend(['-e', '%s=%s' % tuple(envvar)])
+
+    if opts.user:
+        command.extend(['-e', opts.user])
 
     if opts.fs_license_file:
         command.extend([
