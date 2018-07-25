@@ -14,16 +14,11 @@ Please report any feedback to our GitHub repository
 forget to credit all the authors of software that fMRIPrep
 uses (http://fmriprep.rtfd.io/en/latest/citing.html).
 """
-from __future__ import print_function, unicode_literals, division, absolute_import
-from builtins import int, map, input, zip
-from future import standard_library
 import sys
 import os
 import re
 import subprocess
 from warnings import warn
-
-standard_library.install_aliases()
 
 __version__ = '99.99.99'
 __packagename__ = 'fmriprep-docker'
@@ -94,6 +89,13 @@ if not hasattr(subprocess, 'run'):
 
         return res
     subprocess.run = _run
+
+
+# De-fang Python 2's input - we don't eval user input
+try:
+    input = raw_input
+except NameError:
+    pass
 
 
 def check_docker():
@@ -223,8 +225,10 @@ def get_parser():
         add_help=False)
 
     # Standard FMRIPREP arguments
-    parser.add_argument('bids_dir', nargs='?', type=str, default='')
-    parser.add_argument('output_dir', nargs='?', type=str, default='')
+    parser.add_argument('bids_dir', nargs='?', type=os.path.abspath,
+                        default='')
+    parser.add_argument('output_dir', nargs='?', type=os.path.abspath,
+                        default='')
     parser.add_argument('analysis_level', nargs='?', choices=['participant'],
                         default='participant')
 
@@ -243,7 +247,7 @@ def get_parser():
     g_wrap = parser.add_argument_group(
         'Wrapper options',
         'Standard options that require mapping files into the container')
-    g_wrap.add_argument('-w', '--work-dir', action='store',
+    g_wrap.add_argument('-w', '--work-dir', action='store', type=os.path.abspath,
                         help='path where intermediate results should be stored')
     g_wrap.add_argument(
         '--output-grid-reference', required=False, action='store', type=os.path.abspath,
@@ -280,6 +284,8 @@ def get_parser():
                        help='open shell in image instead of running FMRIPREP')
     g_dev.add_argument('--config', metavar='PATH', action='store',
                        type=os.path.abspath, help='Use custom nipype.cfg file')
+    g_dev.add_argument('-e', '--env', action='append', nargs=2, metavar=('ENV_VAR', 'value'),
+                       help='Set custom environment variable within container')
 
     return parser
 
@@ -302,11 +308,10 @@ def main():
             print('fmriprep wrapper {!s}'.format(__version__))
         if opts.help:
             parser.print_help()
-        print("fmriprep: ", end='')
         if check == -1:
-            print("Could not find docker command... Is it installed?")
+            print("fmriprep: Could not find docker command... Is it installed?")
         else:
-            print("Make sure you have permission to run 'docker'")
+            print("fmriprep: Make sure you have permission to run 'docker'")
         return 1
 
     # For --help or --version, ask before downloading an image
@@ -351,11 +356,12 @@ def main():
     for pkg in ('fmriprep', 'niworkflows', 'nipype'):
         repo_path = getattr(opts, 'patch_' + pkg)
         if repo_path is not None:
-            # nipype is now a submodule of niworkflows
-            if pkg == 'nipype':
-                pkg = 'niworkflows/nipype'
             command.extend(['-v',
                             '{}:{}/{}:ro'.format(repo_path, PKG_PATH, pkg)])
+
+    if opts.env:
+        for envvar in opts.env:
+            command.extend(['-e', '%s=%s' % tuple(envvar)])
 
     if opts.fs_license_file:
         command.extend([

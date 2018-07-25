@@ -13,9 +13,9 @@ Resampling workflows
 import os.path as op
 
 
-from niworkflows.nipype.pipeline import engine as pe
-from niworkflows.nipype.interfaces import utility as niu, freesurfer as fs
-from niworkflows.nipype.interfaces.fsl import Split as FSLSplit
+from nipype.pipeline import engine as pe
+from nipype.interfaces import utility as niu, freesurfer as fs
+from nipype.interfaces.fsl import Split as FSLSplit
 
 from niworkflows import data as nid
 from niworkflows.interfaces.utils import GenerateSamplingReference
@@ -152,7 +152,7 @@ def init_bold_surf_wf(mem_gb, output_spaces, medial_surface_nan, name='bold_surf
             (inputnode, medial_nans, [('subjects_dir', 'subjects_dir')]),
             (sampler, medial_nans, [('out_file', 'in_file')]),
             (targets, medial_nans, [('out', 'target_subject')]),
-            (medial_nans, merger, [('out', 'in1')]),
+            (medial_nans, merger, [('out_file', 'in1')]),
         ])
     else:
         workflow.connect(sampler, 'out_file', merger, 'in1')
@@ -182,7 +182,7 @@ def init_bold_mni_trans_wf(template, mem_gb, omp_nthreads,
     **Parameters**
 
         template : str
-            Name of template targeted by `'template'` output space
+            Name of template targeted by ``template`` output space
         mem_gb : float
             Size of BOLD file in GB
         omp_nthreads : int
@@ -271,11 +271,11 @@ def init_bold_mni_trans_wf(template, mem_gb, omp_nthreads,
 
     workflow.connect([
         (inputnode, gen_ref, [(('bold_split', _first), 'moving_image')]),
+        (inputnode, mask_mni_tfm, [('bold_mask', 'input_image')]),
         (inputnode, mask_merge_tfms, [('t1_2_mni_forward_transform', 'in1'),
                                       (('itk_bold_to_t1', _aslist), 'in2')]),
         (mask_merge_tfms, mask_mni_tfm, [('out', 'transforms')]),
         (mask_mni_tfm, outputnode, [('output_image', 'bold_mask_mni')]),
-        (inputnode, mask_mni_tfm, [('bold_mask', 'input_image')])
     ])
 
     bold_to_mni_transform = pe.Node(
@@ -485,7 +485,7 @@ def init_bold_preproc_report_wf(mem_gb, reportlets_dir, name='bold_preproc_repor
 
     """
 
-    from niworkflows.nipype.algorithms.confounds import TSNR
+    from nipype.algorithms.confounds import TSNR
     from niworkflows.interfaces import SimpleBeforeAfter
     from ...interfaces import DerivativesDataSink
 

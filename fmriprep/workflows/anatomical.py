@@ -24,15 +24,16 @@ import os.path as op
 
 from pkg_resources import resource_filename as pkgr
 
-from niworkflows.nipype.pipeline import engine as pe
-from niworkflows.nipype.interfaces import (
+from nipype.pipeline import engine as pe
+from nipype.interfaces import (
     io as nio,
     utility as niu,
     c3,
     freesurfer as fs,
-    fsl
+    fsl,
+    image,
 )
-from niworkflows.nipype.interfaces.ants import BrainExtraction, N4BiasFieldCorrection
+from nipype.interfaces.ants import BrainExtraction, N4BiasFieldCorrection
 
 from niworkflows.interfaces.registration import RobustMNINormalizationRPT
 import niworkflows.data as nid
@@ -44,7 +45,7 @@ from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransf
 from ..engine import Workflow
 from ..interfaces import (
     DerivativesDataSink, MakeMidthickness, FSInjectBrainExtracted,
-    FSDetectInputs, NormalizeSurf, GiftiNameSource, TemplateDimensions, Conform, Reorient,
+    FSDetectInputs, NormalizeSurf, GiftiNameSource, TemplateDimensions, Conform,
     ConcatAffines, RefineBrainMask,
 )
 from ..utils.misc import fix_multi_T1w_source_name, add_suffix
@@ -100,7 +101,7 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
               - fsnative
               - fsaverage (or other pre-existing FreeSurfer templates)
         template : str
-            Name of template targeted by `'template'` output space
+            Name of template targeted by ``template`` output space
         debug : bool
             Enable debugging outputs
         freesurfer : bool
@@ -189,7 +190,7 @@ T1w using fast [16] (FSL v{fsl_ver}).
     )
 
     inputnode = pe.Node(
-        niu.IdentityInterface(fields=['t1w', 't2w', 'flair', 'subjects_dir', 'subject_id']),
+        niu.IdentityInterface(fields=['t1w', 't2w', 'roi', 'flair', 'subjects_dir', 'subject_id']),
         name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['t1_preproc', 't1_brain', 't1_mask', 't1_seg', 't1_tpms',
@@ -314,6 +315,7 @@ T1w using fast [16] (FSL v{fsl_ver}).
         mni_tpms.inputs.reference_image = ref_img
 
         workflow.connect([
+            (inputnode, t1_2_mni, [('roi', 'lesion_mask')]),
             (skullstrip_ants_wf, t1_2_mni, [('outputnode.bias_corrected', 'moving_image')]),
             (buffernode, t1_2_mni, [('t1_mask', 'moving_mask')]),
             (buffernode, mni_mask, [('t1_mask', 'input_image')]),
@@ -496,7 +498,7 @@ map using mri_robust_template ([25], FreeSurfer) after INU-correction.\
         name='t1_merge')
 
     # 2. Reorient template to RAS, if needed (mri_robust_template may set to LIA)
-    t1_reorient = pe.Node(Reorient(), name='t1_reorient')
+    t1_reorient = pe.Node(image.Reorient(), name='t1_reorient')
 
     lta_to_fsl = pe.MapNode(fs.utils.LTAConvert(out_fsl=True), iterfield=['in_lta'],
                             name='lta_to_fsl')
@@ -1313,7 +1315,7 @@ def _seg2msks(in_file, newpath=None):
     """Converts labels to masks"""
     import nibabel as nb
     import numpy as np
-    from niworkflows.nipype.utils.filemanip import fname_presuffix
+    from nipype.utils.filemanip import fname_presuffix
 
     nii = nb.load(in_file)
     labels = nii.get_data()

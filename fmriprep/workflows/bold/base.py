@@ -13,11 +13,11 @@ Orchestrating the BOLD-preprocessing workflow
 import os
 
 import nibabel as nb
-from niworkflows.nipype import logging
+from nipype import logging
 
-from niworkflows.nipype.interfaces.fsl import Split as FSLSplit
-from niworkflows.nipype.pipeline import engine as pe
-from niworkflows.nipype.interfaces import utility as niu
+from nipype.interfaces.fsl import Split as FSLSplit
+from nipype.pipeline import engine as pe
+from nipype.interfaces import utility as niu
 
 from ...interfaces import (
     DerivativesDataSink,
@@ -26,14 +26,14 @@ from ...interfaces import (
 )
 
 from ...interfaces.reports import FunctionalSummary
+from ...interfaces.cifti import GenerateCifti, CiftiNameSource
 from ...engine import Workflow
 
 # BOLD workflows
-from .confounds import init_bold_confs_wf
+from .confounds import init_bold_confs_wf, init_carpetplot_wf
 from .hmc import init_bold_hmc_wf
 from .stc import init_bold_stc_wf
 from .t2s import init_bold_t2s_wf
-from ..fieldmap import init_sdc_wf
 from .registration import init_bold_reg_wf
 from .resampling import (
     init_bold_surf_wf,
@@ -43,14 +43,15 @@ from .resampling import (
 from .util import init_bold_reference_wf
 
 DEFAULT_MEMORY_MIN_GB = 0.01
-LOGGER = logging.getLogger('workflow')
+LOGGER = logging.getLogger('nipype.workflow')
 
 
 def init_func_preproc_wf(bold_file, ignore, freesurfer,
                          use_bbr, t2s_coreg, bold2t1w_dof, reportlets_dir,
                          output_spaces, template, output_dir, omp_nthreads,
                          fmap_bspline, fmap_demean, use_syn, force_syn,
-                         use_aroma, ignore_aroma_err, medial_surface_nan,
+                         use_aroma, ignore_aroma_err, aroma_melodic_dim,
+                         medial_surface_nan, cifti_output,
                          debug, low_mem, template_out_grid, layout=None):
     """
     This workflow controls the functional preprocessing stages of FMRIPREP.
@@ -80,8 +81,10 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                   low_mem=False,
                                   template_out_grid='native',
                                   medial_surface_nan=False,
+                                  cifti_output=False,
                                   use_aroma=False,
-                                  ignore_aroma_err=False)
+                                  ignore_aroma_err=False,
+                                  aroma_melodic_dim=None)
 
     **Parameters**
 
@@ -112,7 +115,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 - fsnative
                 - fsaverage (or other pre-existing FreeSurfer templates)
         template : str
-            Name of template targeted by `'template'` output space
+            Name of template targeted by ``template`` output space
         output_dir : str
             Directory in which to save derivatives
         omp_nthreads : int
@@ -132,6 +135,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             Do not fail on ICA-AROMA errors
         medial_surface_nan : bool
             Replace medial wall values with NaNs on functional GIFTI files
+        cifti_output : bool
+            Generate bold CIFTI file in output spaces
         debug : bool
             Enable debugging outputs
         low_mem : bool
@@ -189,6 +194,10 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             Noise components identified by ICA-AROMA
         melodic_mix
             FSL MELODIC mixing matrix
+        bold_cifti
+            BOLD CIFTI image
+        cifti_variant
+            combination of target spaces for `bold_cifti`
 
 
     **Subworkflows**
@@ -209,6 +218,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         * :py:func:`~fmriprep.workflows.fieldmap.init_nonlinear_sdc_wf`
 
     """
+    from ..fieldmap.base import init_sdc_wf  # Avoid circular dependency (#1066)
 
     ref_file = bold_file
     mem_gb = {'filesize': 1, 'resampled': 1, 'largemem': 1}
@@ -260,7 +270,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         # Short circuits: (True and True and (False or 'TooShort')) == 'TooShort'
         run_stc = ("SliceTiming" in metadata and
                    'slicetiming' not in ignore and
-                   (_get_series_len(bold_file) > 4 or "TooShort"))
+                   (_get_series_len(ref_file) > 4 or "TooShort"))
 
     # Use T2* as target for ME-EPI in co-registration
     if t2s_coreg and not multiecho:
@@ -286,9 +296,10 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     inputnode.inputs.bold_file = bold_file
 
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['bold_t1', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1',
-                'bold_mni', 'bold_mask_mni', 'confounds', 'surfaces',
-                't2s_map', 'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file']),
+        fields=['bold_t1', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1', 'cifti_variant',
+                'bold_mni', 'bold_mask_mni', 'bold_cifti', 'confounds', 'surfaces',
+                't2s_map', 'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file',
+                'cifti_variant_key']),
         name='outputnode')
 
     # BOLD buffer: an identity used as a pointer to either the original BOLD
@@ -307,7 +318,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                                    output_spaces=output_spaces,
                                                    template=template,
                                                    freesurfer=freesurfer,
-                                                   use_aroma=use_aroma)
+                                                   use_aroma=use_aroma,
+                                                   cifti_output=cifti_output)
 
     workflow.connect([
         (inputnode, func_derivatives_wf, [('bold_file', 'inputnode.source_file')]),
@@ -323,6 +335,9 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             ('aroma_noise_ics', 'inputnode.aroma_noise_ics'),
             ('melodic_mix', 'inputnode.melodic_mix'),
             ('nonaggr_denoised_file', 'inputnode.nonaggr_denoised_file'),
+            ('bold_cifti', 'inputnode.bold_cifti'),
+            ('cifti_variant', 'inputnode.cifti_variant'),
+            ('cifti_variant_key', 'inputnode.cifti_variant_key')
         ]),
     ])
 
@@ -370,9 +385,9 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
     if run_stc is True:  # bool('TooShort') == True, so check True explicitly
         bold_stc_wf = init_bold_stc_wf(name='bold_stc_wf', metadata=metadata)
         workflow.connect([
-            (bold_stc_wf, boldbuffer, [('outputnode.stc_file', 'bold_file')]),
             (bold_reference_wf, bold_stc_wf, [('outputnode.bold_file', 'inputnode.bold_file'),
                                               ('outputnode.skip_vols', 'inputnode.skip_vols')]),
+            (bold_stc_wf, boldbuffer, [('outputnode.stc_file', 'bold_file')]),
         ])
     else:  # bypass STC from original BOLD to the splitter through boldbuffer
         workflow.connect([
@@ -400,10 +415,10 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
     # MAIN WORKFLOW STRUCTURE #######################################################
     workflow.connect([
-        # BOLD buffer has slice-time corrected if it was run, original otherwise
-        (boldbuffer, bold_split, [('bold_file', 'in_file')]),
         # Generate early reference
         (inputnode, bold_reference_wf, [('bold_file', 'inputnode.bold_file')]),
+        # BOLD buffer has slice-time corrected if it was run, original otherwise
+        (boldbuffer, bold_split, [('bold_file', 'in_file')]),
         # HMC
         (bold_reference_wf, bold_hmc_wf, [
             ('outputnode.raw_ref_image', 'inputnode.raw_ref_image'),
@@ -510,10 +525,14 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         workflow.disconnect([
             (inputnode, bold_reference_wf, [
                 ('bold_file', 'inputnode.bold_file')]),
+            (bold_reference_wf, boldbuffer, [
+                ('outputnode.bold_file', 'bold_file')]),
         ])
         workflow.connect([
             (me_first_echo, bold_reference_wf, [
-                ('first_image', 'inputnode.bold_file')])
+                ('first_image', 'inputnode.bold_file')]),
+            (inputnode, boldbuffer, [
+                ('bold_file', 'bold_file')]),
         ])
 
         if t2s_coreg:
@@ -567,10 +586,14 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             mem_gb=mem_gb['resampled'],
             omp_nthreads=omp_nthreads,
             template_out_grid=template_out_grid,
-            use_compression=not (low_mem and use_aroma),
+            use_compression=not low_mem,
             use_fieldwarp=fmaps is not None,
             name='bold_mni_trans_wf'
         )
+        carpetplot_wf = init_carpetplot_wf(
+            mem_gb=mem_gb['resampled'],
+            metadata=metadata,
+            name='carpetplot_wf')
 
         workflow.connect([
             (inputnode, bold_mni_trans_wf, [
@@ -588,24 +611,33 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 ('outputnode.out_warp', 'inputnode.fieldwarp')]),
             (bold_mni_trans_wf, outputnode, [('outputnode.bold_mni', 'bold_mni'),
                                              ('outputnode.bold_mask_mni', 'bold_mask_mni')]),
+            (bold_bold_trans_wf, carpetplot_wf, [
+                ('outputnode.bold', 'inputnode.bold'),
+                ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+            (inputnode, carpetplot_wf, [
+                ('t1_2_mni_reverse_transform', 'inputnode.t1_2_mni_reverse_transform')]),
+            (bold_reg_wf, carpetplot_wf, [
+                ('outputnode.itk_t1_to_bold', 'inputnode.t1_bold_xform')]),
+            (bold_confounds_wf, carpetplot_wf, [
+                ('outputnode.confounds_file', 'inputnode.confounds_file')]),
         ])
 
-        if use_aroma:  # ICA-AROMA workflow
-            """
-            ica_aroma_report
-                Reportlet visualizing MELODIC ICs, with ICA-AROMA signal/noise labels
-            aroma_noise_ics
-                CSV of noise components identified by ICA-AROMA
-            melodic_mix
-                FSL MELODIC mixing matrix
-            nonaggr_denoised_file
-                BOLD series with non-aggressive ICA-AROMA denoising applied
-
-            """
+        if use_aroma:
+            # ICA-AROMA workflow
+            # Internally resamples to MNI152 Linear (2006)
             from .confounds import init_ica_aroma_wf
             from ...interfaces import JoinTSVColumns
-            ica_aroma_wf = init_ica_aroma_wf(name='ica_aroma_wf',
-                                             ignore_aroma_err=ignore_aroma_err)
+
+            ica_aroma_wf = init_ica_aroma_wf(
+                template=template,
+                metadata=metadata,
+                mem_gb=mem_gb['resampled'],
+                omp_nthreads=omp_nthreads,
+                use_fieldwarp=fmaps is not None,
+                ignore_aroma_err=ignore_aroma_err,
+                aroma_melodic_dim=aroma_melodic_dim,
+                name='ica_aroma_wf')
+
             join = pe.Node(JoinTSVColumns(), name='aroma_confounds')
 
             workflow.disconnect([
@@ -614,11 +646,20 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                 ]),
             ])
             workflow.connect([
+                (inputnode, ica_aroma_wf, [
+                    ('bold_file', 'inputnode.name_source'),
+                    ('t1_2_mni_forward_transform', 'inputnode.t1_2_mni_forward_transform')]),
+                (bold_split, ica_aroma_wf, [
+                    ('out_files', 'inputnode.bold_split')]),
                 (bold_hmc_wf, ica_aroma_wf, [
-                    ('outputnode.movpar_file', 'inputnode.movpar_file')]),
-                (bold_mni_trans_wf, ica_aroma_wf, [
-                    ('outputnode.bold_mask_mni', 'inputnode.bold_mask_mni'),
-                    ('outputnode.bold_mni', 'inputnode.bold_mni')]),
+                    ('outputnode.movpar_file', 'inputnode.movpar_file'),
+                    ('outputnode.xforms', 'inputnode.hmc_xforms')]),
+                (bold_reg_wf, ica_aroma_wf, [
+                    ('outputnode.itk_bold_to_t1', 'inputnode.itk_bold_to_t1')]),
+                (bold_bold_trans_wf, ica_aroma_wf, [
+                    ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+                (bold_sdc_wf, ica_aroma_wf, [
+                    ('outputnode.out_warp', 'inputnode.fieldwarp')]),
                 (bold_confounds_wf, join, [
                     ('outputnode.confounds_file', 'in_file')]),
                 (ica_aroma_wf, join,
@@ -646,6 +687,23 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             (bold_reg_wf, bold_surf_wf, [('outputnode.bold_t1', 'inputnode.source_file')]),
             (bold_surf_wf, outputnode, [('outputnode.surfaces', 'surfaces')]),
         ])
+
+        # CIFTI output
+        if cifti_output and 'template' in output_spaces:
+            gen_cifti = pe.MapNode(GenerateCifti(), iterfield=["surface_target", "gifti_files"],
+                                   name="gen_cifti")
+            gen_cifti.inputs.TR = metadata.get("RepetitionTime")
+
+            workflow.connect([
+                (bold_surf_wf, gen_cifti, [
+                    ('targets.out', 'surface_target'),
+                    ('outputnode.surfaces', 'gifti_files')]),
+                (inputnode, gen_cifti, [('subjects_dir', 'subjects_dir')]),
+                (bold_mni_trans_wf, gen_cifti, [('outputnode.bold_mni', 'bold_file')]),
+                (gen_cifti, outputnode, [('out_file', 'bold_cifti'),
+                                         ('variant', 'cifti_variant'),
+                                         ('variant_key', 'cifti_variant_key')]),
+            ])
 
     # REPORTING ############################################################
     ds_report_summary = pe.Node(
@@ -675,7 +733,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
 
 def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
-                             use_aroma, name='func_derivatives_wf'):
+                             use_aroma, cifti_output, name='func_derivatives_wf'):
     """
     Set up a battery of datasinks to store derivatives in the right location
     """
@@ -684,9 +742,9 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     inputnode = pe.Node(
         niu.IdentityInterface(
             fields=['source_file', 'bold_t1', 'bold_mask_t1', 'bold_mni', 'bold_mask_mni',
-                    'bold_aseg_t1', 'bold_aparc_t1',
+                    'bold_aseg_t1', 'bold_aparc_t1', 'cifti_variant_key',
                     'confounds', 'surfaces', 'aroma_noise_ics', 'melodic_mix',
-                    'nonaggr_denoised_file']),
+                    'nonaggr_denoised_file', 'bold_cifti', 'cifti_variant']),
         name='inputnode')
 
     suffix_fmt = 'space-{}_{}'.format
@@ -704,7 +762,7 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     # Resample to T1w space
     if 'T1w' in output_spaces:
         ds_bold_t1 = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix=suffix_fmt('T1w', 'preproc')),
+            base_directory=output_dir, suffix=suffix_fmt('T1w', 'preproc'), compress=True),
             name='ds_bold_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
 
@@ -762,12 +820,36 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
                                    iterfield=['in_file', 'suffix'], name='ds_bold_surfs',
                                    run_without_submitting=True,
                                    mem_gb=DEFAULT_MEMORY_MIN_GB)
+
         workflow.connect([
             (inputnode, name_surfs, [('surfaces', 'in_file')]),
             (inputnode, ds_bold_surfs, [('source_file', 'source_file'),
                                         ('surfaces', 'in_file')]),
             (name_surfs, ds_bold_surfs, [('out_name', 'suffix')]),
         ])
+
+        # CIFTI output
+        if cifti_output and 'template' in output_spaces:
+            name_cifti = pe.MapNode(
+                CiftiNameSource(), iterfield=['variant'], name='name_cifti',
+                mem_gb=DEFAULT_MEMORY_MIN_GB, run_without_submitting=True)
+            cifti_bolds = pe.MapNode(DerivativesDataSink(
+                base_directory=output_dir, compress=False),
+                iterfield=['in_file', 'suffix'], name='cifti_bolds',
+                run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
+            cifti_key = pe.MapNode(DerivativesDataSink(
+                base_directory=output_dir), iterfield=['in_file', 'suffix'],
+                name='cifti_key', run_without_submitting=True,
+                mem_gb=DEFAULT_MEMORY_MIN_GB)
+            workflow.connect([
+                (inputnode, name_cifti, [('cifti_variant', 'variant')]),
+                (inputnode, cifti_bolds, [('bold_cifti', 'in_file'),
+                                          ('source_file', 'source_file')]),
+                (name_cifti, cifti_bolds, [('out_name', 'suffix')]),
+                (name_cifti, cifti_key, [('out_name', 'suffix')]),
+                (inputnode, cifti_key, [('source_file', 'source_file'),
+                                        ('cifti_variant_key', 'in_file')]),
+            ])
 
     if use_aroma:
         ds_aroma_noise_ics = pe.Node(DerivativesDataSink(
@@ -798,8 +880,6 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
 
 def _get_series_len(bold_fname):
     from niworkflows.interfaces.registration import _get_vols_to_discard
-    if isinstance(bold_fname, list):  # Multi-echo data
-        bold_fname = bold_fname[0]
     img = nb.load(bold_fname)
     if len(img.shape) < 4:
         return 1
@@ -830,7 +910,7 @@ def _get_wf_name(bold_fname):
     >>> _get_wf_name('/completely/made/up/path/sub-01_task-nback_run-01_echo-1_bold.nii.gz')
     'func_preproc_task_nback_run_01_echo_1_wf'
     """
-    from niworkflows.nipype.utils.filemanip import split_filename
+    from nipype.utils.filemanip import split_filename
     fname = split_filename(bold_fname)[1]
     fname_nosub = '_'.join(fname.split("_")[1:])
     # if 'echo' in fname_nosub:

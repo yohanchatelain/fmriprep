@@ -57,8 +57,8 @@ def get_parser():
 
     g_bids = parser.add_argument_group('Options for filtering BIDS queries')
     g_bids.add_argument('--participant_label', '--participant-label', action='store', nargs='+',
-                        help='one or more participant identifiers (the sub- prefix can be '
-                             'removed)')
+                        help='a space delimited list of participant identifiers or a single '
+                             'identifier (the sub- prefix can be removed)')
     # Re-enable when option is actually implemented
     # g_bids.add_argument('-s', '--session-id', action='store', default='single_session',
     #                     help='select a specific session to be processed')
@@ -97,7 +97,7 @@ def get_parser():
         '--ignore', required=False, action='store', nargs="+", default=[],
         choices=['fieldmaps', 'slicetiming'],
         help='ignore selected aspects of the input dataset to disable corresponding '
-             'parts of the workflow')
+             'parts of the workflow (a space delimited list)')
     g_conf.add_argument(
         '--longitudinal', action='store_true',
         help='treat dataset as longitudinal - may increase runtime')
@@ -119,7 +119,9 @@ def get_parser():
              ' - T1w: subject anatomical volume\n'
              ' - template: normalization target specified by --template\n'
              ' - fsnative: individual subject surface\n'
-             ' - fsaverage*: FreeSurfer average meshes'
+             ' - fsaverage*: FreeSurfer average meshes\n'
+             'this argument can be single value or a space delimited list,\n'
+             'for example: --output-space T1w fsnative'
     )
     g_conf.add_argument(
         '--force-bbr', action='store_true', dest='use_bbr', default=None,
@@ -152,6 +154,11 @@ def get_parser():
     g_aroma = parser.add_argument_group('Specific options for running ICA_AROMA')
     g_aroma.add_argument('--use-aroma', action='store_true', default=False,
                          help='add ICA_AROMA to your preprocessing stream')
+    g_aroma.add_argument('--aroma-melodic-dimensionality', action='store',
+                         default=None, type=int,
+                         help='set the dimensionality of MELODIC before running'
+                         'ICA-AROMA')
+
     #  ANTs options
     g_ants = parser.add_argument_group('Specific options for ANTs registrations')
     g_ants.add_argument('--skull-strip-template', action='store', default='OASIS',
@@ -175,17 +182,23 @@ def get_parser():
 
     # FreeSurfer options
     g_fs = parser.add_argument_group('Specific options for FreeSurfer preprocessing')
-    g_fs.add_argument('--fs-no-reconall', '--no-freesurfer',
-                      action='store_false', dest='run_reconall',
-                      help='disable FreeSurfer surface preprocessing.'
-                      ' Note : `--no-freesurfer` is deprecated and will be removed in 1.2.'
-                      ' Use `--fs-no-reconall` instead.')
-    g_fs.add_argument('--no-submm-recon', action='store_false', dest='hires',
-                      help='disable sub-millimeter (hires) reconstruction')
     g_fs.add_argument(
         '--fs-license-file', metavar='PATH', type=os.path.abspath,
         help='Path to FreeSurfer license key file. Get it (for free) by registering'
              ' at https://surfer.nmr.mgh.harvard.edu/registration.html')
+
+    # Surface generation xor
+    g_surfs = parser.add_argument_group('Surface preprocessing options')
+    g_surfs.add_argument('--no-submm-recon', action='store_false', dest='hires',
+                         help='disable sub-millimeter (hires) reconstruction')
+    g_surfs_xor = g_surfs.add_mutually_exclusive_group()
+    g_surfs_xor.add_argument('--cifti-output', action='store_true', default=False,
+                             help='output BOLD files as CIFTI dtseries')
+    g_surfs_xor.add_argument('--fs-no-reconall', '--no-freesurfer',
+                             action='store_false', dest='run_reconall',
+                             help='disable FreeSurfer surface preprocessing.'
+                             ' Note : `--no-freesurfer` is deprecated and will be removed in 1.2.'
+                             ' Use `--fs-no-reconall` instead.')
 
     g_other = parser.add_argument_group('Other options')
     g_other.add_argument('-w', '--work-dir', action='store',
@@ -206,15 +219,21 @@ def get_parser():
     g_other.add_argument('--stop-on-first-crash', action='store_true', default=False,
                          help='Force stopping on first crash, even if a work directory'
                               ' was specified.')
+    g_other.add_argument('--notrack', action='store_true', default=False,
+                         help='Opt-out of sending tracking information of this run to '
+                              'the FMRIPREP developers. This information helps to '
+                              'improve FMRIPREP and provides an indicator of real '
+                              'world usage crucial for obtaining funding.')
 
     return parser
 
 
 def main():
     """Entry point"""
-    from niworkflows.nipype import logging as nlogging
+    from nipype import logging as nlogging
     from multiprocessing import set_start_method, Process, Manager
     from ..viz.reports import generate_reports
+    from ..info import __version__
     set_start_method('forkserver')
 
     warnings.showwarning = _warn_redirect
@@ -238,9 +257,9 @@ def main():
     log_level = int(max(25 - 5 * opts.verbose_count, logging.DEBUG))
     # Set logging
     logger.setLevel(log_level)
-    nlogging.getLogger('workflow').setLevel(log_level)
-    nlogging.getLogger('interface').setLevel(log_level)
-    nlogging.getLogger('utils').setLevel(log_level)
+    nlogging.getLogger('nipype.workflow').setLevel(log_level)
+    nlogging.getLogger('nipype.interface').setLevel(log_level)
+    nlogging.getLogger('nipype.utils').setLevel(log_level)
 
     errno = 0
 
@@ -250,6 +269,9 @@ def main():
         p = Process(target=build_workflow, args=(opts, retval))
         p.start()
         p.join()
+
+        if p.exitcode != 0:
+            sys.exit(p.exitcode)
 
         fmriprep_wf = retval['workflow']
         plugin_settings = retval['plugin_settings']
@@ -267,6 +289,26 @@ def main():
 
     if opts.reports_only:
         sys.exit(int(retcode > 0))
+
+    # Sentry tracking
+    if not opts.notrack:
+        try:
+            from raven import Client
+            dev_user = bool(int(os.getenv('FMRIPREP_DEV', 0)))
+            msg = 'fMRIPrep running%s' % (int(dev_user) * ' [dev]')
+            client = Client(
+                'https://d5a16b0c38d84d1584dfc93b9fb1ade6:'
+                '21f3c516491847af8e4ed249b122c4af@sentry.io/1137693',
+                release=__version__)
+            client.captureMessage(message=msg,
+                                  level='debug' if dev_user else 'info',
+                                  tags={
+                                      'run_id': run_uuid,
+                                      'npart': len(subject_list),
+                                      'type': 'ping',
+                                      'dev': dev_user})
+        except Exception:
+            pass
 
     # Clean up master process before running workflow, which may create forks
     gc.collect()
@@ -295,13 +337,13 @@ def build_workflow(opts, retval):
     a hard-limited memory-scope.
 
     """
-    from niworkflows.nipype import logging, config as ncfg
+    from nipype import logging, config as ncfg
     from ..info import __version__
     from ..workflows.base import init_fmriprep_wf
     from ..utils.bids import collect_participants
     from ..viz.reports import generate_reports
 
-    logger = logging.getLogger('workflow')
+    logger = logging.getLogger('nipype.workflow')
 
     INIT_MSG = """
     Running fMRIPREP version {version}:
@@ -310,22 +352,29 @@ def build_workflow(opts, retval):
       * Run identifier: {uuid}.
     """.format
 
+    output_spaces = opts.output_space or []
+
     # Validity of some inputs
     # ERROR check if use_aroma was specified, but the correct template was not
     if opts.use_aroma and (opts.template != 'MNI152NLin2009cAsym' or
-                           'template' not in opts.output_space):
-        raise RuntimeError('ERROR: --use-aroma requires functional images to be resampled to '
-                           'MNI152NLin2009cAsym.\n'
-                           '\t--template must be set to "MNI152NLin2009cAsym" (was: "{}")\n'
-                           '\t--output-space list must include "template" (was: "{}")'.format(
-                               opts.template, ' '.join(opts.output_space)))
+                           'template' not in output_spaces):
+        output_spaces.append('template')
+        logger.warning(
+            'Option "--use-aroma" requires functional images to be resampled to MNI space. '
+            'The argument "template" has been automatically added to the list of output '
+            'spaces (option "--output-space").'
+        )
+
     # Check output_space
-    if 'template' not in opts.output_space and (opts.use_syn_sdc or opts.force_syn):
-        msg = ('SyN SDC correction requires T1 to MNI registration, but '
-               '"template" is not specified in "--output-space" arguments')
+    if 'template' not in output_spaces and (opts.use_syn_sdc or opts.force_syn):
+        msg = ['SyN SDC correction requires T1 to MNI registration, but '
+               '"template" is not specified in "--output-space" arguments.',
+               'Option --use-syn will be cowardly dismissed.']
         if opts.force_syn:
-            raise RuntimeError(msg)
-        logger.warning(msg)
+            output_spaces.append('template')
+            msg[1] = (' Since --force-syn has been requested, "template" has been added to'
+                      ' the "--output-space" list.')
+        logger.warning(' '.join(msg))
 
     # Set up some instrumental utilities
     run_uuid = '%s_%s' % (strftime('%Y%m%d-%H%M%S'), uuid.uuid4())
@@ -446,9 +495,10 @@ def build_workflow(opts, retval):
         output_dir=output_dir,
         bids_dir=bids_dir,
         freesurfer=opts.run_reconall,
-        output_spaces=opts.output_space,
+        output_spaces=output_spaces,
         template=opts.template,
         medial_surface_nan=opts.medial_surface_nan,
+        cifti_output=opts.cifti_output,
         template_out_grid=template_out_grid,
         hires=opts.hires,
         use_bbr=opts.use_bbr,
@@ -458,6 +508,7 @@ def build_workflow(opts, retval):
         use_syn=opts.use_syn_sdc,
         force_syn=opts.force_syn,
         use_aroma=opts.use_aroma,
+        aroma_melodic_dim=opts.aroma_melodic_dimensionality,
         ignore_aroma_err=opts.ignore_aroma_denoising_errors,
     )
     retval['return_code'] = 0
