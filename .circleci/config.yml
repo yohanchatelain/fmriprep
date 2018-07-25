@@ -201,7 +201,7 @@ jobs:
           name: Run fMRIPrep tests
           no_output_timeout: 2h
           command: |
-            docker run -ti --rm=false \
+            docker run -u $USER -ti --rm=false \
               --entrypoint="py.test" poldracklab/fmriprep:latest \
               /root/src/fmriprep/ --doctest-modules --ignore=docs --ignore=setup.py
       - run:
@@ -264,7 +264,7 @@ jobs:
           name: Build fMRIPrep documentation
           no_output_timeout: 2h
           command: |
-            docker run -ti --rm=false -v $PWD:/_build_html \
+            docker run -u $USER -ti --rm=false -v $PWD:/_build_html \
               --entrypoint=sphinx-build poldracklab/fmriprep:latest \
               -T -E -b html -d _build/doctrees-readthedocs -W -D \
               language=en /root/src/fmriprep/docs/ /_build_html 2>&1 \

@@ -160,7 +160,9 @@ RUN echo "${VERSION}" > /root/src/fmriprep/fmriprep/VERSION && \
     rm -rf ~/.cache/pip
 
 RUN ldconfig
-WORKDIR /tmp/
+WORKDIR /scratch
+RUN chmod 777 /scratch
+
 ENTRYPOINT ["/usr/local/miniconda/bin/fmriprep"]
 
 ARG BUILD_DATE
