@@ -366,7 +366,7 @@ def main():
             command.extend(['-e', '%s=%s' % tuple(envvar)])
 
     if opts.user:
-        command.extend(['-e', opts.user])
+        command.extend(['-u', opts.user])
 
     if opts.fs_license_file:
         command.extend([
