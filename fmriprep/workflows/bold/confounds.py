@@ -109,7 +109,32 @@ def init_bold_confs_wf(mem_gb, metadata, name="bold_confs_wf"):
             the ROI for tCompCor and the BOLD brain mask.
 
     """
-
+    workflow = Workflow(name=name)
+    workflow.__desc__ = """\
+Several confounding time-series were calculated based on the
+*preprocessed BOLD*: framewise displacement (FD), DVARS and
+three region-wise global signals.
+FD and DVARS are calculated for each functional run, both using their
+implementations in Nipype (following the definitions by @power_fd_dvars).
+The three global signals are extracted within the CSF, the WM, and
+the whole-brain masks using Nilearn [@nilearn, RRID:SCR_001362].
+Additionally, a set of physiological regressors were extracted to
+allow for component-based noise correction [*CompCor*, @compcor].
+Principal components are estimated after high-pass filtering the
+*preprocessed BOLD* time-series (using a discrete cosine filter with
+128s cut-off) for the two *CompCor* variants: temporal (tCompCor)
+and anatomical (aCompCor).
+Six tCompCor components are then calculated from the top 5% variable
+voxels within a mask covering the subcortical regions.
+This subcortical mask is obtained by heavily eroding the brain mask,
+which ensures it does not include cortical GM regions.
+For aCompCor, six components are calculated within the intersection of
+the aforementioned mask and the union of CSF and WM masks calculated
+in T1w space, after their projection to the native space of each
+functional run (using the inverse BOLD-to-T1w transformation).
+The head-motion estimates calculated in the correction step were also
+placed within the corresponding confounds file.
+"""
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['bold', 'bold_mask', 'movpar_file', 't1_mask', 't1_tpms',
                 't1_bold_xform']),
@@ -193,7 +218,6 @@ def init_bold_confs_wf(mem_gb, metadata, name="bold_confs_wf"):
     def _pick_wm(files):
         return files[-1]
 
-    workflow = Workflow(name=name)
     workflow.connect([
         # Massage ROIs (in T1w space)
         (inputnode, acc_tpm, [('t1_tpms', 'in_files')]),
@@ -454,6 +478,16 @@ def init_ica_aroma_wf(template, metadata, mem_gb, omp_nthreads,
 
     """
     workflow = Workflow(name=name)
+    workflow.__postdesc__ = """\
+Automatic removal of motion artifacts using independent component analysis
+[ICA-AROMA, @aroma] was performed on the *preprocessed BOLD on MNI space*
+time-series after a spatial smoothing with an isotropic, Gaussian kernel
+of 6mm FWHM (full-width half-maximum).
+Corresponding "non-aggresively" denoised runs were produced after such
+smoothing.
+Additionally, the "aggressive" noise-regressors were collected and placed
+in the corresponding confounds file.
+"""
 
     inputnode = pe.Node(niu.IdentityInterface(
         fields=[
@@ -480,6 +514,7 @@ def init_ica_aroma_wf(template, metadata, mem_gb, omp_nthreads,
         use_fieldwarp=use_fieldwarp,
         name='bold_mni_trans_wf'
     )
+    bold_mni_trans_wf.__desc__ = None
 
     calc_median_val = pe.Node(fsl.ImageStats(op_string='-k %s -p 50'), name='calc_median_val')
     calc_bold_mean = pe.Node(fsl.MeanImage(), name='calc_bold_mean')

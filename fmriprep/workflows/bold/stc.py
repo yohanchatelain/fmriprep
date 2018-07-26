@@ -56,10 +56,12 @@ def init_bold_stc_wf(metadata, name='bold_stc_wf'):
 
     """
     workflow = Workflow(name=name)
+    workflow.__desc__ = """\
+BOLD runs were slice-time corrected using `3dTshift` from
+AFNI {afni_ver} [@afni, RRID:SCR_005927].
+""".format(afni_ver=afni.TShift().version)
     inputnode = pe.Node(niu.IdentityInterface(fields=['bold_file', 'skip_vols']), name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(fields=['stc_file']), name='outputnode')
-
-    LOGGER.log(25, 'Slice-timing correction will be included.')
 
     def create_custom_slice_timing_file_func(metadata):
         import os

@@ -84,6 +84,8 @@ def get_parser():
                          help='nipype plugin configuration file')
     g_perfm.add_argument('--anat-only', action='store_true',
                          help='run anatomical workflows only')
+    g_perfm.add_argument('--boilerplate', action='store_true',
+                         help='generate boilerplate only')
     g_perfm.add_argument('--ignore-aroma-denoising-errors', action='store_true',
                          default=False,
                          help='ignores the errors ICA_AROMA returns when there '
@@ -288,6 +290,9 @@ def main():
         fmriprep_wf.write_graph(graph2use="colored", format='svg', simple_form=True)
 
     if opts.reports_only:
+        sys.exit(int(retcode > 0))
+
+    if opts.boilerplate:
         sys.exit(int(retcode > 0))
 
     # Sentry tracking
@@ -512,11 +517,16 @@ def build_workflow(opts, retval):
         ignore_aroma_err=opts.ignore_aroma_denoising_errors,
     )
     retval['return_code'] = 0
-    retval['boilerplate'] = retval['workflow'].visit_desc()
 
-    logger.log(25, 'Works derived from this fMRIPrep execution should '
-               'include the following "citation boilerplate":\n\n%s',
-               retval['boilerplate'])
+    boiler_file = os.path.join(output_dir, 'fmriprep', 'logs', 'CITATION.md')
+    try:
+        with open(boiler_file, 'w') as mdf:
+            mdf.write(retval['workflow'].visit_desc())
+    except Exception:
+        logger.error('Could not write boilerplate file')
+    else:
+        logger.log(25, 'Works derived from this fMRIPrep execution should '
+                   'include the citation boilerplate (%s)', boiler_file)
     return retval
 
 

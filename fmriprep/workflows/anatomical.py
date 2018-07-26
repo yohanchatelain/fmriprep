@@ -178,15 +178,36 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
 
     workflow = Workflow(name=name)
     workflow.__postdesc__ = """\
-Spatial normalization to the ICBM 152 Nonlinear Asymmetrical template version \
-2009c [6] was performed through nonlinear registration with the antsRegistration \
-tool of ANTs v{ants_ver} [7], using brain-extracted versions of both T1w volume and \
-template. Brain tissue segmentation of cerebrospinal fluid (CSF), \
-white-matter (WM) and gray-matter (GM) was performed on the brain-extracted \
-T1w using fast [16] (FSL v{fsl_ver}).
+Spatial normalization to the ICBM 152 Nonlinear Asymmetrical
+template version 2009c [@mni, RRID:SCR_008796] was performed
+through nonlinear registration with the `antsRegistration`
+[ANTs {ants_ver}, RRID:SCR_004757, @ants], using
+brain-extracted versions of both T1w volume and template.
+Brain tissue segmentation of cerebrospinal fluid (CSF),
+white-matter (WM) and gray-matter (GM) was performed on
+the brain-extracted T1w using `fast` [FSL {fsl_ver}, RRID:SCR_002823,
+@fsl_fast].
 """.format(
         ants_ver=BrainExtraction().version,
         fsl_ver=fsl.FAST().version,
+    )
+    desc = """Anatomical data preprocessing
+
+: """
+    desc += """\
+A total of {num_t1w} T1w images were found within the input
+BIDS dataset.
+All of them were corrected for intensity non-uniformity (INU)
+using `N4BiasFieldCorrection` [@n4, ANTs {ants_ver}].
+""" if num_t1w > 1 else """\
+The T1w-reference was corrected for intensity non-uniformity (INU)
+using `N4BiasFieldCorrection` [@n4, ANTs {ants_ver}],
+and used as T1w-reference throughout the workflow.
+"""
+
+    workflow.__desc__ = desc.format(
+        num_t1w=num_t1w,
+        ants_ver=BrainExtraction().version
     )
 
     inputnode = pe.Node(
@@ -417,6 +438,8 @@ def init_anat_template_wf(longitudinal, omp_nthreads, num_t1w, name='anat_templa
             (may increase runtime)
         omp_nthreads : int
             Maximum number of threads an individual process may use
+        num_t1w : int
+            Number of T1w images
         name : str, optional
             Workflow name (default: anat_template_wf)
 
@@ -438,10 +461,13 @@ def init_anat_template_wf(longitudinal, omp_nthreads, num_t1w, name='anat_templa
     """
 
     workflow = Workflow(name=name)
-    workflow.__desc__ = """\
-Since several T1w images per subject were found, they were fused in a single T1w-reference
-map using mri_robust_template ([25], FreeSurfer) after INU-correction.\
-"""
+
+    if num_t1w > 1:
+        workflow.__desc__ = """\
+A T1w-reference map was computed after registration of
+{num_t1w} T1w images (after INU-correction) using
+`mri_robust_template` @freesurfer (FreeSurfer {fs_ver}).
+""".format(num_t1w=num_t1w, fs_ver=fs.Info().looseversion())
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['t1w']), name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
@@ -580,9 +606,8 @@ def init_skullstrip_ants_wf(skull_strip_template, debug, omp_nthreads, name='sku
 
     workflow = Workflow(name=name)
     workflow.__desc__ = """\
-Each T1w (T1-weighted) volume was corrected for INU (intensity non-uniformity) \
-using N4BiasFieldCorrection v{ants_ver} [4] and skull-stripped using antsBrainExtraction.sh \
-v{ants_ver} (using the {skullstrip_tpl} template). \
+The T1w-reference was then skull-stripped using `antsBrainExtraction.sh`
+(ANTs {ants_ver}), using {skullstrip_tpl} as target template.
 """.format(ants_ver=BrainExtraction().version, skullstrip_tpl=skull_strip_template)
 
     # Grabbing the appropriate template elements
@@ -750,11 +775,12 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
 
     workflow = Workflow(name=name)
     workflow.__desc__ = """\
-Brain surfaces were reconstructed \
-using recon-all from FreeSurfer v{fs_ver} [5], and the brain mask estimated previously \
-was refined with a custom variation of the method to reconcile ANTs-derived and
-FreeSurfer-derived segmentations of the cortical gray-matter of Mindboggle [20]. \
-""".format(fs_ver=fs.ReconAll().version)
+Brain surfaces were reconstructed using `recon-all` [FreeSurfer {fs_ver},
+RRID:SCR_001847, @fs_reconall], and the brain mask estimated
+previously was refined with a custom variation of the method to reconcile
+ANTs-derived and FreeSurfer-derived segmentations of the cortical
+gray-matter of Mindboggle [RRID:SCR_002438, @mindboggle].
+""".format(fs_ver=fs.Info().looseversion())
 
     inputnode = pe.Node(
         niu.IdentityInterface(

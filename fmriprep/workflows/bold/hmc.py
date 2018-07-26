@@ -59,6 +59,13 @@ def init_bold_hmc_wf(mem_gb, omp_nthreads, name='bold_hmc_wf'):
 
     """
     workflow = Workflow(name=name)
+    workflow.__desc__ = """\
+Head-motion parameters with respect to the BOLD reference
+(transformation matrices, and six corresponding rotation and translation
+parameters) are estimated before any spatiotemporal filtering using
+`mcflirt` @mcflirt (FSL {fsl_ver}).
+""".format(fsl_ver=fsl.Info().version())
+
     inputnode = pe.Node(niu.IdentityInterface(fields=['bold_file', 'raw_ref_image']),
                         name='inputnode')
     outputnode = pe.Node(

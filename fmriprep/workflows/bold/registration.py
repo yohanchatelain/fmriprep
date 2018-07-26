@@ -330,6 +330,12 @@ def init_bbreg_wf(use_bbr, bold2t1w_dof, omp_nthreads, name='bbreg_wf'):
 
     """
     workflow = Workflow(name=name)
+    workflow.__desc__ = """\
+The BOLD reference was then co-registered to the T1w reference using
+`bbregister` (FreeSurfer) which implements boundary-based registration [@bbr].
+Co-registration was configured with nine degrees of freedom to account
+for distortions remaining in the BOLD reference.
+"""
 
     inputnode = pe.Node(
         niu.IdentityInterface([
@@ -501,6 +507,12 @@ def init_fsl_bbr_wf(use_bbr, bold2t1w_dof, name='fsl_bbr_wf'):
 
     """
     workflow = Workflow(name=name)
+    workflow.__desc__ = """\
+The BOLD reference was then co-registered to the T1w reference using
+`flirt` @flirt (FSL) which implements boundary-based registration @bbr.
+Co-registration was configured with nine degrees of freedom to account
+for distortions remaining in the BOLD reference.
+"""
 
     inputnode = pe.Node(
         niu.IdentityInterface([

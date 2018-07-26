@@ -370,6 +370,24 @@ def init_single_subject_wf(subject_id, task_id, name,
                         "All workflows require T1w images.".format(subject_id))
 
     workflow = Workflow(name=name)
+    workflow.__desc__ = """\
+Results included in this manuscript come from preprocessing
+performed using *fMRIPprep* {fmriprep_ver} [@fmriprep1, @fmriprep2, RRID:SCR_016216],
+a *Nipype* [@nipype1, @nipype2, RRID:SCR_002502] based tool.
+
+
+""".format(fmriprep_ver=__version__)
+    workflow.__postdesc__ = """
+
+Many internal operations of *fMRIPrep* use
+Nilearn [@nilearn, RRID:SCR_001362],
+mostly within the functional processing workflow.
+For more details of the pipeline, see
+https://fmriprep.readthedocs.io/en/latest/workflows.html.
+
+# References
+
+"""
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['subjects_dir']),
                         name='inputnode')
@@ -456,7 +474,8 @@ def init_single_subject_wf(subject_id, task_id, name,
                                                template_out_grid=template_out_grid,
                                                use_aroma=use_aroma,
                                                aroma_melodic_dim=aroma_melodic_dim,
-                                               ignore_aroma_err=ignore_aroma_err)
+                                               ignore_aroma_err=ignore_aroma_err,
+                                               num_bold=len(subject_data['bold']))
 
         workflow.connect([
             (anat_preproc_wf, func_preproc_wf,
