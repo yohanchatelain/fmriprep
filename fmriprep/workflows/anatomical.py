@@ -180,7 +180,7 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
     workflow.__postdesc__ = """\
 Spatial normalization to the ICBM 152 Nonlinear Asymmetrical
 template version 2009c [@mni, RRID:SCR_008796] was performed
-through nonlinear registration with the `antsRegistration`
+through nonlinear registration with `antsRegistration`
 [ANTs {ants_ver}, RRID:SCR_004757, @ants], using
 brain-extracted versions of both T1w volume and template.
 Brain tissue segmentation of cerebrospinal fluid (CSF),

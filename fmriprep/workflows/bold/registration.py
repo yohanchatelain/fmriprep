@@ -509,10 +509,11 @@ def init_fsl_bbr_wf(use_bbr, bold2t1w_dof, name='fsl_bbr_wf'):
     workflow = Workflow(name=name)
     workflow.__desc__ = """\
 The BOLD reference was then co-registered to the T1w reference using
-`flirt` @flirt (FSL) which implements boundary-based registration @bbr.
+`flirt` [FSL {fsl_ver}, @flirt] with the boundary-based registration [@bbr]
+cost-function.
 Co-registration was configured with nine degrees of freedom to account
 for distortions remaining in the BOLD reference.
-"""
+""".format(fsl_ver=FLIRTRPT().version or '<ver>')
 
     inputnode = pe.Node(
         niu.IdentityInterface([
