@@ -31,7 +31,7 @@ def _warn_redirect(message, category, filename, lineno, file=None, line=None):
 
 
 def check_deps(workflow):
-    from nipype.filemanip import which
+    from nipype.utils.filemanip import which
     return sorted(
         (node.interface.__class__.__name__, node.interface._cmd)
         for node in workflow.get_nodes()
