@@ -128,7 +128,8 @@ RUN python -c "from matplotlib import font_manager" && \
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
                     git=1:2.7.4-0ubuntu1 \
-                    graphviz=2.38.0-12ubuntu2 && \
+                    graphviz=2.38.0-12ubuntu2 \
+                    pandoc && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Unless otherwise specified each process should only use one thread - nipype
