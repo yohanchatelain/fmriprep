@@ -188,8 +188,8 @@ white-matter (WM) and gray-matter (GM) was performed on
 the brain-extracted T1w using `fast` [FSL {fsl_ver}, RRID:SCR_002823,
 @fsl_fast].
 """.format(
-        ants_ver=BrainExtraction().version,
-        fsl_ver=fsl.FAST().version,
+        ants_ver=BrainExtraction().version or '<ver>',
+        fsl_ver=fsl.FAST().version or '<ver>',
     )
     desc = """Anatomical data preprocessing
 
@@ -207,7 +207,7 @@ and used as T1w-reference throughout the workflow.
 
     workflow.__desc__ = desc.format(
         num_t1w=num_t1w,
-        ants_ver=BrainExtraction().version
+        ants_ver=BrainExtraction().version or '<ver>'
     )
 
     inputnode = pe.Node(
@@ -467,7 +467,7 @@ def init_anat_template_wf(longitudinal, omp_nthreads, num_t1w, name='anat_templa
 A T1w-reference map was computed after registration of
 {num_t1w} T1w images (after INU-correction) using
 `mri_robust_template` @freesurfer (FreeSurfer {fs_ver}).
-""".format(num_t1w=num_t1w, fs_ver=fs.Info().looseversion())
+""".format(num_t1w=num_t1w, fs_ver=fs.Info().looseversion() or '<ver>')
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['t1w']), name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
@@ -608,7 +608,7 @@ def init_skullstrip_ants_wf(skull_strip_template, debug, omp_nthreads, name='sku
     workflow.__desc__ = """\
 The T1w-reference was then skull-stripped using `antsBrainExtraction.sh`
 (ANTs {ants_ver}), using {skullstrip_tpl} as target template.
-""".format(ants_ver=BrainExtraction().version, skullstrip_tpl=skull_strip_template)
+""".format(ants_ver=BrainExtraction().version or '<ver>', skullstrip_tpl=skull_strip_template)
 
     # Grabbing the appropriate template elements
     template_dir = get_dataset('ants_%s_template_ras' % skull_strip_template.lower())
@@ -780,7 +780,7 @@ RRID:SCR_001847, @fs_reconall], and the brain mask estimated
 previously was refined with a custom variation of the method to reconcile
 ANTs-derived and FreeSurfer-derived segmentations of the cortical
 gray-matter of Mindboggle [RRID:SCR_002438, @mindboggle].
-""".format(fs_ver=fs.Info().looseversion())
+""".format(fs_ver=fs.Info().looseversion() or '<ver>')
 
     inputnode = pe.Node(
         niu.IdentityInterface(
