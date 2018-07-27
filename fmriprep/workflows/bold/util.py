@@ -10,8 +10,8 @@ Utility workflows
 .. autofunction:: init_skullstrip_bold_wf
 
 """
-from niworkflows.nipype.pipeline import engine as pe
-from niworkflows.nipype.interfaces import utility as niu, fsl, afni, ants
+from nipype.pipeline import engine as pe
+from nipype.interfaces import utility as niu, fsl, afni, ants
 from niworkflows.interfaces.utils import CopyXForm
 from niworkflows.interfaces.masks import SimpleShowMaskRPT
 from niworkflows.interfaces.registration import EstimateReferenceImage

@@ -1,3 +1,108 @@
+1.1.2 (July 6, 2018)
+====================
+
+This release incorporates Nipype improvements that should reduce the
+chance of hanging if tasks are killed for excessive resource consumption.
+
+Thanks to Elizabeth DuPre for documentation updates.
+
+* [DOC] Clarify how to reuse FreeSurfer derivatives (#1189)
+* [DOC] Improve command line option documentation (#1186, #1080)
+* [MAINT] Update core dependencies (#1179, #1180)
+
+1.1.1 (June 7, 2018)
+====================
+
+* [ENH] Pre-cache DKT31 template in Docker image (#1159)
+* [MAINT] Update core dependencies (#1163)
+
+1.1.0 (June 4, 2018)
+====================
+
+* [ENH] Use Reorient interface included upstream in nipype (#1153)
+* [FIX] Refine BIDS queries to avoid indexing derivatives (#1141)
+* [DOC] Clarify outlier columns (#1138)
+* [PIN] Update to niworkflows 0.4.0 and nipype 1.0.4 (#1133)
+
+1.0.15 (May 17, 2018)
+=====================
+
+* [DOC] Add lesion masking during registration (#1113)
+* [FIX] Patch ``boldbuffer`` for ME (#1134)
+
+1.0.14 (May 15, 2018)
+=====================
+
+With thanks to @ZhifangYe for contributions
+
+* [FIX] Non-invertible transforms bringing parcellation to BOLD (#1130)
+* [FIX] Bad connection for ``--medial-surface-nan`` option (#1128)
+
+1.0.13 (May 11, 2018)
+=====================
+
+With thanks to @danlurie for the outstanding contribution of #1106
+
+* [ENH] Some nit picks on reports (#1123)
+* [ENH] Carpetplot + confounds plot (#1114)
+* [ENH] Add constrained cost-function masking to T1-MNI registration (#1106)
+* [FIX] Circular dependency (#1104)
+* [ENH] Set ``PYTHONNOUSERSITE`` in containers (#1103)
+
+
+1.0.12 (May 03, 2018)
+=====================
+
+* [MAINT] fmriprep-docker: Ensure data/output/work paths are absolute (#1089)
+* [ENH] Add usage tracking and centralized error reporting (#1088)
+* [FIX] Ensure one motion IC index is loaded as list (#1096)
+* [TST] Refactoring CircleCI setup (#1098)
+* [FIX] Compression in DataSinks (#1095)
+* [MAINT] fmriprep-docker: Support Python 2/3 without future or other helpers (#1082)
+* [MAINT] Update npm to 10.x (#1087)
+* [DOC] Prefer pre-print over Zenodo doi in boilerplate (#1086)
+* [DOC] Stylistic fix (\`'template'\`) (#1083)
+* [FIX] Run ICA-AROMA in ``MNI152Lin`` 2mm resampling grid (91x109x91 vox) (#1064)
+* [MAINT] Remove cwebp to revert to png (#1081)
+* [ENH] Allow changing the dimensionality of Melodic for AROMA. (#1052)
+* [FIX] Derivatives datasink handling of compression (#1077)
+* [FIX] Check for invalid sform matrices (#1072)
+* [FIX] Check exit code from subprocess (#1073)
+* [DOC] Add preprint fig. 1 to About (#1070)
+* [FIX] Always strip session from T1w for derivative naming (#1071)
+* [DOC] Add RRIDs in the citation boilerplate (#1061)
+* [ENH] Generate CIFTI derivatives (#1001)
+
+
+1.0.11 (April 16, 2018)
+=======================
+
+* [FIX] Do not detrend CSF/WhiteMatter/GlobalSignal (#1058)
+
+1.0.10 (April 16, 2018)
+=======================
+
+* [TST] Re-run ds005 with only one BOLD run (#1048)
+* [FIX] Patch subject_summary in reports (#1047)
+
+1.0.9 (April 10, 2018)
+======================
+
+With thanks to @danlurie for contributions.
+
+* [FIX] Connect inputnode to SDC for pepolar images (#1046)
+* [FIX] Pass ``ref_file`` to STC check (#1038)
+* [DOC] Add BBR fallback to user docs. (#1036)
+* [ENH] Revise resampling grid for template outputs (#1040)
+* [MAINT] DataSinks within their workflows (#1021)
+* [ENH] Add FLAIR pial refinement support (#829)
+* [MAINT] Upgrade to pybids 0.5 (#1027)
+* [MAINT] Refactor fieldmap heuristics (#1017)
+* [FIX] Use metadata to select shortest echo as ref_file (#1018)
+* [ENH] Adopt versioneer to compose version names (#1007)
+* [ENH] Handle first echo separately for ME-EPI (#891)
+
+
 1.0.8 (February 22, 2018)
 =========================
 
