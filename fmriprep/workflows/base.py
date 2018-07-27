@@ -381,8 +381,10 @@ a *Nipype* [@nipype1, @nipype2, RRID:SCR_002502] based tool.
 Many internal operations of *fMRIPrep* use
 Nilearn [@nilearn, RRID:SCR_001362],
 mostly within the functional processing workflow.
-For more details of the pipeline, see
-https://fmriprep.readthedocs.io/en/latest/workflows.html.
+For more details of the pipeline, see [the section corresponding
+to workflows in *fMRIPrep*'s documentation]\
+(https://fmriprep.readthedocs.io/en/latest/workflows.html \
+"FMRIPrep's documentation").
 
 
 ### References
