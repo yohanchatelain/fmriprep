@@ -195,12 +195,12 @@ the brain-extracted T1w using `fast` [FSL {fsl_ver}, RRID:SCR_002823,
 
 : """
     desc += """\
-A total of {num_t1w} T1w images were found within the input
+A total of {num_t1w} T1-weighted (T1w) images were found within the input
 BIDS dataset.
 All of them were corrected for intensity non-uniformity (INU)
 using `N4BiasFieldCorrection` [@n4, ANTs {ants_ver}].
 """ if num_t1w > 1 else """\
-The T1w-reference was corrected for intensity non-uniformity (INU)
+The T1-weighted (T1w) image was corrected for intensity non-uniformity (INU)
 using `N4BiasFieldCorrection` [@n4, ANTs {ants_ver}],
 and used as T1w-reference throughout the workflow.
 """
