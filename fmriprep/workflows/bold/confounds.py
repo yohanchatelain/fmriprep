@@ -115,7 +115,7 @@ Several confounding time-series were calculated based on the
 *preprocessed BOLD*: framewise displacement (FD), DVARS and
 three region-wise global signals.
 FD and DVARS are calculated for each functional run, both using their
-implementations in Nipype (following the definitions by @power_fd_dvars).
+implementations in *Nipype* [following the definitions by @power_fd_dvars].
 The three global signals are extracted within the CSF, the WM, and
 the whole-brain masks using Nilearn [@nilearn, RRID:SCR_001362].
 Additionally, a set of physiological regressors were extracted to

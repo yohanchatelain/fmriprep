@@ -370,11 +370,10 @@ def init_single_subject_wf(subject_id, task_id, name,
                         "All workflows require T1w images.".format(subject_id))
 
     workflow = Workflow(name=name)
-    workflow.__desc__ = """\
+    workflow.__desc__ = """
 Results included in this manuscript come from preprocessing
 performed using *fMRIPprep* {fmriprep_ver} [@fmriprep1, @fmriprep2, RRID:SCR_016216],
 a *Nipype* [@nipype1, @nipype2, RRID:SCR_002502] based tool.
-
 
 """.format(fmriprep_ver=__version__)
     workflow.__postdesc__ = """
@@ -385,7 +384,8 @@ mostly within the functional processing workflow.
 For more details of the pipeline, see
 https://fmriprep.readthedocs.io/en/latest/workflows.html.
 
-# References
+
+### References
 
 """
 
