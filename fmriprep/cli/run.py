@@ -34,7 +34,7 @@ def check_deps(workflow):
     from nipype.utils.filemanip import which
     return sorted(
         (node.interface.__class__.__name__, node.interface._cmd)
-        for node in workflow.get_nodes()
+        for node in workflow._get_all_nodes()
         if (hasattr(node.interface, '_cmd') and
             which(node.interface._cmd) is None))
 
