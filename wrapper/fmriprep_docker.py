@@ -12,7 +12,7 @@ running ::
 Please report any feedback to our GitHub repository
 (https://github.com/poldracklab/fmriprep) and do not
 forget to credit all the authors of software that fMRIPrep
-uses (http://fmriprep.rtfd.io/en/latest/citing.html).
+uses (https://fmriprep.readthedocs.io/en/latest/citing.html).
 """
 import sys
 import os
@@ -23,7 +23,7 @@ from warnings import warn
 __version__ = '99.99.99'
 __packagename__ = 'fmriprep-docker'
 __author__ = 'The CRN developers'
-__copyright__ = 'Copyright 2017, Center for Reproducible Neuroscience, Stanford University'
+__copyright__ = 'Copyright 2018, Center for Reproducible Neuroscience, Stanford University'
 __credits__ = ['Craig Moodie', 'Ross Blair', 'Oscar Esteban', 'Chris Gorgolewski',
                'Shoshana Berleant', 'Christopher J. Markiewicz', 'Russell A. Poldrack']
 __license__ = '3-clause BSD'
@@ -286,6 +286,8 @@ def get_parser():
                        type=os.path.abspath, help='Use custom nipype.cfg file')
     g_dev.add_argument('-e', '--env', action='append', nargs=2, metavar=('ENV_VAR', 'value'),
                        help='Set custom environment variable within container')
+    g_dev.add_argument('-u', '--user', action='store',
+                       help='Run container as a given user/uid')
 
     return parser
 
@@ -362,6 +364,9 @@ def main():
     if opts.env:
         for envvar in opts.env:
             command.extend(['-e', '%s=%s' % tuple(envvar)])
+
+    if opts.user:
+        command.extend(['-u', opts.user])
 
     if opts.fs_license_file:
         command.extend([
