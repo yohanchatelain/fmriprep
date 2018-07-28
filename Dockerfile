@@ -128,9 +128,13 @@ RUN python -c "from matplotlib import font_manager" && \
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
                     git=1:2.7.4-0ubuntu1 \
-                    graphviz=2.38.0-12ubuntu2 \
-                    pandoc && \
+                    graphviz=2.38.0-12ubuntu2 && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Install latest pandoc
+RUN curl -sSL "https://github.com/jgm/pandoc/releases/download/2.2.2.1/pandoc-2.2.2.1-1-amd64.deb" && \
+    dpkg -i pandoc-2.2.2.1-1-amd64.deb && \
+    rm pandoc-2.2.2.1-1-amd64.deb
 
 # Unless otherwise specified each process should only use one thread - nipype
 # will handle parallelization
