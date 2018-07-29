@@ -412,6 +412,7 @@ BOLD in original space*, or just *preprocessed BOLD*.
 
     # Generate a new BOLD reference
     bold_reference_wf = init_bold_reference_wf(omp_nthreads=omp_nthreads)
+    bold_reference_wf.__desc__ = None  # Unset description to avoid second appearance
 
     workflow.connect([
         (inputnode, merge, [('name_source', 'header_source')]),

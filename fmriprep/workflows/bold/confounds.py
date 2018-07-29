@@ -10,12 +10,12 @@ Calculate BOLD confounds
 
 """
 import os
-from niworkflows.data import get_mni_icbm152_linear, get_mni_icbm152_nlin_asym_09c
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, fsl
 from nipype.interfaces.nilearn import SignalExtraction
 from nipype.algorithms import confounds as nac
 
+from niworkflows.data import get_mni_icbm152_linear, get_mni_icbm152_nlin_asym_09c
 from niworkflows.interfaces.segmentation import ICA_AROMARPT
 from niworkflows.interfaces.masks import ROIsPlot
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
