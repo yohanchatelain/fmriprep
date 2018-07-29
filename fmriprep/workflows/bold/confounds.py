@@ -117,7 +117,7 @@ three region-wise global signals.
 FD and DVARS are calculated for each functional run, both using their
 implementations in *Nipype* [following the definitions by @power_fd_dvars].
 The three global signals are extracted within the CSF, the WM, and
-the whole-brain masks using Nilearn [@nilearn, RRID:SCR_001362].
+the whole-brain masks.
 Additionally, a set of physiological regressors were extracted to
 allow for component-based noise correction [*CompCor*, @compcor].
 Principal components are estimated after high-pass filtering the
