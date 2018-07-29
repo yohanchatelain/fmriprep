@@ -31,6 +31,15 @@ def _warn_redirect(message, category, filename, lineno, file=None, line=None):
     logger.warning('Captured warning (%s): %s', category, message)
 
 
+def check_deps(workflow):
+    from nipype.utils.filemanip import which
+    return sorted(
+        (node.interface.__class__.__name__, node.interface._cmd)
+        for node in workflow._get_all_nodes()
+        if (hasattr(node.interface, '_cmd') and
+            which(node.interface._cmd) is None))
+
+
 def get_parser():
     """Build parser object"""
     from ..info import __version__
@@ -315,6 +324,14 @@ def main():
                                       'dev': dev_user})
         except Exception:
             pass
+
+    # Check workflow for missing commands
+    missing = check_deps(fmriprep_wf)
+    if missing:
+        print("Cannot run fMRIPrep. Missing dependencies:")
+        for iface, cmd in missing:
+            print("\t{} (Interface: {})".format(cmd, iface))
+        sys.exit(2)
 
     # Clean up master process before running workflow, which may create forks
     gc.collect()
