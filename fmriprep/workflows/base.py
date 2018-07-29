@@ -377,7 +377,7 @@ Results included in this manuscript come from preprocessing
 performed using *fMRIPprep* {fmriprep_ver}
 (@fmriprep1; @fmriprep2; RRID:SCR_016216),
 which is based on *Nipype* {nipype_ver}
-(@nipype1; @nipype2; RRID:SCR_002502) based tool.
+(@nipype1; @nipype2; RRID:SCR_002502).
 
 """.format(fmriprep_ver=__version__, nipype_ver=nipype_ver)
     workflow.__postdesc__ = """
