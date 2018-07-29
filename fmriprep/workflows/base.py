@@ -15,8 +15,10 @@ import sys
 import os
 from copy import deepcopy
 
+from nipype import __version__ as nipype_ver
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
+from nilearn import __version__ as nilearn_ver
 
 from ..engine import Workflow
 from ..interfaces import (
@@ -372,14 +374,16 @@ def init_single_subject_wf(subject_id, task_id, name,
     workflow = Workflow(name=name)
     workflow.__desc__ = """
 Results included in this manuscript come from preprocessing
-performed using *fMRIPprep* {fmriprep_ver} [@fmriprep1, @fmriprep2, RRID:SCR_016216],
-a *Nipype* [@nipype1, @nipype2, RRID:SCR_002502] based tool.
+performed using *fMRIPprep* {fmriprep_ver}
+(@fmriprep1; @fmriprep2; RRID:SCR_016216),
+which is based on *Nipype* {nipype_ver}
+(@nipype1; @nipype2; RRID:SCR_002502) based tool.
 
-""".format(fmriprep_ver=__version__)
+""".format(fmriprep_ver=__version__, nipype_ver=nipype_ver)
     workflow.__postdesc__ = """
 
 Many internal operations of *fMRIPrep* use
-Nilearn [@nilearn, RRID:SCR_001362],
+*Nilearn* {nilearn_ver} [@nilearn, RRID:SCR_001362],
 mostly within the functional processing workflow.
 For more details of the pipeline, see [the section corresponding
 to workflows in *fMRIPrep*'s documentation]\
@@ -389,7 +393,7 @@ to workflows in *fMRIPrep*'s documentation]\
 
 ### References
 
-"""
+""".format(nilearn_ver=nilearn_ver)
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['subjects_dir']),
                         name='inputnode')
