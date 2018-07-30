@@ -135,13 +135,13 @@ boilerplate before descending into sub-workflows.
 Once all the sub-workflows of a given workflow have
 been visited, then the ``__postdesc__`` attribute is appended
 and the execution pops out to higher level workflows.
-The dunder attributes are written in Markup language, and may contain
+The dunder attributes are written in Markdown language, and may contain
 references.
 To add a reference, just add a new Bibtex entry to the references
 database (``/fmriprep/data/boilerplate.bib``).
-You can then use the Bibtex handle within the Markup text.
+You can then use the Bibtex handle within the Markdown text.
 For example, if the Bibtex handle is ``myreference``, a citation
-will be generated in Markup language with ``@myreference``.
+will be generated in Markdown language with ``@myreference``.
 To generate citations with parenthesis and/or additional content,
 brackets should be used: e.g. ``[see @myreference]`` will produce
 a citation like *(see Doe J. et al 2018)*.
