@@ -231,8 +231,8 @@ def init_bold_mni_trans_wf(template, mem_gb, omp_nthreads,
     """
     workflow = Workflow(name=name)
     workflow.__desc__ = """\
-The BOLD time-series were resampled on {tpl} standard space,
-generating a *preprocessed BOLD run on {tpl} space*.
+The BOLD time-series were resampled to {tpl} standard space,
+generating a *preprocessed BOLD run in {tpl} space*.
 """.format(tpl=template)
 
     inputnode = pe.Node(
