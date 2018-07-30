@@ -715,6 +715,10 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
         # CIFTI output
         if cifti_output and 'template' in output_spaces:
+            bold_surf_wf.__desc__ += """\
+*Grayordinates* files [@hcppipelines], which combine surface-sampled
+data and volume-sampled data, were also generated.
+"""
             gen_cifti = pe.MapNode(GenerateCifti(), iterfield=["surface_target", "gifti_files"],
                                    name="gen_cifti")
             gen_cifti.inputs.TR = metadata.get("RepetitionTime")
