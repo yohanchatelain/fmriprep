@@ -388,11 +388,13 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
     workflow.__desc__ = """\
 The BOLD time-series (including slice-timing correction when applied)
 were resampled onto their original, native space by applying
-a single, composite transform to correct for head-motion and
-susceptibility distortions (if estimated).
+{transforms}.
 These resampled BOLD time-series will be referred to as *preprocessed
 BOLD in original space*, or just *preprocessed BOLD*.
-"""
+""".format(transforms="""\
+a single, composite transform to correct for head-motion and
+susceptibility distortions""" if use_fieldwarp else """\
+the transforms to correct for head-motion""")
 
     inputnode = pe.Node(niu.IdentityInterface(fields=[
         'name_source', 'bold_file', 'bold_mask', 'hmc_xforms', 'fieldwarp']),
