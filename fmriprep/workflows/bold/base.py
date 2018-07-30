@@ -306,8 +306,8 @@ transform matrices, susceptibility distortion correction when available,
 and co-registrations to anatomical and template spaces).
 Gridded (volumetric) resamplings were performed using `antsApplyTransforms` (ANTs),
 configured with Lanczos interpolation to minimize the smoothing
-effects of other kernels @lanczos.
-Non-grid (surface) resampling were performed using `mri_vol2surf`
+effects of other kernels [@lanczos].
+Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 (FreeSurfer).
 *Grayordinates* files, which combine surface-sampled data and
 volume-sampled data, were also generated.
