@@ -545,6 +545,7 @@ def build_workflow(opts, retval):
     logger.log(25, 'Works derived from this fMRIPrep execution should '
                'include the following boilerplate:\n\n%s', boilerplate)
 
+    # Generate HTML file resolving citations
     cmd = ['pandoc', '-s', '--bibliography',
            pkgrf('fmriprep', 'data/boilerplate.bib'),
            '--filter', 'pandoc-citeproc',
@@ -556,6 +557,16 @@ def build_workflow(opts, retval):
         logger.warning('Could not generate CITATION.html file:\n%s',
                        ' '.join(cmd))
 
+    # Generate LaTex file resolving citations
+    cmd = ['pandoc', '-s', '--bibliography',
+           pkgrf('fmriprep', 'data/boilerplate.bib'),
+           '--natbib', str(logs_path / 'CITATION.md'),
+           '-o', str(logs_path / 'CITATION.tex')]
+    try:
+        check_call(cmd, timeout=10)
+    except (FileNotFoundError, CalledProcessError, TimeoutExpired):
+        logger.warning('Could not generate CITATION.tex file:\n%s',
+                       ' '.join(cmd))
     return retval
 
 
