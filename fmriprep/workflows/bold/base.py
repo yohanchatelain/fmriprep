@@ -27,7 +27,7 @@ from ...interfaces import (
 
 from ...interfaces.reports import FunctionalSummary
 from ...interfaces.cifti import GenerateCifti, CiftiNameSource
-
+from ...engine import Workflow
 
 # BOLD workflows
 from .confounds import init_bold_confs_wf, init_carpetplot_wf
@@ -52,7 +52,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                          fmap_bspline, fmap_demean, use_syn, force_syn,
                          use_aroma, ignore_aroma_err, aroma_melodic_dim,
                          medial_surface_nan, cifti_output,
-                         debug, low_mem, template_out_grid, layout=None):
+                         debug, low_mem, template_out_grid,
+                         layout=None, num_bold=1):
     """
     This workflow controls the functional preprocessing stages of FMRIPREP.
 
@@ -84,7 +85,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                   cifti_output=False,
                                   use_aroma=False,
                                   ignore_aroma_err=False,
-                                  aroma_melodic_dim=None)
+                                  aroma_melodic_dim=None,
+                                  num_bold=1)
 
     **Parameters**
 
@@ -146,6 +148,9 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             image for normalization
         layout : BIDSLayout
             BIDSLayout structure to enable metadata retrieval
+        num_bold : int
+            Total number of BOLD files that have been set for preprocessing
+            (default is 1)
 
     **Inputs**
 
@@ -285,7 +290,27 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         run_stc = False
 
     # Build workflow
-    workflow = pe.Workflow(name=wf_name)
+    workflow = Workflow(name=wf_name)
+    workflow.__desc__ = """
+
+Functional data preprocessing
+
+: For each of the {num_bold} BOLD runs found per subject (across all
+tasks and sessions), the following preprocessing was performed.
+""".format(num_bold=num_bold)
+
+    workflow.__postdesc__ = """\
+All resamplings can be performed with *a single interpolation
+step* by composing all the pertinent transformations (i.e. head-motion
+transform matrices, susceptibility distortion correction when available,
+and co-registrations to anatomical and template spaces).
+Gridded (volumetric) resamplings were performed using `antsApplyTransforms` (ANTs),
+configured with Lanczos interpolation to minimize the smoothing
+effects of other kernels [@lanczos].
+Non-gridded (surface) resamplings were performed using `mri_vol2surf`
+(FreeSurfer).
+"""
+
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_file', 'subjects_dir', 'subject_id',
                 't1_preproc', 't1_brain', 't1_mask', 't1_seg', 't1_tpms',
@@ -690,6 +715,10 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
         # CIFTI output
         if cifti_output and 'template' in output_spaces:
+            bold_surf_wf.__desc__ += """\
+*Grayordinates* files [@hcppipelines], which combine surface-sampled
+data and volume-sampled data, were also generated.
+"""
             gen_cifti = pe.MapNode(GenerateCifti(), iterfield=["surface_target", "gifti_files"],
                                    name="gen_cifti")
             gen_cifti.inputs.TR = metadata.get("RepetitionTime")
@@ -737,7 +766,7 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     """
     Set up a battery of datasinks to store derivatives in the right location
     """
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
 
     inputnode = pe.Node(
         niu.IdentityInterface(

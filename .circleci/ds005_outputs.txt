@@ -1,5 +1,8 @@
 fmriprep
 fmriprep/logs
+fmriprep/logs/CITATION.html
+fmriprep/logs/CITATION.md
+fmriprep/logs/CITATION.tex
 fmriprep/sub-01
 fmriprep/sub-01/anat
 fmriprep/sub-01/anat/sub-01_T1w_brainmask.nii.gz

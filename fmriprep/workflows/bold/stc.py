@@ -13,6 +13,8 @@ from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, afni
 from niworkflows.interfaces.utils import CopyXForm
 
+from ...engine import Workflow
+
 DEFAULT_MEMORY_MIN_GB = 0.01
 LOGGER = logging.getLogger('nipype.workflow')
 
@@ -53,7 +55,11 @@ def init_bold_stc_wf(metadata, name='bold_stc_wf'):
             Slice-timing corrected BOLD series NIfTI file
 
     """
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
+    workflow.__desc__ = """\
+BOLD runs were slice-time corrected using `3dTshift` from
+AFNI {afni_ver} [@afni, RRID:SCR_005927].
+""".format(afni_ver=''.join(list(afni.TShift().version or '<ver>')))
     inputnode = pe.Node(niu.IdentityInterface(fields=['bold_file', 'skip_vols']), name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(fields=['stc_file']), name='outputnode')
 

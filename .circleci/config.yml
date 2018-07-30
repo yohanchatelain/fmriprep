@@ -202,9 +202,8 @@ jobs:
           no_output_timeout: 2h
           command: |
             docker run -ti --rm=false \
-              --entrypoint="/usr/local/miniconda/bin/py.test" \
-              poldracklab/fmriprep:latest . \
-              --doctest-modules --ignore=docs --ignore=setup.py
+              --entrypoint="py.test" poldracklab/fmriprep:latest \
+              /root/src/fmriprep/ --doctest-modules --ignore=docs --ignore=setup.py
       - run:
           name: Test fmriprep-wrapper (Python 2)
           command: |
@@ -268,7 +267,7 @@ jobs:
             docker run -ti --rm=false -v $PWD:/_build_html \
               --entrypoint=sphinx-build poldracklab/fmriprep:latest \
               -T -E -b html -d _build/doctrees-readthedocs -W -D \
-              language=en docs/ /_build_html 2>&1 \
+              language=en /root/src/fmriprep/docs/ /_build_html 2>&1 \
               | tee $PWD/builddocs.log
             cat $PWD/builddocs.log
             grep -qv "ERROR" $PWD/builddocs.log
@@ -327,7 +326,7 @@ jobs:
             sudo setfacl -d -m group:$(id -gn):rwx /tmp/ds005/work && \
                 sudo setfacl -m group:$(id -gn):rwx /tmp/ds005/work
             fmriprep-docker -i poldracklab/fmriprep:latest \
-                -e FMRIPREP_DEV 1 \
+                -e FMRIPREP_DEV 1 -u $(id -u) \
                 --config $PWD/nipype.cfg -w /tmp/ds005/work \
                 /tmp/data/ds005 /tmp/ds005/derivatives participant \
                 --debug --write-graph --mem_mb 4096 \
@@ -347,7 +346,7 @@ jobs:
             sudo setfacl -d -m group:$(id -gn):rwx /tmp/ds005/work && \
                 sudo setfacl -m group:$(id -gn):rwx /tmp/ds005/work
             fmriprep-docker -i poldracklab/fmriprep:latest \
-                -e FMRIPREP_DEV 1 \
+                -e FMRIPREP_DEV 1 -u $(id -u) \
                 --config $PWD/nipype.cfg -w /tmp/ds005/work \
                 /tmp/data/ds005 /tmp/ds005/derivatives participant \
                 --debug --write-graph --use-syn-sdc --mem_mb 4096 \
@@ -374,7 +373,7 @@ jobs:
           command: |
             rm /tmp/data/ds005/sub-01/func/*_run-02_*
             fmriprep-docker -i poldracklab/fmriprep:latest \
-                -e FMRIPREP_DEV 1 \
+                -e FMRIPREP_DEV 1 -u $(id -u) \
                 --config $PWD/nipype.cfg -w /tmp/ds005/work \
                 /tmp/data/ds005 /tmp/ds005/derivatives_partial participant \
                 --debug --write-graph --use-syn-sdc --mem_mb 4096 \

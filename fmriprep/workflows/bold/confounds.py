@@ -10,16 +10,17 @@ Calculate BOLD confounds
 
 """
 import os
-from niworkflows.data import get_mni_icbm152_linear, get_mni_icbm152_nlin_asym_09c
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, fsl
 from nipype.interfaces.nilearn import SignalExtraction
 from nipype.algorithms import confounds as nac
 
+from niworkflows.data import get_mni_icbm152_linear, get_mni_icbm152_nlin_asym_09c
 from niworkflows.interfaces.segmentation import ICA_AROMARPT
 from niworkflows.interfaces.masks import ROIsPlot
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
 
+from ...engine import Workflow
 from ...interfaces import (
     TPM2ROI, AddTPMs, AddTSVHeader, GatherConfounds, ICAConfounds,
     FMRISummary, DerivativesDataSink
@@ -108,7 +109,32 @@ def init_bold_confs_wf(mem_gb, metadata, name="bold_confs_wf"):
             the ROI for tCompCor and the BOLD brain mask.
 
     """
-
+    workflow = Workflow(name=name)
+    workflow.__desc__ = """\
+Several confounding time-series were calculated based on the
+*preprocessed BOLD*: framewise displacement (FD), DVARS and
+three region-wise global signals.
+FD and DVARS are calculated for each functional run, both using their
+implementations in *Nipype* [following the definitions by @power_fd_dvars].
+The three global signals are extracted within the CSF, the WM, and
+the whole-brain masks.
+Additionally, a set of physiological regressors were extracted to
+allow for component-based noise correction [*CompCor*, @compcor].
+Principal components are estimated after high-pass filtering the
+*preprocessed BOLD* time-series (using a discrete cosine filter with
+128s cut-off) for the two *CompCor* variants: temporal (tCompCor)
+and anatomical (aCompCor).
+Six tCompCor components are then calculated from the top 5% variable
+voxels within a mask covering the subcortical regions.
+This subcortical mask is obtained by heavily eroding the brain mask,
+which ensures it does not include cortical GM regions.
+For aCompCor, six components are calculated within the intersection of
+the aforementioned mask and the union of CSF and WM masks calculated
+in T1w space, after their projection to the native space of each
+functional run (using the inverse BOLD-to-T1w transformation).
+The head-motion estimates calculated in the correction step were also
+placed within the corresponding confounds file.
+"""
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['bold', 'bold_mask', 'movpar_file', 't1_mask', 't1_tpms',
                 't1_bold_xform']),
@@ -192,7 +218,6 @@ def init_bold_confs_wf(mem_gb, metadata, name="bold_confs_wf"):
     def _pick_wm(files):
         return files[-1]
 
-    workflow = pe.Workflow(name=name)
     workflow.connect([
         # Massage ROIs (in T1w space)
         (inputnode, acc_tpm, [('t1_tpms', 'in_files')]),
@@ -344,7 +369,7 @@ def init_carpetplot_wf(mem_gb, metadata, name="bold_carpet_wf"):
         name='ds_report_bold_conf', run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
     workflow.connect([
         (inputnode, mrg_xfms, [('t1_bold_xform', 'in1'),
                                ('t1_2_mni_reverse_transform', 'in2')]),
@@ -364,6 +389,7 @@ def init_carpetplot_wf(mem_gb, metadata, name="bold_carpet_wf"):
 
 def init_ica_aroma_wf(template, metadata, mem_gb, omp_nthreads,
                       name='ica_aroma_wf',
+                      susan_fwhm=6.0,
                       ignore_aroma_err=False,
                       aroma_melodic_dim=None,
                       use_fieldwarp=True):
@@ -373,17 +399,22 @@ def init_ica_aroma_wf(template, metadata, mem_gb, omp_nthreads,
 
     The following steps are performed:
 
-    #. Smooth data using SUSAN
-    #. Run MELODIC outside of ICA-AROMA to generate the report
+    #. Smooth data using FSL `susan`, with a kernel width FWHM=6.0mm.
+    #. Run FSL `melodic` outside of ICA-AROMA to generate the report
     #. Run ICA-AROMA
     #. Aggregate identified motion components (aggressive) to TSV
-    #. Return classified_motion_ICs and melodic_mix for user to complete
-        non-aggressive denoising in T1w space
+    #. Return ``classified_motion_ICs`` and ``melodic_mix`` for user to complete
+       non-aggressive denoising in T1w space
     #. Calculate ICA-AROMA-identified noise components
-        (columns named ``AROMAAggrCompXX``)
+       (columns named ``AROMAAggrCompXX``)
 
     Additionally, non-aggressive denoising is performed on the BOLD series
     resampled into MNI space.
+
+    There is a current discussion on whether other confounds should be extracted
+    before or after denoising `here <http://nbviewer.jupyter.org/github/poldracklab/\
+    fmriprep-notebooks/blob/922e436429b879271fa13e76767a6e73443e74d9/issue-817_\
+    aroma_confounds.ipynb>`__.
 
     .. workflow::
         :graph2use: orig
@@ -411,6 +442,9 @@ def init_ica_aroma_wf(template, metadata, mem_gb, omp_nthreads,
             Maximum number of threads an individual process may use
         name : str
             Name of workflow (default: ``bold_mni_trans_wf``)
+        susan_fwhm : float
+            Kernel width (FWHM in mm) for the smoothing step with
+            FSL ``susan`` (default: 6.0mm)
         use_fieldwarp : bool
             Include SDC warp in single-shot transform from BOLD to MNI
         ignore_aroma_err : bool
@@ -441,8 +475,19 @@ def init_ica_aroma_wf(template, metadata, mem_gb, omp_nthreads,
             BOLD series with non-aggressive ICA-AROMA denoising applied
 
     .. _ICA-AROMA: https://github.com/rhr-pruim/ICA-AROMA
+
     """
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
+    workflow.__postdesc__ = """\
+Automatic removal of motion artifacts using independent component analysis
+[ICA-AROMA, @aroma] was performed on the *preprocessed BOLD on MNI space*
+time-series after a spatial smoothing with an isotropic, Gaussian kernel
+of 6mm FWHM (full-width half-maximum).
+Corresponding "non-aggresively" denoised runs were produced after such
+smoothing.
+Additionally, the "aggressive" noise-regressors were collected and placed
+in the corresponding confounds file.
+"""
 
     inputnode = pe.Node(niu.IdentityInterface(
         fields=[
@@ -469,6 +514,7 @@ def init_ica_aroma_wf(template, metadata, mem_gb, omp_nthreads,
         use_fieldwarp=use_fieldwarp,
         name='bold_mni_trans_wf'
     )
+    bold_mni_trans_wf.__desc__ = None
 
     calc_median_val = pe.Node(fsl.ImageStats(op_string='-k %s -p 50'), name='calc_median_val')
     calc_bold_mean = pe.Node(fsl.MeanImage(), name='calc_bold_mean')
@@ -478,7 +524,7 @@ def init_ica_aroma_wf(template, metadata, mem_gb, omp_nthreads,
     getusans = pe.Node(niu.Function(function=_getusans_func, output_names=['usans']),
                        name='getusans', mem_gb=0.01)
 
-    smooth = pe.Node(fsl.SUSAN(fwhm=6.0), name='smooth')
+    smooth = pe.Node(fsl.SUSAN(fwhm=susan_fwhm), name='smooth')
 
     # melodic node
     melodic = pe.Node(fsl.MELODIC(
