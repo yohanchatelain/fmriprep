@@ -8,6 +8,7 @@ fMRI preprocessing workflow
 
 import os
 import os.path as op
+from pathlib import Path
 import logging
 import sys
 import gc
@@ -93,6 +94,8 @@ def get_parser():
                          help='nipype plugin configuration file')
     g_perfm.add_argument('--anat-only', action='store_true',
                          help='run anatomical workflows only')
+    g_perfm.add_argument('--boilerplate', action='store_true',
+                         help='generate boilerplate only')
     g_perfm.add_argument('--ignore-aroma-denoising-errors', action='store_true',
                          default=False,
                          help='ignores the errors ICA_AROMA returns when there '
@@ -249,7 +252,7 @@ def main():
     opts = get_parser().parse_args()
 
     # FreeSurfer license
-    default_license = op.join(os.getenv('FREESURFER_HOME', ''), 'license.txt')
+    default_license = str(Path(os.getenv('FREESURFER_HOME')) / 'license.txt')
     # Precedence: --fs-license-file, $FS_LICENSE, default_license
     license_file = opts.fs_license_file or os.getenv('FS_LICENSE', default_license)
     if not os.path.exists(license_file):
@@ -297,6 +300,9 @@ def main():
         fmriprep_wf.write_graph(graph2use="colored", format='svg', simple_form=True)
 
     if opts.reports_only:
+        sys.exit(int(retcode > 0))
+
+    if opts.boilerplate:
         sys.exit(int(retcode > 0))
 
     # Sentry tracking
@@ -354,6 +360,9 @@ def build_workflow(opts, retval):
     a hard-limited memory-scope.
 
     """
+    from subprocess import check_call, CalledProcessError, TimeoutExpired
+    from pkg_resources import resource_filename as pkgrf
+
     from nipype import logging, config as ncfg
     from ..info import __version__
     from ..workflows.base import init_fmriprep_wf
@@ -397,7 +406,7 @@ def build_workflow(opts, retval):
     run_uuid = '%s_%s' % (strftime('%Y%m%d-%H%M%S'), uuid.uuid4())
 
     # First check that bids_dir looks like a BIDS folder
-    bids_dir = op.abspath(opts.bids_dir)
+    bids_dir = os.path.abspath(opts.bids_dir)
     subject_list = collect_participants(
         bids_dir, participant_label=opts.participant_label)
 
@@ -529,6 +538,35 @@ def build_workflow(opts, retval):
         ignore_aroma_err=opts.ignore_aroma_denoising_errors,
     )
     retval['return_code'] = 0
+
+    logs_path = Path(output_dir) / 'fmriprep' / 'logs'
+    boilerplate = retval['workflow'].visit_desc()
+    (logs_path / 'CITATION.md').write_text(boilerplate)
+    logger.log(25, 'Works derived from this fMRIPrep execution should '
+               'include the following boilerplate:\n\n%s', boilerplate)
+
+    # Generate HTML file resolving citations
+    cmd = ['pandoc', '-s', '--bibliography',
+           pkgrf('fmriprep', 'data/boilerplate.bib'),
+           '--filter', 'pandoc-citeproc',
+           str(logs_path / 'CITATION.md'),
+           '-o', str(logs_path / 'CITATION.html')]
+    try:
+        check_call(cmd, timeout=10)
+    except (FileNotFoundError, CalledProcessError, TimeoutExpired):
+        logger.warning('Could not generate CITATION.html file:\n%s',
+                       ' '.join(cmd))
+
+    # Generate LaTex file resolving citations
+    cmd = ['pandoc', '-s', '--bibliography',
+           pkgrf('fmriprep', 'data/boilerplate.bib'),
+           '--natbib', str(logs_path / 'CITATION.md'),
+           '-o', str(logs_path / 'CITATION.tex')]
+    try:
+        check_call(cmd, timeout=10)
+    except (FileNotFoundError, CalledProcessError, TimeoutExpired):
+        logger.warning('Could not generate CITATION.tex file:\n%s',
+                       ' '.join(cmd))
     return retval
 
 

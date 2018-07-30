@@ -21,6 +21,7 @@ from niworkflows import data as nid
 from niworkflows.interfaces.utils import GenerateSamplingReference
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
 
+from ...engine import Workflow
 from ...interfaces import GiftiSetAnatomicalStructure, MultiApplyTransforms
 from ...interfaces.nilearn import Merge
 from ...interfaces.freesurfer import (
@@ -83,15 +84,21 @@ def init_bold_surf_wf(mem_gb, output_spaces, medial_surface_nan, name='bold_surf
             BOLD series, resampled to FreeSurfer surfaces
 
     """
-    workflow = pe.Workflow(name=name)
+    spaces = [space for space in output_spaces if space.startswith('fs')]
+
+    workflow = Workflow(name=name)
+
+    if spaces:
+        workflow.__desc__ = """\
+The BOLD time-series, were resampled to surfaces on the following
+spaces: {out_spaces}.
+""".format(out_spaces=', '.join(['*%s*' % s for s in spaces]))
     inputnode = pe.Node(
         niu.IdentityInterface(fields=['source_file', 't1_preproc', 'subject_id', 'subjects_dir',
                                       't1_2_fsnative_forward_transform']),
         name='inputnode')
 
     outputnode = pe.Node(niu.IdentityInterface(fields=['surfaces']), name='outputnode')
-
-    spaces = [space for space in output_spaces if space.startswith('fs')]
 
     def select_target(subject_id, space):
         """ Given a source subject ID and a target space, get the target subject ID """
@@ -222,7 +229,12 @@ def init_bold_mni_trans_wf(template, mem_gb, omp_nthreads,
             BOLD series mask in template space
 
     """
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
+    workflow.__desc__ = """\
+The BOLD time-series were resampled to {tpl} standard space,
+generating a *preprocessed BOLD run in {tpl} space*.
+""".format(tpl=template)
+
     inputnode = pe.Node(
         niu.IdentityInterface(fields=[
             'itk_bold_to_t1',
@@ -372,7 +384,18 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
             Same as ``bold_ref``, but once the brain mask has been applied
 
     """
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
+    workflow.__desc__ = """\
+The BOLD time-series (including slice-timing correction when applied)
+were resampled onto their original, native space by applying
+{transforms}.
+These resampled BOLD time-series will be referred to as *preprocessed
+BOLD in original space*, or just *preprocessed BOLD*.
+""".format(transforms="""\
+a single, composite transform to correct for head-motion and
+susceptibility distortions""" if use_fieldwarp else """\
+the transforms to correct for head-motion""")
+
     inputnode = pe.Node(niu.IdentityInterface(fields=[
         'name_source', 'bold_file', 'bold_mask', 'hmc_xforms', 'fieldwarp']),
         name='inputnode'
@@ -391,6 +414,7 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
 
     # Generate a new BOLD reference
     bold_reference_wf = init_bold_reference_wf(omp_nthreads=omp_nthreads)
+    bold_reference_wf.__desc__ = None  # Unset description to avoid second appearance
 
     workflow.connect([
         (inputnode, merge, [('name_source', 'header_source')]),
@@ -488,7 +512,7 @@ def init_bold_preproc_report_wf(mem_gb, reportlets_dir, name='bold_preproc_repor
     from niworkflows.interfaces import SimpleBeforeAfter
     from ...interfaces import DerivativesDataSink
 
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
 
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['in_pre', 'in_post', 'name_source']), name='inputnode')

@@ -15,9 +15,12 @@ import sys
 import os
 from copy import deepcopy
 
+from nipype import __version__ as nipype_ver
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
+from nilearn import __version__ as nilearn_ver
 
+from ..engine import Workflow
 from ..interfaces import (
     BIDSDataGrabber, BIDSFreeSurferDir, BIDSInfo, SubjectSummary, AboutSummary,
     DerivativesDataSink
@@ -157,7 +160,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid,
             image for normalization
 
     """
-    fmriprep_wf = pe.Workflow(name='fmriprep_wf')
+    fmriprep_wf = Workflow(name='fmriprep_wf')
     fmriprep_wf.base_dir = work_dir
 
     if freesurfer:
@@ -368,7 +371,29 @@ def init_single_subject_wf(subject_id, task_id, name,
         raise Exception("No T1w images found for participant {}. "
                         "All workflows require T1w images.".format(subject_id))
 
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
+    workflow.__desc__ = """
+Results included in this manuscript come from preprocessing
+performed using *fMRIPprep* {fmriprep_ver}
+(@fmriprep1; @fmriprep2; RRID:SCR_016216),
+which is based on *Nipype* {nipype_ver}
+(@nipype1; @nipype2; RRID:SCR_002502).
+
+""".format(fmriprep_ver=__version__, nipype_ver=nipype_ver)
+    workflow.__postdesc__ = """
+
+Many internal operations of *fMRIPrep* use
+*Nilearn* {nilearn_ver} [@nilearn, RRID:SCR_001362],
+mostly within the functional processing workflow.
+For more details of the pipeline, see [the section corresponding
+to workflows in *fMRIPrep*'s documentation]\
+(https://fmriprep.readthedocs.io/en/latest/workflows.html \
+"FMRIPrep's documentation").
+
+
+### References
+
+""".format(nilearn_ver=nilearn_ver)
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['subjects_dir']),
                         name='inputnode')
@@ -455,7 +480,8 @@ def init_single_subject_wf(subject_id, task_id, name,
                                                template_out_grid=template_out_grid,
                                                use_aroma=use_aroma,
                                                aroma_melodic_dim=aroma_melodic_dim,
-                                               ignore_aroma_err=ignore_aroma_err)
+                                               ignore_aroma_err=ignore_aroma_err,
+                                               num_bold=len(subject_data['bold']))
 
         workflow.connect([
             (anat_preproc_wf, func_preproc_wf,

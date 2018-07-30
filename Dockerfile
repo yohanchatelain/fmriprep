@@ -113,7 +113,7 @@ RUN conda install -y mkl=2018.0.3 mkl-service;  sync &&\
                      matplotlib=2.2.0 \
                      pandas=0.23.0 \
                      libxml2=2.9.4 \
-                     libxslt=1.1.29\
+                     libxslt=1.1.29 \
                      traits=4.6.0; sync &&  \
     chmod -R a+rX /usr/local/miniconda; sync && \
     chmod +x /usr/local/miniconda/bin/*; sync && \
@@ -130,6 +130,11 @@ RUN apt-get update && \
                     git=1:2.7.4-0ubuntu1 \
                     graphviz=2.38.0-12ubuntu2 && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Install latest pandoc
+RUN curl -o pandoc-2.2.2.1-1-amd64.deb -sSL "https://github.com/jgm/pandoc/releases/download/2.2.2.1/pandoc-2.2.2.1-1-amd64.deb" && \
+    dpkg -i pandoc-2.2.2.1-1-amd64.deb && \
+    rm pandoc-2.2.2.1-1-amd64.deb
 
 # Unless otherwise specified each process should only use one thread - nipype
 # will handle parallelization
