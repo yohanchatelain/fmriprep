@@ -92,6 +92,8 @@ def init_bold_surf_wf(mem_gb, output_spaces, medial_surface_nan, name='bold_surf
         workflow.__desc__ = """\
 The BOLD time-series, were resampled to surfaces on the following
 spaces: {out_spaces}.
+*Grayordinates* files [@hcppipelines], which combine surface-sampled
+data and volume-sampled data, were also generated.
 """.format(out_spaces=', '.join(['*%s*' % s for s in spaces]))
     inputnode = pe.Node(
         niu.IdentityInterface(fields=['source_file', 't1_preproc', 'subject_id', 'subjects_dir',

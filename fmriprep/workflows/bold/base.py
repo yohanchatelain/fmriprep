@@ -309,8 +309,6 @@ configured with Lanczos interpolation to minimize the smoothing
 effects of other kernels [@lanczos].
 Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 (FreeSurfer).
-*Grayordinates* files, which combine surface-sampled data and
-volume-sampled data, were also generated.
 """
 
     inputnode = pe.Node(niu.IdentityInterface(
