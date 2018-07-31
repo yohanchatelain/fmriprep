@@ -1,18 +1,29 @@
 #!/usr/bin/env python
-from __future__ import print_function, unicode_literals, division, absolute_import
-from builtins import int, map, input, zip
-from future import standard_library
+"""
+The fMRIPrep on Docker wrapper
+
+
+This is a lightweight Python wrapper to run fMRIPrep.
+Docker must be installed and running. This can be checked
+running ::
+
+  docker info
+
+Please report any feedback to our GitHub repository
+(https://github.com/poldracklab/fmriprep) and do not
+forget to credit all the authors of software that fMRIPrep
+uses (https://fmriprep.readthedocs.io/en/latest/citing.html).
+"""
 import sys
 import os
 import re
 import subprocess
-
-standard_library.install_aliases()
+from warnings import warn
 
 __version__ = '99.99.99'
 __packagename__ = 'fmriprep-docker'
 __author__ = 'The CRN developers'
-__copyright__ = 'Copyright 2017, Center for Reproducible Neuroscience, Stanford University'
+__copyright__ = 'Copyright 2018, Center for Reproducible Neuroscience, Stanford University'
 __credits__ = ['Craig Moodie', 'Ross Blair', 'Oscar Esteban', 'Chris Gorgolewski',
                'Shoshana Berleant', 'Christopher J. Markiewicz', 'Russell A. Poldrack']
 __license__ = '3-clause BSD'
@@ -78,6 +89,13 @@ if not hasattr(subprocess, 'run'):
 
         return res
     subprocess.run = _run
+
+
+# De-fang Python 2's input - we don't eval user input
+try:
+    input = raw_input
+except NameError:
+    pass
 
 
 def check_docker():
@@ -153,8 +171,8 @@ def merge_help(wrapper_help, target_help):
 
     # Make sure we're not clobbering options we don't mean to
     overlap = set(w_flags).intersection(t_flags)
-    expected_overlap = set(['h', 'version', 'w', 'output-grid-reference',
-                            'fs-license-file'])
+    expected_overlap = set(['h', 'version', 'w', 'template-resampling-grid',
+                            'output-grid-reference', 'fs-license-file'])
     assert overlap == expected_overlap, "Clobbering options: {}".format(
         ', '.join(overlap - expected_overlap))
 
@@ -202,13 +220,15 @@ def get_parser():
     """Defines the command line interface of the wrapper"""
     import argparse
     parser = argparse.ArgumentParser(
-        description='fMRI Preprocessing workflow',
+        description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         add_help=False)
 
     # Standard FMRIPREP arguments
-    parser.add_argument('bids_dir', nargs='?', type=str, default='')
-    parser.add_argument('output_dir', nargs='?', type=str, default='')
+    parser.add_argument('bids_dir', nargs='?', type=os.path.abspath,
+                        default='')
+    parser.add_argument('output_dir', nargs='?', type=os.path.abspath,
+                        default='')
     parser.add_argument('analysis_level', nargs='?', choices=['participant'],
                         default='participant')
 
@@ -227,12 +247,20 @@ def get_parser():
     g_wrap = parser.add_argument_group(
         'Wrapper options',
         'Standard options that require mapping files into the container')
-    g_wrap.add_argument('-w', '--work-dir', action='store',
+    g_wrap.add_argument('-w', '--work-dir', action='store', type=os.path.abspath,
                         help='path where intermediate results should be stored')
-    g_wrap.add_argument('--output-grid-reference', required=False, action='store',
-                        type=os.path.abspath,
-                        help='Grid reference image for resampling BOLD files to volume template '
-                             'space.')
+    g_wrap.add_argument(
+        '--output-grid-reference', required=False, action='store', type=os.path.abspath,
+        help='Deprecated after FMRIPREP 1.0.8. Please use --template-resampling-grid instead.')
+    g_wrap.add_argument(
+        '--template-resampling-grid', required=False, action='store', type=str,
+        help='Keyword ("native", "1mm", or "2mm") or path to an existing file. '
+             'Allows to define a reference grid for the resampling of BOLD images in template '
+             'space. Keyword "native" will use the original BOLD grid as reference. '
+             'Keywords "1mm" and "2mm" will use the corresponding isotropic template '
+             'resolutions. If a path is given, the grid of that image will be used. '
+             'It determines the field of view and resolution of the output images, '
+             'but is not used in normalization.')
     g_wrap.add_argument(
         '--fs-license-file', metavar='PATH', type=os.path.abspath,
         default=os.getenv('FS_LICENSE', None),
@@ -256,6 +284,10 @@ def get_parser():
                        help='open shell in image instead of running FMRIPREP')
     g_dev.add_argument('--config', metavar='PATH', action='store',
                        type=os.path.abspath, help='Use custom nipype.cfg file')
+    g_dev.add_argument('-e', '--env', action='append', nargs=2, metavar=('ENV_VAR', 'value'),
+                       help='Set custom environment variable within container')
+    g_dev.add_argument('-u', '--user', action='store',
+                       help='Run container as a given user/uid')
 
     return parser
 
@@ -278,11 +310,10 @@ def main():
             print('fmriprep wrapper {!s}'.format(__version__))
         if opts.help:
             parser.print_help()
-        print("fmriprep: ", end='')
         if check == -1:
-            print("Could not find docker command... Is it installed?")
+            print("fmriprep: Could not find docker command... Is it installed?")
         else:
-            print("Make sure you have permission to run 'docker'")
+            print("fmriprep: Make sure you have permission to run 'docker'")
         return 1
 
     # For --help or --version, ask before downloading an image
@@ -308,17 +339,18 @@ def main():
         print('Could not detect memory capacity of Docker container.\n'
               'Do you have permission to run docker?')
         return 1
-    if mem_total < 8000:
+    if not (opts.help or opts.version or '--reports-only' in unknown_args) and mem_total < 8000:
         print('Warning: <8GB of RAM is available within your Docker '
-              'environment.\nSome parts of fMRIprep may fail to complete.')
-        resp = 'N'
-        try:
-            resp = input('Continue anyway? [y/N]')
-        except KeyboardInterrupt:
-            print()
-            return 1
-        if resp not in ('y', 'Y', ''):
-            return 0
+              'environment.\nSome parts of fMRIPrep may fail to complete.')
+        if '--mem_mb' not in unknown_args:
+            resp = 'N'
+            try:
+                resp = input('Continue anyway? [y/N]')
+            except KeyboardInterrupt:
+                print()
+                return 1
+            if resp not in ('y', 'Y', ''):
+                return 0
 
     command = ['docker', 'run', '--rm', '-it']
 
@@ -326,11 +358,15 @@ def main():
     for pkg in ('fmriprep', 'niworkflows', 'nipype'):
         repo_path = getattr(opts, 'patch_' + pkg)
         if repo_path is not None:
-            # nipype is now a submodule of niworkflows
-            if pkg == 'nipype':
-                pkg = 'niworkflows/nipype'
             command.extend(['-v',
                             '{}:{}/{}:ro'.format(repo_path, PKG_PATH, pkg)])
+
+    if opts.env:
+        for envvar in opts.env:
+            command.extend(['-e', '%s=%s' % tuple(envvar)])
+
+    if opts.user:
+        command.extend(['-u', opts.user])
 
     if opts.fs_license_file:
         command.extend([
@@ -354,10 +390,16 @@ def main():
         command.extend(['-v', ':'.join((opts.config,
                                         '/root/.nipype/nipype.cfg', 'ro'))])
 
-    if opts.output_grid_reference:
-        target = '/imports/' + os.path.basename(opts.output_grid_reference)
-        command.extend(['-v', ':'.join((opts.output_grid_reference, target, 'ro'))])
-        unknown_args.extend(['--output-grid-reference', target])
+    template_target = opts.template_resampling_grid or opts.output_grid_reference
+    if template_target is not None:
+        if opts.output_grid_reference is not None:
+            warn('Option --output-grid-reference is deprecated, please use '
+                 '--template-resampling-grid', DeprecationWarning)
+        if template_target not in ['native', '2mm' '1mm']:
+            target = '/imports/' + os.path.basename(template_target)
+            command.extend(['-v', ':'.join((os.path.abspath(
+                template_target), target, 'ro'))])
+        unknown_args.extend(['--template-resampling-grid', template_target])
 
     if opts.shell:
         command.append('--entrypoint=bash')
@@ -384,7 +426,7 @@ def main():
     print("RUNNING: " + ' '.join(command))
     ret = subprocess.run(command)
     if ret.returncode:
-        print("fmriprep: Please report errors to {}".format(__bugreports__))
+        print("fMRIPrep: Please report errors to {}".format(__bugreports__))
     return ret.returncode
 
 

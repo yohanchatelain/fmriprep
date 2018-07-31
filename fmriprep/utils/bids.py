@@ -151,7 +151,7 @@ def collect_data(dataset, participant_label, task=None):
 
 
     """
-    layout = BIDSLayout(dataset)
+    layout = BIDSLayout(dataset, exclude=['derivatives', 'sourcedata'])
     queries = {
         'fmap': {'subject': participant_label, 'modality': 'fmap',
                  'extensions': ['nii', 'nii.gz']},
@@ -159,9 +159,13 @@ def collect_data(dataset, participant_label, task=None):
                  'extensions': ['nii', 'nii.gz']},
         'sbref': {'subject': participant_label, 'modality': 'func', 'type': 'sbref',
                   'extensions': ['nii', 'nii.gz']},
-        't2w': {'subject': participant_label, 'type': 'T2w',
+        'flair': {'subject': participant_label, 'modality': 'anat', 'type': 'FLAIR',
+                  'extensions': ['nii', 'nii.gz']},
+        't2w': {'subject': participant_label, 'modality': 'anat', 'type': 'T2w',
                 'extensions': ['nii', 'nii.gz']},
-        't1w': {'subject': participant_label, 'type': 'T1w',
+        't1w': {'subject': participant_label, 'modality': 'anat', 'type': 'T1w',
+                'extensions': ['nii', 'nii.gz']},
+        'roi': {'subject': participant_label, 'modality': 'anat', 'type': 'roi',
                 'extensions': ['nii', 'nii.gz']},
     }
 
@@ -171,16 +175,21 @@ def collect_data(dataset, participant_label, task=None):
     subj_data = {modality: [x.filename for x in layout.get(**query)]
                  for modality, query in queries.items()}
 
-    def _run_num(x):
-        return re.search("task-\\w*_run-\\d*", x).group(0)
+    def _grp_echos(x):
+        if '_echo-' not in x:
+            return x
+        echo = re.search("_echo-\\d*", x).group(0)
+        return x.replace(echo, "_echo-?")
 
     if subj_data["bold"] is not []:
-        all_runs = subj_data["bold"]
-        try:
-            runs = [list(run) for _, run in groupby(all_runs, key=_run_num)]
-            runs = list(map(lambda x: x[0] if len(x) == 1 else x, runs))
-            subj_data.update({"bold": runs})
-        except AttributeError:
-            pass
+        bold_sess = subj_data["bold"]
+
+        if any(['_echo-' in bold for bold in bold_sess]):
+            ses_uids = [list(bold) for _, bold in groupby(bold_sess, key=_grp_echos)]
+            ses_uids = [x[0] if len(x) == 1 else x for x in ses_uids]
+        else:
+            ses_uids = bold_sess
+
+    subj_data.update({"bold": ses_uids})
 
     return subj_data, layout

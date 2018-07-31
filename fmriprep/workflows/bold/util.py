@@ -10,12 +10,13 @@ Utility workflows
 .. autofunction:: init_skullstrip_bold_wf
 
 """
-from niworkflows.nipype.pipeline import engine as pe
-from niworkflows.nipype.interfaces import utility as niu, fsl, afni, ants
+from nipype.pipeline import engine as pe
+from nipype.interfaces import utility as niu, fsl, afni, ants
 from niworkflows.interfaces.utils import CopyXForm
 from niworkflows.interfaces.masks import SimpleShowMaskRPT
 from niworkflows.interfaces.registration import EstimateReferenceImage
 
+from ...engine import Workflow
 from ...interfaces.nilearn import MaskEPI
 from ...interfaces import ValidateImage
 
@@ -23,7 +24,8 @@ from ...interfaces import ValidateImage
 DEFAULT_MEMORY_MIN_GB = 0.01
 
 
-def init_bold_reference_wf(omp_nthreads, bold_file=None, name='bold_reference_wf'):
+def init_bold_reference_wf(omp_nthreads, bold_file=None, name='bold_reference_wf',
+                           gen_report=False, enhance_t2=False):
     """
     This workflow generates reference BOLD images for a series
 
@@ -46,6 +48,11 @@ def init_bold_reference_wf(omp_nthreads, bold_file=None, name='bold_reference_wf
             Maximum number of threads an individual process may use
         name : str
             Name of workflow (default: ``bold_reference_wf``)
+        gen_report : bool
+            Whether a mask report node should be appended in the end
+        enhance_t2 : bool
+            Perform logarithmic transform of input BOLD image to improve contrast
+            before calculating the preliminary mask
 
     **Inputs**
 
@@ -75,12 +82,16 @@ def init_bold_reference_wf(omp_nthreads, bold_file=None, name='bold_reference_wf
         * :py:func:`~fmriprep.workflows.bold.util.init_enhance_and_skullstrip_wf`
 
     """
-    workflow = pe.Workflow(name=name)
-
+    workflow = Workflow(name=name)
+    workflow.__desc__ = """\
+First, a reference volume and its skull-stripped version were generated
+using a custom methodology of *fMRIPrep*.
+"""
     inputnode = pe.Node(niu.IdentityInterface(fields=['bold_file']), name='inputnode')
     outputnode = pe.Node(
         niu.IdentityInterface(fields=['bold_file', 'raw_ref_image', 'skip_vols', 'ref_image',
-                                      'ref_image_brain', 'bold_mask', 'validation_report']),
+                                      'ref_image_brain', 'bold_mask', 'validation_report',
+                                      'mask_report']),
         name='outputnode')
 
     # Simplify manually setting input image
@@ -107,11 +118,20 @@ def init_bold_reference_wf(omp_nthreads, bold_file=None, name='bold_reference_wf
             ('outputnode.skull_stripped_file', 'ref_image_brain')]),
     ])
 
+    if gen_report:
+        mask_reportlet = pe.Node(SimpleShowMaskRPT(), name='mask_reportlet')
+        workflow.connect([
+            (enhance_and_skullstrip_bold_wf, mask_reportlet, [
+                ('outputnode.bias_corrected_file', 'background_file'),
+                ('outputnode.mask_file', 'mask_file'),
+            ]),
+        ])
+
     return workflow
 
 
 def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
-                                        omp_nthreads=1):
+                                        omp_nthreads=1, enhance_t2=False):
     """
     This workflow takes in a :abbr:`BOLD (blood-oxygen level-dependant)`
     :abbr:`fMRI (functional MRI)` average/summary (e.g. a reference image
@@ -146,14 +166,23 @@ def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
         from fmriprep.workflows.bold.util import init_enhance_and_skullstrip_bold_wf
         wf = init_enhance_and_skullstrip_bold_wf(omp_nthreads=1)
 
+    **Parameters**
+        name : str
+            Name of workflow (default: ``enhance_and_skullstrip_bold_wf``)
+        omp_nthreads : int
+            number of threads available to parallel nodes
+        enhance_t2 : bool
+            perform logarithmic transform of input BOLD image to improve contrast
+            before calculating the preliminary mask
 
-    Inputs
+
+    **Inputs**
 
         in_file
             BOLD image (single volume)
 
 
-    Outputs
+    **Outputs**
 
         bias_corrected_file
             the ``in_file`` after `N4BiasFieldCorrection`_
@@ -166,15 +195,15 @@ def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
 
     .. _N4BiasFieldCorrection: https://hdl.handle.net/10380/3053
     """
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
     inputnode = pe.Node(niu.IdentityInterface(fields=['in_file']),
                         name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(fields=[
         'mask_file', 'skull_stripped_file', 'bias_corrected_file']), name='outputnode')
 
-    # Create a rough mask to avoid N4 internal's Otsu mask
-    n4_mask = pe.Node(MaskEPI(upper_cutoff=0.95, opening=1, no_sanitize=True),
-                      name='n4_mask')
+    # Create a loose mask to avoid N4 internal's Otsu mask
+    n4_mask = pe.Node(MaskEPI(upper_cutoff=0.75, enhance_t2=enhance_t2, opening=1,
+                      no_sanitize=True), name='n4_mask')
 
     # Run N4 normally, force num_threads=1 for stability (images are small, no need for >1)
     n4_correct = pe.Node(ants.N4BiasFieldCorrection(dimension=3, copy_header=True),
@@ -268,7 +297,7 @@ def init_skullstrip_bold_wf(name='skullstrip_bold_wf'):
             reportlet for the skull-stripping
 
     """
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
     inputnode = pe.Node(niu.IdentityInterface(fields=['in_file']),
                         name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(fields=['mask_file',

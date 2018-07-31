@@ -7,7 +7,6 @@ Anatomical reference preprocessing workflows
 
 .. autofunction:: init_anat_preproc_wf
 .. autofunction:: init_skullstrip_ants_wf
-.. autofunction:: init_refine_brainmask_wf
 
 Surface preprocessing
 +++++++++++++++++++++
@@ -23,15 +22,18 @@ structural images.
 
 import os.path as op
 
-from niworkflows.nipype.pipeline import engine as pe
-from niworkflows.nipype.interfaces import (
+from pkg_resources import resource_filename as pkgr
+
+from nipype.pipeline import engine as pe
+from nipype.interfaces import (
     io as nio,
     utility as niu,
     c3,
     freesurfer as fs,
-    fsl
+    fsl,
+    image,
 )
-from niworkflows.nipype.interfaces.ants import BrainExtraction
+from nipype.interfaces.ants import BrainExtraction, N4BiasFieldCorrection
 
 from niworkflows.interfaces.registration import RobustMNINormalizationRPT
 import niworkflows.data as nid
@@ -40,9 +42,10 @@ from niworkflows.interfaces.masks import ROIsPlot
 from niworkflows.interfaces.segmentation import ReconAllRPT
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
 
+from ..engine import Workflow
 from ..interfaces import (
-    DerivativesDataSink, StructuralReference, MakeMidthickness, FSInjectBrainExtracted,
-    FSDetectInputs, NormalizeSurf, GiftiNameSource, TemplateDimensions, Conform, Reorient,
+    DerivativesDataSink, MakeMidthickness, FSInjectBrainExtracted,
+    FSDetectInputs, NormalizeSurf, GiftiNameSource, TemplateDimensions, Conform,
     ConcatAffines, RefineBrainMask,
 )
 from ..utils.misc import fix_multi_T1w_source_name, add_suffix
@@ -98,7 +101,7 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
               - fsnative
               - fsaverage (or other pre-existing FreeSurfer templates)
         template : str
-            Name of template targeted by `'template'` output space
+            Name of template targeted by ``template`` output space
         debug : bool
             Enable debugging outputs
         freesurfer : bool
@@ -124,6 +127,8 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
             List of T1-weighted structural images
         t2w
             List of T2-weighted structural images
+        flair
+            List of FLAIR images
         subjects_dir
             FreeSurfer SUBJECTS_DIR
 
@@ -171,10 +176,42 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
 
     """
 
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
+    workflow.__postdesc__ = """\
+Spatial normalization to the ICBM 152 Nonlinear Asymmetrical
+template version 2009c [@mni, RRID:SCR_008796] was performed
+through nonlinear registration with `antsRegistration`
+[ANTs {ants_ver}, RRID:SCR_004757, @ants], using
+brain-extracted versions of both T1w volume and template.
+Brain tissue segmentation of cerebrospinal fluid (CSF),
+white-matter (WM) and gray-matter (GM) was performed on
+the brain-extracted T1w using `fast` [FSL {fsl_ver}, RRID:SCR_002823,
+@fsl_fast].
+""".format(
+        ants_ver=BrainExtraction().version or '<ver>',
+        fsl_ver=fsl.FAST().version or '<ver>',
+    )
+    desc = """Anatomical data preprocessing
+
+: """
+    desc += """\
+A total of {num_t1w} T1-weighted (T1w) images were found within the input
+BIDS dataset.
+All of them were corrected for intensity non-uniformity (INU)
+using `N4BiasFieldCorrection` [@n4, ANTs {ants_ver}].
+""" if num_t1w > 1 else """\
+The T1-weighted (T1w) image was corrected for intensity non-uniformity (INU)
+using `N4BiasFieldCorrection` [@n4, ANTs {ants_ver}],
+and used as T1w-reference throughout the workflow.
+"""
+
+    workflow.__desc__ = desc.format(
+        num_t1w=num_t1w,
+        ants_ver=BrainExtraction().version or '<ver>'
+    )
 
     inputnode = pe.Node(
-        niu.IdentityInterface(fields=['t1w', 't2w', 'subjects_dir', 'subject_id']),
+        niu.IdentityInterface(fields=['t1w', 't2w', 'roi', 'flair', 'subjects_dir', 'subject_id']),
         name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['t1_preproc', 't1_brain', 't1_mask', 't1_seg', 't1_tpms',
@@ -182,7 +219,7 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
                 'mni_mask', 'mni_seg', 'mni_tpms',
                 'template_transforms',
                 'subjects_dir', 'subject_id', 't1_2_fsnative_forward_transform',
-                't1_2_fsnative_reverse_transform', 'surfaces']),
+                't1_2_fsnative_reverse_transform', 'surfaces', 't1_aseg', 't1_aparc']),
         name='outputnode')
 
     buffernode = pe.Node(niu.IdentityInterface(
@@ -216,6 +253,7 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
         workflow.connect([
             (inputnode, surface_recon_wf, [
                 ('t2w', 'inputnode.t2w'),
+                ('flair', 'inputnode.flair'),
                 ('subjects_dir', 'inputnode.subjects_dir'),
                 ('subject_id', 'inputnode.subject_id')]),
             (anat_template_wf, surface_recon_wf, [('outputnode.t1_template', 'inputnode.t1w')]),
@@ -232,7 +270,9 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
                 ('outputnode.subject_id', 'subject_id'),
                 ('outputnode.t1_2_fsnative_forward_transform', 't1_2_fsnative_forward_transform'),
                 ('outputnode.t1_2_fsnative_reverse_transform', 't1_2_fsnative_reverse_transform'),
-                ('outputnode.surfaces', 'surfaces')]),
+                ('outputnode.surfaces', 'surfaces'),
+                ('outputnode.out_aseg', 't1_aseg'),
+                ('outputnode.out_aparc', 't1_aparc')]),
             (applyrefined, buffernode, [('out_file', 't1_brain')]),
             (surface_recon_wf, buffernode, [
                 ('outputnode.out_brainmask', 't1_mask')]),
@@ -240,8 +280,8 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
     else:
         workflow.connect([
             (skullstrip_ants_wf, buffernode, [
-              ('outputnode.out_file', 't1_brain'),
-              ('outputnode.out_mask', 't1_mask')]),
+                ('outputnode.out_file', 't1_brain'),
+                ('outputnode.out_mask', 't1_mask')]),
         ])
 
     # 5. Segmentation
@@ -269,13 +309,13 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
     # Resample the brain mask and the tissue probability maps into mni space
     mni_mask = pe.Node(
         ApplyTransforms(dimension=3, default_value=0, float=True,
-                        interpolation='NearestNeighbor'),
+                        interpolation='MultiLabel'),
         name='mni_mask'
     )
 
     mni_seg = pe.Node(
         ApplyTransforms(dimension=3, default_value=0, float=True,
-                        interpolation='NearestNeighbor'),
+                        interpolation='MultiLabel'),
         name='mni_seg'
     )
 
@@ -296,6 +336,7 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
         mni_tpms.inputs.reference_image = ref_img
 
         workflow.connect([
+            (inputnode, t1_2_mni, [('roi', 'lesion_mask')]),
             (skullstrip_ants_wf, t1_2_mni, [('outputnode.bias_corrected', 'moving_image')]),
             (buffernode, t1_2_mni, [('t1_mask', 'moving_mask')]),
             (buffernode, mni_mask, [('t1_mask', 'input_image')]),
@@ -334,7 +375,7 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
     if freesurfer:
         workflow.connect([
             (surface_recon_wf, anat_reports_wf, [
-                ('outputnode.out_report', 'inputnode.recon_report')])
+                ('outputnode.out_report', 'inputnode.recon_report')]),
         ])
     if 'template' in output_spaces:
         workflow.connect([
@@ -366,6 +407,14 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
         ]),
     ])
 
+    if freesurfer:
+        workflow.connect([
+            (surface_recon_wf, anat_derivatives_wf, [
+                ('outputnode.out_aseg', 'inputnode.t1_fs_aseg'),
+                ('outputnode.out_aparc', 'inputnode.t1_fs_aparc'),
+            ]),
+        ])
+
     return workflow
 
 
@@ -389,6 +438,8 @@ def init_anat_template_wf(longitudinal, omp_nthreads, num_t1w, name='anat_templa
             (may increase runtime)
         omp_nthreads : int
             Maximum number of threads an individual process may use
+        num_t1w : int
+            Number of T1w images
         name : str, optional
             Workflow name (default: anat_template_wf)
 
@@ -409,7 +460,14 @@ def init_anat_template_wf(longitudinal, omp_nthreads, num_t1w, name='anat_templa
             Conformation report
     """
 
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
+
+    if num_t1w > 1:
+        workflow.__desc__ = """\
+A T1w-reference map was computed after registration of
+{num_t1w} T1w images (after INU-correction) using
+`mri_robust_template` [FreeSurfer {fs_ver}, @freesurfer].
+""".format(num_t1w=num_t1w, fs_ver=fs.Info().looseversion() or '<ver>')
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['t1w']), name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
@@ -420,22 +478,53 @@ def init_anat_template_wf(longitudinal, omp_nthreads, num_t1w, name='anat_templa
     t1_template_dimensions = pe.Node(TemplateDimensions(), name='t1_template_dimensions')
     t1_conform = pe.MapNode(Conform(), iterfield='in_file', name='t1_conform')
 
-    # 1. Align and merge if several T1w images are provided
+    workflow.connect([
+        (inputnode, t1_template_dimensions, [('t1w', 't1w_list')]),
+        (t1_template_dimensions, t1_conform, [
+            ('t1w_valid_list', 'in_file'),
+            ('target_zooms', 'target_zooms'),
+            ('target_shape', 'target_shape')]),
+        (t1_template_dimensions, outputnode, [('out_report', 'out_report'),
+                                              ('t1w_valid_list', 't1w_valid_list')]),
+    ])
+
+    if num_t1w == 1:
+        def _get_first(in_list):
+            if isinstance(in_list, (list, tuple)):
+                return in_list[0]
+            return in_list
+
+        outputnode.inputs.template_transforms = [pkgr('fmriprep', 'data/itkIdentityTransform.txt')]
+
+        workflow.connect([
+            (t1_conform, outputnode, [(('out_file', _get_first), 't1_template')]),
+        ])
+
+        return workflow
+
+    # 1. Template (only if several T1w images)
+    # 1a. Correct for bias field: the bias field is an additive factor
+    #     in log-transformed intensity units. Therefore, it is not a linear
+    #     combination of fields and N4 fails with merged images.
+    # 1b. Align and merge if several T1w images are provided
+    n4_correct = pe.MapNode(
+        N4BiasFieldCorrection(dimension=3, copy_header=True),
+        iterfield='input_image', name='n4_correct',
+        n_procs=1)  # n_procs=1 for reproducibility
     t1_merge = pe.Node(
-        # StructuralReference is fs.RobustTemplate if > 1 volume, copying otherwise
-        StructuralReference(auto_detect_sensitivity=True,
-                            initial_timepoint=1,      # For deterministic behavior
-                            intensity_scaling=True,   # 7-DOF (rigid + intensity)
-                            subsample_threshold=200,
-                            fixed_timepoint=not longitudinal,
-                            no_iteration=not longitudinal,
-                            transform_outputs=True,
-                            ),
+        fs.RobustTemplate(auto_detect_sensitivity=True,
+                          initial_timepoint=1,      # For deterministic behavior
+                          intensity_scaling=True,   # 7-DOF (rigid + intensity)
+                          subsample_threshold=200,
+                          fixed_timepoint=not longitudinal,
+                          no_iteration=not longitudinal,
+                          transform_outputs=True,
+                          ),
         mem_gb=2 * num_t1w - 1,
         name='t1_merge')
 
-    # Reorient template to RAS, if needed (mri_robust_template may set to LIA)
-    t1_reorient = pe.Node(Reorient(), name='t1_reorient')
+    # 2. Reorient template to RAS, if needed (mri_robust_template may set to LIA)
+    t1_reorient = pe.Node(image.Reorient(), name='t1_reorient')
 
     lta_to_fsl = pe.MapNode(fs.utils.LTAConvert(out_fsl=True), iterfield=['in_lta'],
                             name='lta_to_fsl')
@@ -447,19 +536,15 @@ def init_anat_template_wf(longitudinal, omp_nthreads, num_t1w, name='anat_templa
     fsl_to_itk = pe.MapNode(c3.C3dAffineTool(fsl2ras=True, itk_transform=True),
                             iterfield=['transform_file', 'source_file'], name='fsl_to_itk')
 
-    def set_threads(in_list, maximum):
+    def _set_threads(in_list, maximum):
         return min(len(in_list), maximum)
 
     workflow.connect([
-        (inputnode, t1_template_dimensions, [('t1w', 't1w_list')]),
-        (t1_template_dimensions, t1_conform, [
-            ('t1w_valid_list', 'in_file'),
-            ('target_zooms', 'target_zooms'),
-            ('target_shape', 'target_shape')]),
+        (t1_conform, n4_correct, [('out_file', 'input_image')]),
         (t1_conform, t1_merge, [
-            ('out_file', 'in_files'),
-            (('out_file', set_threads, omp_nthreads), 'num_threads'),
+            (('out_file', _set_threads, omp_nthreads), 'num_threads'),
             (('out_file', add_suffix, '_template'), 'out_file')]),
+        (n4_correct, t1_merge, [('output_image', 'in_files')]),
         (t1_merge, t1_reorient, [('out_file', 'in_file')]),
         # Combine orientation and template transforms
         (t1_merge, lta_to_fsl, [('transform_outputs', 'in_lta')]),
@@ -470,8 +555,6 @@ def init_anat_template_wf(longitudinal, omp_nthreads, num_t1w, name='anat_templa
         (t1_reorient, fsl_to_itk, [('out_file', 'reference_file')]),
         (concat_affines, fsl_to_itk, [('out_mat', 'transform_file')]),
         # Output
-        (t1_template_dimensions, outputnode, [('out_report', 'out_report'),
-                                              ('t1w_valid_list', 't1w_valid_list')]),
         (t1_reorient, outputnode, [('out_file', 't1_template')]),
         (fsl_to_itk, outputnode, [('itk_transform', 'template_transforms')]),
     ])
@@ -516,26 +599,31 @@ def init_skullstrip_ants_wf(skull_strip_template, debug, omp_nthreads, name='sku
             Reportlet visualizing quality of skull-stripping
 
     """
+    from niworkflows.data.getters import get_dataset
+
+    if skull_strip_template not in ['OASIS', 'NKI']:
+        raise ValueError("Unknown skull-stripping template; select from {OASIS, NKI}")
+
+    workflow = Workflow(name=name)
+    workflow.__desc__ = """\
+The T1w-reference was then skull-stripped using `antsBrainExtraction.sh`
+(ANTs {ants_ver}), using {skullstrip_tpl} as target template.
+""".format(ants_ver=BrainExtraction().version or '<ver>', skullstrip_tpl=skull_strip_template)
+
+    # Grabbing the appropriate template elements
+    template_dir = get_dataset('ants_%s_template_ras' % skull_strip_template.lower())
+    brain_probability_mask = op.join(
+        template_dir, 'T_template0_BrainCerebellumProbabilityMask.nii.gz')
+
+    # TODO: normalize these names so this is not necessary
     if skull_strip_template == 'OASIS':
-        from niworkflows.data import get_ants_oasis_template_ras
-        template_dir = get_ants_oasis_template_ras()
         brain_template = op.join(template_dir, 'T_template0.nii.gz')
-        brain_probability_mask = op.join(
-            template_dir, 'T_template0_BrainCerebellumProbabilityMask.nii.gz')
         extraction_registration_mask = op.join(
             template_dir, 'T_template0_BrainCerebellumRegistrationMask.nii.gz')
     elif skull_strip_template == 'NKI':
-        from niworkflows.data.getters import get_ants_nki_template_ras
-        template_dir = get_ants_nki_template_ras()
         brain_template = op.join(template_dir, 'T_template.nii.gz')
-        brain_probability_mask = op.join(
-            template_dir, 'T_template_BrainCerebellumProbabilityMask.nii.gz')
         extraction_registration_mask = op.join(
             template_dir, 'T_template_BrainCerebellumExtractionMask.nii.gz')
-    else:
-        raise ValueError("Unknown skull-stripping template; select from {OASIS, NKI}")
-
-    workflow = pe.Workflow(name=name)
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['in_file']),
                         name='inputnode')
@@ -581,6 +669,37 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
             -noskullstrip
 
     The second phase imports an externally computed skull-stripping mask.
+    This workflow refines the external brainmask using the internal mask
+    implicit the the FreeSurfer's ``aseg.mgz`` segmentation,
+    to reconcile ANTs' and FreeSurfer's brain masks.
+
+    First, the ``aseg.mgz`` mask from FreeSurfer is refined in two
+    steps, using binary morphological operations:
+
+      1. With a binary closing operation the sulci are included
+         into the mask. This results in a smoother brain mask
+         that does not exclude deep, wide sulci.
+
+      2. Fill any holes (typically, there could be a hole next to
+         the pineal gland and the corpora quadrigemina if the great
+         cerebral brain is segmented out).
+
+    Second, the brain mask is grown, including pixels that have a high likelihood
+    to the GM tissue distribution:
+
+      3. Dilate and substract the brain mask, defining the region to search for candidate
+         pixels that likely belong to cortical GM.
+
+      4. Pixels found in the search region that are labeled as GM by ANTs
+         (during ``antsBrainExtraction.sh``) are directly added to the new mask.
+
+      5. Otherwise, estimate GM tissue parameters locally in  patches of ``ww`` size,
+         and test the likelihood of the pixel to belong in the GM distribution.
+
+    This procedure is inspired on mindboggle's solution to the problem:
+    https://github.com/nipy/mindboggle/blob/7f91faaa7664d820fe12ccc52ebaf21d679795e2/mindboggle/guts/segment.py#L1660
+
+
     The final phase resumes reconstruction, using the T2w image to assist
     in finding the pial surface, if available.
     See :py:func:`~fmriprep.workflows.anatomical.init_autorecon_resume_wf` for details.
@@ -613,6 +732,8 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
             List of T1-weighted structural images
         t2w
             List of T2-weighted structural images (only first used)
+        flair
+            List of FLAIR images
         skullstripped_t1
             Skull-stripped T1-weighted image (or mask of image)
         ants_segs
@@ -639,6 +760,10 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
             midthickness (or graymid) surface, and inflated surfaces
         out_brainmask
             Refined brainmask, derived from FreeSurfer's ``aseg`` volume
+        out_aseg
+            FreeSurfer's aseg segmentation, in native T1w space
+        out_aparc
+            FreeSurfer's aparc+aseg segmentation, in native T1w space
         out_report
             Reportlet visualizing quality of surface alignment
 
@@ -648,17 +773,24 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         * :py:func:`~fmriprep.workflows.anatomical.init_gifti_surface_wf`
     """
 
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
+    workflow.__desc__ = """\
+Brain surfaces were reconstructed using `recon-all` [FreeSurfer {fs_ver},
+RRID:SCR_001847, @fs_reconall], and the brain mask estimated
+previously was refined with a custom variation of the method to reconcile
+ANTs-derived and FreeSurfer-derived segmentations of the cortical
+gray-matter of Mindboggle [RRID:SCR_002438, @mindboggle].
+""".format(fs_ver=fs.Info().looseversion() or '<ver>')
 
     inputnode = pe.Node(
         niu.IdentityInterface(
-            fields=['t1w', 't2w', 'skullstripped_t1', 'corrected_t1', 'ants_segs',
+            fields=['t1w', 't2w', 'flair', 'skullstripped_t1', 'corrected_t1', 'ants_segs',
                     'subjects_dir', 'subject_id']), name='inputnode')
     outputnode = pe.Node(
         niu.IdentityInterface(
             fields=['subjects_dir', 'subject_id', 't1_2_fsnative_forward_transform',
                     't1_2_fsnative_reverse_transform', 'surfaces', 'out_brainmask',
-                    'out_report']),
+                    'out_aseg', 'out_aparc', 'out_report']),
         name='outputnode')
 
     recon_config = pe.Node(FSDetectInputs(hires_enabled=hires), name='recon_config')
@@ -677,12 +809,16 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
 
     autorecon_resume_wf = init_autorecon_resume_wf(omp_nthreads=omp_nthreads)
     gifti_surface_wf = init_gifti_surface_wf()
-    refine_brainmask_wf = init_refine_brainmask_wf()
+
+    aseg_to_native_wf = init_segs_to_native_wf()
+    aparc_to_native_wf = init_segs_to_native_wf(segmentation='aparc_aseg')
+    refine = pe.Node(RefineBrainMask(), name='refine')
 
     workflow.connect([
         # Configuration
         (inputnode, recon_config, [('t1w', 't1w_list'),
-                                   ('t2w', 't2w_list')]),
+                                   ('t2w', 't2w_list'),
+                                   ('flair', 'flair_list')]),
         # Passing subjects_dir / subject_id enforces serial order
         (inputnode, autorecon1, [('subjects_dir', 'subjects_dir'),
                                  ('subject_id', 'subject_id')]),
@@ -696,11 +832,13 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         # Reconstruction phases
         (inputnode, autorecon1, [('t1w', 'T1_files')]),
         (recon_config, autorecon1, [('t2w', 'T2_file'),
+                                    ('flair', 'FLAIR_file'),
                                     ('hires', 'hires'),
                                     # First run only (recon-all saves expert options)
                                     ('mris_inflate', 'mris_inflate')]),
         (inputnode, skull_strip_extern, [('skullstripped_t1', 'in_brain')]),
-        (recon_config, autorecon_resume_wf, [('use_t2w', 'inputnode.use_T2')]),
+        (recon_config, autorecon_resume_wf, [('use_t2w', 'inputnode.use_T2'),
+                                             ('use_flair', 'inputnode.use_FLAIR')]),
         # Construct transform from FreeSurfer conformed image to FMRIPREP
         # reoriented image
         (inputnode, fsnative_2_t1_xfm, [('t1w', 'target_file')]),
@@ -709,11 +847,18 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
             ('out_reg_file', 'inputnode.t1_2_fsnative_reverse_transform')]),
         (fsnative_2_t1_xfm, t1_2_fsnative_xfm, [('out_reg_file', 'in_lta')]),
         # Refine ANTs mask, deriving new mask from FS' aseg
-        (inputnode, refine_brainmask_wf, [('corrected_t1', 'inputnode.in_file'),
-                                          ('ants_segs', 'inputnode.ants_segs')]),
-        (autorecon_resume_wf, refine_brainmask_wf, [
+        (inputnode, refine, [('corrected_t1', 'in_anat'),
+                             ('ants_segs', 'in_ants')]),
+        (inputnode, aseg_to_native_wf, [('corrected_t1', 'inputnode.in_file')]),
+        (autorecon_resume_wf, aseg_to_native_wf, [
             ('outputnode.subjects_dir', 'inputnode.subjects_dir'),
             ('outputnode.subject_id', 'inputnode.subject_id')]),
+        (inputnode, aparc_to_native_wf, [('corrected_t1', 'inputnode.in_file')]),
+        (autorecon_resume_wf, aparc_to_native_wf, [
+            ('outputnode.subjects_dir', 'inputnode.subjects_dir'),
+            ('outputnode.subject_id', 'inputnode.subject_id')]),
+        (aseg_to_native_wf, refine, [('outputnode.out_file', 'in_aseg')]),
+
         # Output
         (autorecon_resume_wf, outputnode, [('outputnode.subjects_dir', 'subjects_dir'),
                                            ('outputnode.subject_id', 'subject_id'),
@@ -721,7 +866,9 @@ def init_surface_recon_wf(omp_nthreads, hires, name='surface_recon_wf'):
         (gifti_surface_wf, outputnode, [('outputnode.surfaces', 'surfaces')]),
         (t1_2_fsnative_xfm, outputnode, [('out_lta', 't1_2_fsnative_forward_transform')]),
         (fsnative_2_t1_xfm, outputnode, [('out_reg_file', 't1_2_fsnative_reverse_transform')]),
-        (refine_brainmask_wf, outputnode, [('outputnode.out_file', 'out_brainmask')]),
+        (refine, outputnode, [('out_file', 'out_brainmask')]),
+        (aseg_to_native_wf, outputnode, [('outputnode.out_file', 'out_aseg')]),
+        (aparc_to_native_wf, outputnode, [('outputnode.out_file', 'out_aparc')]),
     ])
 
     return workflow
@@ -772,7 +919,9 @@ def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
         subject_id
             FreeSurfer subject ID
         use_T2
-            Refine pial surface using T2w images
+            Refine pial surface using T2w image
+        use_FLAIR
+            Refine pial surface using FLAIR image
 
     **Outputs**
 
@@ -784,11 +933,11 @@ def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
             Reportlet visualizing quality of surface alignment
 
     """
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
 
     inputnode = pe.Node(
         niu.IdentityInterface(
-            fields=['subjects_dir', 'subject_id', 'use_T2']),
+            fields=['subjects_dir', 'subject_id', 'use_T2', 'use_FLAIR']),
         name='inputnode')
 
     outputnode = pe.Node(
@@ -831,7 +980,8 @@ def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
         return vals.pop()
 
     workflow.connect([
-        (inputnode, autorecon3, [('use_T2', 'use_T2')]),
+        (inputnode, autorecon3, [('use_T2', 'use_T2'),
+                                 ('use_FLAIR', 'use_FLAIR')]),
         (inputnode, autorecon2_vol, [('subjects_dir', 'subjects_dir'),
                                      ('subject_id', 'subject_id')]),
         (autorecon2_vol, autorecon_surfs, [('subjects_dir', 'subjects_dir'),
@@ -883,7 +1033,7 @@ def init_gifti_surface_wf(name='gifti_surface_wf'):
             midthickness (or graymid) surface, and inflated surfaces
 
     """
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
 
     inputnode = pe.Node(niu.IdentityInterface(['subjects_dir', 'subject_id',
                                                't1_2_fsnative_reverse_transform']),
@@ -928,52 +1078,27 @@ def init_gifti_surface_wf(name='gifti_surface_wf'):
     return workflow
 
 
-def init_refine_brainmask_wf(name='refine_brainmask'):
+def init_segs_to_native_wf(name='segs_to_native', segmentation='aseg'):
     """
-    This workflow refines the brainmask implicit in the FreeSurfer's ``aseg.mgz``
-    brain tissue segmentation to reconcile ANTs' and FreeSurfer's brain masks.
-
-    First, the ``aseg.mgz`` mask from FreeSurfer is refined in two
-    steps, using binary morphological operations:
-
-      1. With a binary closing operation the sulci are included
-         into the mask. This results in a smoother brain mask
-         that does not exclude deep, wide sulci.
-
-      2. Fill any holes (typically, there could be a hole next to
-         the pineal gland and the corpora quadrigemina if the great
-         cerebral brain is segmented out).
-
-    Second, the brain mask is grown, including pixels that have a high likelihood
-    to the GM tissue distribution:
-
-      3. Dilate and substract the brain mask, defining the region to search for candidate
-         pixels that likely belong to cortical GM.
-
-      4. Pixels found in the search region that are labeled as GM by ANTs
-         (during ``antsBrainExtraction.sh``) are directly added to the new mask.
-
-      5. Otherwise, estimate GM tissue parameters locally in  patches of ``ww`` size,
-         and test the likelihood of the pixel to belong in the GM distribution.
-
-
-    This procedure is inspired on mindboggle's solution to the problem:
-    https://github.com/nipy/mindboggle/blob/master/mindboggle/guts/segment.py#L1660
+    Get a segmentation from FreeSurfer conformed space into native T1w space
 
 
     .. workflow::
         :graph2use: orig
         :simple_form: yes
 
-        from fmriprep.workflows.anatomical import init_refine_brainmask_wf
-        wf = init_refine_brainmask_wf()
+        from fmriprep.workflows.anatomical import init_segs_to_native_wf
+        wf = init_segs_to_native_wf()
+
+
+    **Parameters**
+        segmentation
+            The name of a segmentation ('aseg' or 'aparc_aseg' or 'wmparc')
 
     **Inputs**
 
         in_file
             Anatomical, merged T1w image after INU correction
-        ants_segs
-            Brain tissue segmentation from ANTS ``antsBrainExtraction.sh``
         subjects_dir
             FreeSurfer SUBJECTS_DIR
         subject_id
@@ -983,33 +1108,37 @@ def init_refine_brainmask_wf(name='refine_brainmask'):
     **Outputs**
 
         out_file
-            New, refined brain mask
-
+            The selected segmentation, after resampling in native space
     """
-    workflow = pe.Workflow(name=name)
-
+    workflow = Workflow(name='%s_%s' % (name, segmentation))
     inputnode = pe.Node(niu.IdentityInterface([
-        'in_file', 'ants_segs', 'subjects_dir', 'subject_id']), name='inputnode')
+        'in_file', 'subjects_dir', 'subject_id']), name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(['out_file']), name='outputnode')
-    get_aseg = pe.Node(nio.FreeSurferSource(), name='get_aseg')
+    # Extract the aseg and aparc+aseg outputs
+    fssource = pe.Node(nio.FreeSurferSource(), name='fs_datasource')
     tonative = pe.Node(fs.Label2Vol(), name='tonative')
     tonii = pe.Node(fs.MRIConvert(out_type='niigz', resample_type='nearest'), name='tonii')
-    refine = pe.Node(RefineBrainMask(), name='refine')
+
+    if segmentation.startswith('aparc'):
+        if segmentation == 'aparc_aseg':
+            def _sel(x): return x[0]
+        elif segmentation == 'aparc_a2009s':
+            def _sel(x): return x[1]
+        elif segmentation == 'aparc_dkt':
+            def _sel(x): return x[2]
+        segmentation = (segmentation, _sel)
 
     workflow.connect([
-        (inputnode, refine, [('in_file', 'in_anat'),
-                             ('ants_segs', 'in_ants')]),
-        (inputnode, get_aseg, [('subjects_dir', 'subjects_dir'),
-                               ('subject_id', 'subject_id')]),
+        (inputnode, fssource, [
+            ('subjects_dir', 'subjects_dir'),
+            ('subject_id', 'subject_id')]),
         (inputnode, tonii, [('in_file', 'reslice_like')]),
-        (get_aseg, tonative, [('aseg', 'seg_file'),
+        (fssource, tonative, [(segmentation, 'seg_file'),
                               ('rawavg', 'template_file'),
                               ('aseg', 'reg_header')]),
         (tonative, tonii, [('vol_label_file', 'in_file')]),
-        (tonii, refine, [('out_file', 'in_aseg')]),
-        (refine, outputnode, [('out_file', 'out_file')]),
+        (tonii, outputnode, [('out_file', 'out_file')]),
     ])
-
     return workflow
 
 
@@ -1018,7 +1147,7 @@ def init_anat_reports_wf(reportlets_dir, output_spaces,
     """
     Set up a battery of datasinks to store reports in the right location
     """
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
 
     inputnode = pe.Node(
         niu.IdentityInterface(
@@ -1068,7 +1197,7 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     """
     Set up a battery of datasinks to store derivatives in the right location
     """
-    workflow = pe.Workflow(name=name)
+    workflow = Workflow(name=name)
 
     inputnode = pe.Node(
         niu.IdentityInterface(
@@ -1076,7 +1205,8 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
                     't1_preproc', 't1_mask', 't1_seg', 't1_tpms',
                     't1_2_mni_forward_transform', 't1_2_mni_reverse_transform',
                     't1_2_mni', 'mni_mask', 'mni_seg', 'mni_tpms',
-                    't1_2_fsnative_forward_transform', 'surfaces']),
+                    't1_2_fsnative_forward_transform', 'surfaces',
+                    't1_fs_aseg', 't1_fs_aparc']),
         name='inputnode')
 
     t1_name = pe.Node(niu.Function(function=fix_multi_T1w_source_name), name='t1_name')
@@ -1169,6 +1299,12 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     ])
 
     if freesurfer:
+        ds_t1_fsaseg = pe.Node(
+            DerivativesDataSink(base_directory=output_dir, suffix='label-aseg_roi'),
+            name='ds_t1_fsaseg', run_without_submitting=True)
+        ds_t1_fsparc = pe.Node(
+            DerivativesDataSink(base_directory=output_dir, suffix='label-aparcaseg_roi'),
+            name='ds_t1_fsparc', run_without_submitting=True)
         workflow.connect([
             (inputnode, lta_2_itk, [('t1_2_fsnative_forward_transform', 'in_lta')]),
             (t1_name, ds_t1_fsnative, [('out', 'source_file')]),
@@ -1177,6 +1313,10 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
             (inputnode, ds_surfs, [('surfaces', 'in_file')]),
             (t1_name, ds_surfs, [('out', 'source_file')]),
             (name_surfs, ds_surfs, [('out_name', 'suffix')]),
+            (inputnode, ds_t1_fsaseg, [('t1_fs_aseg', 'in_file')]),
+            (inputnode, ds_t1_fsparc, [('t1_fs_aparc', 'in_file')]),
+            (t1_name, ds_t1_fsaseg, [('out', 'source_file')]),
+            (t1_name, ds_t1_fsparc, [('out', 'source_file')]),
         ])
     if 'template' in output_spaces:
         workflow.connect([
@@ -1197,11 +1337,11 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     return workflow
 
 
-def _seg2msks(in_file):
+def _seg2msks(in_file, newpath=None):
     """Converts labels to masks"""
     import nibabel as nb
     import numpy as np
-    from os import path as op
+    from nipype.utils.filemanip import fname_presuffix
 
     nii = nb.load(in_file)
     labels = nii.get_data()
@@ -1210,7 +1350,8 @@ def _seg2msks(in_file):
     for i in range(1, 4):
         ldata = np.zeros_like(labels)
         ldata[labels == i] = 1
-        out_files.append(op.abspath('label%d.nii.gz' % i))
+        out_files.append(fname_presuffix(
+            in_file, suffix='_label%03d' % i, newpath=newpath))
         nii.__class__(ldata, nii.affine, nii.header).to_filename(out_files[-1])
 
     return out_files

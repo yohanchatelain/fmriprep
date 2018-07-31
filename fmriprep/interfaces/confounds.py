@@ -13,13 +13,15 @@ import os
 import shutil
 import numpy as np
 import pandas as pd
-from niworkflows.nipype import logging
-from niworkflows.nipype.interfaces.base import (
+from nipype import logging
+from nipype.utils.filemanip import fname_presuffix
+from nipype.interfaces.base import (
     traits, TraitedSpec, BaseInterfaceInputSpec, File, Directory, isdefined,
     SimpleInterface
 )
+from niworkflows.viz.plots import fMRIPlot
 
-LOGGER = logging.getLogger('interface')
+LOGGER = logging.getLogger('nipype.interface')
 
 
 class GatherConfoundsInputSpec(BaseInterfaceInputSpec):
@@ -75,14 +77,15 @@ class GatherConfounds(SimpleInterface):
 
     def _run_interface(self, runtime):
         combined_out, confounds_list = _gather_confounds(
-            self.inputs.signals,
-            self.inputs.dvars,
-            self.inputs.fd,
-            self.inputs.tcompcor,
-            self.inputs.acompcor,
-            self.inputs.cos_basis,
-            self.inputs.motion,
-            self.inputs.aroma,
+            signals=self.inputs.signals,
+            dvars=self.inputs.dvars,
+            fdisp=self.inputs.fd,
+            tcompcor=self.inputs.tcompcor,
+            acompcor=self.inputs.acompcor,
+            cos_basis=self.inputs.cos_basis,
+            motion=self.inputs.motion,
+            aroma=self.inputs.aroma,
+            newpath=runtime.cwd,
         )
         self._results['confounds_file'] = combined_out
         self._results['confounds_list'] = confounds_list
@@ -108,7 +111,7 @@ class ICAConfounds(SimpleInterface):
 
     def _run_interface(self, runtime):
         aroma_confounds, motion_ics_out, melodic_mix_out = _get_ica_confounds(
-            self.inputs.in_directory)
+            self.inputs.in_directory, newpath=runtime.cwd)
 
         if aroma_confounds is not None:
             self._results['aroma_confounds'] = aroma_confounds
@@ -122,7 +125,7 @@ class ICAConfounds(SimpleInterface):
 
 def _gather_confounds(signals=None, dvars=None, fdisp=None,
                       tcompcor=None, acompcor=None, cos_basis=None,
-                      motion=None, aroma=None):
+                      motion=None, aroma=None, newpath=None):
     """
     Load confounds from the filenames, concatenate together horizontally
     and save new file.
@@ -185,21 +188,27 @@ def _gather_confounds(signals=None, dvars=None, fdisp=None,
         _adjust_indices(confounds_data, new)
         confounds_data = pd.concat((confounds_data, new), axis=1)
 
-    combined_out = os.path.abspath('confounds.tsv')
+    if newpath is None:
+        newpath = os.getcwd()
+
+    combined_out = os.path.join(newpath, 'confounds.tsv')
     confounds_data.to_csv(combined_out, sep='\t', index=False,
                           na_rep='n/a')
 
     return combined_out, confounds_list
 
 
-def _get_ica_confounds(ica_out_dir):
+def _get_ica_confounds(ica_out_dir, newpath=None):
+    if newpath is None:
+        newpath = os.getcwd()
+
     # load the txt files from ICA-AROMA
     melodic_mix = os.path.join(ica_out_dir, 'melodic.ica/melodic_mix')
     motion_ics = os.path.join(ica_out_dir, 'classified_motion_ICs.txt')
 
     # Change names of motion_ics and melodic_mix for output
-    melodic_mix_out = os.path.abspath('MELODICmix.tsv')
-    motion_ics_out = os.path.abspath('AROMAnoiseICs.csv')
+    melodic_mix_out = os.path.join(newpath, 'MELODICmix.tsv')
+    motion_ics_out = os.path.join(newpath, 'AROMAnoiseICs.csv')
 
     # melodic_mix replace spaces with tabs
     with open(melodic_mix, 'r') as melodic_file:
@@ -212,7 +221,7 @@ def _get_ica_confounds(ica_out_dir):
     shutil.copyfile(motion_ics, motion_ics_out)
 
     # -1 since python lists start at index 0
-    motion_ic_indices = np.loadtxt(motion_ics, dtype=int, delimiter=',') - 1
+    motion_ic_indices = np.loadtxt(motion_ics, dtype=int, delimiter=',', ndmin=1) - 1
     melodic_mix_arr = np.loadtxt(melodic_mix, ndmin=2)
 
     # Return dummy list of ones if no noise compnents were found
@@ -232,9 +241,93 @@ def _get_ica_confounds(ica_out_dir):
     aggr_confounds = np.asarray([melodic_mix_arr.T[x] for x in motion_ic_indices])
 
     # add one to motion_ic_indices to match melodic report.
-    aroma_confounds = os.path.abspath("AROMAAggrCompAROMAConfounds.tsv")
+    aroma_confounds = os.path.join(newpath, "AROMAAggrCompAROMAConfounds.tsv")
     pd.DataFrame(aggr_confounds.T,
                  columns=['AROMAAggrComp%02d' % (x + 1) for x in motion_ic_indices]).to_csv(
         aroma_confounds, sep="\t", index=None)
 
     return aroma_confounds, motion_ics_out, melodic_mix_out
+
+
+class FMRISummaryInputSpec(BaseInterfaceInputSpec):
+    in_func = File(exists=True, mandatory=True,
+                   desc='input BOLD time-series (4D file)')
+    in_mask = File(exists=True, mandatory=True,
+                   desc='3D brain mask')
+    in_segm = File(exists=True, desc='resampled segmentation')
+    confounds_file = File(exists=True,
+                          desc="BIDS' _confounds.tsv file")
+
+    str_or_tuple = traits.Either(
+        traits.Str,
+        traits.Tuple(traits.Str, traits.Either(None, traits.Str)),
+        traits.Tuple(traits.Str, traits.Either(None, traits.Str), traits.Either(None, traits.Str)))
+    confounds_list = traits.List(
+        str_or_tuple, minlen=1,
+        desc='list of headers to extract from the confounds_file')
+    tr = traits.Either(None, traits.Float, usedefault=True,
+                       desc='the repetition time')
+
+
+class FMRISummaryOutputSpec(TraitedSpec):
+    out_file = File(exists=True, desc='written file path')
+
+
+class FMRISummary(SimpleInterface):
+    """
+    Copy the x-form matrices from `hdr_file` to `out_file`.
+    """
+    input_spec = FMRISummaryInputSpec
+    output_spec = FMRISummaryOutputSpec
+
+    def _run_interface(self, runtime):
+        self._results['out_file'] = fname_presuffix(
+            self.inputs.in_func,
+            suffix='_fmriplot.svg',
+            use_ext=False,
+            newpath=runtime.cwd)
+
+        dataframe = pd.read_csv(
+            self.inputs.confounds_file,
+            sep="\t", index_col=None, dtype='float32',
+            na_filter=True, na_values='n/a')
+
+        headers = []
+        units = {}
+        names = {}
+
+        for conf_el in self.inputs.confounds_list:
+            if isinstance(conf_el, (list, tuple)):
+                headers.append(conf_el[0])
+                if conf_el[1] is not None:
+                    units[conf_el[0]] = conf_el[1]
+
+                if len(conf_el) > 2 and conf_el[2] is not None:
+                    names[conf_el[0]] = conf_el[2]
+            else:
+                headers.append(conf_el)
+
+        if not headers:
+            data = None
+            units = None
+        else:
+            data = dataframe[headers]
+
+        colnames = data.columns.ravel().tolist()
+
+        for name, newname in list(names.items()):
+            colnames[colnames.index(name)] = newname
+
+        data.columns = colnames
+
+        fig = fMRIPlot(
+            self.inputs.in_func,
+            mask_file=self.inputs.in_mask,
+            seg_file=(self.inputs.in_segm
+                      if isdefined(self.inputs.in_segm) else None),
+            tr=self.inputs.tr,
+            data=data,
+            units=units,
+        ).plot()
+        fig.savefig(self._results['out_file'], bbox_inches='tight')
+        return runtime

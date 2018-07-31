@@ -34,6 +34,7 @@ is presented below:
                                 output_spaces=['T1w', 'fsnative',
                                               'template', 'fsaverage5'],
                                 medial_surface_nan=False,
+                                cifti_output=False,
                                 ignore=[],
                                 debug=False,
                                 low_mem=False,
@@ -45,8 +46,9 @@ is presented below:
                                 fmap_demean=True,
                                 use_syn=True,
                                 force_syn=True,
-                                output_grid_ref=None,
+                                template_out_grid='native',
                                 use_aroma=False,
+                                aroma_melodic_dim=None,
                                 ignore_aroma_err=False)
 
 
@@ -104,6 +106,18 @@ in a multiscale, mutual-information based, nonlinear registration scheme.
 In particular, spatial normalization is done using the `ICBM 2009c Nonlinear
 Asymmetric template (1×1×1mm) <http://nist.mni.mcgill.ca/?p=904>`_ [Fonov2011]_.
 
+When processing images from patients with focal brain lesions (e.g. stroke, tumor
+resection), it is possible to provide a lesion mask to be used during spatial
+normalization to MNI-space [Brett2001]_.
+ANTs will use this mask to minimize warping of healthy tissue into damaged
+areas (or vice-versa).
+Lesion masks should be binary NIfTI images (damaged areas = 1, everywhere else = 0)
+in the same space and resolution as the T1 image, and follow the naming convention specified in
+`BIDS Extension Proposal 3: Common Derivatives <https://docs.google.com/document/d/1Wwc4A6Mow4ZPPszDIWfCUCRNstn7d_zzaWPcfcHmgI4/edit#heading=h.9146wuepclkt>`_
+(e.g. ``sub-001_T1w_label-lesion_roi.nii.gz``).
+This file should be placed in the ``sub-*/anat`` directory of the BIDS dataset
+to be run through ``fmriprep``.
+
 .. figure:: _static/T1MNINormalization.svg
     :scale: 100%
 
@@ -151,6 +165,15 @@ structural images.
 If enabled, several steps in the ``fmriprep`` pipeline are added or replaced.
 All surface preprocessing may be disabled with the ``--fs-no-reconall`` flag.
 
+.. note::
+    Surface processing will be skipped if the outputs already exist.
+
+    In order to bypass reconstruction in ``fmriprep``, place existing reconstructed
+    subjects in ``<output dir>/freesurfer`` prior to the run.
+    ``fmriprep`` will perform any missing ``recon-all`` steps, but will not perform
+    any steps whose outputs already exist.
+
+
 If FreeSurfer reconstruction is performed, the reconstructed subject is placed in
 ``<output dir>/freesurfer/sub-<subject_label>/`` (see :ref:`fsderivs`).
 
@@ -187,11 +210,6 @@ If T1w voxel sizes are less than 1mm in all dimensions (rounding to nearest
 .1mm), `submillimeter reconstruction`_ is used, unless disabled with
 ``--no-submm-recon``.
 
-In order to bypass reconstruction in ``fmriprep``, place existing reconstructed
-subjects in ``<output dir>/freesurfer`` prior to the run.
-``fmriprep`` will perform any missing ``recon-all`` steps, but will not perform
-any steps whose outputs already exist.
-
 ``lh.midthickness`` and ``rh.midthickness`` surfaces are created in the subject
 ``surf/`` directory, corresponding to the surface half-way between the gray/white
 boundary and the pial surface.
@@ -210,7 +228,7 @@ Based on the tissue segmentation of FreeSurfer (located in ``mri/aseg.mgz``)
 and only when the :ref:`Surface Processing <workflows_surface>` step has been
 executed, FMRIPREP replaces the brain mask with a refined one that derives
 from the ``aseg.mgz`` file as described in
-:mod:`fmriprep.workflows.anatomical.init_refine_brainmask_wf`.
+:mod:`fmriprep.interfaces.freesurfer.grow_mask`.
 
 
 BOLD preprocessing
@@ -232,6 +250,7 @@ BOLD preprocessing
                               output_spaces=['T1w', 'fsnative',
                                              'template', 'fsaverage5'],
                               medial_surface_nan=False,
+                              cifti_output=False,
                               debug=False,
                               low_mem=False,
                               use_bbr=True,
@@ -241,12 +260,22 @@ BOLD preprocessing
                               fmap_demean=True,
                               use_syn=True,
                               force_syn=True,
-                              output_grid_ref=None,
+                              template_out_grid='native',
                               use_aroma=False,
+                              aroma_melodic_dim=None,
                               ignore_aroma_err=False)
 
 Preprocessing of :abbr:`BOLD (blood-oxygen level-dependent)` files is
 split into multiple sub-workflows described below.
+
+In the case of multi-echo :abbr:`BOLD (blood-oxygen level-dependent)` data,
+each echo is processed independently. The two exceptions to this occur for
+:ref:`head-motion estimation <bold_hmc>` and :ref:`T2* map creation <bold_t2s>`.
+
+For the :ref:`head-motion estimation workflow <bold_hmc>`, only the first echo
+is submitted as this echo is expected to have the highest contrast between gray
+and white matter. For :ref:`T2* map creation <bold_t2s>`, all echos are
+considered jointly to look at voxel-wise T2* decay.
 
 .. _bold_ref:
 
@@ -346,9 +375,11 @@ T2* Driven Coregistration
     :simple_form: yes
 
     from fmriprep.workflows.bold import init_bold_t2s_wf
-    wf = init_bold_t2s_wf(echo_times=[13.6, 29.79, 46.59],
-                          mem_gb=3,
-                          omp_nthreads=1)
+    wf = init_bold_t2s_wf(
+        bold_echos=['echo1', 'echo2', 'echo3'],
+        echo_times=[13.6, 29.79, 46.59],
+        mem_gb=3,
+        omp_nthreads=1)
 
 If the ``--t2s-coreg`` command line argument is supplied with multi-echo
 :abbr:`BOLD (blood-oxygen level-dependent)` data, a T2* map is generated.
@@ -357,6 +388,7 @@ to ref:`register the BOLD series to the T1w image of the same subject <bold_reg>
 
 Susceptibility Distortion Correction (SDC)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:mod:`fmriprep.workflows.fieldmap.base.init_sdc_wf`
 
 .. figure:: _static/unwarping.svg
     :scale: 100%
@@ -422,7 +454,7 @@ matter boundary (FreeSurfer's ``?h.white`` surfaces).
 
 If FreeSurfer processing is disabled, FSL ``flirt`` is run with the
 :abbr:`BBR (boundary-based registration)` cost function, using the
-``fast`` segmentation to establish the gray/white matter boundary.
+``fast`` segmentation to establish the gray/white matter boundary. After :abbr:`BBR (boundary-based registration)` is run, the resulting affine transform will be compared to the initial transform found by FLIRT. Excessive deviation will result in rejecting the BBR refinement and accepting the original, affine registration.
 
 EPI to MNI transformation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -437,7 +469,7 @@ EPI to MNI transformation
         template='MNI152NLin2009cAsym',
         mem_gb=1,
         omp_nthreads=1,
-        output_grid_ref=None)
+        template_out_grid='native')
 
 This sub-workflow concatenates the transforms calculated upstream (see
 `Head-motion estimation`_, `Susceptibility Distortion Correction (SDC)`_ --if
@@ -448,6 +480,16 @@ It also maps the T1w-based mask to MNI space.
 
 Transforms are concatenated and applied all at once, with one interpolation (Lanczos)
 step, so as little information is lost as possible.
+
+The output space grid can be specified using the ``template_out_grid`` argument.
+This option accepts the following (``str``) values:
+
+  * ``'native'``: the original resolution of the BOLD image will be used.
+  * ``'1mm'``: uses the 1:math:`\times`1:math:`\times`1 [mm] version of the template.
+  * ``'2mm'``: uses the 2:math:`\times`2:math:`\times`2 [mm] version of the template.
+  * **Path to arbitrary reference file**: the output will be resampled on a grid with
+    same resolution as this reference.
+
 
 EPI sampled to FreeSurfer surfaces
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -487,8 +529,6 @@ Confounds estimation
     from fmriprep.workflows.bold.confounds import init_bold_confs_wf
     wf = init_bold_confs_wf(
         name="discover_wf",
-        use_aroma=False,
-        ignore_aroma_err=False,
         mem_gb=1,
         metadata={"RepetitionTime": 2.0,
                   "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]})
@@ -501,6 +541,23 @@ Calculated confounds include the mean global signal, mean tissue class signal,
 tCompCor, aCompCor, Frame-wise Displacement, 6 motion parameters, DVARS, and, if
 the ``--use-aroma`` flag is enabled, the noise components identified by ICA-AROMA
 (those to be removed by the "aggressive" denoising strategy).
+Particular details about ICA-AROMA are given below.
+
+
+ICA-AROMA
+~~~~~~~~~
+:mod:`fmriprep.workflows.bold.confounds.init_ica_aroma_wf`
+
+When one of the `--output-spaces` selected is in MNI space, ICA-AROMA denoising
+can be automatically appended to the workflow.
+The number of ICA-AROMA components depends on a dimensionality estimate
+made by MELODIC.
+For datasets with a very short TR and a large number of timepoints, this may
+result in an unusually high number of components.
+In such cases, it may be useful to specify the number of components to be
+extracted with ``--aroma-melodic-dimensionality``.
+Further details on the implementation are given within the workflow generation
+function (:mod:`fmriprep.workflows.bold.confounds.init_ica_aroma_wf`).
 
 *Note*: *non*-aggressive AROMA denoising is a fundamentally different procedure
 from its "aggressive" counterpart and cannot be performed only by using a set of noise
