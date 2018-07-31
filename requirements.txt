@@ -1,2 +1,0 @@
-niworkflows>=0.4.2
-versioneer
