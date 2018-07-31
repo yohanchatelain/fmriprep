@@ -176,6 +176,9 @@ def get_parser():
     g_ants.add_argument('--skull-strip-template', action='store', default='OASIS',
                         choices=['OASIS', 'NKI'],
                         help='select ANTs skull-stripping template (default: OASIS))')
+    g_ants.add_argument('--skull-strip-fixed-seed', action='store_true',
+                        help='do not use a random seed for skull-stripping - will ensure '
+                             'run-to-run replicability when used with --omp-nthreads 1')
 
     # Fieldmap options
     g_fmap = parser.add_argument_group('Specific options for handling fieldmaps')
@@ -517,6 +520,7 @@ def build_workflow(opts, retval):
         t2s_coreg=opts.t2s_coreg,
         omp_nthreads=omp_nthreads,
         skull_strip_template=opts.skull_strip_template,
+        skull_strip_fixed_seed=opts.skull_strip_fixed_seed,
         work_dir=work_dir,
         output_dir=output_dir,
         bids_dir=bids_dir,
