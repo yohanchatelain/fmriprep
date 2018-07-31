@@ -1,3 +1,22 @@
+1.1.3 (July 30, 2018)
+=====================
+
+* [ENH] Use upstream ``afni.TShift`` improvements (#1160)
+* [PIN] Nipype 1.1.1 (65078c9)
+* [ENH] Dynamic citation boilerplate (#1024)
+* [ENH] Check Command Line dependencies before running (#1044)
+* [ENH] Reimplement ``SignalExtraction`` (#1170)
+* [DOC] Update copyright year to 2018 (#1224)
+* [ENH] Enable ``-u`` (docker user/userid) flag in wrapper (#1223)
+* [FIX] Corrects Dockerfile ``WORKDIR``. (#1218)
+* [ENH] More specific errors for missing echo times (#1221)
+* [ENH] Change ``WORKDIR`` of Docker image (#1204)
+* [DOC] Update documentation related to contributions (#1187)
+* [DOC] Additions to include before responding to reviews of the pre-print (#1195)
+* [DOC] Improving documentation on using Singularity (#1063)
+* [DOC] Add OHBM 2018 poster, presentation (#1198)
+* [ENH] Replace ``InvertT1w`` with upstream ``Rescale(invert=True)`` (#1161)
+
 1.1.2 (July 6, 2018)
 ====================
 
