@@ -63,35 +63,20 @@ AFNI {afni_ver} [@afni, RRID:SCR_005927].
     inputnode = pe.Node(niu.IdentityInterface(fields=['bold_file', 'skip_vols']), name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(fields=['stc_file']), name='outputnode')
 
-    def create_custom_slice_timing_file_func(metadata):
-        import os
-        slice_timings_sec = ["%f" % t for t in metadata["SliceTiming"]]
-        out_file = os.path.abspath("timings.1D")
-        with open(out_file, "w") as fp:
-            fp.write("\t".join(slice_timings_sec))
-        return out_file
-
-    create_custom_slice_timing_file = pe.Node(
-        niu.Function(function=create_custom_slice_timing_file_func),
-        name="create_custom_slice_timing_file",
-        mem_gb=DEFAULT_MEMORY_MIN_GB)
-    create_custom_slice_timing_file.inputs.metadata = metadata
+    LOGGER.log(25, 'Slice-timing correction will be included.')
 
     # It would be good to fingerprint memory use of afni.TShift
     slice_timing_correction = pe.Node(
-        afni.TShift(outputtype='NIFTI_GZ', tr='{}s'.format(metadata["RepetitionTime"])),
+        afni.TShift(outputtype='NIFTI_GZ',
+                    tr='{}s'.format(metadata["RepetitionTime"]),
+                    slice_timing=metadata['SliceTiming']),
         name='slice_timing_correction')
 
     copy_xform = pe.Node(CopyXForm(), name='copy_xform', mem_gb=0.1)
 
-    def _prefix_at(x):
-        return "@%s" % x
-
     workflow.connect([
         (inputnode, slice_timing_correction, [('bold_file', 'in_file'),
                                               ('skip_vols', 'ignore')]),
-        (create_custom_slice_timing_file, slice_timing_correction, [
-            (('out', _prefix_at), 'tpattern')]),
         (slice_timing_correction, copy_xform, [('out_file', 'in_file')]),
         (inputnode, copy_xform, [('bold_file', 'hdr_file')]),
         (copy_xform, outputnode, [('out_file', 'stc_file')]),
