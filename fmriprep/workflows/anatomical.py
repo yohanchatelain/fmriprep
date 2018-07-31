@@ -55,7 +55,7 @@ from ..utils.misc import fix_multi_T1w_source_name, add_suffix
 def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
                          freesurfer, longitudinal, omp_nthreads, hires, reportlets_dir,
                          output_dir, num_t1w,
-                         name='anat_preproc_wf'):
+                         skull_strip_fixed_seed=False, name='anat_preproc_wf'):
     r"""
     This workflow controls the anatomical preprocessing stages of FMRIPREP.
 
@@ -119,6 +119,9 @@ def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
             Directory in which to save derivatives
         name : str, optional
             Workflow name (default: anat_preproc_wf)
+        skull_strip_fixed_seed : bool
+            Do not use a random seed for skull-stripping - will ensure
+            run-to-run replicability when used with --omp-nthreads 1 (default: ``False``)
 
 
     **Inputs**
@@ -562,7 +565,8 @@ A T1w-reference map was computed after registration of
     return workflow
 
 
-def init_skullstrip_ants_wf(skull_strip_template, debug, omp_nthreads, name='skullstrip_ants_wf'):
+def init_skullstrip_ants_wf(skull_strip_template, debug, omp_nthreads,
+                            skull_strip_fixed_seed=False, name='skullstrip_ants_wf'):
     r"""
     This workflow performs skull-stripping using ANTs' ``BrainExtraction.sh``
 
@@ -581,6 +585,9 @@ def init_skullstrip_ants_wf(skull_strip_template, debug, omp_nthreads, name='sku
             Enable debugging outputs
         omp_nthreads : int
             Maximum number of threads an individual process may use
+        skull_strip_fixed_seed : bool
+            Do not use a random seed for skull-stripping - will ensure
+            run-to-run replicability when used with --omp-nthreads 1 (default: ``False``)
 
     **Inputs**
 
@@ -633,7 +640,7 @@ The T1w-reference was then skull-stripped using `antsBrainExtraction.sh`
 
     t1_skull_strip = pe.Node(
         BrainExtraction(dimension=3, use_floatingpoint_precision=1, debug=debug,
-                        keep_temporary_files=1),
+                        keep_temporary_files=1, use_random_seeding=not skull_strip_fixed_seed),
         name='t1_skull_strip', n_procs=omp_nthreads)
 
     t1_skull_strip.inputs.brain_template = brain_template
