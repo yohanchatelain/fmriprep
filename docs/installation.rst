@@ -75,7 +75,7 @@ If the version of Singularity on your HPC is modern enough you can create Singul
 image directly on the HCP.
 This is as simple as: ::
 
-    $ singularity build /my_images/fmriprep-<version>.simg docker://poldracklab/mriqc:<version>
+    $ singularity build /my_images/fmriprep-<version>.simg docker://poldracklab/fmriprep:<version>
     
 Where ``<version>`` should be replaced with the desired version of fMRIPrep that you want to download.
 
