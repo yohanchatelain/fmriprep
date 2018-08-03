@@ -469,7 +469,7 @@ def init_anat_template_wf(longitudinal, omp_nthreads, num_t1w, name='anat_templa
         workflow.__desc__ = """\
 A T1w-reference map was computed after registration of
 {num_t1w} T1w images (after INU-correction) using
-`mri_robust_template` [FreeSurfer {fs_ver}, @freesurfer].
+`mri_robust_template` [FreeSurfer {fs_ver}, @fs_template].
 """.format(num_t1w=num_t1w, fs_ver=fs.Info().looseversion() or '<ver>')
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['t1w']), name='inputnode')
