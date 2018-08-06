@@ -1,3 +1,10 @@
+1.1.4 (August 06, 2018)
+=======================
+
+  * [FIX] Verify first word of _cmd in dependency check (#1236)
+  * [DOC] Add two missing references (#1234)
+  * [ENH] Allow turning off random seeding for ANTs brain extraction (#919)
+
 1.1.3 (July 30, 2018)
 =====================
 
