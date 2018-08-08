@@ -20,11 +20,11 @@ def symmetric_overlap(img1, img2):
 
 @pytest.mark.skipif(not os.getenv('FMRIPREP_REGRESSION_SOURCE') or
                     not os.getenv('FMRIPREP_REGRESSION_TARGETS'))
-@pytest.mark.parametrize('input_name,expected_fname', [
+@pytest.mark.parametrize('input_fname,expected_fname', [
     (os.path.join(os.getenv('FMRIPREP_REGRESSION_SOURCE', ''),
                   base_fname),
      fname_presuffix(base_fname, suffix='_mask', use_ext=True,
-                     new_path=os.getenv('FMRIPREP_REGRESSION_TARGETS', '')))
+                     newpath=os.getenv('FMRIPREP_REGRESSION_TARGETS', '')))
     for base_fname in (
         'ds000116/sub-12_task-visualoddballwithbuttonresponsetotargetstimuli_run-02_bold.nii.gz',
         # 'ds000133/sub-06_ses-post_task-rest_run-01_bold.nii.gz',
