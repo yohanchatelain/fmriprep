@@ -50,4 +50,4 @@ def test_masking(input_fname, expected_fname):
     overlap = symmetric_overlap(expected_fname,
                                 combine_masks.result.outputs.out_file)
 
-    assert overlap < 0.95, input_fname
+    assert overlap > 0.95, input_fname
