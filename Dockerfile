@@ -164,6 +164,10 @@ RUN echo "${VERSION}" > /root/src/fmriprep/fmriprep/VERSION && \
     pip install .[all] && \
     rm -rf ~/.cache/pip
 
+RUN install -m 0755 \
+    /root/src/fmriprep/scripts/generate_reference_mask.py \
+    /usr/local/bin/generate_reference_mask
+
 RUN ldconfig
 WORKDIR /tmp/
 ENTRYPOINT ["/usr/local/miniconda/bin/fmriprep"]
