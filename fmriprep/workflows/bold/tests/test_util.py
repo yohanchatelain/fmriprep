@@ -30,18 +30,18 @@ def symmetric_overlap(img1, img2):
                          os.path.dirname(base_fname))))
     for base_fname in (
         'ds000116/sub-12_task-visualoddballwithbuttonresponsetotargetstimuli_run-02_bold.nii.gz',
-        # 'ds000133/sub-06_ses-post_task-rest_run-01_bold.nii.gz',
-        # 'ds000140/sub-32_task-heatpainwithregulationandratings_run-02_bold.nii.gz',
-        # 'ds000157/sub-23_task-passiveimageviewing_bold.nii.gz',
-        # 'ds000210/sub-06_task-rest_run-01_echo-1_bold.nii.gz',
-        # 'ds000210/sub-06_task-rest_run-01_echo-2_bold.nii.gz',
-        # 'ds000210/sub-06_task-rest_run-01_echo-3_bold.nii.gz',
-        # 'ds000216/sub-03_task-rest_echo-1_bold.nii.gz',
-        # 'ds000216/sub-03_task-rest_echo-2_bold.nii.gz',
-        # 'ds000216/sub-03_task-rest_echo-3_bold.nii.gz',
-        # 'ds000216/sub-03_task-rest_echo-4_bold.nii.gz',
-        # 'ds000237/sub-03_task-MemorySpan_acq-multiband_run-01_bold.nii.gz',
-        # 'ds000237/sub-06_task-MemorySpan_acq-multiband_run-01_bold.nii.gz',
+        'ds000133/sub-06_ses-post_task-rest_run-01_bold.nii.gz',
+        'ds000140/sub-32_task-heatpainwithregulationandratings_run-02_bold.nii.gz',
+        'ds000157/sub-23_task-passiveimageviewing_bold.nii.gz',
+        'ds000210/sub-06_task-rest_run-01_echo-1_bold.nii.gz',
+        'ds000210/sub-06_task-rest_run-01_echo-2_bold.nii.gz',
+        'ds000210/sub-06_task-rest_run-01_echo-3_bold.nii.gz',
+        'ds000216/sub-03_task-rest_echo-1_bold.nii.gz',
+        'ds000216/sub-03_task-rest_echo-2_bold.nii.gz',
+        'ds000216/sub-03_task-rest_echo-3_bold.nii.gz',
+        'ds000216/sub-03_task-rest_echo-4_bold.nii.gz',
+        'ds000237/sub-03_task-MemorySpan_acq-multiband_run-01_bold.nii.gz',
+        'ds000237/sub-06_task-MemorySpan_acq-multiband_run-01_bold.nii.gz',
         )
     ])
 def test_masking(input_fname, expected_fname):
