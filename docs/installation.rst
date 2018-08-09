@@ -136,7 +136,7 @@ If the data to be preprocessed is also on the HPC, you are ready to run fmriprep
         --omp-nthreads 16
 
 
-    or, unset the ``PYTHONPATH`` variable before running: ::
+   or, unset the ``PYTHONPATH`` variable before running: ::
 
       $ unset PYTHONPATH; singularity run ~/poldracklab_fmriprep_latest-2016-12-04-5b74ad9a4c4d.img \
         /work/04168/asdf/lonestar/ $WORK/lonestar/output \
