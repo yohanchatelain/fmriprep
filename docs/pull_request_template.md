@@ -15,11 +15,11 @@ of ongoing development efforts and possible overlaps between contributions).
 Please summarize here the main changes to the documentation that the reviewers should be aware of.
 -->
 
-## Pull-request guidelines:
+## Pull-request agreement:
 <!--
 Please make sure you have read the PR guidelines below, and checked 
 all boxes that apply at the bottom.
--->
+
 1. We invite you to list yourself as a *fMRIPrep* contributor, so if your name 
    is not already mentioned, please modify the 
    [``.zenodo.json``](https://github.com/poldracklab/fmriprep/blob/master/.zenodo.json)
@@ -55,8 +55,8 @@ all boxes that apply at the bottom.
    provided with this PR, within the PR or in future PRs.
    
 
-**Please review and check the following**:
-<!-- replace the empty checkboxes [ ] below with checked ones [x] accordingly -->
+Please review and check the following:
+(Replace the empty checkboxes [ ] below with checked ones [x] accordingly) -->
 
   - [ ] I have read the [guidelines for contributions](https://github.com/poldracklab/fmriprep/blob/master/CONTRIBUTING.md).
   - [ ] I understand that my contributions will not be merged unless the work is
@@ -64,4 +64,4 @@ all boxes that apply at the bottom.
   - [ ] The proposed code follows the
         [coding style](https://github.com/poldracklab/fmriprep/blob/master/CONTRIBUTING.md#fmriprep-coding-style-guide),
         to the extent I understood them (and I will address any comments raised by the PR's reviewers in this regard).
-  - [ ] \(Optional\) I opt-out from being listed in the `.zenodo.json` file.
+  - [ ] I have added myself to the `.zenodo.json` file, OR I decline to be listed in the `.zenodo.json` file at this time.
