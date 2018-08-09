@@ -248,7 +248,7 @@ jobs:
             docker run -ti --rm=false \
               -v /tmp/data:/tmp/data \
               -e FMRIPREP_REGRESSION_SOURCE=/tmp/data/fmriprep_bold_truncated \
-              -e FMRIPREP_REGRESSION_TARGET=/tmp/data/fmriprep_bold_mask \
+              -e FMRIPREP_REGRESSION_TARGETS=/tmp/data/fmriprep_bold_mask \
               --entrypoint="py.test" poldracklab/fmriprep:latest \
               /root/src/fmriprep/ --doctest-modules --ignore=docs --ignore=setup.py
       - run:

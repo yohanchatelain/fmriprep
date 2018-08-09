@@ -25,7 +25,9 @@ def symmetric_overlap(img1, img2):
     (os.path.join(os.getenv('FMRIPREP_REGRESSION_SOURCE', ''),
                   base_fname),
      fname_presuffix(base_fname, suffix='_mask', use_ext=True,
-                     newpath=os.getenv('FMRIPREP_REGRESSION_TARGETS', '')))
+                     newpath=os.path.join(
+                         os.getenv('FMRIPREP_REGRESSION_TARGETS', ''),
+                         os.path.dirname(base_fname))))
     for base_fname in (
         'ds000116/sub-12_task-visualoddballwithbuttonresponsetotargetstimuli_run-02_bold.nii.gz',
         # 'ds000133/sub-06_ses-post_task-rest_run-01_bold.nii.gz',
@@ -43,9 +45,9 @@ def symmetric_overlap(img1, img2):
         )
     ])
 def test_masking(input_fname, expected_fname):
-    bold_reference_wf = init_bold_reference_wf(enhance_t2=True)
+    bold_reference_wf = init_bold_reference_wf(omp_nthreads=1, enhance_t2=True)
     bold_reference_wf.inputs.inputnode.bold_file = input_fname
-    res = bold_reference_wf.run()
+    res = bold_reference_wf.run(plugin='MultiProc')
 
     combine_masks = [node for node in res.nodes if node.name.endswith('combine_masks')][0]
     overlap = symmetric_overlap(expected_fname,
