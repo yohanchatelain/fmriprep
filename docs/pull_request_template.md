@@ -59,9 +59,6 @@ Please review and check the following:
 (Replace the empty checkboxes [ ] below with checked ones [x] accordingly) -->
 
   - [ ] I have read the [guidelines for contributions](https://github.com/poldracklab/fmriprep/blob/master/CONTRIBUTING.md).
-  - [ ] I understand that my contributions will not be merged unless the work is
-        finished (i.e. no ``[WIP]`` tag remains in the title of my PR) and tests pass.
-  - [ ] The proposed code follows the
-        [coding style](https://github.com/poldracklab/fmriprep/blob/master/CONTRIBUTING.md#fmriprep-coding-style-guide),
-        to the extent I understood them (and I will address any comments raised by the PR's reviewers in this regard).
+  - [ ] I understand that my contributions will not be merged unless the work is finished (i.e. no ``[WIP]`` tag remains in the title of my PR) and tests pass.
+  - [ ] The proposed code follows the [coding style](https://github.com/poldracklab/fmriprep/blob/master/CONTRIBUTING.md#fmriprep-coding-style-guide), to the extent I understood them (and I will address any comments raised by the PR's reviewers in this regard).
   - [ ] I have added myself to the `.zenodo.json` file, OR I decline to be listed in the `.zenodo.json` file at this time.
