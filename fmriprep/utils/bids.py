@@ -193,3 +193,52 @@ def collect_data(dataset, participant_label, task=None):
     subj_data.update({"bold": ses_uids})
 
     return subj_data, layout
+
+
+def write_derivative_description(bids_dir, deriv_dir):
+    from fmriprep import __version__
+
+    desc = {
+        'Name': 'fMRIPrep output',
+        'BIDSVersion': '1.1.1',
+        'PipelineDescription': {
+            'Name': 'fMRIPrep',
+            'Version': __version__,
+            # We could parse the version to reference a commit or tag
+            'CodeURL': 'https://github.com/poldracklab/fmriprep',
+            },
+        'CodeURL': 'https://github.com/poldracklab/fmriprep',
+        'HowToAcknowledge': 'https://github.com/poldracklab/fmriprep',
+        }
+
+    # Keys that can only be set by environment
+    if 'FMRIPREP_DOCKER_TAG' in os.environ:
+        desc['DockerHubContainerTag'] = os.environ['FMRIPREP_DOCKER_TAG']
+    if 'FMRIPREP_SINGULARITY_URL' in os.environ:
+        singularity_url = os.environ['FMRIPREP_SINGULARITY_URL']
+        desc['SingularityContainerURL'] = singularity_url
+        try:
+            desc['SingularityContainerMD5'] = _get_shub_version(singularity_url)
+        except ValueError:
+            pass
+
+    # Keys deriving from source dataset
+    fname = os.path.join(bids_dir, 'dataset_description.json')
+    if os.path.exists(fname):
+        with open(fname) as fobj:
+            orig_desc = json.load(fobj)
+    else:
+        orig_desc = {}
+
+    if 'DatasetDOI' in orig_desc:
+        desc['SourceDatasetsURLs'] = ['https://doi.org/{}'.format(
+                                          orig_desc['DatasetDOI'])]
+    if 'License' in orig_desc:
+        desc['License'] = orig_desc['License']
+
+    with open(os.path.join(deriv_dir, 'dataset_description.json'), 'w') as fobj:
+        json.dump(desc, fobj, indent=4)
+
+
+def _get_shub_version(singularity_url):
+    raise ValueError("Not yet implemented")

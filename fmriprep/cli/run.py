@@ -290,6 +290,7 @@ def main():
 
         fmriprep_wf = retval['workflow']
         plugin_settings = retval['plugin_settings']
+        bids_dir = retval['bids_dir']
         output_dir = retval['output_dir']
         work_dir = retval['work_dir']
         subject_list = retval['subject_list']
@@ -348,6 +349,7 @@ def main():
 
     # Generate reports phase
     errno += generate_reports(subject_list, output_dir, work_dir, run_uuid)
+    write_derivative_description(bids_dir, str(Path(output_dir) / 'fmriprep'))
     sys.exit(int(errno > 0))
 
 
@@ -479,6 +481,7 @@ def build_workflow(opts, retval):
 
     retval['return_code'] = 0
     retval['plugin_settings'] = plugin_settings
+    retval['bids_dir'] = bids_dir
     retval['output_dir'] = output_dir
     retval['work_dir'] = work_dir
     retval['subject_list'] = subject_list
