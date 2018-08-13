@@ -54,11 +54,21 @@ It can also be helpful to test your changes locally, using an [FMRIPREP developm
 
 A member of the development team will review your changes to confirm that they can be merged into the main codebase.
 
-Pull requests titles should begin with a descriptive prefix: ``ENH`` (enhancement), ``FIX`` (bug fix), ``TST`` (testing),
-``DOC`` (documentation), ``STY`` (style), ``REF`` (refactor), ``CI`` (continous integration), ``MAINT`` (maintenance).
-For example, `[ENH] Support for SB-reference in multi-band datasets`.
+Pull requests titles should begin with a descriptive prefix:
+
+* ``ENH``: enhancements or new features
+* ``FIX``: bug fixes
+* ``TST``: new or updated tests
+* ``DOC``: new or updated documentation
+* ``STY``: style changes
+* ``REF``: refactoring existing code
+* ``CI``: updates to continous integration infrastructure
+* ``MAINT``: general maintenance
+
+For example: `[ENH] Support for SB-reference in multi-band datasets`
+
 For works-in-progress, add the ``WIP`` tag in addition to the descriptive prefix.
-Pull-requests tagged with ``[WIP]`` will not merged in until the tag is removed.
+Pull-requests tagged with ``[WIP]`` will not be merged until the tag is removed.
 
 ## FMRIPREP coding style guide
 
