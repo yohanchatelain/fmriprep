@@ -13,17 +13,21 @@ newPRWelcomeComment: >
   file with your data right above Russ' entry. Example:
 
   ```
+
   {
      "name": "Contributor, New FMRIPrep",
      "affiliation": "Department of fMRI prep'ing, Open Science Made-Up University",
      "orcid": "<your id>"
   },
+
   {
      "name": "Poldrack, Russell A.",
      "affiliation": "Department of Psychology, Stanford University",
      "orcid": "0000-0001-6755-0259"
   },
+
   ```
+
 
   Of course, if you want to opt-out this time there is no
   problem at all with adding your name later.
