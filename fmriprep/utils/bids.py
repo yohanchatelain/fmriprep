@@ -17,6 +17,7 @@ Fetch some test data
 import os
 import re
 import os.path as op
+import json
 import warnings
 from itertools import groupby
 from bids.grabbids import BIDSLayout
