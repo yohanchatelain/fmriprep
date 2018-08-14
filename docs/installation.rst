@@ -188,7 +188,7 @@ External Dependencies
 ---------------------
 
 FMRIPrep is written using Python 3.5 (or above), and is based on
-`nipype <http://nipype.readthedocs.io>`_.
+nipype_.
 
 FMRIPrep requires some other neuroimaging software tools that are
 not handled by the Python's packaging system (Pypi) used to deploy
