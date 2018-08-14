@@ -224,18 +224,18 @@ jobs:
               echo "Skipping pytest job"
               circleci step halt
             fi
-      - run:
-          name: Check PyPi preconditions
-          command: |
-            pip install "setuptools>=27.0" cython numpy twine future
-            python setup.py check -r -s
-            python setup.py sdist
       - attach_workspace:
           at: /tmp
       - restore_cache:
           keys:
             - regression-v0-{{ epoch }}
             - regression-v0-
+      - run:
+          name: Check PyPi preconditions
+          command: |
+            pip install "setuptools>=27.0" cython numpy twine future
+            python setup.py check -r -s
+            python setup.py sdist
       - run:
           name: Load Docker image layer cache
           no_output_timeout: 30m
