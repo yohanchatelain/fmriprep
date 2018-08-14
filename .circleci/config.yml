@@ -233,7 +233,7 @@ jobs:
       - run:
           name: Check PyPi preconditions
           command: |
-            pip install "setuptools>=27.0" cython numpy twine future
+            pip install "setuptools>=27.0" cython numpy twine future docutils
             python setup.py check -r -s
             python setup.py sdist
       - run:
@@ -695,7 +695,7 @@ jobs:
       - run:
           name: Deploy to PyPi
           command: |
-            pip install "setuptools>=27.0" cython numpy twine future
+            pip install "setuptools>=27.0" cython numpy twine future docutils
             echo "${CIRCLE_TAG}" > fmriprep/VERSION
             python setup.py check -r -s
             python setup.py sdist
