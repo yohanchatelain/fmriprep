@@ -19,31 +19,59 @@ __email__ = 'crn.poldracklab@gmail.com'
 __status__ = 'Prototype'
 __url__ = 'https://github.com/poldracklab/fmriprep'
 __packagename__ = 'fmriprep'
-__description__ = ("fMRIprep is a functional magnetic resonance image pre-processing pipeline "
+__description__ = ("FMRIprep is a functional magnetic resonance image pre-processing pipeline "
                    "that is designed to provide an easily accessible, state-of-the-art interface "
                    "that is robust to differences in scan acquisition protocols and that requires "
                    "minimal user input, while providing easily interpretable and comprehensive "
                    "error and output reporting.")
 __longdesc__ = """\
 Preprocessing of functional MRI (fMRI) involves numerous steps to clean and standardize
-data before statistical analysis. Generally, researchers create ad hoc preprocessing
-workflows for each new dataset, building upon a large inventory of tools available for
-each step. The complexity of these workflows has snowballed with rapid advances in MR data
-acquisition and image processing techniques. We introduce fMRIPrep, an analysis-agnostic
-tool that addresses the challenge of robust and reproducible preprocessing for task-based
-and resting fMRI data. FMRIPrep automatically adapts a best-in-breed workflow to the
-idiosyncrasies of virtually any dataset, ensuring high-quality preprocessing with no
-manual intervention. By introducing visual assessment checkpoints into an iterative
-integration framework for software-testing, we show that fMRIPrep robustly produces
-high-quality results on a diverse fMRI data collection comprising participants from
-54 different studies in the OpenfMRI repository. We review the distinctive features of
-fMRIPrep in a qualitative comparison to other preprocessing workflows. FMRIPrep achieves
-higher spatial accuracy as it introduces less uncontrolled spatial smoothness than commonly
-used preprocessing tools. FMRIPrep has the potential to transform fMRI research by equipping
+data before statistical analysis.
+Generally, researchers create ad hoc preprocessing workflows for each new dataset,
+building upon a large inventory of tools available for each step.
+The complexity of these workflows has snowballed with rapid advances in MR data
+acquisition and image processing techniques.
+FMRIPrep is an analysis-agnostic tool that addresses the challenge of robust and
+reproducible preprocessing for task-based and resting fMRI data.
+FMRIPrep automatically adapts a best-in-breed workflow to the idiosyncrasies of
+virtually any dataset, ensuring high-quality preprocessing with no manual intervention,
+while providing easily interpretable and comprehensive error and output reporting.
+It performs basic preprocessing steps (coregistration, normalization, unwarping, noise
+component extraction, segmentation, skullstripping etc.) providing outputs that can be
+easily submitted to a variety of group level analyses, including task-based or resting-state
+fMRI, graph theory measures, surface or volume-based statistics, etc.
+
+The workflow is based on `Nipype <http://nipype.readthedocs.io>`_ and encompases a large
+set of tools from well-known neuroimaging packages, including
+`FSL <https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/>`_,
+`ANTs <https://stnava.github.io/ANTs/>`_,
+`FreeSurfer <https://surfer.nmr.mgh.harvard.edu/>`_,
+`AFNI <https://afni.nimh.nih.gov/>`_,
+and `Nilearn <https://nilearn.github.io/>`_.
+This pipeline was designed to provide the best software implementation for each state of
+preprocessing, and will be updated as newer and better neuroimaging software becomes
+available.
+
+This tool allows you to easily do the following:
+
+  * Take fMRI data from *unprocessed* (only reconstructed) to ready for analysis.
+  * Implement tools from different software packages.
+  * Achieve optimal data processing quality by using the best tools available.
+  * Generate preprocessing-assessment reports, with which the user can easily identify problems.
+  * Receive verbose output concerning the stage of preprocessing for each subject, including
+    meaningful errors.
+  * Automate and parallelize processing steps, which provides a significant speed-up from
+    typical linear, manual processing.
+
+FMRIPrep has the potential to transform fMRI research by equipping
 neuroscientists with a high-quality, robust, easy-to-use and transparent preprocessing workflow
 which can help ensure the validity of inference and the interpretability of their results.
 
-[Pre-print https://doi.org/10.1101/306951]"""
+[Pre-print doi:`10.1101/306951 <https://doi.org/10.1101/306951>`_]
+[Documentation `fmriprep.org <http://fmriprep.readthedocs.io>`_]
+[Software doi:`10.5281/zenodo.852659 <https://doi.org/10.5281/zenodo.852659>`_]
+[Support `neurostars.org <https://neurostars.org/tags/fmriprep>`_]
+"""
 
 DOWNLOAD_URL = (
     'https://github.com/poldracklab/{name}/archive/{ver}.tar.gz'.format(
