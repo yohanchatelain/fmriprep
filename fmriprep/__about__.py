@@ -41,7 +41,7 @@ component extraction, segmentation, skullstripping etc.) providing outputs that 
 easily submitted to a variety of group level analyses, including task-based or resting-state
 fMRI, graph theory measures, surface or volume-based statistics, etc.
 
-The workflow is based on `Nipype <http://nipype.readthedocs.io>`_ and encompases a large
+The workflow is based on `Nipype <https://nipype.readthedocs.io>`_ and encompases a large
 set of tools from well-known neuroimaging packages, including
 `FSL <https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/>`_,
 `ANTs <https://stnava.github.io/ANTs/>`_,
@@ -68,7 +68,7 @@ neuroscientists with a high-quality, robust, easy-to-use and transparent preproc
 which can help ensure the validity of inference and the interpretability of their results.
 
 [Pre-print doi:`10.1101/306951 <https://doi.org/10.1101/306951>`_]
-[Documentation `fmriprep.org <http://fmriprep.readthedocs.io>`_]
+[Documentation `fmriprep.org <https://fmriprep.readthedocs.io>`_]
 [Software doi:`10.5281/zenodo.852659 <https://doi.org/10.5281/zenodo.852659>`_]
 [Support `neurostars.org <https://neurostars.org/tags/fmriprep>`_]
 """
