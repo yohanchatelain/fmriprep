@@ -247,8 +247,9 @@ def main():
     """Entry point"""
     from nipype import logging as nlogging
     from multiprocessing import set_start_method, Process, Manager
+    from .. import __version__
     from ..viz.reports import generate_reports
-    from ..__about__ import __version__
+    from ..utils.bids import write_derivative_description
     set_start_method('forkserver')
 
     warnings.showwarning = _warn_redirect
