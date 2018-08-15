@@ -209,9 +209,10 @@ def write_derivative_description(bids_dir, deriv_dir):
             'CodeURL': DOWNLOAD_URL,
             },
         'CodeURL': 'https://github.com/poldracklab/fmriprep',
-        'HowToAcknowledge': 'Please cite our paper '
-            '(https://doi.org/10.1101/306951), and include the generated '
-            'citation boilerplate within the Methods section of the text',
+        'HowToAcknowledge':
+            'Please cite our paper (https://doi.org/10.1101/306951), and '
+            'include the generated citation boilerplate within the Methods '
+            'section of the text.',
         }
 
     # Keys that can only be set by environment
