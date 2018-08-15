@@ -48,6 +48,7 @@ jobs:
             fi
             sed -i -E "s/(__version__ = )'[A-Za-z0-9.-]+'/\1'${CIRCLE_TAG:-$THISVERSION}'/" wrapper/fmriprep_docker.py
             sed -i -E "s/(var version = )'[A-Za-z0-9.-]+'/\1'${CIRCLE_TAG:-$THISVERSION}'/" docs/citing.rst
+            sed -i "s/title = {FMRIPrep}/title = {FMRIPrep ${CIRCLE_TAG:-$THISVERSION}}/" fmriprep/data/boilerplate.bib
             # Build docker image
             e=1 && for i in {1..5}; do
               docker build \
@@ -230,6 +231,12 @@ jobs:
           keys:
             - regression-v0-{{ epoch }}
             - regression-v0-
+      - run:
+          name: Check PyPi preconditions
+          command: |
+            pip install "setuptools>=27.0" cython numpy twine future docutils
+            python setup.py check -r -s
+            python setup.py sdist
       - run:
           name: Load Docker image layer cache
           no_output_timeout: 30m
@@ -689,8 +696,9 @@ jobs:
       - run:
           name: Deploy to PyPi
           command: |
-            pip install "setuptools>=27.0" cython numpy twine future
+            pip install "setuptools>=27.0" cython numpy twine future docutils
             echo "${CIRCLE_TAG}" > fmriprep/VERSION
+            python setup.py check -r -s
             python setup.py sdist
             twine upload dist/*
             cd wrapper && python setup.py sdist
