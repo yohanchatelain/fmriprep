@@ -198,6 +198,7 @@ def collect_data(dataset, participant_label, task=None):
 
 def write_derivative_description(bids_dir, deriv_dir):
     from fmriprep import __version__
+    from fmriprep.__about__ import DOWNLOAD_URL
 
     desc = {
         'Name': 'fMRIPrep output',
@@ -205,11 +206,12 @@ def write_derivative_description(bids_dir, deriv_dir):
         'PipelineDescription': {
             'Name': 'fMRIPrep',
             'Version': __version__,
-            # We could parse the version to reference a commit or tag
-            'CodeURL': 'https://github.com/poldracklab/fmriprep',
+            'CodeURL': DOWNLOAD_URL,
             },
         'CodeURL': 'https://github.com/poldracklab/fmriprep',
-        'HowToAcknowledge': 'https://github.com/poldracklab/fmriprep',
+        'HowToAcknowledge': 'Please cite our paper '
+            '(https://doi.org/10.1101/306951), and include the generated '
+            'citation boilerplate within the Methods section of the text',
         }
 
     # Keys that can only be set by environment
