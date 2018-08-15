@@ -42,7 +42,7 @@ def check_deps(workflow):
 
 def get_parser():
     """Build parser object"""
-    from ..info import __version__
+    from ..__about__ import __version__
 
     verstr = 'fmriprep v{}'.format(__version__)
 
@@ -248,7 +248,7 @@ def main():
     from nipype import logging as nlogging
     from multiprocessing import set_start_method, Process, Manager
     from ..viz.reports import generate_reports
-    from ..info import __version__
+    from ..__about__ import __version__
     set_start_method('forkserver')
 
     warnings.showwarning = _warn_redirect
@@ -367,7 +367,7 @@ def build_workflow(opts, retval):
     from pkg_resources import resource_filename as pkgrf
 
     from nipype import logging, config as ncfg
-    from ..info import __version__
+    from ..__about__ import __version__
     from ..workflows.base import init_fmriprep_wf
     from ..utils.bids import collect_participants
     from ..viz.reports import generate_reports
