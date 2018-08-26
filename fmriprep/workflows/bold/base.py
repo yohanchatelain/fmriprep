@@ -546,29 +546,50 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         me_first_echo = pe.Node(FirstEcho(
             te_list=tes, in_files=bold_file, ref_imgs=bold_file),
             name='me_first_echo')
-        # Replace reference with the echo selected with FirstEcho
+
+        join_echos = pe.JoinNode(niu.IdentityInterface(fields=['bold_file', 'hmc_xforms']),
+                                 joinsource='inputnode', joinfield='bold_file',
+                                 name='join_echos')
+
+        # create optimal combination, adaptive T2* map
+        bold_t2s_wf = init_bold_t2s_wf(echo_times=tes,
+                                       mem_gb=mem_gb['resampled'],
+                                       omp_nthreads=omp_nthreads)
+        bold_t2s_wf.inputs.inputnode.name_source = ref_file
+
         workflow.disconnect([
+            # Replace reference with the echo selected with FirstEcho
             (inputnode, bold_reference_wf, [
                 ('bold_file', 'inputnode.bold_file')]),
             (bold_reference_wf, boldbuffer, [
                 ('outputnode.bold_file', 'bold_file')]),
-        ])
+            # Disconnect bold_bold_trans_wf
+            (inputnode, bold_bold_trans_wf, [
+                ('bold_file', 'inputnode.name_source')]),
+            (bold_split, bold_bold_trans_wf, [
+                ('out_files', 'inputnode.bold_file')]),
+            (bold_hmc_wf, bold_bold_trans_wf, [
+                ('outputnode.xforms', 'inputnode.hmc_xforms')]),
+            (bold_bold_trans_wf, bold_confounds_wf, [
+                ('outputnode.bold', 'inputnode.bold'),
+                ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+            ])
+
         workflow.connect([
             (me_first_echo, bold_reference_wf, [
                 ('first_image', 'inputnode.bold_file')]),
             (inputnode, boldbuffer, [
                 ('bold_file', 'bold_file')]),
+            (bold_split, join_echos, [
+                ('out_files', 'bold_file')]),
+            (bold_hmc_wf, join_echos, [
+                ('outputnode.xforms', 'hmc_xforms')]),
+            (join_echos, bold_t2s_wf, [
+                ('outputs.bold_file', 'inputnode.bold_file'),
+                ('outputs.hmc_xforms', 'inputnode.hmc_xforms')])
         ])
 
         if t2s_coreg:
-            # create a T2* map
-            bold_t2s_wf = init_bold_t2s_wf(bold_echos=bold_file,
-                                           echo_times=tes,
-                                           mem_gb=mem_gb['resampled'],
-                                           omp_nthreads=omp_nthreads,
-                                           name='bold_t2s_wf')
-            bold_t2s_wf.inputs.inputnode.name_source = ref_file
-
             # Replace EPI-to-T1w registration inputs
             workflow.disconnect([
                 (bold_sdc_wf, bold_reg_wf, [
@@ -576,11 +597,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                     ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
             ])
             workflow.connect([
-                (bold_hmc_wf, bold_t2s_wf, [
-                    ('outputnode.xforms', 'inputnode.hmc_xforms')]),
                 (bold_t2s_wf, bold_reg_wf, [
-                    ('outputnode.t2s_map', 'inputnode.ref_bold_brain'),
-                    ('outputnode.oc_mask', 'inputnode.ref_bold_mask')]),
+                    ('outputnode.bold_ref', 'inputnode.ref_bold_brain'),
+                    ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
             ])
 
     # Map final BOLD mask into T1w space (if required)
@@ -602,6 +621,17 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (boldmask_to_t1w, outputnode, [
                 ('output_image', 'bold_mask_t1')]),
         ])
+
+        if multiecho:
+            workflow.disconnect([
+                (bold_bold_trans_wf, boldmask_to_t1w, [
+                    ('outputnode.bold_mask', 'input_image')])
+            ])
+
+            workflow.connect([
+                (bold_t2s_wf, boldmask_to_t1w, [
+                    ('outputnode.bold_mask', 'input_image')])
+            ])
 
     if 'template' in output_spaces:
         # Apply transforms in 1 shot
@@ -646,6 +676,23 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (bold_confounds_wf, carpetplot_wf, [
                 ('outputnode.confounds_file', 'inputnode.confounds_file')]),
         ])
+
+        if multiecho:
+            workflow.disconnect([
+                (bold_bold_trans_wf, bold_mni_trans_wf, [
+                    ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+                (bold_bold_trans_wf, carpetplot_wf, [
+                    ('outputnode.bold', 'inputnode.bold'),
+                    ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+            ])
+
+            workflow.connect([
+                (bold_t2s_wf, bold_mni_trans_wf, [
+                    ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+                (bold_t2s_wf, carpetplot_wf, [
+                    ('outputnode.bold', 'inputnode.bold'),
+                    ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+            ])
 
         if use_aroma:
             # ICA-AROMA workflow
@@ -695,6 +742,17 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                      ('outputnode.nonaggr_denoised_file', 'nonaggr_denoised_file')]),
                 (join, outputnode, [('out_file', 'confounds')]),
             ])
+
+            if multiecho:
+                workflow.disconnect([
+                    (bold_bold_trans_wf, ica_aroma_wf, [
+                        ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+                ])
+
+                workflow.connect([
+                    (bold_t2s_wf, ica_aroma_wf, [
+                        ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+                ])
 
     # SURFACES ##################################################################################
     if freesurfer and any(space.startswith('fs') for space in output_spaces):

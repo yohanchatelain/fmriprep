@@ -372,21 +372,15 @@ T2* Driven Coregistration
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 :mod:`fmriprep.workflows.bold.t2s.init_bold_t2s_wf`
 
-.. workflow::
-    :graph2use: colored
-    :simple_form: yes
-
-    from fmriprep.workflows.bold import init_bold_t2s_wf
-    wf = init_bold_t2s_wf(
-        bold_echos=['echo1', 'echo2', 'echo3'],
-        echo_times=[13.6, 29.79, 46.59],
-        mem_gb=3,
-        omp_nthreads=1)
-
 If the ``--t2s-coreg`` command line argument is supplied with multi-echo
-:abbr:`BOLD (blood-oxygen level-dependent)` data, a T2* map is generated.
+:abbr:`BOLD (blood-oxygen level-dependent)` data, an adaptive T2* map is generated
+using the `tedana`_ `T2* workflow`_.
 This T2* map is then used in place of the :ref:`BOLD reference image <bold_ref>`
 to ref:`register the BOLD series to the T1w image of the same subject <bold_reg>`.
+
+.. _tedana: https://github.com/me-ica/tedana
+.. _`T2* workflow`: https://tedana.readthedocs.io/en/latest/generated/tedana.workflows.t2smap_workflow.html#tedana.workflows.t2smap_workflow  # noqa
+
 
 Susceptibility Distortion Correction (SDC)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -456,7 +450,9 @@ matter boundary (FreeSurfer's ``?h.white`` surfaces).
 
 If FreeSurfer processing is disabled, FSL ``flirt`` is run with the
 :abbr:`BBR (boundary-based registration)` cost function, using the
-``fast`` segmentation to establish the gray/white matter boundary. After :abbr:`BBR (boundary-based registration)` is run, the resulting affine transform will be compared to the initial transform found by FLIRT. Excessive deviation will result in rejecting the BBR refinement and accepting the original, affine registration.
+``fast`` segmentation to establish the gray/white matter boundary.
+After :abbr:`BBR (boundary-based registration)` is run, the resulting affine transform will be compared to the initial transform found by FLIRT.
+Excessive deviation will result in rejecting the BBR refinement and accepting the original, affine registration.
 
 EPI to MNI transformation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
