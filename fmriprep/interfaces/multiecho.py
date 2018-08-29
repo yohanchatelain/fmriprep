@@ -15,23 +15,23 @@ Change directory to provide relative paths for doctests
 >>> os.chdir(datadir)
 
 """
-import tedana
+import os
 import numpy as np
 
 from nipype import logging
 from nipype.interfaces.base import (
-    traits, TraitedSpec, File, InputMultiPath, SimpleInterface,
-    BaseInterfaceInputSpec)
+    traits, TraitedSpec, File, CommandLine,
+    SimpleInterface, BaseInterfaceInputSpec, CommandLineInputSpec)
 
 LOGGER = logging.getLogger('nipype.interface')
 
 
 class FirstEchoInputSpec(BaseInterfaceInputSpec):
-    in_files = InputMultiPath(File(exists=True), mandatory=True, minlen=2,
-                              desc='multi-echo BOLD EPIs')
-    ref_imgs = InputMultiPath(File(exists=True), mandatory=True, minlen=2,
-                              desc='generated reference image for each '
-                              'multi-echo BOLD EPI')
+    in_files = traits.List(File(exists=True), mandatory=True, minlen=3,
+                           desc='multi-echo BOLD EPIs')
+    ref_imgs = traits.List(File(exists=True), mandatory=True, minlen=3,
+                           desc='generated reference image for each '
+                           'multi-echo BOLD EPI')
     te_list = traits.List(traits.Float, mandatory=True, desc='echo times')
 
 
@@ -74,21 +74,30 @@ class FirstEcho(SimpleInterface):
         return runtime
 
 
-class T2SMapInputSpec(BaseInterfaceInputSpec):
-    in_files = InputMultiPath(File(exists=True), mandatory=True, minlen=2,
-                              desc='multi-echo BOLD EPIs')
-    te_list = traits.List(traits.Float, mandatory=True, desc='echo times')
+class T2SMapInputSpec(CommandLineInputSpec):
+    in_files = traits.List(File(exists=True),
+                           argstr='-d %s',
+                           position=1,
+                           mandatory=True,
+                           minlen=3,
+                           desc='multi-echo BOLD EPIs')
+    echo_times = traits.List(traits.Float,
+                             argstr='-e %s',
+                             position=2,
+                             mandatory=True,
+                             minlen=3,
+                             desc='echo times')
 
 
 class T2SMapOutputSpec(TraitedSpec):
-    t2sv = File(exists=True, desc='limited T2* map')
-    s0v = File(exists=True, desc='limited s0 map')
-    t2svG = File(exists=True, desc='adaptive T2* map')
-    s0vG = File(exists=True, desc='adaptive s0 map')
-    ts_OC = File(exists=True, desc='optimally combined ME-EPI time series')
+    t2star_map = File(exists=True, desc='limited T2* map')
+    s0_map = File(exists=True, desc='limited s0 map')
+    t2star_adaptive_map = File(exists=True, desc='adaptive T2* map')
+    s0_adaptive_map = File(exists=True, desc='adaptive s0 map')
+    optimal_comb = File(exists=True, desc='optimally combined ME-EPI time series')
 
 
-class T2SMap(SimpleInterface):
+class T2SMap(CommandLine):
     """
     Runs the tedana T2* workflow to generate an adaptive T2* map and create
     an optimally combined ME-EPI time series.
@@ -100,18 +109,28 @@ class T2SMap(SimpleInterface):
     >>> t2smap.inputs.in_files = ['sub-01_run-01_echo-1_bold.nii.gz', \
                                   'sub-01_run-01_echo-2_bold.nii.gz', \
                                   'sub-01_run-01_echo-3_bold.nii.gz']
-    >>> t2smap.inputs.te_list = [0.013, 0.027, 0.043]
-    >>> res = t2smap.run() # doctest: +SKIP
+    >>> t2smap.inputs.echo_times = [0.013, 0.027, 0.043]
+    >>> t2smap.cmdline  # doctest: +ELLIPSIS
+    't2smap -d sub-01_run-01_echo-1_bold.nii.gz sub-01_run-01_echo-2_bold.nii.gz \
+     sub-01_run-01_echo-3_bold.nii.gz -e 0.013 0.027 0.043'
     """
+    _cmd = 't2smap'
     input_spec = T2SMapInputSpec
     output_spec = T2SMapOutputSpec
 
-    def _run_interface(self, runtime):
-        # tedana expects echo times in milliseconds, rather than seconds
-        echo_times = [te * 1000 for te in self.inputs.te_list]
+    def _format_arg(self, name, trait_spec, value):
+        if name == 'echo_times':
+            value = [te * 1000 for te in value]
+        return super(T2SMap, self)._format_arg(name, trait_spec, value)
 
-        (self._results['t2sv'], self._results['s0v'],
-         self._results['t2svG'], self._results['s0vG'],
-         self._results['ts_OC']) = tedana.t2smap_workflow(self.inputs.in_files, echo_times)
+    def _list_outputs(self):
+        outputs = self._outputs().get()
+        out_dir = os.path.abspath('./TED.{}'.format(self.inputs.in_files[0]))
 
-        return runtime
+        outputs['t2star_map'] = os.path.join(out_dir, 't2sv.nii.gz')
+        outputs['s0_map'] = os.path.join(out_dir, 's0v.nii.gz')
+        outputs['t2star_adaptive_map'] = os.path.join(out_dir, 't2svG.nii.gz')
+        outputs['s0_adaptive_map'] = os.path.join(out_dir, 's0vG.nii.gz')
+        outputs['optimal_comb'] = os.path.join(out_dir, 'ts_OC.nii.gz')
+
+        return outputs

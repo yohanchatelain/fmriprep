@@ -50,7 +50,7 @@ def init_bold_t2s_wf(echo_times,
 
     **Inputs**
 
-        bold_echos
+        bold_file
             list of individual echo files
         name_source
             (one echo of) the original BOLD series NIfTI file
@@ -104,18 +104,18 @@ the BOLD reference.
     skullstrip_bold_wf = init_skullstrip_bold_wf(name='skullstrip_bold_wf')
     skullstrip_t2smap_wf = init_skullstrip_bold_wf(name='skullstrip_t2smap_wf')
 
-    t2smap = pe.Node(T2SMap(te_list=echo_times), name='t2smap')
+    t2smap = pe.Node(T2SMap(echo_times=echo_times), name='t2smap')
 
     workflow.connect([
         (inputnode, bold_bold_trans_wf, [
-            ('bold_echos', 'inputnode.bold_file'),
+            ('bold_file', 'inputnode.bold_file'),
             ('name_source', 'inputnode.name_source'),
             ('hmc_xforms', 'inputnode.hmc_xforms')]),
         (bold_bold_trans_wf, skullstrip_bold_wf, [('outputnode.bold', 'inputnode.in_file')]),
         (skullstrip_bold_wf, t2smap, [('outputnode.skull_stripped_file', 'in_files')]),
-        (t2smap, outputnode, [('t2svG', 'bold_ref'),
-                              ('ts_OC', 'bold')]),
-        (t2smap, skullstrip_t2smap_wf, [('t2svG', 'inputnode.in_file')]),
+        (t2smap, outputnode, [('t2star_adaptive_map', 'bold_ref'),
+                              ('optimal_comb', 'bold')]),
+        (t2smap, skullstrip_t2smap_wf, [('t2star_adaptive_map', 'inputnode.in_file')]),
         (skullstrip_t2smap_wf, outputnode, [('outputnode.mask_file', 'bold_mask')]),
     ])
 

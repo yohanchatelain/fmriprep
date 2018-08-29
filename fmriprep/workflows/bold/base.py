@@ -323,7 +323,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_t1', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1', 'cifti_variant',
                 'bold_mni', 'bold_mask_mni', 'bold_cifti', 'confounds', 'surfaces',
-                't2s_map', 'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file',
+                'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file',
                 'cifti_variant_key']),
         name='outputnode')
 
@@ -441,7 +441,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     # MAIN WORKFLOW STRUCTURE #######################################################
     workflow.connect([
         # Generate early reference
-        (inputnode, bold_reference_wf, [('bold_file', 'inputnode.bold_file')]),
+        (inputnode, bold_reference_wf, [
+            ((ref_file if multiecho else 'bold_file'), 'inputnode.bold_file')]),
         # BOLD buffer has slice-time corrected if it was run, original otherwise
         (boldbuffer, bold_split, [('bold_file', 'in_file')]),
         # HMC
@@ -558,9 +559,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         bold_t2s_wf.inputs.inputnode.name_source = ref_file
 
         workflow.disconnect([
-            # Replace reference with the echo selected with FirstEcho
-            (inputnode, bold_reference_wf, [
-                ('bold_file', 'inputnode.bold_file')]),
             (bold_reference_wf, boldbuffer, [
                 ('outputnode.bold_file', 'bold_file')]),
             # Disconnect bold_bold_trans_wf
@@ -576,8 +574,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ])
 
         workflow.connect([
-            (me_first_echo, bold_reference_wf, [
-                ('first_image', 'inputnode.bold_file')]),
             (inputnode, boldbuffer, [
                 ('bold_file', 'bold_file')]),
             (bold_split, join_echos, [
