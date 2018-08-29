@@ -586,7 +586,10 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('outputnode.xforms', 'hmc_xforms')]),
             (join_echos, bold_t2s_wf, [
                 ('outputs.bold_file', 'inputnode.bold_file'),
-                ('outputs.hmc_xforms', 'inputnode.hmc_xforms')])
+                ('outputs.hmc_xforms', 'inputnode.hmc_xforms')]),
+            (bold_t2s_wf, bold_confounds_wf, [
+                ('outputnode.bold', 'inputnode.bold'),
+                ('outputnode.bold_mask', 'inputnode.bold_mask')]),
         ])
 
         if t2s_coreg:
