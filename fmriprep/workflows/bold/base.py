@@ -19,11 +19,7 @@ from nipype.interfaces.fsl import Split as FSLSplit
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 
-from ...interfaces import (
-    DerivativesDataSink,
-    GiftiNameSource,
-    FirstEcho
-)
+from ...interfaces import DerivativesDataSink, GiftiNameSource
 
 from ...interfaces.reports import FunctionalSummary
 from ...interfaces.cifti import GenerateCifti, CiftiNameSource
@@ -441,8 +437,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     # MAIN WORKFLOW STRUCTURE #######################################################
     workflow.connect([
         # Generate early reference
-        (inputnode, bold_reference_wf, [
-            ((ref_file if multiecho else 'bold_file'), 'inputnode.bold_file')]),
+        (inputnode, bold_reference_wf, [('bold_file', 'inputnode.bold_file')]),
         # BOLD buffer has slice-time corrected if it was run, original otherwise
         (boldbuffer, bold_split, [('bold_file', 'in_file')]),
         # HMC
@@ -543,10 +538,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     # if multiecho data, select first echo for hmc correction
     if multiecho:
         inputnode.iterables = ('bold_file', bold_file)
-
-        me_first_echo = pe.Node(FirstEcho(
-            te_list=tes, in_files=bold_file, ref_imgs=bold_file),
-            name='me_first_echo')
+        bold_reference_wf.inputs.inputnode.bold_file = ref_file
 
         join_echos = pe.JoinNode(niu.IdentityInterface(fields=['bold_file', 'hmc_xforms']),
                                  joinsource='inputnode', joinfield='bold_file',
@@ -571,7 +563,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (bold_bold_trans_wf, bold_confounds_wf, [
                 ('outputnode.bold', 'inputnode.bold'),
                 ('outputnode.bold_mask', 'inputnode.bold_mask')]),
-            ])
+        ])
 
         workflow.connect([
             (inputnode, boldbuffer, [
