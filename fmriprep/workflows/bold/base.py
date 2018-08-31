@@ -537,11 +537,11 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
     # if multiecho data, select first echo for hmc correction
     if multiecho:
-        inputnode.iterables = ('bold_file', bold_file)
-        bold_reference_wf.inputs.inputnode.bold_file = ref_file
+        inputnode.iterables = ('bold_file', bold_file)  # Iterate over all provided echos
+        bold_reference_wf.inputs.inputnode.bold_file = ref_file  # Replace reference w first echo
 
-        join_echos = pe.JoinNode(niu.IdentityInterface(fields=['bold_file', 'hmc_xforms']),
-                                 joinsource='inputnode', joinfield='bold_file',
+        join_echos = pe.JoinNode(niu.IdentityInterface(fields=['bold_files', 'hmc_xforms']),
+                                 joinsource='inputnode', joinfield='bold_files',
                                  name='join_echos')
 
         # create optimal combination, adaptive T2* map
@@ -569,12 +569,12 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (inputnode, boldbuffer, [
                 ('bold_file', 'bold_file')]),
             (bold_split, join_echos, [
-                ('out_files', 'bold_file')]),
+                ('out_files', 'bold_files')]),
             (bold_hmc_wf, join_echos, [
                 ('outputnode.xforms', 'hmc_xforms')]),
             (join_echos, bold_t2s_wf, [
-                ('outputs.bold_file', 'inputnode.bold_file'),
-                ('outputs.hmc_xforms', 'inputnode.hmc_xforms')]),
+                ('bold_files', 'inputnode.bold_file'),
+                ('hmc_xforms', 'inputnode.hmc_xforms')]),
             (bold_t2s_wf, bold_confounds_wf, [
                 ('outputnode.bold', 'inputnode.bold'),
                 ('outputnode.bold_mask', 'inputnode.bold_mask')]),
