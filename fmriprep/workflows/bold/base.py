@@ -598,8 +598,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             name='boldmask_to_t1w', mem_gb=0.1
         )
         workflow.connect([
-            (bold_bold_trans_wf, boldmask_to_t1w, [
-                ('outputnode.bold_mask', 'input_image')]),
             (bold_reg_wf, boldmask_to_t1w, [
                 ('outputnode.bold_mask_t1', 'reference_image'),
                 ('outputnode.itk_bold_to_t1', 'transforms')]),
@@ -607,12 +605,13 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('output_image', 'bold_mask_t1')]),
         ])
 
-        if multiecho:
-            workflow.disconnect([
+        if not multiecho:
+            workflow.connect([
                 (bold_bold_trans_wf, boldmask_to_t1w, [
                     ('outputnode.bold_mask', 'input_image')])
             ])
 
+        if multiecho:
             workflow.connect([
                 (bold_t2s_wf, boldmask_to_t1w, [
                     ('outputnode.bold_mask', 'input_image')])
@@ -645,15 +644,10 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('outputnode.xforms', 'inputnode.hmc_xforms')]),
             (bold_reg_wf, bold_mni_trans_wf, [
                 ('outputnode.itk_bold_to_t1', 'inputnode.itk_bold_to_t1')]),
-            (bold_bold_trans_wf, bold_mni_trans_wf, [
-                ('outputnode.bold_mask', 'inputnode.bold_mask')]),
             (bold_sdc_wf, bold_mni_trans_wf, [
                 ('outputnode.out_warp', 'inputnode.fieldwarp')]),
             (bold_mni_trans_wf, outputnode, [('outputnode.bold_mni', 'bold_mni'),
                                              ('outputnode.bold_mask_mni', 'bold_mask_mni')]),
-            (bold_bold_trans_wf, carpetplot_wf, [
-                ('outputnode.bold', 'inputnode.bold'),
-                ('outputnode.bold_mask', 'inputnode.bold_mask')]),
             (inputnode, carpetplot_wf, [
                 ('t1_2_mni_reverse_transform', 'inputnode.t1_2_mni_reverse_transform')]),
             (bold_reg_wf, carpetplot_wf, [
@@ -662,8 +656,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('outputnode.confounds_file', 'inputnode.confounds_file')]),
         ])
 
-        if multiecho:
-            workflow.disconnect([
+        if not multiecho:
+            workflow.connect([
                 (bold_bold_trans_wf, bold_mni_trans_wf, [
                     ('outputnode.bold_mask', 'inputnode.bold_mask')]),
                 (bold_bold_trans_wf, carpetplot_wf, [
@@ -671,6 +665,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                     ('outputnode.bold_mask', 'inputnode.bold_mask')]),
             ])
 
+        if multiecho:
             workflow.connect([
                 (bold_t2s_wf, bold_mni_trans_wf, [
                     ('outputnode.bold_mask', 'inputnode.bold_mask')]),
@@ -713,8 +708,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                     ('outputnode.xforms', 'inputnode.hmc_xforms')]),
                 (bold_reg_wf, ica_aroma_wf, [
                     ('outputnode.itk_bold_to_t1', 'inputnode.itk_bold_to_t1')]),
-                (bold_bold_trans_wf, ica_aroma_wf, [
-                    ('outputnode.bold_mask', 'inputnode.bold_mask')]),
                 (bold_sdc_wf, ica_aroma_wf, [
                     ('outputnode.out_warp', 'inputnode.fieldwarp')]),
                 (bold_confounds_wf, join, [
@@ -728,12 +721,12 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 (join, outputnode, [('out_file', 'confounds')]),
             ])
 
-            if multiecho:
-                workflow.disconnect([
+            if not multiecho:
+                workflow.connect([
                     (bold_bold_trans_wf, ica_aroma_wf, [
                         ('outputnode.bold_mask', 'inputnode.bold_mask')]),
                 ])
-
+            if multiecho:
                 workflow.connect([
                     (bold_t2s_wf, ica_aroma_wf, [
                         ('outputnode.bold_mask', 'inputnode.bold_mask')]),
