@@ -475,9 +475,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('outputnode.bold_ref_brain', 'inputnode.ref_bold_brain'),
             ('outputnode.bold_mask', 'inputnode.ref_bold_mask'),
             ('outputnode.out_warp', 'inputnode.fieldwarp')]),
-        (bold_sdc_wf, bold_bold_trans_wf, [
-            ('outputnode.out_warp', 'inputnode.fieldwarp'),
-            ('outputnode.bold_mask', 'inputnode.bold_mask')]),
         (bold_sdc_wf, summary, [('outputnode.method', 'distortion_correction')]),
         # Connect bold_confounds_wf
         (inputnode, bold_confounds_wf, [('t1_tpms', 'inputnode.t1_tpms'),
@@ -489,19 +486,26 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         (bold_confounds_wf, outputnode, [
             ('outputnode.confounds_file', 'confounds'),
         ]),
-        # Connect bold_bold_trans_wf
-        (inputnode, bold_bold_trans_wf, [
-            ('bold_file', 'inputnode.name_source')]),
-        (bold_split, bold_bold_trans_wf, [
-            ('out_files', 'inputnode.bold_file')]),
-        (bold_hmc_wf, bold_bold_trans_wf, [
-            ('outputnode.xforms', 'inputnode.hmc_xforms')]),
-        (bold_bold_trans_wf, bold_confounds_wf, [
-            ('outputnode.bold', 'inputnode.bold'),
-            ('outputnode.bold_mask', 'inputnode.bold_mask')]),
         # Summary
         (outputnode, summary, [('confounds', 'confounds_file')]),
     ])
+
+    if not multiecho:
+        workflow.connect([
+            (bold_sdc_wf, bold_bold_trans_wf, [
+                ('outputnode.out_warp', 'inputnode.fieldwarp'),
+                ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+            # Connect bold_bold_trans_wf
+            (inputnode, bold_bold_trans_wf, [
+                ('bold_file', 'inputnode.name_source')]),
+            (bold_split, bold_bold_trans_wf, [
+                ('out_files', 'inputnode.bold_file')]),
+            (bold_hmc_wf, bold_bold_trans_wf, [
+                ('outputnode.xforms', 'inputnode.hmc_xforms')]),
+            (bold_bold_trans_wf, bold_confounds_wf, [
+                ('outputnode.bold', 'inputnode.bold'),
+                ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+        ])
 
     if fmaps:
         from ..fieldmap.unwarp import init_fmap_unwarp_report_wf
@@ -553,16 +557,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         workflow.disconnect([
             (bold_reference_wf, boldbuffer, [
                 ('outputnode.bold_file', 'bold_file')]),
-            # Disconnect bold_bold_trans_wf
-            (inputnode, bold_bold_trans_wf, [
-                ('bold_file', 'inputnode.name_source')]),
-            (bold_split, bold_bold_trans_wf, [
-                ('out_files', 'inputnode.bold_file')]),
-            (bold_hmc_wf, bold_bold_trans_wf, [
-                ('outputnode.xforms', 'inputnode.hmc_xforms')]),
-            (bold_bold_trans_wf, bold_confounds_wf, [
-                ('outputnode.bold', 'inputnode.bold'),
-                ('outputnode.bold_mask', 'inputnode.bold_mask')]),
         ])
 
         workflow.connect([
