@@ -401,6 +401,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         use_fieldwarp=(fmaps is not None or use_syn),
         name='bold_bold_trans_wf'
     )
+    bold_bold_trans_wf.inputs.inputnode.name_source = ref_file
 
     # SLICE-TIME CORRECTION (or bypass) #############################################
     if run_stc is True:  # bool('TooShort') == True, so check True explicitly
@@ -471,6 +472,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('outputnode.ref_image', 'inputnode.bold_ref'),
             ('outputnode.ref_image_brain', 'inputnode.bold_ref_brain'),
             ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+        (bold_sdc_wf, bold_bold_trans_wf, [
+            ('outputnode.out_warp', 'inputnode.fieldwarp'),
+            ('outputnode.bold_mask', 'inputnode.bold_mask')]),
         (bold_sdc_wf, bold_reg_wf, [
             ('outputnode.bold_ref_brain', 'inputnode.ref_bold_brain'),
             ('outputnode.bold_mask', 'inputnode.ref_bold_mask'),
@@ -486,22 +490,17 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         (bold_confounds_wf, outputnode, [
             ('outputnode.confounds_file', 'confounds'),
         ]),
+        # Connect bold_bold_trans_wf
+        (bold_split, bold_bold_trans_wf, [
+            ('out_files', 'inputnode.bold_file')]),
+        (bold_hmc_wf, bold_bold_trans_wf, [
+            ('outputnode.xforms', 'inputnode.hmc_xforms')]),
         # Summary
         (outputnode, summary, [('confounds', 'confounds_file')]),
     ])
 
     if not multiecho:
         workflow.connect([
-            (bold_sdc_wf, bold_bold_trans_wf, [
-                ('outputnode.out_warp', 'inputnode.fieldwarp'),
-                ('outputnode.bold_mask', 'inputnode.bold_mask')]),
-            # Connect bold_bold_trans_wf
-            (inputnode, bold_bold_trans_wf, [
-                ('bold_file', 'inputnode.name_source')]),
-            (bold_split, bold_bold_trans_wf, [
-                ('out_files', 'inputnode.bold_file')]),
-            (bold_hmc_wf, bold_bold_trans_wf, [
-                ('outputnode.xforms', 'inputnode.hmc_xforms')]),
             (bold_bold_trans_wf, bold_confounds_wf, [
                 ('outputnode.bold', 'inputnode.bold'),
                 ('outputnode.bold_mask', 'inputnode.bold_mask')]),
@@ -539,20 +538,23 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                     ('outputnode.syn_bold_ref', 'inputnode.in_post')]),
             ])
 
-    # if multiecho data, select first echo for hmc correction
+    # if multiecho data, process all echos but select first echo for hmc correction
     if multiecho:
+        from .util import init_skullstrip_bold_wf
+
         inputnode.iterables = ('bold_file', bold_file)  # Iterate over all provided echos
         bold_reference_wf.inputs.inputnode.bold_file = ref_file  # Replace reference w first echo
 
-        join_echos = pe.JoinNode(niu.IdentityInterface(fields=['bold_files', 'hmc_xforms']),
-                                 joinsource='inputnode', joinfield='bold_files',
+        skullstrip_bold_wf = init_skullstrip_bold_wf(name='skullstrip_bold_wf')
+        join_echos = pe.JoinNode(niu.IdentityInterface(fields=['bold_files']),
+                                 joinsource='inputnode', joinfield=['bold_files'],
                                  name='join_echos')
 
         # create optimal combination, adaptive T2* map
         bold_t2s_wf = init_bold_t2s_wf(echo_times=tes,
                                        mem_gb=mem_gb['resampled'],
-                                       omp_nthreads=omp_nthreads)
-        bold_t2s_wf.inputs.inputnode.name_source = ref_file
+                                       omp_nthreads=omp_nthreads,
+                                       name='bold_t2smap_wf')
 
         workflow.disconnect([
             (bold_reference_wf, boldbuffer, [
@@ -562,13 +564,12 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         workflow.connect([
             (inputnode, boldbuffer, [
                 ('bold_file', 'bold_file')]),
-            (bold_split, join_echos, [
-                ('out_files', 'bold_files')]),
-            (bold_hmc_wf, join_echos, [
-                ('outputnode.xforms', 'hmc_xforms')]),
+            (bold_bold_trans_wf, skullstrip_bold_wf, [
+                ('outputnode.bold', 'inputnode.in_file')]),
+            (skullstrip_bold_wf, join_echos, [
+                ('outputnode.skull_stripped_file', 'bold_files')]),
             (join_echos, bold_t2s_wf, [
-                ('bold_files', 'inputnode.bold_file'),
-                ('hmc_xforms', 'inputnode.hmc_xforms')]),
+                ('bold_files', 'inputnode.bold_file')]),
             (bold_t2s_wf, bold_confounds_wf, [
                 ('outputnode.bold', 'inputnode.bold'),
                 ('outputnode.bold_mask', 'inputnode.bold_mask')]),

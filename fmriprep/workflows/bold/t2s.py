@@ -14,7 +14,6 @@ from nipype.interfaces import utility as niu
 
 from ...engine import Workflow
 from ...interfaces import T2SMap
-from .resampling import init_bold_preproc_trans_wf
 
 from .util import init_skullstrip_bold_wf
 
@@ -52,11 +51,6 @@ def init_bold_t2s_wf(echo_times,
 
         bold_file
             list of individual echo files
-        name_source
-            (one echo of) the original BOLD series NIfTI file
-            Used to recover original information lost during processing
-        hmc_xforms
-            ITKTransform file aligning each volume to ``ref_image``
 
     **Outputs**
 
@@ -82,37 +76,18 @@ echoes following the method described in @posse_t2s and was also retained as
 the BOLD reference.
 """
 
-    inputnode = pe.Node(niu.IdentityInterface(
-        fields=['bold_file', 'name_source', 'hmc_xforms']),
-        name='inputnode')
+    inputnode = pe.Node(niu.IdentityInterface(fields=['bold_file']), name='inputnode')
 
     outputnode = pe.Node(niu.IdentityInterface(fields=['bold', 'bold_mask', 'bold_ref']),
                          name='outputnode')
 
     LOGGER.log(25, 'Generating T2* map and optimally combined ME-EPI time series.')
 
-    # Apply transforms in 1 shot
-    bold_bold_trans_wf = init_bold_preproc_trans_wf(
-        mem_gb=mem_gb,
-        omp_nthreads=omp_nthreads,
-        name='bold_bold_trans_wf',
-        split_file=True,
-        interpolation='NearestNeighbor'
-    )
-    bold_bold_trans_wf.__desc__ = None
-
-    skullstrip_bold_wf = init_skullstrip_bold_wf(name='skullstrip_bold_wf')
+    t2smap = pe.Node(T2SMap(echo_times=echo_times), name='t2smap')
     skullstrip_t2smap_wf = init_skullstrip_bold_wf(name='skullstrip_t2smap_wf')
 
-    t2smap = pe.Node(T2SMap(echo_times=echo_times), name='t2smap')
-
     workflow.connect([
-        (inputnode, bold_bold_trans_wf, [
-            ('bold_file', 'inputnode.bold_file'),
-            ('name_source', 'inputnode.name_source'),
-            ('hmc_xforms', 'inputnode.hmc_xforms')]),
-        (bold_bold_trans_wf, skullstrip_bold_wf, [('outputnode.bold', 'inputnode.in_file')]),
-        (skullstrip_bold_wf, t2smap, [('outputnode.skull_stripped_file', 'in_files')]),
+        (inputnode, t2smap, [('bold_file', 'in_files')]),
         (t2smap, outputnode, [('t2star_adaptive_map', 'bold_ref'),
                               ('optimal_comb', 'bold')]),
         (t2smap, skullstrip_t2smap_wf, [('t2star_adaptive_map', 'inputnode.in_file')]),
@@ -120,7 +95,3 @@ the BOLD reference.
     ])
 
     return workflow
-
-
-def _first(inlist):
-    return inlist[0][0]
