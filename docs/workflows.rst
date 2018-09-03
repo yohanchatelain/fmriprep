@@ -128,8 +128,8 @@ to be run through ``fmriprep``.
 
 Longitudinal processing
 ~~~~~~~~~~~~~~~~~~~~~~~
-In the case of multiple sessions, T1w images are merged into a single template
-image using FreeSurfer's `mri_robust_template`_.
+In the case of multiple T1w images (across sessions and/or runs), T1w images are 
+merged into a single template image using FreeSurfer's `mri_robust_template`_.
 This template may be *unbiased*, or equidistant from all source images, or
 aligned to the first image (determined lexicographically by session label).
 For two images, the additional cost of estimating an unbiased template is
