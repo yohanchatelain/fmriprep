@@ -16,6 +16,7 @@ Change directory to provide relative paths for doctests
 
 """
 import os
+from nibabel.filename_parser import splitext_addext
 
 from nipype import logging
 from nipype.interfaces.base import (
@@ -76,12 +77,13 @@ sub-01_run-01_echo-3_bold.nii.gz -e 13.0 27.0 43.0'
 
     def _list_outputs(self):
         outputs = self._outputs().get()
-        out_dir = os.path.abspath('./TED.{}'.format(self.inputs.in_files[0]))
+        filename = splitext_addext(os.path.basename(self.inputs.in_files[0]))[0]
+        out_dir = os.path.abspath('TED.{}'.format(filename))
 
-        outputs['t2star_map'] = os.path.join(out_dir, 't2sv.nii.gz')
-        outputs['s0_map'] = os.path.join(out_dir, 's0v.nii.gz')
-        outputs['t2star_adaptive_map'] = os.path.join(out_dir, 't2svG.nii.gz')
-        outputs['s0_adaptive_map'] = os.path.join(out_dir, 's0vG.nii.gz')
-        outputs['optimal_comb'] = os.path.join(out_dir, 'ts_OC.nii.gz')
+        outputs['t2star_map'] = os.path.join(out_dir, 't2sv.nii')
+        outputs['s0_map'] = os.path.join(out_dir, 's0v.nii')
+        outputs['t2star_adaptive_map'] = os.path.join(out_dir, 't2svG.nii')
+        outputs['s0_adaptive_map'] = os.path.join(out_dir, 's0vG.nii')
+        outputs['optimal_comb'] = os.path.join(out_dir, 'ts_OC.nii')
 
         return outputs
