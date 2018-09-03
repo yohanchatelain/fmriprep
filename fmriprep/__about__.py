@@ -104,10 +104,11 @@ REQUIRES = [
     'indexed_gzip>=0.8.2',
     'scikit-image',
     'versioneer',
-    'tedana',
 ]
 
 LINKS_REQUIRES = [
+    'git+https://github.com/me-ica/tedana.git@'
+    'cb01d725d05f0102e2da89ad50c32905c68a79fd#egg=tedana',
 ]
 
 TESTS_REQUIRES = [

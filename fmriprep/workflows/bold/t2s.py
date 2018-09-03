@@ -83,14 +83,14 @@ the BOLD reference.
 
     LOGGER.log(25, 'Generating T2* map and optimally combined ME-EPI time series.')
 
-    t2smap = pe.Node(T2SMap(echo_times=echo_times), name='t2smap')
+    t2smap_node = pe.Node(T2SMap(echo_times=echo_times), name='t2smap_node')
     skullstrip_t2smap_wf = init_skullstrip_bold_wf(name='skullstrip_t2smap_wf')
 
     workflow.connect([
-        (inputnode, t2smap, [('bold_file', 'in_files')]),
-        (t2smap, outputnode, [('t2star_adaptive_map', 'bold_ref'),
-                              ('optimal_comb', 'bold')]),
-        (t2smap, skullstrip_t2smap_wf, [('t2star_adaptive_map', 'inputnode.in_file')]),
+        (inputnode, t2smap_node, [('bold_file', 'in_files')]),
+        (t2smap_node, outputnode, [('t2star_adaptive_map', 'bold_ref'),
+                                   ('optimal_comb', 'bold')]),
+        (t2smap_node, skullstrip_t2smap_wf, [('t2star_adaptive_map', 'inputnode.in_file')]),
         (skullstrip_t2smap_wf, outputnode, [('outputnode.mask_file', 'bold_mask')]),
     ])
 
