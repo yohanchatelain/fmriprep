@@ -116,7 +116,7 @@ using a custom methodology of *fMRIPrep*.
         (validate, outputnode, [('out_file', 'bold_file'),
                                 ('out_report', 'validation_report')]),
         (gen_ref, outputnode, [('n_volumes_to_discard', 'skip_vols')]),
-        (validate_ref, outputnode, [('ref_image', 'raw_ref_image')]),
+        (validate_ref, outputnode, [('out_file', 'raw_ref_image')]),
         (enhance_and_skullstrip_bold_wf, outputnode, [
             ('outputnode.bias_corrected_file', 'ref_image'),
             ('outputnode.mask_file', 'bold_mask'),
