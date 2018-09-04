@@ -242,6 +242,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                     'Memory resampled/largemem=%.2f/%.2f GB.'),
                ref_file, mem_gb['filesize'], bold_tlen, mem_gb['resampled'], mem_gb['largemem'])
 
+    sbref_file = None
     # For doc building purposes
     if layout is None or bold_file == 'bold_preprocesing':
         LOGGER.log(25, 'No valid layout: building empty workflow.')
@@ -257,7 +258,6 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             'magnitude2': 'sub-03/ses-2/fmap/sub-03_ses-2_run-1_magnitude2.nii.gz',
         }]
         run_stc = True
-        sbref_file = None
         multiecho = False
     else:
         # Find associated sbref, if possible
