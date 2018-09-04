@@ -294,6 +294,9 @@ BOLD reference image estimation
 
 This workflow estimates a reference image for a
 :abbr:`BOLD (blood-oxygen level-dependent)` series.
+If a single-band reference ("sbref") image associated with the BOLD series is
+available, then it is used directly.
+If not, a reference image is estimated from the BOLD series as follows:
 When T1-saturation effects ("dummy scans" or non-steady state volumes) are
 detected, they are averaged and used as reference due to their
 superior tissue contrast.
