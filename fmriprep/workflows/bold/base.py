@@ -273,7 +273,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                     "Multiple single-band reference files found for {}; using "
                     "{}".format(refbase, sbbase))
             else:
-                LOGGER.log(25, "Using single-band reference file {}".format(sbbase)
+                LOGGER.log(25, "Using single-band reference file {}".format(sbbase))
         else:
             LOGGER.log(25, "No single-band-reference found for {}".format(refbase))
 

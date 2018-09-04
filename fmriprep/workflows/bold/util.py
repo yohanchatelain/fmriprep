@@ -87,7 +87,8 @@ def init_bold_reference_wf(omp_nthreads, bold_file=None, name='bold_reference_wf
 First, a reference volume and its skull-stripped version were generated
 using a custom methodology of *fMRIPrep*.
 """
-    inputnode = pe.Node(niu.IdentityInterface(fields=['bold_file', 'sbref_file']), name='inputnode')
+    inputnode = pe.Node(niu.IdentityInterface(fields=['bold_file', 'sbref_file']),
+                        name='inputnode')
     outputnode = pe.Node(
         niu.IdentityInterface(fields=['bold_file', 'raw_ref_image', 'skip_vols', 'ref_image',
                                       'ref_image_brain', 'bold_mask', 'validation_report',
