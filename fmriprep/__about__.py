@@ -98,7 +98,7 @@ REQUIRES = [
     'pybids>=0.6.3',
     'nitime',
     'nipype>=1.1.1',
-    'niworkflows>=0.4.2',
+    'niworkflows>=0.4.3',
     'statsmodels',
     'seaborn',
     'indexed_gzip>=0.8.2',
