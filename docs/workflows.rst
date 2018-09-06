@@ -270,15 +270,6 @@ BOLD preprocessing
 Preprocessing of :abbr:`BOLD (blood-oxygen level-dependent)` files is
 split into multiple sub-workflows described below.
 
-In the case of multi-echo :abbr:`BOLD (blood-oxygen level-dependent)` data,
-each echo is processed independently. The two exceptions to this occur for
-:ref:`head-motion estimation <bold_hmc>` and :ref:`T2* map creation <bold_t2s>`.
-
-For the :ref:`head-motion estimation workflow <bold_hmc>`, only the first echo
-is submitted as this echo is expected to have the highest contrast between gray
-and white matter. For :ref:`T2* map creation <bold_t2s>`, all echos are
-considered jointly to look at voxel-wise T2* decay.
-
 .. _bold_ref:
 
 BOLD reference image estimation
@@ -365,22 +356,6 @@ command line argument.
 If a :abbr:`BOLD (blood-oxygen level-dependent)` series has fewer than
 5 usable (steady-state) volumes, slice time correction will be disabled
 for that run.
-
-.. _bold_t2s:
-
-T2* Driven Coregistration
-~~~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.bold.t2s.init_bold_t2s_wf`
-
-If the ``--t2s-coreg`` command line argument is supplied with multi-echo
-:abbr:`BOLD (blood-oxygen level-dependent)` data, an adaptive T2* map is generated
-using the `tedana`_ `T2* workflow`_.
-This T2* map is then used in place of the :ref:`BOLD reference image <bold_ref>`
-to ref:`register the BOLD series to the T1w image of the same subject <bold_reg>`.
-
-.. _tedana: https://github.com/me-ica/tedana
-.. _`T2* workflow`: https://tedana.readthedocs.io/en/latest/generated/tedana.workflows.t2smap_workflow.html#tedana.workflows.t2smap_workflow  # noqa
-
 
 Susceptibility Distortion Correction (SDC)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -583,3 +558,22 @@ A visualization of the AROMA component classification is also included in the HT
     Right hand side of each map: time series (top in seconds),
     frequency spectrum (bottom in Hertz).
     Components classified as signal in green; noise in red.
+
+
+.. _bold_t2s:
+
+T2* Driven Coregistration
+~~~~~~~~~~~~~~~~~~~~~~~~~
+:mod:`fmriprep.workflows.bold.t2s.init_bold_t2s_wf`
+
+If multi-echo :abbr:`BOLD (blood-oxygen level-dependent)` data is supplied,
+this workflow uses the `tedana`_ `T2* workflow`_ to generate an adaptive T2* map
+and optimally weighted combination of all supplied single echo time series.
+This optimaly combined time series is then carried forward for all subsequent
+preprocessing steps.
+Optionally, if the ``--t2s_coreg`` flag is supplied, the T2* map is then used
+in place of the :ref:`BOLD reference image <bold_ref>` to
+ref:`register the BOLD series to the T1w image <bold_reg>` of the same subject.
+
+.. _tedana: https://github.com/me-ica/tedana
+.. _`T2* workflow`: https://tedana.readthedocs.io/en/latest/generated/tedana.workflows.t2smap_workflow.html#tedana.workflows.t2smap_workflow  # noqa
