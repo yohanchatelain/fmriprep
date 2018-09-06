@@ -104,6 +104,7 @@ REQUIRES = [
     'indexed_gzip>=0.8.2',
     'scikit-image',
     'versioneer',
+    'pyyaml',
 ]
 
 LINKS_REQUIRES = [
