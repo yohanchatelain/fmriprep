@@ -50,6 +50,10 @@ from ..interfaces import (
 )
 from ..utils.misc import fix_multi_T1w_source_name, add_suffix
 
+TEMPLATE_MAP = {
+    'MNI152NLin2009cAsym': 'mni_icbm152_nlin_asym_09c',
+    }
+
 
 #  pylint: disable=R0914
 def init_anat_preproc_wf(skull_strip_template, output_spaces, template, debug,
@@ -330,7 +334,7 @@ and used as T1w-reference throughout the workflow.
     )
 
     if 'template' in output_spaces:
-        template_str = nid.TEMPLATE_MAP[template]
+        template_str = TEMPLATE_MAP[template]
         ref_img = op.join(nid.get_dataset(template_str), '1mm_T1.nii.gz')
 
         t1_2_mni.inputs.template = template_str
