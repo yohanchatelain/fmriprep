@@ -45,7 +45,7 @@ class PatchedBBRegisterRPT(BBRegisterRPT):
     
         fixed = False
         newfile = []
-        print("rrr coucou")
+
         for line in lines:
             if line.startswith('filename = ') and len(line.strip("\n")) >= 255:
                 fixed = True
@@ -71,7 +71,7 @@ class PatchedMRICoregRPT(MRICoregRPT):
     
         fixed = False
         newfile = []
-        print("rrr coucou")
+
         for line in lines:
             if line.startswith('filename = ') and len(line.strip("\n")) >= 255:
                 fixed = True
