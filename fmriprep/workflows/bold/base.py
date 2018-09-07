@@ -573,7 +573,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         # Replace reference with the echo selected with FirstEcho
         workflow.disconnect([
             (inputnode, bold_reference_wf, [
-                ('bold_file', 'inputnode.bold_file')]),
+                ('bold_file', 'inputnode.bold_file'),
+                ('sbref_file', 'inputnode.sbref_file')]),
             (bold_reference_wf, boldbuffer, [
                 ('outputnode.bold_file', 'bold_file')]),
         ])
