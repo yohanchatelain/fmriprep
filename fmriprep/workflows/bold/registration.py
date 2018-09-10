@@ -17,7 +17,7 @@ import os.path as op
 
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, fsl, c3, freesurfer as fs
-from niworkflows.interfaces.registration import FLIRTRPT, BBRegisterRPT, MRICoregRPT
+from niworkflows.interfaces.registration import FLIRTRPT
 from niworkflows.interfaces.utils import GenerateSamplingReference
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
 
@@ -27,64 +27,13 @@ from ...interfaces import MultiApplyTransforms, DerivativesDataSink
 from ...interfaces.nilearn import Merge
 from ...interfaces.images import extract_wm
 # See https://github.com/poldracklab/fmriprep/issues/768
-from ...interfaces.freesurfer import PatchedConcatenateLTA as ConcatenateLTA
+from ...interfaces.freesurfer import (
+        PatchedConcatenateLTA as ConcatenateLTA,
+        PatchedBBRegisterRPT as BBRegisterRPT,
+        PatchedMRICoregRPT as MRICoregRPT)
 
 
 DEFAULT_MEMORY_MIN_GB = 0.01
-
-
-class PatchedBBRegisterRPT(BBRegisterRPT):
-
-    def _list_outputs(self):
-        outputs = super(PatchedBBRegisterRPT, self)._list_outputs()
-
-        if not op.exists(outputs['out_lta_file']):
-            return outputs
-
-        with open(outputs['out_lta_file'], 'r') as f:
-            lines = f.readlines()
-
-        fixed = False
-        newfile = []
-
-        for line in lines:
-            if line.startswith('filename = ') and len(line.strip("\n")) >= 255:
-                fixed = True
-                newfile.append('filename = path_too_long\n')
-            else:
-                newfile.append(line)
-
-        if fixed:
-            with open(outputs['out_lta_file'], 'w') as f:
-                f.write(''.join(newfile))
-        return outputs
-
-
-class PatchedMRICoregRPT(MRICoregRPT):
-
-    def _list_outputs(self):
-        outputs = super(PatchedMRICoregRPT, self)._list_outputs()
-
-        if not op.exists(outputs['out_lta_file']):
-            return outputs
-
-        with open(outputs['out_lta_file'], 'r') as f:
-            lines = f.readlines()
-
-        fixed = False
-        newfile = []
-
-        for line in lines:
-            if line.startswith('filename = ') and len(line.strip("\n")) >= 255:
-                fixed = True
-                newfile.append('filename = path_too_long\n')
-            else:
-                newfile.append(line)
-
-        if fixed:
-            with open(outputs['out_lta_file'], 'w') as f:
-                f.write(''.join(newfile))
-        return outputs
 
 
 def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
@@ -402,8 +351,8 @@ for distortions remaining in the BOLD reference.
         name='outputnode')
 
     mri_coreg = pe.Node(
-        PatchedMRICoregRPT(dof=bold2t1w_dof, sep=[4], ftol=0.0001, linmintol=0.01,
-                           generate_report=not use_bbr),
+        MRICoregRPT(dof=bold2t1w_dof, sep=[4], ftol=0.0001, linmintol=0.01,
+                    generate_report=not use_bbr),
         name='mri_coreg', n_procs=omp_nthreads, mem_gb=5)
 
     lta_concat = pe.Node(ConcatenateLTA(out_file='out.lta'), name='lta_concat')
@@ -442,10 +391,9 @@ for distortions remaining in the BOLD reference.
         outputnode.inputs.fallback = True
 
         return workflow
-
     bbregister = pe.Node(
-        PatchedBBRegisterRPT(dof=bold2t1w_dof, contrast_type='t2', registered_file=True,
-                             out_lta_file=True, generate_report=True),
+        BBRegisterRPT(dof=bold2t1w_dof, contrast_type='t2', registered_file=True,
+                      out_lta_file=True, generate_report=True),
         name='bbregister', mem_gb=12)
 
     workflow.connect([
