@@ -391,6 +391,7 @@ for distortions remaining in the BOLD reference.
         outputnode.inputs.fallback = True
 
         return workflow
+
     bbregister = pe.Node(
         BBRegisterRPT(dof=bold2t1w_dof, contrast_type='t2', registered_file=True,
                       out_lta_file=True, generate_report=True),
