@@ -265,7 +265,9 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         entities['type'] = 'sbref'
         files = layout.get(**entities)
         refbase = os.path.basename(ref_file)
-        if files and multiecho:
+        if 'sbref' in ignore:
+            LOGGER.info("Single-band reference files ignored.")
+        elif files and multiecho:
             LOGGER.warning("Single-band reference found, but not supported in "
                            "multi-echo workflows at this time. Ignoring.")
         elif files:
