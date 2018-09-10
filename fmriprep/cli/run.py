@@ -421,7 +421,7 @@ def build_workflow(opts, retval):
         from yaml import load as loadyml
         with open(opts.use_plugin) as f:
             plugin_settings = loadyml(f)
-        plugin_settings.set_default('plugin_args', {})
+        plugin_settings.setdefault('plugin_args', {})
     else:
         # Defaults
         plugin_settings = {
