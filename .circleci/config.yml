@@ -257,7 +257,8 @@ jobs:
               -e FMRIPREP_REGRESSION_SOURCE=/tmp/data/fmriprep_bold_truncated \
               -e FMRIPREP_REGRESSION_TARGETS=/tmp/data/fmriprep_bold_mask \
               --entrypoint="py.test" poldracklab/fmriprep:latest \
-              /root/src/fmriprep/ --doctest-modules --ignore=docs --ignore=setup.py
+              /root/src/fmriprep/ \
+              --doctest-modules --ignore=/root/src/fmriprep/docs --ignore=setup.py
       - run:
           name: Test fmriprep-wrapper (Python 2)
           command: |

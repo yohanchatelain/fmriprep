@@ -81,7 +81,7 @@ def get_parser():
     g_perfm = parser.add_argument_group('Options to handle performance')
     g_perfm.add_argument('--debug', action='store_true', default=False,
                          help='run debug version of workflow')
-    g_perfm.add_argument('--nthreads', '--n_cpus', '-n-cpus', action='store', default=0, type=int,
+    g_perfm.add_argument('--nthreads', '--n_cpus', '-n-cpus', action='store', type=int,
                          help='maximum number of threads across all processes')
     g_perfm.add_argument('--omp-nthreads', action='store', type=int, default=0,
                          help='maximum number of threads per-process')
@@ -416,28 +416,35 @@ def build_workflow(opts, retval):
     subject_list = collect_participants(
         bids_dir, participant_label=opts.participant_label)
 
-    # Setting up MultiProc
-    nthreads = opts.nthreads
-    if nthreads < 1:
-        nthreads = cpu_count()
-
-    plugin_settings = {
-        'plugin': 'MultiProc',
-        'plugin_args': {
-            'n_procs': nthreads,
-            'raise_insufficient': False,
-            'maxtasksperchild': 1,
-        }
-    }
-
-    if opts.mem_mb:
-        plugin_settings['plugin_args']['memory_gb'] = opts.mem_mb / 1024
-
-    # Overload plugin_settings if --use-plugin
+    # Load base plugin_settings from file if --use-plugin
     if opts.use_plugin is not None:
         from yaml import load as loadyml
         with open(opts.use_plugin) as f:
             plugin_settings = loadyml(f)
+        plugin_settings.setdefault('plugin_args', {})
+    else:
+        # Defaults
+        plugin_settings = {
+            'plugin': 'MultiProc',
+            'plugin_args': {
+                'raise_insufficient': False,
+                'maxtasksperchild': 1,
+            }
+        }
+
+    # Resource management options
+    # Note that we're making strong assumptions about valid plugin args
+    # This may need to be revisited if people try to use batch plugins
+    nthreads = plugin_settings['plugin_args'].get('n_procs')
+    # Permit overriding plugin config with specific CLI options
+    if nthreads is None or opts.nthreads is not None:
+        nthreads = opts.nthreads
+        if nthreads is None or nthreads < 1:
+            nthreads = cpu_count()
+        plugin_settings['plugin_args']['n_procs'] = nthreads
+
+    if opts.mem_mb:
+        plugin_settings['plugin_args']['memory_gb'] = opts.mem_mb / 1024
 
     omp_nthreads = opts.omp_nthreads
     if omp_nthreads == 0:

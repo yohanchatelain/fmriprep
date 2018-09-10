@@ -1,9 +1,28 @@
+1.1.5 (September 06, 2018)
+==========================
+
+* [DOC] Replace ``--clearenv`` with correct ``--cleanenv`` flag (#1237) @jarodroland
+* [DOC] De-indent to remove text from code block (#1238) @effigies
+* [TST] Add enhance-and-skullstrip regression tests (#1074) @effigies
+* [DOC] Clearly indicate that fMRIPrep requires Python 3.5+ (#1249) @oesteban
+* [MAINT] Update PR template (#1239) @effigies
+* [DOC] Set appropriate version in Zenodo citation (#1250) @oesteban
+* [DOC] Updating long description (#1230) @oesteban
+* [DOC] Add ME workflow description (#1253) @tsalo
+* [FIX] Add memory annotation to ROIPlot interface (#1256) @jdkent
+* [ENH] Write derivatives ``dataset_description.json`` (#1247) @effigies
+* [DOC] Enable table text wrap and link docstrings to code on GitHub (#1258) @tsalo
+* [DOC] Clarify language describing T1w image merging (#1269) @chrisfilo
+* [FIX] Accommodate new template formats (#1273) @effigies
+* [FIX] Permit overriding plugin config with CLI options (#1272) @effigies
+
+
 1.1.4 (August 06, 2018)
 =======================
 
-  * [FIX] Verify first word of _cmd in dependency check (#1236)
-  * [DOC] Add two missing references (#1234)
-  * [ENH] Allow turning off random seeding for ANTs brain extraction (#919)
+* [FIX] Verify first word of ``_cmd`` in dependency check (#1236)
+* [DOC] Add two missing references (#1234)
+* [ENH] Allow turning off random seeding for ANTs brain extraction (#919)
 
 1.1.3 (July 30, 2018)
 =====================

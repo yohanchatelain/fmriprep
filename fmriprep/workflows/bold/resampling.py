@@ -29,6 +29,7 @@ from ...interfaces.freesurfer import (
     # See https://github.com/poldracklab/fmriprep/issues/768
     PatchedConcatenateLTA as ConcatenateLTA
 )
+from ..anatomical import TEMPLATE_MAP
 
 from .util import init_bold_reference_wf
 
@@ -259,7 +260,7 @@ generating a *preprocessed BOLD run in {tpl} space*.
 
     gen_ref = pe.Node(GenerateSamplingReference(), name='gen_ref',
                       mem_gb=0.3)  # 256x256x256 * 64 / 8 ~ 150MB)
-    template_str = nid.TEMPLATE_MAP[template]
+    template_str = TEMPLATE_MAP[template]
     gen_ref.inputs.fixed_image = op.join(nid.get_dataset(template_str), '1mm_T1.nii.gz')
 
     mask_mni_tfm = pe.Node(
