@@ -533,7 +533,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         from .util import init_skullstrip_bold_wf
         inputnode.inputs.bold_file = ref_file  # Replace reference w first echo
 
-        if run_stc:
+        if run_stc is True:
             workflow.disconnect([
                 (bold_reference_wf, bold_stc_wf,
                     [('outputnode.bold_file', 'inputnode.bold_file')])])
