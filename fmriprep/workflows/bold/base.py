@@ -401,15 +401,26 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     if run_stc is True:  # bool('TooShort') == True, so check True explicitly
         bold_stc_wf = init_bold_stc_wf(name='bold_stc_wf', metadata=metadata)
         workflow.connect([
-            (bold_reference_wf, bold_stc_wf, [('outputnode.bold_file', 'inputnode.bold_file'),
-                                              ('outputnode.skip_vols', 'inputnode.skip_vols')]),
+            (bold_reference_wf, bold_stc_wf, [
+                ('outputnode.skip_vols', 'inputnode.skip_vols')]),
             (bold_stc_wf, boldbuffer, [('outputnode.stc_file', 'bold_file')]),
         ])
+        if not multiecho:
+            workflow.connect([
+                (bold_reference_wf, bold_stc_wf, [
+                    ('outputnode.bold_file', 'inputnode.bold_file')])])
+        if multiecho:  # iterate through stc_wf for all workflows
+            meepi_echos = boldbuffer.clone(name='meepi_echos')
+            meepi_echos.iterables = ('bold_file', bold_file)
+            workflow.connect([
+                (meepi_echos, bold_stc_wf, [('bold_file', 'inputnode.bold_file')])])
     else:  # bypass STC from original BOLD to the splitter through boldbuffer
-        workflow.connect([
-            (bold_reference_wf, boldbuffer, [
-                ('outputnode.bold_file', 'bold_file')]),
-        ])
+        if not multiecho:
+            workflow.connect([
+                (bold_reference_wf, boldbuffer, [
+                    ('outputnode.bold_file', 'bold_file')])])
+        if multiecho:  # iterate over all meepi echos to boldbuffer
+            boldbuffer.iterables = ('bold_file', bold_file)
 
     # SDC (SUSCEPTIBILITY DISTORTION CORRECTION) or bypass ##########################
     bold_sdc_wf = init_sdc_wf(
@@ -428,6 +439,23 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     else:
         LOGGER.log(25, 'SDC: fieldmap estimation of type "%s" intended for %s found.',
                    fmaps[0]['type'], ref_file)
+
+    # MULTI-ECHO EPI DATA #############################################
+    if multiecho:
+        from .util import init_skullstrip_bold_wf
+        inputnode.inputs.bold_file = ref_file  # Replace reference w first echo
+
+        skullstrip_bold_wf = init_skullstrip_bold_wf(name='skullstrip_bold_wf')
+        join_echos = pe.JoinNode(niu.IdentityInterface(fields=['bold_files']),
+                                 joinsource=('meepi_echos' if run_stc is True else 'boldbuffer'),
+                                 joinfield=['bold_files'],
+                                 name='join_echos')
+
+        # create optimal combination, adaptive T2* map
+        bold_t2s_wf = init_bold_t2s_wf(echo_times=tes,
+                                       mem_gb=mem_gb['resampled'],
+                                       omp_nthreads=omp_nthreads,
+                                       name='bold_t2smap_wf')
 
     # MAIN WORKFLOW STRUCTURE #######################################################
     workflow.connect([
@@ -489,12 +517,30 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('out_files', 'inputnode.bold_file')]),
         (bold_hmc_wf, bold_bold_trans_wf, [
             ('outputnode.xforms', 'inputnode.hmc_xforms')]),
-        (bold_bold_trans_wf, bold_confounds_wf, [
-            ('outputnode.bold', 'inputnode.bold'),
-            ('outputnode.bold_mask', 'inputnode.bold_mask')]),
         # Summary
         (outputnode, summary, [('confounds', 'confounds_file')]),
     ])
+
+    # create and use optimal combination from meepi, or pass along standard epi
+    if multiecho:
+        workflow.connect([
+            (bold_bold_trans_wf, skullstrip_bold_wf, [
+                ('outputnode.bold', 'inputnode.in_file')]),
+            (skullstrip_bold_wf, join_echos, [
+                ('outputnode.skull_stripped_file', 'bold_files')]),
+            (join_echos, bold_t2s_wf, [
+                ('bold_files', 'inputnode.bold_file')]),
+            (bold_t2s_wf, bold_confounds_wf, [
+                ('outputnode.bold', 'inputnode.bold'),
+                ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+        ])
+
+    if not multiecho:
+        workflow.connect([
+            (bold_bold_trans_wf, bold_confounds_wf, [
+                ('outputnode.bold', 'inputnode.bold'),
+                ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+        ])
 
     if fmaps:
         from ..fieldmap.unwarp import init_fmap_unwarp_report_wf
@@ -527,58 +573,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 (bold_sdc_wf, syn_unwarp_report_wf, [
                     ('outputnode.syn_bold_ref', 'inputnode.in_post')]),
             ])
-
-    # if multiecho data, process all echos but select first echo for hmc correction
-    if multiecho:
-        from .util import init_skullstrip_bold_wf
-        inputnode.inputs.bold_file = ref_file  # Replace reference w first echo
-
-        if run_stc is True:
-            workflow.disconnect([
-                (bold_reference_wf, bold_stc_wf,
-                    [('outputnode.bold_file', 'inputnode.bold_file')])])
-            meepi_echos = boldbuffer.clone(name='meepi_echos')
-            meepi_echos.iterables = ('bold_file', bold_file)
-            workflow.connect([
-                (meepi_echos, bold_stc_wf,
-                    [('bold_file', 'inputnode.bold_file')])
-            ])
-
-        else:
-            workflow.disconnect([
-                (bold_reference_wf, boldbuffer, [
-                    ('outputnode.bold_file', 'bold_file')])])
-            boldbuffer.iterables = ('bold_file', bold_file)
-
-        skullstrip_bold_wf = init_skullstrip_bold_wf(name='skullstrip_bold_wf')
-        join_echos = pe.JoinNode(niu.IdentityInterface(fields=['bold_files']),
-                                 joinsource=('meepi_echos' if run_stc else 'boldbuffer'),
-                                 joinfield=['bold_files'],
-                                 name='join_echos')
-
-        # create optimal combination, adaptive T2* map
-        bold_t2s_wf = init_bold_t2s_wf(echo_times=tes,
-                                       mem_gb=mem_gb['resampled'],
-                                       omp_nthreads=omp_nthreads,
-                                       name='bold_t2smap_wf')
-
-        workflow.disconnect([
-            (bold_bold_trans_wf, bold_confounds_wf, [
-                ('outputnode.bold', 'inputnode.bold'),
-                ('outputnode.bold_mask', 'inputnode.bold_mask')]),
-        ])
-
-        workflow.connect([
-            (bold_bold_trans_wf, skullstrip_bold_wf, [
-                ('outputnode.bold', 'inputnode.in_file')]),
-            (skullstrip_bold_wf, join_echos, [
-                ('outputnode.skull_stripped_file', 'bold_files')]),
-            (join_echos, bold_t2s_wf, [
-                ('bold_files', 'inputnode.bold_file')]),
-            (bold_t2s_wf, bold_confounds_wf, [
-                ('outputnode.bold', 'inputnode.bold'),
-                ('outputnode.bold_mask', 'inputnode.bold_mask')]),
-        ])
 
         if t2s_coreg:
             # Replace EPI-to-T1w registration inputs

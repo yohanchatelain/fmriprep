@@ -128,7 +128,7 @@ to be run through ``fmriprep``.
 
 Longitudinal processing
 ~~~~~~~~~~~~~~~~~~~~~~~
-In the case of multiple T1w images (across sessions and/or runs), T1w images are 
+In the case of multiple T1w images (across sessions and/or runs), T1w images are
 merged into a single template image using FreeSurfer's `mri_robust_template`_.
 This template may be *unbiased*, or equidistant from all source images, or
 aligned to the first image (determined lexicographically by session label).
@@ -573,7 +573,7 @@ This optimaly combined time series is then carried forward for all subsequent
 preprocessing steps.
 Optionally, if the ``--t2s_coreg`` flag is supplied, the T2* map is then used
 in place of the :ref:`BOLD reference image <bold_ref>` to
-ref:`register the BOLD series to the T1w image <bold_reg>` of the same subject.
+:ref:`register the BOLD series to the T1w image <bold_reg>` of the same subject.
 
 .. _tedana: https://github.com/me-ica/tedana
 .. _`T2* workflow`: https://tedana.readthedocs.io/en/latest/generated/tedana.workflows.t2smap_workflow.html#tedana.workflows.t2smap_workflow  # noqa
