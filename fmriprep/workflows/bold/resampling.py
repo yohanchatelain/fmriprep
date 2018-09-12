@@ -27,7 +27,8 @@ from ...interfaces.nilearn import Merge
 from ...interfaces.freesurfer import (
     MedialNaNs,
     # See https://github.com/poldracklab/fmriprep/issues/768
-    PatchedConcatenateLTA as ConcatenateLTA
+    PatchedConcatenateLTA as ConcatenateLTA,
+    PatchedLTAconvert as LTAConvert
 )
 from ..anatomical import TEMPLATE_MAP
 
@@ -116,7 +117,7 @@ spaces: {out_spaces}.
                             mem_gb=DEFAULT_MEMORY_MIN_GB)
     rename_src.inputs.subject = spaces
 
-    resampling_xfm = pe.Node(fs.utils.LTAConvert(in_lta='identity.nofile', out_lta=True),
+    resampling_xfm = pe.Node(LTAConvert(in_lta='identity.nofile', out_lta=True),
                              name='resampling_xfm')
     set_xfm_source = pe.Node(ConcatenateLTA(out_type='RAS2RAS'), name='set_xfm_source')
 
