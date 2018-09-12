@@ -521,7 +521,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         (outputnode, summary, [('confounds', 'confounds_file')]),
     ])
 
-    # create and use optimal combination from meepi, or pass along standard epi
+    # create and use optimal combination from meepi
     if multiecho:
         workflow.connect([
             (bold_bold_trans_wf, skullstrip_bold_wf, [
@@ -535,11 +535,25 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('outputnode.bold_mask', 'inputnode.bold_mask')]),
         ])
 
+    # for standard EPI data, pass along correct file
     if not multiecho:
         workflow.connect([
             (bold_bold_trans_wf, bold_confounds_wf, [
                 ('outputnode.bold', 'inputnode.bold'),
                 ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+        ])
+
+    if t2s_coreg:
+        # Replace EPI-to-T1w registration inputs
+        workflow.disconnect([
+            (bold_sdc_wf, bold_reg_wf, [
+                ('outputnode.bold_ref_brain', 'inputnode.ref_bold_brain'),
+                ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
+        ])
+        workflow.connect([
+            (bold_t2s_wf, bold_reg_wf, [
+                ('outputnode.bold_ref', 'inputnode.ref_bold_brain'),
+                ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
         ])
 
     if fmaps:
@@ -572,19 +586,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                     ('outputnode.itk_t1_to_bold', 'inputnode.in_xfm')]),
                 (bold_sdc_wf, syn_unwarp_report_wf, [
                     ('outputnode.syn_bold_ref', 'inputnode.in_post')]),
-            ])
-
-        if t2s_coreg:
-            # Replace EPI-to-T1w registration inputs
-            workflow.disconnect([
-                (bold_sdc_wf, bold_reg_wf, [
-                    ('outputnode.bold_ref_brain', 'inputnode.ref_bold_brain'),
-                    ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
-            ])
-            workflow.connect([
-                (bold_t2s_wf, bold_reg_wf, [
-                    ('outputnode.bold_ref', 'inputnode.ref_bold_brain'),
-                    ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
             ])
 
     # Map final BOLD mask into T1w space (if required)
