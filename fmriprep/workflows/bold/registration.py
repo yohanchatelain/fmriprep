@@ -33,9 +33,9 @@ from ...interfaces.freesurfer import PatchedConcatenateLTA as ConcatenateLTA
 DEFAULT_MEMORY_MIN_GB = 0.01
 
 
-def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
-                     name='bold_reg_wf', use_compression=True,
-                     use_fieldwarp=False, write_report=True):
+def init_bold_calc_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
+                          use_compression=True, write_report=True,
+                          name='bold_calc_reg_wf', ):
     """
     This workflow registers the reference BOLD image to T1-space, using a
     boundary-based registration (BBR) cost function.
@@ -70,14 +70,12 @@ def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
             Size of BOLD file in GB
         omp_nthreads : int
             Maximum number of threads an individual process may use
-        name : str
-            Name of workflow (default: ``bold_reg_wf``)
         use_compression : bool
             Save registered BOLD series as ``.nii.gz``
-        use_fieldwarp : bool
-            Include SDC warp in single-shot transform from BOLD to T1
         write_report : bool
             Whether a reportlet should be stored
+        name : str
+            Name of workflow (default: ``bold_calc_reg_wf``)
 
     **Inputs**
 
@@ -106,16 +104,12 @@ def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
             (only if ``recon-all`` was run).
         bold_split
             Individual 3D BOLD volumes, not motion corrected
-        hmc_xforms
-            List of affine transforms aligning each volume to ``ref_image`` in ITK format
         subjects_dir
             FreeSurfer SUBJECTS_DIR
         subject_id
             FreeSurfer subject ID
         t1_2_fsnative_reverse_transform
             LTA-style affine matrix translating from FreeSurfer-conformed subject space to T1w
-        fieldwarp
-            a :abbr:`DFM (displacements field map)` in ITK format
 
     **Outputs**
 
@@ -123,8 +117,6 @@ def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
             Affine transform from ``ref_bold_brain`` to T1 space (ITK format)
         itk_t1_to_bold
             Affine transform from T1 space to BOLD space (ITK format)
-        bold_t1
-            Motion-corrected BOLD series in T1 space
         bold_mask_t1
             BOLD mask in T1 space
         bold_aseg_t1
@@ -148,15 +140,15 @@ def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
         niu.IdentityInterface(
             fields=['name_source', 'ref_bold_brain', 'ref_bold_mask',
                     't1_preproc', 't1_brain', 't1_mask', 't1_seg',
-                    't1_aseg', 't1_aparc', 'bold_split', 'hmc_xforms',
-                    'subjects_dir', 'subject_id', 't1_2_fsnative_reverse_transform', 'fieldwarp']),
+                    't1_aseg', 't1_aparc', 'bold_split', 'subjects_dir',
+                    'subject_id', 't1_2_fsnative_reverse_transform']),
         name='inputnode'
     )
 
     outputnode = pe.Node(
         niu.IdentityInterface(fields=[
             'itk_bold_to_t1', 'itk_t1_to_bold', 'fallback',
-            'bold_t1', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1']),
+            'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1']),
         name='outputnode'
     )
 
@@ -215,35 +207,6 @@ def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
             (aparc_t1w_tfm, outputnode, [('output_image', 'bold_aparc_t1')]),
         ])
 
-    # Merge transforms placing the head motion correction last
-    nforms = 2 + int(use_fieldwarp)
-    merge_xforms = pe.Node(niu.Merge(nforms), name='merge_xforms',
-                           run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
-    workflow.connect([
-        (inputnode, merge_xforms, [('hmc_xforms', 'in%d' % nforms)])
-    ])
-
-    if use_fieldwarp:
-        workflow.connect([
-            (inputnode, merge_xforms, [('fieldwarp', 'in2')])
-        ])
-
-    bold_to_t1w_transform = pe.Node(
-        MultiApplyTransforms(interpolation="LanczosWindowedSinc", float=True, copy_dtype=True),
-        name='bold_to_t1w_transform', mem_gb=mem_gb * 3 * omp_nthreads, n_procs=omp_nthreads)
-
-    merge = pe.Node(Merge(compress=use_compression), name='merge', mem_gb=mem_gb)
-
-    workflow.connect([
-        (bbr_wf, merge_xforms, [('outputnode.itk_bold_to_t1', 'in1')]),
-        (merge_xforms, bold_to_t1w_transform, [('out', 'transforms')]),
-        (inputnode, merge, [('name_source', 'header_source')]),
-        (merge, outputnode, [('out_file', 'bold_t1')]),
-        (inputnode, bold_to_t1w_transform, [('bold_split', 'input_image')]),
-        (gen_ref, bold_to_t1w_transform, [('out_file', 'reference_image')]),
-        (bold_to_t1w_transform, merge, [('out_files', 'in_files')]),
-    ])
-
     if write_report:
         ds_report_reg = pe.Node(
             DerivativesDataSink(),
@@ -260,6 +223,97 @@ def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
                 ('outputnode.out_report', 'in_file'),
                 (('outputnode.fallback', _bold_reg_suffix, freesurfer), 'suffix')]),
         ])
+
+    return workflow
+
+
+def init_bold_apply_reg_wf(mem_gb, omp_nthreads, use_compression=True,
+                           use_fieldwarp=False, name='bold_apply_reg_wf'):
+    """
+    This workflow registers the reference BOLD image to T1-space, using a
+    boundary-based registration (BBR) cost function.
+
+    If FreeSurfer-based preprocessing is enabled, the ``bbregister`` utility
+    is used to align the BOLD images to the reconstructed subject, and the
+    resulting transform is adjusted to target the T1 space.
+    If FreeSurfer-based preprocessing is disabled, FSL FLIRT is used with the
+    BBR cost function to directly target the T1 space.
+
+    .. workflow::
+        :graph2use: orig
+        :simple_form: yes
+
+        from fmriprep.workflows.bold.registration import init_bold_reg_wf
+        wf = init_bold_reg_wf(mem_gb=3,
+                              omp_nthreads=19)
+
+    **Parameters**
+
+        mem_gb : float
+            Size of BOLD file in GB
+        omp_nthreads : int
+            Maximum number of threads an individual process may use
+        use_compression : bool
+            Save registered BOLD series as ``.nii.gz``
+        use_fieldwarp : bool
+            Include SDC warp in single-shot transform from BOLD to T1
+        name : str
+            Name of workflow (default: ``bold_apply_reg_wf``)
+
+    **Inputs**
+        reference_grid
+            Reference grid for resampling to a different space (e.g. MNI),
+            keeping the original resolution
+        itk_bold_to_t1
+            Affine transform from ``ref_bold_brain`` to T1 space (ITK format)
+        hmc_xforms
+            List of affine transforms aligning each volume to ``ref_image`` in ITK format
+        fieldwarp
+            a :abbr:`DFM (displacements field map)` in ITK format
+
+    **Outputs**
+        bold_t1
+            Motion-corrected BOLD series in T1 space
+
+    """
+    workflow = Workflow(name=name)
+    inputnode = pe.Node(
+        niu.IdentityInterface(fields=[
+            'reference_grid', 'itk_bold_to_t1', 'hmc_xforms', 'fieldwarp']),
+        name='inputnode'
+    )
+
+    outputnode = pe.Node(
+        niu.IdentityInterface(fields=['bold_t1']),
+        name='outputnode'
+    )
+
+    # Merge transforms placing the head motion correction last
+    nforms = 2 + int(use_fieldwarp)
+    merge_xforms = pe.Node(niu.Merge(nforms), name='merge_xforms',
+                           run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
+
+    bold_to_t1w_transform = pe.Node(
+        MultiApplyTransforms(interpolation="LanczosWindowedSinc", float=True, copy_dtype=True),
+        name='bold_to_t1w_transform', mem_gb=mem_gb * 3 * omp_nthreads, n_procs=omp_nthreads)
+
+    merge = pe.Node(Merge(compress=use_compression), name='merge', mem_gb=mem_gb)
+
+    if use_fieldwarp:
+        workflow.connect([
+            (inputnode, merge_xforms, [('fieldwarp', 'in2')])
+        ])
+
+    workflow.connect([
+        (inputnode, merge_xforms, [('itk_bold_to_t1', 'in1'),
+                                   ('hmc_xforms', 'in%d' % nforms)]),
+        (merge_xforms, bold_to_t1w_transform, [('out', 'transforms')]),
+        (inputnode, bold_to_t1w_transform, [('bold_split', 'input_image')]),
+        (inputnode, bold_to_t1w_transform, [('reference_grid', 'reference_image')]),
+        (bold_to_t1w_transform, merge, [('out_files', 'in_files')]),
+        (inputnode, merge, [('name_source', 'header_source')]),
+        (merge, outputnode, [('out_file', 'bold_t1')]),
+    ])
 
     return workflow
 
