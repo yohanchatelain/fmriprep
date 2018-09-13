@@ -19,7 +19,7 @@ from nipype.interfaces.fsl import Split as FSLSplit
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 
-from ..utils.misc import meepi_optimal_comb_source_name
+from ...utils.misc import meepi_optimal_comb_source_name
 from ...interfaces import DerivativesDataSink, GiftiNameSource
 
 from ...interfaces.reports import FunctionalSummary
@@ -338,7 +338,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                                                    cifti_output=cifti_output)
 
     workflow.connect([
-        (inputnode, func_derivatives_wf, [('bold_file', 'inputnode.source_file')]),
         (outputnode, func_derivatives_wf, [
             ('bold_t1', 'inputnode.bold_t1'),
             ('bold_aseg_t1', 'inputnode.bold_aseg_t1'),
@@ -524,15 +523,17 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
     # create and use optimal combination from meepi
     if multiecho:
+
         workflow.connect([
+            # update name source for optimal combination
+            (inputnode, func_derivatives_wf, [
+                (('bold_file', meepi_optimal_comb_source_name), 'inputnode.source_file')]),
             (bold_bold_trans_wf, skullstrip_bold_wf, [
                 ('outputnode.bold', 'inputnode.in_file')]),
             (skullstrip_bold_wf, join_echos, [
                 ('outputnode.skull_stripped_file', 'bold_files')]),
             (join_echos, bold_t2s_wf, [
                 ('bold_files', 'inputnode.bold_file')]),
-            (join_echos, func_derivatives_wf, [
-                (('bold_files', meepi_optimal_comb_source_name), 'source_file')]),
             (bold_t2s_wf, bold_confounds_wf, [
                 ('outputnode.bold', 'inputnode.bold'),
                 ('outputnode.bold_mask', 'inputnode.bold_mask')]),
@@ -541,6 +542,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     # for standard EPI data, pass along correct file
     if not multiecho:
         workflow.connect([
+            (inputnode, func_derivatives_wf, [
+                ('bold_file', 'inputnode.source_file')]),
             (bold_bold_trans_wf, bold_confounds_wf, [
                 ('outputnode.bold', 'inputnode.bold'),
                 ('outputnode.bold_mask', 'inputnode.bold_mask')]),
