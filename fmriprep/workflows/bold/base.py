@@ -19,6 +19,7 @@ from nipype.interfaces.fsl import Split as FSLSplit
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 
+from ..utils.misc import meepi_optimal_comb_source_name
 from ...interfaces import DerivativesDataSink, GiftiNameSource
 
 from ...interfaces.reports import FunctionalSummary
@@ -530,6 +531,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('outputnode.skull_stripped_file', 'bold_files')]),
             (join_echos, bold_t2s_wf, [
                 ('bold_files', 'inputnode.bold_file')]),
+            (join_echos, func_derivatives_wf, [
+                (('bold_files', meepi_optimal_comb_source_name), 'source_file')]),
             (bold_t2s_wf, bold_confounds_wf, [
                 ('outputnode.bold', 'inputnode.bold'),
                 ('outputnode.bold_mask', 'inputnode.bold_mask')]),
