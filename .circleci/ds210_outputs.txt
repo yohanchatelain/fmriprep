@@ -22,8 +22,8 @@ fmriprep/sub-02/anat/sub-02_T1w_space-MNI152NLin2009cAsym_target-T1w_warp.h5
 fmriprep/sub-02/anat/sub-02_T1w_space-orig_target-T1w_affine.txt
 fmriprep/sub-02/anat/sub-02_T1w_target-MNI152NLin2009cAsym_warp.h5
 fmriprep/sub-02/func
-fmriprep/sub-02/func/sub-02_task-cuedSGT_run-01_echo-1_bold_confounds.tsv
-fmriprep/sub-02/func/sub-02_task-cuedSGT_run-01_echo-1_bold_space-MNI152NLin2009cAsym_brainmask.nii.gz
-fmriprep/sub-02/func/sub-02_task-cuedSGT_run-01_echo-1_bold_space-MNI152NLin2009cAsym_preproc.nii.gz
+fmriprep/sub-02/func/sub-02_task-cuedSGT_run-01_bold_confounds.tsv
+fmriprep/sub-02/func/sub-02_task-cuedSGT_run-01_bold_space-MNI152NLin2009cAsym_brainmask.nii.gz
+fmriprep/sub-02/func/sub-02_task-cuedSGT_run-01_bold_space-MNI152NLin2009cAsym_preproc.nii.gz
 fmriprep/sub-02.html
 /tmp/ds210/derivatives
