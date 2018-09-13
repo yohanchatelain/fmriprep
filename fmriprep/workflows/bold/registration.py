@@ -127,6 +127,9 @@ def init_bold_calc_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthread
             (only if ``recon-all`` was run).
         fallback
             Boolean indicating whether BBR was rejected (mri_coreg registration returned)
+        reference_image
+            Reference grid for resampling to a different space (e.g. MNI),
+            keeping the original resolution
 
 
     **Subworkflows**
@@ -148,7 +151,8 @@ def init_bold_calc_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthread
     outputnode = pe.Node(
         niu.IdentityInterface(fields=[
             'itk_bold_to_t1', 'itk_t1_to_bold', 'fallback',
-            'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1']),
+            'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1',
+            'reference_image']),
         name='outputnode'
     )
 
@@ -203,6 +207,7 @@ def init_bold_calc_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthread
             (inputnode, aparc_t1w_tfm, [('t1_aparc', 'input_image')]),
             (gen_ref, aseg_t1w_tfm, [('out_file', 'reference_image')]),
             (gen_ref, aparc_t1w_tfm, [('out_file', 'reference_image')]),
+            (gen_ref, outputnode, [('out_file', 'reference_image')]),
             (aseg_t1w_tfm, outputnode, [('output_image', 'bold_aseg_t1')]),
             (aparc_t1w_tfm, outputnode, [('output_image', 'bold_aparc_t1')]),
         ])
