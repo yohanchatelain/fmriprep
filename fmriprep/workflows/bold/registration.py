@@ -36,7 +36,7 @@ DEFAULT_MEMORY_MIN_GB = 0.01
 
 def init_bold_calc_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
                           use_compression=True, write_report=True,
-                          name='bold_calc_reg_wf', ):
+                          name='bold_calc_reg_wf'):
     """
     This workflow calculates the registration of the reference BOLD image to T1-space,
      using a boundary-based registration (BBR) cost function.
@@ -80,9 +80,6 @@ def init_bold_calc_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthread
 
     **Inputs**
 
-        name_source
-            BOLD series NIfTI file
-            Used to recover original information lost during processing
         ref_bold_brain
             Reference image to which BOLD series is aligned
             If ``fieldwarp == True``, ``ref_bold_brain`` should be unwarped
@@ -140,7 +137,7 @@ def init_bold_calc_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthread
     workflow = Workflow(name=name)
     inputnode = pe.Node(
         niu.IdentityInterface(
-            fields=['name_source', 'ref_bold_brain', 'ref_bold_mask',
+            fields=['ref_bold_brain', 'ref_bold_mask',
                     't1_preproc', 't1_brain', 't1_mask', 't1_seg',
                     't1_aseg', 't1_aparc', 'subjects_dir',
                     'subject_id', 't1_2_fsnative_reverse_transform']),
@@ -265,6 +262,9 @@ def init_bold_apply_reg_wf(mem_gb, omp_nthreads, use_compression=True,
             Name of workflow (default: ``bold_apply_reg_wf``)
 
     **Inputs**
+        name_source
+            BOLD series NIfTI file
+            Used to recover original information lost during processing
         bold_split
             Individual 3D BOLD volumes, not motion corrected
         reference_grid
@@ -285,8 +285,8 @@ def init_bold_apply_reg_wf(mem_gb, omp_nthreads, use_compression=True,
     workflow = Workflow(name=name)
     inputnode = pe.Node(
         niu.IdentityInterface(fields=[
-            'bold_split', 'reference_grid', 'itk_bold_to_t1',
-            'hmc_xforms', 'fieldwarp']),
+            'name_source', 'bold_split', 'reference_grid',
+            'itk_bold_to_t1', 'hmc_xforms', 'fieldwarp']),
         name='inputnode'
     )
 

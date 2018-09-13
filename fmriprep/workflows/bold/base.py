@@ -457,7 +457,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('outputnode.bold_file', 'inputnode.bold_file')]),
         # EPI-T1 registration workflow
         (inputnode, bold_calc_reg_wf, [
-            ('bold_file', 'inputnode.name_source'),
             ('t1_preproc', 'inputnode.t1_preproc'),
             ('t1_brain', 'inputnode.t1_brain'),
             ('t1_mask', 'inputnode.t1_mask'),
@@ -468,6 +467,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('subjects_dir', 'inputnode.subjects_dir'),
             ('subject_id', 'inputnode.subject_id'),
             ('t1_2_fsnative_reverse_transform', 'inputnode.t1_2_fsnative_reverse_transform')]),
+        (inputnode, bold_apply_reg_wf, [('bold_file', 'inputnode.name_source')]),
         (bold_split, bold_apply_reg_wf, [('out_files', 'inputnode.bold_split')]),
         (bold_hmc_wf, bold_apply_reg_wf, [('outputnode.xforms', 'inputnode.hmc_xforms')]),
         (bold_calc_reg_wf, outputnode, [('outputnode.bold_aseg_t1', 'bold_aseg_t1'),
