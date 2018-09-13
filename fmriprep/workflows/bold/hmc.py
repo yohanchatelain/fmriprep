@@ -10,8 +10,9 @@ Head-Motion Estimation and Correction (HMC) of BOLD images
 """
 
 from nipype.pipeline import engine as pe
-from nipype.interfaces import utility as niu, fsl
+from nipype.interfaces import utility as niu, fsl, afni
 from niworkflows.interfaces import NormalizeMotionParams
+from fmriprep.utils.misc import afni2itk_func
 from ...engine import Workflow
 from ...interfaces import MCFLIRT2ITK
 
@@ -73,24 +74,24 @@ parameters) are estimated before any spatiotemporal filtering using
         name='outputnode')
 
     # Head motion correction (hmc)
-    mcflirt = pe.Node(fsl.MCFLIRT(save_mats=True, save_plots=True),
-                      name='mcflirt', mem_gb=mem_gb * 3)
+    mc = pe.Node(afni.Volreg(args='-prefix NULL -twopass',
+                             zpad=4, outputtype='NIFTI_GZ'), name="mc", mem_gb=mem_gb * 3)
 
-    fsl2itk = pe.Node(MCFLIRT2ITK(), name='fsl2itk',
-                      mem_gb=0.05, n_procs=omp_nthreads)
+    afni2itk = pe.Node(niu.Function(function=afni2itk_func,
+                                    input_names=["in_file"],
+                                    output_names=["out_files"]), name='afni2itk',
+                       mem_gb=0.05)
 
-    normalize_motion = pe.Node(NormalizeMotionParams(format='FSL'),
+    normalize_motion = pe.Node(NormalizeMotionParams(format='AFNI'),
                                name="normalize_motion",
                                mem_gb=DEFAULT_MEMORY_MIN_GB)
 
     workflow.connect([
-        (inputnode, mcflirt, [('raw_ref_image', 'ref_file'),
-                              ('bold_file', 'in_file')]),
-        (inputnode, fsl2itk, [('raw_ref_image', 'in_source'),
-                              ('raw_ref_image', 'in_reference')]),
-        (mcflirt, fsl2itk, [('mat_file', 'in_files')]),
-        (mcflirt, normalize_motion, [('par_file', 'in_file')]),
-        (fsl2itk, outputnode, [('out_file', 'xforms')]),
+        (inputnode, mc, [('raw_ref_image', 'basefile'),
+                         ('bold_file', 'in_file')]),
+        (mc, afni2itk, [('oned_matrix_save', 'in_file')]),
+        (mc, normalize_motion, [('oned_file', 'in_file')]),
+        (afni2itk, outputnode, [('out_files', 'xforms')]),
         (normalize_motion, outputnode, [('out_file', 'movpar_file')]),
     ])
 

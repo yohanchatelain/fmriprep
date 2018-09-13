@@ -19,6 +19,7 @@ from nipype.interfaces.fsl import Split as FSLSplit
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 
+from fmriprep.utils.misc import split_and_deoblique_func
 from ...interfaces import (
     DerivativesDataSink,
     GiftiNameSource,
@@ -371,7 +372,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         omp_nthreads=omp_nthreads, enhance_t2=True)
 
     # Top-level BOLD splitter
-    bold_split = pe.Node(FSLSplit(dimension='t'), name='bold_split',
+    bold_split = pe.Node(niu.Function(function=split_and_deoblique_func, input_names=['in_file'],
+                                      output_names=['out_files']), name='bold_split',
                          mem_gb=mem_gb['filesize'] * 3)
 
     # HMC on the BOLD
