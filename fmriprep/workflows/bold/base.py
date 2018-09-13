@@ -274,11 +274,15 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                    'slicetiming' not in ignore and
                    (_get_series_len(ref_file) > 4 or "TooShort"))
 
-    # Use T2* as target for ME-EPI in co-registration
+    # Check if MEEPI for T2* coregistration target
     if t2s_coreg and not multiecho:
         LOGGER.warning("No multiecho BOLD images found for T2* coregistration. "
                        "Using standard EPI-T1 coregistration.")
         t2s_coreg = False
+
+    # By default, force-bbr for t2s_coreg unless user specifies otherwise
+    if t2s_coreg and (use_bbr is not False):
+            use_bbr = True
 
     # Build workflow
     workflow = Workflow(name=wf_name)
