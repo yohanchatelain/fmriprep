@@ -6,7 +6,8 @@
 Registration workflows
 ++++++++++++++++++++++
 
-.. autofunction:: init_bold_reg_wf
+.. autofunction:: init_bold_calc_reg_wf
+.. autofunction:: init_bold_apply_reg_wf
 .. autofunction:: init_bbreg_wf
 .. autofunction:: init_fsl_bbr_wf
 
@@ -37,8 +38,8 @@ def init_bold_calc_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthread
                           use_compression=True, write_report=True,
                           name='bold_calc_reg_wf', ):
     """
-    This workflow registers the reference BOLD image to T1-space, using a
-    boundary-based registration (BBR) cost function.
+    This workflow calculates the registration of the reference BOLD image to T1-space,
+     using a boundary-based registration (BBR) cost function.
 
     If FreeSurfer-based preprocessing is enabled, the ``bbregister`` utility
     is used to align the BOLD images to the reconstructed subject, and the
@@ -50,12 +51,12 @@ def init_bold_calc_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthread
         :graph2use: orig
         :simple_form: yes
 
-        from fmriprep.workflows.bold.registration import init_bold_reg_wf
-        wf = init_bold_reg_wf(freesurfer=True,
-                              mem_gb=3,
-                              omp_nthreads=1,
-                              use_bbr=True,
-                              bold2t1w_dof=9)
+        from fmriprep.workflows.bold.registration import init_bold_calc_reg_wf
+        wf = init_bold_calc_reg_wf(freesurfer=True,
+                                   mem_gb=3,
+                                   omp_nthreads=1,
+                                   use_bbr=True,
+                                   bold2t1w_dof=9)
 
     **Parameters**
 
@@ -102,8 +103,6 @@ def init_bold_calc_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthread
         t1_aparc
             FreeSurfer's ``aparc+aseg.mgz`` atlas projected into the T1w reference
             (only if ``recon-all`` was run).
-        bold_split
-            Individual 3D BOLD volumes, not motion corrected
         subjects_dir
             FreeSurfer SUBJECTS_DIR
         subject_id
@@ -143,7 +142,7 @@ def init_bold_calc_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthread
         niu.IdentityInterface(
             fields=['name_source', 'ref_bold_brain', 'ref_bold_mask',
                     't1_preproc', 't1_brain', 't1_mask', 't1_seg',
-                    't1_aseg', 't1_aparc', 'bold_split', 'subjects_dir',
+                    't1_aseg', 't1_aparc', 'subjects_dir',
                     'subject_id', 't1_2_fsnative_reverse_transform']),
         name='inputnode'
     )
@@ -248,9 +247,9 @@ def init_bold_apply_reg_wf(mem_gb, omp_nthreads, use_compression=True,
         :graph2use: orig
         :simple_form: yes
 
-        from fmriprep.workflows.bold.registration import init_bold_reg_wf
-        wf = init_bold_reg_wf(mem_gb=3,
-                              omp_nthreads=19)
+        from fmriprep.workflows.bold.registration import init_bold_apply_reg_wf
+        wf = init_bold_apply_reg_wf(mem_gb=3,
+                                    omp_nthreads=19)
 
     **Parameters**
 
@@ -266,6 +265,8 @@ def init_bold_apply_reg_wf(mem_gb, omp_nthreads, use_compression=True,
             Name of workflow (default: ``bold_apply_reg_wf``)
 
     **Inputs**
+        bold_split
+            Individual 3D BOLD volumes, not motion corrected
         reference_grid
             Reference grid for resampling to a different space (e.g. MNI),
             keeping the original resolution
@@ -284,7 +285,8 @@ def init_bold_apply_reg_wf(mem_gb, omp_nthreads, use_compression=True,
     workflow = Workflow(name=name)
     inputnode = pe.Node(
         niu.IdentityInterface(fields=[
-            'reference_grid', 'itk_bold_to_t1', 'hmc_xforms', 'fieldwarp']),
+            'bold_split', 'reference_grid', 'itk_bold_to_t1',
+            'hmc_xforms', 'fieldwarp']),
         name='inputnode'
     )
 

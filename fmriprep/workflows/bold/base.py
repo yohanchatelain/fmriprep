@@ -468,7 +468,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('subjects_dir', 'inputnode.subjects_dir'),
             ('subject_id', 'inputnode.subject_id'),
             ('t1_2_fsnative_reverse_transform', 'inputnode.t1_2_fsnative_reverse_transform')]),
-        (bold_split, bold_calc_reg_wf, [('out_files', 'inputnode.bold_split')]),
+        (bold_split, bold_apply_reg_wf, [('out_files', 'inputnode.bold_split')]),
         (bold_hmc_wf, bold_apply_reg_wf, [('outputnode.xforms', 'inputnode.hmc_xforms')]),
         (bold_calc_reg_wf, outputnode, [('outputnode.bold_aseg_t1', 'bold_aseg_t1'),
                                         ('outputnode.bold_aparc_t1', 'bold_aparc_t1')]),

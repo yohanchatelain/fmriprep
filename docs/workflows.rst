@@ -128,7 +128,7 @@ to be run through ``fmriprep``.
 
 Longitudinal processing
 ~~~~~~~~~~~~~~~~~~~~~~~
-In the case of multiple T1w images (across sessions and/or runs), T1w images are 
+In the case of multiple T1w images (across sessions and/or runs), T1w images are
 merged into a single template image using FreeSurfer's `mri_robust_template`_.
 This template may be *unbiased*, or equidistant from all source images, or
 aligned to the first image (determined lexicographically by session label).
@@ -431,23 +431,23 @@ Interpolation uses a Lanczos kernel.
 
 EPI to T1w registration
 ~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.bold.registration.init_bold_reg_wf`
+:mod:`fmriprep.workflows.bold.registration.init_bold_calc_reg_wf`
 
 .. workflow::
     :graph2use: orig
     :simple_form: yes
 
-    from fmriprep.workflows.bold import init_bold_reg_wf
-    wf = init_bold_reg_wf(
+    from fmriprep.workflows.bold import init_bold_calc_reg_wf
+    wf = init_bold_calc_reg_wf(
         freesurfer=True,
         mem_gb=1,
         omp_nthreads=1,
         use_bbr=True,
         bold2t1w_dof=9)
 
-The reference :abbr:`EPI (echo-planar imaging)` image of each run is aligned
-by the ``bbregister`` routine to the reconstructed subject using the gray/white
-matter boundary (FreeSurfer's ``?h.white`` surfaces).
+The alignment between the reference :abbr:`EPI (echo-planar imaging)` image
+of each run and the reconstructed subject using the gray/white matter boundary
+(FreeSurfer's ``?h.white`` surfaces) is calculated by the ``bbregister`` routine.
 
 .. figure:: _static/EPIT1Normalization.svg
     :scale: 100%
