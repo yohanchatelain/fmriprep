@@ -243,6 +243,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                     'Memory resampled/largemem=%.2f/%.2f GB.'),
                ref_file, mem_gb['filesize'], bold_tlen, mem_gb['resampled'], mem_gb['largemem'])
 
+    sbref_file = None
     # For doc building purposes
     if layout is None or bold_file == 'bold_preprocesing':
         LOGGER.log(25, 'No valid layout: building empty workflow.')
@@ -260,6 +261,28 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         run_stc = True
         multiecho = False
     else:
+        # Find associated sbref, if possible
+        entities = layout.parse_file_entities(ref_file)
+        entities['type'] = 'sbref'
+        files = layout.get(**entities)
+        refbase = os.path.basename(ref_file)
+        if 'sbref' in ignore:
+            LOGGER.info("Single-band reference files ignored.")
+        elif files and multiecho:
+            LOGGER.warning("Single-band reference found, but not supported in "
+                           "multi-echo workflows at this time. Ignoring.")
+        elif files:
+            sbref_file = files[0].filename
+            sbbase = os.path.basename(sbref_file)
+            if len(files) > 1:
+                LOGGER.warning(
+                    "Multiple single-band reference files found for {}; using "
+                    "{}".format(refbase, sbbase))
+            else:
+                LOGGER.log(25, "Using single-band reference file {}".format(sbbase))
+        else:
+            LOGGER.log(25, "No single-band-reference found for {}".format(refbase))
+
         metadata = layout.get_metadata(ref_file)
 
         # Find fieldmaps. Options: (phase1|phase2|phasediff|epi|fieldmap|syn)
@@ -313,13 +336,15 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 """
 
     inputnode = pe.Node(niu.IdentityInterface(
-        fields=['bold_file', 'subjects_dir', 'subject_id',
+        fields=['bold_file', 'sbref_file', 'subjects_dir', 'subject_id',
                 't1_preproc', 't1_brain', 't1_mask', 't1_seg', 't1_tpms',
                 't1_aseg', 't1_aparc',
                 't1_2_mni_forward_transform', 't1_2_mni_reverse_transform',
                 't1_2_fsnative_forward_transform', 't1_2_fsnative_reverse_transform']),
         name='inputnode')
     inputnode.inputs.bold_file = bold_file
+    if sbref_file is not None:
+        inputnode.inputs.sbref_file = sbref_file
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_t1', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1', 'cifti_variant',
@@ -443,7 +468,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     # MAIN WORKFLOW STRUCTURE #######################################################
     workflow.connect([
         # Generate early reference
-        (inputnode, bold_reference_wf, [('bold_file', 'inputnode.bold_file')]),
+        (inputnode, bold_reference_wf, [('bold_file', 'inputnode.bold_file'),
+                                        ('sbref_file', 'inputnode.sbref_file')]),
         # BOLD buffer has slice-time corrected if it was run, original otherwise
         (boldbuffer, bold_split, [('bold_file', 'in_file')]),
         # HMC
@@ -551,7 +577,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         # Replace reference with the echo selected with FirstEcho
         workflow.disconnect([
             (inputnode, bold_reference_wf, [
-                ('bold_file', 'inputnode.bold_file')]),
+                ('bold_file', 'inputnode.bold_file'),
+                ('sbref_file', 'inputnode.sbref_file')]),
             (bold_reference_wf, boldbuffer, [
                 ('outputnode.bold_file', 'bold_file')]),
         ])
