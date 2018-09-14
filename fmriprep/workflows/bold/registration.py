@@ -37,7 +37,7 @@ DEFAULT_MEMORY_MIN_GB = 0.01
 def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
                      use_compression=True, write_report=True, name='bold_reg_wf'):
     """
-    The registration between a reference BOLD image and T1-space is calculated
+    Calculates the registration between a reference BOLD image and T1-space
     using a boundary-based registration (BBR) cost function.
 
     If FreeSurfer-based preprocessing is enabled, the ``bbregister`` utility
@@ -170,12 +170,6 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, use_fieldwarp=False,
     """
     This workflow registers the reference BOLD image to T1-space, using a
     boundary-based registration (BBR) cost function.
-
-    If FreeSurfer-based preprocessing is enabled, the ``bbregister`` utility
-    is used to align the BOLD images to the reconstructed subject, and the
-    resulting transform is adjusted to target the T1 space.
-    If FreeSurfer-based preprocessing is disabled, FSL FLIRT is used with the
-    BBR cost function to directly target the T1 space.
 
     .. workflow::
         :graph2use: orig

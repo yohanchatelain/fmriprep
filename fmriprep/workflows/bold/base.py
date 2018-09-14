@@ -465,18 +465,18 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('subject_id', 'inputnode.subject_id'),
             ('t1_2_fsnative_reverse_transform', 'inputnode.t1_2_fsnative_reverse_transform')]),
         (inputnode, bold_t1_trans_wf, [
+            ('bold_file', 'inputnode.name_source'),
             ('t1_brain', 'inputnode.t1_brain'),
             ('t1_mask', 'inputnode.t1_mask'),
             ('t1_aseg', 'inputnode.t1_aseg'),
             ('t1_aparc', 'inputnode.t1_aparc')]),
-        (inputnode, bold_t1_trans_wf, [('bold_file', 'inputnode.name_source')]),
         (bold_split, bold_t1_trans_wf, [('out_files', 'inputnode.bold_split')]),
         (bold_hmc_wf, bold_t1_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms')]),
-        (bold_t1_trans_wf, outputnode, [('outputnode.bold_aseg_t1', 'bold_aseg_t1'),
-                                        ('outputnode.bold_aparc_t1', 'bold_aparc_t1')]),
         (bold_reg_wf, bold_t1_trans_wf, [
             ('outputnode.itk_bold_to_t1', 'inputnode.itk_bold_to_t1')]),
-        (bold_t1_trans_wf, outputnode, [('outputnode.bold_t1', 'bold_t1')]),
+        (bold_t1_trans_wf, outputnode, [('outputnode.bold_t1', 'bold_t1'),
+                                        ('outputnode.bold_aseg_t1', 'bold_aseg_t1'),
+                                        ('outputnode.bold_aparc_t1', 'bold_aparc_t1')]),
         (bold_reg_wf, summary, [('outputnode.fallback', 'fallback')]),
         # SDC (or pass-through workflow)
         (inputnode, bold_sdc_wf, [
