@@ -104,7 +104,7 @@ using a custom methodology of *fMRIPrep*.
     gen_ref = pe.Node(EstimateReferenceImage(), name="gen_ref",
                       mem_gb=1)  # OE: 128x128x128x50 * 64 / 8 ~ 900MB.
     # Re-run validation; no effect if no sbref; otherwise apply same validation to sbref as bold
-    validate_ref = pe.Node(ValidateImage(deoblique=True), name='validate_ref',
+    validate_ref = pe.Node(ValidateImage(remove_rotations_and_shear=True), name='validate_ref',
                            mem_gb=DEFAULT_MEMORY_MIN_GB)
     enhance_and_skullstrip_bold_wf = init_enhance_and_skullstrip_bold_wf(omp_nthreads=omp_nthreads)
 
