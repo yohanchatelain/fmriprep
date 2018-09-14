@@ -431,14 +431,14 @@ Interpolation uses a Lanczos kernel.
 
 EPI to T1w registration
 ~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.bold.registration.init_bold_calc_reg_wf`
+:mod:`fmriprep.workflows.bold.registration.init_bold_reg_wf`
 
 .. workflow::
     :graph2use: orig
     :simple_form: yes
 
-    from fmriprep.workflows.bold import init_bold_calc_reg_wf
-    wf = init_bold_calc_reg_wf(
+    from fmriprep.workflows.bold import init_bold_reg_wf
+    wf = init_bold_reg_wf(
         freesurfer=True,
         mem_gb=1,
         omp_nthreads=1,
@@ -456,7 +456,9 @@ of each run and the reconstructed subject using the gray/white matter boundary
 
 If FreeSurfer processing is disabled, FSL ``flirt`` is run with the
 :abbr:`BBR (boundary-based registration)` cost function, using the
-``fast`` segmentation to establish the gray/white matter boundary. After :abbr:`BBR (boundary-based registration)` is run, the resulting affine transform will be compared to the initial transform found by FLIRT. Excessive deviation will result in rejecting the BBR refinement and accepting the original, affine registration.
+``fast`` segmentation to establish the gray/white matter boundary.
+After :abbr:`BBR (boundary-based registration)` is run, the resulting affine transform will be compared to the initial transform found by FLIRT.
+Excessive deviation will result in rejecting the BBR refinement and accepting the original, affine registration.
 
 EPI to MNI transformation
 ~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -34,7 +34,7 @@ from .confounds import init_bold_confs_wf, init_carpetplot_wf
 from .hmc import init_bold_hmc_wf
 from .stc import init_bold_stc_wf
 from .t2s import init_bold_t2s_wf
-from .registration import init_bold_apply_reg_wf, init_bold_calc_reg_wf
+from .registration import init_bold_t1_trans_wf, init_bold_reg_wf
 from .resampling import (
     init_bold_surf_wf,
     init_bold_mni_trans_wf,
@@ -211,8 +211,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         * :py:func:`~fmriprep.workflows.bold.stc.init_bold_stc_wf`
         * :py:func:`~fmriprep.workflows.bold.hmc.init_bold_hmc_wf`
         * :py:func:`~fmriprep.workflows.bold.t2s.init_bold_t2s_wf`
-        * :py:func:`~fmriprep.workflows.bold.registration.init_bold_apply_reg_wf`
-        * :py:func:`~fmriprep.workflows.bold.registration.init_bold_calc_reg_wf`
+        * :py:func:`~fmriprep.workflows.bold.registration.init_bold_t1_trans_wf`
+        * :py:func:`~fmriprep.workflows.bold.registration.init_bold_reg_wf`
         * :py:func:`~fmriprep.workflows.bold.confounds.init_bold_confounds_wf`
         * :py:func:`~fmriprep.workflows.bold.confounds.init_ica_aroma_wf`
         * :py:func:`~fmriprep.workflows.bold.resampling.init_bold_mni_trans_wf`
@@ -380,21 +380,22 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                                    mem_gb=mem_gb['filesize'],
                                    omp_nthreads=omp_nthreads)
 
-    # mean BOLD registration to T1w
-    bold_calc_reg_wf = init_bold_calc_reg_wf(name='bold_calc_reg_wf',
+    # calculate BOLD registration to T1w
+    bold_reg_wf = init_bold_reg_wf(name='bold_reg_wf',
+                                   freesurfer=freesurfer,
+                                   use_bbr=use_bbr,
+                                   bold2t1w_dof=bold2t1w_dof,
+                                   mem_gb=mem_gb['resampled'],
+                                   omp_nthreads=omp_nthreads,
+                                   use_compression=False)
+
+    # apply BOLD registration to T1w
+    bold_t1_trans_wf = init_bold_t1_trans_wf(name='bold_t1_trans_wf',
                                              freesurfer=freesurfer,
-                                             use_bbr=use_bbr,
-                                             bold2t1w_dof=bold2t1w_dof,
+                                             use_fieldwarp=(fmaps is not None or use_syn),
                                              mem_gb=mem_gb['resampled'],
                                              omp_nthreads=omp_nthreads,
                                              use_compression=False)
-
-    # mean BOLD registration to T1w
-    bold_apply_reg_wf = init_bold_apply_reg_wf(name='bold_apply_reg_wf',
-                                               mem_gb=mem_gb['resampled'],
-                                               omp_nthreads=omp_nthreads,
-                                               use_compression=False,
-                                               use_fieldwarp=(fmaps is not None or use_syn))
 
     # get confounds
     bold_confounds_wf = init_bold_confs_wf(
@@ -456,27 +457,27 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('outputnode.raw_ref_image', 'inputnode.raw_ref_image'),
             ('outputnode.bold_file', 'inputnode.bold_file')]),
         # EPI-T1 registration workflow
-        (inputnode, bold_calc_reg_wf, [
-            ('t1_preproc', 'inputnode.t1_preproc'),
+        (inputnode, bold_reg_wf, [
             ('t1_brain', 'inputnode.t1_brain'),
-            ('t1_mask', 'inputnode.t1_mask'),
             ('t1_seg', 'inputnode.t1_seg'),
-            ('t1_aseg', 'inputnode.t1_aseg'),
-            ('t1_aparc', 'inputnode.t1_aparc'),
             # Undefined if --no-freesurfer, but this is safe
             ('subjects_dir', 'inputnode.subjects_dir'),
             ('subject_id', 'inputnode.subject_id'),
             ('t1_2_fsnative_reverse_transform', 'inputnode.t1_2_fsnative_reverse_transform')]),
-        (inputnode, bold_apply_reg_wf, [('bold_file', 'inputnode.name_source')]),
-        (bold_split, bold_apply_reg_wf, [('out_files', 'inputnode.bold_split')]),
-        (bold_hmc_wf, bold_apply_reg_wf, [('outputnode.xforms', 'inputnode.hmc_xforms')]),
-        (bold_calc_reg_wf, outputnode, [('outputnode.bold_aseg_t1', 'bold_aseg_t1'),
+        (inputnode, bold_t1_trans_wf, [
+            ('t1_brain', 'inputnode.t1_brain'),
+            ('t1_mask', 'inputnode.t1_mask'),
+            ('t1_aseg', 'inputnode.t1_aseg'),
+            ('t1_aparc', 'inputnode.t1_aparc')]),
+        (inputnode, bold_t1_trans_wf, [('bold_file', 'inputnode.name_source')]),
+        (bold_split, bold_t1_trans_wf, [('out_files', 'inputnode.bold_split')]),
+        (bold_hmc_wf, bold_t1_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms')]),
+        (bold_t1_trans_wf, outputnode, [('outputnode.bold_aseg_t1', 'bold_aseg_t1'),
                                         ('outputnode.bold_aparc_t1', 'bold_aparc_t1')]),
-        (bold_calc_reg_wf, bold_apply_reg_wf, [
-            ('outputnode.reference_image', 'inputnode.reference_grid'),
+        (bold_reg_wf, bold_t1_trans_wf, [
             ('outputnode.itk_bold_to_t1', 'inputnode.itk_bold_to_t1')]),
-        (bold_apply_reg_wf, outputnode, [('outputnode.bold_t1', 'bold_t1')]),
-        (bold_calc_reg_wf, summary, [('outputnode.fallback', 'fallback')]),
+        (bold_t1_trans_wf, outputnode, [('outputnode.bold_t1', 'bold_t1')]),
+        (bold_reg_wf, summary, [('outputnode.fallback', 'fallback')]),
         # SDC (or pass-through workflow)
         (inputnode, bold_sdc_wf, [
             ('t1_brain', 'inputnode.t1_brain'),
@@ -485,10 +486,11 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('outputnode.ref_image', 'inputnode.bold_ref'),
             ('outputnode.ref_image_brain', 'inputnode.bold_ref_brain'),
             ('outputnode.bold_mask', 'inputnode.bold_mask')]),
-        (bold_sdc_wf, bold_calc_reg_wf, [
+        (bold_sdc_wf, bold_reg_wf, [
+            ('outputnode.bold_ref_brain', 'inputnode.ref_bold_brain')]),
+        (bold_sdc_wf, bold_t1_trans_wf, [
             ('outputnode.bold_ref_brain', 'inputnode.ref_bold_brain'),
-            ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
-        (bold_sdc_wf, bold_apply_reg_wf, [
+            ('outputnode.bold_mask', 'inputnode.ref_bold_mask'),
             ('outputnode.out_warp', 'inputnode.fieldwarp')]),
         (bold_sdc_wf, bold_bold_trans_wf, [
             ('outputnode.out_warp', 'inputnode.fieldwarp'),
@@ -499,7 +501,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                                         ('t1_mask', 'inputnode.t1_mask')]),
         (bold_hmc_wf, bold_confounds_wf, [
             ('outputnode.movpar_file', 'inputnode.movpar_file')]),
-        (bold_calc_reg_wf, bold_confounds_wf, [
+        (bold_reg_wf, bold_confounds_wf, [
             ('outputnode.itk_t1_to_bold', 'inputnode.t1_bold_xform')]),
         (bold_confounds_wf, outputnode, [
             ('outputnode.confounds_file', 'confounds'),
@@ -530,7 +532,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('t1_seg', 'inputnode.in_seg')]),
             (bold_reference_wf, fmap_unwarp_report_wf, [
                 ('outputnode.ref_image', 'inputnode.in_pre')]),
-            (bold_calc_reg_wf, fmap_unwarp_report_wf, [
+            (bold_reg_wf, fmap_unwarp_report_wf, [
                 ('outputnode.itk_t1_to_bold', 'inputnode.in_xfm')]),
             (bold_sdc_wf, fmap_unwarp_report_wf, [
                 ('outputnode.bold_ref', 'inputnode.in_post')]),
@@ -544,7 +546,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                     ('t1_seg', 'inputnode.in_seg')]),
                 (bold_reference_wf, syn_unwarp_report_wf, [
                     ('outputnode.ref_image', 'inputnode.in_pre')]),
-                (bold_calc_reg_wf, syn_unwarp_report_wf, [
+                (bold_reg_wf, syn_unwarp_report_wf, [
                     ('outputnode.itk_t1_to_bold', 'inputnode.in_xfm')]),
                 (bold_sdc_wf, syn_unwarp_report_wf, [
                     ('outputnode.syn_bold_ref', 'inputnode.in_post')]),
@@ -582,14 +584,14 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
             # Replace EPI-to-T1w registration inputs
             workflow.disconnect([
-                (bold_sdc_wf, bold_calc_reg_wf, [
+                (bold_sdc_wf, bold_t1_trans_wf, [
                     ('outputnode.bold_ref_brain', 'inputnode.ref_bold_brain'),
                     ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
             ])
             workflow.connect([
                 (bold_hmc_wf, bold_t2s_wf, [
                     ('outputnode.xforms', 'inputnode.hmc_xforms')]),
-                (bold_t2s_wf, bold_calc_reg_wf, [
+                (bold_t2s_wf, bold_t1_trans_wf, [
                     ('outputnode.t2s_map', 'inputnode.ref_bold_brain'),
                     ('outputnode.oc_mask', 'inputnode.ref_bold_mask')]),
             ])
@@ -607,9 +609,10 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         workflow.connect([
             (bold_bold_trans_wf, boldmask_to_t1w, [
                 ('outputnode.bold_mask', 'input_image')]),
-            (bold_calc_reg_wf, boldmask_to_t1w, [
-                ('outputnode.bold_mask_t1', 'reference_image'),
+            (bold_reg_wf, boldmask_to_t1w, [
                 ('outputnode.itk_bold_to_t1', 'transforms')]),
+            (bold_t1_trans_wf, boldmask_to_t1w, [
+                ('outputnode.bold_mask_t1', 'reference_image')]),
             (boldmask_to_t1w, outputnode, [
                 ('output_image', 'bold_mask_t1')]),
         ])
@@ -639,7 +642,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('out_files', 'inputnode.bold_split')]),
             (bold_hmc_wf, bold_mni_trans_wf, [
                 ('outputnode.xforms', 'inputnode.hmc_xforms')]),
-            (bold_calc_reg_wf, bold_mni_trans_wf, [
+            (bold_reg_wf, bold_mni_trans_wf, [
                 ('outputnode.itk_bold_to_t1', 'inputnode.itk_bold_to_t1')]),
             (bold_bold_trans_wf, bold_mni_trans_wf, [
                 ('outputnode.bold_mask', 'inputnode.bold_mask')]),
@@ -652,7 +655,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('outputnode.bold_mask', 'inputnode.bold_mask')]),
             (inputnode, carpetplot_wf, [
                 ('t1_2_mni_reverse_transform', 'inputnode.t1_2_mni_reverse_transform')]),
-            (bold_calc_reg_wf, carpetplot_wf, [
+            (bold_reg_wf, carpetplot_wf, [
                 ('outputnode.itk_t1_to_bold', 'inputnode.t1_bold_xform')]),
             (bold_confounds_wf, carpetplot_wf, [
                 ('outputnode.confounds_file', 'inputnode.confounds_file')]),
@@ -690,7 +693,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 (bold_hmc_wf, ica_aroma_wf, [
                     ('outputnode.movpar_file', 'inputnode.movpar_file'),
                     ('outputnode.xforms', 'inputnode.hmc_xforms')]),
-                (bold_calc_reg_wf, ica_aroma_wf, [
+                (bold_reg_wf, ica_aroma_wf, [
                     ('outputnode.itk_bold_to_t1', 'inputnode.itk_bold_to_t1')]),
                 (bold_bold_trans_wf, ica_aroma_wf, [
                     ('outputnode.bold_mask', 'inputnode.bold_mask')]),
@@ -720,7 +723,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('subjects_dir', 'inputnode.subjects_dir'),
                 ('subject_id', 'inputnode.subject_id'),
                 ('t1_2_fsnative_forward_transform', 'inputnode.t1_2_fsnative_forward_transform')]),
-            (bold_apply_reg_wf, bold_surf_wf, [('outputnode.bold_t1', 'inputnode.source_file')]),
+            (bold_t1_trans_wf, bold_surf_wf, [('outputnode.bold_t1', 'inputnode.source_file')]),
             (bold_surf_wf, outputnode, [('outputnode.surfaces', 'surfaces')]),
         ])
 
