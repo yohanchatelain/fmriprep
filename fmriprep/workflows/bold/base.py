@@ -15,7 +15,6 @@ import os
 import nibabel as nb
 from nipype import logging
 
-from nipype.interfaces.fsl import Split as FSLSplit
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 

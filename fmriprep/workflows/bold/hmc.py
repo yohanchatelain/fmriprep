@@ -14,7 +14,6 @@ from nipype.interfaces import utility as niu, fsl, afni
 from niworkflows.interfaces import NormalizeMotionParams
 from fmriprep.utils.misc import afni2itk_func
 from ...engine import Workflow
-from ...interfaces import MCFLIRT2ITK
 
 DEFAULT_MEMORY_MIN_GB = 0.01
 
