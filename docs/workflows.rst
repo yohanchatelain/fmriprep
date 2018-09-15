@@ -285,6 +285,9 @@ BOLD reference image estimation
 
 This workflow estimates a reference image for a
 :abbr:`BOLD (blood-oxygen level-dependent)` series.
+If a single-band reference ("sbref") image associated with the BOLD series is
+available, then it is used directly.
+If not, a reference image is estimated from the BOLD series as follows:
 When T1-saturation effects ("dummy scans" or non-steady state volumes) are
 detected, they are averaged and used as reference due to their
 superior tissue contrast.
@@ -414,9 +417,9 @@ EPI to T1w registration
         use_bbr=True,
         bold2t1w_dof=9)
 
-The reference :abbr:`EPI (echo-planar imaging)` image of each run is aligned
-by the ``bbregister`` routine to the reconstructed subject using the gray/white
-matter boundary (FreeSurfer's ``?h.white`` surfaces).
+The alignment between the reference :abbr:`EPI (echo-planar imaging)` image
+of each run and the reconstructed subject using the gray/white matter boundary
+(FreeSurfer's ``?h.white`` surfaces) is calculated by the ``bbregister`` routine.
 
 .. figure:: _static/EPIT1Normalization.svg
     :scale: 100%

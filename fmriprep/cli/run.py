@@ -107,7 +107,7 @@ def get_parser():
     g_conf = parser.add_argument_group('Workflow configuration')
     g_conf.add_argument(
         '--ignore', required=False, action='store', nargs="+", default=[],
-        choices=['fieldmaps', 'slicetiming'],
+        choices=['fieldmaps', 'slicetiming', 'sbref'],
         help='ignore selected aspects of the input dataset to disable corresponding '
              'parts of the workflow (a space delimited list)')
     g_conf.add_argument(
@@ -119,10 +119,9 @@ def get_parser():
              'T2*-driven coregistration. When multi-echo data is provided and this '
              'option is not enabled, standard EPI-T1 coregistration is performed '
              'using the middle echo.')
-    g_conf.add_argument('--bold2t1w-dof', action='store', default=9, choices=[6, 9, 12], type=int,
+    g_conf.add_argument('--bold2t1w-dof', action='store', default=6, choices=[6, 9, 12], type=int,
                         help='Degrees of freedom when registering BOLD to T1w images. '
-                             '9 (rotation, translation, and scaling) is used by '
-                             'default to compensate for field inhomogeneities.')
+                             '6 degrees (rotation and translation) are used by default.')
     g_conf.add_argument(
         '--output-space', required=False, action='store',
         choices=['T1w', 'template', 'fsnative', 'fsaverage', 'fsaverage6', 'fsaverage5'],

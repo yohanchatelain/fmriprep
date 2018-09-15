@@ -22,7 +22,7 @@ RUN apt-get update && \
     apt-get update
 
 # Installing freesurfer
-RUN curl -sSL https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/6.0.1/freesurfer-Linux-centos6_x86_64-stable-pub-v6.0.1-f53a55a.tar.gz | tar zxv --no-same-owner -C /opt \
+RUN curl -sSL https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/6.0.1/freesurfer-Linux-centos6_x86_64-stable-pub-v6.0.1.tar.gz | tar zxv --no-same-owner -C /opt \
     --exclude='freesurfer/trctrain' \
     --exclude='freesurfer/subjects/fsaverage_sym' \
     --exclude='freesurfer/subjects/fsaverage3' \
@@ -114,6 +114,7 @@ RUN conda install -y mkl=2018.0.3 mkl-service;  sync &&\
                      pandas=0.23.0 \
                      libxml2=2.9.4 \
                      libxslt=1.1.29 \
+                     graphviz=2.40.1 \
                      traits=4.6.0; sync &&  \
     chmod -R a+rX /usr/local/miniconda; sync && \
     chmod +x /usr/local/miniconda/bin/*; sync && \
@@ -127,8 +128,7 @@ RUN python -c "from matplotlib import font_manager" && \
 # Installing Ubuntu packages and cleaning up
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-                    git=1:2.7.4-0ubuntu1 \
-                    graphviz=2.38.0-12ubuntu2 && \
+                    git=1:2.7.4-0ubuntu1 && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Install latest pandoc
@@ -183,4 +183,3 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.vcs-url="https://github.com/poldracklab/fmriprep" \
       org.label-schema.version=$VERSION \
       org.label-schema.schema-version="1.0"
-

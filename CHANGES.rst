@@ -1,3 +1,10 @@
+1.1.6 (September 10, 2018)
+==========================
+
+Hotfix release.
+
+* [FIX] Typo in plugin config loading.
+
 1.1.5 (September 06, 2018)
 ==========================
 
