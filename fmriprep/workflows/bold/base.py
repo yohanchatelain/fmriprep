@@ -480,9 +480,10 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     # MULTI-ECHO EPI DATA #############################################
     if multiecho:
         from .util import init_skullstrip_bold_wf
+        skullstrip_bold_wf = init_skullstrip_bold_wf(name='skullstrip_bold_wf')
+
         inputnode.inputs.bold_file = ref_file  # Replace reference w first echo
 
-        skullstrip_bold_wf = init_skullstrip_bold_wf(name='skullstrip_bold_wf')
         join_echos = pe.JoinNode(niu.IdentityInterface(fields=['bold_files']),
                                  joinsource=('meepi_echos' if run_stc is True else 'boldbuffer'),
                                  joinfield=['bold_files'],
@@ -535,11 +536,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('outputnode.ref_image', 'inputnode.bold_ref'),
             ('outputnode.ref_image_brain', 'inputnode.bold_ref_brain'),
             ('outputnode.bold_mask', 'inputnode.bold_mask')]),
-        (bold_sdc_wf, bold_reg_wf, [
-            ('outputnode.bold_ref_brain', 'inputnode.ref_bold_brain')]),
         (bold_sdc_wf, bold_t1_trans_wf, [
-            ('outputnode.bold_ref_brain', 'inputnode.ref_bold_brain'),
-            ('outputnode.bold_mask', 'inputnode.ref_bold_mask'),
             ('outputnode.out_warp', 'inputnode.fieldwarp')]),
         (bold_sdc_wf, bold_bold_trans_wf, [
             ('outputnode.out_warp', 'inputnode.fieldwarp'),
@@ -566,7 +563,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
     # create and use optimal combination from meepi
     if multiecho:
-
         workflow.connect([
             # update name source for optimal combination
             (inputnode, func_derivatives_wf, [
@@ -594,14 +590,20 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
     if t2s_coreg:
         # Replace EPI-to-T1w registration inputs
-        workflow.disconnect([
-            (bold_sdc_wf, bold_reg_wf, [
-                ('outputnode.bold_ref_brain', 'inputnode.ref_bold_brain'),
-                ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
-        ])
         workflow.connect([
             (bold_t2s_wf, bold_reg_wf, [
+                ('outputnode.bold_ref', 'inputnode.ref_bold_brain')]),
+            (bold_t2s_wf, bold_t1_trans_wf, [
                 ('outputnode.bold_ref', 'inputnode.ref_bold_brain'),
+                ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
+        ])
+
+    if not t2s_coreg:
+        workflow.connect([
+            (bold_sdc_wf, bold_reg_wf, [
+                ('outputnode.bold_ref_brain', 'inputnode.ref_bold_brain')]),
+            (bold_sdc_wf, bold_t1_trans_wf, [
+                ('outputnode.bold_ref_brain', 'inputnode.ref_bold_brain'),
                 ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
         ])
 
