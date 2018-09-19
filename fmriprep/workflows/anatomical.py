@@ -49,6 +49,9 @@ from ..interfaces import (
     ConcatAffines, RefineBrainMask,
 )
 from ..utils.misc import fix_multi_T1w_source_name, add_suffix
+from ..interfaces.freesurfer import (
+        PatchedLTAConvert as LTAConvert,
+        PatchedRobustRegister as RobustRegister)
 
 TEMPLATE_MAP = {
     'MNI152NLin2009cAsym': 'mni_icbm152_nlin_asym_09c',
@@ -533,7 +536,7 @@ A T1w-reference map was computed after registration of
     # 2. Reorient template to RAS, if needed (mri_robust_template may set to LIA)
     t1_reorient = pe.Node(image.Reorient(), name='t1_reorient')
 
-    lta_to_fsl = pe.MapNode(fs.utils.LTAConvert(out_fsl=True), iterfield=['in_lta'],
+    lta_to_fsl = pe.MapNode(LTAConvert(out_fsl=True), iterfield=['in_lta'],
                             name='lta_to_fsl')
 
     concat_affines = pe.MapNode(
@@ -813,9 +816,9 @@ gray-matter of Mindboggle [RRID:SCR_002438, @mindboggle].
 
     skull_strip_extern = pe.Node(FSInjectBrainExtracted(), name='skull_strip_extern')
 
-    fsnative_2_t1_xfm = pe.Node(fs.RobustRegister(auto_sens=True, est_int_scale=True),
+    fsnative_2_t1_xfm = pe.Node(RobustRegister(auto_sens=True, est_int_scale=True),
                                 name='fsnative_2_t1_xfm')
-    t1_2_fsnative_xfm = pe.Node(fs.utils.LTAConvert(out_lta=True, invert=True),
+    t1_2_fsnative_xfm = pe.Node(LTAConvert(out_lta=True, invert=True),
                                 name='t1_2_fsnative_xfm')
 
     autorecon_resume_wf = init_autorecon_resume_wf(omp_nthreads=omp_nthreads)
@@ -1279,7 +1282,7 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
         DerivativesDataSink(base_directory=output_dir, suffix=suffix_fmt(template, 'warp')),
         name='ds_t1_mni_warp', run_without_submitting=True)
 
-    lta_2_itk = pe.Node(fs.utils.LTAConvert(out_itk=True), name='lta_2_itk')
+    lta_2_itk = pe.Node(LTAConvert(out_itk=True), name='lta_2_itk')
 
     ds_t1_fsnative = pe.Node(
         DerivativesDataSink(base_directory=output_dir, suffix=suffix_fmt('fsnative', 'affine')),
