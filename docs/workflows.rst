@@ -219,6 +219,12 @@ The ``smoothwm``, ``midthickness``, ``pial`` and ``inflated`` surfaces are also
 converted to GIFTI_ format and adjusted to be compatible with multiple software
 packages, including FreeSurfer and the `Connectome Workbench`_.
 
+.. note::
+    GIFTI surface outputs are aligned to the FreeSurfer T1.mgz image, which
+    may differ from the T1w space in some cases, to maintain compatibility
+    with the FreeSurfer directory.
+    Any measures sampled to the surface take into account any difference in
+    these images.
 
 Refinement of the brain mask
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
