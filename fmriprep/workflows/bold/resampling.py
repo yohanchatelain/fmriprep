@@ -28,7 +28,7 @@ from ...interfaces.freesurfer import (
     MedialNaNs,
     # See https://github.com/poldracklab/fmriprep/issues/768
     PatchedConcatenateLTA as ConcatenateLTA,
-    PatchedLTAconvert as LTAConvert
+    PatchedLTAConvert as LTAConvert
 )
 from ..anatomical import TEMPLATE_MAP
 
