@@ -57,8 +57,8 @@ def init_bold_t2s_wf(echo_times,
         bold
             the optimally combined time series for all supplied echos
         bold_mask
-            the skull-stripped adaptive T2* map
-        bold_ref
+            the binarized, skull-stripped adaptive T2* map
+        bold_ref_brain
             the adaptive T2* map
 
     .. _tedana: https://github.com/me-ica/tedana
@@ -78,7 +78,7 @@ the BOLD reference.
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['bold_file']), name='inputnode')
 
-    outputnode = pe.Node(niu.IdentityInterface(fields=['bold', 'bold_mask', 'bold_ref']),
+    outputnode = pe.Node(niu.IdentityInterface(fields=['bold', 'bold_mask', 'bold_ref_brain']),
                          name='outputnode')
 
     LOGGER.log(25, 'Generating T2* map and optimally combined ME-EPI time series.')
@@ -88,10 +88,11 @@ the BOLD reference.
 
     workflow.connect([
         (inputnode, t2smap_node, [('bold_file', 'in_files')]),
-        (t2smap_node, outputnode, [('t2star_adaptive_map', 'bold_ref'),
-                                   ('optimal_comb', 'bold')]),
-        (t2smap_node, skullstrip_t2smap_wf, [('optimal_comb', 'inputnode.in_file')]),
-        (skullstrip_t2smap_wf, outputnode, [('outputnode.mask_file', 'bold_mask')]),
+        (t2smap_node, outputnode, [('optimal_comb', 'bold')]),
+        (t2smap_node, skullstrip_t2smap_wf, [('t2star_adaptive_map', 'inputnode.in_file')]),
+        (skullstrip_t2smap_wf, outputnode, [
+            ('outputnode.mask_file', 'bold_mask'),
+            ('outputnode.skull_stripped_file', 'bold_ref_brain')]),
     ])
 
     return workflow
