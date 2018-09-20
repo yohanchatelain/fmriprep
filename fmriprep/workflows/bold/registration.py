@@ -165,7 +165,7 @@ def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
     return workflow
 
 
-def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, use_fieldwarp=False,
+def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, multiecho=False, use_fieldwarp=False,
                           use_compression=True, name='bold_t1_trans_wf'):
     """
     This workflow registers the reference BOLD image to T1-space, using a
@@ -186,6 +186,8 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, use_fieldwarp=False,
             Enable FreeSurfer functional registration (bbregister)
         use_fieldwarp : bool
             Include SDC warp in single-shot transform from BOLD to T1
+        multiecho : bool
+            If multiecho data was supplied, HMC already performed
         mem_gb : float
             Size of BOLD file in GB
         omp_nthreads : int
@@ -297,33 +299,44 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, use_fieldwarp=False,
             (aparc_t1w_tfm, outputnode, [('output_image', 'bold_aparc_t1')]),
         ])
 
-    # Merge transforms placing the head motion correction last
-    nforms = 2 + int(use_fieldwarp)
-    merge_xforms = pe.Node(niu.Merge(nforms), name='merge_xforms',
-                           run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
-    workflow.connect([
-        (inputnode, merge_xforms, [('hmc_xforms', 'in%d' % nforms)])
-    ])
-
-    if use_fieldwarp:
-        workflow.connect([
-            (inputnode, merge_xforms, [('fieldwarp', 'in2')])
-        ])
-
     bold_to_t1w_transform = pe.Node(
         MultiApplyTransforms(interpolation="LanczosWindowedSinc", float=True, copy_dtype=True),
         name='bold_to_t1w_transform', mem_gb=mem_gb * 3 * omp_nthreads, n_procs=omp_nthreads)
 
-    merge = pe.Node(Merge(compress=use_compression), name='merge', mem_gb=mem_gb)
+    if not multiecho:
+        # Merge transforms placing the head motion correction last
+        nforms = 2 + int(use_fieldwarp)
+        merge_xforms = pe.Node(niu.Merge(nforms), name='merge_xforms',
+                               run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
+        if use_fieldwarp:
+            workflow.connect([
+                (inputnode, merge_xforms, [('fieldwarp', 'in2')])
+            ])
+
+        # merge 3D volumes into 4D timeseries
+        merge = pe.Node(Merge(compress=use_compression), name='merge', mem_gb=mem_gb)
+
+        workflow.connect([
+            # merge transforms
+            (inputnode, merge_xforms, [
+                ('hmc_xforms', 'in%d' % nforms),
+                ('itk_bold_to_t1', 'in1')]),
+            (merge_xforms, bold_to_t1w_transform, [('out', 'transforms')]),
+            # merge 3D volumes into 4D time series
+            (inputnode, merge, [('name_source', 'header_source')]),
+            (bold_to_t1w_transform, merge, [('out_files', 'in_files')]),
+            (merge, outputnode, [('out_file', 'bold_t1')]),
+        ])
+
+    else:
+        workflow.connect([
+            (inputnode, bold_to_t1w_transform, [('itk_bold_to_t1', 'transforms')]),
+            (bold_to_t1w_transform, outputnode, [('out_files', 'bold_t1')]),
+        ])
 
     workflow.connect([
-        (inputnode, merge_xforms, [('itk_bold_to_t1', 'in1')]),
-        (merge_xforms, bold_to_t1w_transform, [('out', 'transforms')]),
-        (inputnode, merge, [('name_source', 'header_source')]),
         (inputnode, bold_to_t1w_transform, [('bold_split', 'input_image')]),
         (gen_ref, bold_to_t1w_transform, [('out_file', 'reference_image')]),
-        (bold_to_t1w_transform, merge, [('out_files', 'in_files')]),
-        (merge, outputnode, [('out_file', 'bold_t1')]),
     ])
 
     return workflow
