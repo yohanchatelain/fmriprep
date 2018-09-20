@@ -451,13 +451,13 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             meepi_echos.iterables = ('bold_file', bold_file)
             workflow.connect([
                 (meepi_echos, bold_stc_wf, [('bold_file', 'inputnode.bold_file')])])
-    else:  # bypass STC from original BOLD to the splitter through boldbuffer
-        if not multiecho:
-            workflow.connect([
-                (bold_reference_wf, boldbuffer, [
-                    ('outputnode.bold_file', 'bold_file')])])
-        else:  # for meepi, iterate over all meepi echos to boldbuffer
-            boldbuffer.iterables = ('bold_file', bold_file)
+    elif multiecho:  # STC is too short or False
+        # bypass STC from original BOLD to the splitter through boldbuffer
+        workflow.connect([
+            (bold_reference_wf, boldbuffer, [('outputnode.bold_file', 'bold_file')])])
+    else:
+        # for meepi, iterate over all meepi echos to boldbuffer
+        boldbuffer.iterables = ('bold_file', bold_file)
 
     # SDC (SUSCEPTIBILITY DISTORTION CORRECTION) or bypass ##########################
     bold_sdc_wf = init_sdc_wf(
@@ -495,6 +495,13 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                                        omp_nthreads=omp_nthreads,
                                        name='bold_t2smap_wf')
 
+        workflow.connect([
+            (skullstrip_bold_wf, join_echos, [
+                ('outputnode.skull_stripped_file', 'bold_files')]),
+            (join_echos, bold_t2s_wf, [
+                ('bold_files', 'inputnode.bold_file')]),
+        ])
+
     # MAIN WORKFLOW STRUCTURE #######################################################
     workflow.connect([
         # Generate early reference
@@ -520,7 +527,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('t1_mask', 'inputnode.t1_mask'),
             ('t1_aseg', 'inputnode.t1_aseg'),
             ('t1_aparc', 'inputnode.t1_aparc')]),
-        (bold_split, bold_t1_trans_wf, [('out_files', 'inputnode.bold_split')]),
+        # unused if multiecho, but this is safe
         (bold_hmc_wf, bold_t1_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms')]),
         (bold_reg_wf, bold_t1_trans_wf, [
             ('outputnode.itk_bold_to_t1', 'inputnode.itk_bold_to_t1')]),
@@ -575,6 +582,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (bold_bold_trans_wf, bold_confounds_wf, [
                 ('outputnode.bold', 'inputnode.bold'),
                 ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+            (bold_split, bold_t1_trans_wf, [
+                ('out_files', 'inputnode.bold_split')]),
         ])
     else:  # for meepi, create and use optimal combination
         workflow.connect([
@@ -583,13 +592,11 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 (('bold_file', meepi_optimal_comb_source_name), 'inputnode.source_file')]),
             (bold_bold_trans_wf, skullstrip_bold_wf, [
                 ('outputnode.bold', 'inputnode.in_file')]),
-            (skullstrip_bold_wf, join_echos, [
-                ('outputnode.skull_stripped_file', 'bold_files')]),
-            (join_echos, bold_t2s_wf, [
-                ('bold_files', 'inputnode.bold_file')]),
             (bold_t2s_wf, bold_confounds_wf, [
                 ('outputnode.bold', 'inputnode.bold'),
                 ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+            (bold_t2s_wf, bold_t1_trans_wf, [
+                ('outputnode.bold', 'inputnode.bold_split')]),
         ])
 
     if fmaps:
