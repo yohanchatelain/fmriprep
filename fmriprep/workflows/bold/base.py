@@ -452,7 +452,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             meepi_echos.iterables = ('bold_file', bold_file)
             workflow.connect([
                 (meepi_echos, bold_stc_wf, [('bold_file', 'inputnode.bold_file')])])
-    elif multiecho:  # STC is too short or False
+    elif not multiecho:  # STC is too short or False
         # bypass STC from original BOLD to the splitter through boldbuffer
         workflow.connect([
             (bold_reference_wf, boldbuffer, [('outputnode.bold_file', 'bold_file')])])
