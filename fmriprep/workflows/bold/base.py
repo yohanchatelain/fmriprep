@@ -674,8 +674,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (inputnode, bold_mni_trans_wf, [
                 ('bold_file', 'inputnode.name_source'),
                 ('t1_2_mni_forward_transform', 'inputnode.t1_2_mni_forward_transform')]),
-            (bold_split, bold_mni_trans_wf, [
-                ('out_files', 'inputnode.bold_split')]),
             (bold_hmc_wf, bold_mni_trans_wf, [
                 ('outputnode.xforms', 'inputnode.hmc_xforms')]),
             (bold_reg_wf, bold_mni_trans_wf, [
@@ -696,6 +694,21 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (bold_confounds_wf, carpetplot_wf, [
                 ('outputnode.confounds_file', 'inputnode.confounds_file')]),
         ])
+
+        if not multiecho:
+            workflow.connect([
+                (bold_split, bold_mni_trans_wf, [
+                    ('out_files', 'inputnode.bold_split')])
+            ])
+        else:
+            split_opt_comb = bold_split.clone(name='split_opt_comb')
+            workflow.connect([
+                (bold_t2s_wf, split_opt_comb, [
+                    ('outputnode.bold', 'in_file')]),
+                (split_opt_comb, bold_mni_trans_wf, [
+                    ('out_files', 'inputnode.bold_split')
+                ])
+            ])
 
         if use_aroma:
             # ICA-AROMA workflow
