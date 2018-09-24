@@ -299,12 +299,12 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, multiecho=False, use
             (aparc_t1w_tfm, outputnode, [('output_image', 'bold_aparc_t1')]),
         ])
 
-    # merge 3D volumes into 4D timeseries
-    merge = pe.Node(Merge(compress=use_compression), name='merge', mem_gb=mem_gb)
-
     bold_to_t1w_transform = pe.Node(
         MultiApplyTransforms(interpolation="LanczosWindowedSinc", float=True, copy_dtype=True),
         name='bold_to_t1w_transform', mem_gb=mem_gb * 3 * omp_nthreads, n_procs=omp_nthreads)
+
+    # merge 3D volumes into 4D timeseries
+    merge = pe.Node(Merge(compress=use_compression), name='merge', mem_gb=mem_gb)
 
     if not multiecho:
         # Merge transforms placing the head motion correction last
@@ -337,9 +337,8 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, multiecho=False, use
         ])
 
     workflow.connect([
-        (gen_ref, bold_to_t1w_transform, [('out_file', 'reference_image')]),
-        # merge 3D volumes into 4D time series
         (inputnode, merge, [('name_source', 'header_source')]),
+        (gen_ref, bold_to_t1w_transform, [('out_file', 'reference_image')]),
         (bold_to_t1w_transform, merge, [('out_files', 'in_files')]),
         (merge, outputnode, [('out_file', 'bold_t1')]),
     ])

@@ -574,7 +574,7 @@ this workflow uses the `tedana`_ `T2* workflow`_ to generate an adaptive T2* map
 and optimally weighted combination of all supplied single echo time series.
 This optimaly combined time series is then carried forward for all subsequent
 preprocessing steps.
-Optionally, if the ``--t2s_coreg`` flag is supplied, the T2* map is then used
+Optionally, if the ``--t2s-coreg`` flag is supplied, the T2* map is then used
 in place of the :ref:`BOLD reference image <bold_ref>` to
 :ref:`register the BOLD series to the T1w image <bold_reg>` of the same subject.
 

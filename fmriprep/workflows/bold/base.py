@@ -97,6 +97,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         use_bbr : bool or None
             Enable/disable boundary-based registration refinement.
             If ``None``, test BBR result for distortion before accepting.
+            When using ``t2s_coreg``, BBR will be enabled by default unless
+            explicitly specified otherwise.
         t2s_coreg : bool
             Use multiple BOLD echos to create T2*-map for T2*-driven coregistration
         bold2t1w_dof : 6, 9 or 12
@@ -305,8 +307,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         t2s_coreg = False
 
     # By default, force-bbr for t2s_coreg unless user specifies otherwise
-    if t2s_coreg and (use_bbr is not False):
-            use_bbr = True
+    if t2s_coreg and use_bbr is None:
+        use_bbr = True
 
     # Build workflow
     workflow = Workflow(name=wf_name)
