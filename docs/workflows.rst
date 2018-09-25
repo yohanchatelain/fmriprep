@@ -382,7 +382,7 @@ T2* Driven Coregistration
 :mod:`fmriprep.workflows.bold.t2s.init_bold_t2s_wf`
 
 .. workflow::
-    :graph2use: colored
+    :graph2use: orig
     :simple_form: yes
 
     from fmriprep.workflows.bold import init_bold_t2s_wf
