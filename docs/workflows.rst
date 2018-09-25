@@ -395,7 +395,7 @@ T2* Driven Coregistration
 If the ``--t2s-coreg`` command line argument is supplied with multi-echo
 :abbr:`BOLD (blood-oxygen level-dependent)` data, a T2* map is generated.
 This T2* map is then used in place of the :ref:`BOLD reference image <bold_ref>`
-to ref:`register the BOLD series to the T1w image of the same subject <bold_reg>`.
+to :ref:`register the BOLD series to the T1w image <bold_reg>` of the same subject.
 
 Susceptibility Distortion Correction (SDC)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
