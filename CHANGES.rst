@@ -1,4 +1,4 @@
-1.1.7 (September 10, 2018)
+1.1.7 (September 25, 2018)
 ==========================
 
 Several bug fixes. With thanks to Elizabeth Dupre and Romain Vala for
