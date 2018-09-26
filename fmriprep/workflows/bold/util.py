@@ -105,7 +105,8 @@ using a custom methodology of *fMRIPrep*.
                       mem_gb=1)  # OE: 128x128x128x50 * 64 / 8 ~ 900MB.
     # Re-run validation; no effect if no sbref; otherwise apply same validation to sbref as bold
     validate_ref = pe.Node(ValidateImage(), name='validate_ref', mem_gb=DEFAULT_MEMORY_MIN_GB)
-    enhance_and_skullstrip_bold_wf = init_enhance_and_skullstrip_bold_wf(omp_nthreads=omp_nthreads)
+    enhance_and_skullstrip_bold_wf = init_enhance_and_skullstrip_bold_wf(omp_nthreads=omp_nthreads,
+                                                                         enhance_t2=enhance_t2)
 
     workflow.connect([
         (inputnode, validate, [('bold_file', 'in_file')]),
