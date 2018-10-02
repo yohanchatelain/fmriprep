@@ -97,7 +97,7 @@ REQUIRES = [
     'grabbit',
     'pybids>=0.6.3',
     'nitime',
-    'nipype>=1.1.1',
+    'nipype>=1.1.3',
     'niworkflows>=0.4.3',
     'statsmodels',
     'seaborn',

@@ -17,8 +17,8 @@ import os
 import os.path as op
 
 from nipype.pipeline import engine as pe
-from nipype.interfaces import utility as niu, fsl, c3, freesurfer as fs
-from niworkflows.interfaces.registration import FLIRTRPT, BBRegisterRPT, MRICoregRPT
+from nipype.interfaces import utility as niu, fsl, c3
+from niworkflows.interfaces.registration import FLIRTRPT
 from niworkflows.interfaces.utils import GenerateSamplingReference
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
 
@@ -28,7 +28,11 @@ from ...interfaces import MultiApplyTransforms, DerivativesDataSink
 from ...interfaces.nilearn import Merge
 from ...interfaces.images import extract_wm
 # See https://github.com/poldracklab/fmriprep/issues/768
-from ...interfaces.freesurfer import PatchedConcatenateLTA as ConcatenateLTA
+from ...interfaces.freesurfer import (
+        PatchedConcatenateLTA as ConcatenateLTA,
+        PatchedBBRegisterRPT as BBRegisterRPT,
+        PatchedMRICoregRPT as MRICoregRPT,
+        PatchedLTAConvert as LTAConvert)
 
 
 DEFAULT_MEMORY_MIN_GB = 0.01
@@ -437,8 +441,8 @@ for distortions remaining in the BOLD reference.
     lta_concat = pe.Node(ConcatenateLTA(out_file='out.lta'), name='lta_concat')
     # XXX LTA-FSL-ITK may ultimately be able to be replaced with a straightforward
     # LTA-ITK transform, but right now the translation parameters are off.
-    lta2fsl_fwd = pe.Node(fs.utils.LTAConvert(out_fsl=True), name='lta2fsl_fwd')
-    lta2fsl_inv = pe.Node(fs.utils.LTAConvert(out_fsl=True, invert=True), name='lta2fsl_inv')
+    lta2fsl_fwd = pe.Node(LTAConvert(out_fsl=True), name='lta2fsl_fwd')
+    lta2fsl_inv = pe.Node(LTAConvert(out_fsl=True, invert=True), name='lta2fsl_inv')
     fsl2itk_fwd = pe.Node(c3.C3dAffineTool(fsl2ras=True, itk_transform=True),
                           name='fsl2itk_fwd', mem_gb=DEFAULT_MEMORY_MIN_GB)
     fsl2itk_inv = pe.Node(c3.C3dAffineTool(fsl2ras=True, itk_transform=True),
@@ -495,7 +499,7 @@ for distortions remaining in the BOLD reference.
     transforms = pe.Node(niu.Merge(2), run_without_submitting=True, name='transforms')
     reports = pe.Node(niu.Merge(2), run_without_submitting=True, name='reports')
 
-    lta_ras2ras = pe.MapNode(fs.utils.LTAConvert(out_lta=True), iterfield=['in_lta'],
+    lta_ras2ras = pe.MapNode(LTAConvert(out_lta=True), iterfield=['in_lta'],
                              name='lta_ras2ras', mem_gb=2)
     compare_transforms = pe.Node(niu.Function(function=compare_xforms), name='compare_transforms')
 
@@ -676,7 +680,7 @@ for distortions remaining in the BOLD reference.
     select_transform = pe.Node(niu.Select(), run_without_submitting=True, name='select_transform')
     select_report = pe.Node(niu.Select(), run_without_submitting=True, name='select_report')
 
-    fsl_to_lta = pe.MapNode(fs.utils.LTAConvert(out_lta=True), iterfield=['in_fsl'],
+    fsl_to_lta = pe.MapNode(LTAConvert(out_lta=True), iterfield=['in_fsl'],
                             name='fsl_to_lta')
 
     workflow.connect([
