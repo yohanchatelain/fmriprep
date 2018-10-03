@@ -524,13 +524,13 @@ A T1w-reference map was computed after registration of
     # StructuralReference is fs.RobustTemplate if > 1 volume, copying otherwise
     t1_merge = pe.Node(
         StructuralReference(auto_detect_sensitivity=True,
-                           initial_timepoint=1,      # For deterministic behavior
-                           intensity_scaling=True,   # 7-DOF (rigid + intensity)
-                           subsample_threshold=200,
-                           fixed_timepoint=not longitudinal,
-                           no_iteration=not longitudinal,
-                           transform_outputs=True,
-                           ),
+                            initial_timepoint=1,      # For deterministic behavior
+                            intensity_scaling=True,   # 7-DOF (rigid + intensity)
+                            subsample_threshold=200,
+                            fixed_timepoint=not longitudinal,
+                            no_iteration=not longitudinal,
+                            transform_outputs=True,
+                            ),
         mem_gb=2 * num_t1w - 1,
         name='t1_merge')
 
