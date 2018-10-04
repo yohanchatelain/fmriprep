@@ -835,6 +835,10 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
             base_directory=output_dir, suffix=suffix_fmt('T1w', 'preproc'), compress=True),
             name='ds_bold_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
+        ds_bold_t1_ref = pe.Node(DerivativesDataSink(
+            base_directory=output_dir, suffix=suffix_fmt('T1w', 'desc-3dref'),
+            keep_dtype=True), name='ds_bold_t1_ref', run_without_submitting=True,
+            mem_gb=DEFAULT_MEMORY_MIN_GB)
 
         ds_bold_mask_t1 = pe.Node(DerivativesDataSink(
             base_directory=output_dir, suffix=suffix_fmt('T1w', 'brainmask')),
@@ -850,9 +854,14 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     # Resample to template (default: MNI)
     if 'template' in output_spaces:
         ds_bold_mni = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix=suffix_fmt(template, 'preproc')),
+            base_directory=output_dir, suffix=suffix_fmt(template, 'preproc'), compress=True),
             name='ds_bold_mni', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
+        ds_bold_mni_ref = pe.Node(DerivativesDataSink(
+            base_directory=output_dir, suffix=suffix_fmt(template, 'desc-3dref'),
+            keep_dtype=True), name='ds_bold_mni_ref', run_without_submitting=True,
+            mem_gb=DEFAULT_MEMORY_MIN_GB)
+
         ds_bold_mask_mni = pe.Node(DerivativesDataSink(
             base_directory=output_dir, suffix=suffix_fmt(template, 'brainmask')),
             name='ds_bold_mask_mni', run_without_submitting=True,
