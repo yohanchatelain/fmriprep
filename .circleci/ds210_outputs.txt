@@ -24,13 +24,15 @@ fmriprep/sub-02/anat/sub-02_target-MNI152NLin2009cAsym_warp.h5
 fmriprep/sub-02/func
 fmriprep/sub-02/func/sub-02_task-cuedSGT_run-01_echo-1_confounds.tsv
 fmriprep/sub-02/func/sub-02_task-cuedSGT_run-01_echo-1_space-MNI152NLin2009cAsym_brainmask.nii.gz
+fmriprep/sub-02/func/sub-02_task-cuedSGT_run-01_echo-1_space-MNI152NLin2009cAsym_desc-3dref_bold.nii.gz
 fmriprep/sub-02/func/sub-02_task-cuedSGT_run-01_echo-1_space-MNI152NLin2009cAsym_preproc.nii.gz
 fmriprep/sub-02/func/sub-02_task-cuedSGT_run-01_echo-2_confounds.tsv
 fmriprep/sub-02/func/sub-02_task-cuedSGT_run-01_echo-2_space-MNI152NLin2009cAsym_brainmask.nii.gz
+fmriprep/sub-02/func/sub-02_task-cuedSGT_run-01_echo-2_space-MNI152NLin2009cAsym_desc-3dref_bold.nii.gz
 fmriprep/sub-02/func/sub-02_task-cuedSGT_run-01_echo-2_space-MNI152NLin2009cAsym_preproc.nii.gz
 fmriprep/sub-02/func/sub-02_task-cuedSGT_run-01_echo-3_confounds.tsv
 fmriprep/sub-02/func/sub-02_task-cuedSGT_run-01_echo-3_space-MNI152NLin2009cAsym_brainmask.nii.gz
+fmriprep/sub-02/func/sub-02_task-cuedSGT_run-01_echo-3_space-MNI152NLin2009cAsym_desc-3dref_bold.nii.gz
 fmriprep/sub-02/func/sub-02_task-cuedSGT_run-01_echo-3_space-MNI152NLin2009cAsym_preproc.nii.gz
-fmriprep/sub-02/func/sub-02_task-cuedSGT_run-01_space-MNI152NLin2009cAsym_desc-3dref_bold.nii.gz
 fmriprep/sub-02.html
 /tmp/ds210/derivatives
