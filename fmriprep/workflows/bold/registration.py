@@ -250,7 +250,7 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, use_fieldwarp=False,
         * :py:func:`~fmriprep.workflows.bold.registration.init_fsl_bbr_wf`
 
     """
-    from ..util import init_bold_reference_wf
+    from .util import init_bold_reference_wf
     workflow = Workflow(name=name)
     inputnode = pe.Node(
         niu.IdentityInterface(
