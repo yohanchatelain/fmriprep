@@ -10,11 +10,20 @@ Utility workflows
 .. autofunction:: init_skullstrip_bold_wf
 
 """
+from packaging.version import parse as parseversion, Version
+from pkg_resources import resource_filename as pkgr_fn
+
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, fsl, afni, ants
-from niworkflows.interfaces.utils import CopyXForm
+from niworkflows.data import get_template
+from niworkflows.interfaces.ants import AI
+from niworkflows.interfaces.fixes import (
+    FixHeaderRegistration as Registration,
+    FixHeaderApplyTransforms as ApplyTransforms,
+)
 from niworkflows.interfaces.masks import SimpleShowMaskRPT
 from niworkflows.interfaces.registration import EstimateReferenceImage
+from niworkflows.interfaces.utils import CopyXForm
 
 from ...engine import Workflow
 from ...interfaces.nilearn import MaskEPI
@@ -105,8 +114,8 @@ using a custom methodology of *fMRIPrep*.
                       mem_gb=1)  # OE: 128x128x128x50 * 64 / 8 ~ 900MB.
     # Re-run validation; no effect if no sbref; otherwise apply same validation to sbref as bold
     validate_ref = pe.Node(ValidateImage(), name='validate_ref', mem_gb=DEFAULT_MEMORY_MIN_GB)
-    enhance_and_skullstrip_bold_wf = init_enhance_and_skullstrip_bold_wf(omp_nthreads=omp_nthreads,
-                                                                         enhance_t2=enhance_t2)
+    enhance_and_skullstrip_bold_wf = init_enhance_and_skullstrip_bold_wf(
+        omp_nthreads=omp_nthreads)
 
     workflow.connect([
         (inputnode, validate, [('bold_file', 'in_file')]),
@@ -137,7 +146,7 @@ using a custom methodology of *fMRIPrep*.
 
 
 def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
-                                        omp_nthreads=1, enhance_t2=False):
+                                        omp_nthreads=1):
     """
     This workflow takes in a :abbr:`BOLD (blood-oxygen level-dependant)`
     :abbr:`fMRI (functional MRI)` average/summary (e.g. a reference image
@@ -177,10 +186,6 @@ def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
             Name of workflow (default: ``enhance_and_skullstrip_bold_wf``)
         omp_nthreads : int
             number of threads available to parallel nodes
-        enhance_t2 : bool
-            perform logarithmic transform of input BOLD image to improve contrast
-            before calculating the preliminary mask
-
 
     **Inputs**
 
@@ -207,9 +212,43 @@ def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
     outputnode = pe.Node(niu.IdentityInterface(fields=[
         'mask_file', 'skull_stripped_file', 'bias_corrected_file']), name='outputnode')
 
-    # Create a loose mask to avoid N4 internal's Otsu mask
-    n4_mask = pe.Node(MaskEPI(upper_cutoff=0.75, enhance_t2=enhance_t2, opening=1,
-                      no_sanitize=True), name='n4_mask')
+    bold_template = get_template('fMRIPrep') / 'tpl-fMRIPrep_space-MNI_res-02_boldref.nii.gz'
+    brain_mask = get_template('MNI152NLin2009cAsym') / \
+        'tpl-MNI152NLin2009cAsym_space-MNI_res-02_brainmask.nii.gz'
+
+    # Initialize transforms with antsAI
+    init_aff = pe.Node(AI(
+        fixed_image=str(bold_template),
+        fixed_image_mask=str(brain_mask),
+        metric=('Mattes', 32, 'Regular', 0.2),
+        transform=('Affine', 0.1),
+        search_factor=(20, 0.12),
+        principal_axes=False,
+        convergence=(10, 1e-6, 10),
+        verbose=True),
+        name='init_aff',
+        n_procs=omp_nthreads)
+
+    if parseversion(Registration().version) > Version('2.2.0'):
+        init_aff.inputs.search_grid = (40, (0, 40, 40))
+
+    # Set up spatial normalization
+    norm = pe.Node(Registration(
+        from_file=pkgr_fn(
+            'fmriprep.data',
+            'epi_registration_settings.json')),
+        name='norm',
+        n_procs=omp_nthreads)
+    fixed_mask_trait = 'fixed_image_mask'
+    norm.inputs.fixed_image = str(bold_template)
+    if parseversion(Registration().version) >= Version('2.2.0'):
+        fixed_mask_trait += 's'
+    setattr(norm.inputs, fixed_mask_trait, str(brain_mask))
+
+    map_brainmask = pe.Node(
+        ApplyTransforms(interpolation='MultiLabel', float=True, input_image=str(brain_mask)),
+        name='map_brainmask'
+    )
 
     # Run N4 normally, force num_threads=1 for stability (images are small, no need for >1)
     n4_correct = pe.Node(ants.N4BiasFieldCorrection(dimension=3, copy_header=True),
@@ -246,11 +285,17 @@ def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
     apply_mask = pe.Node(fsl.ApplyMask(), name='apply_mask')
 
     workflow.connect([
-        (inputnode, n4_mask, [('in_file', 'in_files')]),
+        (inputnode, init_aff, [('in_file', 'moving_image')]),
+        (inputnode, map_brainmask, [('in_file', 'reference_image')]),
+        (inputnode, norm, [('in_file', 'moving_image')]),
+        (init_aff, norm, [('output_transform', 'initial_moving_transform')]),
+        (norm, map_brainmask, [
+            ('reverse_invert_flags', 'invert_transform_flags'),
+            ('reverse_transforms', 'transforms')]),
         (inputnode, n4_correct, [('in_file', 'input_image')]),
         (inputnode, fixhdr_unifize, [('in_file', 'hdr_file')]),
         (inputnode, fixhdr_skullstrip2, [('in_file', 'hdr_file')]),
-        (n4_mask, n4_correct, [('out_mask', 'mask_image')]),
+        (map_brainmask, n4_correct, [('output_image', 'mask_image')]),
         (n4_correct, skullstrip_first_pass, [('output_image', 'in_file')]),
         (skullstrip_first_pass, bet_dilate, [('mask_file', 'in_file')]),
         (bet_dilate, bet_mask, [('out_file', 'mask_file')]),
