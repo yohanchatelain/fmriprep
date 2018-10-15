@@ -26,7 +26,6 @@ from niworkflows.interfaces.registration import EstimateReferenceImage
 from niworkflows.interfaces.utils import CopyXForm
 
 from ...engine import Workflow
-from ...interfaces.nilearn import MaskEPI
 from ...interfaces import ValidateImage
 
 
