@@ -10,7 +10,7 @@ Head-Motion Estimation and Correction (HMC) of BOLD images
 """
 
 from nipype.pipeline import engine as pe
-from nipype.interfaces import utility as niu, fsl, afni
+from nipype.interfaces import utility as niu, afni
 from niworkflows.interfaces import NormalizeMotionParams
 from ...interfaces import Volreg2ITK
 from ...engine import Workflow
