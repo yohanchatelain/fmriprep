@@ -235,14 +235,14 @@ def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
     norm = pe.Node(Registration(
         from_file=pkgr_fn(
             'fmriprep.data',
-            'epi_registration_settings.json')),
+            'epi_atlasbased_brainmask.json')),
         name='norm',
         n_procs=omp_nthreads)
-    fixed_mask_trait = 'fixed_image_mask'
     norm.inputs.fixed_image = str(bold_template)
-    if parseversion(Registration().version) >= Version('2.2.0'):
-        fixed_mask_trait += 's'
-    setattr(norm.inputs, fixed_mask_trait, str(brain_mask))
+    # fixed_mask_trait = 'fixed_image_mask'
+    # if parseversion(Registration().version) >= Version('2.2.0'):
+    #     fixed_mask_trait += 's'
+    # setattr(norm.inputs, fixed_mask_trait, str(brain_mask))
 
     map_brainmask = pe.Node(
         ApplyTransforms(interpolation='MultiLabel', float=True, input_image=str(brain_mask)),
