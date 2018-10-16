@@ -171,18 +171,19 @@ def init_enhance_and_skullstrip_bold_wf(
          is in MNI space.
          The tentative mask is obtained by resampling the MNI template's
          brainmask into *boldref*-space.
-      2. Run ANTs' ``N4BiasFieldCorrection`` on the input
+      2. Binary dilation of the tentative mask with a sphere of 3mm diameter.
+      3. Run ANTs' ``N4BiasFieldCorrection`` on the input
          :abbr:`BOLD (blood-oxygen level-dependant)` average, using the
          mask generated in 1) instead of the internal Otsu thresholding.
-      3. Calculate a loose mask using FSL's ``bet``, with one mathematical morphology
+      4. Calculate a loose mask using FSL's ``bet``, with one mathematical morphology
          dilation of one iteration and a sphere of 6mm as structuring element.
-      4. Mask the :abbr:`INU (intensity non-uniformity)`-corrected image
+      5. Mask the :abbr:`INU (intensity non-uniformity)`-corrected image
          with the latest mask calculated in 3), then use AFNI's ``3dUnifize``
          to *standardize* the T2* contrast distribution.
-      5. Calculate a mask using AFNI's ``3dAutomask`` after the contrast
+      6. Calculate a mask using AFNI's ``3dAutomask`` after the contrast
          enhancement of 4).
-      6. Calculate a final mask as the intersection of 3) and 5).
-      7. Apply final mask on the enhanced reference.
+      7. Calculate a final mask as the intersection of 3) and 5).
+      8. Apply final mask on the enhanced reference.
 
     Step 1 can be skipped if the ``pre_mask`` argument is set to ``True`` and
     a tentative mask is passed in to the workflow throught the ``pre_mask``
