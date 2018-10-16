@@ -72,6 +72,13 @@ def test_masking(input_fname, expected_fname):
     mask_diff_plot.inputs.in_mask = expected_fname
     mask_diff_plot.inputs.out_report = out_fname
 
+    mask_dir = os.path.join(newpath, 'fmriprep_bold_mask')
+    save_mask = pe.Node(niu.Function(function=copyfile), name='save_mask')
+    save_mask.inputs.copy = True
+    save_mask.inputs.newfile = fname_presuffix(basename, suffix='_mask',
+                                               use_ext=True, newpath=mask_dir)
+
+    outputnode = bold_reference_wf.get_node('outputnode')
     bold_reference_wf.connect([
         (bold_reference_wf.get_node('outputnode'), mask_diff_plot, [
             ('ref_image', 'in_file'),
