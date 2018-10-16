@@ -32,8 +32,8 @@ from ...interfaces import ValidateImage
 DEFAULT_MEMORY_MIN_GB = 0.01
 
 
-def init_bold_reference_wf(omp_nthreads, bold_file=None, name='bold_reference_wf',
-                           gen_report=False, enhance_t2=False):
+def init_bold_reference_wf(omp_nthreads, bold_file=None, pre_mask=False,
+                           name='bold_reference_wf', gen_report=False):
     """
     This workflow generates reference BOLD images for a series
 
@@ -66,6 +66,9 @@ def init_bold_reference_wf(omp_nthreads, bold_file=None, name='bold_reference_wf
 
         bold_file
             BOLD series NIfTI file
+        bold_mask : bool
+            A tentative brain mask to initialize the workflow (requires ``pre_mask``
+            parameter set ``True``).
 
     **Outputs**
 
@@ -95,7 +98,7 @@ def init_bold_reference_wf(omp_nthreads, bold_file=None, name='bold_reference_wf
 First, a reference volume and its skull-stripped version were generated
 using a custom methodology of *fMRIPrep*.
 """
-    inputnode = pe.Node(niu.IdentityInterface(fields=['bold_file', 'sbref_file']),
+    inputnode = pe.Node(niu.IdentityInterface(fields=['bold_file', 'sbref_file', 'bold_mask']),
                         name='inputnode')
     outputnode = pe.Node(
         niu.IdentityInterface(fields=['bold_file', 'raw_ref_image', 'skip_vols', 'ref_image',
@@ -114,7 +117,7 @@ using a custom methodology of *fMRIPrep*.
     # Re-run validation; no effect if no sbref; otherwise apply same validation to sbref as bold
     validate_ref = pe.Node(ValidateImage(), name='validate_ref', mem_gb=DEFAULT_MEMORY_MIN_GB)
     enhance_and_skullstrip_bold_wf = init_enhance_and_skullstrip_bold_wf(
-        omp_nthreads=omp_nthreads)
+        omp_nthreads=omp_nthreads, pre_mask=pre_mask)
 
     workflow.connect([
         (inputnode, validate, [('bold_file', 'in_file')]),
@@ -132,6 +135,11 @@ using a custom methodology of *fMRIPrep*.
             ('outputnode.skull_stripped_file', 'ref_image_brain')]),
     ])
 
+    if pre_mask:
+        workflow.connect([
+            (inputnode, enhance_and_skullstrip_bold_wf, [('bold_mask', 'inputnode.pre_mask')]),
+        ])
+
     if gen_report:
         mask_reportlet = pe.Node(SimpleShowMaskRPT(), name='mask_reportlet')
         workflow.connect([
@@ -144,8 +152,10 @@ using a custom methodology of *fMRIPrep*.
     return workflow
 
 
-def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
-                                        omp_nthreads=1):
+def init_enhance_and_skullstrip_bold_wf(
+        name='enhance_and_skullstrip_bold_wf',
+        pre_mask=False,
+        omp_nthreads=1):
     """
     This workflow takes in a :abbr:`BOLD (blood-oxygen level-dependant)`
     :abbr:`fMRI (functional MRI)` average/summary (e.g. a reference image
@@ -156,8 +166,11 @@ def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
 
     Steps of this workflow are:
 
-
-      1. Calculate a conservative mask using Nilearn's ``create_epi_mask``.
+      1. Calculate a tentative mask by registering (9-parameters) to *fMRIPrep*'s
+         :abbr:`EPI (echo-planar imaging)` -*boldref* template, which
+         is in MNI space.
+         The tentative mask is obtained by resampling the MNI template's
+         brainmask into *boldref*-space.
       2. Run ANTs' ``N4BiasFieldCorrection`` on the input
          :abbr:`BOLD (blood-oxygen level-dependant)` average, using the
          mask generated in 1) instead of the internal Otsu thresholding.
@@ -171,6 +184,9 @@ def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
       6. Calculate a final mask as the intersection of 3) and 5).
       7. Apply final mask on the enhanced reference.
 
+    Step 1 can be skipped if the ``pre_mask`` argument is set to ``True`` and
+    a tentative mask is passed in to the workflow throught the ``pre_mask``
+    Nipype input.
 
 
     .. workflow ::
@@ -183,6 +199,9 @@ def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
     **Parameters**
         name : str
             Name of workflow (default: ``enhance_and_skullstrip_bold_wf``)
+        pre_mask : bool
+            Indicates whether the ``pre_mask`` input will be set (and thus, step 1
+            should be skipped).
         omp_nthreads : int
             number of threads available to parallel nodes
 
@@ -190,6 +209,9 @@ def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
 
         in_file
             BOLD image (single volume)
+        pre_mask : bool
+            A tentative brain mask to initialize the workflow (requires ``pre_mask``
+            parameter set ``True``).
 
 
     **Outputs**
@@ -206,48 +228,15 @@ def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
     .. _N4BiasFieldCorrection: https://hdl.handle.net/10380/3053
     """
     workflow = Workflow(name=name)
-    inputnode = pe.Node(niu.IdentityInterface(fields=['in_file']),
+    inputnode = pe.Node(niu.IdentityInterface(fields=['in_file', 'pre_mask']),
                         name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(fields=[
         'mask_file', 'skull_stripped_file', 'bias_corrected_file']), name='outputnode')
 
-    bold_template = get_template('fMRIPrep') / 'tpl-fMRIPrep_space-MNI_res-02_boldref.nii.gz'
-    brain_mask = get_template('MNI152NLin2009cAsym') / \
-        'tpl-MNI152NLin2009cAsym_space-MNI_res-02_brainmask.nii.gz'
-
-    # Initialize transforms with antsAI
-    init_aff = pe.Node(AI(
-        fixed_image=str(bold_template),
-        fixed_image_mask=str(brain_mask),
-        metric=('Mattes', 32, 'Regular', 0.2),
-        transform=('Affine', 0.1),
-        search_factor=(20, 0.12),
-        principal_axes=False,
-        convergence=(10, 1e-6, 10),
-        verbose=True),
-        name='init_aff',
-        n_procs=omp_nthreads)
-
-    if parseversion(Registration().version) > Version('2.2.0'):
-        init_aff.inputs.search_grid = (40, (0, 40, 40))
-
-    # Set up spatial normalization
-    norm = pe.Node(Registration(
-        from_file=pkgr_fn(
-            'fmriprep.data',
-            'epi_atlasbased_brainmask.json')),
-        name='norm',
-        n_procs=omp_nthreads)
-    norm.inputs.fixed_image = str(bold_template)
-    # fixed_mask_trait = 'fixed_image_mask'
-    # if parseversion(Registration().version) >= Version('2.2.0'):
-    #     fixed_mask_trait += 's'
-    # setattr(norm.inputs, fixed_mask_trait, str(brain_mask))
-
-    map_brainmask = pe.Node(
-        ApplyTransforms(interpolation='MultiLabel', float=True, input_image=str(brain_mask)),
-        name='map_brainmask'
-    )
+    # Dilate pre_mask
+    pre_dilate = pe.Node(fsl.DilateImage(
+        operation='max', kernel_shape='sphere', kernel_size=3.0,
+        internal_datatype='char'), name='pre_mask_dilate')
 
     # Run N4 normally, force num_threads=1 for stability (images are small, no need for >1)
     n4_correct = pe.Node(ants.N4BiasFieldCorrection(dimension=3, copy_header=True),
@@ -283,18 +272,59 @@ def init_enhance_and_skullstrip_bold_wf(name='enhance_and_skullstrip_bold_wf',
     # Compute masked brain
     apply_mask = pe.Node(fsl.ApplyMask(), name='apply_mask')
 
+    if not pre_mask:
+        bold_template = get_template('fMRIPrep') / 'tpl-fMRIPrep_space-MNI_res-02_boldref.nii.gz'
+        brain_mask = get_template('MNI152NLin2009cAsym') / \
+            'tpl-MNI152NLin2009cAsym_space-MNI_res-02_brainmask.nii.gz'
+
+        # Initialize transforms with antsAI
+        init_aff = pe.Node(AI(
+            fixed_image=str(bold_template),
+            fixed_image_mask=str(brain_mask),
+            metric=('Mattes', 32, 'Regular', 0.2),
+            transform=('Affine', 0.1),
+            search_factor=(20, 0.12),
+            principal_axes=False,
+            convergence=(10, 1e-6, 10),
+            verbose=True),
+            name='init_aff',
+            n_procs=omp_nthreads)
+
+        if parseversion(Registration().version) > Version('2.2.0'):
+            init_aff.inputs.search_grid = (40, (0, 40, 40))
+
+        # Set up spatial normalization
+        norm = pe.Node(Registration(
+            from_file=pkgr_fn(
+                'fmriprep.data',
+                'epi_atlasbased_brainmask.json')),
+            name='norm',
+            n_procs=omp_nthreads)
+        norm.inputs.fixed_image = str(bold_template)
+        map_brainmask = pe.Node(
+            ApplyTransforms(interpolation='MultiLabel', float=True, input_image=str(brain_mask)),
+            name='map_brainmask'
+        )
+        workflow.connect([
+            (inputnode, init_aff, [('in_file', 'moving_image')]),
+            (inputnode, map_brainmask, [('in_file', 'reference_image')]),
+            (inputnode, norm, [('in_file', 'moving_image')]),
+            (init_aff, norm, [('output_transform', 'initial_moving_transform')]),
+            (norm, map_brainmask, [
+                ('reverse_invert_flags', 'invert_transform_flags'),
+                ('reverse_transforms', 'transforms')]),
+            (map_brainmask, pre_dilate, [('output_image', 'in_file')]),
+        ])
+    else:
+        workflow.connect([
+            (inputnode, pre_dilate, [('pre_mask', 'in_file')]),
+        ])
+
     workflow.connect([
-        (inputnode, init_aff, [('in_file', 'moving_image')]),
-        (inputnode, map_brainmask, [('in_file', 'reference_image')]),
-        (inputnode, norm, [('in_file', 'moving_image')]),
-        (init_aff, norm, [('output_transform', 'initial_moving_transform')]),
-        (norm, map_brainmask, [
-            ('reverse_invert_flags', 'invert_transform_flags'),
-            ('reverse_transforms', 'transforms')]),
+        (pre_dilate, n4_correct, [('out_file', 'mask_image')]),
         (inputnode, n4_correct, [('in_file', 'input_image')]),
         (inputnode, fixhdr_unifize, [('in_file', 'hdr_file')]),
         (inputnode, fixhdr_skullstrip2, [('in_file', 'hdr_file')]),
-        (map_brainmask, n4_correct, [('output_image', 'mask_image')]),
         (n4_correct, skullstrip_first_pass, [('output_image', 'in_file')]),
         (skullstrip_first_pass, bet_dilate, [('mask_file', 'in_file')]),
         (bet_dilate, bet_mask, [('out_file', 'mask_file')]),

@@ -394,9 +394,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         ]),
     ])
 
-    # The first reference uses T2 contrast enhancement
-    bold_reference_wf = init_bold_reference_wf(
-        omp_nthreads=omp_nthreads, enhance_t2=True)
+    # Generate a tentative boldref
+    bold_reference_wf = init_bold_reference_wf(omp_nthreads=omp_nthreads)
 
     # Top-level BOLD splitter
     bold_split = pe.Node(FSLSplit(dimension='t'), name='bold_split',
