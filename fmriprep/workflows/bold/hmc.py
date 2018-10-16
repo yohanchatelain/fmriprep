@@ -12,7 +12,7 @@ Head-Motion Estimation and Correction (HMC) of BOLD images
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, fsl, afni
 from niworkflows.interfaces import NormalizeMotionParams
-from fmriprep.utils.misc import afni2itk_func
+from ...interfaces import Volreg2ITK
 from ...engine import Workflow
 
 DEFAULT_MEMORY_MIN_GB = 0.01
@@ -75,12 +75,7 @@ parameters) are estimated before any spatiotemporal filtering using
     # Head motion correction (hmc)
     mc = pe.Node(afni.Volreg(args='-prefix NULL -twopass',
                              zpad=4, outputtype='NIFTI_GZ'), name="mc", mem_gb=mem_gb * 3)
-
-    afni2itk = pe.Node(niu.Function(function=afni2itk_func,
-                                    input_names=["in_file"],
-                                    output_names=["out_files"]), name='afni2itk',
-                       mem_gb=0.05)
-
+    afni2itk = pe.Node(Volreg2ITK(), name='afni2itk', mem_gb=0.05)
     normalize_motion = pe.Node(NormalizeMotionParams(format='AFNI'),
                                name="normalize_motion",
                                mem_gb=DEFAULT_MEMORY_MIN_GB)
@@ -90,7 +85,7 @@ parameters) are estimated before any spatiotemporal filtering using
                          ('bold_file', 'in_file')]),
         (mc, afni2itk, [('oned_matrix_save', 'in_file')]),
         (mc, normalize_motion, [('oned_file', 'in_file')]),
-        (afni2itk, outputnode, [('out_files', 'xforms')]),
+        (afni2itk, outputnode, [('out_file', 'xforms')]),
         (normalize_motion, outputnode, [('out_file', 'movpar_file')]),
     ])
 
