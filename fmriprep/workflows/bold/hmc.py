@@ -55,7 +55,7 @@ def init_bold_hmc_wf(mem_gb, omp_nthreads, name='bold_hmc_wf'):
         xforms
             ITKTransform file aligning each volume to ``ref_image``
         movpar_file
-            MCFLIRT motion parameters, normalized to SPM format (X, Y, Z, Rx, Ry, Rz)
+            Head Motion parameters, normalized to SPM format (X, Y, Z, Rx, Ry, Rz)
 
     """
     workflow = Workflow(name=name)
@@ -63,8 +63,8 @@ def init_bold_hmc_wf(mem_gb, omp_nthreads, name='bold_hmc_wf'):
 Head-motion parameters with respect to the BOLD reference
 (transformation matrices, and six corresponding rotation and translation
 parameters) are estimated before any spatiotemporal filtering using
-`mcflirt` [FSL {fsl_ver}, @mcflirt].
-""".format(fsl_ver=fsl.Info().version() or '<ver>')
+`3dVolreg` from AFNI, version {afni_ver} [@afni, RRID:SCR_005927].
+""".format(afni_ver=''.join(list(afni.Volreg().version or '<ver>')))
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['bold_file', 'raw_ref_image']),
                         name='inputnode')
