@@ -229,8 +229,8 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - regression-v0-{{ epoch }}
-            - regression-v0-
+            - regression-v1-{{ epoch }}
+            - regression-v1-
       - run:
           name: Check PyPi preconditions
           command: |
