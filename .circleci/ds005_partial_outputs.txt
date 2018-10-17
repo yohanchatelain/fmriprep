@@ -9,10 +9,10 @@ fmriprep/sub-01/anat
 fmriprep/sub-01/anat/sub-01_desc-brain_mask.nii.gz
 fmriprep/sub-01/anat/sub-01_desc-preproc_T1w.nii.gz
 fmriprep/sub-01/anat/sub-01_dseg.nii.gz
-fmriprep/sub-01/anat/sub-01_from-MNI152NLin2009cAsym_to-T1w_xfm.h5
-fmriprep/sub-01/anat/sub-01_from-orig_to-T1w_xfm.txt
-fmriprep/sub-01/anat/sub-01_from-T1w_to-fsnative_xfm.txt
-fmriprep/sub-01/anat/sub-01_from-T1w_to-MNI152NLin2009cAsym_xfm.h5
+fmriprep/sub-01/anat/sub-01_from-MNI152NLin2009cAsym_to-T1w_mode-image_xfm.h5
+fmriprep/sub-01/anat/sub-01_from-orig_to-T1w_mode-image_xfm.txt
+fmriprep/sub-01/anat/sub-01_from-T1w_to-fsnative_mode-image_xfm.txt
+fmriprep/sub-01/anat/sub-01_from-T1w_to-MNI152NLin2009cAsym_mode-image_xfm.h5
 fmriprep/sub-01/anat/sub-01_hemi-L_inflated.surf.gii
 fmriprep/sub-01/anat/sub-01_hemi-L_midthickness.surf.gii
 fmriprep/sub-01/anat/sub-01_hemi-L_pial.surf.gii
@@ -46,8 +46,8 @@ fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_space-MNI152NLin2009cAs
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_space-MNI152NLin2009cAsym_variant-smoothAROMAnonaggr_preproc.nii.gz
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_space-T1w_boldref.nii.gz
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_space-T1w_brainmask.nii.gz
-fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_space-T1w_label-aparcaseg_roi.nii.gz
-fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_space-T1w_label-aseg_roi.nii.gz
+fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_space-T1w_label-aparcaseg_dseg.nii.gz
+fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_space-T1w_label-aseg_dseg.nii.gz
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_space-T1w_preproc.nii.gz
 fmriprep/sub-01.html
 /tmp/ds005/derivatives_partial

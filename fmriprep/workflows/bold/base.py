@@ -885,11 +885,11 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
 
     if freesurfer:
         ds_bold_aseg_t1 = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix='space-T1w_label-aseg_roi'),
+            base_directory=output_dir, suffix='space-T1w_label-aseg_dseg'),
             name='ds_bold_aseg_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_aparc_t1 = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix='space-T1w_label-aparcaseg_roi'),
+            base_directory=output_dir, suffix='space-T1w_label-aparcaseg_dseg'),
             name='ds_bold_aparc_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         workflow.connect([
