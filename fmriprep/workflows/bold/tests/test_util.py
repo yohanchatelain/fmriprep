@@ -5,7 +5,7 @@ from pathlib import Path
 
 import numpy as np
 from nipype.pipeline import engine as pe
-from nipype.utils.filemanip import fname_presuffix
+from nipype.utils.filemanip import fname_presuffix, copyfile
 from nilearn.image import load_img
 
 from niworkflows.interfaces.masks import ROIsPlot
