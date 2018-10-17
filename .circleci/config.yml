@@ -734,6 +734,8 @@ workflows:
           requires:
             - build
           filters:
+            branches:
+              ignore: /tests?\/.*/
             tags:
               only: /.*/
 
