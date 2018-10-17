@@ -46,6 +46,14 @@ def symmetric_overlap(img1, img2):
         'ds000216/sub-03_task-rest_echo-4_bold.nii.gz',
         'ds000237/sub-03_task-MemorySpan_acq-multiband_run-01_bold.nii.gz',
         'ds000237/sub-06_task-MemorySpan_acq-multiband_run-01_bold.nii.gz',
+        'ds001240/sub-26_task-localizerimagination_bold.nii.gz',
+        'ds001240/sub-26_task-localizerviewing_bold.nii.gz',
+        'ds001240/sub-26_task-molencoding_run-01_bold.nii.gz',
+        'ds001240/sub-26_task-molencoding_run-02_bold.nii.gz',
+        'ds001240/sub-26_task-molretrieval_run-01_bold.nii.gz',
+        'ds001240/sub-26_task-molretrieval_run-02_bold.nii.gz',
+        'ds001240/sub-26_task-rest_bold.nii.gz',
+        'ds001362/sub-01_task-taskname_run-01_bold.nii.gz',
         )
     ])
 def test_masking(input_fname, expected_fname):

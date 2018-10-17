@@ -165,8 +165,8 @@ jobs:
     steps:
       - restore_cache:
           keys:
-            - regression-v0-{{ epoch }}
-            - regression-v0-
+            - regression-v1-{{ epoch }}
+            - regression-v1-
       - run:
           name: Get truncated BOLD series
           command: |
@@ -193,7 +193,7 @@ jobs:
           paths:
             - data
       - save_cache:
-         key: regression-v0-{{ epoch }}
+         key: regression-v1-{{ epoch }}
          paths:
             - /tmp/data
 
@@ -719,7 +719,9 @@ workflows:
       - get_data:
           filters:
             branches:
-              ignore: /docs?\/.*/
+              ignore:
+                - /docs?\/.*/
+                - /tests?\/.*/
             tags:
               only: /.*/
 
@@ -740,7 +742,9 @@ workflows:
             - build
           filters:
             branches:
-              ignore: /docs?\/.*/
+              ignore:
+                - /docs?\/.*/
+                - /tests?\/.*/
             tags:
               only: /.*/
 
@@ -760,7 +764,9 @@ workflows:
             - build
           filters:
             branches:
-              ignore: /docs?\/.*/
+              ignore:
+                - /docs?\/.*/
+                - /tests?\/.*/
             tags:
               only: /.*/
 
@@ -770,7 +776,9 @@ workflows:
             - build
           filters:
             branches:
-              ignore: /docs?\/.*/
+              ignore:
+                - /docs?\/.*/
+                - /tests?\/.*/
             tags:
               only: /.*/
 
@@ -781,7 +789,9 @@ workflows:
           filters:
             branches:
               # only: /meepi.*/
-              ignore: /docs?\/.*/
+              ignore:
+                - /docs?\/.*/
+                - /tests?\/.*/
             tags:
               only: /.*/
 
