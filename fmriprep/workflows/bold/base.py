@@ -827,7 +827,7 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     variant_suffix_fmt = 'space-{}_variant-{}_{}'.format
 
     ds_confounds = pe.Node(DerivativesDataSink(
-        base_directory=output_dir, suffix='confounds'),
+        base_directory=output_dir, desc='confounds', suffix='regressors'),
         name="ds_confounds", run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
     workflow.connect([
@@ -837,17 +837,19 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
 
     # Resample to T1w space
     if 'T1w' in output_spaces:
-        ds_bold_t1 = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix=suffix_fmt('T1w', 'preproc'), compress=True),
+        ds_bold_t1 = pe.Node(
+            DerivativesDataSink(base_directory=output_dir, space='T1w', desc='preproc',
+                                keep_dtype=True, compress=True),
             name='ds_bold_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
-        ds_bold_t1_ref = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix=suffix_fmt('T1w', 'boldref')),
+        ds_bold_t1_ref = pe.Node(
+            DerivativesDataSink(base_directory=output_dir, space='T1w', suffix='boldref'),
             name='ds_bold_t1_ref', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
 
-        ds_bold_mask_t1 = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix=suffix_fmt('T1w', 'brainmask')),
+        ds_bold_mask_t1 = pe.Node(
+            DerivativesDataSink(base_directory=output_dir, space='T1w', desc='brain',
+                                suffix='mask'),
             name='ds_bold_mask_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         workflow.connect([
@@ -861,17 +863,19 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
 
     # Resample to template (default: MNI)
     if 'template' in output_spaces:
-        ds_bold_mni = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix=suffix_fmt(template, 'preproc'), compress=True),
+        ds_bold_mni = pe.Node(
+            DerivativesDataSink(base_directory=output_dir, space=template, desc='preproc',
+                                keep_dtype=True, compress=True),
             name='ds_bold_mni', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
-        ds_bold_mni_ref = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix=suffix_fmt(template, 'boldref')),
+        ds_bold_mni_ref = pe.Node(
+            DerivativesDataSink(base_directory=output_dir, space=template, suffix='boldref'),
             name='ds_bold_mni_ref', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
 
-        ds_bold_mask_mni = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix=suffix_fmt(template, 'brainmask')),
+        ds_bold_mask_mni = pe.Node(
+            DerivativesDataSink(base_directory=output_dir, space=template, desc='brain',
+                                suffix='mask'),
             name='ds_bold_mask_mni', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         workflow.connect([
@@ -885,11 +889,11 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
 
     if freesurfer:
         ds_bold_aseg_t1 = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix='space-T1w_label-aseg_dseg'),
+            base_directory=output_dir, space='T1w', suffix='label-aseg_dseg'),
             name='ds_bold_aseg_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_aparc_t1 = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix='space-T1w_label-aparcaseg_dseg'),
+            base_directory=output_dir,  space='T1w', suffix='label-aparcaseg_dseg'),
             name='ds_bold_aparc_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         workflow.connect([
@@ -902,7 +906,7 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     # fsaverage space
     if freesurfer and any(space.startswith('fs') for space in output_spaces):
         name_surfs = pe.MapNode(GiftiNameSource(
-            pattern=r'(?P<LR>[lr])h.(?P<space>\w+).gii', template='space-{space}.{LR}.func'),
+            pattern=r'(?P<LR>[lr])h.(?P<space>\w+).gii', template='space-{space}_hemi-{LR}.func'),
             iterfield='in_file', name='name_surfs', mem_gb=DEFAULT_MEMORY_MIN_GB,
             run_without_submitting=True)
         ds_bold_surfs = pe.MapNode(DerivativesDataSink(base_directory=output_dir),
@@ -922,8 +926,9 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
             name_cifti = pe.MapNode(
                 CiftiNameSource(), iterfield=['variant'], name='name_cifti',
                 mem_gb=DEFAULT_MEMORY_MIN_GB, run_without_submitting=True)
-            cifti_bolds = pe.MapNode(DerivativesDataSink(
-                base_directory=output_dir, compress=False),
+            cifti_bolds = pe.MapNode(
+                DerivativesDataSink(base_directory=output_dir, desc='preproc',
+                                    keep_dtype=True, compress=False),
                 iterfield=['in_file', 'suffix'], name='cifti_bolds',
                 run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
             cifti_key = pe.MapNode(DerivativesDataSink(
