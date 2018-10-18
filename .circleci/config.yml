@@ -165,8 +165,8 @@ jobs:
     steps:
       - restore_cache:
           keys:
-            - regression-v0-{{ epoch }}
-            - regression-v0-
+            - regression-v2-{{ epoch }}
+            - regression-v2-
       - run:
           name: Get truncated BOLD series
           command: |
@@ -193,7 +193,7 @@ jobs:
           paths:
             - data
       - save_cache:
-         key: regression-v0-{{ epoch }}
+         key: regression-v2-{{ epoch }}
          paths:
             - /tmp/data
 
@@ -227,10 +227,6 @@ jobs:
             fi
       - attach_workspace:
           at: /tmp
-      - restore_cache:
-          keys:
-            - regression-v0-{{ epoch }}
-            - regression-v0-
       - run:
           name: Check PyPi preconditions
           command: |
@@ -260,7 +256,13 @@ jobs:
               -e FMRIPREP_REGRESSION_REPORTS=/tmp/data/reports \
               --entrypoint="py.test" poldracklab/fmriprep:latest \
               /root/src/fmriprep/ \
-              --doctest-modules --ignore=/root/src/fmriprep/docs --ignore=setup.py
+              -svx --doctest-modules --ignore=/root/src/fmriprep/docs --ignore=setup.py
+      - run:
+          name: Package new masks
+          no_output_timeout: 10m
+          working_directory: /tmp/data/reports
+          command: |
+            tar cfz fmriprep_bold_mask.tar.gz fmriprep_bold_mask/*/*.nii.gz
       - run:
           name: Test fmriprep-wrapper (Python 2)
           command: |
@@ -719,7 +721,9 @@ workflows:
       - get_data:
           filters:
             branches:
-              ignore: /docs?\/.*/
+              ignore:
+                - /docs?\/.*/
+                - /tests?\/.*/
             tags:
               only: /.*/
 
@@ -732,6 +736,8 @@ workflows:
           requires:
             - build
           filters:
+            branches:
+              ignore: /tests?\/.*/
             tags:
               only: /.*/
 
@@ -740,7 +746,9 @@ workflows:
             - build
           filters:
             branches:
-              ignore: /docs?\/.*/
+              ignore:
+                - /docs?\/.*/
+                - /tests?\/.*/
             tags:
               only: /.*/
 
@@ -760,7 +768,9 @@ workflows:
             - build
           filters:
             branches:
-              ignore: /docs?\/.*/
+              ignore:
+                - /docs?\/.*/
+                - /tests?\/.*/
             tags:
               only: /.*/
 
@@ -770,7 +780,9 @@ workflows:
             - build
           filters:
             branches:
-              ignore: /docs?\/.*/
+              ignore:
+                - /docs?\/.*/
+                - /tests?\/.*/
             tags:
               only: /.*/
 
@@ -781,7 +793,9 @@ workflows:
           filters:
             branches:
               # only: /meepi.*/
-              ignore: /docs?\/.*/
+              ignore:
+                - /docs?\/.*/
+                - /tests?\/.*/
             tags:
               only: /.*/
 
