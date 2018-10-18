@@ -65,7 +65,7 @@ def test_masking(input_fname, expected_fname):
     dirname, basename = os.path.split(input_fname)
     dsname = os.path.basename(dirname)
     reports_dir = Path(os.getenv('FMRIPREP_REGRESSION_REPORTS', ''))
-    newpath = reports_dir / dirname
+    newpath = reports_dir / dsname
     out_fname = fname_presuffix(basename, suffix='_masks.svg', use_ext=False,
                                 newpath=str(newpath))
     newpath.mkdir(parents=True, exist_ok=True)
@@ -85,11 +85,12 @@ def test_masking(input_fname, expected_fname):
     overlap = symmetric_overlap(expected_fname,
                                 combine_masks.result.outputs.out_file)
 
-    assert overlap > 0.95, input_fname
-
     mask_dir = reports_dir / 'fmriprep_bold_mask' / dsname
     mask_dir.mkdir(parents=True, exist_ok=True)
     copyfile(combine_masks.result.outputs.out_file,
              fname_presuffix(basename, suffix='_mask',
                              use_ext=True, newpath=str(mask_dir)),
              copy=True)
+    
+    assert overlap > 0.95, input_fname
+
