@@ -227,10 +227,6 @@ jobs:
             fi
       - attach_workspace:
           at: /tmp
-      - restore_cache:
-          keys:
-            - regression-v1-{{ epoch }}
-            - regression-v1-
       - run:
           name: Check PyPi preconditions
           command: |
