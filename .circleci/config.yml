@@ -165,8 +165,8 @@ jobs:
     steps:
       - restore_cache:
           keys:
-            - regression-v1-{{ epoch }}
-            - regression-v1-
+            - regression-v2-{{ epoch }}
+            - regression-v2-
       - run:
           name: Get truncated BOLD series
           command: |
@@ -193,7 +193,7 @@ jobs:
           paths:
             - data
       - save_cache:
-         key: regression-v1-{{ epoch }}
+         key: regression-v2-{{ epoch }}
          paths:
             - /tmp/data
 
