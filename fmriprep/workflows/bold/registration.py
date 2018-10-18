@@ -157,7 +157,7 @@ def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
 
         def _bold_reg_suffix(fallback, freesurfer):
             if fallback:
-                return 'coreg' if freesurfer else 'flirt'
+                return 'coreg' if freesurfer else 'flirtnobbr'
             return 'bbregister' if freesurfer else 'flirtbbr'
 
         workflow.connect([
