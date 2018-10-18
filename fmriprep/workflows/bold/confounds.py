@@ -581,7 +581,8 @@ in the corresponding confounds file.
         # connect nodes to ICA-AROMA
         (smooth, ica_aroma, [('smoothed_file', 'in_file')]),
         (bold_mni_trans_wf, ica_aroma, [
-            ('outputnode.bold_mask_mni', 'report_mask')]),
+            ('outputnode.bold_mask_mni', 'report_mask'),
+            ('outputnode.bold_mask_mni', 'mask')]),
         (melodic, ica_aroma, [('out_dir', 'melodic_dir')]),
         # generate tsvs from ICA-AROMA
         (ica_aroma, ica_aroma_confound_extraction, [('out_dir', 'in_directory')]),
