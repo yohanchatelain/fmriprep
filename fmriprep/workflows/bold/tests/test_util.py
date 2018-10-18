@@ -55,8 +55,8 @@ def symmetric_overlap(img1, img2):
         'ds001240/sub-26_task-molretrieval_run-02_bold.nii.gz',
         'ds001240/sub-26_task-rest_bold.nii.gz',
         'ds001362/sub-01_task-taskname_run-01_bold.nii.gz',
-        )
-    ])
+    )
+])
 def test_masking(input_fname, expected_fname):
     bold_reference_wf = init_bold_reference_wf(omp_nthreads=1, enhance_t2=True)
     bold_reference_wf.inputs.inputnode.bold_file = input_fname
@@ -78,7 +78,7 @@ def test_masking(input_fname, expected_fname):
     bold_reference_wf.connect([
         (outputnode, mask_diff_plot, [('ref_image', 'in_file'),
                                       ('bold_mask', 'in_rois')])
-        ])
+    ])
     res = bold_reference_wf.run(plugin='MultiProc')
 
     combine_masks = [node for node in res.nodes if node.name.endswith('combine_masks')][0]
@@ -91,6 +91,5 @@ def test_masking(input_fname, expected_fname):
              fname_presuffix(basename, suffix='_mask',
                              use_ext=True, newpath=str(mask_dir)),
              copy=True)
-    
-    assert overlap > 0.95, input_fname
 
+    assert overlap > 0.95, input_fname
