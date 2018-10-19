@@ -823,7 +823,6 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
                     'nonaggr_denoised_file', 'bold_cifti', 'cifti_variant']),
         name='inputnode')
 
-    suffix_fmt = 'space-{}_{}'.format
     variant_suffix_fmt = 'space-{}_variant-{}_{}'.format
 
     ds_confounds = pe.Node(DerivativesDataSink(
