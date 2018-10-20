@@ -138,7 +138,7 @@ The head-motion estimates calculated in the correction step were also
 placed within the corresponding confounds file.
 """
     inputnode = pe.Node(niu.IdentityInterface(
-        fields=['bold', 'bold_mask', 'movpar_file', 'n_volumes_to_discard', 
+        fields=['bold', 'bold_mask', 'movpar_file', 'n_volumes_to_discard',
                 't1_mask', 't1_tpms', 't1_bold_xform']),
         name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
@@ -515,7 +515,7 @@ in the corresponding confounds file.
     )
     bold_mni_trans_wf.__desc__ = None
 
-    rm_non_steady_state = pe.Node(niu.Function(function=_remove_volumes, 
+    rm_non_steady_state = pe.Node(niu.Function(function=_remove_volumes,
                                                output_names=['bold_cut']),
                                   name='rm_nonsteady')
 
@@ -542,7 +542,7 @@ in the corresponding confounds file.
         denoise_type='nonaggr', generate_report=True, TR=metadata['RepetitionTime']),
         name='ica_aroma')
 
-    add_non_steady_state = pe.Node(niu.Function(function=_add_volumes, 
+    add_non_steady_state = pe.Node(niu.Function(function=_add_volumes,
                                                 output_names=['bold_add']),
                                    name='add_nonsteady')
 
@@ -615,6 +615,7 @@ in the corresponding confounds file.
     ])
 
     return workflow
+
 
 def _remove_volumes(bold_file, n_volumes):
         import nibabel as nb
