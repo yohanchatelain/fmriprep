@@ -92,6 +92,8 @@ def init_bold_confs_wf(mem_gb, metadata, name="bold_confs_wf"):
             BOLD series mask
         movpar_file
             SPM-formatted motion parameters file
+        n_volumes_to_discard
+            number of non steady state volumes
         t1_mask
             Mask of the skull-stripped template image
         t1_tpms
@@ -136,8 +138,8 @@ The head-motion estimates calculated in the correction step were also
 placed within the corresponding confounds file.
 """
     inputnode = pe.Node(niu.IdentityInterface(
-        fields=['bold', 'bold_mask', 'movpar_file', 't1_mask', 't1_tpms',
-                't1_bold_xform']),
+        fields=['bold', 'bold_mask', 'movpar_file', 'n_volumes_to_discard', 
+                't1_mask', 't1_tpms', 't1_bold_xform']),
         name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['confounds_file']),
@@ -178,7 +180,6 @@ placed within the corresponding confounds file.
                     name="fdisp", mem_gb=mem_gb)
 
     # a/t-CompCor
-    non_steady_state = pe.Node(nac.NonSteadyStateDetector(), name='non_steady_state')
     tcompcor = pe.Node(TCompCor(
         components_file='tcompcor.tsv', pre_filter='cosine', save_pre_filter=True,
         percentile_threshold=.05), name="tcompcor", mem_gb=mem_gb)
@@ -250,18 +251,15 @@ placed within the corresponding confounds file.
                             ('bold_mask', 'in_mask')]),
         (inputnode, fdisp, [('movpar_file', 'in_file')]),
 
-        # Calculate nonsteady state
-        (inputnode, non_steady_state, [('bold', 'in_file')]),
-
         # tCompCor
         (inputnode, tcompcor, [('bold', 'realigned_file')]),
-        (non_steady_state, tcompcor, [('n_volumes_to_discard', 'ignore_initial_volumes')]),
+        (inputnode, tcompcor, [('n_volumes_to_discard', 'ignore_initial_volumes')]),
         (tcc_tfm, tcc_msk, [('output_image', 'roi_file')]),
         (tcc_msk, tcompcor, [('out', 'mask_files')]),
 
         # aCompCor
         (inputnode, acompcor, [('bold', 'realigned_file')]),
-        (non_steady_state, acompcor, [('n_volumes_to_discard', 'ignore_initial_volumes')]),
+        (inputnode, acompcor, [('n_volumes_to_discard', 'ignore_initial_volumes')]),
         (acc_tfm, acc_msk, [('output_image', 'roi_file')]),
         (acc_msk, acompcor, [('out', 'mask_files')]),
 
@@ -494,6 +492,7 @@ in the corresponding confounds file.
             'itk_bold_to_t1',
             't1_2_mni_forward_transform',
             'name_source',
+            'n_volumes_to_discard',
             'bold_split',
             'bold_mask',
             'hmc_xforms',
@@ -515,6 +514,10 @@ in the corresponding confounds file.
         name='bold_mni_trans_wf'
     )
     bold_mni_trans_wf.__desc__ = None
+
+    rm_non_steady_state = pe.Node(niu.Function(function=_remove_volumes, 
+                                               output_names=['bold_cut']),
+                                  name='rm_nonsteady')
 
     calc_median_val = pe.Node(fsl.ImageStats(op_string='-k %s -p 50'), name='calc_median_val')
     calc_bold_mean = pe.Node(fsl.MeanImage(), name='calc_bold_mean')
@@ -539,6 +542,10 @@ in the corresponding confounds file.
         denoise_type='nonaggr', generate_report=True, TR=metadata['RepetitionTime']),
         name='ica_aroma')
 
+    add_non_steady_state = pe.Node(niu.Function(function=_add_volumes, 
+                                                output_names=['bold_add']),
+                                   name='add_nonsteady')
+
     # extract the confound ICs from the results
     ica_aroma_confound_extraction = pe.Node(ICAConfounds(ignore_aroma_err=ignore_aroma_err),
                                             name='ica_aroma_confound_extraction')
@@ -562,16 +569,21 @@ in the corresponding confounds file.
             ('t1_2_mni_forward_transform', 'inputnode.t1_2_mni_forward_transform'),
             ('fieldwarp', 'inputnode.fieldwarp')]),
         (inputnode, ica_aroma, [('movpar_file', 'motion_parameters')]),
+        (inputnode, rm_non_steady_state, [
+            ('n_volumes_to_discard', 'n_volumes')]),
+        (bold_mni_trans_wf, rm_non_steady_state, [
+            ('outputnode.bold_mni', 'bold_file')]),
         (bold_mni_trans_wf, calc_median_val, [
-            ('outputnode.bold_mni', 'in_file'),
             ('outputnode.bold_mask_mni', 'mask_file')]),
-        (bold_mni_trans_wf, calc_bold_mean, [
-            ('outputnode.bold_mni', 'in_file')]),
+        (rm_non_steady_state, calc_median_val, [
+            ('bold_cut', 'in_file')]),
+        (rm_non_steady_state, calc_bold_mean, [
+            ('bold_cut', 'in_file')]),
         (calc_bold_mean, getusans, [('out_file', 'image')]),
         (calc_median_val, getusans, [('out_stat', 'thresh')]),
         # Connect input nodes to complete smoothing
-        (bold_mni_trans_wf, smooth, [
-            ('outputnode.bold_mni', 'in_file')]),
+        (rm_non_steady_state, smooth, [
+            ('bold_cut', 'in_file')]),
         (getusans, smooth, [('usans', 'usans')]),
         (calc_median_val, smooth, [(('out_stat', _getbtthresh), 'brightness_threshold')]),
         # connect smooth to melodic
@@ -585,16 +597,64 @@ in the corresponding confounds file.
         (melodic, ica_aroma, [('out_dir', 'melodic_dir')]),
         # generate tsvs from ICA-AROMA
         (ica_aroma, ica_aroma_confound_extraction, [('out_dir', 'in_directory')]),
+        (inputnode, ica_aroma_confound_extraction, [
+            ('n_volumes_to_discard', 'n_volumes')]),
         # output for processing and reporting
         (ica_aroma_confound_extraction, outputnode, [('aroma_confounds', 'aroma_confounds'),
                                                      ('aroma_noise_ics', 'aroma_noise_ics'),
                                                      ('melodic_mix', 'melodic_mix')]),
         # TODO change melodic report to reflect noise and non-noise components
-        (ica_aroma, outputnode, [('nonaggr_denoised_file', 'nonaggr_denoised_file')]),
+        (ica_aroma, add_non_steady_state, [
+            ('nonaggr_denoised_file', 'bold_cut_file')]),
+        (bold_mni_trans_wf, add_non_steady_state, [
+            ('outputnode.bold_mni', 'bold_file')]),
+        (inputnode, add_non_steady_state, [
+            ('n_volumes_to_discard', 'n_volumes')]),
+        (add_non_steady_state, outputnode, [('bold_add', 'nonaggr_denoised_file')]),
         (ica_aroma, ds_report_ica_aroma, [('out_report', 'in_file')]),
     ])
 
     return workflow
+
+def _remove_volumes(bold_file, n_volumes):
+        import nibabel as nb
+        from nipype.utils.filemanip import fname_presuffix
+
+        # load the bold file and get the 4d matrix
+        bold_img = nb.load(bold_file)
+        bold_data = bold_img.get_data()
+
+        # cut off the beginning volumes
+        bold_data_cut = bold_data[..., n_volumes:]
+
+        # modify header with new shape (fewer volumes)
+        data_shape = list(bold_img.header.get_data_shape())
+        data_shape[-1] -= n_volumes
+        bold_img.header.set_data_shape(tuple(data_shape))
+
+        # save the resulting bold file
+        out = fname_presuffix(bold_file, suffix='_cut')
+        bold_img.__class__(bold_data_cut, bold_img.affine, bold_img.header).to_filename(out)
+        return out
+
+
+def _add_volumes(bold_file, bold_cut_file, n_volumes):
+    """prepend n_volumes from bold_file onto bold_cut_file"""
+    import nibabel as nb
+    from nipype.utils.filemanip import fname_presuffix
+
+    # load the data
+    bold_img = nb.load(bold_file)
+    bold_data = bold_img.get_data()
+    bold_cut_img = nb.load(bold_cut_file)
+    bold_cut_data = bold_cut_img.get_data()
+
+    # assign everything from n_volumes foward to bold_cut_data
+    bold_data[..., n_volumes:] = bold_cut_data
+
+    out = fname_presuffix(bold_cut_file, suffix='_addnonsteady')
+    bold_img.__class__(bold_data, bold_img.affine, bold_img.header).to_filename(out)
+    return out
 
 
 def _maskroi(in_mask, roi_file):
