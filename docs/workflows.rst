@@ -589,7 +589,7 @@ be generated, so non-aggressive denoising can be manually performed in the T1w s
         -o sub-<subject_label>_task-<task_id>_bold_space-<space>_AromaNonAggressiveDenoised.nii.gz
 
 *Note*: The non-steady state volumes are removed for the determination of components in melodic.
-Therefore ``*MELODICmix.tsv`` may have zero padded rows to account for the volumes not used in 
+Therefore ``*MELODICmix.tsv`` may have zero padded rows to account for the volumes not used in
 melodic's estimation of components.
 
 A visualization of the AROMA component classification is also included in the HTML reports.
