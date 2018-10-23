@@ -92,7 +92,7 @@ def init_bold_confs_wf(mem_gb, metadata, name="bold_confs_wf"):
             BOLD series mask
         movpar_file
             SPM-formatted motion parameters file
-        n_volumes_to_discard
+        skip_vols
             number of non steady state volumes
         t1_mask
             Mask of the skull-stripped template image
@@ -138,7 +138,7 @@ The head-motion estimates calculated in the correction step were also
 placed within the corresponding confounds file.
 """
     inputnode = pe.Node(niu.IdentityInterface(
-        fields=['bold', 'bold_mask', 'movpar_file', 'n_volumes_to_discard',
+        fields=['bold', 'bold_mask', 'movpar_file', 'skip_vols',
                 't1_mask', 't1_tpms', 't1_bold_xform']),
         name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
@@ -253,13 +253,13 @@ placed within the corresponding confounds file.
 
         # tCompCor
         (inputnode, tcompcor, [('bold', 'realigned_file')]),
-        (inputnode, tcompcor, [('n_volumes_to_discard', 'ignore_initial_volumes')]),
+        (inputnode, tcompcor, [('skip_vols', 'ignore_initial_volumes')]),
         (tcc_tfm, tcc_msk, [('output_image', 'roi_file')]),
         (tcc_msk, tcompcor, [('out', 'mask_files')]),
 
         # aCompCor
         (inputnode, acompcor, [('bold', 'realigned_file')]),
-        (inputnode, acompcor, [('n_volumes_to_discard', 'ignore_initial_volumes')]),
+        (inputnode, acompcor, [('skip_vols', 'ignore_initial_volumes')]),
         (acc_tfm, acc_msk, [('output_image', 'roi_file')]),
         (acc_msk, acompcor, [('out', 'mask_files')]),
 
@@ -466,7 +466,7 @@ def init_ica_aroma_wf(template, metadata, mem_gb, omp_nthreads,
             Affine transform from ``ref_bold_brain`` to T1 space (ITK format)
         movpar_file
             SPM-formatted motion parameters file
-        n_volumes_to_discard
+        skip_vols
             number of non steady state volumes
         name_source
             BOLD series NIfTI file
@@ -506,7 +506,7 @@ in the corresponding confounds file.
             'itk_bold_to_t1',
             't1_2_mni_forward_transform',
             'name_source',
-            'n_volumes_to_discard',
+            'skip_vols',
             'bold_split',
             'bold_mask',
             'hmc_xforms',
@@ -584,7 +584,7 @@ in the corresponding confounds file.
             ('fieldwarp', 'inputnode.fieldwarp')]),
         (inputnode, ica_aroma, [('movpar_file', 'motion_parameters')]),
         (inputnode, rm_non_steady_state, [
-            ('n_volumes_to_discard', 'n_volumes')]),
+            ('skip_vols', 'skip_vols')]),
         (bold_mni_trans_wf, rm_non_steady_state, [
             ('outputnode.bold_mni', 'bold_file')]),
         (bold_mni_trans_wf, calc_median_val, [
@@ -613,7 +613,7 @@ in the corresponding confounds file.
         # generate tsvs from ICA-AROMA
         (ica_aroma, ica_aroma_confound_extraction, [('out_dir', 'in_directory')]),
         (inputnode, ica_aroma_confound_extraction, [
-            ('n_volumes_to_discard', 'n_volumes')]),
+            ('skip_vols', 'skip_vols')]),
         # output for processing and reporting
         (ica_aroma_confound_extraction, outputnode, [('aroma_confounds', 'aroma_confounds'),
                                                      ('aroma_noise_ics', 'aroma_noise_ics'),
@@ -624,7 +624,7 @@ in the corresponding confounds file.
         (bold_mni_trans_wf, add_non_steady_state, [
             ('outputnode.bold_mni', 'bold_file')]),
         (inputnode, add_non_steady_state, [
-            ('n_volumes_to_discard', 'n_volumes')]),
+            ('skip_vols', 'skip_vols')]),
         (add_non_steady_state, outputnode, [('bold_add', 'nonaggr_denoised_file')]),
         (ica_aroma, ds_report_ica_aroma, [('out_report', 'in_file')]),
     ])
@@ -632,7 +632,7 @@ in the corresponding confounds file.
     return workflow
 
 
-def _remove_volumes(bold_file, n_volumes):
+def _remove_volumes(bold_file, skip_vols):
         import nibabel as nb
         from nipype.utils.filemanip import fname_presuffix
 
@@ -641,11 +641,11 @@ def _remove_volumes(bold_file, n_volumes):
         bold_data = bold_img.get_data()
 
         # cut off the beginning volumes
-        bold_data_cut = bold_data[..., n_volumes:]
+        bold_data_cut = bold_data[..., skip_vols:]
 
         # modify header with new shape (fewer volumes)
         data_shape = list(bold_img.header.get_data_shape())
-        data_shape[-1] -= n_volumes
+        data_shape[-1] -= skip_vols
         bold_img.header.set_data_shape(tuple(data_shape))
 
         # save the resulting bold file
@@ -654,8 +654,8 @@ def _remove_volumes(bold_file, n_volumes):
         return out
 
 
-def _add_volumes(bold_file, bold_cut_file, n_volumes):
-    """prepend n_volumes from bold_file onto bold_cut_file"""
+def _add_volumes(bold_file, bold_cut_file, skip_vols):
+    """prepend skip_vols from bold_file onto bold_cut_file"""
     import nibabel as nb
     from nipype.utils.filemanip import fname_presuffix
 
@@ -665,8 +665,8 @@ def _add_volumes(bold_file, bold_cut_file, n_volumes):
     bold_cut_img = nb.load(bold_cut_file)
     bold_cut_data = bold_cut_img.get_data()
 
-    # assign everything from n_volumes foward to bold_cut_data
-    bold_data[..., n_volumes:] = bold_cut_data
+    # assign everything from skip_vols foward to bold_cut_data
+    bold_data[..., skip_vols:] = bold_cut_data
 
     out = fname_presuffix(bold_cut_file, suffix='_addnonsteady')
     bold_img.__class__(bold_data, bold_img.affine, bold_img.header).to_filename(out)

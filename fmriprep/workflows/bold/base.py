@@ -18,7 +18,6 @@ from nipype import logging
 from nipype.interfaces.fsl import Split as FSLSplit
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
-from nipype.algorithms import confounds as nac
 
 from ...interfaces import (
     DerivativesDataSink,
@@ -425,9 +424,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                                              omp_nthreads=omp_nthreads,
                                              use_compression=False)
 
-    # get non steady-state volumes
-    non_steady_state = pe.Node(nac.NonSteadyStateDetector(), name='non_steady_state')
-
     # get confounds
     bold_confounds_wf = init_bold_confs_wf(
         mem_gb=mem_gb['largemem'],
@@ -529,9 +525,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('outputnode.out_warp', 'inputnode.fieldwarp'),
             ('outputnode.bold_mask', 'inputnode.bold_mask')]),
         (bold_sdc_wf, summary, [('outputnode.method', 'distortion_correction')]),
-        # Calculate nonsteady state
-        (bold_bold_trans_wf, non_steady_state, [
-            ('outputnode.bold', 'in_file')]),
         # Connect bold_confounds_wf
         (inputnode, bold_confounds_wf, [('t1_tpms', 'inputnode.t1_tpms'),
                                         ('t1_mask', 'inputnode.t1_mask')]),
@@ -539,8 +532,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('outputnode.movpar_file', 'inputnode.movpar_file')]),
         (bold_reg_wf, bold_confounds_wf, [
             ('outputnode.itk_t1_to_bold', 'inputnode.t1_bold_xform')]),
-        (non_steady_state, bold_confounds_wf, [
-            ('n_volumes_to_discard', 'inputnode.n_volumes_to_discard')]),
+        (bold_reference_wf, bold_confounds_wf, [
+            ('outputnode.skip_vols', 'inputnode.skip_vols')]),
         (bold_confounds_wf, outputnode, [
             ('outputnode.confounds_file', 'confounds'),
         ]),
@@ -739,8 +732,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                     ('outputnode.bold_mask', 'inputnode.bold_mask')]),
                 (bold_sdc_wf, ica_aroma_wf, [
                     ('outputnode.out_warp', 'inputnode.fieldwarp')]),
-                (non_steady_state, ica_aroma_wf, [
-                    ('n_volumes_to_discard', 'inputnode.n_volumes_to_discard')]),
+                (bold_reference_wf, ica_aroma_wf, [
+                    ('outputnode.skip_vols', 'inputnode.skip_vols')]),
                 (bold_confounds_wf, join, [
                     ('outputnode.confounds_file', 'in_file')]),
                 (ica_aroma_wf, join,
