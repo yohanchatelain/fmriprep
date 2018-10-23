@@ -926,8 +926,7 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
                 CiftiNameSource(), iterfield=['variant'], name='name_cifti',
                 mem_gb=DEFAULT_MEMORY_MIN_GB, run_without_submitting=True)
             cifti_bolds = pe.MapNode(
-                DerivativesDataSink(base_directory=output_dir, desc='preproc',
-                                    keep_dtype=True, compress=False),
+                DerivativesDataSink(base_directory=output_dir, desc='preproc', compress=False),
                 iterfield=['in_file', 'suffix'], name='cifti_bolds',
                 run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
             cifti_key = pe.MapNode(DerivativesDataSink(
@@ -950,12 +949,12 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
             name="ds_aroma_noise_ics", run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_melodic_mix = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix='MELODICmix'),
+            base_directory=output_dir, desc='MELODIC', suffix='mixing'),
             name="ds_melodic_mix", run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
-        ds_aroma_mni = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix=variant_suffix_fmt(
-                template, 'smoothAROMAnonaggr', 'preproc')),
+        ds_aroma_mni = pe.Node(
+            DerivativesDataSink(base_directory=output_dir, space=template,
+                                desc='smoothAROMAnonaggr', keep_dtype=True),
             name='ds_aroma_mni', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
 
