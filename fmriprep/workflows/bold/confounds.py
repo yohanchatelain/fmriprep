@@ -43,18 +43,17 @@ def init_bold_confs_wf(mem_gb, metadata, name="bold_confs_wf"):
 
     The following confounds are calculated, with column headings in parentheses:
 
-    #. Region-wise average signal (``CSF``, ``WhiteMatter``, ``GlobalSignal``)
-    #. DVARS - standard, nonstandard, and voxel-wise standard variants
-       (``stdDVARS``, ``non-stdDVARS``, ``vx-wisestdDVARS``)
+    #. Region-wise average signal (``csf``, ``white_matter``, ``global_signal``)
+    #. DVARS - original and standardized variants (``dvars``, ``std_dvars``)
     #. Framewise displacement, based on MCFLIRT motion parameters
-       (``FramewiseDisplacement``)
-    #. Temporal CompCor (``tCompCorXX``)
-    #. Anatomical CompCor (``aCompCorXX``)
+       (``framewise_displacement``)
+    #. Temporal CompCor (``t_comp_cor_XX``)
+    #. Anatomical CompCor (``a_comp_cor_XX``)
     #. Cosine basis set for high-pass filtering w/ 0.008 Hz cut-off
-       (``CosineXX``)
-    #. Non-steady-state volumes (``NonSteadyStateXX``)
+       (``cosine_XX``)
+    #. Non-steady-state volumes (``non_steady_state_XX``)
     #. Estimated head-motion parameters, in mm and rad
-       (``X``, ``Y``, ``Z``, ``RotX``, ``RotY``, ``RotZ``)
+       (``trans_x``, ``trans_y``, ``trans_z``, ``rot_x``, ``rot_y``, ``rot_z``)
 
 
     Prior to estimating aCompCor and tCompCor, non-steady-state volumes are
@@ -180,12 +179,14 @@ placed within the corresponding confounds file.
                     name="fdisp", mem_gb=mem_gb)
 
     # a/t-CompCor
-    tcompcor = pe.Node(TCompCor(
-        components_file='tcompcor.tsv', pre_filter='cosine', save_pre_filter=True,
-        percentile_threshold=.05), name="tcompcor", mem_gb=mem_gb)
+    tcompcor = pe.Node(
+        TCompCor(components_file='tcompcor.tsv', header_prefix='t_comp_cor_', pre_filter='cosine',
+                 save_pre_filter=True, percentile_threshold=.05),
+        name="tcompcor", mem_gb=mem_gb)
 
-    acompcor = pe.Node(ACompCor(
-        components_file='acompcor.tsv', pre_filter='cosine', save_pre_filter=True),
+    acompcor = pe.Node(
+        ACompCor(components_file='acompcor.tsv', header_prefix='a_comp_cor_', pre_filter='cosine',
+                 save_pre_filter=True),
         name="acompcor", mem_gb=mem_gb)
 
     # Set TR if present
@@ -195,12 +196,13 @@ placed within the corresponding confounds file.
 
     # Global and segment regressors
     mrg_lbl = pe.Node(niu.Merge(3), name='merge_rois', run_without_submitting=True)
-    signals = pe.Node(SignalExtraction(class_labels=["CSF", "WhiteMatter", "GlobalSignal"]),
+    signals = pe.Node(SignalExtraction(class_labels=["csf", "white_matter", "global_signal"]),
                       name="signals", mem_gb=mem_gb)
 
     # Arrange confounds
-    add_header = pe.Node(AddTSVHeader(columns=["X", "Y", "Z", "RotX", "RotY", "RotZ"]),
-                         name="add_header", mem_gb=0.01, run_without_submitting=True)
+    add_header = pe.Node(
+        AddTSVHeader(columns=["trans_x", "trans_y", "trans_z", "rot_x", "rot_y", "rot_z"]),
+        name="add_header", mem_gb=0.01, run_without_submitting=True)
     concat = pe.Node(GatherConfounds(), name="concat", mem_gb=0.01, run_without_submitting=True)
 
     # Generate reportlet
