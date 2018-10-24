@@ -633,43 +633,39 @@ in the corresponding confounds file.
 
 
 def _remove_volumes(bold_file, skip_vols):
-        import nibabel as nb
-        from nipype.utils.filemanip import fname_presuffix
+    """remove skip_vols from bold_file"""
+    import nibabel as nb
+    from nipype.utils.filemanip import fname_presuffix
 
-        # load the bold file and get the 4d matrix
-        bold_img = nb.load(bold_file)
-        bold_data = bold_img.get_data()
+    if skip_vols == 0:
+        return bold_file
 
-        # cut off the beginning volumes
-        bold_data_cut = bold_data[..., skip_vols:]
+    out = fname_presuffix(bold_file, suffix='_cut')
+    bold_img = nb.load(bold_file)
+    bold_img.__class__(bold_img.dataobj[..., skip_vols:],
+                       bold_img.affine, bold_img.header).to_filename(out)
 
-        # modify header with new shape (fewer volumes)
-        data_shape = list(bold_img.header.get_data_shape())
-        data_shape[-1] -= skip_vols
-        bold_img.header.set_data_shape(tuple(data_shape))
-
-        # save the resulting bold file
-        out = fname_presuffix(bold_file, suffix='_cut')
-        bold_img.__class__(bold_data_cut, bold_img.affine, bold_img.header).to_filename(out)
-        return out
+    return out
 
 
 def _add_volumes(bold_file, bold_cut_file, skip_vols):
     """prepend skip_vols from bold_file onto bold_cut_file"""
     import nibabel as nb
+    import numpy as np
     from nipype.utils.filemanip import fname_presuffix
 
-    # load the data
-    bold_img = nb.load(bold_file)
-    bold_data = bold_img.get_data()
-    bold_cut_img = nb.load(bold_cut_file)
-    bold_cut_data = bold_cut_img.get_data()
+    if skip_vols == 0:
+        return bold_cut_file
 
-    # assign everything from skip_vols foward to bold_cut_data
-    bold_data[..., skip_vols:] = bold_cut_data
+    bold_img = nb.load(bold_file)
+    bold_cut_img = nb.load(bold_cut_file)
+
+    bold_data = np.concatenate((bold_img.dataobj[..., :skip_vols],
+                                bold_cut_img.dataobj), axis=3)
 
     out = fname_presuffix(bold_cut_file, suffix='_addnonsteady')
     bold_img.__class__(bold_data, bold_img.affine, bold_img.header).to_filename(out)
+
     return out
 
 
