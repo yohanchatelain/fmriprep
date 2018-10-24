@@ -26,7 +26,7 @@ from niworkflows.interfaces.registration import EstimateReferenceImage
 from niworkflows.interfaces.utils import CopyXForm
 
 from ...engine import Workflow
-from ...interfaces import ValidateImage
+from ...interfaces import ValidateImage, MatchHeader
 
 
 DEFAULT_MEMORY_MIN_GB = 0.01
@@ -239,6 +239,10 @@ def init_enhance_and_skullstrip_bold_wf(
         operation='max', kernel_shape='sphere', kernel_size=3.0,
         internal_datatype='char'), name='pre_mask_dilate')
 
+    # Ensure mask's header matches reference's
+    check_hdr = pe.Node(MatchHeader(), name='check_hdr',
+                        run_without_submitting=True)
+
     # Run N4 normally, force num_threads=1 for stability (images are small, no need for >1)
     n4_correct = pe.Node(ants.N4BiasFieldCorrection(dimension=3, copy_header=True),
                          name='n4_correct', n_procs=1)
@@ -322,7 +326,9 @@ def init_enhance_and_skullstrip_bold_wf(
         ])
 
     workflow.connect([
-        (pre_dilate, n4_correct, [('out_file', 'mask_image')]),
+        (inputnode, check_hdr, [('in_file', 'reference')]),
+        (pre_dilate, check_hdr, [('out_file', 'in_file')]),
+        (check_hdr, n4_correct, [('out_file', 'mask_image')]),
         (inputnode, n4_correct, [('in_file', 'input_image')]),
         (inputnode, fixhdr_unifize, [('in_file', 'hdr_file')]),
         (inputnode, fixhdr_skullstrip2, [('in_file', 'hdr_file')]),
