@@ -171,7 +171,7 @@ placed within the corresponding confounds file.
     tcc_msk = pe.Node(niu.Function(function=_maskroi), name='tcc_msk')
 
     # DVARS
-    dvars = pe.Node(nac.ComputeDVARS(save_all=True, remove_zerovariance=True),
+    dvars = pe.Node(nac.ComputeDVARS(save_nstd=True, save_std=True, remove_zerovariance=True),
                     name="dvars", mem_gb=mem_gb)
 
     # Frame displacement
@@ -200,9 +200,15 @@ placed within the corresponding confounds file.
                       name="signals", mem_gb=mem_gb)
 
     # Arrange confounds
-    add_header = pe.Node(
+    add_dvars_header = pe.Node(
+        AddTSVHeader(columns=["dvars"]),
+        name="add_dvars_header", mem_gb=0.01, run_without_submitting=True)
+    add_std_dvars_header = pe.Node(
+        AddTSVHeader(columns=["std_dvars"]),
+        name="add_std_dvars_header", mem_gb=0.01, run_without_submitting=True)
+    add_motion_headers = pe.Node(
         AddTSVHeader(columns=["trans_x", "trans_y", "trans_z", "rot_x", "rot_y", "rot_z"]),
-        name="add_header", mem_gb=0.01, run_without_submitting=True)
+        name="add_motion_headers", mem_gb=0.01, run_without_submitting=True)
     concat = pe.Node(GatherConfounds(), name="concat", mem_gb=0.01, run_without_submitting=True)
 
     # Generate reportlet
@@ -275,14 +281,17 @@ placed within the corresponding confounds file.
         (mrg_lbl, signals, [('out', 'label_files')]),
 
         # Collate computed confounds together
-        (inputnode, add_header, [('movpar_file', 'in_file')]),
+        (inputnode, add_motion_headers, [('movpar_file', 'in_file')]),
+        (dvars, add_dvars_header, [('out_nstd', 'in_file')]),
+        (dvars, add_std_dvars_header, [('out_std', 'in_file')]),
         (signals, concat, [('out_file', 'signals')]),
-        (dvars, concat, [('out_all', 'dvars')]),
         (fdisp, concat, [('out_file', 'fd')]),
         (tcompcor, concat, [('components_file', 'tcompcor'),
                             ('pre_filter_file', 'cos_basis')]),
         (acompcor, concat, [('components_file', 'acompcor')]),
-        (add_header, concat, [('out_file', 'motion')]),
+        (add_motion_headers, concat, [('out_file', 'motion')]),
+        (add_dvars_header, concat, [('out_file', 'dvars')]),
+        (add_std_dvars_header, concat, [('out_file', 'std_dvars')]),
 
         # Set outputs
         (concat, outputnode, [('confounds_file', 'confounds_file')]),
@@ -358,11 +367,11 @@ def init_carpetplot_wf(mem_gb, metadata, name="bold_carpet_wf"):
     conf_plot = pe.Node(FMRISummary(
         tr=metadata['RepetitionTime'],
         confounds_list=[
-            ('GlobalSignal', None, 'GS'),
-            ('CSF', None, 'GSCSF'),
-            ('WhiteMatter', None, 'GSWM'),
-            ('stdDVARS', None, 'DVARS'),
-            ('FramewiseDisplacement', 'mm', 'FD')]),
+            ('global_signal', None, 'GS'),
+            ('csf', None, 'GSCSF'),
+            ('white_matter', None, 'GSWM'),
+            ('std_dvars', None, 'DVARS'),
+            ('framewise_displacement', 'mm', 'FD')]),
         name='conf_plot', mem_gb=mem_gb)
     ds_report_bold_conf = pe.Node(
         DerivativesDataSink(suffix='carpetplot'),
