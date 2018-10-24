@@ -68,7 +68,15 @@ arguments in a ``docker`` command::
         -v $HOME/projects/fmriprep/fmriprep:/usr/local/miniconda/lib/python3.6/site-packages/fmriprep:ro --entrypoint=bash \
         poldracklab/fmriprep:latest
 
-Patching containers can be achieved in Singularity by using the PYTHONPATH variable: ::
+Patching containers can be achieved in Singularity analogous to ``docker``
+using the ``--bind`` (``-B``) option: ::
+
+    $ singularity run \
+        -B $HOME/projects/fmriprep/fmriprep:/usr/local/miniconda/lib/python3.6/site-packages/fmriprep \
+        fmriprep.img \
+        /scratch/dataset /scratch/out participant -w /out/work/
+
+Or you can patch Singularity containers using the PYTHONPATH variable: ::
 
    $ PYTHONPATH="$HOME/projects/fmriprep" singularity run fmriprep.img \
         /scratch/dataset /scratch/out participant -w /out/work/
