@@ -427,53 +427,52 @@ def init_ica_aroma_wf(template, metadata, mem_gb, omp_nthreads,
 
     **Parameters**
 
-        aroma_melodic_dim: int or None
-            Set the dimensionality of the Melodic ICA decomposition
-            If None, MELODIC automatically estimates dimensionality.
-        ignore_aroma_err : bool
-            Do not fail on ICA-AROMA errors
-        mem_gb : float
-            Size of BOLD file in GB
-        metadata : dict
-            BIDS metadata for BOLD file
-        name : str
-            Name of workflow (default: ``bold_mni_trans_wf``)
-        omp_nthreads : int
-            Maximum number of threads an individual process may use
         template : str
             Spatial normalization template used as target when that
             registration step was previously calculated with
             :py:func:`~fmriprep.workflows.bold.registration.init_bold_reg_wf`.
             The template must be one of the MNI templates (fMRIPrep uses
             ``MNI152NLin2009cAsym`` by default).
+        metadata : dict
+            BIDS metadata for BOLD file
+        mem_gb : float
+            Size of BOLD file in GB
+        omp_nthreads : int
+            Maximum number of threads an individual process may use
+        name : str
+            Name of workflow (default: ``bold_mni_trans_wf``)
         susan_fwhm : float
             Kernel width (FWHM in mm) for the smoothing step with
             FSL ``susan`` (default: 6.0mm)
         use_fieldwarp : bool
             Include SDC warp in single-shot transform from BOLD to MNI
-
+        ignore_aroma_err : bool
+            Do not fail on ICA-AROMA errors
+        aroma_melodic_dim: int or None
+            Set the dimensionality of the Melodic ICA decomposition
+            If None, MELODIC automatically estimates dimensionality.
 
     **Inputs**
-        bold_mask
-            BOLD series mask in template space
-        bold_split
-            Individual 3D BOLD volumes, not motion corrected
-        fieldwarp
-            a :abbr:`DFM (displacements field map)` in ITK format
-        hmc_xforms
-            List of affine transforms aligning each volume to ``ref_image`` in ITK format
+
         itk_bold_to_t1
             Affine transform from ``ref_bold_brain`` to T1 space (ITK format)
-        movpar_file
-            SPM-formatted motion parameters file
-        skip_vols
-            number of non steady state volumes
+        t1_2_mni_forward_transform
+            ANTs-compatible affine-and-warp transform file
         name_source
             BOLD series NIfTI file
             Used to recover original information lost during processing
-        t1_2_mni_forward_transform
-            ANTs-compatible affine-and-warp transform file
-
+        skip_vols
+            number of non steady state volumes
+        bold_split
+            Individual 3D BOLD volumes, not motion corrected
+        bold_mask
+            BOLD series mask in template space
+        hmc_xforms
+            List of affine transforms aligning each volume to ``ref_image`` in ITK format
+        fieldwarp
+            a :abbr:`DFM (displacements field map)` in ITK format
+        movpar_file
+            SPM-formatted motion parameters file
 
     **Outputs**
 
