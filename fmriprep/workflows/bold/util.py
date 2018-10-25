@@ -120,6 +120,7 @@ using a custom methodology of *fMRIPrep*.
         omp_nthreads=omp_nthreads, pre_mask=pre_mask)
 
     workflow.connect([
+        (inputnode, enhance_and_skullstrip_bold_wf, [('bold_mask', 'inputnode.pre_mask')]),
         (inputnode, validate, [('bold_file', 'in_file')]),
         (inputnode, gen_ref, [('sbref_file', 'sbref_file')]),
         (validate, gen_ref, [('out_file', 'in_file')]),
@@ -134,11 +135,6 @@ using a custom methodology of *fMRIPrep*.
             ('outputnode.mask_file', 'bold_mask'),
             ('outputnode.skull_stripped_file', 'ref_image_brain')]),
     ])
-
-    if pre_mask:
-        workflow.connect([
-            (inputnode, enhance_and_skullstrip_bold_wf, [('bold_mask', 'inputnode.pre_mask')]),
-        ])
 
     if gen_report:
         mask_reportlet = pe.Node(SimpleShowMaskRPT(), name='mask_reportlet')
