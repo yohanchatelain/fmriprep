@@ -65,12 +65,15 @@ AFNI {afni_ver} [@afni, RRID:SCR_005927].
 
     LOGGER.log(25, 'Slice-timing correction will be included.')
 
+
     # It would be good to fingerprint memory use of afni.TShift
     slice_timing_correction = pe.Node(
         afni.TShift(outputtype='NIFTI_GZ',
                     tr='{}s'.format(metadata["RepetitionTime"]),
                     slice_timing=metadata['SliceTiming']),
         name='slice_timing_correction')
+    if 'SliceEncodingDirection' in metadata:
+        slice_timing_correction.inputs.slice_encoding_direction = metadata['SliceEncodingDirection']
 
     copy_xform = pe.Node(CopyXForm(), name='copy_xform', mem_gb=0.1)
 
