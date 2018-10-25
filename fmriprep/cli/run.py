@@ -79,8 +79,6 @@ def get_parser():
                         help='select a specific task to be processed')
 
     g_perfm = parser.add_argument_group('Options to handle performance')
-    g_perfm.add_argument('--debug', action='store_true', default=False,
-                         help='DEPRECATED - Does not do what you want.')
     g_perfm.add_argument('--nthreads', '--n_cpus', '-n-cpus', action='store', type=int,
                          help='maximum number of threads across all processes')
     g_perfm.add_argument('--omp-nthreads', action='store', type=int, default=0,
@@ -103,6 +101,8 @@ def get_parser():
                               'signal')
     g_perfm.add_argument("-v", "--verbose", dest="verbose_count", action="count", default=0,
                          help="increases log verbosity for each occurence, debug level is -vvv")
+    g_perfm.add_argument('--debug', action='store_true', default=False,
+                         help='DEPRECATED - Does not do what you want.')
 
     g_conf = parser.add_argument_group('Workflow configuration')
     g_conf.add_argument(
@@ -238,9 +238,8 @@ def get_parser():
                               'the FMRIPREP developers. This information helps to '
                               'improve FMRIPREP and provides an indicator of real '
                               'world usage crucial for obtaining funding.')
-    g_perfm.add_argument('--sloppy', action='store_true', default=False,
-                         help='Use low-quality tools for speed '
-                              '- TESTING ONLY')
+    g_other.add_argument('--sloppy', action='store_true', default=False,
+                         help='Use low-quality tools for speed - TESTING ONLY')
 
     return parser
 
