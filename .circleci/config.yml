@@ -742,14 +742,22 @@ workflows:
       - get_regression_data:
           filters:
             branches:
-              ignore: /docs?\/.*/
+              ignore:
+                - /docs?\/.*/
+                - /ds005\/.*/
+                - /ds054\/.*/
+                - /ds210\/.*/
 
       - build_docs:
           requires:
             - build
           filters:
             branches:
-              ignore: /tests?\/.*/
+              ignore:
+                - /tests?\/.*/
+                - /ds005\/.*/
+                - /ds054\/.*/
+                - /ds210\/.*/
             tags:
               only: /.*/
 
@@ -770,7 +778,11 @@ workflows:
             - get_regression_data
           filters:
             branches:
-              ignore: /docs?\/.*/
+              ignore: 
+                - /docs?\/.*/
+                - /ds005\/.*/
+                - /ds054\/.*/
+                - /ds210\/.*/
             tags:
               only: /.*/
 
@@ -783,6 +795,8 @@ workflows:
               ignore:
                 - /docs?\/.*/
                 - /tests?\/.*/
+                - /ds054\/.*/
+                - /ds210\/.*/
             tags:
               only: /.*/
 
@@ -795,6 +809,8 @@ workflows:
               ignore:
                 - /docs?\/.*/
                 - /tests?\/.*/
+                - /ds005\/.*/
+                - /ds210\/.*/
             tags:
               only: /.*/
 
@@ -808,6 +824,8 @@ workflows:
               ignore:
                 - /docs?\/.*/
                 - /tests?\/.*/
+                - /ds005\/.*/
+                - /ds054\/.*/
             tags:
               only: /.*/
 
