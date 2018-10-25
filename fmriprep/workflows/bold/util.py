@@ -178,7 +178,7 @@ def init_enhance_and_skullstrip_bold_wf(
          to *standardize* the T2* contrast distribution.
       6. Calculate a mask using AFNI's ``3dAutomask`` after the contrast
          enhancement of 4).
-      7. Calculate a final mask as the intersection of 3) and 5).
+      7. Calculate a final mask as the intersection of 4) and 6).
       8. Apply final mask on the enhanced reference.
 
     Step 1 can be skipped if the ``pre_mask`` argument is set to ``True`` and
