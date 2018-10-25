@@ -388,7 +388,7 @@ jobs:
                 -e FMRIPREP_DEV 1 -u $(id -u) \
                 --config $PWD/nipype.cfg -w /tmp/ds005/work \
                 /tmp/data/ds005 /tmp/ds005/derivatives participant \
-                --debug --write-graph --mem_mb 4096 \
+                --sloppy --write-graph --mem_mb 4096 \
                 --nthreads 2 --anat-only -vv
       - save_cache:
          key: ds005-anat-v9-{{ .Branch }}-{{ epoch }}
@@ -408,7 +408,7 @@ jobs:
                 -e FMRIPREP_DEV 1 -u $(id -u) \
                 --config $PWD/nipype.cfg -w /tmp/ds005/work \
                 /tmp/data/ds005 /tmp/ds005/derivatives participant \
-                --debug --write-graph --use-syn-sdc --mem_mb 4096 \
+                --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
                 --ignore-aroma-denoising-errors --use-aroma \
                 --output-space T1w template fsaverage5 \
                 --template-resampling-grid native \
@@ -435,7 +435,7 @@ jobs:
                 -e FMRIPREP_DEV 1 -u $(id -u) \
                 --config $PWD/nipype.cfg -w /tmp/ds005/work \
                 /tmp/data/ds005 /tmp/ds005/derivatives_partial participant \
-                --debug --write-graph --use-syn-sdc --mem_mb 4096 \
+                --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
                 --output-space T1w template fsaverage5 \
                 --ignore-aroma-denoising-errors --use-aroma \
                 --template-resampling-grid native \
@@ -517,7 +517,7 @@ jobs:
                 -e FMRIPREP_DEV 1 \
                 --config $PWD/nipype.cfg -w /tmp/ds054/work \
                 /tmp/data/ds054 /tmp/ds054/derivatives participant \
-                --fs-no-reconall --debug --write-graph \
+                --fs-no-reconall --sloppy --write-graph \
                 --mem_mb 4096 --nthreads 2 --anat-only -vv
       - save_cache:
          key: ds054-anat-v7-{{ .Branch }}-{{ epoch }}
@@ -537,7 +537,7 @@ jobs:
                 -e FMRIPREP_DEV 1 \
                 --config $PWD/nipype.cfg -w /tmp/ds054/work \
                 /tmp/data/ds054 /tmp/ds054/derivatives participant \
-                --fs-no-reconall --debug \
+                --fs-no-reconall --sloppy \
                 --output-space T1w template \
                 --template-resampling-grid 2mm \
                 --mem_mb 4096 --nthreads 2 -vv
@@ -562,7 +562,7 @@ jobs:
                 -e FMRIPREP_DEV 1 \
                 --config $PWD/nipype.cfg -w /tmp/ds054/work \
                 /tmp/data/ds054 /tmp/ds054/derivatives participant \
-                --fs-no-reconall --debug --write-graph \
+                --fs-no-reconall --sloppy --write-graph \
                 --output-space T1w template \
                 --template-resampling-grid 2mm \
                 --reports-only --run-uuid $UUID
@@ -633,7 +633,7 @@ jobs:
                 -e FMRIPREP_DEV 1 \
                 --config $PWD/nipype.cfg -w /tmp/ds210/work \
                 /tmp/data/ds210 /tmp/ds210/derivatives participant \
-                --fs-no-reconall --debug --write-graph \
+                --fs-no-reconall --sloppy --write-graph \
                 --mem_mb 4096 --nthreads 2 --anat-only -vv
       - save_cache:
          key: ds210-anat-v4-{{ epoch }}
@@ -651,7 +651,7 @@ jobs:
                 /tmp/data/ds210 /tmp/ds210/derivatives participant \
                 --fs-no-reconall --t2s-coreg --use-syn-sdc \
                 --template-resampling-grid native \
-                --debug --write-graph --mem_mb 4096 --nthreads 2 -vv
+                --sloppy --write-graph --mem_mb 4096 --nthreads 2 -vv
       - run:
           name: Checking outputs of fMRIPrep
           command: |
