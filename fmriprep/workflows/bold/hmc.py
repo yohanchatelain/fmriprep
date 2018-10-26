@@ -68,14 +68,14 @@ def init_bold_hmc_wf(use_mcflirt, mem_gb, omp_nthreads, name='bold_hmc_wf'):
     else:
         software = """\
 `3dVolreg` from AFNI, version {afni_ver} [@afni, RRID:SCR_005927].
-""".format(afni_ver=''.join(list(afni.Volreg().version or '<ver>')))
+""".format(afni_ver=''.join(list(afni.Info().version() or '<ver>')))
 
     workflow = Workflow(name=name)
     workflow.__desc__ = """\
 Head-motion parameters with respect to the BOLD reference
 (transformation matrices, and six corresponding rotation and translation
 parameters) are estimated before any spatiotemporal filtering using
-{}.""".format(software)
+{}""".format(software)
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['bold_file', 'raw_ref_image']),
                         name='inputnode')
