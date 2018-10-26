@@ -81,6 +81,7 @@ class GatherConfounds(SimpleInterface):
         combined_out, confounds_list = _gather_confounds(
             signals=self.inputs.signals,
             dvars=self.inputs.dvars,
+            std_dvars=self.inputs.std_dvars,
             fdisp=self.inputs.fd,
             tcompcor=self.inputs.tcompcor,
             acompcor=self.inputs.acompcor,
