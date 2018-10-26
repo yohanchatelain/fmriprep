@@ -531,6 +531,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('outputnode.movpar_file', 'inputnode.movpar_file')]),
         (bold_reg_wf, bold_confounds_wf, [
             ('outputnode.itk_t1_to_bold', 'inputnode.t1_bold_xform')]),
+        (bold_reference_wf, bold_confounds_wf, [
+            ('outputnode.skip_vols', 'inputnode.skip_vols')]),
         (bold_confounds_wf, outputnode, [
             ('outputnode.confounds_file', 'confounds'),
         ]),
@@ -729,6 +731,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                     ('outputnode.bold_mask', 'inputnode.bold_mask')]),
                 (bold_sdc_wf, ica_aroma_wf, [
                     ('outputnode.out_warp', 'inputnode.fieldwarp')]),
+                (bold_reference_wf, ica_aroma_wf, [
+                    ('outputnode.skip_vols', 'inputnode.skip_vols')]),
                 (bold_confounds_wf, join, [
                     ('outputnode.confounds_file', 'in_file')]),
                 (ica_aroma_wf, join,
