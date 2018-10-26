@@ -68,7 +68,7 @@ def init_bold_hmc_wf(use_mcflirt, mem_gb, omp_nthreads, name='bold_hmc_wf'):
     else:
         software = """\
 `3dVolreg` from AFNI, version {afni_ver} [@afni, RRID:SCR_005927].
-""".format(afni_ver=''.join(list(afni.Info().version() or '<ver>')))
+""".format(afni_ver=''.join(['%02d' % v for v in afni.Info().version() or []]))
 
     workflow = Workflow(name=name)
     workflow.__desc__ = """\
