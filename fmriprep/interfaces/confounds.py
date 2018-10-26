@@ -94,6 +94,7 @@ class GatherConfounds(SimpleInterface):
 
 class ICAConfoundsInputSpec(BaseInterfaceInputSpec):
     in_directory = Directory(mandatory=True, desc='directory where ICA derivatives are found')
+    skip_vols = traits.Int(desc='number of non steady state volumes identified')
     ignore_aroma_err = traits.Bool(False, usedefault=True, desc='ignore ICA-AROMA errors')
 
 
@@ -111,7 +112,7 @@ class ICAConfounds(SimpleInterface):
 
     def _run_interface(self, runtime):
         aroma_confounds, motion_ics_out, melodic_mix_out = _get_ica_confounds(
-            self.inputs.in_directory, newpath=runtime.cwd)
+            self.inputs.in_directory, self.inputs.skip_vols, newpath=runtime.cwd)
 
         if aroma_confounds is not None:
             self._results['aroma_confounds'] = aroma_confounds
@@ -198,7 +199,7 @@ def _gather_confounds(signals=None, dvars=None, fdisp=None,
     return combined_out, confounds_list
 
 
-def _get_ica_confounds(ica_out_dir, newpath=None):
+def _get_ica_confounds(ica_out_dir, skip_vols, newpath=None):
     if newpath is None:
         newpath = os.getcwd()
 
@@ -210,19 +211,20 @@ def _get_ica_confounds(ica_out_dir, newpath=None):
     melodic_mix_out = os.path.join(newpath, 'MELODICmix.tsv')
     motion_ics_out = os.path.join(newpath, 'AROMAnoiseICs.csv')
 
-    # melodic_mix replace spaces with tabs
-    with open(melodic_mix, 'r') as melodic_file:
-        melodic_mix_out_char = melodic_file.read().replace('  ', '\t')
-    # write to output file
-    with open(melodic_mix_out, 'w+') as melodic_file_out:
-        melodic_file_out.write(melodic_mix_out_char)
-
     # copy metion_ics file to derivatives name
     shutil.copyfile(motion_ics, motion_ics_out)
 
     # -1 since python lists start at index 0
     motion_ic_indices = np.loadtxt(motion_ics, dtype=int, delimiter=',', ndmin=1) - 1
     melodic_mix_arr = np.loadtxt(melodic_mix, ndmin=2)
+
+    # pad melodic_mix_arr with rows of zeros corresponding to number non steadystate volumes
+    if skip_vols > 0:
+        zeros = np.zeros([skip_vols, melodic_mix_arr.shape[1]])
+        melodic_mix_arr = np.vstack([zeros, melodic_mix_arr])
+
+    # save melodic_mix_arr
+    np.savetxt(melodic_mix_out, melodic_mix_arr, delimiter='\t')
 
     # Return dummy list of ones if no noise compnents were found
     if motion_ic_indices.size == 0:

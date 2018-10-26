@@ -157,8 +157,8 @@ def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
 
         def _bold_reg_suffix(fallback, freesurfer):
             if fallback:
-                return 'coreg' if freesurfer else 'flirt'
-            return 'bbr' if freesurfer else 'flt_bbr'
+                return 'coreg' if freesurfer else 'flirtnobbr'
+            return 'bbregister' if freesurfer else 'flirtbbr'
 
         workflow.connect([
             (bbr_wf, ds_report_reg, [
@@ -314,7 +314,7 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, multiecho=False, use
     merge = pe.Node(Merge(compress=use_compression), name='merge', mem_gb=mem_gb)
 
     # Generate a reference on the target T1w space
-    gen_final_ref = init_bold_reference_wf(omp_nthreads)
+    gen_final_ref = init_bold_reference_wf(omp_nthreads, pre_mask=True)
 
     if not multiecho:
         # Merge transforms placing the head motion correction last
@@ -351,6 +351,7 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, multiecho=False, use
         (gen_ref, bold_to_t1w_transform, [('out_file', 'reference_image')]),
         (bold_to_t1w_transform, merge, [('out_files', 'in_files')]),
         (merge, gen_final_ref, [('out_file', 'inputnode.bold_file')]),
+        (mask_t1w_tfm, gen_final_ref, [('output_image', 'inputnode.bold_mask')]),
         (merge, outputnode, [('out_file', 'bold_t1')]),
         (gen_final_ref, outputnode, [('outputnode.ref_image', 'bold_t1_ref')]),
     ])

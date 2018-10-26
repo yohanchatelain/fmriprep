@@ -390,9 +390,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         ]),
     ])
 
-    # The first reference uses T2 contrast enhancement
-    bold_reference_wf = init_bold_reference_wf(
-        omp_nthreads=omp_nthreads, enhance_t2=True)
+    # Generate a tentative boldref
+    bold_reference_wf = init_bold_reference_wf(omp_nthreads=omp_nthreads)
 
     # Top-level BOLD splitter
     bold_split = pe.Node(FSLSplit(dimension='t'), name='bold_split',
@@ -568,6 +567,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('outputnode.movpar_file', 'inputnode.movpar_file')]),
         (bold_reg_wf, bold_confounds_wf, [
             ('outputnode.itk_t1_to_bold', 'inputnode.t1_bold_xform')]),
+        (bold_reference_wf, bold_confounds_wf, [
+            ('outputnode.skip_vols', 'inputnode.skip_vols')]),
         (bold_confounds_wf, outputnode, [
             ('outputnode.confounds_file', 'confounds'),
         ]),
@@ -754,6 +755,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                     ('outputnode.bold_mask', 'inputnode.bold_mask')]),
                 (bold_sdc_wf, ica_aroma_wf, [
                     ('outputnode.out_warp', 'inputnode.fieldwarp')]),
+                (bold_reference_wf, ica_aroma_wf, [
+                    ('outputnode.skip_vols', 'inputnode.skip_vols')]),
                 (bold_confounds_wf, join, [
                     ('outputnode.confounds_file', 'in_file')]),
                 (ica_aroma_wf, join,
@@ -847,11 +850,8 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
                     'nonaggr_denoised_file', 'bold_cifti', 'cifti_variant']),
         name='inputnode')
 
-    suffix_fmt = 'space-{}_{}'.format
-    variant_suffix_fmt = 'space-{}_variant-{}_{}'.format
-
     ds_confounds = pe.Node(DerivativesDataSink(
-        base_directory=output_dir, suffix='confounds'),
+        base_directory=output_dir, desc='confounds', suffix='regressors'),
         name="ds_confounds", run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
     workflow.connect([
@@ -861,17 +861,19 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
 
     # Resample to T1w space
     if 'T1w' in output_spaces:
-        ds_bold_t1 = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix=suffix_fmt('T1w', 'preproc'), compress=True),
+        ds_bold_t1 = pe.Node(
+            DerivativesDataSink(base_directory=output_dir, space='T1w', desc='preproc',
+                                keep_dtype=True, compress=True),
             name='ds_bold_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
-        ds_bold_t1_ref = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix=suffix_fmt('T1w', 'boldref')),
+        ds_bold_t1_ref = pe.Node(
+            DerivativesDataSink(base_directory=output_dir, space='T1w', suffix='boldref'),
             name='ds_bold_t1_ref', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
 
-        ds_bold_mask_t1 = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix=suffix_fmt('T1w', 'brainmask')),
+        ds_bold_mask_t1 = pe.Node(
+            DerivativesDataSink(base_directory=output_dir, space='T1w', desc='brain',
+                                suffix='mask'),
             name='ds_bold_mask_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         workflow.connect([
@@ -885,17 +887,19 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
 
     # Resample to template (default: MNI)
     if 'template' in output_spaces:
-        ds_bold_mni = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix=suffix_fmt(template, 'preproc'), compress=True),
+        ds_bold_mni = pe.Node(
+            DerivativesDataSink(base_directory=output_dir, space=template, desc='preproc',
+                                keep_dtype=True, compress=True),
             name='ds_bold_mni', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
-        ds_bold_mni_ref = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix=suffix_fmt(template, 'boldref')),
+        ds_bold_mni_ref = pe.Node(
+            DerivativesDataSink(base_directory=output_dir, space=template, suffix='boldref'),
             name='ds_bold_mni_ref', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
 
-        ds_bold_mask_mni = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix=suffix_fmt(template, 'brainmask')),
+        ds_bold_mask_mni = pe.Node(
+            DerivativesDataSink(base_directory=output_dir, space=template, desc='brain',
+                                suffix='mask'),
             name='ds_bold_mask_mni', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         workflow.connect([
@@ -909,11 +913,11 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
 
     if freesurfer:
         ds_bold_aseg_t1 = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix='space-T1w_label-aseg_roi'),
+            base_directory=output_dir, space='T1w', suffix='label-aseg_dseg'),
             name='ds_bold_aseg_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_aparc_t1 = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix='space-T1w_label-aparcaseg_roi'),
+            base_directory=output_dir,  space='T1w', suffix='label-aparcaseg_dseg'),
             name='ds_bold_aparc_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         workflow.connect([
@@ -926,7 +930,7 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     # fsaverage space
     if freesurfer and any(space.startswith('fs') for space in output_spaces):
         name_surfs = pe.MapNode(GiftiNameSource(
-            pattern=r'(?P<LR>[lr])h.(?P<space>\w+).gii', template='space-{space}.{LR}.func'),
+            pattern=r'(?P<LR>[lr])h.(?P<space>\w+).gii', template='space-{space}_hemi-{LR}.func'),
             iterfield='in_file', name='name_surfs', mem_gb=DEFAULT_MEMORY_MIN_GB,
             run_without_submitting=True)
         ds_bold_surfs = pe.MapNode(DerivativesDataSink(base_directory=output_dir),
@@ -946,8 +950,8 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
             name_cifti = pe.MapNode(
                 CiftiNameSource(), iterfield=['variant'], name='name_cifti',
                 mem_gb=DEFAULT_MEMORY_MIN_GB, run_without_submitting=True)
-            cifti_bolds = pe.MapNode(DerivativesDataSink(
-                base_directory=output_dir, compress=False),
+            cifti_bolds = pe.MapNode(
+                DerivativesDataSink(base_directory=output_dir, compress=False),
                 iterfield=['in_file', 'suffix'], name='cifti_bolds',
                 run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
             cifti_key = pe.MapNode(DerivativesDataSink(
@@ -970,12 +974,12 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
             name="ds_aroma_noise_ics", run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_melodic_mix = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix='MELODICmix'),
+            base_directory=output_dir, desc='MELODIC', suffix='mixing'),
             name="ds_melodic_mix", run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
-        ds_aroma_mni = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix=variant_suffix_fmt(
-                template, 'smoothAROMAnonaggr', 'preproc')),
+        ds_aroma_mni = pe.Node(
+            DerivativesDataSink(base_directory=output_dir, space=template,
+                                desc='smoothAROMAnonaggr', keep_dtype=True),
             name='ds_aroma_mni', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
 
