@@ -537,7 +537,7 @@ jobs:
                 -e FMRIPREP_DEV 1 \
                 --config $PWD/nipype.cfg -w /tmp/ds054/work \
                 /tmp/data/ds054 /tmp/ds054/derivatives participant \
-                --fs-no-reconall --sloppy \
+                --fs-no-reconall --sloppy --hmc-use-mcflirt \
                 --output-space T1w template \
                 --template-resampling-grid 2mm \
                 --mem_mb 4096 --nthreads 2 -vv
@@ -778,7 +778,7 @@ workflows:
             - get_regression_data
           filters:
             branches:
-              ignore: 
+              ignore:
                 - /docs?\/.*/
                 - /ds005\/.*/
                 - /ds054\/.*/
