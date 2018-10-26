@@ -77,8 +77,8 @@ Derivatives related to EPI files are in the ``func`` subfolder.
 Volumetric output spaces include ``T1w`` and ``MNI152NLin2009cAsym`` (default).
 
 - ``*bold_space-<space>_brainmask.nii.gz`` Brain mask for EPI files, calculated by nilearn on the average EPI volume, post-motion correction
-- ``*bold_space-<space>_preproc.nii.gz`` Motion-corrected (using MCFLIRT for estimation and ANTs for interpolation) EPI file
-- (optional) ``*bold_space-<space>_variant-smoothAROMAnonaggr_preproc.nii.gz`` Motion-corrected (using MCFLIRT for estimation and ANTs for interpolation),
+- ``*bold_space-<space>_preproc.nii.gz`` Head-motion corrected EPI file
+- (optional) ``*bold_space-<space>_variant-smoothAROMAnonaggr_preproc.nii.gz`` Head-motion corrected,
   smoothed (6mm), and non-aggressively denoised (using AROMA) EPI file - currently produced only for the ``MNI152NLin2009cAsym`` space
 
 Surface output spaces include ``fsnative`` (full density subject-specific mesh),
@@ -160,7 +160,7 @@ derivative of RMS variance over voxels (or :abbr:`DVARS (D referring to differen
 standardized (``stdDVARS``), non-standardized (``non-stdDVARS``), and voxel-wise standardized (``vx-wisestdDVARS``);
 the ``FrameDisplacement`` is a quantification of the estimated bulk-head motion; ``X``, ``Y``, ``Z``, ``RotX``,
 ``RotY``, ``RotZ`` are the actual 6 rigid-body transform parameters estimated by FMRIPREP;
-the ``NonSteadyStateOutlierXX`` columns indicate non-steady state volumes with a single ``1`` value and ``0`` elsewhere (there 
+the ``NonSteadyStateOutlierXX`` columns indicate non-steady state volumes with a single ``1`` value and ``0`` elsewhere (there
 is one ``NonSteadyStateOutlierXX`` column per outlier/volume); and finally six noise components ``aCompCorXX`` calculated using
 :abbr:`CompCor (Component Based Noise Correction Method)`
 and five noise components ``AROMAaggrCompXX`` if

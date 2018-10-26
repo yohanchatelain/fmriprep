@@ -19,38 +19,40 @@ is presented below:
     :simple_form: yes
 
     from fmriprep.workflows.base import init_single_subject_wf
-    wf = init_single_subject_wf(subject_id='test',
-                                name='single_subject_wf',
-                                task_id='',
-                                longitudinal=False,
-                                t2s_coreg=False,
-                                omp_nthreads=1,
-                                freesurfer=True,
-                                reportlets_dir='.',
-                                output_dir='.',
-                                bids_dir='.',
-                                skull_strip_template='OASIS',
-                                skull_strip_fixed_seed=False,
-                                template='MNI152NLin2009cAsym',
-                                output_spaces=['T1w', 'fsnative',
-                                              'template', 'fsaverage5'],
-                                medial_surface_nan=False,
-                                cifti_output=False,
-                                ignore=[],
-                                debug=False,
-                                low_mem=False,
-                                anat_only=False,
-                                hires=True,
-                                use_bbr=True,
-                                bold2t1w_dof=9,
-                                fmap_bspline=False,
-                                fmap_demean=True,
-                                use_syn=True,
-                                force_syn=True,
-                                template_out_grid='native',
-                                use_aroma=False,
-                                aroma_melodic_dim=None,
-                                ignore_aroma_err=False)
+    wf = init_single_subject_wf(
+        subject_id='test',
+        name='single_subject_wf',
+        task_id='',
+        longitudinal=False,
+        t2s_coreg=False,
+        omp_nthreads=1,
+        freesurfer=True,
+        reportlets_dir='.',
+        output_dir='.',
+        bids_dir='.',
+        skull_strip_template='OASIS',
+        skull_strip_fixed_seed=False,
+        template='MNI152NLin2009cAsym',
+        output_spaces=['T1w', 'fsnative', 'template', 'fsaverage5'],
+        medial_surface_nan=False,
+        cifti_output=False,
+        ignore=[],
+        debug=False,
+        low_mem=False,
+        anat_only=False,
+        hires=True,
+        use_bbr=True,
+        bold2t1w_dof=9,
+        fmap_bspline=False,
+        fmap_demean=True,
+        use_syn=True,
+        force_syn=True,
+        template_out_grid='native',
+        use_aroma=False,
+        aroma_melodic_dim=None,
+        ignore_aroma_err=False,
+        use_mcflirt=False,
+    )
 
 
 T1w/T2w preprocessing
@@ -248,30 +250,32 @@ BOLD preprocessing
     :simple_form: yes
 
     from fmriprep.workflows.bold import init_func_preproc_wf
-    wf = init_func_preproc_wf('/completely/made/up/path/sub-01_task-nback_bold.nii.gz',
-                              omp_nthreads=1,
-                              ignore=[],
-                              freesurfer=True,
-                              reportlets_dir='.',
-                              output_dir='.',
-                              template='MNI152NLin2009cAsym',
-                              output_spaces=['T1w', 'fsnative',
-                                             'template', 'fsaverage5'],
-                              medial_surface_nan=False,
-                              cifti_output=False,
-                              debug=False,
-                              low_mem=False,
-                              use_bbr=True,
-                              t2s_coreg=False,
-                              bold2t1w_dof=9,
-                              fmap_bspline=True,
-                              fmap_demean=True,
-                              use_syn=True,
-                              force_syn=True,
-                              template_out_grid='native',
-                              use_aroma=False,
-                              aroma_melodic_dim=None,
-                              ignore_aroma_err=False)
+    wf = init_func_preproc_wf(
+        '/completely/made/up/path/sub-01_task-nback_bold.nii.gz',
+        omp_nthreads=1,
+        ignore=[],
+        freesurfer=True,
+        reportlets_dir='.',
+        output_dir='.',
+        template='MNI152NLin2009cAsym',
+        output_spaces=['T1w', 'fsnative', 'template', 'fsaverage5'],
+        medial_surface_nan=False,
+        cifti_output=False,
+        debug=False,
+        low_mem=False,
+        use_bbr=True,
+        t2s_coreg=False,
+        bold2t1w_dof=9,
+        fmap_bspline=True,
+        fmap_demean=True,
+        use_syn=True,
+        force_syn=True,
+        template_out_grid='native',
+        use_aroma=False,
+        aroma_melodic_dim=None,
+        ignore_aroma_err=False,
+        use_mcflirt=False,
+    )
 
 Preprocessing of :abbr:`BOLD (blood-oxygen level-dependent)` files is
 split into multiple sub-workflows described below.
@@ -332,11 +336,12 @@ Head-motion estimation
 
     from fmriprep.workflows.bold import init_bold_hmc_wf
     wf = init_bold_hmc_wf(
+        use_mcflirt=False,
         mem_gb=1,
         omp_nthreads=1)
 
 Using the previously :ref:`estimated reference scan <bold_ref>`,
-FSL ``mcflirt`` is used to estimate head-motion.
+AFNI's ``3dVolreg`` is used to estimate head-motion.
 As a result, one rigid-body transform with respect to
 the reference image is written for each :abbr:`BOLD (blood-oxygen level-dependent)`
 time-step.
@@ -546,7 +551,7 @@ Confounds estimation
         metadata={"RepetitionTime": 2.0,
                   "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]})
 
-Given a motion-corrected fMRI, a brain mask, ``mcflirt`` movement parameters and a
+Given a motion-corrected fMRI, a brain mask, head-motion parameters and a
 segmentation, the `discover_wf` sub-workflow calculates potential
 confounds per volume.
 
