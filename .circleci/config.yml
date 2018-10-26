@@ -165,8 +165,8 @@ jobs:
     steps:
       - restore_cache:
           keys:
-            - regression-v0-{{ epoch }}
-            - regression-v0-
+            - regression-v2-{{ epoch }}
+            - regression-v2-
       - run:
           name: Get truncated BOLD series
           command: |
@@ -193,7 +193,7 @@ jobs:
           paths:
             - data
       - save_cache:
-         key: regression-v0-{{ epoch }}
+         key: regression-v2-{{ epoch }}
          paths:
             - /tmp/data
 
@@ -227,10 +227,6 @@ jobs:
             fi
       - attach_workspace:
           at: /tmp
-      - restore_cache:
-          keys:
-            - regression-v0-{{ epoch }}
-            - regression-v0-
       - run:
           name: Check PyPi preconditions
           command: |
@@ -252,13 +248,21 @@ jobs:
           name: Run fMRIPrep tests
           no_output_timeout: 2h
           command: |
+            mkdir /tmp/data/reports && \
             docker run -ti --rm=false \
               -v /tmp/data:/tmp/data \
               -e FMRIPREP_REGRESSION_SOURCE=/tmp/data/fmriprep_bold_truncated \
               -e FMRIPREP_REGRESSION_TARGETS=/tmp/data/fmriprep_bold_mask \
+              -e FMRIPREP_REGRESSION_REPORTS=/tmp/data/reports \
               --entrypoint="py.test" poldracklab/fmriprep:latest \
               /root/src/fmriprep/ \
-              --doctest-modules --ignore=/root/src/fmriprep/docs --ignore=setup.py
+              -svx --doctest-modules --ignore=/root/src/fmriprep/docs --ignore=setup.py
+      - run:
+          name: Package new masks
+          no_output_timeout: 10m
+          working_directory: /tmp/data/reports
+          command: |
+            tar cfz fmriprep_bold_mask.tar.gz fmriprep_bold_mask/*/*.nii.gz
       - run:
           name: Test fmriprep-wrapper (Python 2)
           command: |
@@ -284,7 +288,7 @@ jobs:
             fmriprep-docker -i poldracklab/fmriprep:latest --help
             fmriprep-docker -i poldracklab/fmriprep:latest --version
       - store_artifacts:
-          path: /home/circleci/out/tests
+          path: /tmp/data/reports
 
 
   build_docs:
@@ -350,10 +354,10 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - ds005-anat-v7-{{ .Branch }}-{{ epoch }}
-            - ds005-anat-v7-{{ .Branch }}
-            - ds005-anat-v7-master
-            - ds005-anat-v7-
+            - ds005-anat-v9-{{ .Branch }}-{{ epoch }}
+            - ds005-anat-v9-{{ .Branch }}
+            - ds005-anat-v9-master
+            - ds005-anat-v9-
       - run:
           name: Setting up test
           command: |
@@ -384,10 +388,10 @@ jobs:
                 -e FMRIPREP_DEV 1 -u $(id -u) \
                 --config $PWD/nipype.cfg -w /tmp/ds005/work \
                 /tmp/data/ds005 /tmp/ds005/derivatives participant \
-                --debug --write-graph --mem_mb 4096 \
+                --sloppy --write-graph --mem_mb 4096 \
                 --nthreads 2 --anat-only -vv
       - save_cache:
-         key: ds005-anat-v7-{{ .Branch }}-{{ epoch }}
+         key: ds005-anat-v9-{{ .Branch }}-{{ epoch }}
          paths:
             - /tmp/ds005/work
             - /tmp/ds005/derivatives/fmriprep
@@ -404,7 +408,7 @@ jobs:
                 -e FMRIPREP_DEV 1 -u $(id -u) \
                 --config $PWD/nipype.cfg -w /tmp/ds005/work \
                 /tmp/data/ds005 /tmp/ds005/derivatives participant \
-                --debug --write-graph --use-syn-sdc --mem_mb 4096 \
+                --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
                 --ignore-aroma-denoising-errors --use-aroma \
                 --output-space T1w template fsaverage5 \
                 --template-resampling-grid native \
@@ -431,7 +435,7 @@ jobs:
                 -e FMRIPREP_DEV 1 -u $(id -u) \
                 --config $PWD/nipype.cfg -w /tmp/ds005/work \
                 /tmp/data/ds005 /tmp/ds005/derivatives_partial participant \
-                --debug --write-graph --use-syn-sdc --mem_mb 4096 \
+                --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
                 --output-space T1w template fsaverage5 \
                 --ignore-aroma-denoising-errors --use-aroma \
                 --template-resampling-grid native \
@@ -479,10 +483,10 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - ds054-anat-v5-{{ .Branch }}-{{ epoch }}
-            - ds054-anat-v5-{{ .Branch }}
-            - ds054-anat-v5-master
-            - ds054-anat-v5-
+            - ds054-anat-v7-{{ .Branch }}-{{ epoch }}
+            - ds054-anat-v7-{{ .Branch }}
+            - ds054-anat-v7-master
+            - ds054-anat-v7-
       - run:
           name: Setting up test
           command: |
@@ -513,10 +517,10 @@ jobs:
                 -e FMRIPREP_DEV 1 \
                 --config $PWD/nipype.cfg -w /tmp/ds054/work \
                 /tmp/data/ds054 /tmp/ds054/derivatives participant \
-                --fs-no-reconall --debug --write-graph \
+                --fs-no-reconall --sloppy --write-graph \
                 --mem_mb 4096 --nthreads 2 --anat-only -vv
       - save_cache:
-         key: ds054-anat-v5-{{ .Branch }}-{{ epoch }}
+         key: ds054-anat-v7-{{ .Branch }}-{{ epoch }}
          paths:
             - /tmp/ds054/work
             - /tmp/ds054/derivatives
@@ -533,7 +537,7 @@ jobs:
                 -e FMRIPREP_DEV 1 \
                 --config $PWD/nipype.cfg -w /tmp/ds054/work \
                 /tmp/data/ds054 /tmp/ds054/derivatives participant \
-                --fs-no-reconall --debug \
+                --fs-no-reconall --sloppy \
                 --output-space T1w template \
                 --template-resampling-grid 2mm \
                 --mem_mb 4096 --nthreads 2 -vv
@@ -558,7 +562,7 @@ jobs:
                 -e FMRIPREP_DEV 1 \
                 --config $PWD/nipype.cfg -w /tmp/ds054/work \
                 /tmp/data/ds054 /tmp/ds054/derivatives participant \
-                --fs-no-reconall --debug --write-graph \
+                --fs-no-reconall --sloppy --write-graph \
                 --output-space T1w template \
                 --template-resampling-grid 2mm \
                 --reports-only --run-uuid $UUID
@@ -597,8 +601,8 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - ds210-anat-v2-{{ epoch }}
-            - ds210-anat-v2-
+            - ds210-anat-v4-{{ epoch }}
+            - ds210-anat-v4-
       - run:
           name: Setting up test
           command: |
@@ -629,10 +633,10 @@ jobs:
                 -e FMRIPREP_DEV 1 \
                 --config $PWD/nipype.cfg -w /tmp/ds210/work \
                 /tmp/data/ds210 /tmp/ds210/derivatives participant \
-                --fs-no-reconall --debug --write-graph \
+                --fs-no-reconall --sloppy --write-graph \
                 --mem_mb 4096 --nthreads 2 --anat-only -vv
       - save_cache:
-         key: ds210-anat-v2-{{ epoch }}
+         key: ds210-anat-v4-{{ epoch }}
          paths:
             - /tmp/ds210/work
             - /tmp/ds210/derivatives
@@ -647,7 +651,7 @@ jobs:
                 /tmp/data/ds210 /tmp/ds210/derivatives participant \
                 --fs-no-reconall --t2s-coreg --use-syn-sdc \
                 --template-resampling-grid native \
-                --debug --write-graph --mem_mb 4096 --nthreads 2 -vv
+                --sloppy --write-graph --mem_mb 4096 --nthreads 2 -vv
       - run:
           name: Checking outputs of fMRIPrep
           command: |
@@ -666,7 +670,7 @@ jobs:
       - store_artifacts:
           path: /tmp/ds210
 
-  deploy:
+  deploy_docker:
     machine:
       image: circleci/classic:201711-01
     working_directory: /tmp/src/fmriprep
@@ -690,10 +694,22 @@ jobs:
           command: |
             if [[ -n "$DOCKER_PASS" ]]; then
               docker login -u $DOCKER_USER -p $DOCKER_PASS
-              docker push poldracklab/fmriprep:latest
-              docker tag poldracklab/fmriprep poldracklab/fmriprep:$CIRCLE_TAG
-              docker push poldracklab/fmriprep:$CIRCLE_TAG
+              docker tag poldracklab/fmriprep poldracklab/fmriprep:unstable
+              docker push poldracklab/fmriprep:unstable
+              if [[ -n "$CIRCLE_TAG" ]]; then
+                docker push poldracklab/fmriprep:latest
+                docker tag poldracklab/fmriprep poldracklab/fmriprep:$CIRCLE_TAG
+                docker push poldracklab/fmriprep:$CIRCLE_TAG
+              fi
             fi
+
+  deploy_pypi:
+    machine:
+      image: circleci/classic:201711-01
+    working_directory: /tmp/src/fmriprep
+    steps:
+      - attach_workspace:
+          at: /tmp
       - run:
           name: Deploy to PyPi
           command: |
@@ -717,19 +733,31 @@ workflows:
       - get_data:
           filters:
             branches:
-              ignore: /docs?\/.*/
+              ignore:
+                - /docs?\/.*/
+                - /tests?\/.*/
             tags:
               only: /.*/
 
       - get_regression_data:
           filters:
             branches:
-              ignore: /docs?\/.*/
+              ignore:
+                - /docs?\/.*/
+                - /ds005\/.*/
+                - /ds054\/.*/
+                - /ds210\/.*/
 
       - build_docs:
           requires:
             - build
           filters:
+            branches:
+              ignore:
+                - /tests?\/.*/
+                - /ds005\/.*/
+                - /ds054\/.*/
+                - /ds210\/.*/
             tags:
               only: /.*/
 
@@ -738,7 +766,9 @@ workflows:
             - build
           filters:
             branches:
-              ignore: /docs?\/.*/
+              ignore:
+                - /docs?\/.*/
+                - /tests?\/.*/
             tags:
               only: /.*/
 
@@ -748,7 +778,11 @@ workflows:
             - get_regression_data
           filters:
             branches:
-              ignore: /docs?\/.*/
+              ignore: 
+                - /docs?\/.*/
+                - /ds005\/.*/
+                - /ds054\/.*/
+                - /ds210\/.*/
             tags:
               only: /.*/
 
@@ -758,7 +792,11 @@ workflows:
             - build
           filters:
             branches:
-              ignore: /docs?\/.*/
+              ignore:
+                - /docs?\/.*/
+                - /tests?\/.*/
+                - /ds054\/.*/
+                - /ds210\/.*/
             tags:
               only: /.*/
 
@@ -768,7 +806,11 @@ workflows:
             - build
           filters:
             branches:
-              ignore: /docs?\/.*/
+              ignore:
+                - /docs?\/.*/
+                - /tests?\/.*/
+                - /ds005\/.*/
+                - /ds210\/.*/
             tags:
               only: /.*/
 
@@ -779,11 +821,29 @@ workflows:
           filters:
             branches:
               # only: /meepi.*/
-              ignore: /docs?\/.*/
+              ignore:
+                - /docs?\/.*/
+                - /tests?\/.*/
+                - /ds005\/.*/
+                - /ds054\/.*/
             tags:
               only: /.*/
 
-      - deploy:
+      - deploy_docker:
+          requires:
+            - build
+            - test_pytest
+            - build_docs
+            - ds005
+            - ds054
+            - ds210
+          filters:
+            branches:
+              only: master
+            tags:
+              only: /.*/
+
+      - deploy_pypi:
           requires:
             - build
             - test_pytest
