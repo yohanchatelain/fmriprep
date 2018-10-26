@@ -53,7 +53,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                          use_aroma, ignore_aroma_err, aroma_melodic_dim,
                          medial_surface_nan, cifti_output,
                          debug, low_mem, template_out_grid,
-                         layout=None, num_bold=1):
+                         use_mcflirt, layout=None, num_bold=1):
     """
     This workflow controls the functional preprocessing stages of FMRIPREP.
 
@@ -86,6 +86,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                   use_aroma=False,
                                   ignore_aroma_err=False,
                                   aroma_melodic_dim=None,
+                                  use_mcflirt=False,
                                   num_bold=1)
 
     **Parameters**
@@ -146,6 +147,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         template_out_grid : str
             Keyword ('native', '1mm' or '2mm') or path of custom reference
             image for normalization
+        use_mcflirt : bool
+            Use FSL ``mcflirt`` for head motion correction, instead of AFNI ``3dVolreg``.
         layout : BIDSLayout
             BIDSLayout structure to enable metadata retrieval
         num_bold : int
@@ -403,7 +406,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                          mem_gb=mem_gb['filesize'] * 3)
 
     # HMC on the BOLD
-    bold_hmc_wf = init_bold_hmc_wf(name='bold_hmc_wf',
+    bold_hmc_wf = init_bold_hmc_wf(use_mcflirt=use_mcflirt,
+                                   name='bold_hmc_wf',
                                    mem_gb=mem_gb['filesize'],
                                    omp_nthreads=omp_nthreads)
 

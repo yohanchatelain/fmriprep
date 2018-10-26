@@ -38,7 +38,8 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid, work_dir, output_dir, bids
                      omp_nthreads, skull_strip_template, skull_strip_fixed_seed,
                      freesurfer, output_spaces, template, medial_surface_nan, cifti_output, hires,
                      use_bbr, bold2t1w_dof, fmap_bspline, fmap_demean, use_syn, force_syn,
-                     use_aroma, ignore_aroma_err, aroma_melodic_dim, template_out_grid):
+                     use_aroma, ignore_aroma_err, aroma_melodic_dim, template_out_grid,
+                     use_mcflirt):
     """
     This workflow organizes the execution of FMRIPREP, with a sub-workflow for
     each subject.
@@ -84,7 +85,8 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid, work_dir, output_dir, bids
                               use_aroma=False,
                               ignore_aroma_err=False,
                               aroma_melodic_dim=None,
-                              template_out_grid='native')
+                              template_out_grid='native',
+                              use_mcflirt=False)
 
 
     Parameters
@@ -162,6 +164,8 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid, work_dir, output_dir, bids
         template_out_grid : str
             Keyword ('native', '1mm' or '2mm') or path of custom reference
             image for normalization
+        use_mcflirt : bool
+            Use FSL ``mcflirt`` for head motion correction, instead of AFNI ``3dVolreg``.
 
     """
     fmriprep_wf = Workflow(name='fmriprep_wf')
@@ -177,37 +181,40 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid, work_dir, output_dir, bids
 
     reportlets_dir = os.path.join(work_dir, 'reportlets')
     for subject_id in subject_list:
-        single_subject_wf = init_single_subject_wf(subject_id=subject_id,
-                                                   task_id=task_id,
-                                                   name="single_subject_" + subject_id + "_wf",
-                                                   reportlets_dir=reportlets_dir,
-                                                   output_dir=output_dir,
-                                                   bids_dir=bids_dir,
-                                                   ignore=ignore,
-                                                   debug=debug,
-                                                   low_mem=low_mem,
-                                                   anat_only=anat_only,
-                                                   longitudinal=longitudinal,
-                                                   t2s_coreg=t2s_coreg,
-                                                   omp_nthreads=omp_nthreads,
-                                                   skull_strip_template=skull_strip_template,
-                                                   skull_strip_fixed_seed=skull_strip_fixed_seed,
-                                                   freesurfer=freesurfer,
-                                                   output_spaces=output_spaces,
-                                                   template=template,
-                                                   medial_surface_nan=medial_surface_nan,
-                                                   cifti_output=cifti_output,
-                                                   hires=hires,
-                                                   use_bbr=use_bbr,
-                                                   bold2t1w_dof=bold2t1w_dof,
-                                                   fmap_bspline=fmap_bspline,
-                                                   fmap_demean=fmap_demean,
-                                                   use_syn=use_syn,
-                                                   force_syn=force_syn,
-                                                   template_out_grid=template_out_grid,
-                                                   use_aroma=use_aroma,
-                                                   aroma_melodic_dim=aroma_melodic_dim,
-                                                   ignore_aroma_err=ignore_aroma_err)
+        single_subject_wf = init_single_subject_wf(
+            subject_id=subject_id,
+            task_id=task_id,
+            name="single_subject_" + subject_id + "_wf",
+            reportlets_dir=reportlets_dir,
+            output_dir=output_dir,
+            bids_dir=bids_dir,
+            ignore=ignore,
+            debug=debug,
+            low_mem=low_mem,
+            anat_only=anat_only,
+            longitudinal=longitudinal,
+            t2s_coreg=t2s_coreg,
+            omp_nthreads=omp_nthreads,
+            skull_strip_template=skull_strip_template,
+            skull_strip_fixed_seed=skull_strip_fixed_seed,
+            freesurfer=freesurfer,
+            output_spaces=output_spaces,
+            template=template,
+            medial_surface_nan=medial_surface_nan,
+            cifti_output=cifti_output,
+            hires=hires,
+            use_bbr=use_bbr,
+            bold2t1w_dof=bold2t1w_dof,
+            fmap_bspline=fmap_bspline,
+            fmap_demean=fmap_demean,
+            use_syn=use_syn,
+            force_syn=force_syn,
+            template_out_grid=template_out_grid,
+            use_aroma=use_aroma,
+            aroma_melodic_dim=aroma_melodic_dim,
+            ignore_aroma_err=ignore_aroma_err,
+            use_mcflirt=use_mcflirt,
+        )
 
         single_subject_wf.config['execution']['crashdump_dir'] = (
             os.path.join(output_dir, "fmriprep", "sub-" + subject_id, 'log', run_uuid)
@@ -229,7 +236,7 @@ def init_single_subject_wf(subject_id, task_id, name, reportlets_dir, output_dir
                            freesurfer, output_spaces, template, medial_surface_nan,
                            cifti_output, hires, use_bbr, bold2t1w_dof, fmap_bspline, fmap_demean,
                            use_syn, force_syn, template_out_grid,
-                           use_aroma, aroma_melodic_dim, ignore_aroma_err):
+                           use_aroma, aroma_melodic_dim, ignore_aroma_err, use_mcflirt):
     """
     This workflow organizes the preprocessing pipeline for a single subject.
     It collects and reports information about the subject, and prepares
@@ -276,7 +283,8 @@ def init_single_subject_wf(subject_id, task_id, name, reportlets_dir, output_dir
                                     template_out_grid='native',
                                     use_aroma=False,
                                     aroma_melodic_dim=None,
-                                    ignore_aroma_err=False)
+                                    ignore_aroma_err=False,
+                                    use_mcflirt=False)
 
     Parameters
 
@@ -353,6 +361,8 @@ def init_single_subject_wf(subject_id, task_id, name, reportlets_dir, output_dir
             Perform ICA-AROMA on MNI-resampled functional series
         ignore_aroma_err : bool
             Do not fail on ICA-AROMA errors
+        use_mcflirt : bool
+            Use FSL ``mcflirt`` for head motion correction, instead of AFNI ``3dVolreg``.
 
     Inputs
 
@@ -491,7 +501,8 @@ to workflows in *fMRIPrep*'s documentation]\
                                                use_aroma=use_aroma,
                                                aroma_melodic_dim=aroma_melodic_dim,
                                                ignore_aroma_err=ignore_aroma_err,
-                                               num_bold=len(subject_data['bold']))
+                                               num_bold=len(subject_data['bold']),
+                                               use_mcflirt=use_mcflirt)
 
         workflow.connect([
             (anat_preproc_wf, func_preproc_wf,
