@@ -336,7 +336,7 @@ Head-motion estimation
         omp_nthreads=1)
 
 Using the previously :ref:`estimated reference scan <bold_ref>`,
-FSL ``mcflirt`` is used to estimate head-motion.
+AFNI's ``3dVolreg`` is used to estimate head-motion.
 As a result, one rigid-body transform with respect to
 the reference image is written for each :abbr:`BOLD (blood-oxygen level-dependent)`
 time-step.
@@ -546,7 +546,7 @@ Confounds estimation
         metadata={"RepetitionTime": 2.0,
                   "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]})
 
-Given a motion-corrected fMRI, a brain mask, ``mcflirt`` movement parameters and a
+Given a motion-corrected fMRI, a brain mask, head-motion parameters and a
 segmentation, the `discover_wf` sub-workflow calculates potential
 confounds per volume.
 

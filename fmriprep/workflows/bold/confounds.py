@@ -46,7 +46,7 @@ def init_bold_confs_wf(mem_gb, metadata, name="bold_confs_wf"):
     #. Region-wise average signal (``CSF``, ``WhiteMatter``, ``GlobalSignal``)
     #. DVARS - standard, nonstandard, and voxel-wise standard variants
        (``stdDVARS``, ``non-stdDVARS``, ``vx-wisestdDVARS``)
-    #. Framewise displacement, based on MCFLIRT motion parameters
+    #. Framewise displacement, based on head-motion parameters
        (``FramewiseDisplacement``)
     #. Temporal CompCor (``tCompCorXX``)
     #. Anatomical CompCor (``aCompCorXX``)
