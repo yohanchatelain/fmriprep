@@ -255,7 +255,7 @@ def _get_ica_confounds(ica_out_dir, skip_vols, newpath=None):
     # add one to motion_ic_indices to match melodic report.
     aroma_confounds = os.path.join(newpath, "AROMAAggrCompAROMAConfounds.tsv")
     pd.DataFrame(aggr_confounds.T,
-                 columns=['AROMAAggrComp%02d' % (x + 1) for x in motion_ic_indices]).to_csv(
+                 columns=['aroma_motion_%02d' % (x + 1) for x in motion_ic_indices]).to_csv(
         aroma_confounds, sep="\t", index=None)
 
     return aroma_confounds, motion_ics_out, melodic_mix_out
