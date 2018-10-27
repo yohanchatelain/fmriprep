@@ -601,8 +601,8 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - ds210-anat-v4-{{ epoch }}
-            - ds210-anat-v4-
+            - ds210-anat-v5-{{ epoch }}
+            - ds210-anat-v5-
       - run:
           name: Setting up test
           command: |
@@ -636,7 +636,7 @@ jobs:
                 --fs-no-reconall --sloppy --write-graph \
                 --mem_mb 4096 --nthreads 2 --anat-only -vv
       - save_cache:
-         key: ds210-anat-v4-{{ epoch }}
+         key: ds210-anat-v5-{{ epoch }}
          paths:
             - /tmp/ds210/work
             - /tmp/ds210/derivatives
