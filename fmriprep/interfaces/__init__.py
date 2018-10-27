@@ -16,5 +16,5 @@ from .reports import SubjectSummary, FunctionalSummary, AboutSummary
 from .utils import TPM2ROI, AddTPMs, AddTSVHeader, ConcatAffines, JoinTSVColumns
 from .fmap import FieldEnhance, FieldToRadS, FieldToHz, Phasediff2Fieldmap
 from .confounds import GatherConfounds, ICAConfounds, FMRISummary
-from .itk import MCFLIRT2ITK, Volreg2ITK, MultiApplyTransforms
+from .itk import MCFLIRT2ITK, MultiApplyTransforms
 from .multiecho import FirstEcho
