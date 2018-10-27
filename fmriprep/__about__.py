@@ -105,7 +105,6 @@ REQUIRES = [
     'scikit-image',
     'versioneer',
     'pyyaml',
-    'transforms3d',
 ]
 
 LINKS_REQUIRES = [
