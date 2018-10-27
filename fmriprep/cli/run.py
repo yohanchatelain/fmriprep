@@ -160,6 +160,10 @@ def get_parser():
         '--medial-surface-nan', required=False, action='store_true', default=False,
         help='Replace medial wall values with NaNs on functional GIFTI files. Only '
         'performed for GIFTI files mapped to a freesurfer subject (fsaverage or fsnative).')
+    g_conf.add_argument(
+        '--hmc-use-mcflirt', required=False, action='store_true', default=False,
+        help='Head-Motion Correction (HMC) - use FSL\'s ``mcflirt`` instead '
+        'of AFNI\'s ``3dVolreg``.')
 
     # ICA_AROMA options
     g_aroma = parser.add_argument_group('Specific options for running ICA_AROMA')
@@ -554,6 +558,7 @@ def build_workflow(opts, retval):
         use_aroma=opts.use_aroma,
         aroma_melodic_dim=opts.aroma_melodic_dimensionality,
         ignore_aroma_err=opts.ignore_aroma_denoising_errors,
+        use_mcflirt=opts.hmc_use_mcflirt,
     )
     retval['return_code'] = 0
 

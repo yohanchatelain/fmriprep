@@ -100,8 +100,8 @@ we recommend to include in your paper.
 
    <p style="font-style: italic;">
      Functional data was <span class="slicetime_text_true">slice time corrected using
-     <code>3dTshift</code> from AFNI v16.2.07 [11, RRID:SCR_005927]
-     and </span>motion corrected using <code>mcflirt</code> (FSL v5.0.9 [9]).
+     <code>3dTshift</code> (AFNI v16.2.07 [11, RRID:SCR_005927]) and </span>
+     motion-corrected using <code>3dVolreg</code> (AFNI v16.2.07 [11, RRID:SCR_005927]).
      <span class="SDC_text_TOPUP" style="display: none">Distortion correction was performed
      using an implementation of the TOPUP technique [10] using <code>3dQwarp</code> (AFNI v16.2.07 [11]).</span>
      <span class="SDC_text_FUGUE" style="display: none">Distortion correction was performed using fieldmaps
