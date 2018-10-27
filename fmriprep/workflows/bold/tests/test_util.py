@@ -58,7 +58,8 @@ def symmetric_overlap(img1, img2):
     )
 ])
 def test_masking(input_fname, expected_fname):
-    bold_reference_wf = init_bold_reference_wf(omp_nthreads=1)
+    bold_reference_wf = init_bold_reference_wf(
+        omp_nthreads=1, remove_rotation_and_shear=False)
     bold_reference_wf.inputs.inputnode.bold_file = input_fname
 
     # Reconstruct base_fname from above

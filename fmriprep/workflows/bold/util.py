@@ -33,7 +33,8 @@ DEFAULT_MEMORY_MIN_GB = 0.01
 
 
 def init_bold_reference_wf(omp_nthreads, bold_file=None, pre_mask=False,
-                           name='bold_reference_wf', gen_report=False):
+                           name='bold_reference_wf', gen_report=False,
+                           remove_rotation_and_shear=True):
     """
     This workflow generates reference BOLD images for a series
 
@@ -58,9 +59,8 @@ def init_bold_reference_wf(omp_nthreads, bold_file=None, pre_mask=False,
             Name of workflow (default: ``bold_reference_wf``)
         gen_report : bool
             Whether a mask report node should be appended in the end
-        enhance_t2 : bool
-            Perform logarithmic transform of input BOLD image to improve contrast
-            before calculating the preliminary mask
+        remove_rotation_and_shear : bool
+            Remove rotation and shear components from affine when validating BOLD
 
     **Inputs**
 
@@ -110,13 +110,16 @@ using a custom methodology of *fMRIPrep*.
     if bold_file is not None:
         inputnode.inputs.bold_file = bold_file
 
-    validate = pe.Node(ValidateImage(), name='validate', mem_gb=DEFAULT_MEMORY_MIN_GB)
+    validate = pe.Node(ValidateImage(
+        remove_rotation_and_shear=remove_rotation_and_shear),
+        name='validate', mem_gb=DEFAULT_MEMORY_MIN_GB)
 
     gen_ref = pe.Node(EstimateReferenceImage(), name="gen_ref",
                       mem_gb=1)  # OE: 128x128x128x50 * 64 / 8 ~ 900MB.
     # Re-run validation; no effect if no sbref; otherwise apply same validation to sbref as bold
-    validate_ref = pe.Node(ValidateImage(remove_rotation_and_shear=True), name='validate_ref',
-                           mem_gb=DEFAULT_MEMORY_MIN_GB)
+    validate_ref = pe.Node(ValidateImage(
+        remove_rotation_and_shear=remove_rotation_and_shear),
+        name='validate_ref', mem_gb=DEFAULT_MEMORY_MIN_GB)
     enhance_and_skullstrip_bold_wf = init_enhance_and_skullstrip_bold_wf(
         omp_nthreads=omp_nthreads, pre_mask=pre_mask)
 
