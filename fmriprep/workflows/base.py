@@ -33,7 +33,7 @@ from .anatomical import init_anat_preproc_wf
 from .bold import init_func_preproc_wf
 
 
-def init_fmriprep_wf(subject_list, task_id, run_uuid, work_dir, output_dir, bids_dir,
+def init_fmriprep_wf(subject_list, task_id, echo_idx, run_uuid, work_dir, output_dir, bids_dir,
                      ignore, debug, low_mem, anat_only, longitudinal, t2s_coreg,
                      omp_nthreads, skull_strip_template, skull_strip_fixed_seed,
                      freesurfer, output_spaces, template, medial_surface_nan, cifti_output, hires,
@@ -56,6 +56,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid, work_dir, output_dir, bids
         from fmriprep.workflows.base import init_fmriprep_wf
         wf = init_fmriprep_wf(subject_list=['fmripreptest'],
                               task_id='',
+                              echo_idx='',
                               run_uuid='X',
                               work_dir='.',
                               output_dir='.',
@@ -95,6 +96,9 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid, work_dir, output_dir, bids
             List of subject labels
         task_id : str or None
             Task ID of BOLD series to preprocess, or ``None`` to preprocess all
+        echo_idx : int or None
+            Index of echo to preprocess in multiecho BOLD series,
+            or ``None`` to preprocess all
         run_uuid : str
             Unique identifier for execution instance
         work_dir : str
@@ -184,6 +188,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid, work_dir, output_dir, bids
         single_subject_wf = init_single_subject_wf(
             subject_id=subject_id,
             task_id=task_id,
+            echo_idx=echo_idx,
             name="single_subject_" + subject_id + "_wf",
             reportlets_dir=reportlets_dir,
             output_dir=output_dir,
@@ -230,8 +235,8 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid, work_dir, output_dir, bids
     return fmriprep_wf
 
 
-def init_single_subject_wf(subject_id, task_id, name, reportlets_dir, output_dir, bids_dir,
-                           ignore, debug, low_mem, anat_only, longitudinal, t2s_coreg,
+def init_single_subject_wf(subject_id, task_id, echo_idx, name, reportlets_dir, output_dir,
+                           bids_dir, ignore, debug, low_mem, anat_only, longitudinal, t2s_coreg,
                            omp_nthreads, skull_strip_template, skull_strip_fixed_seed,
                            freesurfer, output_spaces, template, medial_surface_nan,
                            cifti_output, hires, use_bbr, bold2t1w_dof, fmap_bspline, fmap_demean,
@@ -254,6 +259,7 @@ def init_single_subject_wf(subject_id, task_id, name, reportlets_dir, output_dir
         from fmriprep.workflows.base import init_single_subject_wf
         wf = init_single_subject_wf(subject_id='test',
                                     task_id='',
+                                    echo_idx='',
                                     name='single_subject_wf',
                                     reportlets_dir='.',
                                     output_dir='.',
@@ -292,6 +298,9 @@ def init_single_subject_wf(subject_id, task_id, name, reportlets_dir, output_dir
             List of subject labels
         task_id : str or None
             Task ID of BOLD series to preprocess, or ``None`` to preprocess all
+        echo_idx : int or None
+            Index of echo to preprocess in multiecho BOLD series,
+            or ``None`` to preprocess all
         name : str
             Name of workflow
         ignore : list
@@ -378,7 +387,7 @@ def init_single_subject_wf(subject_id, task_id, name, reportlets_dir, output_dir
         }
         layout = None
     else:
-        subject_data, layout = collect_data(bids_dir, subject_id, task_id)
+        subject_data, layout = collect_data(bids_dir, subject_id, task_id, echo_idx)
 
     # Make sure we always go through these two checks
     if not anat_only and subject_data['bold'] == []:
