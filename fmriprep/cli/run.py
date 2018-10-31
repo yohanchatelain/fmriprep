@@ -77,7 +77,7 @@ def get_parser():
     #                     help='select a specific run to be processed')
     g_bids.add_argument('-t', '--task-id', action='store',
                         help='select a specific task to be processed')
-    g_bids.add_argument('--echo-idx', action='store',
+    g_bids.add_argument('-e', '--echo-idx', action='store', type=int,
                         help='select a specific echo to be processed in a multiecho series')
 
     g_perfm = parser.add_argument_group('Options to handle performance')

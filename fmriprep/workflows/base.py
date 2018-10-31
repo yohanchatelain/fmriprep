@@ -56,7 +56,7 @@ def init_fmriprep_wf(subject_list, task_id, echo_idx, run_uuid, work_dir, output
         from fmriprep.workflows.base import init_fmriprep_wf
         wf = init_fmriprep_wf(subject_list=['fmripreptest'],
                               task_id='',
-                              echo_idx='',
+                              echo_idx=None,
                               run_uuid='X',
                               work_dir='.',
                               output_dir='.',
@@ -259,7 +259,7 @@ def init_single_subject_wf(subject_id, task_id, echo_idx, name, reportlets_dir, 
         from fmriprep.workflows.base import init_single_subject_wf
         wf = init_single_subject_wf(subject_id='test',
                                     task_id='',
-                                    echo_idx='',
+                                    echo_idx=None,
                                     name='single_subject_wf',
                                     reportlets_dir='.',
                                     output_dir='.',
