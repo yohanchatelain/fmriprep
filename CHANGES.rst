@@ -1,3 +1,8 @@
+1.2.1 (November 1, 2018)
+========================
+
+Hotfix release (deployment system)
+
 1.2.0 (October 31, 2018)
 ========================
 
