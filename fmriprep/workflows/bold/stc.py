@@ -65,7 +65,6 @@ AFNI {afni_ver} [@afni, RRID:SCR_005927].
 
     LOGGER.log(25, 'Slice-timing correction will be included.')
 
-
     # It would be good to fingerprint memory use of afni.TShift
     slice_timing_correction = pe.Node(
         afni.TShift(outputtype='NIFTI_GZ',
