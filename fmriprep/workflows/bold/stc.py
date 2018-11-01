@@ -69,10 +69,9 @@ AFNI {afni_ver} [@afni, RRID:SCR_005927].
     slice_timing_correction = pe.Node(
         afni.TShift(outputtype='NIFTI_GZ',
                     tr='{}s'.format(metadata["RepetitionTime"]),
-                    slice_timing=metadata['SliceTiming']),
+                    slice_timing=metadata['SliceTiming'],
+                    slice_encoding_direction=metadata.get('SliceEncodingDirection', 'k')),
         name='slice_timing_correction')
-    if 'SliceEncodingDirection' in metadata:
-        slice_timing_correction.inputs.slice_encoding_direction = metadata['SliceEncodingDirection']
 
     copy_xform = pe.Node(CopyXForm(), name='copy_xform', mem_gb=0.1)
 
