@@ -406,13 +406,13 @@ jobs:
                 sudo setfacl -m group:$(id -gn):rwx /tmp/ds005/work
             fmriprep-docker -i poldracklab/fmriprep:latest \
                 -e FMRIPREP_DEV 1 -u $(id -u) \
-                --use-plugin /home/circleci/src/fmriprep/.circleci/legacy.yml \
                 --config $PWD/nipype.cfg -w /tmp/ds005/work \
                 /tmp/data/ds005 /tmp/ds005/derivatives participant \
                 --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
                 --ignore-aroma-denoising-errors --use-aroma \
                 --output-space T1w template fsaverage5 \
                 --template-resampling-grid native \
+                --use-plugin /home/circleci/src/fmriprep/.circleci/legacy.yml \
                 --nthreads 2 --cifti-output -vv
       - run:
           name: Move intermediate results for second run
