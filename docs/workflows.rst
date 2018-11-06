@@ -49,7 +49,7 @@ is presented below:
         force_syn=True,
         template_out_grid='native',
         use_aroma=False,
-        aroma_melodic_dim=None,
+        aroma_melodic_dim=-200,
         ignore_aroma_err=False,
     )
 
@@ -271,7 +271,7 @@ BOLD preprocessing
         force_syn=True,
         template_out_grid='native',
         use_aroma=False,
-        aroma_melodic_dim=None,
+        aroma_melodic_dim=-200,
         ignore_aroma_err=False,
     )
 
