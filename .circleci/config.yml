@@ -397,7 +397,7 @@ jobs:
             - /tmp/ds005/derivatives/fmriprep
 
       - run:
-          name: Run full fMRIPrep on ds005
+          name: Run full fMRIPrep on ds005 (LegacyMultiProc plugin)
           no_output_timeout: 2h
           command: |
             sudo setfacl -d -m group:$(id -gn):rwx /tmp/ds005/derivatives && \
@@ -406,6 +406,7 @@ jobs:
                 sudo setfacl -m group:$(id -gn):rwx /tmp/ds005/work
             fmriprep-docker -i poldracklab/fmriprep:latest \
                 -e FMRIPREP_DEV 1 -u $(id -u) \
+                --use-plugin /home/circleci/src/fmriprep/.circleci/legacy.yml \
                 --config $PWD/nipype.cfg -w /tmp/ds005/work \
                 /tmp/data/ds005 /tmp/ds005/derivatives participant \
                 --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
