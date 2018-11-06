@@ -568,9 +568,9 @@ can be automatically appended to the workflow.
 The number of ICA-AROMA components depends on a dimensionality estimate
 made by MELODIC.
 For datasets with a very short TR and a large number of timepoints, this may
-result in an unusually high number of components.
-In such cases, it may be useful to specify the number of components to be
-extracted with ``--aroma-melodic-dimensionality``.
+result in an unusually high number of components. By default, dimensionality is 
+limited to a maximum of 200 components. To override this upper limit one may specify 
+the number of components to be extracted with ``--aroma-melodic-dimensionality``.
 Further details on the implementation are given within the workflow generation
 function (:mod:`fmriprep.workflows.bold.confounds.init_ica_aroma_wf`).
 
