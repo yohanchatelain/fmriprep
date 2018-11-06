@@ -23,6 +23,7 @@ is presented below:
         subject_id='test',
         name='single_subject_wf',
         task_id='',
+        echo_idx=None,
         longitudinal=False,
         t2s_coreg=False,
         omp_nthreads=1,

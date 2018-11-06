@@ -77,6 +77,8 @@ def get_parser():
     #                     help='select a specific run to be processed')
     g_bids.add_argument('-t', '--task-id', action='store',
                         help='select a specific task to be processed')
+    g_bids.add_argument('--echo-idx', action='store', type=int,
+                        help='select a specific echo to be processed in a multiecho series')
 
     g_perfm = parser.add_argument_group('Options to handle performance')
     g_perfm.add_argument('--nthreads', '--n_cpus', '-n-cpus', action='store', type=int,
@@ -529,6 +531,7 @@ def build_workflow(opts, retval):
     retval['workflow'] = init_fmriprep_wf(
         subject_list=subject_list,
         task_id=opts.task_id,
+        echo_idx=opts.echo_idx,
         run_uuid=run_uuid,
         ignore=opts.ignore,
         debug=opts.sloppy,
