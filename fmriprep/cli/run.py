@@ -163,7 +163,7 @@ def get_parser():
     g_aroma.add_argument('--use-aroma', action='store_true', default=False,
                          help='add ICA_AROMA to your preprocessing stream')
     g_aroma.add_argument('--aroma-melodic-dimensionality', action='store',
-                         default=None, type=int,
+                         default=-200, type=int,
                          help='set the dimensionality of MELODIC before running'
                          'ICA-AROMA')
 
