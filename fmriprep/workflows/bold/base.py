@@ -19,10 +19,7 @@ from nipype.interfaces.fsl import Split as FSLSplit
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 
-from ...utils.misc import (
-  split_and_rm_rotshear_func,
-  meepi_optimal_comb_source_name,
-)
+from ...utils.misc import meepi_optimal_comb_source_name
 from ...interfaces import DerivativesDataSink, GiftiNameSource
 
 from ...interfaces.reports import FunctionalSummary
