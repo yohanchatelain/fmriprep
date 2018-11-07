@@ -38,8 +38,7 @@ def init_fmriprep_wf(subject_list, task_id, echo_idx, run_uuid, work_dir, output
                      omp_nthreads, skull_strip_template, skull_strip_fixed_seed,
                      freesurfer, output_spaces, template, medial_surface_nan, cifti_output, hires,
                      use_bbr, bold2t1w_dof, fmap_bspline, fmap_demean, use_syn, force_syn,
-                     use_aroma, ignore_aroma_err, aroma_melodic_dim, template_out_grid,
-                     use_mcflirt):
+                     use_aroma, ignore_aroma_err, aroma_melodic_dim, template_out_grid):
     """
     This workflow organizes the execution of FMRIPREP, with a sub-workflow for
     each subject.
@@ -86,8 +85,7 @@ def init_fmriprep_wf(subject_list, task_id, echo_idx, run_uuid, work_dir, output
                               use_aroma=False,
                               ignore_aroma_err=False,
                               aroma_melodic_dim=None,
-                              template_out_grid='native',
-                              use_mcflirt=False)
+                              template_out_grid='native')
 
 
     Parameters
@@ -168,8 +166,6 @@ def init_fmriprep_wf(subject_list, task_id, echo_idx, run_uuid, work_dir, output
         template_out_grid : str
             Keyword ('native', '1mm' or '2mm') or path of custom reference
             image for normalization
-        use_mcflirt : bool
-            Use FSL ``mcflirt`` for head motion correction, instead of AFNI ``3dVolreg``.
 
     """
     fmriprep_wf = Workflow(name='fmriprep_wf')
@@ -218,7 +214,6 @@ def init_fmriprep_wf(subject_list, task_id, echo_idx, run_uuid, work_dir, output
             use_aroma=use_aroma,
             aroma_melodic_dim=aroma_melodic_dim,
             ignore_aroma_err=ignore_aroma_err,
-            use_mcflirt=use_mcflirt,
         )
 
         single_subject_wf.config['execution']['crashdump_dir'] = (
@@ -241,7 +236,7 @@ def init_single_subject_wf(subject_id, task_id, echo_idx, name, reportlets_dir, 
                            freesurfer, output_spaces, template, medial_surface_nan,
                            cifti_output, hires, use_bbr, bold2t1w_dof, fmap_bspline, fmap_demean,
                            use_syn, force_syn, template_out_grid,
-                           use_aroma, aroma_melodic_dim, ignore_aroma_err, use_mcflirt):
+                           use_aroma, aroma_melodic_dim, ignore_aroma_err):
     """
     This workflow organizes the preprocessing pipeline for a single subject.
     It collects and reports information about the subject, and prepares
@@ -289,8 +284,7 @@ def init_single_subject_wf(subject_id, task_id, echo_idx, name, reportlets_dir, 
                                     template_out_grid='native',
                                     use_aroma=False,
                                     aroma_melodic_dim=None,
-                                    ignore_aroma_err=False,
-                                    use_mcflirt=False)
+                                    ignore_aroma_err=False)
 
     Parameters
 
@@ -370,8 +364,6 @@ def init_single_subject_wf(subject_id, task_id, echo_idx, name, reportlets_dir, 
             Perform ICA-AROMA on MNI-resampled functional series
         ignore_aroma_err : bool
             Do not fail on ICA-AROMA errors
-        use_mcflirt : bool
-            Use FSL ``mcflirt`` for head motion correction, instead of AFNI ``3dVolreg``.
 
     Inputs
 
@@ -510,8 +502,7 @@ to workflows in *fMRIPrep*'s documentation]\
                                                use_aroma=use_aroma,
                                                aroma_melodic_dim=aroma_melodic_dim,
                                                ignore_aroma_err=ignore_aroma_err,
-                                               num_bold=len(subject_data['bold']),
-                                               use_mcflirt=use_mcflirt)
+                                               num_bold=len(subject_data['bold']))
 
         workflow.connect([
             (anat_preproc_wf, func_preproc_wf,

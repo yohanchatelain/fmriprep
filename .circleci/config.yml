@@ -354,10 +354,10 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - ds005-anat-v9-{{ .Branch }}-{{ epoch }}
-            - ds005-anat-v9-{{ .Branch }}
-            - ds005-anat-v9-master
-            - ds005-anat-v9-
+            - ds005-anat-v10-{{ .Branch }}-{{ epoch }}
+            - ds005-anat-v10-{{ .Branch }}
+            - ds005-anat-v10-master
+            - ds005-anat-v10-
       - run:
           name: Setting up test
           command: |
@@ -391,7 +391,7 @@ jobs:
                 --sloppy --write-graph --mem_mb 4096 \
                 --nthreads 2 --anat-only -vv
       - save_cache:
-         key: ds005-anat-v9-{{ .Branch }}-{{ epoch }}
+         key: ds005-anat-v10-{{ .Branch }}-{{ epoch }}
          paths:
             - /tmp/ds005/work
             - /tmp/ds005/derivatives/fmriprep
@@ -537,7 +537,7 @@ jobs:
                 -e FMRIPREP_DEV 1 \
                 --config $PWD/nipype.cfg -w /tmp/ds054/work \
                 /tmp/data/ds054 /tmp/ds054/derivatives participant \
-                --fs-no-reconall --sloppy --hmc-use-mcflirt \
+                --fs-no-reconall --sloppy \
                 --output-space T1w template \
                 --template-resampling-grid 2mm \
                 --mem_mb 4096 --nthreads 2 -vv
@@ -601,8 +601,10 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - ds210-anat-v4-{{ epoch }}
-            - ds210-anat-v4-
+            - ds210-anat-v5-{{ .Branch }}-{{ epoch }}
+            - ds210-anat-v5-{{ .Branch }}
+            - ds210-anat-v5-master
+            - ds210-anat-v5-
       - run:
           name: Setting up test
           command: |
@@ -636,7 +638,7 @@ jobs:
                 --fs-no-reconall --sloppy --write-graph \
                 --mem_mb 4096 --nthreads 2 --anat-only -vv
       - save_cache:
-         key: ds210-anat-v4-{{ epoch }}
+         key: ds210-anat-v5-{{ .Branch }}-{{ epoch }}
          paths:
             - /tmp/ds210/work
             - /tmp/ds210/derivatives
@@ -747,6 +749,8 @@ workflows:
                 - /ds005\/.*/
                 - /ds054\/.*/
                 - /ds210\/.*/
+            tags:
+              only: /.*/
 
       - build_docs:
           requires:

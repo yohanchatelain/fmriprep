@@ -52,7 +52,6 @@ is presented below:
         use_aroma=False,
         aroma_melodic_dim=None,
         ignore_aroma_err=False,
-        use_mcflirt=False,
     )
 
 
@@ -275,7 +274,6 @@ BOLD preprocessing
         use_aroma=False,
         aroma_melodic_dim=None,
         ignore_aroma_err=False,
-        use_mcflirt=False,
     )
 
 Preprocessing of :abbr:`BOLD (blood-oxygen level-dependent)` files is
@@ -328,12 +326,11 @@ Head-motion estimation
 
     from fmriprep.workflows.bold import init_bold_hmc_wf
     wf = init_bold_hmc_wf(
-        use_mcflirt=False,
         mem_gb=1,
         omp_nthreads=1)
 
 Using the previously :ref:`estimated reference scan <bold_ref>`,
-AFNI's ``3dVolreg`` is used to estimate head-motion.
+FSL ``mcflirt`` is used to estimate head-motion.
 As a result, one rigid-body transform with respect to
 the reference image is written for each :abbr:`BOLD (blood-oxygen level-dependent)`
 time-step.
@@ -522,7 +519,7 @@ Confounds estimation
         metadata={"RepetitionTime": 2.0,
                   "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]})
 
-Given a motion-corrected fMRI, a brain mask, head-motion parameters and a
+Given a motion-corrected fMRI, a brain mask, ``mcflirt`` movement parameters and a
 segmentation, the `discover_wf` sub-workflow calculates potential
 confounds per volume.
 
