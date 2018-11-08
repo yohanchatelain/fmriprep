@@ -460,10 +460,10 @@ def init_ica_aroma_wf(template, metadata, mem_gb, omp_nthreads,
         ignore_aroma_err : bool
             Do not fail on ICA-AROMA errors
         aroma_melodic_dim: int
-            Set the dimensionality of the Melodic ICA decomposition
-            By default, MELODIC automatically estimates dimensionality with an upper limit of 200 components.
-            If set to a negative number (int), the upper limit is changed to the absolute of that number. 
-            If set to a positive number (int), MELODIC tries to extract exactly that number of components
+            Set the dimensionality of the MELODIC ICA decomposition.
+            Negative numbers set a maximum on automatic dimensionality estimation.
+            Positive numbers set an exact number of components to extract.
+            (default: -200, i.e., estimate <=200 components)
 
     **Inputs**
 
