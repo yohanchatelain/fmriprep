@@ -557,7 +557,7 @@ in the corresponding confounds file.
 
     # melodic node
     melodic = pe.Node(fsl.MELODIC(
-        no_bet=True, tr_sec=float(metadata['RepetitionTime']), mm_thresh=0.5, out_stats=True, 
+        no_bet=True, tr_sec=float(metadata['RepetitionTime']), mm_thresh=0.5, out_stats=True,
         dim=aroma_melodic_dim), name="melodic")
 
     # ica_aroma node
