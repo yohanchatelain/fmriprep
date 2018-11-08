@@ -400,7 +400,7 @@ def init_ica_aroma_wf(template, metadata, mem_gb, omp_nthreads,
                       name='ica_aroma_wf',
                       susan_fwhm=6.0,
                       ignore_aroma_err=False,
-                      aroma_melodic_dim=None,
+                      aroma_melodic_dim=-200,
                       use_fieldwarp=True):
     """
     This workflow wraps `ICA-AROMA`_ to identify and remove motion-related
@@ -459,9 +459,11 @@ def init_ica_aroma_wf(template, metadata, mem_gb, omp_nthreads,
             Include SDC warp in single-shot transform from BOLD to MNI
         ignore_aroma_err : bool
             Do not fail on ICA-AROMA errors
-        aroma_melodic_dim: int or None
-            Set the dimensionality of the Melodic ICA decomposition
-            If None, MELODIC automatically estimates dimensionality.
+        aroma_melodic_dim: int
+            Set the dimensionality of the MELODIC ICA decomposition.
+            Negative numbers set a maximum on automatic dimensionality estimation.
+            Positive numbers set an exact number of components to extract.
+            (default: -200, i.e., estimate <=200 components)
 
     **Inputs**
 
@@ -555,11 +557,8 @@ in the corresponding confounds file.
 
     # melodic node
     melodic = pe.Node(fsl.MELODIC(
-        no_bet=True, tr_sec=float(metadata['RepetitionTime']), mm_thresh=0.5, out_stats=True),
-        name="melodic")
-
-    if aroma_melodic_dim is not None:
-        melodic.inputs.dim = aroma_melodic_dim
+        no_bet=True, tr_sec=float(metadata['RepetitionTime']), mm_thresh=0.5, out_stats=True,
+        dim=aroma_melodic_dim), name="melodic")
 
     # ica_aroma node
     ica_aroma = pe.Node(ICA_AROMARPT(

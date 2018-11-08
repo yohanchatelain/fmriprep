@@ -163,9 +163,9 @@ def get_parser():
     g_aroma.add_argument('--use-aroma', action='store_true', default=False,
                          help='add ICA_AROMA to your preprocessing stream')
     g_aroma.add_argument('--aroma-melodic-dimensionality', action='store',
-                         default=None, type=int,
-                         help='set the dimensionality of MELODIC before running'
-                         'ICA-AROMA')
+                         default=-200, type=int,
+                         help='Exact or maximum number of MELODIC components to estimate '
+                         '(positive = exact, negative = maximum)')
 
     #  ANTs options
     g_ants = parser.add_argument_group('Specific options for ANTs registrations')
