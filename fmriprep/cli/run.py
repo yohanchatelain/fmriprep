@@ -252,6 +252,14 @@ def main():
     warnings.showwarning = _warn_redirect
     opts = get_parser().parse_args()
 
+    if not opts.notrack:
+        from raven import Client
+        from ..__about__ import __version__
+        sentry_client = Client(
+            'https://d5a16b0c38d84d1584dfc93b9fb1ade6:'
+            '21f3c516491847af8e4ed249b122c4af@sentry.io/1137693',
+            release=__version__)
+
     # FreeSurfer license
     default_license = str(Path(os.getenv('FREESURFER_HOME')) / 'license.txt')
     # Precedence: --fs-license-file, $FS_LICENSE, default_license
@@ -309,7 +317,7 @@ def main():
 
     # Sentry tracking
     if not opts.notrack:
-        sentry_log(run_uuid, subject_list, 'fMRIPrep running')
+        ping_sentry(run_uuid, subject_list, 'fMRIPrep running', sentry_client)
 
     # Check workflow for missing commands
     missing = check_deps(fmriprep_wf)
@@ -334,19 +342,13 @@ def main():
     write_derivative_description(bids_dir, str(Path(output_dir) / 'fmriprep'))
 
     if not opts.notrack and errno == 0:
-        sentry_log(run_uuid, subject_list, 'fMRIPrep finished without errors')
+        ping_sentry(run_uuid, subject_list, 'fMRIPrep finished without errors', sentry_client)
     sys.exit(int(errno > 0))
 
 
-def sentry_log(run_uuid, subject_list, msg):
+def ping_sentry(run_uuid, subject_list, msg, client):
     try:
-        from raven import Client
-        from ..__about__ import __version__
         dev_user = bool(int(os.getenv('FMRIPREP_DEV', 0)))
-        client = Client(
-            'https://d5a16b0c38d84d1584dfc93b9fb1ade6:'
-            '21f3c516491847af8e4ed249b122c4af@sentry.io/1137693',
-            release=__version__)
         msg += '%s' % (int(dev_user) * ' [dev]')
         client.captureMessage(message=msg,
                               level='debug' if dev_user else 'info',
