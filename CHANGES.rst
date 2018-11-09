@@ -1,3 +1,15 @@
+1.2.2 (November 9, 2018)
+========================
+
+Several bug fixes. With thanks to Franz Liem, Nir Jacoby and Markus Handal Sneve for contributions.
+
+* [FIX] Do not show --debug deprecation warning unless used (#1361) @effigies
+* [FIX] Select consistent parcellation for producing aparcaseg derivatives (#1369) @nirjacoby
+* [FIX] Count non-steady-state volumes even if sbref is passed (#1373) @effigies
+* [ENH] Respect SliceEncodingDirection metadata (#1350) @fliem
+* [ENH] Set maximum MELODIC components to 200 by default (#1366) @markushs
+* [TEST] Verify LegacyMultiProc functionality (#1368) @effigies
+
 1.2.1 (November 1, 2018)
 ========================
 
