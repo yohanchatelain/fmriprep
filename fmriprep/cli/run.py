@@ -310,23 +310,7 @@ def main():
 
     # Sentry tracking
     if not opts.notrack:
-        try:
-            from raven import Client
-            dev_user = bool(int(os.getenv('FMRIPREP_DEV', 0)))
-            msg = 'fMRIPrep running%s' % (int(dev_user) * ' [dev]')
-            client = Client(
-                'https://d5a16b0c38d84d1584dfc93b9fb1ade6:'
-                '21f3c516491847af8e4ed249b122c4af@sentry.io/1137693',
-                release=__version__)
-            client.captureMessage(message=msg,
-                                  level='debug' if dev_user else 'info',
-                                  tags={
-                                      'run_id': run_uuid,
-                                      'npart': len(subject_list),
-                                      'type': 'ping',
-                                      'dev': dev_user})
-        except Exception:
-            pass
+        sentry_log(run_uuid, subject_list, 'fMRIPrep running')
 
     # Check workflow for missing commands
     missing = check_deps(fmriprep_wf)
@@ -349,7 +333,31 @@ def main():
     # Generate reports phase
     errno += generate_reports(subject_list, output_dir, work_dir, run_uuid)
     write_derivative_description(bids_dir, str(Path(output_dir) / 'fmriprep'))
+
+    if not opts.notrack and errno == 0:
+        sentry_log(run_uuid, subject_list, 'fMRIPrep finished without errors')
     sys.exit(int(errno > 0))
+
+
+def sentry_log(run_uuid, subject_list, msg):
+    try:
+        from raven import Client
+        from ..__about__ import __version__
+        dev_user = bool(int(os.getenv('FMRIPREP_DEV', 0)))
+        client = Client(
+            'https://d5a16b0c38d84d1584dfc93b9fb1ade6:'
+            '21f3c516491847af8e4ed249b122c4af@sentry.io/1137693',
+            release=__version__)
+        msg += '%s' % (int(dev_user) * ' [dev]')
+        client.captureMessage(message=msg,
+                              level='debug' if dev_user else 'info',
+                              tags={
+                                  'run_id': run_uuid,
+                                  'npart': len(subject_list),
+                                  'type': 'ping',
+                                  'dev': dev_user})
+    except Exception:
+        pass
 
 
 def build_workflow(opts, retval):
