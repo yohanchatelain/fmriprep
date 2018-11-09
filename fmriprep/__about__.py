@@ -130,7 +130,7 @@ EXTRA_REQUIRES = {
     'duecredit': ['duecredit'],
     'datalad': ['datalad'],
     'resmon': ['psutil>=5.4.0'],
-    'sentry': ['raven'],
+    'sentry': ['sentry-sdk>=0.5.3'],
 }
 EXTRA_REQUIRES['docs'] = EXTRA_REQUIRES['doc']
 

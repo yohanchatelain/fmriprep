@@ -253,12 +253,13 @@ def main():
     opts = get_parser().parse_args()
 
     if not opts.notrack:
-        from raven import Client
+        import sentry_sdk
         from ..__about__ import __version__
-        sentry_client = Client(
-            'https://d5a16b0c38d84d1584dfc93b9fb1ade6:'
-            '21f3c516491847af8e4ed249b122c4af@sentry.io/1137693',
-            release=__version__)
+        sentry_sdk.init("https://d5a16b0c38d84d1584dfc93b9fb1ade6@sentry.io/1137693",
+                        release='fmriprep@'+__version__)
+        sentry_sdk.add_breadcrumb(level='info',
+                                  sys_argv=sys.argv,
+                                  **dict(opts.keyvalues))
 
     # FreeSurfer license
     default_license = str(Path(os.getenv('FREESURFER_HOME')) / 'license.txt')
@@ -317,7 +318,10 @@ def main():
 
     # Sentry tracking
     if not opts.notrack:
-        ping_sentry(run_uuid, subject_list, 'fMRIPrep running', sentry_client)
+        sentry_sdk.add_breadcrumb(level='info',
+                                  run_uuid=run_uuid,
+                                  npart=len(subject_list))
+        sentry_sdk.capture_message('fMRIPrep running', level='info')
 
     # Check workflow for missing commands
     missing = check_deps(fmriprep_wf)
@@ -342,21 +346,21 @@ def main():
     write_derivative_description(bids_dir, str(Path(output_dir) / 'fmriprep'))
 
     if not opts.notrack and errno == 0:
-        ping_sentry(run_uuid, subject_list, 'fMRIPrep finished without errors', sentry_client)
+        sentry_sdk.capture_message('fMRIPrep finished without errors', level='info')
     sys.exit(int(errno > 0))
 
 
-def ping_sentry(run_uuid, subject_list, msg, client):
+def ping_sentry(run_uuid, subject_list, msg, sentry_sdk):
     try:
         dev_user = bool(int(os.getenv('FMRIPREP_DEV', 0)))
         msg += '%s' % (int(dev_user) * ' [dev]')
-        client.captureMessage(message=msg,
-                              level='debug' if dev_user else 'info',
-                              tags={
-                                  'run_id': run_uuid,
-                                  'npart': len(subject_list),
-                                  'type': 'ping',
-                                  'dev': dev_user})
+        sentry_sdk.capture_message(message=msg,
+                                  level='debug' if dev_user else 'info',
+                                  tags={
+                                      'run_id': run_uuid,
+                                      'npart': len(subject_list),
+                                      'type': 'ping',
+                                      'dev': dev_user})
     except Exception:
         pass
 
