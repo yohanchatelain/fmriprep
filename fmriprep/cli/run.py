@@ -255,11 +255,17 @@ def main():
     if not opts.notrack:
         import sentry_sdk
         from ..__about__ import __version__
+        environment = "prod"
+        if bool(int(os.getenv('FMRIPREP_DEV', 0))) or ('+' in __version__):
+            environment = "dev"
         sentry_sdk.init("https://d5a16b0c38d84d1584dfc93b9fb1ade6@sentry.io/1137693",
-                        release='fmriprep@'+__version__)
-        sentry_sdk.add_breadcrumb(level='info',
-                                  sys_argv=sys.argv,
-                                  **dict(opts.keyvalues))
+                        release=__version__,
+                        environment=environment)
+        with sentry_sdk.configure_scope() as scope:
+            for k, v in vars(opts).items():
+                scope.set_tag(k, v)
+
+        sentry_sdk.capture_message('test')
 
     # FreeSurfer license
     default_license = str(Path(os.getenv('FREESURFER_HOME')) / 'license.txt')
@@ -302,6 +308,11 @@ def main():
         work_dir = retval['work_dir']
         subject_list = retval['subject_list']
         run_uuid = retval['run_uuid']
+        if not opts.notrack:
+            with sentry_sdk.configure_scope() as scope:
+                scope.set_tag('run_uuid', run_uuid)
+                scope.set_tag('npart', len(subject_list))
+
         retcode = retval['return_code']
 
     if fmriprep_wf is None:
@@ -318,10 +329,8 @@ def main():
 
     # Sentry tracking
     if not opts.notrack:
-        sentry_sdk.add_breadcrumb(level='info',
-                                  run_uuid=run_uuid,
-                                  npart=len(subject_list))
-        sentry_sdk.capture_message('fMRIPrep running', level='info')
+        sentry_sdk.add_breadcrumb(message='fMRIPrep started', level='info')
+        sentry_sdk.capture_message('fMRIPrep started', level='info')
 
     # Check workflow for missing commands
     missing = check_deps(fmriprep_wf)
@@ -348,21 +357,6 @@ def main():
     if not opts.notrack and errno == 0:
         sentry_sdk.capture_message('fMRIPrep finished without errors', level='info')
     sys.exit(int(errno > 0))
-
-
-def ping_sentry(run_uuid, subject_list, msg, sentry_sdk):
-    try:
-        dev_user = bool(int(os.getenv('FMRIPREP_DEV', 0)))
-        msg += '%s' % (int(dev_user) * ' [dev]')
-        sentry_sdk.capture_message(message=msg,
-                                  level='debug' if dev_user else 'info',
-                                  tags={
-                                      'run_id': run_uuid,
-                                      'npart': len(subject_list),
-                                      'type': 'ping',
-                                      'dev': dev_user})
-    except Exception:
-        pass
 
 
 def build_workflow(opts, retval):
