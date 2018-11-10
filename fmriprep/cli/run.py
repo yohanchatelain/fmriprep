@@ -371,6 +371,21 @@ def build_workflow(opts, retval):
     a hard-limited memory-scope.
 
     """
+    if not opts.notrack:
+        import sentry_sdk
+        from ..__about__ import __version__
+        environment = "prod"
+        if bool(int(os.getenv('FMRIPREP_DEV', 0))) or ('+' in __version__):
+            environment = "dev"
+        sentry_sdk.init("https://d5a16b0c38d84d1584dfc93b9fb1ade6@sentry.io/1137693",
+                        release=__version__,
+                        environment=environment)
+        with sentry_sdk.configure_scope() as scope:
+            for k, v in vars(opts).items():
+                scope.set_tag(k, v)
+
+        sentry_sdk.capture_message('build_workflow')
+
     from subprocess import check_call, CalledProcessError, TimeoutExpired
     from pkg_resources import resource_filename as pkgrf
 
