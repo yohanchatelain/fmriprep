@@ -682,6 +682,7 @@ def _maskroi(in_mask, roi_file):
     import numpy as np
     import nibabel as nb
     from nipype.utils.filemanip import fname_presuffix
+    failme
 
     roi = nb.load(roi_file)
     roidata = roi.get_data().astype(np.uint8)

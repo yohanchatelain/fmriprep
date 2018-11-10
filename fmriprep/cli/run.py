@@ -12,6 +12,7 @@ from pathlib import Path
 import logging
 import sys
 import gc
+import re
 import uuid
 import warnings
 from argparse import ArgumentParser
@@ -258,14 +259,29 @@ def main():
         environment = "prod"
         if bool(int(os.getenv('FMRIPREP_DEV', 0))) or ('+' in __version__):
             environment = "dev"
+
+        def before_send(event, hints):
+            # Filtering log messages about crashed files
+            if 'logentry' in event and 'message' in event['logentry']:
+                msg = event['logentry']['message']
+                if msg.startswith("could not run node:"):
+                    return None
+                elif msg.startswith("Saving crash info to"):
+                    return None
+                elif re.match("Node .+ failed to run on host .+", msg):
+                    return None
+
+            else:
+                return event
+
         sentry_sdk.init("https://d5a16b0c38d84d1584dfc93b9fb1ade6@sentry.io/1137693",
                         release=__version__,
-                        environment=environment)
+                        environment=environment,
+                        before_send=before_send,
+                        debug=True)
         with sentry_sdk.configure_scope() as scope:
             for k, v in vars(opts).items():
                 scope.set_tag(k, v)
-
-        sentry_sdk.capture_message('test')
 
     # FreeSurfer license
     default_license = str(Path(os.getenv('FREESURFER_HOME')) / 'license.txt')
@@ -371,21 +387,6 @@ def build_workflow(opts, retval):
     a hard-limited memory-scope.
 
     """
-    if not opts.notrack:
-        import sentry_sdk
-        from ..__about__ import __version__
-        environment = "prod"
-        if bool(int(os.getenv('FMRIPREP_DEV', 0))) or ('+' in __version__):
-            environment = "dev"
-        sentry_sdk.init("https://d5a16b0c38d84d1584dfc93b9fb1ade6@sentry.io/1137693",
-                        release=__version__,
-                        environment=environment)
-        with sentry_sdk.configure_scope() as scope:
-            for k, v in vars(opts).items():
-                scope.set_tag(k, v)
-
-        sentry_sdk.capture_message('build_workflow')
-
     from subprocess import check_call, CalledProcessError, TimeoutExpired
     from pkg_resources import resource_filename as pkgrf
 
