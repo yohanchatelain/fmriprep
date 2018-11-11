@@ -9,13 +9,12 @@ Calculate BOLD confounds
 .. autofunction:: init_ica_aroma_wf
 
 """
-import os
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, fsl
 from nipype.interfaces.nilearn import SignalExtraction
 from nipype.algorithms import confounds as nac
 
-from niworkflows.data import get_mni_icbm152_linear, get_mni_icbm152_nlin_asym_09c
+from niworkflows.data import get_template
 from niworkflows.interfaces.segmentation import ICA_AROMARPT
 from niworkflows.interfaces.masks import ROIsPlot
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
@@ -358,8 +357,9 @@ def init_carpetplot_wf(mem_gb, metadata, name="bold_carpet_wf"):
     # Warp segmentation into EPI space
     resample_parc = pe.Node(ApplyTransforms(
         float=True,
-        input_image=os.path.join(
-            get_mni_icbm152_nlin_asym_09c(), '1mm_parc.nii.gz'),
+        input_image=str(
+            get_template('MNI152NLin2009cAsym') /
+            'tpl-MNI152NLin2009cAsym_space-MNI_res-01_label-carpet_atlas.nii.gz'),
         dimension=3, default_value=0, interpolation='MultiLabel'),
         name='resample_parc')
 
@@ -533,8 +533,8 @@ in the corresponding confounds file.
         template=template,
         mem_gb=mem_gb,
         omp_nthreads=omp_nthreads,
-        template_out_grid=os.path.join(get_mni_icbm152_linear(),
-                                       '2mm_T1.nii.gz'),
+        template_out_grid=str(
+            get_template('MNI152Lin') / 'tpl-MNI152Lin_space-MNI_res-02_T1w.nii.gz'),
         use_compression=False,
         use_fieldwarp=use_fieldwarp,
         name='bold_mni_trans_wf'
