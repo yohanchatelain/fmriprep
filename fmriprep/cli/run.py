@@ -377,7 +377,8 @@ def main():
             raise
     finally:
         # Generate reports phase
-        errno += generate_reports(subject_list, output_dir, work_dir, run_uuid, sentry_sdk=sentry_sdk)
+        errno += generate_reports(subject_list, output_dir, work_dir, run_uuid,
+                                  sentry_sdk=sentry_sdk)
         write_derivative_description(bids_dir, str(Path(output_dir) / 'fmriprep'))
 
         if not opts.notrack and errno == 0:
