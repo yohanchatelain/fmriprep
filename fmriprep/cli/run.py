@@ -253,6 +253,7 @@ def main():
     warnings.showwarning = _warn_redirect
     opts = get_parser().parse_args()
 
+    sentry_sdk = None
     if not opts.notrack:
         import sentry_sdk
         from ..__about__ import __version__
@@ -261,24 +262,22 @@ def main():
             environment = "dev"
 
         def before_send(event, hints):
-            # Filtering log messages about crashed files
+            # Filtering log messages about crashed nodes
             if 'logentry' in event and 'message' in event['logentry']:
                 msg = event['logentry']['message']
                 if msg.startswith("could not run node:"):
                     return None
-                elif msg.startswith("Saving crash info to"):
+                elif msg.startswith("Saving crash info to "):
                     return None
                 elif re.match("Node .+ failed to run on host .+", msg):
                     return None
-
             else:
                 return event
 
         sentry_sdk.init("https://d5a16b0c38d84d1584dfc93b9fb1ade6@sentry.io/1137693",
                         release=__version__,
                         environment=environment,
-                        before_send=before_send,
-                        debug=True)
+                        before_send=before_send)
         with sentry_sdk.configure_scope() as scope:
             for k, v in vars(opts).items():
                 scope.set_tag(k, v)
@@ -367,7 +366,7 @@ def main():
             raise
 
     # Generate reports phase
-    errno += generate_reports(subject_list, output_dir, work_dir, run_uuid)
+    errno += generate_reports(subject_list, output_dir, work_dir, run_uuid, sentry_sdk=sentry_sdk)
     write_derivative_description(bids_dir, str(Path(output_dir) / 'fmriprep'))
 
     if not opts.notrack and errno == 0:
