@@ -168,6 +168,8 @@ RUN install -m 0755 \
     /root/src/fmriprep/scripts/generate_reference_mask.py \
     /usr/local/bin/generate_reference_mask
 
+ENV IS_DOCKER_8395080871=1
+
 RUN ldconfig
 WORKDIR /tmp/
 ENTRYPOINT ["/usr/local/miniconda/bin/fmriprep"]

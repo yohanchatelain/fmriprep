@@ -279,6 +279,17 @@ def main():
                         environment=environment,
                         before_send=before_send)
         with sentry_sdk.configure_scope() as scope:
+            exec_env = 'native'
+            # special variable set in the container
+            if os.getenv('IS_DOCKER_8395080871', 0):
+                # based on https://stackoverflow.com/a/42674935/616300
+                with open('/proc/1/cgroup', 'rt') as ifh:
+                    if 'docker' in ifh.read():
+                        exec_env = 'docker'
+                    else:
+                        exec_env = 'singularity'
+            scope.set_tag('exec_env', exec_env)
+
             for k, v in vars(opts).items():
                 scope.set_tag(k, v)
 
