@@ -108,6 +108,7 @@ REQUIRES = [
 ]
 
 LINKS_REQUIRES = [
+    'git+https://github.com/nipy/nipype.git@67d6212a9cabd395ee74f7818d09d8ea6c8426a4#egg=nipype'
 ]
 
 TESTS_REQUIRES = [

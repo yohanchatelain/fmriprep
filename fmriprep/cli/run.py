@@ -364,14 +364,14 @@ def main():
             errno = 1
         else:
             raise
+    finally:
+        # Generate reports phase
+        errno += generate_reports(subject_list, output_dir, work_dir, run_uuid, sentry_sdk=sentry_sdk)
+        write_derivative_description(bids_dir, str(Path(output_dir) / 'fmriprep'))
 
-    # Generate reports phase
-    errno += generate_reports(subject_list, output_dir, work_dir, run_uuid, sentry_sdk=sentry_sdk)
-    write_derivative_description(bids_dir, str(Path(output_dir) / 'fmriprep'))
-
-    if not opts.notrack and errno == 0:
-        sentry_sdk.capture_message('fMRIPrep finished without errors', level='info')
-    sys.exit(int(errno > 0))
+        if not opts.notrack and errno == 0:
+            sentry_sdk.capture_message('fMRIPrep finished without errors', level='info')
+        sys.exit(int(errno > 0))
 
 
 def build_workflow(opts, retval):
