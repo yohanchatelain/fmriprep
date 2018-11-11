@@ -89,7 +89,7 @@ the BOLD reference.
     workflow.connect([
         (inputnode, t2smap_node, [('bold_file', 'in_files')]),
         (t2smap_node, outputnode, [('optimal_comb', 'bold')]),
-        (t2smap_node, skullstrip_t2smap_wf, [('t2star_adaptive_map', 'inputnode.in_file')]),
+        (t2smap_node, skullstrip_t2smap_wf, [('t2star_map', 'inputnode.in_file')]),
         (skullstrip_t2smap_wf, outputnode, [
             ('outputnode.mask_file', 'bold_mask'),
             ('outputnode.skull_stripped_file', 'bold_ref_brain')]),
