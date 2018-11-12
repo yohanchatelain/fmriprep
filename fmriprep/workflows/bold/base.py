@@ -100,7 +100,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             When using ``t2s_coreg``, BBR will be enabled by default unless
             explicitly specified otherwise.
         t2s_coreg : bool
-            Use multiple BOLD echos to create T2*-map for T2*-driven coregistration
+            For multiecho EPI, use the calculated T2*-map for T2*-driven coregistration
         bold2t1w_dof : 6, 9 or 12
             Degrees-of-freedom for BOLD-T1w registration
         reportlets_dir : str
@@ -497,6 +497,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         bold_t2s_wf = init_bold_t2s_wf(echo_times=tes,
                                        mem_gb=mem_gb['resampled'],
                                        omp_nthreads=omp_nthreads,
+                                       t2s_coreg=t2s_coreg,
                                        name='bold_t2smap_wf')
 
         workflow.connect([
