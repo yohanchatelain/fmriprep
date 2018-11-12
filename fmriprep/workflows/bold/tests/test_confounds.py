@@ -10,6 +10,7 @@ skip_pytest = pytest.mark.skipif(not os.getenv('FMRIPREP_REGRESSION_SOURCE') or
                                  not os.getenv('FMRIPREP_REGRESSION_TARGETS'),
                                  reason='FMRIPREP_REGRESSION_{SOURCE,TARGETS} env vars not set')
 
+
 @skip_pytest
 def test_remove_volumes():
     bold_file = os.path.join(os.getenv('FMRIPREP_REGRESSION_SOURCE'),
