@@ -97,8 +97,8 @@ REQUIRES = [
     'grabbit==0.2.3',
     'pybids==0.6.5',
     'nitime',
-    'nipype>=1.1.4',
-    'niworkflows==0.4.4',
+    'nipype>=1.1.5',
+    'niworkflows==0.5.1',
     'statsmodels',
     'seaborn',
     'indexed_gzip>=0.8.2',
@@ -108,6 +108,8 @@ REQUIRES = [
 ]
 
 LINKS_REQUIRES = [
+    'git+https://github.com/nipy/nipype.git@'
+    '67d6212a9cabd395ee74f7818d09d8ea6c8426a4#egg=nipype',
     'git+https://github.com/me-ica/tedana.git@'
     'cb01d725d05f0102e2da89ad50c32905c68a79fd#egg=tedana',
 ]
@@ -132,7 +134,7 @@ EXTRA_REQUIRES = {
     'duecredit': ['duecredit'],
     'datalad': ['datalad'],
     'resmon': ['psutil>=5.4.0'],
-    'sentry': ['raven'],
+    'sentry': ['sentry-sdk>=0.5.3'],
 }
 EXTRA_REQUIRES['docs'] = EXTRA_REQUIRES['doc']
 

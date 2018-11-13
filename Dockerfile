@@ -144,11 +144,13 @@ ENV MKL_NUM_THREADS=1 \
 WORKDIR /root/
 
 # Precaching atlases
-ENV CRN_SHARED_DATA /niworkflows_data
+ENV CRN_SHARED_DATA /templateflow
 ADD docker/scripts/get_templates.sh get_templates.sh
 RUN mkdir $CRN_SHARED_DATA && \
     /root/get_templates.sh && \
-    chmod -R a+rX $CRN_SHARED_DATA
+    find $CRN_SHARED_DATA -type d -exec chmod 555 {} \; && \
+    find $CRN_SHARED_DATA -type f -exec chmod 444 {} \; && \
+    chmod +w $CRN_SHARED_DATA
 
 # Installing dev requirements (packages that are not in pypi)
 ADD requirements.txt requirements.txt
@@ -167,6 +169,8 @@ RUN echo "${VERSION}" > /root/src/fmriprep/fmriprep/VERSION && \
 RUN install -m 0755 \
     /root/src/fmriprep/scripts/generate_reference_mask.py \
     /usr/local/bin/generate_reference_mask
+
+ENV IS_DOCKER_8395080871=1
 
 RUN ldconfig
 WORKDIR /tmp/
