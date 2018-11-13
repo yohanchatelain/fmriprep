@@ -358,8 +358,8 @@ and used as T1w-reference throughout the workflow.
             (mni_tpms, outputnode, [('output_image', 'mni_tpms')]),
         ])
 
-    seg2msks = pe.Node(niu.Function(function=_seg2msks), name='seg2msks')
-    seg_rpt = pe.Node(ROIsPlot(colors=['r', 'magenta', 'b', 'g']), name='seg_rpt')
+    seg_rpt = pe.Node(ROIsPlot(colors=['magenta', 'b'], levels=[1.5, 2.5]),
+                      name='seg_rpt')
     anat_reports_wf = init_anat_reports_wf(
         reportlets_dir=reportlets_dir, output_spaces=output_spaces, template=template,
         freesurfer=freesurfer)
@@ -370,8 +370,7 @@ and used as T1w-reference throughout the workflow.
             ('outputnode.out_report', 'inputnode.t1_conform_report')]),
         (anat_template_wf, seg_rpt, [
             ('outputnode.t1_template', 'in_file')]),
-        (t1_seg, seg2msks, [('tissue_class_map', 'in_file')]),
-        (seg2msks, seg_rpt, [('out', 'in_rois')]),
+        (t1_seg, seg_rpt, [('tissue_class_map', 'in_rois')]),
         (outputnode, seg_rpt, [('t1_mask', 'in_mask')]),
         (seg_rpt, anat_reports_wf, [('out_report', 'inputnode.seg_report')]),
     ])
@@ -1338,23 +1337,3 @@ def init_anat_derivatives_wf(output_dir, output_spaces, template, freesurfer,
         ])
 
     return workflow
-
-
-def _seg2msks(in_file, newpath=None):
-    """Converts labels to masks"""
-    import nibabel as nb
-    import numpy as np
-    from nipype.utils.filemanip import fname_presuffix
-
-    nii = nb.load(in_file)
-    labels = nii.get_data()
-
-    out_files = []
-    for i in range(1, 4):
-        ldata = np.zeros_like(labels)
-        ldata[labels == i] = 1
-        out_files.append(fname_presuffix(
-            in_file, suffix='_label%03d' % i, newpath=newpath))
-        nii.__class__(ldata, nii.affine, nii.header).to_filename(out_files[-1])
-
-    return out_files
