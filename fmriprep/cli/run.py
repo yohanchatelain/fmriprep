@@ -279,9 +279,9 @@ def main():
                         environment=environment,
                         before_send=before_send)
         with sentry_sdk.configure_scope() as scope:
-            exec_env = 'native'
+            exec_env = os.name
             # special variable set in the container
-            if os.getenv('IS_DOCKER_8395080871', 0):
+            if os.getenv('IS_DOCKER_8395080871'):
                 # based on https://stackoverflow.com/a/42674935/616300
                 with open('/proc/1/cgroup', 'rt') as ifh:
                     if 'docker' in ifh.read():
