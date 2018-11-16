@@ -259,7 +259,7 @@ def main():
         from ..__about__ import __version__
         environment = "prod"
         release = __version__
-        if __version__ == '':
+        if not __version__:
             environment = "dev"
             release = "dev"
         elif bool(int(os.getenv('FMRIPREP_DEV', 0))) or ('+' in __version__):
