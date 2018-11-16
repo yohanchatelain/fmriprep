@@ -258,7 +258,11 @@ def main():
         import sentry_sdk
         from ..__about__ import __version__
         environment = "prod"
-        if bool(int(os.getenv('FMRIPREP_DEV', 0))) or ('+' in __version__):
+        release = __version__
+        if not __version__:
+            environment = "dev"
+            release = "dev"
+        elif bool(int(os.getenv('FMRIPREP_DEV', 0))) or ('+' in __version__):
             environment = "dev"
 
         def before_send(event, hints):
@@ -275,7 +279,7 @@ def main():
                 return event
 
         sentry_sdk.init("https://d5a16b0c38d84d1584dfc93b9fb1ade6@sentry.io/1137693",
-                        release=__version__,
+                        release=release,
                         environment=environment,
                         before_send=before_send)
         with sentry_sdk.configure_scope() as scope:
@@ -371,9 +375,9 @@ def main():
     try:
         fmriprep_wf.run(**plugin_settings)
     except RuntimeError as e:
-        if "Workflow did not execute cleanly" in str(e):
-            errno = 1
-        else:
+        errno = 1
+        if "Workflow did not execute cleanly" not in str(e):
+            sentry_sdk.capture_exception(e)
             raise
     finally:
         # Generate reports phase
@@ -381,9 +385,9 @@ def main():
                                   sentry_sdk=sentry_sdk)
         write_derivative_description(bids_dir, str(Path(output_dir) / 'fmriprep'))
 
-        if not opts.notrack and errno == 0:
-            sentry_sdk.capture_message('fMRIPrep finished without errors', level='info')
-        sys.exit(int(errno > 0))
+    if not opts.notrack and errno == 0:
+        sentry_sdk.capture_message('fMRIPrep finished without errors', level='info')
+    sys.exit(int(errno > 0))
 
 
 def build_workflow(opts, retval):
