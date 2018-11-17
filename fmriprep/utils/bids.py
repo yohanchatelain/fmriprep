@@ -20,7 +20,7 @@ import os.path as op
 import json
 import warnings
 from itertools import groupby
-from bids.layout import BIDSLayout
+from bids import BIDSLayout
 
 
 class BIDSError(ValueError):
