@@ -803,6 +803,7 @@ gray-matter of Mindboggle [RRID:SCR_002438, @mindboggle].
         fs.ReconAll(directive='autorecon1', flags='-noskullstrip', openmp=omp_nthreads),
         name='autorecon1', n_procs=omp_nthreads, mem_gb=5)
     autorecon1.interface._can_resume = False
+    autorecon1.interface._always_run = True
 
     skull_strip_extern = pe.Node(FSInjectBrainExtracted(), name='skull_strip_extern')
 
@@ -952,6 +953,7 @@ def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
     autorecon2_vol = pe.Node(
         fs.ReconAll(directive='autorecon2-volonly', openmp=omp_nthreads),
         n_procs=omp_nthreads, mem_gb=5, name='autorecon2_vol')
+    autorecon2_vol.interface._always_run = True
 
     autorecon_surfs = pe.MapNode(
         fs.ReconAll(
@@ -964,17 +966,20 @@ def init_autorecon_resume_wf(omp_nthreads, name='autorecon_resume_wf'):
         iterfield='hemi', n_procs=omp_nthreads, mem_gb=5,
         name='autorecon_surfs')
     autorecon_surfs.inputs.hemi = ['lh', 'rh']
+    autorecon_surfs.interface._always_run = True
 
     autorecon3 = pe.MapNode(
         fs.ReconAll(directive='autorecon3', openmp=omp_nthreads),
         iterfield='hemi', n_procs=omp_nthreads, mem_gb=5,
         name='autorecon3')
     autorecon3.inputs.hemi = ['lh', 'rh']
+    autorecon3.interface._always_run = True
 
     # Only generate the report once; should be nothing to do
     recon_report = pe.Node(
         ReconAllRPT(directive='autorecon3', generate_report=True),
         name='recon_report', mem_gb=5)
+    recon_report.interface._always_run = True
 
     def _dedup(in_list):
         vals = set(in_list)
