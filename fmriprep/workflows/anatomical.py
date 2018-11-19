@@ -535,7 +535,7 @@ A T1w-reference map was computed after registration of
     t1_reorient = pe.Node(image.Reorient(), name='t1_reorient')
 
     concat_affines = pe.MapNode(
-        ConcatenateLTA(out_type='RAS2RAS'),
+        ConcatenateLTA(out_type='RAS2RAS', invert_out=True),
         iterfield=['in_lta1', 'in_lta2'],
         name='concat_affines')
 
