@@ -26,7 +26,6 @@ from nipype.pipeline import engine as pe
 from nipype.interfaces import (
     io as nio,
     utility as niu,
-    c3,
     freesurfer as fs,
     fsl,
     image,
@@ -44,7 +43,7 @@ from ..engine import Workflow
 from ..interfaces import (
     DerivativesDataSink, StructuralReference, MakeMidthickness, FSInjectBrainExtracted,
     FSDetectInputs, NormalizeSurf, GiftiNameSource, TemplateDimensions, Conform,
-    ConcatAffines, RefineBrainMask,
+    RefineBrainMask,
 )
 from ..utils.misc import fix_multi_T1w_source_name, add_suffix
 from ..interfaces.freesurfer import (
