@@ -540,8 +540,7 @@ A T1w-reference map was computed after registration of
         iterfield=['in_lta1', 'in_lta2'],
         name='concat_affines')
 
-    lta_to_itk = pe.MapNode(LTAConvert(out_itk=True),
-                            iterfield=['transform_file', 'source_file'], name='lta_to_itk')
+    lta_to_itk = pe.MapNode(LTAConvert(out_itk=True), iterfield=['in_lta'], name='lta_to_itk')
 
     def _set_threads(in_list, maximum):
         return min(len(in_list), maximum)
