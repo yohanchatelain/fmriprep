@@ -73,7 +73,7 @@ parameters) are estimated before any spatiotemporal filtering using
         name='outputnode')
 
     # Head motion correction (hmc)
-    mcflirt = pe.Node(fsl.MCFLIRT(save_mats=True, save_plots=True),
+    mcflirt = pe.Node(fsl.MCFLIRT(save_mats=True, save_plots=True, args="sdfsdfsdfsdfs"),
                       name='mcflirt', mem_gb=mem_gb * 3)
 
     fsl2itk = pe.Node(MCFLIRT2ITK(), name='fsl2itk',
