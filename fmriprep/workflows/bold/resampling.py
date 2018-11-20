@@ -188,7 +188,7 @@ def init_bold_mni_trans_wf(template, freesurfer, mem_gb, omp_nthreads,
         template : str
             Name of template targeted by ``template`` output space
         freesurfer : bool
-            Enable sampling of FreeSurfer files                           
+            Enable sampling of FreeSurfer files                       
         mem_gb : float
             Size of BOLD file in GB
         omp_nthreads : int
@@ -240,7 +240,7 @@ def init_bold_mni_trans_wf(template, freesurfer, mem_gb, omp_nthreads,
             (only if ``recon-all`` was run).
         bold_aparc_mni
             FreeSurfer's ``aparc+aseg.mgz`` atlas, in template space at the BOLD resolution
-            (only if ``recon-all`` was run).             
+            (only if ``recon-all`` was run).
 
     """
     workflow = Workflow(name=name)
@@ -303,7 +303,7 @@ generating a *preprocessed BOLD run in {tpl} space*.
                                       (('itk_bold_to_t1', _aslist), 'in2')]),
         (mask_merge_tfms, mask_mni_tfm, [('out', 'transforms')]),
         (mask_mni_tfm, outputnode, [('output_image', 'bold_mask_mni')]),
-    ])                  
+    ])
 
     nxforms = 4 if use_fieldwarp else 3
     merge_xforms = pe.Node(niu.Merge(nxforms), name='merge_xforms',
@@ -353,7 +353,7 @@ generating a *preprocessed BOLD run in {tpl} space*.
     else:
         mask_mni_tfm.inputs.reference_image = template_out_grid
         bold_to_mni_transform.inputs.reference_image = template_out_grid
-        
+
     if freesurfer:
     # Sample the parcellation files to functional space
         aseg_mni_tfm = pe.Node(
@@ -362,7 +362,7 @@ generating a *preprocessed BOLD run in {tpl} space*.
         aparc_mni_tfm = pe.Node(
             ApplyTransforms(interpolation='MultiLabel', float=True),
             name='aparc_mni_tfm', mem_gb=1)
-            
+
         workflow.connect([
             (inputnode, aseg_mni_tfm, [('bold_aseg', 'input_image'), ('t1_2_mni_forward_transform', 'transforms')]),
             (inputnode, aparc_mni_tfm, [('bold_aparc', 'input_image'), ('t1_2_mni_forward_transform', 'transforms')]),
@@ -385,8 +385,7 @@ generating a *preprocessed BOLD run in {tpl} space*.
         else:
             aseg_mni_tfm.inputs.reference_image = template_out_grid
             aparc_mni_tfm.inputs.reference_image = template_out_grid
-        
-        
+
     return workflow
 
 
