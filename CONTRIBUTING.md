@@ -29,6 +29,11 @@ Already know what you're looking for in this guide? Jump to the following sectio
 and we're excited to have you join!
 Most of our discussions will take place on open [issues][link_issues].
 
+We also encourage users to report any difficulties they encounter on [NeuroStars][link_stars],
+a community platform for discussing neuroimaging.
+
+We actively monitor both spaces and look forward to hearing from you in either venue!
+
 
 ## Contributing through GitHub
 
@@ -205,6 +210,8 @@ You're awesome. :wave::smiley:
 [link_github]: https://github.com/
 [link_fmriprep]: https://github.com/poldracklab/FMRIPREP
 [link_signupinstructions]: https://help.github.com/articles/signing-up-for-a-new-github-account
+
+[link_stars]: https://neurostars.org/
 
 [link_git]: https://git-scm.com/
 [link_handbook]: https://guides.github.com/introduction/git-handbook/
