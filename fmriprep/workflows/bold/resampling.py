@@ -188,7 +188,7 @@ def init_bold_mni_trans_wf(template, freesurfer, mem_gb, omp_nthreads,
         template : str
             Name of template targeted by ``template`` output space
         freesurfer : bool
-            Enable sampling of FreeSurfer files                       
+            Enable sampling of FreeSurfer files
         mem_gb : float
             Size of BOLD file in GB
         omp_nthreads : int
