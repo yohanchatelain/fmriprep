@@ -35,7 +35,7 @@ preprocessing pipeline that is designed to provide an easily accessible,
 state-of-the-art interface that is robust to variations in scan acquisition
 protocols and that requires minimal user input, while providing easily
 interpretable and comprehensive error and output reporting.
-It performs basic processing steps (coregistration, normalization, unwarping, 
+It performs basic processing steps (coregistration, normalization, unwarping,
 noise component extraction, segmentation, skullstripping etc.) providing
 outputs that can be easily submitted to a variety of group level analyses,
 including task-based or resting-state fMRI, graph theory measures, surface or
@@ -123,8 +123,3 @@ Please acknowledge this work by mentioning explicitly the name of this software
 For more details, please see :ref:`citation`.
 
 .. include:: license.rst
-
-
-.. image:: https://badges.gitter.im/poldracklab/fmriprep.svg
-   :alt: Join the chat at https://gitter.im/poldracklab/fmriprep
-   :target: https://gitter.im/poldracklab/fmriprep?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
