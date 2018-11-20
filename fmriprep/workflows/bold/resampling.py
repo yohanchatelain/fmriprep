@@ -187,6 +187,8 @@ def init_bold_mni_trans_wf(template, freesurfer, mem_gb, omp_nthreads,
 
         template : str
             Name of template targeted by ``template`` output space
+        freesurfer : bool
+            Enable sampling of FreeSurfer files                           
         mem_gb : float
             Size of BOLD file in GB
         omp_nthreads : int
@@ -238,7 +240,7 @@ def init_bold_mni_trans_wf(template, freesurfer, mem_gb, omp_nthreads,
             (only if ``recon-all`` was run).
         bold_aparc_mni
             FreeSurfer's ``aparc+aseg.mgz`` atlas, in template space at the BOLD resolution
-            (only if ``recon-all`` was run).                   
+            (only if ``recon-all`` was run).             
 
     """
     workflow = Workflow(name=name)
@@ -255,7 +257,7 @@ generating a *preprocessed BOLD run in {tpl} space*.
             'bold_split',
             'bold_mask',
             'bold_aseg',
-            'bold_aparc',            
+            'bold_aparc',
             'hmc_xforms',
             'fieldwarp'
         ]),
@@ -293,7 +295,7 @@ generating a *preprocessed BOLD run in {tpl} space*.
     # Write corrected file in the designated output dir
     mask_merge_tfms = pe.Node(niu.Merge(2), name='mask_merge_tfms', run_without_submitting=True,
                               mem_gb=DEFAULT_MEMORY_MIN_GB)
-    
+
     workflow.connect([
         (inputnode, gen_ref, [(('bold_split', _first), 'moving_image')]),
         (inputnode, mask_mni_tfm, [('bold_mask', 'input_image')]),
@@ -301,7 +303,7 @@ generating a *preprocessed BOLD run in {tpl} space*.
                                       (('itk_bold_to_t1', _aslist), 'in2')]),
         (mask_merge_tfms, mask_mni_tfm, [('out', 'transforms')]),
         (mask_mni_tfm, outputnode, [('output_image', 'bold_mask_mni')]),
-    ])                       
+    ])                  
 
     nxforms = 4 if use_fieldwarp else 3
     merge_xforms = pe.Node(niu.Merge(nxforms), name='merge_xforms',
@@ -362,8 +364,8 @@ generating a *preprocessed BOLD run in {tpl} space*.
             name='aparc_mni_tfm', mem_gb=1)
             
         workflow.connect([
-            (inputnode, aseg_mni_tfm, [('bold_aseg', 'input_image'),('t1_2_mni_forward_transform', 'transforms')]),
-            (inputnode, aparc_mni_tfm, [('bold_aparc', 'input_image'),('t1_2_mni_forward_transform', 'transforms')]),
+            (inputnode, aseg_mni_tfm, [('bold_aseg', 'input_image'), ('t1_2_mni_forward_transform', 'transforms')]),
+            (inputnode, aparc_mni_tfm, [('bold_aparc', 'input_image'), ('t1_2_mni_forward_transform', 'transforms')]),
             (aseg_mni_tfm, outputnode, [('output_image', 'bold_aseg_mni')]),
             (aparc_mni_tfm, outputnode, [('output_image', 'bold_aparc_mni')]),
         ])
@@ -407,8 +409,6 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
 
     **Parameters**
 
-        freesurfer : bool
-            Enable sampling of FreeSurfer files
         mem_gb : float
             Size of BOLD file in GB
         omp_nthreads : int
