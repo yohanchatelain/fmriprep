@@ -355,7 +355,8 @@ def main():
             if resp not in ('y', 'Y', ''):
                 return 0
 
-    ret = subprocess.run(['docker', '--version'], stdout=subprocess.PIPE)
+    ret = subprocess.run(['docker', 'version', '--format', "{{.Server.Version}}"],
+                         stdout=subprocess.PIPE)
     docker_version = ret.stdout.decode('ascii').strip()
 
     command = ['docker', 'run', '--rm', '-it', '-e',
