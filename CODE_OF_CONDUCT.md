@@ -1,4 +1,4 @@
-# FMRIPREP Code of Conduct
+# fMRIPrep Code of Conduct
 
 ## Our Pledge
 
