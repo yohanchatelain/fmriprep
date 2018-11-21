@@ -15,6 +15,7 @@ import gc
 import re
 import uuid
 import warnings
+import subprocess
 from argparse import ArgumentParser
 from argparse import RawTextHelpFormatter
 from multiprocessing import cpu_count
@@ -64,6 +65,9 @@ def get_parser():
     parser.add_argument('--version', action='version', version=verstr)
 
     g_bids = parser.add_argument_group('Options for filtering BIDS queries')
+    g_bids.add_argument('--skip_bids_validation', '--skip-bids-validation', action='store_true',
+                        default=False,
+                        help='assume the input dataset is BIDS compliant and skip the validation')
     g_bids.add_argument('--participant_label', '--participant-label', action='store', nargs='+',
                         help='a space delimited list of participant identifiers or a single '
                              'identifier (the sub- prefix can be removed)')
@@ -296,6 +300,12 @@ def main():
 
             for k, v in vars(opts).items():
                 scope.set_tag(k, v)
+
+    # Validate inputs
+    if not opts.skip_bids_validation:
+        print("Making sure the input data is BIDS compliant (warnings can be ignored in most "
+              "cases).")
+        subprocess.check_call('bids-validator %s' % opts.bids_dir, shell=True)
 
     # FreeSurfer license
     default_license = str(Path(os.getenv('FREESURFER_HOME')) / 'license.txt')
