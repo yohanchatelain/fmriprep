@@ -284,14 +284,18 @@ def main():
                         before_send=before_send)
         with sentry_sdk.configure_scope() as scope:
             exec_env = os.name
+
             # special variable set in the container
             if os.getenv('IS_DOCKER_8395080871'):
-                # based on https://stackoverflow.com/a/42674935/616300
-                with open('/proc/1/cgroup', 'rt') as ifh:
-                    if 'docker' in ifh.read():
-                        exec_env = 'docker'
-                    else:
-                        exec_env = 'singularity'
+                exec_env = 'singularity'
+                if 'docker' in Path('/proc/1/cgroup').read_text():
+                    exec_env = 'docker'
+
+                    docker_version = os.getenv('DOCKER_VERSION_8395080871')
+                    if docker_version:
+                        exec_env = 'fmriprep-docker'
+                        scope.set_tag('docker_version', docker_version)
+
             scope.set_tag('exec_env', exec_env)
 
             for k, v in vars(opts).items():
