@@ -455,7 +455,7 @@ def validate_input_dir(exec_env, bids_dir, participant_label):
             "MISSING_SESSION"
         ],
         "error": ["NO_T1W"],
-        "ignoredFiles": ['dataset_description.json', 'participants.tsv']
+        "ignoredFiles": ['/dataset_description.json', '/participants.tsv']
     }
     # Limit validation only to data from requested participants
     if participant_label:
