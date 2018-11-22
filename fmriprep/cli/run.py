@@ -308,94 +308,7 @@ def main():
     if not opts.skip_bids_validation:
         print("Making sure the input data is BIDS compliant (warnings can be ignored in most "
               "cases).")
-        # Ignore issues and warnings that should not influence FMRIPREP
-        validator_config_dict = {
-            "ignore": [
-                "EVENTS_COLUMN_ONSET",
-                "EVENTS_COLUMN_DURATION",
-                "TSV_EQUAL_ROWS",
-                "TSV_EMPTY_CELL",
-                "TSV_IMPROPER_NA",
-                "VOLUME_COUNT_MISMATCH",
-                "BVAL_MULTIPLE_ROWS",
-                "BVEC_NUMBER_ROWS",
-                "DWI_MISSING_BVAL",
-                "INCONSISTENT_SUBJECTS",
-                "INCONSISTENT_PARAMETERS",
-                "BVEC_ROW_LENGTH",
-                "B_FILE",
-                "PARTICIPANT_ID_COLUMN",
-                "PARTICIPANT_ID_MISMATCH",
-                "TASK_NAME_MUST_DEFINE",
-                "PHENOTYPE_SUBJECTS_MISSING",
-                "STIMULUS_FILE_MISSING",
-                "DWI_MISSING_BVEC",
-                "EVENTS_TSV_MISSING",
-                "TSV_IMPROPER_NA",
-                "ACQTIME_FMT",
-                "Participants age 89 or higher",
-                "DATASET_DESCRIPTION_JSON_MISSING",
-                "FILENAME_COLUMN",
-                "WRONG_NEW_LINE",
-                "MISSING_TSV_COLUMN_CHANNELS",
-                "MISSING_TSV_COLUMN_IEEG_CHANNELS",
-                "MISSING_TSV_COLUMN_IEEG_ELECTRODES",
-                "UNUSED_STIMULUS",
-                "CHANNELS_COLUMN_SFREQ",
-                "CHANNELS_COLUMN_LOWCUT",
-                "CHANNELS_COLUMN_HIGHCUT",
-                "CHANNELS_COLUMN_NOTCH",
-                "CUSTOM_COLUMN_WITHOUT_DESCRIPTION",
-                "ACQTIME_FMT",
-                "SUSPICIOUSLY_LONG_EVENT_DESIGN",
-                "SUSPICIOUSLY_SHORT_EVENT_DESIGN",
-                "MALFORMED_BVEC",
-                "MALFORMED_BVAL",
-                "MISSING_TSV_COLUMN_EEG_ELECTRODES",
-                "MISSING_SESSION"
-            ],
-            "error": ["NO_T1W"]
-        }
-
-        # Limit validation only to data from requested participants
-        if opts.participant_label:
-            all_subs = set([os.path.split(i)[1][4:] for i in glob(os.path.join(opts.bids_dir,
-                                                                           "sub-*"))])
-            selected_subs = []
-            for selected_sub in opts.participant_label:
-                if selected_sub.startswith("sub-"):
-                    selected_subs.append(selected_sub[4:])
-                else:
-                    selected_subs.append(selected_sub)
-            selected_subs = set(selected_subs)
-            bad_labels = selected_subs.difference(all_subs)
-            if bad_labels:
-                error_msg = 'Data for requested participant(s) label(s) not found. Could ' \
-                            'not find data for participant(s): %s. Please verify the requested ' \
-                            'participant labels.'
-                if exec_env == 'docker':
-                    error_msg += ' This error can be caused by the input data not being ' \
-                                 'accessible inside the docker container. Please make sure all ' \
-                                 'volumes are mounted properly (see https://docs.docker.com/' \
-                                 'engine/reference/commandline/run/#mount-volume--v---read-only)'
-                if exec_env == 'singularity':
-                    error_msg += ' This error can be caused by the input data not being ' \
-                                 'accessible inside the singularity container. Please make sure ' \
-                                 'all paths are mapped properly (see https://www.sylabs.io/' \
-                                 'guides/3.0/user-guide/bind_paths_and_mounts.html)'
-                raise RuntimeError(error_msg % ','.join(bad_labels))
-
-            ignored_subs = all_subs.difference(selected_subs)
-            if ignored_subs:
-                validator_config_dict["ignoredFiles"] = []
-                for sub in ignored_subs:
-                    validator_config_dict["ignoredFiles"].append("/sub-%s/**" % sub)
-
-        with tempfile.NamedTemporaryFile('w+') as temp:
-            temp.write(json.dumps(validator_config_dict))
-            temp.flush()
-            subprocess.check_call('bids-validator %s -c %s' % (opts.bids_dir, temp.name),
-                                  shell=True)
+        validate_input_dir(exec_env, opts.bids_dir, opts.participant_label)
 
     # FreeSurfer license
     default_license = str(Path(os.getenv('FREESURFER_HOME')) / 'license.txt')
@@ -488,6 +401,95 @@ def main():
     if not opts.notrack and errno == 0:
         sentry_sdk.capture_message('fMRIPrep finished without errors', level='info')
     sys.exit(int(errno > 0))
+
+
+def validate_input_dir(exec_env, bids_dir, participant_label):
+    # Ignore issues and warnings that should not influence FMRIPREP
+    validator_config_dict = {
+        "ignore": [
+            "EVENTS_COLUMN_ONSET",
+            "EVENTS_COLUMN_DURATION",
+            "TSV_EQUAL_ROWS",
+            "TSV_EMPTY_CELL",
+            "TSV_IMPROPER_NA",
+            "VOLUME_COUNT_MISMATCH",
+            "BVAL_MULTIPLE_ROWS",
+            "BVEC_NUMBER_ROWS",
+            "DWI_MISSING_BVAL",
+            "INCONSISTENT_SUBJECTS",
+            "INCONSISTENT_PARAMETERS",
+            "BVEC_ROW_LENGTH",
+            "B_FILE",
+            "PARTICIPANT_ID_COLUMN",
+            "PARTICIPANT_ID_MISMATCH",
+            "TASK_NAME_MUST_DEFINE",
+            "PHENOTYPE_SUBJECTS_MISSING",
+            "STIMULUS_FILE_MISSING",
+            "DWI_MISSING_BVEC",
+            "EVENTS_TSV_MISSING",
+            "TSV_IMPROPER_NA",
+            "ACQTIME_FMT",
+            "Participants age 89 or higher",
+            "DATASET_DESCRIPTION_JSON_MISSING",
+            "FILENAME_COLUMN",
+            "WRONG_NEW_LINE",
+            "MISSING_TSV_COLUMN_CHANNELS",
+            "MISSING_TSV_COLUMN_IEEG_CHANNELS",
+            "MISSING_TSV_COLUMN_IEEG_ELECTRODES",
+            "UNUSED_STIMULUS",
+            "CHANNELS_COLUMN_SFREQ",
+            "CHANNELS_COLUMN_LOWCUT",
+            "CHANNELS_COLUMN_HIGHCUT",
+            "CHANNELS_COLUMN_NOTCH",
+            "CUSTOM_COLUMN_WITHOUT_DESCRIPTION",
+            "ACQTIME_FMT",
+            "SUSPICIOUSLY_LONG_EVENT_DESIGN",
+            "SUSPICIOUSLY_SHORT_EVENT_DESIGN",
+            "MALFORMED_BVEC",
+            "MALFORMED_BVAL",
+            "MISSING_TSV_COLUMN_EEG_ELECTRODES",
+            "MISSING_SESSION"
+        ],
+        "error": ["NO_T1W"]
+    }
+    # Limit validation only to data from requested participants
+    if participant_label:
+        all_subs = set([os.path.split(i)[1][4:] for i in glob(os.path.join(bids_dir,
+                                                                           "sub-*"))])
+        selected_subs = []
+        for selected_sub in participant_label:
+            if selected_sub.startswith("sub-"):
+                selected_subs.append(selected_sub[4:])
+            else:
+                selected_subs.append(selected_sub)
+        selected_subs = set(selected_subs)
+        bad_labels = selected_subs.difference(all_subs)
+        if bad_labels:
+            error_msg = 'Data for requested participant(s) label(s) not found. Could ' \
+                        'not find data for participant(s): %s. Please verify the requested ' \
+                        'participant labels.'
+            if exec_env == 'docker':
+                error_msg += ' This error can be caused by the input data not being ' \
+                             'accessible inside the docker container. Please make sure all ' \
+                             'volumes are mounted properly (see https://docs.docker.com/' \
+                             'engine/reference/commandline/run/#mount-volume--v---read-only)'
+            if exec_env == 'singularity':
+                error_msg += ' This error can be caused by the input data not being ' \
+                             'accessible inside the singularity container. Please make sure ' \
+                             'all paths are mapped properly (see https://www.sylabs.io/' \
+                             'guides/3.0/user-guide/bind_paths_and_mounts.html)'
+            raise RuntimeError(error_msg % ','.join(bad_labels))
+
+        ignored_subs = all_subs.difference(selected_subs)
+        if ignored_subs:
+            validator_config_dict["ignoredFiles"] = []
+            for sub in ignored_subs:
+                validator_config_dict["ignoredFiles"].append("/sub-%s/**" % sub)
+    with tempfile.NamedTemporaryFile('w+') as temp:
+        temp.write(json.dumps(validator_config_dict))
+        temp.flush()
+        subprocess.check_call('bids-validator %s -c %s' % (bids_dir, temp.name),
+                              shell=True)
 
 
 def build_workflow(opts, retval):
