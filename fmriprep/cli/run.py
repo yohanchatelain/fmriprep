@@ -260,6 +260,16 @@ def main():
     warnings.showwarning = _warn_redirect
     opts = get_parser().parse_args()
 
+    exec_env = os.name
+
+    # special variable set in the container
+    if os.getenv('IS_DOCKER_8395080871'):
+        exec_env = 'singularity'
+        if 'docker' in Path('/proc/1/cgroup').read_text():
+            exec_env = 'docker'
+            if os.getenv('DOCKER_VERSION_8395080871'):
+                exec_env = 'fmriprep-docker'
+
     sentry_sdk = None
     if not opts.notrack:
         import sentry_sdk
@@ -290,20 +300,10 @@ def main():
                         environment=environment,
                         before_send=before_send)
         with sentry_sdk.configure_scope() as scope:
-            exec_env = os.name
-
-            # special variable set in the container
-            if os.getenv('IS_DOCKER_8395080871'):
-                exec_env = 'singularity'
-                if 'docker' in Path('/proc/1/cgroup').read_text():
-                    exec_env = 'docker'
-
-                    docker_version = os.getenv('DOCKER_VERSION_8395080871')
-                    if docker_version:
-                        exec_env = 'fmriprep-docker'
-                        scope.set_tag('docker_version', docker_version)
-
             scope.set_tag('exec_env', exec_env)
+
+            if exec_env == 'fmriprep-docker':
+                scope.set_tag('docker_version', os.getenv('DOCKER_VERSION_8395080871'))
 
             for k, v in vars(opts).items():
                 scope.set_tag(k, v)
