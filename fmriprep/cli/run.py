@@ -454,7 +454,8 @@ def validate_input_dir(exec_env, bids_dir, participant_label):
             "MISSING_TSV_COLUMN_EEG_ELECTRODES",
             "MISSING_SESSION"
         ],
-        "error": ["NO_T1W"]
+        "error": ["NO_T1W"],
+        "ignoredFiles": ['dataset_description.json', 'participants.tsv']
     }
     # Limit validation only to data from requested participants
     if participant_label:
@@ -486,7 +487,6 @@ def validate_input_dir(exec_env, bids_dir, participant_label):
 
         ignored_subs = all_subs.difference(selected_subs)
         if ignored_subs:
-            validator_config_dict["ignoredFiles"] = []
             for sub in ignored_subs:
                 validator_config_dict["ignoredFiles"].append("/sub-%s/**" % sub)
     with tempfile.NamedTemporaryFile('w+') as temp:
