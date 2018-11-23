@@ -275,8 +275,21 @@ def main():
                     return None
                 elif re.match("Node .+ failed to run on host .+", msg):
                     return None
-            else:
-                return event
+
+            if 'breadcrumbs' in event and isinstance(event['breadcrumbs'], list):
+                fingerprints_to_propagate = ['no-disk-space', 'memory-error', 'permission-denied',
+                                             'keyboard-interrupt']
+                for bc in [b for b in event['breadcrumbs'] if 'message' in b]:
+                    break_outer = False
+                    for fp in fingerprints_to_propagate:
+                        if bc['message'] == fp:
+                            event['fingerprint'] = [fp]
+                            break_outer = True
+                            break
+                    if break_outer:
+                        break
+
+            return event
 
         sentry_sdk.init("https://d5a16b0c38d84d1584dfc93b9fb1ade6@sentry.io/1137693",
                         release=release,
