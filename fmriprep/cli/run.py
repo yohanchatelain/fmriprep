@@ -279,14 +279,10 @@ def main():
             if 'breadcrumbs' in event and isinstance(event['breadcrumbs'], list):
                 fingerprints_to_propagate = ['no-disk-space', 'memory-error', 'permission-denied',
                                              'keyboard-interrupt']
-                for bc in [b for b in event['breadcrumbs'] if 'message' in b]:
-                    break_outer = False
-                    for fp in fingerprints_to_propagate:
-                        if bc['message'] == fp:
-                            event['fingerprint'] = [fp]
-                            break_outer = True
-                            break
-                    if break_outer:
+                for bc in event['breadcrumbs']:
+                    msg = bc.get('message', 'empty-msg')
+                    if msg in fingerprints_to_propagate:
+                        event['fingerprint'] = [msg]
                         break
 
             return event
