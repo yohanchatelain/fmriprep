@@ -16,6 +16,7 @@ import re
 import uuid
 import json
 import tempfile
+import psutil
 import warnings
 import subprocess
 from argparse import ArgumentParser
@@ -304,6 +305,10 @@ def main():
 
             if exec_env == 'fmriprep-docker':
                 scope.set_tag('docker_version', os.getenv('DOCKER_VERSION_8395080871'))
+
+            free_mem_at_start = round(psutil.virtual_memory().free / 1024**3, 1)
+            scope.set_tag('free_mem_at_start', free_mem_at_start)
+            scope.set_tag('cpu_count', cpu_count())
 
             for k, v in vars(opts).items():
                 scope.set_tag(k, v)
