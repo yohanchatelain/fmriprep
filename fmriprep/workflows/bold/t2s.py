@@ -73,7 +73,7 @@ decay model with log-linear regression.
 For each voxel, the maximal number of echoes with reliable signal in that voxel were
 used to fit the model.
 The calculated T2* map was then used to optimally combine preprocessed BOLD across
-echoes following the method described in @posse_t2s.
+echoes following the method described in [@posse_t2s].
 The optimally combined time series was carried forward as the *preprocessed BOLD*{}.
 """.format('' if not t2s_coreg else ', and the T2* map was also retained as the BOLD reference')
 
