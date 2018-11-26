@@ -1,3 +1,15 @@
+1.2.3 (November 16, 2018)
+=========================
+
+Refactor of Sentry reporting, bug fixes and added tests. With thanks to @sebnaze for contributions.
+
+* [TEST] Utility functions for skipping/re-inserting non-steady-state volumes (#1382) @jdkent
+* [FIX] Correctly populate right-hemisphere time series in CIFTI derivatives (#1378) @sebnaze
+* [FIX] Restore original contour colors in reports (#1385) @oesteban
+* [ENH] New sentry SDK (#1381) @chrisfilo
+* [ENH] Sentry refinement (#1394) @chrisfilo
+
+
 1.2.2 (November 9, 2018)
 ========================
 
