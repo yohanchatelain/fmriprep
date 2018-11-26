@@ -22,18 +22,17 @@ LOGGER = logging.getLogger('nipype.workflow')
 
 
 # pylint: disable=R0914
-def init_bold_t2s_wf(echo_times,
-                     mem_gb, omp_nthreads,
-                     name='bold_t2s_wf'):
+def init_bold_t2s_wf(echo_times, mem_gb, omp_nthreads,
+                     t2s_coreg=False, name='bold_t2s_wf'):
     """
     This workflow wraps the `tedana`_ `T2* workflow`_ to optimally
-    combine multiple echos and derive a T2* map for use as a
+    combine multiple echos and derive a T2* map for optional use as a
     coregistration target.
 
     The following steps are performed:
 
     #. :abbr:`HMC (head motion correction)` on individual echo files.
-    #. Compute the adaptive T2* map
+    #. Compute the T2* map
     #. Create an optimally combined ME-EPI time series
 
     **Parameters**
@@ -44,6 +43,8 @@ def init_bold_t2s_wf(echo_times,
             Size of BOLD file in GB
         omp_nthreads : int
             Maximum number of threads an individual process may use
+        t2s_coreg : bool
+            Use the calculated T2*-map for T2*-driven coregistration
         name : str
             Name of workflow (default: ``bold_t2s_wf``)
 
@@ -67,14 +68,14 @@ def init_bold_t2s_wf(echo_times,
     """
     workflow = Workflow(name=name)
     workflow.__desc__ = """\
-A T2* map was estimated from preprocessed BOLD by fitting to a
-monoexponential signal decay model with log-linear regression.
-For each voxel, the maximal number of echoes with high signal in that voxel was
+A T2* map was estimated from the preprocessed BOLD by fitting to a monoexponential signal
+decay model with log-linear regression.
+For each voxel, the maximal number of echoes with reliable signal in that voxel were
 used to fit the model.
-The T2* map was used to optimally combine preprocessed BOLD across
-echoes following the method described in @posse_t2s and was also retained as
-the BOLD reference.
-"""
+The calculated T2* map was then used to optimally combine preprocessed BOLD across
+echoes following the method described in [@posse_t2s].
+The optimally combined time series was carried forward as the *preprocessed BOLD*{}.
+""".format('' if not t2s_coreg else ', and the T2* map was also retained as the BOLD reference')
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['bold_file']), name='inputnode')
 
@@ -89,7 +90,7 @@ the BOLD reference.
     workflow.connect([
         (inputnode, t2smap_node, [('bold_file', 'in_files')]),
         (t2smap_node, outputnode, [('optimal_comb', 'bold')]),
-        (t2smap_node, skullstrip_t2smap_wf, [('t2star_adaptive_map', 'inputnode.in_file')]),
+        (t2smap_node, skullstrip_t2smap_wf, [('t2star_map', 'inputnode.in_file')]),
         (skullstrip_t2smap_wf, outputnode, [
             ('outputnode.mask_file', 'bold_mask'),
             ('outputnode.skull_stripped_file', 'bold_ref_brain')]),

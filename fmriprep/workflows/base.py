@@ -117,7 +117,7 @@ def init_fmriprep_wf(subject_list, task_id, echo_idx, run_uuid, work_dir, output
             Treat multiple sessions as longitudinal (may increase runtime)
             See sub-workflows for specific differences
         t2s_coreg : bool
-            Use multiple BOLD echos to create T2*-map for T2*-driven coregistration
+            For multi-echo EPI, use the calculated T2*-map for T2*-driven coregistration
         omp_nthreads : int
             Maximum number of threads an individual process may use
         skull_strip_template : str
@@ -309,7 +309,7 @@ def init_single_subject_wf(subject_id, task_id, echo_idx, name, reportlets_dir, 
             Treat multiple sessions as longitudinal (may increase runtime)
             See sub-workflows for specific differences
         t2s_coreg : bool
-            Use multiple BOLDS echos to create T2*-map for T2*-driven coregistration
+            For multi-echo EPI, use the calculated T2*-map for T2*-driven coregistration
         omp_nthreads : int
             Maximum number of threads an individual process may use
         skull_strip_template : str
