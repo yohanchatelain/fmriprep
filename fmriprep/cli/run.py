@@ -497,7 +497,11 @@ def validate_input_dir(exec_env, bids_dir, participant_label):
     with tempfile.NamedTemporaryFile('w+') as temp:
         temp.write(json.dumps(validator_config_dict))
         temp.flush()
-        subprocess.check_call(['bids-validator', bids_dir, '-c', temp.name])
+        try:
+            subprocess.check_call(['bids-validator', bids_dir, '-c', temp.name])
+        except FileNotFoundError:
+            logger.error("bids-validator does not appear to be installed")
+
 
 
 def build_workflow(opts, retval):
