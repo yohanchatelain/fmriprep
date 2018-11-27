@@ -503,7 +503,6 @@ def validate_input_dir(exec_env, bids_dir, participant_label):
             logger.error("bids-validator does not appear to be installed")
 
 
-
 def build_workflow(opts, retval):
     """
     Create the Nipype Workflow that supports the whole execution
