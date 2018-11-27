@@ -464,7 +464,7 @@ def validate_input_dir(exec_env, bids_dir, participant_label):
     }
     # Limit validation only to data from requested participants
     if participant_label:
-        all_subs = set([os.path.split(i)[1][4:] for i in glob(os.path.join(bids_dir,
+        all_subs = set([os.path.basename(i)[4:] for i in glob(os.path.join(bids_dir,
                                                                            "sub-*"))])
         selected_subs = []
         for selected_sub in participant_label:
@@ -497,8 +497,7 @@ def validate_input_dir(exec_env, bids_dir, participant_label):
     with tempfile.NamedTemporaryFile('w+') as temp:
         temp.write(json.dumps(validator_config_dict))
         temp.flush()
-        subprocess.check_call('bids-validator %s -c %s' % (bids_dir, temp.name),
-                              shell=True)
+        subprocess.check_call(['bids-validator', bids_dir, '-c', temp.name])
 
 
 def build_workflow(opts, retval):
