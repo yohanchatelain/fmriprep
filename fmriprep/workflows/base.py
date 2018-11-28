@@ -173,7 +173,7 @@ def init_fmriprep_wf(subject_list, task_id, run_uuid, work_dir, output_dir, bids
                 derivatives=output_dir,
                 freesurfer_home=os.getenv('FREESURFER_HOME'),
                 spaces=output_spaces),
-            name='fsdir', run_without_submitting=True)
+            name='fsdir_run_' + run_uuid.replace('-', '_'), run_without_submitting=True)
 
     reportlets_dir = os.path.join(work_dir, 'reportlets')
     for subject_id in subject_list:
