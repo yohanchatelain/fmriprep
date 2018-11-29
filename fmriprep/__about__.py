@@ -99,6 +99,7 @@ REQUIRES = [
     'nitime',
     'nipype>=1.1.6',
     'niworkflows==0.5.1',
+    'tedana>=0.0.5',
     'statsmodels',
     'seaborn',
     'indexed_gzip>=0.8.8',
