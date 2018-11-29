@@ -99,6 +99,7 @@ REQUIRES = [
     'nitime',
     'nipype>=1.1.5',
     'niworkflows==0.5.1',
+    'tedana>=0.0.5',
     'statsmodels',
     'seaborn',
     'indexed_gzip>=0.8.8',
@@ -110,8 +111,6 @@ REQUIRES = [
 LINKS_REQUIRES = [
     'git+https://github.com/nipy/nipype.git@'
     'ac4076480ef55eb2a79aff9eff7cbf48394c565b#egg=nipype',
-    'git+https://github.com/me-ica/tedana.git@'
-    'cb01d725d05f0102e2da89ad50c32905c68a79fd#egg=tedana',
 ]
 
 TESTS_REQUIRES = [
