@@ -321,6 +321,28 @@ def main():
             scope.set_tag('free_mem_at_start', free_mem_at_start)
             scope.set_tag('cpu_count', cpu_count())
 
+            # Memory policy may have a large effect on types of errors experienced
+            overcommit_memory = Path('/proc/sys/vm/overcommit_memory')
+            if overcommit_memory.exists():
+                policy = {'0': 'heuristic',
+                          '1': 'always',
+                          '2': 'never'}.get(overcommit_memory.read_text().strip(), 'unknown')
+                scope.set_tag('overcommit_memory', policy)
+                if policy == 'never':
+                    overcommit_kbytes = Path('/proc/sys/vm/overcommit_memory')
+                    kb = overcommit_kbytes.read_text().strip()
+                    if kb != '0':
+                        limit = '{}kB'.format(kb)
+                    else:
+                        overcommit_ratio = Path('/proc/sys/vm/overcommit_ratio')
+                        limit = '{}%'.format(overcommit_ratio.read_text().strip())
+                    scope.set_tag('overcommit_limit', limit)
+                else:
+                    scope.set_tag('overcommit_limit', 'n/a')
+            else:
+                scope.set_tag('overcommit_memory', 'n/a')
+                scope.set_tag('overcommit_limit', 'n/a')
+
             for k, v in vars(opts).items():
                 scope.set_tag(k, v)
 
