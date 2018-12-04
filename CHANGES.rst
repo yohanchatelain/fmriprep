@@ -1,3 +1,11 @@
+1.2.5 (December 4, 2018)
+========================
+
+Hotfix release.
+
+* [FIX] Breadcrumb reporting (#1435) @chrisfilo
+
+
 1.2.4 (December 3, 2018)
 ========================
 
@@ -24,6 +32,7 @@ Bugfixes, an additional iteration over Sentry reporting and some relevant ME-EPI
 * [MAINT] Require nipype >= 1.1.6 (#1426) @effigies
 * [ENH] Omnibus multi-echo pull request (#1296) @effigies
 * [ENH] Report memory overcommit policies (#1429) @effigies
+
 
 1.2.3 (November 16, 2018)
 =========================
