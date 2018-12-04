@@ -8,7 +8,7 @@ This pipeline is developed by the `Poldrack lab at Stanford University
 Neuroscience (CRN) <http://reproducibility.stanford.edu/>`_, as well as for
 open-source software distribution.
 
-.. image:: http://bids.neuroimaging.io/openneuro_badge.svg
+.. image:: https://img.shields.io/badge/hosted%20on-OpenNeuro-green.svg
   :target: https://openneuro.org
   :alt: Available in OpenNeuro!
 
@@ -22,7 +22,11 @@ open-source software distribution.
 .. image:: https://img.shields.io/pypi/v/fmriprep.svg
   :target: https://pypi.python.org/pypi/fmriprep/
   :alt: Latest Version
-
+  
+.. image:: https://img.shields.io/badge/doi-10.1038%2Fs41592--018--0235--4-blue.svg
+  :target: https://doi.org/10.1038/s41592-018-0235-4
+  :alt: Published in Nature Methods
+  
 
 About
 -----
