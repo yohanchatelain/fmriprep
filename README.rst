@@ -12,7 +12,7 @@ open-source software distribution.
   :target: https://hub.docker.com/r/poldracklab/fmriprep/tags/
   :alt: Docker image available!
 
-.. image:: https://img.shields.io/badge/hosted%20on-OpenNeuro-green.svg
+.. image:: https://img.shields.io/badge/OpenNeuro-Available!-brightgreen.svg
   :target: https://openneuro.org
   :alt: Available in OpenNeuro!
   
