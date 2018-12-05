@@ -97,18 +97,18 @@ REQUIRES = [
     'grabbit==0.2.3',
     'pybids==0.6.5',
     'nitime',
-    'nipype>=1.1.5',
+    'nipype>=1.1.6',
     'niworkflows==0.5.1',
+    'tedana>=0.0.5',
     'statsmodels',
     'seaborn',
-    'indexed_gzip>=0.8.2',
+    'indexed_gzip>=0.8.8',
     'scikit-image',
     'versioneer',
     'pyyaml',
 ]
 
 LINKS_REQUIRES = [
-    'git+https://github.com/nipy/nipype.git@67d6212a9cabd395ee74f7818d09d8ea6c8426a4#egg=nipype'
 ]
 
 TESTS_REQUIRES = [

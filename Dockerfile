@@ -87,6 +87,9 @@ RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
 RUN apt-get install -y nodejs
 RUN npm install -g svgo
 
+# Installing bids-validator
+RUN npm install -g bids-validator@1.1.0
+
 # Installing and setting up ICA_AROMA
 RUN mkdir -p /opt/ICA-AROMA && \
   curl -sSL "https://github.com/maartenmennes/ICA-AROMA/archive/v0.4.4-beta.tar.gz" \
@@ -96,9 +99,9 @@ RUN mkdir -p /opt/ICA-AROMA && \
 ENV PATH=/opt/ICA-AROMA:$PATH
 
 # Installing and setting up miniconda
-RUN curl -sSLO https://repo.continuum.io/miniconda/Miniconda3-4.5.4-Linux-x86_64.sh && \
-    bash Miniconda3-4.5.4-Linux-x86_64.sh -b -p /usr/local/miniconda && \
-    rm Miniconda3-4.5.4-Linux-x86_64.sh
+RUN curl -sSLO https://repo.continuum.io/miniconda/Miniconda3-4.5.11-Linux-x86_64.sh && \
+    bash Miniconda3-4.5.11-Linux-x86_64.sh -b -p /usr/local/miniconda && \
+    rm Miniconda3-4.5.11-Linux-x86_64.sh
 
 ENV PATH=/usr/local/miniconda/bin:$PATH \
     LANG=C.UTF-8 \
@@ -106,8 +109,9 @@ ENV PATH=/usr/local/miniconda/bin:$PATH \
     PYTHONNOUSERSITE=1
 
 # Installing precomputed python packages
-RUN conda install -y mkl=2018.0.3 mkl-service;  sync &&\
-    conda install -y numpy=1.14.3 \
+RUN conda install -y python=3.7; sync && \
+    conda install -y mkl=2018.0.3 mkl-service; sync && \
+    conda install -y numpy=1.15.4 \
                      scipy=1.1.0 \
                      scikit-learn=0.19.1 \
                      matplotlib=2.2.0 \
