@@ -15,10 +15,10 @@ from nipype.interfaces import utility as niu, freesurfer as fs
 from nipype.interfaces.fsl import Split as FSLSplit
 
 from niworkflows.data import get_template, TEMPLATE_ALIASES
+from niworkflows.engine.workflows import LiterateWorkflow as Workflow
 from niworkflows.interfaces.utils import GenerateSamplingReference
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
 
-from ...engine import Workflow
 from ...interfaces import GiftiSetAnatomicalStructure, MultiApplyTransforms
 from ...interfaces.nilearn import Merge
 from ...interfaces.freesurfer import (

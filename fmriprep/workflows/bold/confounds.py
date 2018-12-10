@@ -15,11 +15,11 @@ from nipype.interfaces.nilearn import SignalExtraction
 from nipype.algorithms import confounds as nac
 
 from niworkflows.data import get_template
+from niworkflows.engine.workflows import LiterateWorkflow as Workflow
 from niworkflows.interfaces.segmentation import ICA_AROMARPT
 from niworkflows.interfaces.masks import ROIsPlot
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
 
-from ...engine import Workflow
 from ...interfaces import (
     TPM2ROI, AddTPMs, AddTSVHeader, GatherConfounds, ICAConfounds,
     FMRISummary, DerivativesDataSink

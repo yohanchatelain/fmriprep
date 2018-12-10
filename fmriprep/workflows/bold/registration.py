@@ -18,13 +18,12 @@ import os.path as op
 
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, fsl, c3
+from niworkflows.engine.workflows import LiterateWorkflow as Workflow
 from niworkflows.interfaces.registration import FLIRTRPT
 from niworkflows.interfaces.utils import GenerateSamplingReference
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
 
-from ...engine import Workflow
 from ...interfaces import MultiApplyTransforms, DerivativesDataSink
-
 from ...interfaces.nilearn import Merge
 from ...interfaces.images import extract_wm
 # See https://github.com/poldracklab/fmriprep/issues/768

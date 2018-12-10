@@ -32,6 +32,7 @@ from nipype.interfaces import (
 )
 from nipype.interfaces.ants import BrainExtraction, N4BiasFieldCorrection
 
+from niworkflows.engine.workflows import LiterateWorkflow as Workflow
 from niworkflows.interfaces.registration import RobustMNINormalizationRPT
 import niworkflows.data as nid
 from niworkflows.interfaces.masks import ROIsPlot
@@ -39,7 +40,6 @@ from niworkflows.interfaces.masks import ROIsPlot
 from niworkflows.interfaces.segmentation import ReconAllRPT
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
 
-from ..engine import Workflow
 from ..interfaces import (
     DerivativesDataSink, StructuralReference, MakeMidthickness, FSInjectBrainExtracted,
     FSDetectInputs, NormalizeSurf, GiftiNameSource, TemplateDimensions, Conform,

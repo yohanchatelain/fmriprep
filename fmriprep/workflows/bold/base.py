@@ -19,12 +19,13 @@ from nipype.interfaces.fsl import Split as FSLSplit
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 
+from niworkflows.engine.workflows import LiterateWorkflow as Workflow
+
 from ...utils.misc import meepi_optimal_comb_source_name
 from ...interfaces import DerivativesDataSink, GiftiNameSource
 
 from ...interfaces.reports import FunctionalSummary
 from ...interfaces.cifti import GenerateCifti, CiftiNameSource
-from ...engine import Workflow
 
 # BOLD workflows
 from .confounds import init_bold_confs_wf, init_carpetplot_wf
