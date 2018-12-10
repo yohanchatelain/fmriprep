@@ -86,11 +86,8 @@ SETUP_REQUIRES = [
 ]
 
 REQUIRES = [
-    'future',
     'grabbit==0.2.3',
     'indexed_gzip>=0.8.8',
-    'lockfile',
-    'matplotlib>=2.2.0',
     'nibabel>=2.2.1',
     'nilearn',
     'nipype>=1.1.6',
@@ -101,9 +98,7 @@ REQUIRES = [
     'pybids==0.6.5',
     'pyyaml',
     'scikit-image',
-    'scikit-learn',
     'seaborn',
-    'sklearn',
     'statsmodels',
     'tedana>=0.0.5',
     'versioneer',
