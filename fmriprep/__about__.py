@@ -4,14 +4,12 @@
 """
 Base module variables
 """
-from datetime import datetime
 from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions
 
 __author__ = 'The CRN developers'
-__copyright__ = 'Copyright {}, Center for Reproducible Neuroscience, Stanford University'.format(
-    datetime.now().year)
+__copyright__ = 'Copyright 2018, Center for Reproducible Neuroscience, Stanford University'
 __credits__ = ('Contributors: please check the ``.zenodo.json`` file at the top-level folder'
                'of the repository')
 __license__ = '3-clause BSD'
