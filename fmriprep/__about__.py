@@ -98,10 +98,8 @@ REQUIRES = [
     'pybids==0.6.5',
     'pyyaml',
     'scikit-image',
-    'seaborn',
     'statsmodels',
     'tedana>=0.0.5',
-    'versioneer',
 ]
 
 

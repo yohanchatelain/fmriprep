@@ -35,7 +35,6 @@
 | nipype | https://doi.org/10.3389/fninf.2011.00013 https://doi.org/10.5281/zenodo.581704 | https://github.com/nipy/nipype/ |
 | convert3d | | https://sourceforge.net/projects/c3d/ |
 | **Graphics**
-| seaborn | https://doi.org/10.5281/zenodo.883859 | https://github.com/mwaskom/seaborn |
 | matplotlib 2.0.0 | https://doi.org/10.5281/zenodo.248351 | https://github.com/matplotlib/matplotlib |
 | cwebp | https://developers.google.com/speed/webp/docs/webp_study https://developers.google.com/speed/webp/docs/webp_lossless_alpha_study | https://developers.google.com/speed/webp/ |
 | SVGO | | https://github.com/svg/svgo |
