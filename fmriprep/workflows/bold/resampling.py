@@ -179,6 +179,7 @@ def init_bold_mni_trans_wf(template, freesurfer, mem_gb, omp_nthreads,
 
         from fmriprep.workflows.bold import init_bold_mni_trans_wf
         wf = init_bold_mni_trans_wf(template='MNI152NLin2009cAsym',
+                                    freesurfer=True,
                                     mem_gb=3,
                                     omp_nthreads=1,
                                     template_out_grid='native')
@@ -237,10 +238,10 @@ def init_bold_mni_trans_wf(template, freesurfer, mem_gb, omp_nthreads,
             BOLD series mask in template space
         bold_aseg_mni
             FreeSurfer's ``aseg.mgz`` atlas, in template space at the BOLD resolution
-            (only if ``recon-all`` was run).
+            (only if ``recon-all`` was run)
         bold_aparc_mni
             FreeSurfer's ``aparc+aseg.mgz`` atlas, in template space at the BOLD resolution
-            (only if ``recon-all`` was run).
+            (only if ``recon-all`` was run)
 
     """
     workflow = Workflow(name=name)

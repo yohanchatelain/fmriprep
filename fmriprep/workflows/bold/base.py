@@ -946,9 +946,9 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
                 mem_gb=DEFAULT_MEMORY_MIN_GB)
             workflow.connect([
                 (inputnode, ds_bold_aseg_mni, [('source_file', 'source_file'),
-                                              ('bold_aseg_mni', 'in_file')]),
+                                               ('bold_aseg_mni', 'in_file')]),
                 (inputnode, ds_bold_aparc_mni, [('source_file', 'source_file'),
-                                               ('bold_aparc_mni', 'in_file')]),
+                                                ('bold_aparc_mni', 'in_file')]),
             ])
 
     # fsaverage space
