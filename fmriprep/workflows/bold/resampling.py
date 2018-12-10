@@ -356,7 +356,7 @@ generating a *preprocessed BOLD run in {tpl} space*.
         bold_to_mni_transform.inputs.reference_image = template_out_grid
 
     if freesurfer:
-    # Sample the parcellation files to functional space
+        # Sample the parcellation files to functional space
         aseg_mni_tfm = pe.Node(
             ApplyTransforms(interpolation='MultiLabel', float=True),
             name='aseg_mni_tfm', mem_gb=1)
@@ -365,8 +365,10 @@ generating a *preprocessed BOLD run in {tpl} space*.
             name='aparc_mni_tfm', mem_gb=1)
 
         workflow.connect([
-            (inputnode, aseg_mni_tfm, [('bold_aseg', 'input_image'), ('t1_2_mni_forward_transform', 'transforms')]),
-            (inputnode, aparc_mni_tfm, [('bold_aparc', 'input_image'), ('t1_2_mni_forward_transform', 'transforms')]),
+            (inputnode, aseg_mni_tfm, [('bold_aseg', 'input_image'),
+            ('t1_2_mni_forward_transform', 'transforms')]),
+            (inputnode, aparc_mni_tfm, [('bold_aparc', 'input_image'),
+            ('t1_2_mni_forward_transform', 'transforms')]),
             (aseg_mni_tfm, outputnode, [('output_image', 'bold_aseg_mni')]),
             (aparc_mni_tfm, outputnode, [('output_image', 'bold_aparc_mni')]),
         ])
