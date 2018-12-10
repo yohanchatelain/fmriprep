@@ -16,24 +16,26 @@ Fetch some test data
 """
 import os
 import json
+from pathlib import Path
 
 
 def write_derivative_description(bids_dir, deriv_dir):
-    from fmriprep import __version__
-    from fmriprep.__about__ import DOWNLOAD_URL
+    from ..__about__ import __version__, __url__, DOWNLOAD_URL
 
+    bids_dir = Path(bids_dir)
+    deriv_dir = Path(deriv_dir)
     desc = {
-        'Name': 'fMRIPrep output',
+        'Name': 'fMRIPrep - fMRI PREProcessing workflow',
         'BIDSVersion': '1.1.1',
         'PipelineDescription': {
             'Name': 'fMRIPrep',
             'Version': __version__,
             'CodeURL': DOWNLOAD_URL,
         },
-        'CodeURL': 'https://github.com/poldracklab/fmriprep',
+        'CodeURL': __url__,
         'HowToAcknowledge':
-            'Please cite our paper (https://doi.org/10.1101/306951), and '
-            'include the generated citation boilerplate within the Methods '
+            'Please cite our paper (https://doi.org/10.1038/s41592-018-0235-4), '
+            'and include the generated citation boilerplate within the Methods '
             'section of the text.',
     }
 
@@ -43,18 +45,17 @@ def write_derivative_description(bids_dir, deriv_dir):
     if 'FMRIPREP_SINGULARITY_URL' in os.environ:
         singularity_url = os.environ['FMRIPREP_SINGULARITY_URL']
         desc['SingularityContainerURL'] = singularity_url
-        try:
+
+        singularity_md5 = _get_shub_version(singularity_url)
+        if singularity_md5 and singularity_md5 is not NotImplemented:
             desc['SingularityContainerMD5'] = _get_shub_version(singularity_url)
-        except ValueError:
-            pass
 
     # Keys deriving from source dataset
-    fname = os.path.join(bids_dir, 'dataset_description.json')
-    if os.path.exists(fname):
-        with open(fname) as fobj:
+    orig_desc = {}
+    fname = bids_dir / 'dataset_description.json'
+    if fname.exists():
+        with fname.open() as fobj:
             orig_desc = json.load(fobj)
-    else:
-        orig_desc = {}
 
     if 'DatasetDOI' in orig_desc:
         desc['SourceDatasetsURLs'] = ['https://doi.org/{}'.format(
@@ -62,9 +63,9 @@ def write_derivative_description(bids_dir, deriv_dir):
     if 'License' in orig_desc:
         desc['License'] = orig_desc['License']
 
-    with open(os.path.join(deriv_dir, 'dataset_description.json'), 'w') as fobj:
+    with (deriv_dir / 'dataset_description.json').open('w') as fobj:
         json.dump(desc, fobj, indent=4)
 
 
 def _get_shub_version(singularity_url):
-    raise ValueError("Not yet implemented")
+    return NotImplemented
