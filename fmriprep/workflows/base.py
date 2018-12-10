@@ -21,9 +21,9 @@ from nipype.interfaces import utility as niu
 from nilearn import __version__ as nilearn_ver
 
 from niworkflows.engine.workflows import LiterateWorkflow as Workflow
-
+from niworkflows.interfaces.bids import (BIDSInfo)
 from ..interfaces import (
-    BIDSDataGrabber, BIDSFreeSurferDir, BIDSInfo, SubjectSummary, AboutSummary,
+    BIDSDataGrabber, BIDSFreeSurferDir, SubjectSummary, AboutSummary,
     DerivativesDataSink
 )
 from ..utils.bids import collect_data
