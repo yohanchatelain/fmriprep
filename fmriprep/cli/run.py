@@ -552,9 +552,9 @@ def build_workflow(opts, retval):
     from pkg_resources import resource_filename as pkgrf
 
     from nipype import logging, config as ncfg
+    from niworkflows.utils.bids import collect_participants
     from ..__about__ import __version__
     from ..workflows.base import init_fmriprep_wf
-    from ..utils.bids import collect_participants
     from ..viz.reports import generate_reports
 
     logger = logging.getLogger('nipype.workflow')

@@ -16,17 +16,21 @@ from nipype.algorithms import confounds as nac
 
 from niworkflows.data import get_template
 from niworkflows.engine.workflows import LiterateWorkflow as Workflow
-from niworkflows.interfaces.segmentation import ICA_AROMARPT
-from niworkflows.interfaces.masks import ROIsPlot
+from niworkflows.interfaces.bids import DerivativesDataSink
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
+from niworkflows.interfaces.masks import ROIsPlot
+from niworkflows.interfaces.patches import (
+    RobustACompCor as ACompCor,
+    RobustTCompCor as TCompCor,
+)
+from niworkflows.interfaces.segmentation import ICA_AROMARPT
+from niworkflows.interfaces.utils import (
+    TPM2ROI, AddTPMs, AddTSVHeader
+)
 
 from ...interfaces import (
-    TPM2ROI, AddTPMs, AddTSVHeader, GatherConfounds, ICAConfounds,
-    FMRISummary, DerivativesDataSink
-)
-from ...interfaces.patches import (
-    RobustACompCor as ACompCor,
-    RobustTCompCor as TCompCor
+    GatherConfounds, ICAConfounds,
+    FMRISummary
 )
 
 from .resampling import init_bold_mni_trans_wf

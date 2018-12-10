@@ -19,19 +19,20 @@ import os.path as op
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, fsl, c3
 from niworkflows.engine.workflows import LiterateWorkflow as Workflow
+from niworkflows.interfaces.bids import DerivativesDataSink
+# See https://github.com/poldracklab/fmriprep/issues/768
+from niworkflows.interfaces.freesurfer import (
+    PatchedConcatenateLTA as ConcatenateLTA,
+    PatchedBBRegisterRPT as BBRegisterRPT,
+    PatchedMRICoregRPT as MRICoregRPT,
+    PatchedLTAConvert as LTAConvert)
+from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
+from niworkflows.interfaces.images import extract_wm
+from niworkflows.interfaces.itk import MultiApplyTransforms
 from niworkflows.interfaces.registration import FLIRTRPT
 from niworkflows.interfaces.utils import GenerateSamplingReference
-from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
 
-from ...interfaces import MultiApplyTransforms, DerivativesDataSink
 from ...interfaces.nilearn import Merge
-from ...interfaces.images import extract_wm
-# See https://github.com/poldracklab/fmriprep/issues/768
-from ...interfaces.freesurfer import (
-        PatchedConcatenateLTA as ConcatenateLTA,
-        PatchedBBRegisterRPT as BBRegisterRPT,
-        PatchedMRICoregRPT as MRICoregRPT,
-        PatchedLTAConvert as LTAConvert)
 
 
 DEFAULT_MEMORY_MIN_GB = 0.01
@@ -747,7 +748,7 @@ def compare_xforms(lta_list, norm_threshold=15):
           second transform relative to the first
 
     """
-    from fmriprep.interfaces.surf import load_transform
+    from niworkflows.interfaces.surf import load_transform
     from nipype.algorithms.rapidart import _calc_norm_affine
 
     bbr_affine = load_transform(lta_list[0])

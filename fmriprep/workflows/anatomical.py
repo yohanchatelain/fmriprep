@@ -32,24 +32,23 @@ from nipype.interfaces import (
 )
 from nipype.interfaces.ants import BrainExtraction, N4BiasFieldCorrection
 
+from niworkflows import data as nid
 from niworkflows.engine.workflows import LiterateWorkflow as Workflow
-from niworkflows.interfaces.registration import RobustMNINormalizationRPT
-import niworkflows.data as nid
-from niworkflows.interfaces.masks import ROIsPlot
-
-from niworkflows.interfaces.segmentation import ReconAllRPT
+from niworkflows.interfaces.bids import DerivativesDataSink
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
-
-from ..interfaces import (
-    DerivativesDataSink, StructuralReference, MakeMidthickness, FSInjectBrainExtracted,
-    FSDetectInputs, NormalizeSurf, GiftiNameSource, TemplateDimensions, Conform,
+from niworkflows.interfaces.freesurfer import (
+    StructuralReference, MakeMidthickness, FSInjectBrainExtracted, FSDetectInputs,
     RefineBrainMask,
-)
-from ..utils.misc import fix_multi_T1w_source_name, add_suffix
-from ..interfaces.freesurfer import (
     PatchedLTAConvert as LTAConvert,
     PatchedConcatenateLTA as ConcatenateLTA,
-    PatchedRobustRegister as RobustRegister)
+    PatchedRobustRegister as RobustRegister
+)
+from niworkflows.interfaces.images import TemplateDimensions, Conform
+from niworkflows.interfaces.masks import ROIsPlot
+from niworkflows.interfaces.registration import RobustMNINormalizationRPT
+from niworkflows.interfaces.segmentation import ReconAllRPT
+from niworkflows.interfaces.surf import NormalizeSurf, GiftiNameSource
+from niworkflows.utils.misc import fix_multi_T1w_source_name, add_suffix
 
 
 #  pylint: disable=R0914

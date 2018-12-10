@@ -22,11 +22,10 @@ from niworkflows.interfaces.fixes import (
     FixHeaderRegistration as Registration,
     FixHeaderApplyTransforms as ApplyTransforms,
 )
+from niworkflows.interfaces.images import ValidateImage, MatchHeader
 from niworkflows.interfaces.masks import SimpleShowMaskRPT
 from niworkflows.interfaces.registration import EstimateReferenceImage
 from niworkflows.interfaces.utils import CopyXForm
-
-from ...interfaces import ValidateImage, MatchHeader
 
 
 DEFAULT_MEMORY_MIN_GB = 0.01
