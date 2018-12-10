@@ -11,13 +11,13 @@ Calculate BOLD confounds
 """
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, fsl
-from nipype.interfaces.nilearn import SignalExtraction
 from nipype.algorithms import confounds as nac
 
 from niworkflows.data import get_template
 from niworkflows.engine.workflows import LiterateWorkflow as Workflow
 from niworkflows.interfaces.bids import DerivativesDataSink
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
+from niworkflows.interfaces.images import SignalExtraction
 from niworkflows.interfaces.masks import ROIsPlot
 from niworkflows.interfaces.patches import (
     RobustACompCor as ACompCor,
