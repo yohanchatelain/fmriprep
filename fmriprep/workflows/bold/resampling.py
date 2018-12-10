@@ -366,9 +366,9 @@ generating a *preprocessed BOLD run in {tpl} space*.
 
         workflow.connect([
             (inputnode, aseg_mni_tfm, [('bold_aseg', 'input_image'),
-            ('t1_2_mni_forward_transform', 'transforms')]),
+                                       ('t1_2_mni_forward_transform', 'transforms')]),
             (inputnode, aparc_mni_tfm, [('bold_aparc', 'input_image'),
-            ('t1_2_mni_forward_transform', 'transforms')]),
+                                        ('t1_2_mni_forward_transform', 'transforms')]),
             (aseg_mni_tfm, outputnode, [('output_image', 'bold_aseg_mni')]),
             (aparc_mni_tfm, outputnode, [('output_image', 'bold_aparc_mni')]),
         ])
