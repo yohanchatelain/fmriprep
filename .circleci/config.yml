@@ -225,6 +225,8 @@ jobs:
               echo "Skipping pytest job"
               circleci step halt
             fi
+      - run: sudo apt update
+      - run: sudo apt -y install pigz
       - attach_workspace:
           at: /tmp
       - run:
@@ -242,7 +244,6 @@ jobs:
             docker info
             set +o pipefail
             if [ -f /tmp/cache/docker.tar.gz ]; then
-              sudo apt update && sudo apt -y install pigz
               pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
               docker images
             fi
@@ -308,6 +309,8 @@ jobs:
               echo "Skipping pytest job"
               circleci step halt
             fi
+      - run: sudo apt update
+      - run: sudo apt -y install pigz
       - attach_workspace:
           at: /tmp
       - run:
@@ -317,7 +320,6 @@ jobs:
             docker info
             set +o pipefail
             if [ -f /tmp/cache/docker.tar.gz ]; then
-              sudo apt update && sudo apt -y install pigz
               pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
               docker images
             fi
@@ -352,6 +354,8 @@ jobs:
               echo "Skipping ds000005 build"
               circleci step halt
             fi
+      - run: sudo apt update
+      - run: sudo apt -y install pigz
       - attach_workspace:
           at: /tmp
       - restore_cache:
@@ -373,7 +377,6 @@ jobs:
             docker info
             set +o pipefail
             if [ -f /tmp/cache/docker.tar.gz ]; then
-              sudo apt update && sudo apt -y install pigz
               pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
               docker images
             fi
@@ -482,6 +485,8 @@ jobs:
               echo "Skipping ds000054 build"
               circleci step halt
             fi
+      - run: sudo apt update
+      - run: sudo apt -y install pigz
       - attach_workspace:
           at: /tmp
       - restore_cache:
@@ -503,7 +508,6 @@ jobs:
             docker info
             set +o pipefail
             if [ -f /tmp/cache/docker.tar.gz ]; then
-              sudo apt update && sudo apt -y install pigz
               pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
               docker images
             fi
@@ -600,6 +604,8 @@ jobs:
               echo "Skipping ds000210 build"
               circleci step halt
             fi
+      - run: sudo apt update
+      - run: sudo apt -y install pigz
       - attach_workspace:
           at: /tmp
       - restore_cache:
@@ -621,7 +627,6 @@ jobs:
             docker info
             set +o pipefail
             if [ -f /tmp/cache/docker.tar.gz ]; then
-              sudo apt update && sudo apt -y install pigz
               pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
               docker images
             fi
@@ -680,6 +685,8 @@ jobs:
       image: circleci/classic:201808-01
     working_directory: /tmp/src/fmriprep
     steps:
+      - run: sudo apt update
+      - run: sudo apt -y install pigz
       - attach_workspace:
           at: /tmp
       - run:
@@ -689,7 +696,6 @@ jobs:
             docker info
             set +o pipefail
             if [ -f /tmp/cache/docker.tar.gz ]; then
-              sudo apt update && sudo apt -y install pigz
               pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
               docker images
             fi
