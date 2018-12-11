@@ -242,6 +242,7 @@ jobs:
             docker info
             set +o pipefail
             if [ -f /tmp/cache/docker.tar.gz ]; then
+              sudo bash /tmp/src/fmriprep/.circleci/kill-apt-daily.sh
               sudo apt update && sudo apt -y install pigz
               pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
               docker images
@@ -317,6 +318,7 @@ jobs:
             docker info
             set +o pipefail
             if [ -f /tmp/cache/docker.tar.gz ]; then
+              sudo bash /tmp/src/fmriprep/.circleci/kill-apt-daily.sh
               sudo apt update && sudo apt -y install pigz
               pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
               docker images
@@ -373,6 +375,7 @@ jobs:
             docker info
             set +o pipefail
             if [ -f /tmp/cache/docker.tar.gz ]; then
+              sudo bash /tmp/src/fmriprep/.circleci/kill-apt-daily.sh
               sudo apt update && sudo apt -y install pigz
               pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
               docker images
@@ -503,6 +506,7 @@ jobs:
             docker info
             set +o pipefail
             if [ -f /tmp/cache/docker.tar.gz ]; then
+              sudo bash /tmp/src/fmriprep/.circleci/kill-apt-daily.sh
               sudo apt update && sudo apt -y install pigz
               pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
               docker images
@@ -621,6 +625,7 @@ jobs:
             docker info
             set +o pipefail
             if [ -f /tmp/cache/docker.tar.gz ]; then
+              sudo bash /tmp/src/fmriprep/.circleci/kill-apt-daily.sh
               sudo apt update && sudo apt -y install pigz
               pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
               docker images
@@ -689,6 +694,7 @@ jobs:
             docker info
             set +o pipefail
             if [ -f /tmp/cache/docker.tar.gz ]; then
+              sudo bash /tmp/src/fmriprep/.circleci/kill-apt-daily.sh
               sudo apt update && sudo apt -y install pigz
               pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
               docker images
