@@ -232,7 +232,7 @@ jobs:
       - run:
           name: Check PyPi preconditions
           command: |
-            pyenv global 3.6
+            pyenv global 3.5.2
             virtualenv venv
             pip install "setuptools>=27.0" cython numpy twine docutils
             python setup.py check -r -s
@@ -725,7 +725,7 @@ jobs:
       - run:
           name: Deploy to PyPi
           command: |
-            pyenv global 3.6
+            pyenv global 3.5.2
             virtualenv venv
             pip install "setuptools>=27.0" cython numpy twine docutils
             echo "${CIRCLE_TAG}" > fmriprep/VERSION
