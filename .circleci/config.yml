@@ -31,6 +31,7 @@ jobs:
             docker info
             set +o pipefail
             if [ -f /tmp/cache/docker.tar.gz ]; then
+              sudo apt update && sudo apt -y install pigz
               pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
               docker images
             fi
@@ -78,7 +79,7 @@ jobs:
   get_data:
     machine:
       # Ubuntu 14.04 with Docker 17.10.0-ce
-      image: circleci/classic:201808-01
+      image: circleci/classic:201711-01
     working_directory: /home/circleci/data
     steps:
       - restore_cache:
@@ -160,7 +161,7 @@ jobs:
   get_regression_data:
     machine:
       # Ubuntu 14.04 with Docker 17.10.0-ce
-      image: circleci/classic:201808-01
+      image: circleci/classic:201711-01
     working_directory: /home/circleci/data
     steps:
       - restore_cache:
@@ -200,7 +201,7 @@ jobs:
   update_cache:
     machine:
       # Ubuntu 14.04 with Docker 17.10.0-ce
-      image: circleci/classic:201808-01
+      image: circleci/classic:201711-01
     working_directory: /tmp/src/fmriprep
     steps:
       - attach_workspace:
@@ -212,7 +213,7 @@ jobs:
 
   test_pytest:
     machine:
-      image: circleci/classic:201808-01
+      image: circleci/classic:201711-01
     working_directory: /tmp/src/fmriprep
     steps:
       - checkout:
@@ -225,14 +226,13 @@ jobs:
               echo "Skipping pytest job"
               circleci step halt
             fi
-      - run: sudo apt update
-      - run: sudo apt -y install pigz
+
       - attach_workspace:
           at: /tmp
       - run:
           name: Check PyPi preconditions
           command: |
-            pyenv global 3.7.0
+            pyenv global 3.6
             virtualenv venv
             pip install "setuptools>=27.0" cython numpy twine docutils
             python setup.py check -r -s
@@ -244,6 +244,7 @@ jobs:
             docker info
             set +o pipefail
             if [ -f /tmp/cache/docker.tar.gz ]; then
+              sudo apt update && sudo apt -y install pigz
               pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
               docker images
             fi
@@ -296,7 +297,7 @@ jobs:
 
   build_docs:
     machine:
-      image: circleci/classic:201808-01
+      image: circleci/classic:201711-01
     working_directory: /home/circleci/out/docs
     steps:
       - checkout:
@@ -309,8 +310,7 @@ jobs:
               echo "Skipping pytest job"
               circleci step halt
             fi
-      - run: sudo apt update
-      - run: sudo apt -y install pigz
+
       - attach_workspace:
           at: /tmp
       - run:
@@ -320,6 +320,7 @@ jobs:
             docker info
             set +o pipefail
             if [ -f /tmp/cache/docker.tar.gz ]; then
+              sudo apt update && sudo apt -y install pigz
               pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
               docker images
             fi
@@ -339,7 +340,7 @@ jobs:
 
   ds005:
     machine:
-      image: circleci/classic:201808-01
+      image: circleci/classic:201711-01
     working_directory: /tmp/ds005
     environment:
       - FS_LICENSE: /tmp/fslicense/license.txt
@@ -354,8 +355,7 @@ jobs:
               echo "Skipping ds000005 build"
               circleci step halt
             fi
-      - run: sudo apt update
-      - run: sudo apt -y install pigz
+
       - attach_workspace:
           at: /tmp
       - restore_cache:
@@ -377,6 +377,7 @@ jobs:
             docker info
             set +o pipefail
             if [ -f /tmp/cache/docker.tar.gz ]; then
+              sudo apt update && sudo apt -y install pigz
               pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
               docker images
             fi
@@ -470,7 +471,7 @@ jobs:
 
   ds054:
     machine:
-      image: circleci/classic:201808-01
+      image: circleci/classic:201711-01
     working_directory: /tmp/ds054
     environment:
       - FS_LICENSE: /tmp/fslicense/license.txt
@@ -485,8 +486,7 @@ jobs:
               echo "Skipping ds000054 build"
               circleci step halt
             fi
-      - run: sudo apt update
-      - run: sudo apt -y install pigz
+
       - attach_workspace:
           at: /tmp
       - restore_cache:
@@ -508,6 +508,7 @@ jobs:
             docker info
             set +o pipefail
             if [ -f /tmp/cache/docker.tar.gz ]; then
+              sudo apt update && sudo apt -y install pigz
               pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
               docker images
             fi
@@ -589,7 +590,7 @@ jobs:
 
   ds210:
     machine:
-      image: circleci/classic:201808-01
+      image: circleci/classic:201711-01
     working_directory: /tmp/ds210
     environment:
       - FS_LICENSE: /tmp/fslicense/license.txt
@@ -604,8 +605,7 @@ jobs:
               echo "Skipping ds000210 build"
               circleci step halt
             fi
-      - run: sudo apt update
-      - run: sudo apt -y install pigz
+
       - attach_workspace:
           at: /tmp
       - restore_cache:
@@ -627,6 +627,7 @@ jobs:
             docker info
             set +o pipefail
             if [ -f /tmp/cache/docker.tar.gz ]; then
+              sudo apt update && sudo apt -y install pigz
               pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
               docker images
             fi
@@ -682,11 +683,10 @@ jobs:
 
   deploy_docker:
     machine:
-      image: circleci/classic:201808-01
+      image: circleci/classic:201711-01
     working_directory: /tmp/src/fmriprep
     steps:
-      - run: sudo apt update
-      - run: sudo apt -y install pigz
+
       - attach_workspace:
           at: /tmp
       - run:
@@ -696,6 +696,7 @@ jobs:
             docker info
             set +o pipefail
             if [ -f /tmp/cache/docker.tar.gz ]; then
+              sudo apt update && sudo apt -y install pigz
               pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
               docker images
             fi
@@ -716,7 +717,7 @@ jobs:
 
   deploy_pypi:
     machine:
-      image: circleci/classic:201808-01
+      image: circleci/classic:201711-01
     working_directory: /tmp/src/fmriprep
     steps:
       - attach_workspace:
@@ -724,7 +725,7 @@ jobs:
       - run:
           name: Deploy to PyPi
           command: |
-            pyenv global 3.7.0
+            pyenv global 3.6
             virtualenv venv
             pip install "setuptools>=27.0" cython numpy twine docutils
             echo "${CIRCLE_TAG}" > fmriprep/VERSION
