@@ -102,6 +102,8 @@ REQUIRES = [
 
 
 LINKS_REQUIRES = [
+    'git+https://github.com/effigies/nipype.git@'
+    '16af71ec3ca85ba55893f6b74cb5366ec8aa7fef#egg=nipype',
 ]
 
 TESTS_REQUIRES = [
