@@ -22,12 +22,12 @@ from nilearn import __version__ as nilearn_ver
 
 from niworkflows.engine.workflows import LiterateWorkflow as Workflow
 from niworkflows.interfaces.bids import (
-    BIDSInfo, BIDSDataGrabber, DerivativesDataSink, BIDSFreeSurferDir
+    BIDSInfo, BIDSDataGrabber, BIDSFreeSurferDir
 )
 from niworkflows.utils.bids import collect_data
 from niworkflows.utils.misc import fix_multi_T1w_source_name
 
-from ..interfaces import SubjectSummary, AboutSummary
+from ..interfaces import SubjectSummary, AboutSummary, DerivativesDataSink
 from ..__about__ import __version__
 
 from .anatomical import init_anat_preproc_wf

@@ -20,12 +20,12 @@ from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 
 from niworkflows.engine.workflows import LiterateWorkflow as Workflow
-from niworkflows.interfaces.bids import DerivativesDataSink
 from niworkflows.interfaces.cifti import GenerateCifti, CiftiNameSource
 from niworkflows.interfaces.surf import GiftiNameSource
 
 from ...utils.meepi import combine_meepi_source
 
+from ...interfaces import DerivativesDataSink
 from ...interfaces.reports import FunctionalSummary
 
 # BOLD workflows

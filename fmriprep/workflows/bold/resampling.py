@@ -27,6 +27,7 @@ from niworkflows.interfaces.itk import MultiApplyTransforms
 from niworkflows.interfaces.utils import GenerateSamplingReference
 from niworkflows.interfaces.surf import GiftiSetAnatomicalStructure
 
+from ...interfaces import DerivativesDataSink
 from ...interfaces.nilearn import Merge
 
 from .util import init_bold_reference_wf
@@ -526,7 +527,6 @@ def init_bold_preproc_report_wf(mem_gb, reportlets_dir, name='bold_preproc_repor
 
     from nipype.algorithms.confounds import TSNR
     from niworkflows.interfaces import SimpleBeforeAfter
-    from niworkflows.interfaces.bids import DerivativesDataSink
 
     workflow = Workflow(name=name)
 

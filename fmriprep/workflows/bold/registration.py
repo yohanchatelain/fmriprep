@@ -19,7 +19,6 @@ import os.path as op
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, fsl, c3
 from niworkflows.engine.workflows import LiterateWorkflow as Workflow
-from niworkflows.interfaces.bids import DerivativesDataSink
 # See https://github.com/poldracklab/fmriprep/issues/768
 from niworkflows.interfaces.freesurfer import (
     PatchedConcatenateLTA as ConcatenateLTA,
@@ -32,6 +31,7 @@ from niworkflows.interfaces.itk import MultiApplyTransforms
 from niworkflows.interfaces.registration import FLIRTRPT
 from niworkflows.interfaces.utils import GenerateSamplingReference
 
+from ...interfaces import DerivativesDataSink
 from ...interfaces.nilearn import Merge
 
 
