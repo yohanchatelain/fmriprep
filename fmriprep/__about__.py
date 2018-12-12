@@ -106,7 +106,6 @@ LINKS_REQUIRES = [
 
 TESTS_REQUIRES = [
     "codecov",
-    "mock",
     "pytest",
 ]
 
