@@ -180,12 +180,12 @@ placed within the corresponding confounds file.
     # a/t-CompCor
     tcompcor = pe.Node(
         TCompCor(components_file='tcompcor.tsv', header_prefix='t_comp_cor_', pre_filter='cosine',
-                 save_pre_filter=True, percentile_threshold=.05),
+                 save_pre_filter=True, percentile_threshold=.05, failure_mode='NaN'),
         name="tcompcor", mem_gb=mem_gb)
 
     acompcor = pe.Node(
         ACompCor(components_file='acompcor.tsv', header_prefix='a_comp_cor_', pre_filter='cosine',
-                 save_pre_filter=True),
+                 save_pre_filter=True, failure_mode='NaN'),
         name="acompcor", mem_gb=mem_gb)
 
     # Set TR if present
