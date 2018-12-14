@@ -771,8 +771,8 @@ def build_workflow(opts, retval):
             logger.warning('Could not generate CITATION.tex file:\n%s',
                            ' '.join(cmd))
         else:
-             copyfile(pkgrf('fmriprep', 'data/boilerplate.bib'),
-                      str(logs_path / 'CITATION.bib'))
+            copyfile(pkgrf('fmriprep', 'data/boilerplate.bib'),
+                     (logs_path / 'CITATION.bib'))
 
     return retval
 
