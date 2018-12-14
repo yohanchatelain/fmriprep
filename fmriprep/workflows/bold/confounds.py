@@ -220,6 +220,16 @@ placed within the corresponding confounds file.
         name='ds_report_bold_rois', run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 
+    ds_warn_acompcor = pe.Node(
+        DerivativesDataSink(suffix='acompcor'),
+        name='ds_warn_acompcor', run_without_submitting=True,
+        mem_gb=DEFAULT_MEMORY_MIN_GB)
+
+    ds_warn_tcompcor = pe.Node(
+        DerivativesDataSink(suffix='tcompcor'),
+        name='ds_warn_tcompcor', run_without_submitting=True,
+        mem_gb=DEFAULT_MEMORY_MIN_GB)
+
     def _pick_csf(files):
         return files[0]
 
@@ -300,6 +310,8 @@ placed within the corresponding confounds file.
         (acc_msk, mrg_compcor, [('out', 'in2')]),
         (mrg_compcor, rois_plot, [('out', 'in_rois')]),
         (rois_plot, ds_report_bold_rois, [('out_report', 'in_file')]),
+        (acompcor, ds_warn_acompcor, [('out_report', 'in_file')]),
+        (tcompcor, ds_warn_tcompcor, [('out_report', 'in_file')]),
     ])
 
     return workflow
