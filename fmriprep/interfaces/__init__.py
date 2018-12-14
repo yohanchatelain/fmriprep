@@ -10,6 +10,11 @@ from .fmap import FieldEnhance, FieldToRadS, FieldToHz, Phasediff2Fieldmap
 from .confounds import GatherConfounds, ICAConfounds, FMRISummary
 from .multiecho import T2SMap
 
+
+class DerivativesDataSink(bids.DerivativesDataSink):
+    out_path_base = 'fmriprep'
+
+
 __all__ = [
     'bids',
     'cifti',
@@ -29,4 +34,5 @@ __all__ = [
     'ICAConfounds',
     'FMRISummary',
     'T2SMap',
+    'DerivativesDataSink',
 ]

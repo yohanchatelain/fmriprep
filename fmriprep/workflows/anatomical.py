@@ -34,7 +34,6 @@ from nipype.interfaces.ants import BrainExtraction, N4BiasFieldCorrection
 
 from niworkflows import data as nid
 from niworkflows.engine.workflows import LiterateWorkflow as Workflow
-from niworkflows.interfaces.bids import DerivativesDataSink
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
 from niworkflows.interfaces.freesurfer import (
     StructuralReference, MakeMidthickness, FSInjectBrainExtracted, FSDetectInputs,
@@ -49,6 +48,8 @@ from niworkflows.interfaces.registration import RobustMNINormalizationRPT
 from niworkflows.interfaces.segmentation import ReconAllRPT
 from niworkflows.interfaces.surf import NormalizeSurf, GiftiNameSource
 from niworkflows.utils.misc import fix_multi_T1w_source_name, add_suffix
+
+from ..interfaces import DerivativesDataSink
 
 
 #  pylint: disable=R0914

@@ -15,7 +15,6 @@ from nipype.algorithms import confounds as nac
 
 from niworkflows.data import get_template
 from niworkflows.engine.workflows import LiterateWorkflow as Workflow
-from niworkflows.interfaces.bids import DerivativesDataSink
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
 from niworkflows.interfaces.images import SignalExtraction
 from niworkflows.interfaces.masks import ROIsPlot
@@ -30,7 +29,7 @@ from niworkflows.interfaces.utils import (
 
 from ...interfaces import (
     GatherConfounds, ICAConfounds,
-    FMRISummary
+    FMRISummary, DerivativesDataSink
 )
 
 from .resampling import init_bold_mni_trans_wf
@@ -535,6 +534,7 @@ in the corresponding confounds file.
 
     bold_mni_trans_wf = init_bold_mni_trans_wf(
         template=template,
+        freesurfer=False,
         mem_gb=mem_gb,
         omp_nthreads=omp_nthreads,
         template_out_grid=str(
