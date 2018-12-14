@@ -79,11 +79,11 @@ class RetryCompCorMixin(reporting.ReportCapableInterface):
             fobj.write(snippet)
 
 
-class RobustACompCorInputSpec(RetryCompCorInputSpecMixin, nac.ACompCorInputSpec):
+class RobustACompCorInputSpec(RetryCompCorInputSpecMixin, nac.CompCorInputSpec):
     pass
 
 
-class RobustACompCorOutputSpec(reporting.ReportCapableOutputSpec, nac.ACompCorOutputSpec):
+class RobustACompCorOutputSpec(reporting.ReportCapableOutputSpec, nac.CompCorOutputSpec):
     pass
 
 
@@ -100,7 +100,7 @@ class RobustACompCor(RetryCompCorMixin, nac.ACompCor):
     output_spec = RobustACompCorOutputSpec
 
 
-class RobustTCompCorInputSpec(RetryCompCorInputSpecMixin, nac.ACompCorInputSpec):
+class RobustTCompCorInputSpec(RetryCompCorInputSpecMixin, nac.TCompCorInputSpec):
     pass
 
 
