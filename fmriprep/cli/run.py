@@ -550,6 +550,7 @@ def build_workflow(opts, retval):
     """
     from subprocess import check_call, CalledProcessError, TimeoutExpired
     from pkg_resources import resource_filename as pkgrf
+    from shutil import copyfile
 
     from nipype import logging, config as ncfg
     from ..__about__ import __version__
@@ -764,6 +765,7 @@ def build_workflow(opts, retval):
            '-o', str(logs_path / 'CITATION.tex')]
     try:
         check_call(cmd, timeout=10)
+        copyfile(pkgrf('fmriprep', 'data/boilerplate.bib'), str(logs_path / 'CITATION.bib'))
     except (FileNotFoundError, CalledProcessError, TimeoutExpired):
         logger.warning('Could not generate CITATION.tex file:\n%s',
                        ' '.join(cmd))
