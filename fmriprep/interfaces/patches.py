@@ -64,7 +64,7 @@ class RetryCompCorMixin(reporting.ReportCapableInterface):
         return np.isnan(components).all()
 
     def _generate_report(self):
-        snippet = ''
+        snippet = '<!-- {} completed without error -->'.format(self._header)
         if self._check_nans():
             snippet = '''\
 <p class="elem-desc">
