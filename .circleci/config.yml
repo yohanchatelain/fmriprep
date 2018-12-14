@@ -490,10 +490,10 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - ds054-anat-v9-{{ .Branch }}-{{ epoch }}
-            - ds054-anat-v9-{{ .Branch }}
-            - ds054-anat-v9-master
-            - ds054-anat-v9-
+            - ds054-anat-v10-{{ .Branch }}-{{ epoch }}
+            - ds054-anat-v10-{{ .Branch }}
+            - ds054-anat-v10-master
+            - ds054-anat-v10-
       - run:
           name: Setting up test
           command: |
@@ -527,7 +527,7 @@ jobs:
                 --fs-no-reconall --sloppy --write-graph \
                 --mem_mb 4096 --nthreads 2 --anat-only -vv
       - save_cache:
-         key: ds054-anat-v9-{{ .Branch }}-{{ epoch }}
+         key: ds054-anat-v10-{{ .Branch }}-{{ epoch }}
          paths:
             - /tmp/ds054/work
             - /tmp/ds054/derivatives
@@ -609,10 +609,10 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - ds210-anat-v7-{{ .Branch }}-{{ epoch }}
-            - ds210-anat-v7-{{ .Branch }}
-            - ds210-anat-v7-master
-            - ds210-anat-v7-
+            - ds210-anat-v8-{{ .Branch }}-{{ epoch }}
+            - ds210-anat-v8-{{ .Branch }}
+            - ds210-anat-v8-master
+            - ds210-anat-v8-
       - run:
           name: Setting up test
           command: |
@@ -646,7 +646,7 @@ jobs:
                 --fs-no-reconall --sloppy --write-graph \
                 --mem_mb 4096 --nthreads 2 --anat-only -vv
       - save_cache:
-         key: ds210-anat-v7-{{ .Branch }}-{{ epoch }}
+         key: ds210-anat-v8-{{ .Branch }}-{{ epoch }}
          paths:
             - /tmp/ds210/work
             - /tmp/ds210/derivatives
