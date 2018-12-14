@@ -453,6 +453,7 @@ EPI to MNI transformation
     from fmriprep.workflows.bold import init_bold_mni_trans_wf
     wf = init_bold_mni_trans_wf(
         template='MNI152NLin2009cAsym',
+		freesurfer=True,
         mem_gb=1,
         omp_nthreads=1,
         template_out_grid='native')

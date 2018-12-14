@@ -347,8 +347,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_t1', 'bold_t1_ref', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1',
-                'bold_mni', 'bold_mni_ref' 'bold_mask_mni', 'bold_cifti',
-                'cifti_variant', 'cifti_variant_key', 'confounds', 'surfaces',
+                'bold_mni', 'bold_mni_ref' 'bold_mask_mni', 'bold_aseg_mni', 'bold_aparc_mni',
+                'bold_cifti', 'cifti_variant', 'cifti_variant_key', 'confounds', 'surfaces',
                 'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file']),
         name='outputnode')
 
@@ -380,6 +380,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('bold_mask_t1', 'inputnode.bold_mask_t1'),
             ('bold_mni', 'inputnode.bold_mni'),
             ('bold_mni_ref', 'inputnode.bold_mni_ref'),
+            ('bold_aseg_mni', 'inputnode.bold_aseg_mni'),
+            ('bold_aparc_mni', 'inputnode.bold_aparc_mni'),
             ('bold_mask_mni', 'inputnode.bold_mask_mni'),
             ('confounds', 'inputnode.confounds'),
             ('surfaces', 'inputnode.surfaces'),
@@ -667,6 +669,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         # Only use uncompressed output if AROMA is to be run
         bold_mni_trans_wf = init_bold_mni_trans_wf(
             template=template,
+            freesurfer=freesurfer,
             mem_gb=mem_gb['resampled'],
             omp_nthreads=omp_nthreads,
             template_out_grid=template_out_grid,
@@ -682,7 +685,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         workflow.connect([
             (inputnode, bold_mni_trans_wf, [
                 ('bold_file', 'inputnode.name_source'),
-                ('t1_2_mni_forward_transform', 'inputnode.t1_2_mni_forward_transform')]),
+                ('t1_2_mni_forward_transform', 'inputnode.t1_2_mni_forward_transform'),
+                ('t1_aseg', 'inputnode.bold_aseg'),
+                ('t1_aparc', 'inputnode.bold_aparc')]),
             (bold_hmc_wf, bold_mni_trans_wf, [
                 ('outputnode.xforms', 'inputnode.hmc_xforms')]),
             (bold_reg_wf, bold_mni_trans_wf, [
@@ -693,7 +698,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('outputnode.out_warp', 'inputnode.fieldwarp')]),
             (bold_mni_trans_wf, outputnode, [('outputnode.bold_mni', 'bold_mni'),
                                              ('outputnode.bold_mni_ref', 'bold_mni_ref'),
-                                             ('outputnode.bold_mask_mni', 'bold_mask_mni')]),
+                                             ('outputnode.bold_mask_mni', 'bold_mask_mni'),
+                                             ('outputnode.bold_aseg_mni', 'bold_aseg_mni'),
+                                             ('outputnode.bold_aparc_mni', 'bold_aparc_mni')]),
             (inputnode, carpetplot_wf, [
                 ('t1_2_mni_reverse_transform', 'inputnode.t1_2_mni_reverse_transform')]),
             (bold_bold_trans_wf if not multiecho else bold_t2s_wf, carpetplot_wf, [
@@ -848,7 +855,8 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
             fields=['source_file',
                     'bold_t1', 'bold_t1_ref', 'bold_mask_t1',
                     'bold_mni', 'bold_mni_ref', 'bold_mask_mni',
-                    'bold_aseg_t1', 'bold_aparc_t1', 'cifti_variant_key',
+                    'bold_aseg_t1', 'bold_aparc_t1', 'bold_aseg_mni',
+                    'bold_aparc_mni', 'cifti_variant_key',
                     'confounds', 'surfaces', 'aroma_noise_ics', 'melodic_mix',
                     'nonaggr_denoised_file', 'bold_cifti', 'cifti_variant']),
         name='inputnode')
@@ -887,6 +895,21 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
             (inputnode, ds_bold_mask_t1, [('source_file', 'source_file'),
                                           ('bold_mask_t1', 'in_file')]),
         ])
+        if freesurfer:
+            ds_bold_aseg_t1 = pe.Node(DerivativesDataSink(
+                base_directory=output_dir, space='T1w', desc='aseg', suffix='dseg'),
+                name='ds_bold_aseg_t1', run_without_submitting=True,
+                mem_gb=DEFAULT_MEMORY_MIN_GB)
+            ds_bold_aparc_t1 = pe.Node(DerivativesDataSink(
+                base_directory=output_dir,  space='T1w', desc='aparcaseg', suffix='dseg'),
+                name='ds_bold_aparc_t1', run_without_submitting=True,
+                mem_gb=DEFAULT_MEMORY_MIN_GB)
+            workflow.connect([
+                (inputnode, ds_bold_aseg_t1, [('source_file', 'source_file'),
+                                              ('bold_aseg_t1', 'in_file')]),
+                (inputnode, ds_bold_aparc_t1, [('source_file', 'source_file'),
+                                               ('bold_aparc_t1', 'in_file')]),
+            ])
 
     # Resample to template (default: MNI)
     if 'template' in output_spaces:
@@ -914,21 +937,21 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
                                            ('bold_mask_mni', 'in_file')]),
         ])
 
-    if freesurfer:
-        ds_bold_aseg_t1 = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, space='T1w', desc='aseg', suffix='dseg'),
-            name='ds_bold_aseg_t1', run_without_submitting=True,
-            mem_gb=DEFAULT_MEMORY_MIN_GB)
-        ds_bold_aparc_t1 = pe.Node(DerivativesDataSink(
-            base_directory=output_dir,  space='T1w', desc='aparcaseg', suffix='dseg'),
-            name='ds_bold_aparc_t1', run_without_submitting=True,
-            mem_gb=DEFAULT_MEMORY_MIN_GB)
-        workflow.connect([
-            (inputnode, ds_bold_aseg_t1, [('source_file', 'source_file'),
-                                          ('bold_aseg_t1', 'in_file')]),
-            (inputnode, ds_bold_aparc_t1, [('source_file', 'source_file'),
-                                           ('bold_aparc_t1', 'in_file')]),
-        ])
+        if freesurfer:
+            ds_bold_aseg_mni = pe.Node(DerivativesDataSink(
+                base_directory=output_dir, space=template, desc='aseg', suffix='dseg'),
+                name='ds_bold_aseg_mni', run_without_submitting=True,
+                mem_gb=DEFAULT_MEMORY_MIN_GB)
+            ds_bold_aparc_mni = pe.Node(DerivativesDataSink(
+                base_directory=output_dir,  space=template, desc='aparcaseg', suffix='dseg'),
+                name='ds_bold_aparc_mni', run_without_submitting=True,
+                mem_gb=DEFAULT_MEMORY_MIN_GB)
+            workflow.connect([
+                (inputnode, ds_bold_aseg_mni, [('source_file', 'source_file'),
+                                               ('bold_aseg_mni', 'in_file')]),
+                (inputnode, ds_bold_aparc_mni, [('source_file', 'source_file'),
+                                                ('bold_aparc_mni', 'in_file')]),
+            ])
 
     # fsaverage space
     if freesurfer and any(space.startswith('fs') for space in output_spaces):
