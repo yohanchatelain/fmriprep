@@ -38,7 +38,7 @@ class RetryCompCorMixin(reporting.ReportCapableInterface):
             # Identifiy success/failure in both error and NaN mode
             try:
                 runtime = super()._run_interface(runtime)
-                if warn and self._check_nans():
+                if warn and self._is_allnans():
                     success = False
             except LinAlgError as exc:
                 success = False
@@ -57,7 +57,7 @@ class RetryCompCorMixin(reporting.ReportCapableInterface):
 
         return runtime
 
-    def _check_nans(self):
+    def _is_allnans(self):
         import numpy as np
         outputs = self._list_outputs()
         components = np.loadtxt(outputs['components_file'], skiprows=1)
@@ -65,7 +65,7 @@ class RetryCompCorMixin(reporting.ReportCapableInterface):
 
     def _generate_report(self):
         snippet = '<!-- {} completed without error -->'.format(self._header)
-        if self._check_nans():
+        if self._is_allnans():
             snippet = '''\
 <p class="elem-desc">
     Warning: {} components could not be estimated, due to a linear algebra error.
