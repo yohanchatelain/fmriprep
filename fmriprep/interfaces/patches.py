@@ -19,12 +19,6 @@ from nipype.interfaces.mixins import reporting
 class RetryCompCorInputSpecMixin(reporting.ReportCapableInputSpec):
     out_report = File('report.html', usedefault=True, hash_files=False,
                       desc='filename for warning HTML snippet')
-    # 'NaN` by default
-    failure_mode = traits.Enum(
-        'NaN', 'error',
-        usedefault=True,
-        desc='When no components are found or convergence fails, raise an error '
-             'or silently return columns of NaNs.')
 
 
 class RetryCompCorMixin(reporting.ReportCapableInterface):
