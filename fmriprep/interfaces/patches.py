@@ -12,7 +12,7 @@ from time import sleep
 
 from numpy.linalg.linalg import LinAlgError
 from nipype.algorithms import confounds as nac
-from nipype.interfaces.base import (File, traits)
+from nipype.interfaces.base import File
 from nipype.interfaces.mixins import reporting
 
 
