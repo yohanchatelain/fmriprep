@@ -102,7 +102,7 @@ class RobustTCompCorOutputSpec(reporting.ReportCapableOutputSpec, nac.TCompCorOu
     pass
 
 
-class RobustTCompCor(RetryCompCorMixin, nac.ACompCor):
+class RobustTCompCor(RetryCompCorMixin, nac.TCompCor):
     """
     Runs tCompCor several times if it suddenly fails with
     https://github.com/poldracklab/fmriprep/issues/776
