@@ -88,7 +88,7 @@ REQUIRES = [
     'indexed_gzip>=0.8.8',
     'nibabel>=2.2.1',
     'nilearn',
-    'nipype>=1.1.6',
+    'nipype>=1.1.7',
     'nitime',
     'niworkflows>=0.5.1,<0.5.2',
     'numpy',
@@ -102,8 +102,6 @@ REQUIRES = [
 
 
 LINKS_REQUIRES = [
-    'git+https://github.com/effigies/nipype.git@'
-    '16af71ec3ca85ba55893f6b74cb5366ec8aa7fef#egg=nipype',
 ]
 
 TESTS_REQUIRES = [
