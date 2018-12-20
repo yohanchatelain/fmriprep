@@ -290,7 +290,8 @@ def init_enhance_and_skullstrip_bold_wf(
             name='init_aff',
             n_procs=omp_nthreads)
 
-        if parseversion(Registration().version) > Version('2.2.0'):
+        # Registration().version may be None
+        if parseversion(Registration().version or '0.0.0') > Version('2.2.0'):
             init_aff.inputs.search_grid = (40, (0, 40, 40))
 
         # Set up spatial normalization
