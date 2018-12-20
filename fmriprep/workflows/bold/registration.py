@@ -16,7 +16,10 @@ Registration workflows
 import os
 import os.path as op
 
+import pkg_resources as pkgr
+
 from nipype.pipeline import engine as pe
+from nipype import logging
 from nipype.interfaces import utility as niu, fsl, c3
 from niworkflows.engine.workflows import LiterateWorkflow as Workflow
 # See https://github.com/poldracklab/fmriprep/issues/768
@@ -36,6 +39,8 @@ from ...interfaces.nilearn import Merge
 
 
 DEFAULT_MEMORY_MIN_GB = 0.01
+
+LOGGER = logging.getLogger('nipype.workflow')
 
 
 def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
@@ -658,9 +663,16 @@ for distortions remaining in the BOLD reference.
         return workflow
 
     flt_bbr = pe.Node(
-        FLIRTRPT(cost_func='bbr', dof=bold2t1w_dof, generate_report=True,
-                 schedule=op.join(os.getenv('FSLDIR'), 'etc/flirtsch/bbr.sch')),
+        FLIRTRPT(cost_func='bbr', dof=bold2t1w_dof, generate_report=True),
         name='flt_bbr')
+
+    FSLDIR = os.getenv('FSLDIR')
+    if FSLDIR:
+        flt_bbr.inputs.schedule = op.join(FSLDIR, 'etc/flirtsch/bbr.sch')
+    else:
+        # Should mostly be hit while building docs
+        LOGGER.warning("FSLDIR unset - using packaged BBR schedule")
+        flt_bbr.inputs.schedule = pkgr.resource_filename('fmriprep', 'data/flirtsch/bbr.sch')
 
     workflow.connect([
         (inputnode, wm_mask, [('t1_seg', 'in_seg')]),
