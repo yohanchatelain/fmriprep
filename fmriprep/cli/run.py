@@ -268,7 +268,8 @@ def main():
     # special variable set in the container
     if os.getenv('IS_DOCKER_8395080871'):
         exec_env = 'singularity'
-        if 'docker' in Path('/proc/1/cgroup').read_text():
+        cgroup = Path('/proc/1/cgroup')
+        if cgroup.exists() and 'docker' in cgroup.read_text():
             exec_env = 'docker'
             if os.getenv('DOCKER_VERSION_8395080871'):
                 exec_env = 'fmriprep-docker'
