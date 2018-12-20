@@ -11,9 +11,4 @@ python:
     extra_requirements:
         - doc
 
-requirements_file: requirements.txt
-
-conda:
-    file: docs/environment.yml
-
 formats: []
