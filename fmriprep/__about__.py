@@ -98,10 +98,13 @@ REQUIRES = [
     'scikit-image',
     'statsmodels',
     'tedana>=0.0.5',
+    'psutil>=5.4',
 ]
 
 
 LINKS_REQUIRES = [
+    'git+https://github.com/poldracklab/niworkflows.git@'
+    'master#egg=niworkflows',
 ]
 
 TESTS_REQUIRES = [
@@ -121,7 +124,7 @@ EXTRA_REQUIRES = {
         'sphinx_rtd_theme',
     ],
     'duecredit': ['duecredit'],
-    'resmon': ['psutil>=5.4.0'],
+    'resmon': [],
     'sentry': ['sentry-sdk>=0.5.3'],
     'tests': TESTS_REQUIRES,
 }
