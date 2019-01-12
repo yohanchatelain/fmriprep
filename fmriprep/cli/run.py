@@ -104,9 +104,13 @@ def get_parser():
                          help='generate boilerplate only')
     g_perfm.add_argument('--ignore-aroma-denoising-errors', action='store_true',
                          default=False,
-                         help='ignores the errors ICA_AROMA returns when there '
-                              'are no components classified as either noise or '
-                              'signal')
+                         help='DEPRECATED (now does nothing, see --error-on-aroma-warnings) '
+                              '- ignores the errors ICA_AROMA returns when there are no '
+                              'components classified as either noise or signal')
+    g_perfm.add_argument('--error-on-aroma-warnings', action='store_true',
+                         default=False,
+                         help='Raise an error if ICA_AROMA does not produce sensible output '
+                              '(e.g. if all the components are classified as signal or noise)'
     g_perfm.add_argument("-v", "--verbose", dest="verbose_count", action="count", default=0,
                          help="increases log verbosity for each occurence, debug level is -vvv")
     g_perfm.add_argument('--debug', action='store_true', default=False,
@@ -737,7 +741,7 @@ def build_workflow(opts, retval):
         force_syn=opts.force_syn,
         use_aroma=opts.use_aroma,
         aroma_melodic_dim=opts.aroma_melodic_dimensionality,
-        ignore_aroma_err=opts.ignore_aroma_denoising_errors,
+        err_on_aroma_warn=opts.error_on_aroma_warnings,
     )
     retval['return_code'] = 0
 
