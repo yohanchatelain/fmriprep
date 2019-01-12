@@ -402,7 +402,7 @@ def init_carpetplot_wf(mem_gb, metadata, name="bold_carpet_wf"):
 def init_ica_aroma_wf(template, metadata, mem_gb, omp_nthreads,
                       name='ica_aroma_wf',
                       susan_fwhm=6.0,
-                      ignore_aroma_err=False,
+                      err_on_aroma_warn=False,
                       aroma_melodic_dim=-200,
                       use_fieldwarp=True):
     """
@@ -460,7 +460,7 @@ def init_ica_aroma_wf(template, metadata, mem_gb, omp_nthreads,
             FSL ``susan`` (default: 6.0mm)
         use_fieldwarp : bool
             Include SDC warp in single-shot transform from BOLD to MNI
-        ignore_aroma_err : bool
+        err_on_aroma_warn : bool
             Do not fail on ICA-AROMA errors
         aroma_melodic_dim: int
             Set the dimensionality of the MELODIC ICA decomposition.
@@ -574,7 +574,7 @@ in the corresponding confounds file.
                                    name='add_nonsteady')
 
     # extract the confound ICs from the results
-    ica_aroma_confound_extraction = pe.Node(ICAConfounds(ignore_aroma_err=ignore_aroma_err),
+    ica_aroma_confound_extraction = pe.Node(ICAConfounds(err_on_aroma_warn=err_on_aroma_warn),
                                             name='ica_aroma_confound_extraction')
 
     ds_report_ica_aroma = pe.Node(

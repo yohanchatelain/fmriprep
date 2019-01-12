@@ -49,7 +49,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                          use_bbr, t2s_coreg, bold2t1w_dof, reportlets_dir,
                          output_spaces, template, output_dir, omp_nthreads,
                          fmap_bspline, fmap_demean, use_syn, force_syn,
-                         use_aroma, ignore_aroma_err, aroma_melodic_dim,
+                         use_aroma, err_on_aroma_warn, aroma_melodic_dim,
                          medial_surface_nan, cifti_output,
                          debug, low_mem, template_out_grid,
                          layout=None, num_bold=1):
@@ -83,7 +83,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                   medial_surface_nan=False,
                                   cifti_output=False,
                                   use_aroma=False,
-                                  ignore_aroma_err=False,
+                                  err_on_aroma_warn=False,
                                   aroma_melodic_dim=-200,
                                   num_bold=1)
 
@@ -134,7 +134,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             **Temporary**: Always run SyN-based SDC
         use_aroma : bool
             Perform ICA-AROMA on MNI-resampled functional series
-        ignore_aroma_err : bool
+        err_on_aroma_warn : bool
             Do not fail on ICA-AROMA errors
         medial_surface_nan : bool
             Replace medial wall values with NaNs on functional GIFTI files
@@ -739,7 +739,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 mem_gb=mem_gb['resampled'],
                 omp_nthreads=omp_nthreads,
                 use_fieldwarp=fmaps is not None,
-                ignore_aroma_err=ignore_aroma_err,
+                err_on_aroma_warn=err_on_aroma_warn,
                 aroma_melodic_dim=aroma_melodic_dim,
                 name='ica_aroma_wf')
 
@@ -767,16 +767,22 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                     ('outputnode.out_warp', 'inputnode.fieldwarp')]),
                 (bold_reference_wf, ica_aroma_wf, [
                     ('outputnode.skip_vols', 'inputnode.skip_vols')]),
-                (bold_confounds_wf, join, [
-                    ('outputnode.confounds_file', 'in_file')]),
-                (ica_aroma_wf, join,
-                    [('outputnode.aroma_confounds', 'join_file')]),
-                (ica_aroma_wf, outputnode,
-                    [('outputnode.aroma_noise_ics', 'aroma_noise_ics'),
-                     ('outputnode.melodic_mix', 'melodic_mix'),
-                     ('outputnode.nonaggr_denoised_file', 'nonaggr_denoised_file')]),
-                (join, outputnode, [('out_file', 'confounds')]),
             ])
+
+            # The confounds file can be None (empty) if all the
+            # aroma components are classified as signal
+            if bold_confounds_wf.outputnode.confounds_file is not None:
+                workflow.connect([
+                    (bold_confounds_wf, join, [
+                        ('outputnode.confounds_file', 'in_file')]),
+                    (ica_aroma_wf, join,
+                        [('outputnode.aroma_confounds', 'join_file')]),
+                    (ica_aroma_wf, outputnode,
+                        [('outputnode.aroma_noise_ics', 'aroma_noise_ics'),
+                        ('outputnode.melodic_mix', 'melodic_mix'),
+                        ('outputnode.nonaggr_denoised_file', 'nonaggr_denoised_file')]),
+                    (join, outputnode, [('out_file', 'confounds')]),
+                ])
 
     # SURFACES ##################################################################################
     if freesurfer and any(space.startswith('fs') for space in output_spaces):
