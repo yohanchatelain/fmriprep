@@ -110,7 +110,7 @@ def get_parser():
     g_perfm.add_argument('--error-on-aroma-warnings', action='store_true',
                          default=False,
                          help='Raise an error if ICA_AROMA does not produce sensible output '
-                              '(e.g. if all the components are classified as signal or noise)'
+                              '(e.g. if all the components are classified as signal or noise)')
     g_perfm.add_argument("-v", "--verbose", dest="verbose_count", action="count", default=0,
                          help="increases log verbosity for each occurence, debug level is -vvv")
     g_perfm.add_argument('--debug', action='store_true', default=False,
