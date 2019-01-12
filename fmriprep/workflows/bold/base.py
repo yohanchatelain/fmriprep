@@ -779,8 +779,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                         [('outputnode.aroma_confounds', 'join_file')]),
                     (ica_aroma_wf, outputnode,
                         [('outputnode.aroma_noise_ics', 'aroma_noise_ics'),
-                        ('outputnode.melodic_mix', 'melodic_mix'),
-                        ('outputnode.nonaggr_denoised_file', 'nonaggr_denoised_file')]),
+                         ('outputnode.melodic_mix', 'melodic_mix'),
+                         ('outputnode.nonaggr_denoised_file', 'nonaggr_denoised_file')]),
                     (join, outputnode, [('out_file', 'confounds')]),
                 ])
 
