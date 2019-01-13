@@ -9,7 +9,7 @@ __version__ = get_versions()['version']
 del get_versions
 
 __author__ = 'The CRN developers'
-__copyright__ = 'Copyright 2018, Center for Reproducible Neuroscience, Stanford University'
+__copyright__ = 'Copyright 2019, Center for Reproducible Neuroscience, Stanford University'
 __credits__ = ('Contributors: please check the ``.zenodo.json`` file at the top-level folder'
                'of the repository')
 __license__ = '3-clause BSD'
@@ -135,7 +135,7 @@ EXTRA_REQUIRES['all'] = list(set([
     v for deps in EXTRA_REQUIRES.values() for v in deps]))
 
 CLASSIFIERS = [
-    'Development Status :: 3 - Alpha',
+    'Development Status :: 4 - Beta',
     'Intended Audience :: Science/Research',
     'Topic :: Scientific/Engineering :: Image Recognition',
     'License :: OSI Approved :: BSD License',
