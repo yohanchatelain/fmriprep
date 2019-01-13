@@ -745,11 +745,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
             join = pe.Node(JoinTSVColumns(), name='aroma_confounds')
 
-            workflow.disconnect([
-                (bold_confounds_wf, outputnode, [
-                    ('outputnode.confounds_file', 'confounds'),
-                ]),
-            ])
             workflow.connect([
                 (inputnode, ica_aroma_wf, [
                     ('bold_file', 'inputnode.name_source'),
@@ -772,6 +767,11 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             # The confounds file can be None (empty) if all the
             # aroma components are classified as signal
             if ica_aroma_wf.outputs.outputnode.aroma_confounds is not None:
+                workflow.disconnect([
+                    (bold_confounds_wf, outputnode, [
+                        ('outputnode.confounds_file', 'confounds'),
+                    ]),
+                ])
                 workflow.connect([
                     (bold_confounds_wf, join, [
                         ('outputnode.confounds_file', 'in_file')]),
