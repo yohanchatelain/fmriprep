@@ -771,7 +771,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
             # The confounds file can be None (empty) if all the
             # aroma components are classified as signal
-            if bold_confounds_wf.outputnode.confounds_file is not None:
+            if ica_aroma_wf.outputs.outputnode.aroma_confounds is not None:
                 workflow.connect([
                     (bold_confounds_wf, join, [
                         ('outputnode.confounds_file', 'in_file')]),
