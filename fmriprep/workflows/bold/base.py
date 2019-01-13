@@ -731,7 +731,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             # ICA-AROMA workflow
             # Internally resamples to MNI152 Linear (2006)
             from .confounds import init_ica_aroma_wf
-            from niworkflows.interfaces.utils import JoinTSVColumns
 
             ica_aroma_wf = init_ica_aroma_wf(
                 template=template,
@@ -743,8 +742,15 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 aroma_melodic_dim=aroma_melodic_dim,
                 name='ica_aroma_wf')
 
-            join = pe.Node(JoinTSVColumns(), name='aroma_confounds')
+            join = pe.Node(niu.Function(output_names=["out_file"],
+                                        function=_to_join),
+                           name='aroma_confounds')
 
+            workflow.disconnect([
+                (bold_confounds_wf, outputnode, [
+                    ('outputnode.confounds_file', 'confounds'),
+                ]),
+            ])
             workflow.connect([
                 (inputnode, ica_aroma_wf, [
                     ('bold_file', 'inputnode.name_source'),
@@ -762,27 +768,16 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                     ('outputnode.out_warp', 'inputnode.fieldwarp')]),
                 (bold_reference_wf, ica_aroma_wf, [
                     ('outputnode.skip_vols', 'inputnode.skip_vols')]),
+                (bold_confounds_wf, join, [
+                    ('outputnode.confounds_file', 'in_file')]),
+                (ica_aroma_wf, join,
+                    [('outputnode.aroma_confounds', 'join_file')]),
+                (ica_aroma_wf, outputnode,
+                    [('outputnode.aroma_noise_ics', 'aroma_noise_ics'),
+                     ('outputnode.melodic_mix', 'melodic_mix'),
+                     ('outputnode.nonaggr_denoised_file', 'nonaggr_denoised_file')]),
+                (join, outputnode, [('out_file', 'confounds')]),
             ])
-
-            # The confounds file can be None (empty) if all the
-            # aroma components are classified as signal
-            if ica_aroma_wf.outputs.outputnode.aroma_confounds is not None:
-                workflow.disconnect([
-                    (bold_confounds_wf, outputnode, [
-                        ('outputnode.confounds_file', 'confounds'),
-                    ]),
-                ])
-                workflow.connect([
-                    (bold_confounds_wf, join, [
-                        ('outputnode.confounds_file', 'in_file')]),
-                    (ica_aroma_wf, join,
-                        [('outputnode.aroma_confounds', 'join_file')]),
-                    (ica_aroma_wf, outputnode,
-                        [('outputnode.aroma_noise_ics', 'aroma_noise_ics'),
-                         ('outputnode.melodic_mix', 'melodic_mix'),
-                         ('outputnode.nonaggr_denoised_file', 'nonaggr_denoised_file')]),
-                    (join, outputnode, [('out_file', 'confounds')]),
-                ])
 
     # SURFACES ##################################################################################
     if freesurfer and any(space.startswith('fs') for space in output_spaces):
@@ -1068,3 +1063,15 @@ def _get_wf_name(bold_fname):
         ".", "_").replace(" ", "").replace("-", "_").replace("_bold", "_wf")
 
     return name
+
+
+def _to_join(in_file, join_file):
+    """
+    Joins two tsv files if the join_file is not None
+    """
+    from niworkflows.interfaces.utils import JoinTSVColumns
+    if join_file is None:
+        return in_file
+    else:
+        res = JoinTSVColumns(in_file=in_file, join_file=join_file).run()
+        return res.outputs.out_file
