@@ -414,7 +414,7 @@ jobs:
                 --config $PWD/nipype.cfg -w /tmp/ds005/work \
                 /tmp/data/ds005 /tmp/ds005/derivatives participant \
                 --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
-                --ignore-aroma-denoising-errors --use-aroma \
+                --use-aroma \
                 --output-space T1w template fsaverage5 \
                 --template-resampling-grid native \
                 --use-plugin /home/circleci/src/fmriprep/.circleci/legacy.yml \
