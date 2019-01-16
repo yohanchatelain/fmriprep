@@ -547,7 +547,7 @@ jobs:
                 --fs-no-reconall --sloppy \
                 --output-space T1w template \
                 --template-resampling-grid 2mm \
-                --use-aroma --aroma-melodic-dimensionality 2 \
+                --use-aroma \
                 --mem_mb 4096 --nthreads 2 -vv
       - run:
           name: Checking outputs of fMRIPrep
