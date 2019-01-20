@@ -439,11 +439,11 @@ jobs:
             rm /tmp/data/ds005/sub-01/func/*_run-02_*
             fmriprep-docker -i poldracklab/fmriprep:latest \
                 -e FMRIPREP_DEV 1 -u $(id -u) \
-                --config $PWD/nipype.cfg -w /tmp/ds005/work \
+                --config $PWD/nipype.cfg -w /tmp/ds005/work_partial \
                 /tmp/data/ds005 /tmp/ds005/derivatives_partial participant \
                 --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
                 --output-space T1w template fsaverage5 \
-                --aroma-melodic-dimensionality 1 --use-aroma \
+                --aroma-melodic-dimensionality 2 --use-aroma \
                 --template-resampling-grid native \
                 --nthreads 2 --cifti-output -vv
       - run:
