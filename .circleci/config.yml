@@ -425,7 +425,7 @@ jobs:
             mkdir -p /tmp/ds005/derivatives_partial
             sudo mv /tmp/ds005/derivatives/freesurfer /tmp/ds005/derivatives_partial
             sudo cp -a /tmp/ds005/work /tmp/ds005/work_partial
-            sudo rm -rf /tmp/ds005/work_partial/fmriprep_wf/single_subject_01_wf/func_preproc_task_mixedgamblestask_run_01_wf/ica_aroma_wf
+            sudo rm -rf /tmp/ds005/work_partial/fmriprep_wf/single_subject_01_wf/func_preproc_task_mixedgamblestask_run_02_wf/ica_aroma_wf
       - run:
           name: Checking outputs of full fMRIPrep run
           command: |
@@ -437,7 +437,7 @@ jobs:
           name: Re-run fMRIPrep on single run of task data
           no_output_timeout: 2h
           command: |
-            rm /tmp/data/ds005/sub-01/func/*_run-02_*
+            rm /tmp/data/ds005/sub-01/func/*_run-01_*
             fmriprep-docker -i poldracklab/fmriprep:latest \
                 -e FMRIPREP_DEV 1 -u $(id -u) \
                 --config $PWD/nipype.cfg -w /tmp/ds005/work_partial \
