@@ -415,7 +415,7 @@ jobs:
                 /tmp/data/ds005 /tmp/ds005/derivatives participant \
                 --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
                 --ignore-aroma-denoising-errors --use-aroma \
-                --output-space T1w template fsaverage5 \
+                --output-space T1w template fsaverage5 fsnative \
                 --template-resampling-grid native \
                 --use-plugin /home/circleci/src/fmriprep/.circleci/legacy.yml \
                 --nthreads 2 --cifti-output -vv
@@ -442,7 +442,7 @@ jobs:
                 --config $PWD/nipype.cfg -w /tmp/ds005/work \
                 /tmp/data/ds005 /tmp/ds005/derivatives_partial participant \
                 --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
-                --output-space T1w template fsaverage5 \
+                --output-space T1w template fsaverage5 fsnative \
                 --ignore-aroma-denoising-errors --use-aroma \
                 --template-resampling-grid native \
                 --nthreads 2 --cifti-output -vv
