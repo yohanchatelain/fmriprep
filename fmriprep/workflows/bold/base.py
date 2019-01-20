@@ -805,7 +805,8 @@ data and volume-sampled data, were also generated.
             gen_cifti = pe.MapNode(GenerateCifti(), iterfield=["surface_target", "gifti_files"],
                                    name="gen_cifti")
             gen_cifti.inputs.TR = metadata.get("RepetitionTime")
-            gen_cifti.inputs.surface_target = surface_spaces
+            gen_cifti.inputs.surface_target = [s for s in surface_spaces
+                                               if s.startswith('fsaverage')]
 
             workflow.connect([
                 (bold_surf_wf, gen_cifti, [
