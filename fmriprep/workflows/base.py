@@ -26,11 +26,10 @@ from niworkflows.interfaces.bids import (
 )
 from niworkflows.utils.bids import collect_data
 from niworkflows.utils.misc import fix_multi_T1w_source_name
+from smriprep.workflows.anatomical import init_anat_preproc_wf
 
 from ..interfaces import SubjectSummary, AboutSummary, DerivativesDataSink
 from ..__about__ import __version__
-
-from .anatomical import init_anat_preproc_wf
 from .bold import init_func_preproc_wf
 
 
@@ -442,19 +441,21 @@ to workflows in *fMRIPrep*'s documentation]\
         name='ds_report_about', run_without_submitting=True)
 
     # Preprocessing of T1w (includes registration to MNI)
-    anat_preproc_wf = init_anat_preproc_wf(name="anat_preproc_wf",
-                                           skull_strip_template=skull_strip_template,
-                                           skull_strip_fixed_seed=skull_strip_fixed_seed,
-                                           output_spaces=output_spaces,
-                                           template=template,
-                                           debug=debug,
-                                           longitudinal=longitudinal,
-                                           omp_nthreads=omp_nthreads,
-                                           freesurfer=freesurfer,
-                                           hires=hires,
-                                           reportlets_dir=reportlets_dir,
-                                           output_dir=output_dir,
-                                           num_t1w=len(subject_data['t1w']))
+    anat_preproc_wf = init_anat_preproc_wf(
+        skull_strip_template=skull_strip_template,
+        fs_spaces=output_spaces,
+        template=template,
+        debug=debug,
+        freesurfer=freesurfer,
+        longitudinal=longitudinal,
+        omp_nthreads=omp_nthreads,
+        hires=hires,
+        reportlets_dir=reportlets_dir,
+        output_dir=output_dir,
+        num_t1w=len(subject_data['t1w']),
+        skull_strip_fixed_seed=skull_strip_fixed_seed,
+        name="anat_preproc_wf",
+    )
 
     workflow.connect([
         (inputnode, anat_preproc_wf, [('subjects_dir', 'inputnode.subjects_dir')]),
