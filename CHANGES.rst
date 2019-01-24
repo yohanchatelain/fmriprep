@@ -1,3 +1,12 @@
+1.2.6-1 (January 24, 2019)
+==========================
+
+Hotfix release of the 1.2.6 addressing the ``UnboundLocalError``, which should be
+fixed in niworkflows-0.5.4.
+
+* [PIN] NiWorkflows 0.5.4
+
+
 1.2.6 (January 17, 2019)
 ========================
 
