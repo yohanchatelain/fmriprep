@@ -19,6 +19,16 @@ structural images.
 .. autofunction:: init_gifti_surface_wf
 
 """
-from smriprep.workflows.anatomical import init_anat_preproc_wf
+from smriprep.workflows.anatomical import (
+    init_anat_preproc_wf,
+    init_surface_recon_wf,
+)
+from smriprep.workflows.surfaces import (
+    init_autorecon_resume_wf,
+)
 
-__all__ = ['init_anat_preproc_wf']
+__all__ = ['init_anat_preproc_wf',
+           'init_surface_recon_wf',
+           'init_autorecon_resume_wf',
+]
+
