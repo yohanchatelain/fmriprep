@@ -105,6 +105,7 @@ REQUIRES = [
 
 
 LINKS_REQUIRES = [
+    'git+https://github.com/poldracklab/smriprep.git@master#egg=smriprep'
 ]
 
 TESTS_REQUIRES = [
