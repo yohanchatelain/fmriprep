@@ -476,6 +476,11 @@ to workflows in *fMRIPrep*'s documentation]\
         (about, ds_report_about, [('out_report', 'in_file')]),
     ])
 
+    # Overwrite ``out_path_base`` of smriprep's DataSinks
+    for node in workflow.list_node_names():
+        if node.split('.')[-1].startswith('ds_'):
+            workflow.get_node(node).interface.out_path_base = 'fmriprep'
+
     if anat_only:
         return workflow
 
