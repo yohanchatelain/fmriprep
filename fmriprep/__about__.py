@@ -90,7 +90,7 @@ REQUIRES = [
     'nilearn',
     'nipype>=1.1.6',
     'nitime',
-    'niworkflows>=0.5.3.post6,<0.5.4',
+    'niworkflows>=0.5.2.post6,<0.5.3',
     'numpy',
     'pandas',
     'psutil>=5.4',
