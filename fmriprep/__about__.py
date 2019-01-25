@@ -97,7 +97,7 @@ REQUIRES = [
     'pybids==0.6.5',
     'pyyaml',
     'scikit-image',
-    'smriprep<1.0.0',
+    'smriprep>=0.0.4,<1.0.0',
     'statsmodels',
     'tedana>=0.0.5',
     'templateflow>=0.0.4',
@@ -105,7 +105,6 @@ REQUIRES = [
 
 
 LINKS_REQUIRES = [
-    'git+https://github.com/poldracklab/smriprep.git@master#egg=smriprep'
 ]
 
 TESTS_REQUIRES = [
