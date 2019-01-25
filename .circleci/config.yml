@@ -257,8 +257,8 @@ jobs:
               -e FMRIPREP_REGRESSION_TARGETS=/tmp/data/fmriprep_bold_mask \
               -e FMRIPREP_REGRESSION_REPORTS=/tmp/data/reports \
               --entrypoint="py.test" poldracklab/fmriprep:latest \
-              /root/src/fmriprep/ \
-              -svx --doctest-modules --ignore=/root/src/fmriprep/docs --ignore=setup.py
+              /src/fmriprep/ \
+              -svx --doctest-modules --ignore=/src/fmriprep/docs --ignore=setup.py
       - run:
           name: Package new masks
           no_output_timeout: 10m
@@ -329,7 +329,7 @@ jobs:
             docker run -ti --rm=false -v $PWD:/_build_html \
               --entrypoint=sphinx-build poldracklab/fmriprep:latest \
               -T -E -b html -d _build/doctrees-readthedocs -W -D \
-              language=en /root/src/fmriprep/docs/ /_build_html 2>&1 \
+              language=en /src/fmriprep/docs/ /_build_html 2>&1 \
               | tee $PWD/builddocs.log
             cat $PWD/builddocs.log
             grep -qv "ERROR" $PWD/builddocs.log
