@@ -67,7 +67,7 @@ def init_fmriprep_wf(subject_list, task_id, echo_idx, run_uuid, work_dir, output
                               longitudinal=False,
                               t2s_coreg=False,
                               omp_nthreads=1,
-                              skull_strip_template='OASIS',
+                              skull_strip_template='OASIS30ANTs',
                               skull_strip_fixed_seed=False,
                               freesurfer=True,
                               output_spaces=['T1w', 'fsnative',
@@ -121,7 +121,7 @@ def init_fmriprep_wf(subject_list, task_id, echo_idx, run_uuid, work_dir, output
         omp_nthreads : int
             Maximum number of threads an individual process may use
         skull_strip_template : str
-            Name of ANTs skull-stripping template ('OASIS' or 'NKI')
+            Name of ANTs skull-stripping template ('OASIS30ANTs' or 'NKI')
         skull_strip_fixed_seed : bool
             Do not use a random seed for skull-stripping - will ensure
             run-to-run replicability when used with --omp-nthreads 1
@@ -266,7 +266,7 @@ def init_single_subject_wf(subject_id, task_id, echo_idx, name, reportlets_dir, 
                                     longitudinal=False,
                                     t2s_coreg=False,
                                     omp_nthreads=1,
-                                    skull_strip_template='OASIS',
+                                    skull_strip_template='OASIS30ANTs',
                                     skull_strip_fixed_seed=False,
                                     freesurfer=True,
                                     template='MNI152NLin2009cAsym',
@@ -313,7 +313,7 @@ def init_single_subject_wf(subject_id, task_id, echo_idx, name, reportlets_dir, 
         omp_nthreads : int
             Maximum number of threads an individual process may use
         skull_strip_template : str
-            Name of ANTs skull-stripping template ('OASIS' or 'NKI')
+            Name of ANTs skull-stripping template ('OASIS30ANTs' or 'NKI')
         skull_strip_fixed_seed : bool
             Do not use a random seed for skull-stripping - will ensure
             run-to-run replicability when used with --omp-nthreads 1
