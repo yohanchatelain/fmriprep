@@ -21,14 +21,18 @@ structural images.
 """
 from smriprep.workflows.anatomical import (
     init_anat_preproc_wf,
-    init_surface_recon_wf,
+    init_skullstrip_ants_wf,
 )
 from smriprep.workflows.surfaces import (
+    init_surface_recon_wf,
     init_autorecon_resume_wf,
+    init_gifti_surface_wf,
 )
 
-__all__ = ['init_anat_preproc_wf',
-           'init_surface_recon_wf',
-           'init_autorecon_resume_wf',
+__all__ = [
+    'init_anat_preproc_wf',
+    'init_skullstrip_ants_wf',
+    'init_surface_recon_wf',
+    'init_autorecon_resume_wf',
+    'init_gifti_surface_wf',
 ]
-
