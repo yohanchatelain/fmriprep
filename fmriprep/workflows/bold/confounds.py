@@ -15,12 +15,16 @@ from nipype.algorithms import confounds as nac
 
 from niworkflows.data import get_template
 from niworkflows.engine.workflows import LiterateWorkflow as Workflow
+from niworkflows.interfaces.confounds import ExpandModel, SpikeRegressors
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
 from niworkflows.interfaces.images import SignalExtraction
 from niworkflows.interfaces.masks import ROIsPlot
 from niworkflows.interfaces.patches import (
     RobustACompCor as ACompCor,
     RobustTCompCor as TCompCor,
+)
+from niworkflows.interfaces.plotting import (
+    CompCorVariancePlot, ConfoundsCorrelationPlot
 )
 from niworkflows.interfaces.segmentation import ICA_AROMARPT
 from niworkflows.interfaces.utils import (
@@ -183,12 +187,13 @@ placed within the corresponding confounds file.
     # a/t-CompCor
     tcompcor = pe.Node(
         TCompCor(components_file='tcompcor.tsv', header_prefix='t_comp_cor_', pre_filter='cosine',
-                 save_pre_filter=True, percentile_threshold=.05),
+                 save_pre_filter=True, num_components='all', save_metadata=True,
+                 percentile_threshold=.05),
         name="tcompcor", mem_gb=mem_gb)
 
     acompcor = pe.Node(
         ACompCor(components_file='acompcor.tsv', header_prefix='a_comp_cor_', pre_filter='cosine',
-                 save_pre_filter=True),
+                 save_pre_filter=True, num_components='all', save_metadata=True),
         name="acompcor", mem_gb=mem_gb)
 
     # Set TR if present
@@ -213,7 +218,7 @@ placed within the corresponding confounds file.
         name="add_motion_headers", mem_gb=0.01, run_without_submitting=True)
     concat = pe.Node(GatherConfounds(), name="concat", mem_gb=0.01, run_without_submitting=True)
 
-    # Generate reportlet
+    # Generate reportlet (ROIs)
     mrg_compcor = pe.Node(niu.Merge(2), name='merge_compcor', run_without_submitting=True)
     rois_plot = pe.Node(ROIsPlot(colors=['b', 'magenta'], generate_report=True),
                         name='rois_plot', mem_gb=mem_gb)
@@ -222,6 +227,40 @@ placed within the corresponding confounds file.
         DerivativesDataSink(suffix='rois'),
         name='ds_report_bold_rois', run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
+
+    # Generate reportlet (CompCor)
+    mrg_cc_metadata = pe.Node(niu.Merge(2), name='merge_compcor_metadata',
+                              run_without_submitting=True)
+    compcor_plot = pe.Node(CompCorVariancePlot(
+        variance_thresholds=(0.5, 0.7, 0.9),
+        metadata_sources=['tCompCor', 'aCompCor']),
+        name='compcor_plot')
+    ds_report_compcor = pe.Node(
+        DerivativesDataSink(suffix='compcor'),
+        name='ds_report_compcor', run_without_submitting=True,
+        mem_gb=DEFAULT_MEMORY_MIN_GB)
+
+    # Generate reportlet (Confound correlation)
+    conf_corr_plot = pe.Node(ConfoundsCorrelationPlot(
+        reference_column='global_signal'),
+        name='conf_corr_plot')
+    ds_report_conf_corr = pe.Node(
+        DerivativesDataSink(suffix='confounds_correlation'),
+        name='ds_report_conf_corr', run_without_submitting=True,
+        mem_gb=DEFAULT_MEMORY_MIN_GB)
+
+    # Expand model to include derivatives and quadratics
+    model_expand = pe.Node(ExpandModel(
+        model_formula='(dd1(rps + wm + csf + gsr))^^2 + others'),
+        name='model_expansion')
+
+    # Add spike regressors
+    spike_regress = pe.Node(SpikeRegressors(
+        criteria={
+            'framewise_displacement': ('>', 0.2),
+            'dvars': ('>', 20)
+        }),
+        name='spike_regressors')
 
     def _pick_csf(files):
         return files[0]
@@ -295,14 +334,24 @@ placed within the corresponding confounds file.
         (add_dvars_header, concat, [('out_file', 'dvars')]),
         (add_std_dvars_header, concat, [('out_file', 'std_dvars')]),
 
+        # Expand the model with derivatives, quadratics, and spikes
+        (concat, model_expand, [('confounds_file', 'confounds_file')]),
+        (model_expand, spike_regress, [('confounds_file', 'confounds_file')]),
+
         # Set outputs
-        (concat, outputnode, [('confounds_file', 'confounds_file')]),
+        (spike_regress, outputnode, [('confounds_file', 'confounds_file')]),
         (inputnode, rois_plot, [('bold', 'in_file'),
                                 ('bold_mask', 'in_mask')]),
         (tcompcor, mrg_compcor, [('high_variance_masks', 'in1')]),
         (acc_msk, mrg_compcor, [('out', 'in2')]),
         (mrg_compcor, rois_plot, [('out', 'in_rois')]),
         (rois_plot, ds_report_bold_rois, [('out_report', 'in_file')]),
+        (tcompcor, mrg_cc_metadata, [('metadata_file', 'in1')]),
+        (acompcor, mrg_cc_metadata, [('metadata_file', 'in2')]),
+        (mrg_cc_metadata, compcor_plot, [('out', 'metadata_files')]),
+        (compcor_plot, ds_report_compcor, [('out_file', 'in_file')]),
+        (concat, conf_corr_plot, [('confounds_file', 'confounds_file')]),
+        (conf_corr_plot, ds_report_conf_corr, [('out_file', 'in_file')]),
     ])
 
     return workflow
