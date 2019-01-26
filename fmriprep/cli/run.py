@@ -581,6 +581,15 @@ def build_workflow(opts, retval):
             'spaces (option "--output-space").'
         )
 
+    if opts.cifti_output and (opts.template != 'MNI152NLin2009cAsym' or
+                              'template' not in output_spaces):
+        output_spaces.append('template')
+        logger.warning(
+            'Option "--cifti-output" requires functional images to be resampled to MNI space. '
+            'The argument "template" has been automatically added to the list of output '
+            'spaces (option "--output-space").'
+        )
+
     # Check output_space
     if 'template' not in output_spaces and (opts.use_syn_sdc or opts.force_syn):
         msg = ['SyN SDC correction requires T1 to MNI registration, but '
@@ -753,6 +762,7 @@ def build_workflow(opts, retval):
         cmd = ['pandoc', '-s', '--bibliography',
                pkgrf('fmriprep', 'data/boilerplate.bib'),
                '--filter', 'pandoc-citeproc',
+               '--metadata', 'pagetitle="fMRIPrep citation boilerplate"',
                str(logs_path / 'CITATION.md'),
                '-o', str(logs_path / 'CITATION.html')]
         try:
