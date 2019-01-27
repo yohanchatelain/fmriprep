@@ -349,7 +349,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         fields=['bold_t1', 'bold_t1_ref', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1',
                 'bold_mni', 'bold_mni_ref' 'bold_mask_mni', 'bold_aseg_mni', 'bold_aparc_mni',
                 'bold_cifti', 'cifti_variant', 'cifti_variant_key', 'confounds', 'surfaces',
-                'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file']),
+                'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file',
+                'tcompcor_metadata', 'acompcor_metadata']),
         name='outputnode')
 
     # BOLD buffer: an identity used as a pointer to either the original BOLD
@@ -390,7 +391,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('nonaggr_denoised_file', 'inputnode.nonaggr_denoised_file'),
             ('bold_cifti', 'inputnode.bold_cifti'),
             ('cifti_variant', 'inputnode.cifti_variant'),
-            ('cifti_variant_key', 'inputnode.cifti_variant_key')
+            ('cifti_variant_key', 'inputnode.cifti_variant_key'),
+            ('tcompcor_metadata', 'inputnode.tcompcor_metadata'),
+            ('acompcor_metadata', 'inputnode.acompcor_metadata')
         ]),
     ])
 
@@ -576,6 +579,12 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('outputnode.skip_vols', 'inputnode.skip_vols')]),
         (bold_confounds_wf, outputnode, [
             ('outputnode.confounds_file', 'confounds'),
+        ]),
+        (bold_confounds_wf, outputnode, [
+            ('outputnode.acompcor_metadata', 'acompcor_metadata'),
+        ]),
+        (bold_confounds_wf, outputnode, [
+            ('outputnode.tcompcor_metadata', 'tcompcor_metadata'),
         ]),
         # Connect bold_bold_trans_wf
         (bold_split, bold_bold_trans_wf, [
@@ -860,16 +869,29 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
                     'bold_aseg_t1', 'bold_aparc_t1', 'bold_aseg_mni',
                     'bold_aparc_mni', 'cifti_variant_key',
                     'confounds', 'surfaces', 'aroma_noise_ics', 'melodic_mix',
-                    'nonaggr_denoised_file', 'bold_cifti', 'cifti_variant']),
+                    'nonaggr_denoised_file', 'bold_cifti', 'cifti_variant',
+                    'tcompcor_metadata', 'acompcor_metadata']),
         name='inputnode')
 
     ds_confounds = pe.Node(DerivativesDataSink(
         base_directory=output_dir, desc='confounds', suffix='regressors'),
         name="ds_confounds", run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
+    ds_tcc_metadata = pe.Node(DerivativesDataSink(
+        base_directory=output_dir, desc='tcompcor', suffix='decomposition'),
+        name="ds_tcc_metadata", run_without_submitting=True,
+        mem_gb=DEFAULT_MEMORY_MIN_GB)
+    ds_acc_metadata = pe.Node(DerivativesDataSink(
+        base_directory=output_dir, desc='acompcor', suffix='decomposition'),
+        name="ds_acc_metadata", run_without_submitting=True,
+        mem_gb=DEFAULT_MEMORY_MIN_GB)
     workflow.connect([
         (inputnode, ds_confounds, [('source_file', 'source_file'),
                                    ('confounds', 'in_file')]),
+        (inputnode, ds_tcc_metadata, [('source_file', 'source_file'),
+                                      ('tcompcor_metadata', 'in_file')]),
+        (inputnode, ds_acc_metadata, [('source_file', 'source_file'),
+                                      ('acompcor_metadata', 'in_file')]),
     ])
 
     # Resample to T1w space
