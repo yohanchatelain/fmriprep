@@ -257,8 +257,8 @@ jobs:
               -e FMRIPREP_REGRESSION_TARGETS=/tmp/data/fmriprep_bold_mask \
               -e FMRIPREP_REGRESSION_REPORTS=/tmp/data/reports \
               --entrypoint="py.test" poldracklab/fmriprep:latest \
-              /root/src/fmriprep/ \
-              -svx --doctest-modules --ignore=/root/src/fmriprep/docs --ignore=setup.py
+              /src/fmriprep/ \
+              -svx --doctest-modules --ignore=/src/fmriprep/docs --ignore=setup.py
       - run:
           name: Package new masks
           no_output_timeout: 10m
@@ -329,7 +329,7 @@ jobs:
             docker run -ti --rm=false -v $PWD:/_build_html \
               --entrypoint=sphinx-build poldracklab/fmriprep:latest \
               -T -E -b html -d _build/doctrees-readthedocs -W -D \
-              language=en /root/src/fmriprep/docs/ /_build_html 2>&1 \
+              language=en /src/fmriprep/docs/ /_build_html 2>&1 \
               | tee $PWD/builddocs.log
             cat $PWD/builddocs.log
             grep -qv "ERROR" $PWD/builddocs.log
@@ -358,10 +358,10 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - ds005-anat-v13-{{ .Branch }}-{{ epoch }}
-            - ds005-anat-v13-{{ .Branch }}
-            - ds005-anat-v13-master
-            - ds005-anat-v13-
+            - ds005-anat-v14-{{ .Branch }}-{{ epoch }}
+            - ds005-anat-v14-{{ .Branch }}
+            - ds005-anat-v14-master
+            - ds005-anat-v14-
       - run:
           name: Setting up test
           command: |
@@ -389,13 +389,13 @@ jobs:
             sudo setfacl -d -m group:$(id -gn):rwx /tmp/ds005/work && \
                 sudo setfacl -m group:$(id -gn):rwx /tmp/ds005/work
             fmriprep-docker -i poldracklab/fmriprep:latest \
-                -e FMRIPREP_DEV 1 -u $(id -u) \
+                -e FMRIPREP_DEV 1 \
                 --config $PWD/nipype.cfg -w /tmp/ds005/work \
                 /tmp/data/ds005 /tmp/ds005/derivatives participant \
                 --sloppy --write-graph --mem_mb 4096 \
                 --nthreads 2 --anat-only -vv
       - save_cache:
-         key: ds005-anat-v13-{{ .Branch }}-{{ epoch }}
+         key: ds005-anat-v14-{{ .Branch }}-{{ epoch }}
          paths:
             - /tmp/ds005/work
 
@@ -408,7 +408,7 @@ jobs:
             sudo setfacl -d -m group:$(id -gn):rwx /tmp/ds005/work && \
                 sudo setfacl -m group:$(id -gn):rwx /tmp/ds005/work
             fmriprep-docker -i poldracklab/fmriprep:latest \
-                -e FMRIPREP_DEV 1 -u $(id -u) \
+                -e FMRIPREP_DEV 1 \
                 --config $PWD/nipype.cfg -w /tmp/ds005/work \
                 /tmp/data/ds005 /tmp/ds005/derivatives participant \
                 --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
@@ -436,7 +436,7 @@ jobs:
           command: |
             rm /tmp/data/ds005/sub-01/func/*_run-02_*
             fmriprep-docker -i poldracklab/fmriprep:latest \
-                -e FMRIPREP_DEV 1 -u $(id -u) \
+                -e FMRIPREP_DEV 1 \
                 --config $PWD/nipype.cfg -w /tmp/ds005/work \
                 /tmp/data/ds005 /tmp/ds005/derivatives_partial participant \
                 --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
@@ -488,10 +488,10 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - ds054-anat-v11-{{ .Branch }}-{{ epoch }}
-            - ds054-anat-v11-{{ .Branch }}
-            - ds054-anat-v11-master
-            - ds054-anat-v11-
+            - ds054-anat-v12-{{ .Branch }}-{{ epoch }}
+            - ds054-anat-v12-{{ .Branch }}
+            - ds054-anat-v12-master
+            - ds054-anat-v12-
       - run:
           name: Setting up test
           command: |
@@ -525,7 +525,7 @@ jobs:
                 --fs-no-reconall --sloppy --write-graph \
                 --mem_mb 4096 --nthreads 2 --anat-only -vv
       - save_cache:
-         key: ds054-anat-v11-{{ .Branch }}-{{ epoch }}
+         key: ds054-anat-v12-{{ .Branch }}-{{ epoch }}
          paths:
             - /tmp/ds054/work
 
@@ -606,10 +606,10 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - ds210-anat-v9-{{ .Branch }}-{{ epoch }}
-            - ds210-anat-v9-{{ .Branch }}
-            - ds210-anat-v9-master
-            - ds210-anat-v9-
+            - ds210-anat-v10-{{ .Branch }}-{{ epoch }}
+            - ds210-anat-v10-{{ .Branch }}
+            - ds210-anat-v10-master
+            - ds210-anat-v10-
       - run:
           name: Setting up test
           command: |
@@ -643,7 +643,7 @@ jobs:
                 --fs-no-reconall --sloppy --write-graph \
                 --mem_mb 4096 --nthreads 2 --anat-only -vv
       - save_cache:
-         key: ds210-anat-v9-{{ .Branch }}-{{ epoch }}
+         key: ds210-anat-v10-{{ .Branch }}-{{ epoch }}
          paths:
             - /tmp/ds210/work
 
