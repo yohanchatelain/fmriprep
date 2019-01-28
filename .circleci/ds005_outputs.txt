@@ -37,6 +37,7 @@ fmriprep/sub-01/func
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_AROMAnoiseICs.csv
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold.dtseries.json
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold.dtseries.nii
+fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_desc-acompcor_decomposition.json
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_desc-confounds_regressors.tsv
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_desc-MELODIC_mixing.tsv
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_space-fsaverage5_hemi-L.func.gii
@@ -57,6 +58,7 @@ fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_space-T1w_desc-preproc_
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_AROMAnoiseICs.csv
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold.dtseries.json
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold.dtseries.nii
+fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_desc-acompcor_decomposition.json
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_desc-confounds_regressors.tsv
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_desc-MELODIC_mixing.tsv
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_space-fsaverage5_hemi-L.func.gii
