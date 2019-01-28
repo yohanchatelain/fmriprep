@@ -25,6 +25,7 @@ fmriprep/sub-100185/anat/sub-100185_space-MNI152NLin2009cAsym_label-WM_probseg.n
 fmriprep/sub-100185/func
 fmriprep/sub-100185/func/sub-100185_task-machinegame_run-01_desc-acompcor_decomposition.json
 fmriprep/sub-100185/func/sub-100185_task-machinegame_run-01_desc-confounds_regressors.tsv
+fmriprep/sub-100185/func/sub-100185_task-machinegame_run-01_desc-tcompcor_decomposition.json
 fmriprep/sub-100185/func/sub-100185_task-machinegame_run-01_space-MNI152NLin2009cAsym_boldref.nii.gz
 fmriprep/sub-100185/func/sub-100185_task-machinegame_run-01_space-MNI152NLin2009cAsym_desc-brain_mask.nii.gz
 fmriprep/sub-100185/func/sub-100185_task-machinegame_run-01_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz
@@ -33,6 +34,7 @@ fmriprep/sub-100185/func/sub-100185_task-machinegame_run-01_space-T1w_desc-brain
 fmriprep/sub-100185/func/sub-100185_task-machinegame_run-01_space-T1w_desc-preproc_bold.nii.gz
 fmriprep/sub-100185/func/sub-100185_task-machinegame_run-02_desc-acompcor_decomposition.json
 fmriprep/sub-100185/func/sub-100185_task-machinegame_run-02_desc-confounds_regressors.tsv
+fmriprep/sub-100185/func/sub-100185_task-machinegame_run-02_desc-tcompcor_decomposition.json
 fmriprep/sub-100185/func/sub-100185_task-machinegame_run-02_space-MNI152NLin2009cAsym_boldref.nii.gz
 fmriprep/sub-100185/func/sub-100185_task-machinegame_run-02_space-MNI152NLin2009cAsym_desc-brain_mask.nii.gz
 fmriprep/sub-100185/func/sub-100185_task-machinegame_run-02_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz
