@@ -1,3 +1,14 @@
+1.2.6-1 (January 24, 2019)
+==========================
+
+Hotfix release of version 1.2.6, pinning niworkflows to a release version (instead
+of the development branch, since #1459) and including to bugfixes.
+
+* [PIN] NiWorkflows 0.5.2.post7 (`1bf4a21 <https://github.com/poldracklab/fmriprep/commit/1bf4a21cce62c4330510a9a8ae50db876fbc23b0>`__).
+* [FIX] Bad ``fsnative`` replacement in CIfTI workflow (#1476) @oesteban
+* [FIX] Avoid warning when generating boilerplate (#1464) @oesteban
+
+
 1.2.6 (January 17, 2019)
 ========================
 
