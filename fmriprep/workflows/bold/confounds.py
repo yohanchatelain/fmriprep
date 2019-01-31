@@ -143,7 +143,7 @@ The head-motion estimates calculated in the correction step were also
 placed within the corresponding confounds file.
 The confound time series derived from head motion estimates and global
 signals were expanded with the inclusion of temporal derivatives and
-quadratic terms for each [@satterthwaite].
+quadratic terms for each [@confounds_satterthwaite_2012].
 Frames that exceeded a threshold of 0.2 mm FD or 20 DVARS were classified
 as motion outliers [following @power_fd_dvars].
 """
