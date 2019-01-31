@@ -143,7 +143,7 @@ The head-motion estimates calculated in the correction step were also
 placed within the corresponding confounds file.
 The confound time series derived from head motion estimates and global
 signals were expanded with the inclusion of temporal derivatives and
-quadratic terms for each [@confounds_satterthwaite_2012].
+quadratic terms for each [@confounds_satterthwaite_2013].
 Frames that exceeded a threshold of 0.2 mm FD or 20 DVARS were classified
 as motion outliers [following @power_fd_dvars].
 """
@@ -190,6 +190,8 @@ as motion outliers [following @power_fd_dvars].
                     name="fdisp", mem_gb=mem_gb)
 
     # a/t-CompCor
+    mrg_lbl_cc = pe.Node(niu.Merge(3), name='merge_rois_cc', run_without_submitting=True)
+
     tcompcor = pe.Node(
         TCompCor(components_file='tcompcor.tsv', header_prefix='t_comp_cor_', pre_filter='cosine',
                  save_pre_filter=True, num_components='all', save_metadata=True,
@@ -198,7 +200,8 @@ as motion outliers [following @power_fd_dvars].
 
     acompcor = pe.Node(
         ACompCor(components_file='acompcor.tsv', header_prefix='a_comp_cor_', pre_filter='cosine',
-                 save_pre_filter=True, num_components='all', save_metadata=True),
+                 save_pre_filter=True, num_components='all', save_metadata=True,
+                 mask_names=['combined', 'CSF', 'WM'], merge_method='none'),
         name="acompcor", mem_gb=mem_gb)
 
     # Set TR if present
@@ -325,7 +328,10 @@ as motion outliers [following @power_fd_dvars].
         (inputnode, acompcor, [('bold', 'realigned_file')]),
         (inputnode, acompcor, [('skip_vols', 'ignore_initial_volumes')]),
         (acc_tfm, acc_msk, [('output_image', 'roi_file')]),
-        (acc_msk, acompcor, [('out', 'mask_files')]),
+        (acc_msk, mrg_lbl_cc, [('out', 'in1')]),
+        (csf_msk, mrg_lbl_cc, [('out', 'in2')]),
+        (wm_msk, mrg_lbl_cc, [('out', 'in3')]),
+        (mrg_lbl_cc, acompcor, [('out', 'mask_files')]),
 
         # Global signals extraction (constrained by anatomy)
         (inputnode, signals, [('bold', 'in_file')]),
