@@ -125,7 +125,7 @@ EXTRA_REQUIRES = {
     ],
     'duecredit': ['duecredit'],
     'resmon': [],
-    'sentry': ['sentry-sdk>=0.5.3'],
+    'sentry': ['sentry-sdk>=0.6.9'],
     'tests': TESTS_REQUIRES,
 }
 EXTRA_REQUIRES['docs'] = EXTRA_REQUIRES['doc']
