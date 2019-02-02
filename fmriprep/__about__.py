@@ -90,7 +90,7 @@ REQUIRES = [
     'nilearn',
     'nipype>=1.1.6',
     'nitime',
-    'niworkflows>=0.6.1',
+    'niworkflows',
     'numpy',
     'pandas',
     'psutil>=5.4',
@@ -105,7 +105,7 @@ REQUIRES = [
 
 
 LINKS_REQUIRES = [
-    'git+https://github.com/oesteban/niworkflows@'
+    'git+https://github.com/oesteban/niworkflows.git@'
     'e3b6647c4dd9b29e459bd99e7a91548cf016ce3f#niworkflows-0.6.1',
 ]
 
