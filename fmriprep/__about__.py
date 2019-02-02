@@ -84,17 +84,17 @@ SETUP_REQUIRES = [
 ]
 
 REQUIRES = [
-    'grabbit==0.2.3',
+    'grabbit==0.2.6',
     'indexed_gzip>=0.8.8',
     'nibabel>=2.2.1',
     'nilearn',
     'nipype>=1.1.6',
     'nitime',
-    'niworkflows>=0.6.1,<0.7.0a0',
+    'niworkflows>=0.6.1',
     'numpy',
     'pandas',
     'psutil>=5.4',
-    'pybids==0.6.5',
+    'pybids>=0.7.0,<8',
     'pyyaml',
     'scikit-image',
     'smriprep>=0.0.4,<0.1.0a0',
@@ -105,6 +105,8 @@ REQUIRES = [
 
 
 LINKS_REQUIRES = [
+    'git+https://github.com/oesteban/niworkflows@'
+    'e3b6647c4dd9b29e459bd99e7a91548cf016ce3f#niworkflows-0.6.1',
 ]
 
 TESTS_REQUIRES = [

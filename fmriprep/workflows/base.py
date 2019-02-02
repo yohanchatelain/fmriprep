@@ -379,7 +379,8 @@ def init_single_subject_wf(subject_id, task_id, echo_idx, name, reportlets_dir, 
         }
         layout = None
     else:
-        subject_data, layout = collect_data(bids_dir, subject_id, task_id, echo_idx)
+        subject_data, layout = collect_data(
+            bids_dir, subject_id, task_id, echo_idx, bids_validate=False)
 
     # Make sure we always go through these two checks
     if not anat_only and subject_data['bold'] == []:
@@ -421,7 +422,9 @@ to workflows in *fMRIPrep*'s documentation]\
     bidssrc = pe.Node(BIDSDataGrabber(subject_data=subject_data, anat_only=anat_only),
                       name='bidssrc')
 
-    bids_info = pe.Node(BIDSInfo(), name='bids_info', run_without_submitting=True)
+    bids_info = pe.Node(BIDSInfo(
+        bids_dir=bids_dir, bids_validate=False),
+        name='bids_info', run_without_submitting=True)
 
     summary = pe.Node(SubjectSummary(output_spaces=output_spaces, template=template),
                       name='summary', run_without_submitting=True)
@@ -464,12 +467,12 @@ to workflows in *fMRIPrep*'s documentation]\
         (bidssrc, summary, [('t1w', 't1w'),
                             ('t2w', 't2w'),
                             ('bold', 'bold')]),
-        (bids_info, summary, [('subject_id', 'subject_id')]),
+        (bids_info, summary, [('subject', 'subject_id')]),
+        (bids_info, anat_preproc_wf, [(('subject', _prefix), 'inputnode.subject_id')]),
         (bidssrc, anat_preproc_wf, [('t1w', 'inputnode.t1w'),
                                     ('t2w', 'inputnode.t2w'),
                                     ('roi', 'inputnode.roi'),
                                     ('flair', 'inputnode.flair')]),
-        (summary, anat_preproc_wf, [('subject_id', 'inputnode.subject_id')]),
         (bidssrc, ds_report_summary, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
         (summary, ds_report_summary, [('out_report', 'in_file')]),
         (bidssrc, ds_report_about, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
@@ -532,3 +535,10 @@ to workflows in *fMRIPrep*'s documentation]\
         ])
 
     return workflow
+
+
+def _prefix(subid):
+    if subid.startswith('sub-'):
+        return subid
+    return '-'.join(('sub', subid))
+
