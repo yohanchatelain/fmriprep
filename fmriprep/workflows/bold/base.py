@@ -254,7 +254,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             'PhaseEncodingDirection': 'j',
         }
         fmaps = [{
-            'type': 'phasediff',
+            'suffix': 'phasediff',
             'phasediff': 'sub-03/ses-2/fmap/sub-03_ses-2_run-1_phasediff.nii.gz',
             'magnitude1': 'sub-03/ses-2/fmap/sub-03_ses-2_run-1_magnitude1.nii.gz',
             'magnitude2': 'sub-03/ses-2/fmap/sub-03_ses-2_run-1_magnitude2.nii.gz',
@@ -291,11 +291,11 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         if 'fieldmaps' not in ignore:
             fmaps = layout.get_fieldmap(ref_file, return_list=True)
             for fmap in fmaps:
-                fmap['metadata'] = layout.get_metadata(fmap[fmap['type']])
+                fmap['metadata'] = layout.get_metadata(fmap[fmap['suffix']])
 
         # Run SyN if forced or in the absence of fieldmap correction
         if force_syn or (use_syn and not fmaps):
-            fmaps.append({'type': 'syn'})
+            fmaps.append({'suffix': 'syn'})
 
         # Short circuits: (True and True and (False or 'TooShort')) == 'TooShort'
         run_stc = ("SliceTiming" in metadata and
@@ -476,14 +476,14 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     if not fmaps:
         LOGGER.warning('SDC: no fieldmaps found or they were ignored (%s).',
                        ref_file)
-    elif fmaps[0]['type'] == 'syn':
+    elif fmaps[0]['suffix'] == 'syn':
         LOGGER.warning(
             'SDC: no fieldmaps found or they were ignored. '
             'Using EXPERIMENTAL "fieldmap-less SyN" correction '
             'for dataset %s.', ref_file)
     else:
         LOGGER.log(25, 'SDC: fieldmap estimation of type "%s" intended for %s found.',
-                   fmaps[0]['type'], ref_file)
+                   fmaps[0]['suffix'], ref_file)
 
     # MULTI-ECHO EPI DATA #############################################
     if multiecho:
@@ -613,7 +613,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
     if fmaps:
         from ..fieldmap.unwarp import init_fmap_unwarp_report_wf
-        sdc_type = fmaps[0]['type']
+        sdc_type = fmaps[0]['suffix']
 
         # Report on BOLD correction
         fmap_unwarp_report_wf = init_fmap_unwarp_report_wf(
