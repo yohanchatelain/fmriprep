@@ -106,7 +106,7 @@ REQUIRES = [
 
 LINKS_REQUIRES = [
     'git+https://github.com/oesteban/niworkflows.git@'
-    'e3b6647c4dd9b29e459bd99e7a91548cf016ce3f#niworkflows-0.6.1',
+    '0208e37b8915d89720856ac76becbed7592437c5#niworkflows-0.6.1',
 ]
 
 TESTS_REQUIRES = [
