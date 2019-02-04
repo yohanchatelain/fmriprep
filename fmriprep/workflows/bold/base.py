@@ -273,7 +273,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             LOGGER.warning("Single-band reference found, but not supported in "
                            "multi-echo workflows at this time. Ignoring.")
         elif files:
-            sbref_file = files[0].filename
+            sbref_file = files[0]
             sbbase = os.path.basename(sbref_file)
             if len(files) > 1:
                 LOGGER.warning(
