@@ -265,7 +265,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         # Find associated sbref, if possible
         entities = layout.parse_file_entities(ref_file)
         entities['suffix'] = 'sbref'
-        files = layout.get(extensions=['nii', 'nii.gz'], **entities)
+        files = layout.get(return_type='file', extensions=['nii', 'nii.gz'], **entities)
         refbase = os.path.basename(ref_file)
         if 'sbref' in ignore:
             LOGGER.info("Single-band reference files ignored.")
