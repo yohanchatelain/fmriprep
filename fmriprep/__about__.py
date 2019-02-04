@@ -84,7 +84,6 @@ SETUP_REQUIRES = [
 ]
 
 REQUIRES = [
-    'grabbit==0.2.6',
     'indexed_gzip>=0.8.8',
     'nibabel>=2.2.1',
     'nilearn',
@@ -97,7 +96,7 @@ REQUIRES = [
     'pybids>=0.7.0,<8',
     'pyyaml',
     'scikit-image',
-    'smriprep>=0.0.4,<0.1.0a0',
+    'smriprep',
     'statsmodels',
     'tedana>=0.0.5',
     'templateflow>=0.0.4',
@@ -107,6 +106,8 @@ REQUIRES = [
 LINKS_REQUIRES = [
     'git+https://github.com/oesteban/niworkflows.git@'
     '0208e37b8915d89720856ac76becbed7592437c5#niworkflows-0.6.1',
+    'git+https://github.com/oesteban/smriprep.git@'
+    'e504ddaca62da545b75a7cbc629ff91b8b48f2ee#smriprep-0.0.4',
 ]
 
 TESTS_REQUIRES = [
