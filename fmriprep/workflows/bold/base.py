@@ -246,7 +246,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
 
     sbref_file = None
     # For doc building purposes
-    if layout is None or bold_file == 'bold_preprocesing':
+    if not hasattr(layout, 'parse_file_entities'):
         LOGGER.log(25, 'No valid layout: building empty workflow.')
         metadata = {
             'RepetitionTime': 2.0,
