@@ -381,7 +381,6 @@ def init_single_subject_wf(layout, subject_id, task_id, echo_idx, name, reportle
             't1w': ['/completely/made/up/path/sub-01_T1w.nii.gz'],
             'bold': ['/completely/made/up/path/sub-01_task-nback_bold.nii.gz']
         }
-        layout = None
     else:
         subject_data = collect_data(layout, subject_id, task_id, echo_idx)[0]
 
