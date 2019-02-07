@@ -425,8 +425,7 @@ to workflows in *fMRIPrep*'s documentation]\
                       name='bidssrc')
 
     bids_info = pe.Node(BIDSInfo(
-        bids_dir=layout.root, bids_validate=False),
-        name='bids_info', run_without_submitting=True)
+        bids_dir=layout.root, bids_validate=False), name='bids_info')
 
     summary = pe.Node(SubjectSummary(output_spaces=output_spaces, template=template),
                       name='summary', run_without_submitting=True)

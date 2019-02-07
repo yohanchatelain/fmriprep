@@ -607,7 +607,7 @@ def build_workflow(opts, retval):
 
     # First check that bids_dir looks like a BIDS folder
     bids_dir = os.path.abspath(opts.bids_dir)
-    layout = BIDSLayout(bids_dir, validate=False)
+    layout = BIDSLayout(bids_dir, validate=not opts.skip_bids_validation)
     subject_list = collect_participants(
         layout, participant_label=opts.participant_label)
 
