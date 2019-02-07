@@ -19,7 +19,10 @@ is presented below:
     :simple_form: yes
 
     from fmriprep.workflows.base import init_single_subject_wf
+    from collections import namedtuple
+    BIDSLayout = namedtuple('BIDSLayout', ['root'], defaults='.')
     wf = init_single_subject_wf(
+        layout=BIDSLayout(),
         subject_id='test',
         name='single_subject_wf',
         task_id='',
@@ -30,7 +33,6 @@ is presented below:
         freesurfer=True,
         reportlets_dir='.',
         output_dir='.',
-        bids_dir='.',
         skull_strip_template='OASIS30ANTs',
         skull_strip_fixed_seed=False,
         template='MNI152NLin2009cAsym',
