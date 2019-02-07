@@ -51,10 +51,11 @@ def init_fmriprep_wf(layout, subject_list, task_id, echo_idx, run_uuid, work_dir
         :simple_form: yes
 
         import os
-        from pybids import BIDSLayout
+        from collections import namedtuple
+        BIDSLayout = namedtuple('BIDSLayout', ['root'], defaults='.')
         from fmriprep.workflows.base import init_fmriprep_wf
         os.environ['FREESURFER_HOME'] = os.getcwd()
-        wf = init_fmriprep_wf(layout=BIDSLayout('.', validate=False),
+        wf = init_fmriprep_wf(layout=BIDSLayout(),
                               subject_list=['fmripreptest'],
                               task_id='',
                               echo_idx=None,
@@ -253,8 +254,9 @@ def init_single_subject_wf(layout, subject_id, task_id, echo_idx, name, reportle
         :simple_form: yes
 
         from fmriprep.workflows.base import init_single_subject_wf
-        from bids import BIDSLayout
-        wf = init_single_subject_wf(layout=BIDSLayout('.', validate=False),
+        from collections import namedtuple
+        BIDSLayout = namedtuple('BIDSLayout', ['root'], defaults='.')
+        wf = init_single_subject_wf(layout=BIDSLayout(),
                                     subject_id='test',
                                     task_id='',
                                     echo_idx=None,
