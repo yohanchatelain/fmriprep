@@ -1,3 +1,21 @@
+1.3.0 (February 7, 2019)
+========================
+
+We start the 1.3.x series including a few bugfixes, housekeeping duty and a refactors
+to leverage `sMRIPrep <https://github.com/poldracklab/smriprep>`__ (which is a fork of
+fMRIPrep's anatomical workflow), pybids>=0.7 for querying dataset, and 
+`TemplateFlow <https://github.com/templateflow>`__ for handling standard spaces.
+
+* [FIX] Bad ``fsnative`` replacement in CIfTI workflow (#1476) @oesteban
+* [FIX] Avoid warning when generating boilerplate (#1464) @oesteban
+* [MAINT] resolves #1485 : patch fmriprep-docker automount for use with Python 3.7 (#1486) @rciric
+* [RF] Use anatomical workflows from sMRIPrep (#1482) @oesteban
+* [MAINT] Update sentry-sdk (#1490) @chrisfilo
+* [ENH] Remaining TemplateFlow integrations (#1494) @oesteban
+* [MAINT] Update to keep up with poldracklab/niworkflows#299 (#1496) @oesteban
+* [FIX] Updating bids-validator to 1.1.3 (#1498) @chrisfilo
+
+
 1.2.6-1 (January 24, 2019)
 ==========================
 

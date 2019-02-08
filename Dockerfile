@@ -104,7 +104,7 @@ RUN apt-get install -y nodejs
 RUN npm install -g svgo
 
 # Installing bids-validator
-RUN npm install -g bids-validator@1.1.0
+RUN npm install -g bids-validator@1.1.3
 
 # Installing and setting up ICA_AROMA
 RUN mkdir -p /opt/ICA-AROMA && \
@@ -161,10 +161,13 @@ RUN pip install "datalad==0.10.0" && \
     rm -rf ~/.cache/pip
 
 RUN git config --global user.name "First Last" && \
-    git config --global user.email "email@domain.com" && \
-    datalad install -r https://github.com/templateflow/templateflow.git
-RUN datalad get $TEMPLATEFLOW_HOME/tpl-MNI152NLin2009cAsym/*_T1w.nii.gz \
+    git config --global user.email "mail@domain.com"
+
+RUN datalad install -r https://github.com/templateflow/templateflow.git && \
+    datalad get $TEMPLATEFLOW_HOME/tpl-MNI152NLin2009cAsym/*_T1w.nii.gz \
                 $TEMPLATEFLOW_HOME/tpl-MNI152NLin2009cAsym/*_desc-brain_mask.nii.gz \
+                $TEMPLATEFLOW_HOME/tpl-MNI152NLin2009cAsym/tpl-MNI152NLin2009cAsym_res-02_desc-fMRIPrep_boldref.nii.gz \
+                $TEMPLATEFLOW_HOME/tpl-MNI152NLin2009cAsym/tpl-MNI152NLin2009cAsym_res-02_desc-DKT31_dseg.nii.gz \
                 $TEMPLATEFLOW_HOME/tpl-MNI152Lin/*_T1w.nii.gz \
                 $TEMPLATEFLOW_HOME/tpl-MNI152Lin/*_desc-brain_mask.nii.gz \
                 $TEMPLATEFLOW_HOME/tpl-OASIS30ANTs/*_T1w.nii.gz \

@@ -33,7 +33,7 @@ from ..__about__ import __version__
 from .bold import init_func_preproc_wf
 
 
-def init_fmriprep_wf(subject_list, task_id, echo_idx, run_uuid, work_dir, output_dir, bids_dir,
+def init_fmriprep_wf(layout, subject_list, task_id, echo_idx, run_uuid, work_dir, output_dir,
                      ignore, debug, low_mem, anat_only, longitudinal, t2s_coreg,
                      omp_nthreads, skull_strip_template, skull_strip_fixed_seed,
                      freesurfer, output_spaces, template, medial_surface_nan, cifti_output, hires,
@@ -51,15 +51,17 @@ def init_fmriprep_wf(subject_list, task_id, echo_idx, run_uuid, work_dir, output
         :simple_form: yes
 
         import os
-        os.environ['FREESURFER_HOME'] = os.getcwd()
+        from collections import namedtuple
+        BIDSLayout = namedtuple('BIDSLayout', ['root'], defaults='.')
         from fmriprep.workflows.base import init_fmriprep_wf
-        wf = init_fmriprep_wf(subject_list=['fmripreptest'],
+        os.environ['FREESURFER_HOME'] = os.getcwd()
+        wf = init_fmriprep_wf(layout=BIDSLayout(),
+                              subject_list=['fmripreptest'],
                               task_id='',
                               echo_idx=None,
                               run_uuid='X',
                               work_dir='.',
                               output_dir='.',
-                              bids_dir='.',
                               ignore=[],
                               debug=False,
                               low_mem=False,
@@ -90,6 +92,8 @@ def init_fmriprep_wf(subject_list, task_id, echo_idx, run_uuid, work_dir, output
 
     Parameters
 
+        layout : BIDSLayout object
+            BIDS dataset layout
         subject_list : list
             List of subject labels
         task_id : str or None
@@ -103,8 +107,6 @@ def init_fmriprep_wf(subject_list, task_id, echo_idx, run_uuid, work_dir, output
             Directory in which to store workflow execution state and temporary files
         output_dir : str
             Directory in which to save derivatives
-        bids_dir : str
-            Root directory of BIDS dataset
         ignore : list
             Preprocessing steps to skip (may include "slicetiming", "fieldmaps")
         debug : bool
@@ -182,13 +184,13 @@ def init_fmriprep_wf(subject_list, task_id, echo_idx, run_uuid, work_dir, output
     reportlets_dir = os.path.join(work_dir, 'reportlets')
     for subject_id in subject_list:
         single_subject_wf = init_single_subject_wf(
+            layout=layout,
             subject_id=subject_id,
             task_id=task_id,
             echo_idx=echo_idx,
             name="single_subject_" + subject_id + "_wf",
             reportlets_dir=reportlets_dir,
             output_dir=output_dir,
-            bids_dir=bids_dir,
             ignore=ignore,
             debug=debug,
             low_mem=low_mem,
@@ -230,8 +232,8 @@ def init_fmriprep_wf(subject_list, task_id, echo_idx, run_uuid, work_dir, output
     return fmriprep_wf
 
 
-def init_single_subject_wf(subject_id, task_id, echo_idx, name, reportlets_dir, output_dir,
-                           bids_dir, ignore, debug, low_mem, anat_only, longitudinal, t2s_coreg,
+def init_single_subject_wf(layout, subject_id, task_id, echo_idx, name, reportlets_dir,
+                           output_dir, ignore, debug, low_mem, anat_only, longitudinal, t2s_coreg,
                            omp_nthreads, skull_strip_template, skull_strip_fixed_seed,
                            freesurfer, output_spaces, template, medial_surface_nan,
                            cifti_output, hires, use_bbr, bold2t1w_dof, fmap_bspline, fmap_demean,
@@ -252,13 +254,15 @@ def init_single_subject_wf(subject_id, task_id, echo_idx, name, reportlets_dir, 
         :simple_form: yes
 
         from fmriprep.workflows.base import init_single_subject_wf
-        wf = init_single_subject_wf(subject_id='test',
+        from collections import namedtuple
+        BIDSLayout = namedtuple('BIDSLayout', ['root'], defaults='.')
+        wf = init_single_subject_wf(layout=BIDSLayout(),
+                                    subject_id='test',
                                     task_id='',
                                     echo_idx=None,
                                     name='single_subject_wf',
                                     reportlets_dir='.',
                                     output_dir='.',
-                                    bids_dir='.',
                                     ignore=[],
                                     debug=False,
                                     low_mem=False,
@@ -288,6 +292,8 @@ def init_single_subject_wf(subject_id, task_id, echo_idx, name, reportlets_dir, 
 
     Parameters
 
+        layout : BIDSLayout object
+            BIDS dataset layout
         subject_id : str
             List of subject labels
         task_id : str or None
@@ -321,8 +327,6 @@ def init_single_subject_wf(subject_id, task_id, echo_idx, name, reportlets_dir, 
             Directory in which to save reportlets
         output_dir : str
             Directory in which to save derivatives
-        bids_dir : str
-            Root directory of BIDS dataset
         freesurfer : bool
             Enable FreeSurfer surface reconstruction (may increase runtime)
         output_spaces : list
@@ -377,9 +381,8 @@ def init_single_subject_wf(subject_id, task_id, echo_idx, name, reportlets_dir, 
             't1w': ['/completely/made/up/path/sub-01_T1w.nii.gz'],
             'bold': ['/completely/made/up/path/sub-01_task-nback_bold.nii.gz']
         }
-        layout = None
     else:
-        subject_data, layout = collect_data(bids_dir, subject_id, task_id, echo_idx)
+        subject_data = collect_data(layout, subject_id, task_id, echo_idx)[0]
 
     # Make sure we always go through these two checks
     if not anat_only and subject_data['bold'] == []:
@@ -421,7 +424,8 @@ to workflows in *fMRIPrep*'s documentation]\
     bidssrc = pe.Node(BIDSDataGrabber(subject_data=subject_data, anat_only=anat_only),
                       name='bidssrc')
 
-    bids_info = pe.Node(BIDSInfo(), name='bids_info', run_without_submitting=True)
+    bids_info = pe.Node(BIDSInfo(
+        bids_dir=layout.root, bids_validate=False), name='bids_info')
 
     summary = pe.Node(SubjectSummary(output_spaces=output_spaces, template=template),
                       name='summary', run_without_submitting=True)
@@ -464,12 +468,12 @@ to workflows in *fMRIPrep*'s documentation]\
         (bidssrc, summary, [('t1w', 't1w'),
                             ('t2w', 't2w'),
                             ('bold', 'bold')]),
-        (bids_info, summary, [('subject_id', 'subject_id')]),
+        (bids_info, summary, [('subject', 'subject_id')]),
+        (bids_info, anat_preproc_wf, [(('subject', _prefix), 'inputnode.subject_id')]),
         (bidssrc, anat_preproc_wf, [('t1w', 'inputnode.t1w'),
                                     ('t2w', 'inputnode.t2w'),
                                     ('roi', 'inputnode.roi'),
                                     ('flair', 'inputnode.flair')]),
-        (summary, anat_preproc_wf, [('subject_id', 'inputnode.subject_id')]),
         (bidssrc, ds_report_summary, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
         (summary, ds_report_summary, [('out_report', 'in_file')]),
         (bidssrc, ds_report_about, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
@@ -532,3 +536,9 @@ to workflows in *fMRIPrep*'s documentation]\
         ])
 
     return workflow
+
+
+def _prefix(subid):
+    if subid.startswith('sub-'):
+        return subid
+    return '-'.join(('sub', subid))

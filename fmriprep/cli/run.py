@@ -556,6 +556,7 @@ def build_workflow(opts, retval):
     from subprocess import check_call, CalledProcessError, TimeoutExpired
     from pkg_resources import resource_filename as pkgrf
     from shutil import copyfile
+    from bids import BIDSLayout
 
     from nipype import logging, config as ncfg
     from niworkflows.utils.bids import collect_participants
@@ -610,8 +611,9 @@ def build_workflow(opts, retval):
 
     # First check that bids_dir looks like a BIDS folder
     bids_dir = os.path.abspath(opts.bids_dir)
+    layout = BIDSLayout(bids_dir, validate=False)
     subject_list = collect_participants(
-        bids_dir, participant_label=opts.participant_label)
+        layout, participant_label=opts.participant_label)
 
     # Load base plugin_settings from file if --use-plugin
     if opts.use_plugin is not None:
@@ -719,6 +721,7 @@ def build_workflow(opts, retval):
         logger.warning('Option --debug is deprecated and has no effect')
 
     retval['workflow'] = init_fmriprep_wf(
+        layout=layout,
         subject_list=subject_list,
         task_id=opts.task_id,
         echo_idx=opts.echo_idx,
@@ -734,7 +737,6 @@ def build_workflow(opts, retval):
         skull_strip_fixed_seed=opts.skull_strip_fixed_seed,
         work_dir=work_dir,
         output_dir=output_dir,
-        bids_dir=bids_dir,
         freesurfer=opts.run_reconall,
         output_spaces=output_spaces,
         template=opts.template,

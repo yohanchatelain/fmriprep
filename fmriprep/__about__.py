@@ -84,20 +84,19 @@ SETUP_REQUIRES = [
 ]
 
 REQUIRES = [
-    'grabbit==0.2.3',
     'indexed_gzip>=0.8.8',
     'nibabel>=2.2.1',
     'nilearn',
     'nipype>=1.1.6',
     'nitime',
-    'niworkflows>=0.6.1,<0.7.0a0',
+    'niworkflows',
     'numpy',
     'pandas',
     'psutil>=5.4',
-    'pybids==0.6.5',
+    'pybids>=0.7.0,<0.8.0a0',
     'pyyaml',
     'scikit-image',
-    'smriprep>=0.0.4,<0.1.0a0',
+    'smriprep>=0.0.5,<0.1.0a0',
     'statsmodels',
     'tedana>=0.0.5',
     'templateflow>=0.0.4',
@@ -105,6 +104,8 @@ REQUIRES = [
 
 
 LINKS_REQUIRES = [
+    'git+https://github.com/poldracklab/niworkflows.git@'
+    'b97787ee2f1b93cafb104664b60fa0c4fd81253a#egg=niworkflows-0.7.1',
 ]
 
 TESTS_REQUIRES = [
@@ -125,7 +126,7 @@ EXTRA_REQUIRES = {
     ],
     'duecredit': ['duecredit'],
     'resmon': [],
-    'sentry': ['sentry-sdk>=0.5.3'],
+    'sentry': ['sentry-sdk>=0.6.9'],
     'tests': TESTS_REQUIRES,
 }
 EXTRA_REQUIRES['docs'] = EXTRA_REQUIRES['doc']
