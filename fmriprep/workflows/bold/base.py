@@ -50,6 +50,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                          output_spaces, template, output_dir, omp_nthreads,
                          fmap_bspline, fmap_demean, use_syn, force_syn,
                          use_aroma, ignore_aroma_err, aroma_melodic_dim,
+                         return_all_components, fd_spike_thr, dv_spike_thr,
                          medial_surface_nan, cifti_output,
                          debug, low_mem, template_out_grid,
                          layout=None, num_bold=1):
@@ -136,6 +137,12 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             Perform ICA-AROMA on MNI-resampled functional series
         ignore_aroma_err : bool
             Do not fail on ICA-AROMA errors
+        return_all_components
+            Return all CompCor component time series instead of the top fraction
+        fd_spike_thr
+            Criterion for flagging framewise displacement outliers
+        dv_spike_thr
+            Criterion for flagging DVARS outliers
         medial_surface_nan : bool
             Replace medial wall values with NaNs on functional GIFTI files
         cifti_output : bool
@@ -431,6 +438,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     bold_confounds_wf = init_bold_confs_wf(
         mem_gb=mem_gb['largemem'],
         metadata=metadata,
+        return_all_components=return_all_components,
+        fd_spike_thr=fd_spike_thr,
+        dv_spike_thr=dv_spike_thr,
         name='bold_confounds_wf')
     bold_confounds_wf.get_node('inputnode').inputs.t1_transform_flags = [False]
 

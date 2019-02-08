@@ -39,7 +39,8 @@ def init_fmriprep_wf(subject_list, task_id, echo_idx, run_uuid, work_dir, output
                      omp_nthreads, skull_strip_template, skull_strip_fixed_seed,
                      freesurfer, output_spaces, template, medial_surface_nan, cifti_output, hires,
                      use_bbr, bold2t1w_dof, fmap_bspline, fmap_demean, use_syn, force_syn,
-                     use_aroma, ignore_aroma_err, aroma_melodic_dim, template_out_grid):
+                     use_aroma, ignore_aroma_err, aroma_melodic_dim, template_out_grid,
+                     return_all_components, fd_spike_thr, dv_spike_thr):
     """
     This workflow organizes the execution of FMRIPREP, with a sub-workflow for
     each subject.
@@ -167,6 +168,12 @@ def init_fmriprep_wf(subject_list, task_id, echo_idx, run_uuid, work_dir, output
         template_out_grid : str
             Keyword ('native', '1mm' or '2mm') or path of custom reference
             image for normalization
+        return_all_components
+            Return all CompCor component time series instead of the top fraction
+        fd_spike_thr
+            Criterion for flagging framewise displacement outliers
+        dv_spike_thr
+            Criterion for flagging DVARS outliers
 
     """
     fmriprep_wf = Workflow(name='fmriprep_wf')
@@ -215,6 +222,9 @@ def init_fmriprep_wf(subject_list, task_id, echo_idx, run_uuid, work_dir, output
             use_aroma=use_aroma,
             aroma_melodic_dim=aroma_melodic_dim,
             ignore_aroma_err=ignore_aroma_err,
+            return_all_components=return_all_components,
+            fd_spike_thr=fd_spike_thr,
+            dv_spike_thr=dv_spike_thr,
         )
 
         single_subject_wf.config['execution']['crashdump_dir'] = (
@@ -237,7 +247,8 @@ def init_single_subject_wf(subject_id, task_id, echo_idx, name, reportlets_dir, 
                            freesurfer, output_spaces, template, medial_surface_nan,
                            cifti_output, hires, use_bbr, bold2t1w_dof, fmap_bspline, fmap_demean,
                            use_syn, force_syn, template_out_grid,
-                           use_aroma, aroma_melodic_dim, ignore_aroma_err):
+                           use_aroma, aroma_melodic_dim, ignore_aroma_err,
+                           return_all_components, fd_spike_thr, dv_spike_thr):
     """
     This workflow organizes the preprocessing pipeline for a single subject.
     It collects and reports information about the subject, and prepares
@@ -365,6 +376,12 @@ def init_single_subject_wf(subject_id, task_id, echo_idx, name, reportlets_dir, 
             Perform ICA-AROMA on MNI-resampled functional series
         ignore_aroma_err : bool
             Do not fail on ICA-AROMA errors
+        return_all_components
+            Return all CompCor component time series instead of the top fraction
+        fd_spike_thr
+            Criterion for flagging framewise displacement outliers
+        dv_spike_thr
+            Criterion for flagging DVARS outliers
 
     Inputs
 
@@ -503,6 +520,9 @@ to workflows in *fMRIPrep*'s documentation]\
                                                use_aroma=use_aroma,
                                                aroma_melodic_dim=aroma_melodic_dim,
                                                ignore_aroma_err=ignore_aroma_err,
+                                               return_all_components=return_all_components,
+                                               fd_spike_thr=fd_spike_thr,
+                                               dv_spike_thr=dv_spike_thr,
                                                num_bold=len(subject_data['bold']))
 
         workflow.connect([
