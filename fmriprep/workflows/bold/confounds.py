@@ -41,7 +41,8 @@ from .resampling import init_bold_mni_trans_wf
 DEFAULT_MEMORY_MIN_GB = 0.01
 
 
-def init_bold_confs_wf(mem_gb, metadata, name="bold_confs_wf"):
+def init_bold_confs_wf(mem_gb, metadata, return_all_components=False,
+                       spike_criteria=None, name="bold_confs_wf"):
     """
     This workflow calculates confounds for a BOLD series, and aggregates them
     into a :abbr:`TSV (tab-separated value)` file, for use as nuisance
@@ -87,6 +88,15 @@ def init_bold_confs_wf(mem_gb, metadata, name="bold_confs_wf"):
             BIDS metadata for BOLD file
         name : str
             Name of workflow (default: ``bold_confs_wf``)
+        return_all_components: bool
+            Indicates whether CompCor decompositions should return all
+            components instead of the minimal number of components necessary
+            to explain 50 percent of the variance in the decomposition mask.
+        fd_spike_thr
+            Criterion for flagging framewise displacement outliers
+        dv_spike_thr
+            Criterion for flagging DVARS outliers
+
 
     **Inputs**
 
@@ -144,9 +154,9 @@ placed within the corresponding confounds file.
 The confound time series derived from head motion estimates and global
 signals were expanded with the inclusion of temporal derivatives and
 quadratic terms for each [@confounds_satterthwaite_2013].
-Frames that exceeded a threshold of 0.2 mm FD or 20 DVARS were classified
-as motion outliers [following @power_fd_dvars].
-"""
+Frames that exceeded a threshold of {fd} mm FD or {dv} standardised DVARS
+were classified as motion outliers.
+""".format(fd=fd_spike_thr, dv=dv_spike_thr)
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['bold', 'bold_mask', 'movpar_file', 'skip_vols',
                 't1_mask', 't1_tpms', 't1_bold_xform']),
@@ -194,15 +204,22 @@ as motion outliers [following @power_fd_dvars].
 
     tcompcor = pe.Node(
         TCompCor(components_file='tcompcor.tsv', header_prefix='t_comp_cor_', pre_filter='cosine',
-                 save_pre_filter=True, num_components='all', save_metadata=True,
-                 percentile_threshold=.05),
+                 save_pre_filter=True, save_metadata=True, percentile_threshold=.05),
         name="tcompcor", mem_gb=mem_gb)
 
     acompcor = pe.Node(
         ACompCor(components_file='acompcor.tsv', header_prefix='a_comp_cor_', pre_filter='cosine',
-                 save_pre_filter=True, num_components='all', save_metadata=True,
-                 mask_names=['combined', 'CSF', 'WM'], merge_method='none'),
+                 save_pre_filter=True, save_metadata=True, mask_names=['combined', 'CSF', 'WM'],
+                 merge_method='none'),
         name="acompcor", mem_gb=mem_gb)
+
+    # Set number of components
+    if return_all_components:
+        acompcor.inputs.num_components = 'all'
+        tcompcor.inputs.num_components = 'all'
+    else:
+        acompcor.inputs.variance_threshold = 0.5
+        tcompcor.inputs.variance_threshold = 0.5
 
     # Set TR if present
     if 'RepetitionTime' in metadata:
@@ -232,7 +249,7 @@ as motion outliers [following @power_fd_dvars].
                  additional_metadata={'Method': 'tCompCor'}, enforce_case=True),
         name='tcc_metadata_fmt')
     acc_metadata_fmt = pe.Node(
-        TSV2JSON(index_column='component', drop_columns=['mask'],
+        TSV2JSON(index_column='component',
                  additional_metadata={'Method': 'aCompCor'}, enforce_case=True),
         name='acc_metadata_fmt')
 
@@ -244,8 +261,8 @@ as motion outliers [following @power_fd_dvars].
     # Add spike regressors
     spike_regress = pe.Node(SpikeRegressors(
         criteria={
-            'framewise_displacement': ('>', 0.2),
-            'dvars': ('>', 20)
+            'framewise_displacement': ('>', fd_spike_thr),
+            'std_dvars': ('>', dv_spike_thr)
         }),
         name='spike_regressors')
 
