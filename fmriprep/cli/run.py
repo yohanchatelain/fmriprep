@@ -185,11 +185,11 @@ def get_parser():
         help='Include all components estimated in CompCor decomposition in the confounds '
              'file instead of only the components sufficient to explain 50 percent of '
              'BOLD variance in each CompCor mask')
-    g.confounds.add_argument(
+    g_confounds.add_argument(
         '--fd-spike-threshold', required=False, action='store', default=0.5, type=float,
         help='Threshold for flagging a frame as an outlier on the basis of framewise '
              'displacement')
-    g.confounds.add_argument(
+    g_confounds.add_argument(
         '--dvars-spike-threshold', required=False, action='store', default=1.5, type=float,
         help='Threshold for flagging a frame as an outlier on the basis of standardised '
              'DVARS')

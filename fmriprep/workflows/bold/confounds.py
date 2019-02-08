@@ -42,7 +42,7 @@ DEFAULT_MEMORY_MIN_GB = 0.01
 
 
 def init_bold_confs_wf(mem_gb, metadata, return_all_components=False,
-                       spike_criteria=None, name="bold_confs_wf"):
+                       fd_spike_thr=0.5, dv_spike_thr=1.5, name="bold_confs_wf"):
     """
     This workflow calculates confounds for a BOLD series, and aggregates them
     into a :abbr:`TSV (tab-separated value)` file, for use as nuisance
@@ -148,7 +148,8 @@ which ensures it does not include cortical GM regions.
 For aCompCor, components are calculated within the intersection of
 the aforementioned mask and the union of CSF and WM masks calculated
 in T1w space, after their projection to the native space of each
-functional run (using the inverse BOLD-to-T1w transformation).
+functional run (using the inverse BOLD-to-T1w transformation). Components
+are also calculated separately within the WM and CSF masks.
 The head-motion estimates calculated in the correction step were also
 placed within the corresponding confounds file.
 The confound time series derived from head motion estimates and global
