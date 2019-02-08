@@ -160,10 +160,8 @@ ENV TEMPLATEFLOW_HOME="/opt/templateflow"
 RUN pip install "datalad==0.10.0" && \
     rm -rf ~/.cache/pip
 
-RUN git config --global user.name "First Last" && \
-    git config --global user.email "mail@domain.com"
-
-RUN datalad install -r https://github.com/templateflow/templateflow.git && \
+RUN umask 000 && \
+    datalad install -r https://github.com/templateflow/templateflow.git && \
     datalad get $TEMPLATEFLOW_HOME/tpl-MNI152NLin2009cAsym/*_T1w.nii.gz \
                 $TEMPLATEFLOW_HOME/tpl-MNI152NLin2009cAsym/*_desc-brain_mask.nii.gz \
                 $TEMPLATEFLOW_HOME/tpl-MNI152NLin2009cAsym/tpl-MNI152NLin2009cAsym_res-02_desc-fMRIPrep_boldref.nii.gz \
@@ -174,6 +172,11 @@ RUN datalad install -r https://github.com/templateflow/templateflow.git && \
                 $TEMPLATEFLOW_HOME/tpl-OASIS30ANTs/tpl-OASIS30ANTs_res-01_desc-brain_mask.nii.gz \
                 $TEMPLATEFLOW_HOME/tpl-OASIS30ANTs/tpl-OASIS30ANTs_res-01_label-brain_probseg.nii.gz \
                 $TEMPLATEFLOW_HOME/tpl-OASIS30ANTs/tpl-OASIS30ANTs_res-01_desc-BrainCerebellumExtraction_mask.nii.gz
+
+# Stop datalad complaining about user info when using templateflow on Singularity
+RUN cd $TEMPLATEFLOW_HOME && \
+    git config user.name "fMRIPrep User" && \
+    git config user.email "mail@domain.tld"
 
 # Installing dev requirements (packages that are not in pypi)
 WORKDIR /src/
