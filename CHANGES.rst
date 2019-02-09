@@ -1,3 +1,9 @@
+1.3.0.post1 (February 8, 2019)
+==============================
+
+Hotfix release intended for Singularity users. For further detail, please see 
+`#1500 <https://github.com/poldracklab/fmriprep/issues/1500>`__.
+
 1.3.0 (February 7, 2019)
 ========================
 
