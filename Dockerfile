@@ -148,6 +148,8 @@ RUN conda install -y python=3.7.1 \
 # Precaching fonts, set 'Agg' as default backend for matplotlib
 RUN python -c "from matplotlib import font_manager" && \
     sed -i 's/\(backend *: \).*$/\1Agg/g' $( python -c "import matplotlib; print(matplotlib.matplotlib_fname())" )
+RUN pip install "datalad==0.10.0" && \
+    rm -rf ~/.cache/pip
 
 # Unless otherwise specified each process should only use one thread - nipype
 # will handle parallelization
@@ -155,28 +157,15 @@ ENV MKL_NUM_THREADS=1 \
     OMP_NUM_THREADS=1
 
 # Precaching atlases
-WORKDIR /opt
+RUN git config --global user.name "fMRIPrep User" && \
+    git config --global user.email "mail@domain.tld"
 ENV TEMPLATEFLOW_HOME="/opt/templateflow"
-RUN pip install "datalad==0.10.0" && \
-    rm -rf ~/.cache/pip
-
-RUN umask 000 && \
-    datalad install -r https://github.com/templateflow/templateflow.git && \
-    datalad get $TEMPLATEFLOW_HOME/tpl-MNI152NLin2009cAsym/*_T1w.nii.gz \
-                $TEMPLATEFLOW_HOME/tpl-MNI152NLin2009cAsym/*_desc-brain_mask.nii.gz \
-                $TEMPLATEFLOW_HOME/tpl-MNI152NLin2009cAsym/tpl-MNI152NLin2009cAsym_res-02_desc-fMRIPrep_boldref.nii.gz \
-                $TEMPLATEFLOW_HOME/tpl-MNI152NLin2009cAsym/tpl-MNI152NLin2009cAsym_res-02_desc-DKT31_dseg.nii.gz \
-                $TEMPLATEFLOW_HOME/tpl-MNI152Lin/*_T1w.nii.gz \
-                $TEMPLATEFLOW_HOME/tpl-MNI152Lin/*_desc-brain_mask.nii.gz \
-                $TEMPLATEFLOW_HOME/tpl-OASIS30ANTs/*_T1w.nii.gz \
-                $TEMPLATEFLOW_HOME/tpl-OASIS30ANTs/tpl-OASIS30ANTs_res-01_desc-brain_mask.nii.gz \
-                $TEMPLATEFLOW_HOME/tpl-OASIS30ANTs/tpl-OASIS30ANTs_res-01_label-brain_probseg.nii.gz \
-                $TEMPLATEFLOW_HOME/tpl-OASIS30ANTs/tpl-OASIS30ANTs_res-01_desc-BrainCerebellumExtraction_mask.nii.gz
-
-# Stop datalad complaining about user info when using templateflow on Singularity
-RUN cd $TEMPLATEFLOW_HOME && \
-    git config user.name "fMRIPrep User" && \
-    git config user.email "mail@domain.tld"
+WORKDIR /opt
+RUN datalad install -r https://github.com/templateflow/templateflow.git
+RUN datalad get $TEMPLATEFLOW_HOME/tpl-MNI152NLin2009cAsym/* \
+                $TEMPLATEFLOW_HOME/tpl-MNI152Lin/* \
+                $TEMPLATEFLOW_HOME/tpl-OASIS30ANTs/* \
+                $TEMPLATEFLOW_HOME/tpl-NKI/*
 
 # Installing dev requirements (packages that are not in pypi)
 WORKDIR /src/
