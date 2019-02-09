@@ -412,7 +412,7 @@ jobs:
                 --config $PWD/nipype.cfg -w /tmp/ds005/work \
                 /tmp/data/ds005 /tmp/ds005/derivatives participant \
                 --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
-                --ignore-aroma-denoising-errors --use-aroma \
+                --use-aroma \
                 --output-space T1w template fsaverage5 fsnative \
                 --template-resampling-grid native \
                 --use-plugin /home/circleci/src/fmriprep/.circleci/legacy.yml \
@@ -423,6 +423,7 @@ jobs:
             mkdir -p /tmp/ds005/derivatives_partial
             sudo mv /tmp/ds005/derivatives/freesurfer /tmp/ds005/derivatives_partial
             sudo cp -a /tmp/ds005/work /tmp/ds005/work_partial
+            sudo rm -rf /tmp/ds005/work_partial/fmriprep_wf/single_subject_01_wf/func_preproc_task_mixedgamblestask_run_02_wf/ica_aroma_wf
       - run:
           name: Checking outputs of full fMRIPrep run
           command: |
@@ -434,14 +435,14 @@ jobs:
           name: Re-run fMRIPrep on single run of task data
           no_output_timeout: 2h
           command: |
-            rm /tmp/data/ds005/sub-01/func/*_run-02_*
+            rm /tmp/data/ds005/sub-01/func/*_run-01_*
             fmriprep-docker -i poldracklab/fmriprep:latest \
                 -e FMRIPREP_DEV 1 \
-                --config $PWD/nipype.cfg -w /tmp/ds005/work \
+                --config $PWD/nipype.cfg -w /tmp/ds005/work_partial \
                 /tmp/data/ds005 /tmp/ds005/derivatives_partial participant \
                 --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
                 --output-space T1w template fsaverage5 fsnative \
-                --ignore-aroma-denoising-errors --use-aroma \
+                --aroma-melodic-dimensionality 2 --use-aroma \
                 --template-resampling-grid native \
                 --nthreads 2 --cifti-output -vv
       - run:

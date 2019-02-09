@@ -53,7 +53,7 @@ is presented below:
         template_out_grid='native',
         use_aroma=False,
         aroma_melodic_dim=-200,
-        ignore_aroma_err=False,
+        err_on_aroma_warn=False,
     )
 
 
@@ -275,7 +275,7 @@ BOLD preprocessing
         template_out_grid='native',
         use_aroma=False,
         aroma_melodic_dim=-200,
-        ignore_aroma_err=False,
+        err_on_aroma_warn=False,
     )
 
 Preprocessing of :abbr:`BOLD (blood-oxygen level-dependent)` files is

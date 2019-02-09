@@ -38,7 +38,7 @@ def init_fmriprep_wf(layout, subject_list, task_id, echo_idx, run_uuid, work_dir
                      omp_nthreads, skull_strip_template, skull_strip_fixed_seed,
                      freesurfer, output_spaces, template, medial_surface_nan, cifti_output, hires,
                      use_bbr, bold2t1w_dof, fmap_bspline, fmap_demean, use_syn, force_syn,
-                     use_aroma, ignore_aroma_err, aroma_melodic_dim, template_out_grid):
+                     use_aroma, err_on_aroma_warn, aroma_melodic_dim, template_out_grid):
     """
     This workflow organizes the execution of FMRIPREP, with a sub-workflow for
     each subject.
@@ -85,7 +85,7 @@ def init_fmriprep_wf(layout, subject_list, task_id, echo_idx, run_uuid, work_dir
                               use_syn=True,
                               force_syn=True,
                               use_aroma=False,
-                              ignore_aroma_err=False,
+                              err_on_aroma_warn=False,
                               aroma_melodic_dim=-200,
                               template_out_grid='native')
 
@@ -163,7 +163,7 @@ def init_fmriprep_wf(layout, subject_list, task_id, echo_idx, run_uuid, work_dir
             **Temporary**: Always run SyN-based SDC
         use_aroma : bool
             Perform ICA-AROMA on MNI-resampled functional series
-        ignore_aroma_err : bool
+        err_on_aroma_warn : bool
             Do not fail on ICA-AROMA errors
         template_out_grid : str
             Keyword ('native', '1mm' or '2mm') or path of custom reference
@@ -215,7 +215,7 @@ def init_fmriprep_wf(layout, subject_list, task_id, echo_idx, run_uuid, work_dir
             template_out_grid=template_out_grid,
             use_aroma=use_aroma,
             aroma_melodic_dim=aroma_melodic_dim,
-            ignore_aroma_err=ignore_aroma_err,
+            err_on_aroma_warn=err_on_aroma_warn,
         )
 
         single_subject_wf.config['execution']['crashdump_dir'] = (
@@ -238,7 +238,7 @@ def init_single_subject_wf(layout, subject_id, task_id, echo_idx, name, reportle
                            freesurfer, output_spaces, template, medial_surface_nan,
                            cifti_output, hires, use_bbr, bold2t1w_dof, fmap_bspline, fmap_demean,
                            use_syn, force_syn, template_out_grid,
-                           use_aroma, aroma_melodic_dim, ignore_aroma_err):
+                           use_aroma, aroma_melodic_dim, err_on_aroma_warn):
     """
     This workflow organizes the preprocessing pipeline for a single subject.
     It collects and reports information about the subject, and prepares
@@ -288,7 +288,7 @@ def init_single_subject_wf(layout, subject_id, task_id, echo_idx, name, reportle
                                     template_out_grid='native',
                                     use_aroma=False,
                                     aroma_melodic_dim=-200,
-                                    ignore_aroma_err=False)
+                                    err_on_aroma_warn=False)
 
     Parameters
 
@@ -366,7 +366,7 @@ def init_single_subject_wf(layout, subject_id, task_id, echo_idx, name, reportle
             image for normalization
         use_aroma : bool
             Perform ICA-AROMA on MNI-resampled functional series
-        ignore_aroma_err : bool
+        err_on_aroma_warn : bool
             Do not fail on ICA-AROMA errors
 
     Inputs
@@ -512,7 +512,7 @@ to workflows in *fMRIPrep*'s documentation]\
                                                template_out_grid=template_out_grid,
                                                use_aroma=use_aroma,
                                                aroma_melodic_dim=aroma_melodic_dim,
-                                               ignore_aroma_err=ignore_aroma_err,
+                                               err_on_aroma_warn=err_on_aroma_warn,
                                                num_bold=len(subject_data['bold']))
 
         workflow.connect([

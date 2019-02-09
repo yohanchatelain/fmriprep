@@ -49,7 +49,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                          use_bbr, t2s_coreg, bold2t1w_dof, reportlets_dir,
                          output_spaces, template, output_dir, omp_nthreads,
                          fmap_bspline, fmap_demean, use_syn, force_syn,
-                         use_aroma, ignore_aroma_err, aroma_melodic_dim,
+                         use_aroma, err_on_aroma_warn, aroma_melodic_dim,
                          medial_surface_nan, cifti_output,
                          debug, low_mem, template_out_grid,
                          layout=None, num_bold=1):
@@ -83,7 +83,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                   medial_surface_nan=False,
                                   cifti_output=False,
                                   use_aroma=False,
-                                  ignore_aroma_err=False,
+                                  err_on_aroma_warn=False,
                                   aroma_melodic_dim=-200,
                                   num_bold=1)
 
@@ -134,7 +134,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
             **Temporary**: Always run SyN-based SDC
         use_aroma : bool
             Perform ICA-AROMA on MNI-resampled functional series
-        ignore_aroma_err : bool
+        err_on_aroma_warn : bool
             Do not fail on ICA-AROMA errors
         medial_surface_nan : bool
             Replace medial wall values with NaNs on functional GIFTI files
@@ -731,7 +731,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             # ICA-AROMA workflow
             # Internally resamples to MNI152 Linear (2006)
             from .confounds import init_ica_aroma_wf
-            from niworkflows.interfaces.utils import JoinTSVColumns
 
             ica_aroma_wf = init_ica_aroma_wf(
                 template=template,
@@ -739,11 +738,13 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 mem_gb=mem_gb['resampled'],
                 omp_nthreads=omp_nthreads,
                 use_fieldwarp=fmaps is not None,
-                ignore_aroma_err=ignore_aroma_err,
+                err_on_aroma_warn=err_on_aroma_warn,
                 aroma_melodic_dim=aroma_melodic_dim,
                 name='ica_aroma_wf')
 
-            join = pe.Node(JoinTSVColumns(), name='aroma_confounds')
+            join = pe.Node(niu.Function(output_names=["out_file"],
+                                        function=_to_join),
+                           name='aroma_confounds')
 
             workflow.disconnect([
                 (bold_confounds_wf, outputnode, [
@@ -1064,3 +1065,15 @@ def _get_wf_name(bold_fname):
         ".", "_").replace(" ", "").replace("-", "_").replace("_bold", "_wf")
 
     return name
+
+
+def _to_join(in_file, join_file):
+    """
+    Joins two tsv files if the join_file is not None
+    """
+    from niworkflows.interfaces.utils import JoinTSVColumns
+    if join_file is None:
+        return in_file
+    else:
+        res = JoinTSVColumns(in_file=in_file, join_file=join_file).run()
+        return res.outputs.out_file
