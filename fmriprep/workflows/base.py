@@ -397,7 +397,7 @@ def init_single_subject_wf(layout, subject_id, task_id, echo_idx, name, reportle
     workflow = Workflow(name=name)
     workflow.__desc__ = """
 Results included in this manuscript come from preprocessing
-performed using *fMRIPprep* {fmriprep_ver}
+performed using *fMRIPrep* {fmriprep_ver}
 (@fmriprep1; @fmriprep2; RRID:SCR_016216),
 which is based on *Nipype* {nipype_ver}
 (@nipype1; @nipype2; RRID:SCR_002502).
