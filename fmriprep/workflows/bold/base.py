@@ -361,7 +361,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                           slice_timing=run_stc,
                           registration='FreeSurfer' if freesurfer else 'FSL',
                           registration_dof=bold2t1w_dof,
-                          pe_direction=metadata.get("PhaseEncodingDirection")),
+                          pe_direction=metadata.get("PhaseEncodingDirection"),
+                          tr=metadata.get("RepetitionTime")),
         name='summary', mem_gb=DEFAULT_MEMORY_MIN_GB, run_without_submitting=True)
 
     func_derivatives_wf = init_func_derivatives_wf(output_dir=output_dir,
