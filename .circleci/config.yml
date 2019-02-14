@@ -677,6 +677,35 @@ jobs:
       - store_artifacts:
           path: /tmp/ds210
 
+  deploy_docker_patches:
+    machine:
+      image: circleci/classic:201711-01
+    working_directory: /tmp/src/fmriprep
+    steps:
+
+      - attach_workspace:
+          at: /tmp
+      - run:
+          name: Load Docker image layer cache
+          no_output_timeout: 30m
+          command: |
+            docker info
+            set +o pipefail
+            if [ -f /tmp/cache/docker.tar.gz ]; then
+              sudo apt update && sudo apt -y install pigz
+              pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
+              docker images
+            fi
+      - run:
+          name: Deploy to Docker Hub
+          no_output_timeout: 40m
+          command: |
+            if [[ -n "$DOCKER_PASS" ]]; then
+              docker login -u $DOCKER_USER -p $DOCKER_PASS
+              docker tag poldracklab/fmriprep poldracklab/fmriprep:${CIRCLE_BRANCH#docker/}
+              docker push poldracklab/fmriprep:${CIRCLE_BRANCH#docker/}
+            fi
+
   deploy_docker:
     machine:
       image: circleci/classic:201711-01
@@ -747,6 +776,7 @@ workflows:
               ignore:
                 - /docs?\/.*/
                 - /tests?\/.*/
+                - /docker\/.*/
             tags:
               only: /.*/
 
@@ -758,6 +788,7 @@ workflows:
                 - /ds005\/.*/
                 - /ds054\/.*/
                 - /ds210\/.*/
+                - /docker\/.*/
             tags:
               only: /.*/
 
@@ -771,6 +802,7 @@ workflows:
                 - /ds005\/.*/
                 - /ds054\/.*/
                 - /ds210\/.*/
+                - /docker\/.*/
             tags:
               only: /.*/
 
@@ -782,6 +814,7 @@ workflows:
               ignore:
                 - /docs?\/.*/
                 - /tests?\/.*/
+                - /docker\/.*/
             tags:
               only: /.*/
 
@@ -796,6 +829,7 @@ workflows:
                 - /ds005\/.*/
                 - /ds054\/.*/
                 - /ds210\/.*/
+                - /docker\/.*/
             tags:
               only: /.*/
 
@@ -810,6 +844,7 @@ workflows:
                 - /tests?\/.*/
                 - /ds054\/.*/
                 - /ds210\/.*/
+                - /docker\/.*/
             tags:
               only: /.*/
 
@@ -824,6 +859,7 @@ workflows:
                 - /tests?\/.*/
                 - /ds005\/.*/
                 - /ds210\/.*/
+                - /docker\/.*/
             tags:
               only: /.*/
 
@@ -839,8 +875,16 @@ workflows:
                 - /tests?\/.*/
                 - /ds005\/.*/
                 - /ds054\/.*/
+                - /docker\/.*/
             tags:
               only: /.*/
+
+      - deploy_docker_patches:
+          requires:
+            - build
+          filters:
+            branches:
+              only: /docker\/.*/
 
       - deploy_docker:
           requires:

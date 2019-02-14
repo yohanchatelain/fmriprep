@@ -166,6 +166,11 @@ RUN datalad get $TEMPLATEFLOW_HOME/tpl-MNI152NLin2009cAsym/* \
                 $TEMPLATEFLOW_HOME/tpl-MNI152Lin/* \
                 $TEMPLATEFLOW_HOME/tpl-OASIS30ANTs/* \
                 $TEMPLATEFLOW_HOME/tpl-NKI/*
+RUN git -C $TEMPLATEFLOW_HOME config annex.merge-annex-branches false && \
+    git -C $TEMPLATEFLOW_HOME/tpl-MNI152NLin2009cAsym config annex.merge-annex-branches false && \
+    git -C $TEMPLATEFLOW_HOME/tpl-MNI152Lin config annex.merge-annex-branches false && \
+    git -C $TEMPLATEFLOW_HOME/tpl-OASIS30ANTs config annex.merge-annex-branches false && \
+    git -C $TEMPLATEFLOW_HOME/tpl-NKI config annex.merge-annex-branches false
 
 # Installing dev requirements (packages that are not in pypi)
 WORKDIR /src/
