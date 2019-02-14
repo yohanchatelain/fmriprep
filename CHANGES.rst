@@ -1,3 +1,9 @@
+1.3.0.post2 (February 14, 2019)
+===============================
+
+Hotfix release intended for Singularity users, amending the previous iteration
+that didn't fix the problem (#1510) @effigies.
+
 1.3.0.post1 (February 8, 2019)
 ==============================
 
