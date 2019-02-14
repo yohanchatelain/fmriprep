@@ -34,7 +34,7 @@ SUBJECT_TEMPLATE = """\t<ul class="elem-desc">
 
 FUNCTIONAL_TEMPLATE = """\t\t<h3 class="elem-title">Summary</h3>
 \t\t<ul class="elem-desc">
-\t\t\t<li>Repetition Time: {tr}</li>
+\t\t\t<li>Repetition time (TR): {tr:.03g}s</li>
 \t\t\t<li>Phase-encoding (PE) direction: {pedir}</li>
 \t\t\t<li>Slice timing correction: {stc}</li>
 \t\t\t<li>Susceptibility distortion correction: {sdc}</li>
