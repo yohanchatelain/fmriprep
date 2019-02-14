@@ -155,7 +155,7 @@ class FunctionalSummaryInputSpec(BaseInterfaceInputSpec):
                                    mandatory=True)
     output_spaces = traits.List(desc='Target spaces')
     confounds_file = File(exists=True, desc='Confounds file')
-    tr = traits.Float(desc='TR', mandetory=True)
+    tr = traits.Float(desc='Repetition time', mandatory=True)
 
 
 class FunctionalSummary(SummaryInterface):
