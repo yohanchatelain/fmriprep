@@ -366,7 +366,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         name='summary', mem_gb=DEFAULT_MEMORY_MIN_GB, run_without_submitting=True)
 
     # CIfTI output: currently, we only support fsaverage{5,6}
-    cifti_spaces = [s for s in surface_spaces if s in ('fsaverage5', 'fsaverage6')]
+    cifti_spaces = [s for s in output_spaces if s in ('fsaverage5', 'fsaverage6')]
     cifti_output = cifti_output and cifti_spaces
     func_derivatives_wf = init_func_derivatives_wf(output_dir=output_dir,
                                                    output_spaces=output_spaces,
