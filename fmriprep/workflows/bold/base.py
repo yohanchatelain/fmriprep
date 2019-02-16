@@ -365,6 +365,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                           tr=metadata.get("RepetitionTime")),
         name='summary', mem_gb=DEFAULT_MEMORY_MIN_GB, run_without_submitting=True)
 
+    # CIfTI output: currently, we only support fsaverage{5,6}
+    cifti_spaces = [s for s in surface_spaces if s in ('fsaverage5', 'fsaverage6')]
+    cifti_output = cifti_output and cifti_spaces
     func_derivatives_wf = init_func_derivatives_wf(output_dir=output_dir,
                                                    output_spaces=output_spaces,
                                                    template=template,
@@ -798,8 +801,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (bold_surf_wf, outputnode, [('outputnode.surfaces', 'surfaces')]),
         ])
 
-        # CIFTI output
-        if cifti_output and surface_spaces:
+        if cifti_output:
             bold_surf_wf.__desc__ += """\
 *Grayordinates* files [@hcppipelines], which combine surface-sampled
 data and volume-sampled data, were also generated.
@@ -807,8 +809,7 @@ data and volume-sampled data, were also generated.
             gen_cifti = pe.MapNode(GenerateCifti(), iterfield=["surface_target", "gifti_files"],
                                    name="gen_cifti")
             gen_cifti.inputs.TR = metadata.get("RepetitionTime")
-            gen_cifti.inputs.surface_target = [s for s in surface_spaces
-                                               if s.startswith('fsaverage')]
+            gen_cifti.inputs.surface_target = cifti_spaces
 
             workflow.connect([
                 (bold_surf_wf, gen_cifti, [
