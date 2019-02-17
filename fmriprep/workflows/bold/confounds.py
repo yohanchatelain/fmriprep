@@ -261,10 +261,8 @@ were classified as motion outliers.
 
     # Add spike regressors
     spike_regress = pe.Node(SpikeRegressors(
-        criteria={
-            'framewise_displacement': ('>', fd_spike_thr),
-            'std_dvars': ('>', dv_spike_thr)
-        }),
+        fd_thresh=fd_spike_thr,
+        dvars_thresh=dv_spike_thr),
         name='spike_regressors')
 
     # Generate reportlet (ROIs)
