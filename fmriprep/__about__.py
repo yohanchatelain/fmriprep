@@ -84,21 +84,22 @@ SETUP_REQUIRES = [
 ]
 
 REQUIRES = [
-    'grabbit==0.2.3',
     'indexed_gzip>=0.8.8',
     'nibabel>=2.2.1',
     'nilearn',
     'nipype>=1.1.6',
     'nitime',
-    'niworkflows>=0.5.2.post7,<0.5.3',
+    'niworkflows>=0.7.2,<0.8.0a0',
     'numpy',
     'pandas',
     'psutil>=5.4',
-    'pybids==0.6.5',
+    'pybids>=0.7.0,<0.8.0a0',
     'pyyaml',
     'scikit-image',
+    'smriprep>=0.0.5,<0.1.0a0',
     'statsmodels',
     'tedana>=0.0.5',
+    'templateflow>=0.0.4',
 ]
 
 
@@ -123,7 +124,7 @@ EXTRA_REQUIRES = {
     ],
     'duecredit': ['duecredit'],
     'resmon': [],
-    'sentry': ['sentry-sdk>=0.5.3'],
+    'sentry': ['sentry-sdk>=0.6.9'],
     'tests': TESTS_REQUIRES,
 }
 EXTRA_REQUIRES['docs'] = EXTRA_REQUIRES['doc']

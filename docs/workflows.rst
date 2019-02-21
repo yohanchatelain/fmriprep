@@ -19,7 +19,10 @@ is presented below:
     :simple_form: yes
 
     from fmriprep.workflows.base import init_single_subject_wf
+    from collections import namedtuple
+    BIDSLayout = namedtuple('BIDSLayout', ['root'], defaults='.')
     wf = init_single_subject_wf(
+        layout=BIDSLayout(),
         subject_id='test',
         name='single_subject_wf',
         task_id='',
@@ -30,8 +33,7 @@ is presented below:
         freesurfer=True,
         reportlets_dir='.',
         output_dir='.',
-        bids_dir='.',
-        skull_strip_template='OASIS',
+        skull_strip_template='OASIS30ANTs',
         skull_strip_fixed_seed=False,
         template='MNI152NLin2009cAsym',
         output_spaces=['T1w', 'fsnative', 'template', 'fsaverage5'],
@@ -51,7 +53,7 @@ is presented below:
         template_out_grid='native',
         use_aroma=False,
         aroma_melodic_dim=-200,
-        ignore_aroma_err=False,
+        err_on_aroma_warn=False,
     )
 
 
@@ -68,9 +70,9 @@ T1w/T2w preprocessing
                               reportlets_dir='.',
                               output_dir='.',
                               template='MNI152NLin2009cAsym',
-                              output_spaces=['T1w', 'fsnative',
-                                             'template', 'fsaverage5'],
-                              skull_strip_template='OASIS',
+                              fs_spaces=['T1w', 'fsnative',
+                                         'template', 'fsaverage5'],
+                              skull_strip_template='OASIS30ANTs',
                               skull_strip_fixed_seed=False,
                               freesurfer=True,
                               longitudinal=False,
@@ -273,7 +275,7 @@ BOLD preprocessing
         template_out_grid='native',
         use_aroma=False,
         aroma_melodic_dim=-200,
-        ignore_aroma_err=False,
+        err_on_aroma_warn=False,
     )
 
 Preprocessing of :abbr:`BOLD (blood-oxygen level-dependent)` files is
