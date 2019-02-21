@@ -104,9 +104,13 @@ def get_parser():
                          help='generate boilerplate only')
     g_perfm.add_argument('--ignore-aroma-denoising-errors', action='store_true',
                          default=False,
-                         help='ignores the errors ICA_AROMA returns when there '
-                              'are no components classified as either noise or '
-                              'signal')
+                         help='DEPRECATED (now does nothing, see --error-on-aroma-warnings) '
+                              '- ignores the errors ICA_AROMA returns when there are no '
+                              'components classified as either noise or signal')
+    g_perfm.add_argument('--error-on-aroma-warnings', action='store_true',
+                         default=False,
+                         help='Raise an error if ICA_AROMA does not produce sensible output '
+                              '(e.g. if all the components are classified as signal or noise)')
     g_perfm.add_argument("-v", "--verbose", dest="verbose_count", action="count", default=0,
                          help="increases log verbosity for each occurence, debug level is -vvv")
     g_perfm.add_argument('--debug', action='store_true', default=False,
@@ -196,9 +200,9 @@ def get_parser():
 
     #  ANTs options
     g_ants = parser.add_argument_group('Specific options for ANTs registrations')
-    g_ants.add_argument('--skull-strip-template', action='store', default='OASIS',
-                        choices=['OASIS', 'NKI'],
-                        help='select ANTs skull-stripping template (default: OASIS))')
+    g_ants.add_argument('--skull-strip-template', action='store', default='OASIS30ANTs',
+                        choices=['OASIS30ANTs', 'NKI'],
+                        help='select ANTs skull-stripping template (default: OASIS30ANTs))')
     g_ants.add_argument('--skull-strip-fixed-seed', action='store_true',
                         help='do not use a random seed for skull-stripping - will ensure '
                              'run-to-run replicability when used with --omp-nthreads 1')
@@ -568,6 +572,7 @@ def build_workflow(opts, retval):
     from subprocess import check_call, CalledProcessError, TimeoutExpired
     from pkg_resources import resource_filename as pkgrf
     from shutil import copyfile
+    from bids import BIDSLayout
 
     from nipype import logging, config as ncfg
     from niworkflows.utils.bids import collect_participants
@@ -622,8 +627,9 @@ def build_workflow(opts, retval):
 
     # First check that bids_dir looks like a BIDS folder
     bids_dir = os.path.abspath(opts.bids_dir)
+    layout = BIDSLayout(bids_dir, validate=False)
     subject_list = collect_participants(
-        bids_dir, participant_label=opts.participant_label)
+        layout, participant_label=opts.participant_label)
 
     # Load base plugin_settings from file if --use-plugin
     if opts.use_plugin is not None:
@@ -731,6 +737,7 @@ def build_workflow(opts, retval):
         logger.warning('Option --debug is deprecated and has no effect')
 
     retval['workflow'] = init_fmriprep_wf(
+        layout=layout,
         subject_list=subject_list,
         task_id=opts.task_id,
         echo_idx=opts.echo_idx,
@@ -746,7 +753,6 @@ def build_workflow(opts, retval):
         skull_strip_fixed_seed=opts.skull_strip_fixed_seed,
         work_dir=work_dir,
         output_dir=output_dir,
-        bids_dir=bids_dir,
         freesurfer=opts.run_reconall,
         output_spaces=output_spaces,
         template=opts.template,
@@ -762,7 +768,7 @@ def build_workflow(opts, retval):
         force_syn=opts.force_syn,
         use_aroma=opts.use_aroma,
         aroma_melodic_dim=opts.aroma_melodic_dimensionality,
-        ignore_aroma_err=opts.ignore_aroma_denoising_errors,
+        err_on_aroma_warn=opts.error_on_aroma_warnings,
         return_all_components=opts.return_all_components,
         fd_spike_thr=opts.fd_spike_threshold,
         dv_spike_thr=opts.dvars_spike_threshold,

@@ -257,8 +257,8 @@ jobs:
               -e FMRIPREP_REGRESSION_TARGETS=/tmp/data/fmriprep_bold_mask \
               -e FMRIPREP_REGRESSION_REPORTS=/tmp/data/reports \
               --entrypoint="py.test" poldracklab/fmriprep:latest \
-              /root/src/fmriprep/ \
-              -svx --doctest-modules --ignore=/root/src/fmriprep/docs --ignore=setup.py
+              /src/fmriprep/ \
+              -svx --doctest-modules --ignore=/src/fmriprep/docs --ignore=setup.py
       - run:
           name: Package new masks
           no_output_timeout: 10m
@@ -329,7 +329,7 @@ jobs:
             docker run -ti --rm=false -v $PWD:/_build_html \
               --entrypoint=sphinx-build poldracklab/fmriprep:latest \
               -T -E -b html -d _build/doctrees-readthedocs -W -D \
-              language=en /root/src/fmriprep/docs/ /_build_html 2>&1 \
+              language=en /src/fmriprep/docs/ /_build_html 2>&1 \
               | tee $PWD/builddocs.log
             cat $PWD/builddocs.log
             grep -qv "ERROR" $PWD/builddocs.log
@@ -358,10 +358,10 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - ds005-anat-v13-{{ .Branch }}-{{ epoch }}
-            - ds005-anat-v13-{{ .Branch }}
-            - ds005-anat-v13-master
-            - ds005-anat-v13-
+            - ds005-anat-v14-{{ .Branch }}-{{ epoch }}
+            - ds005-anat-v14-{{ .Branch }}
+            - ds005-anat-v14-master
+            - ds005-anat-v14-
       - run:
           name: Setting up test
           command: |
@@ -389,13 +389,13 @@ jobs:
             sudo setfacl -d -m group:$(id -gn):rwx /tmp/ds005/work && \
                 sudo setfacl -m group:$(id -gn):rwx /tmp/ds005/work
             fmriprep-docker -i poldracklab/fmriprep:latest \
-                -e FMRIPREP_DEV 1 -u $(id -u) \
+                -e FMRIPREP_DEV 1 \
                 --config $PWD/nipype.cfg -w /tmp/ds005/work \
                 /tmp/data/ds005 /tmp/ds005/derivatives participant \
                 --sloppy --write-graph --mem_mb 4096 \
                 --nthreads 2 --anat-only -vv
       - save_cache:
-         key: ds005-anat-v13-{{ .Branch }}-{{ epoch }}
+         key: ds005-anat-v14-{{ .Branch }}-{{ epoch }}
          paths:
             - /tmp/ds005/work
 
@@ -408,11 +408,11 @@ jobs:
             sudo setfacl -d -m group:$(id -gn):rwx /tmp/ds005/work && \
                 sudo setfacl -m group:$(id -gn):rwx /tmp/ds005/work
             fmriprep-docker -i poldracklab/fmriprep:latest \
-                -e FMRIPREP_DEV 1 -u $(id -u) \
+                -e FMRIPREP_DEV 1 \
                 --config $PWD/nipype.cfg -w /tmp/ds005/work \
                 /tmp/data/ds005 /tmp/ds005/derivatives participant \
                 --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
-                --ignore-aroma-denoising-errors --use-aroma \
+                --use-aroma \
                 --output-space T1w template fsaverage5 fsnative \
                 --template-resampling-grid native \
                 --use-plugin /home/circleci/src/fmriprep/.circleci/legacy.yml \
@@ -423,6 +423,7 @@ jobs:
             mkdir -p /tmp/ds005/derivatives_partial
             sudo mv /tmp/ds005/derivatives/freesurfer /tmp/ds005/derivatives_partial
             sudo cp -a /tmp/ds005/work /tmp/ds005/work_partial
+            sudo rm -rf /tmp/ds005/work_partial/fmriprep_wf/single_subject_01_wf/func_preproc_task_mixedgamblestask_run_02_wf/ica_aroma_wf
       - run:
           name: Checking outputs of full fMRIPrep run
           command: |
@@ -434,14 +435,14 @@ jobs:
           name: Re-run fMRIPrep on single run of task data
           no_output_timeout: 2h
           command: |
-            rm /tmp/data/ds005/sub-01/func/*_run-02_*
+            rm /tmp/data/ds005/sub-01/func/*_run-01_*
             fmriprep-docker -i poldracklab/fmriprep:latest \
-                -e FMRIPREP_DEV 1 -u $(id -u) \
-                --config $PWD/nipype.cfg -w /tmp/ds005/work \
+                -e FMRIPREP_DEV 1 \
+                --config $PWD/nipype.cfg -w /tmp/ds005/work_partial \
                 /tmp/data/ds005 /tmp/ds005/derivatives_partial participant \
                 --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
                 --output-space T1w template fsaverage5 fsnative \
-                --ignore-aroma-denoising-errors --use-aroma \
+                --aroma-melodic-dimensionality 2 --use-aroma \
                 --template-resampling-grid native \
                 --nthreads 2 --cifti-output -vv
       - run:
@@ -488,10 +489,10 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - ds054-anat-v11-{{ .Branch }}-{{ epoch }}
-            - ds054-anat-v11-{{ .Branch }}
-            - ds054-anat-v11-master
-            - ds054-anat-v11-
+            - ds054-anat-v12-{{ .Branch }}-{{ epoch }}
+            - ds054-anat-v12-{{ .Branch }}
+            - ds054-anat-v12-master
+            - ds054-anat-v12-
       - run:
           name: Setting up test
           command: |
@@ -525,7 +526,7 @@ jobs:
                 --fs-no-reconall --sloppy --write-graph \
                 --mem_mb 4096 --nthreads 2 --anat-only -vv
       - save_cache:
-         key: ds054-anat-v11-{{ .Branch }}-{{ epoch }}
+         key: ds054-anat-v12-{{ .Branch }}-{{ epoch }}
          paths:
             - /tmp/ds054/work
 
@@ -606,10 +607,10 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - ds210-anat-v9-{{ .Branch }}-{{ epoch }}
-            - ds210-anat-v9-{{ .Branch }}
-            - ds210-anat-v9-master
-            - ds210-anat-v9-
+            - ds210-anat-v10-{{ .Branch }}-{{ epoch }}
+            - ds210-anat-v10-{{ .Branch }}
+            - ds210-anat-v10-master
+            - ds210-anat-v10-
       - run:
           name: Setting up test
           command: |
@@ -643,7 +644,7 @@ jobs:
                 --fs-no-reconall --sloppy --write-graph \
                 --mem_mb 4096 --nthreads 2 --anat-only -vv
       - save_cache:
-         key: ds210-anat-v9-{{ .Branch }}-{{ epoch }}
+         key: ds210-anat-v10-{{ .Branch }}-{{ epoch }}
          paths:
             - /tmp/ds210/work
 
@@ -675,6 +676,35 @@ jobs:
             # tar cf - work/ | pigz -2 -p 2 > ds054_workdir.tar.gz && sudo rm -fr work
       - store_artifacts:
           path: /tmp/ds210
+
+  deploy_docker_patches:
+    machine:
+      image: circleci/classic:201711-01
+    working_directory: /tmp/src/fmriprep
+    steps:
+
+      - attach_workspace:
+          at: /tmp
+      - run:
+          name: Load Docker image layer cache
+          no_output_timeout: 30m
+          command: |
+            docker info
+            set +o pipefail
+            if [ -f /tmp/cache/docker.tar.gz ]; then
+              sudo apt update && sudo apt -y install pigz
+              pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
+              docker images
+            fi
+      - run:
+          name: Deploy to Docker Hub
+          no_output_timeout: 40m
+          command: |
+            if [[ -n "$DOCKER_PASS" ]]; then
+              docker login -u $DOCKER_USER -p $DOCKER_PASS
+              docker tag poldracklab/fmriprep poldracklab/fmriprep:${CIRCLE_BRANCH#docker/}
+              docker push poldracklab/fmriprep:${CIRCLE_BRANCH#docker/}
+            fi
 
   deploy_docker:
     machine:
@@ -746,6 +776,7 @@ workflows:
               ignore:
                 - /docs?\/.*/
                 - /tests?\/.*/
+                - /docker\/.*/
             tags:
               only: /.*/
 
@@ -757,6 +788,7 @@ workflows:
                 - /ds005\/.*/
                 - /ds054\/.*/
                 - /ds210\/.*/
+                - /docker\/.*/
             tags:
               only: /.*/
 
@@ -770,6 +802,7 @@ workflows:
                 - /ds005\/.*/
                 - /ds054\/.*/
                 - /ds210\/.*/
+                - /docker\/.*/
             tags:
               only: /.*/
 
@@ -781,6 +814,7 @@ workflows:
               ignore:
                 - /docs?\/.*/
                 - /tests?\/.*/
+                - /docker\/.*/
             tags:
               only: /.*/
 
@@ -795,6 +829,7 @@ workflows:
                 - /ds005\/.*/
                 - /ds054\/.*/
                 - /ds210\/.*/
+                - /docker\/.*/
             tags:
               only: /.*/
 
@@ -809,6 +844,7 @@ workflows:
                 - /tests?\/.*/
                 - /ds054\/.*/
                 - /ds210\/.*/
+                - /docker\/.*/
             tags:
               only: /.*/
 
@@ -823,6 +859,7 @@ workflows:
                 - /tests?\/.*/
                 - /ds005\/.*/
                 - /ds210\/.*/
+                - /docker\/.*/
             tags:
               only: /.*/
 
@@ -838,8 +875,16 @@ workflows:
                 - /tests?\/.*/
                 - /ds005\/.*/
                 - /ds054\/.*/
+                - /docker\/.*/
             tags:
               only: /.*/
+
+      - deploy_docker_patches:
+          requires:
+            - build
+          filters:
+            branches:
+              only: /docker\/.*/
 
       - deploy_docker:
           requires:

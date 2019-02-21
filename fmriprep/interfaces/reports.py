@@ -34,6 +34,7 @@ SUBJECT_TEMPLATE = """\t<ul class="elem-desc">
 
 FUNCTIONAL_TEMPLATE = """\t\t<h3 class="elem-title">Summary</h3>
 \t\t<ul class="elem-desc">
+\t\t\t<li>Repetition time (TR): {tr:.03g}s</li>
 \t\t\t<li>Phase-encoding (PE) direction: {pedir}</li>
 \t\t\t<li>Slice timing correction: {stc}</li>
 \t\t\t<li>Susceptibility distortion correction: {sdc}</li>
@@ -154,6 +155,7 @@ class FunctionalSummaryInputSpec(BaseInterfaceInputSpec):
                                    mandatory=True)
     output_spaces = traits.List(desc='Target spaces')
     confounds_file = File(exists=True, desc='Confounds file')
+    tr = traits.Float(desc='Repetition time', mandatory=True)
 
 
 class FunctionalSummary(SummaryInterface):
@@ -185,7 +187,7 @@ class FunctionalSummary(SummaryInterface):
         return FUNCTIONAL_TEMPLATE.format(
             pedir=pedir, stc=stc, sdc=self.inputs.distortion_correction, registration=reg,
             output_spaces=', '.join(self.inputs.output_spaces),
-            confounds=re.sub(r'[\t ]+', ', ', conflist))
+            confounds=re.sub(r'[\t ]+', ', ', conflist), tr=self.inputs.tr)
 
 
 class AboutSummaryInputSpec(BaseInterfaceInputSpec):
