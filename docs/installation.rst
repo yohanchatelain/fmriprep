@@ -96,7 +96,7 @@ Where ``<version>`` should be replaced with the desired version of fMRIPrep that
 Preparing a Singularity image (Singularity version < 2.5)
 ---------------------------------------------------------
 In this case, start with a machine (e.g., your personal computer) with Docker installed.
-Use `docker2singularity <https://github.com/singularityware/docker2singularity>`_ to
+Use `docker2singularity <https://github.com/singularityware/docker2singularity>`_ to 
 create a singularity image.
 You will need an active internet connection and some time. ::
 
@@ -106,7 +106,7 @@ You will need an active internet connection and some time. ::
         singularityware/docker2singularity \
         poldracklab/fmriprep:<version>
 
-Where ``<version>`` should be replaced with the desired version of fMRIPrep that you want
+Where ``<version>`` should be replaced with the desired version of fMRIPrep that you want 
 to download.
 
 Beware of the back slashes, expected for Windows systems.
@@ -135,11 +135,11 @@ If the data to be preprocessed is also on the HPC, you are ready to run fmriprep
 
 .. note::
 
-   Singularity by default `exposes all environment variables from the host inside
+   Singularity by default `exposes all environment variables from the host inside 
    the container <https://github.com/singularityware/singularity/issues/445>`_.
-   Because of this your host libraries (such as nipype) could be accidentally used
+   Because of this your host libraries (such as nipype) could be accidentally used 
    instead of the ones inside the container - if they are included in ``PYTHONPATH``.
-   To avoid such situation we recommend using the ``--cleanenv`` singularity flag
+   To avoid such situation we recommend using the ``--cleanenv`` singularity flag 
    in production use. For example: ::
 
       $ singularity run --cleanenv ~/poldracklab_fmriprep_latest-2016-12-04-5b74ad9a4c4d.img \
@@ -160,9 +160,9 @@ If the data to be preprocessed is also on the HPC, you are ready to run fmriprep
 
 .. note::
 
-   Depending on how Singularity is configured on your cluster it might or might not
-   automatically bind (mount or expose) host folders to the container.
-   If this is not done automatically you will need to bind the necessary folders using
+   Depending on how Singularity is configured on your cluster it might or might not 
+   automatically bind (mount or expose) host folders to the container. 
+   If this is not done automatically you will need to bind the necessary folders using 
    the ``-B <host_folder>:<container_folder>`` Singularity argument.
    For example: ::
 
@@ -177,7 +177,7 @@ Manually Prepared Environment (Python 3.5+)
 
 .. warning::
 
-   This method is not recommended! Make sure you would rather do this than
+   This method is not recommended! Make sure you would rather do this than 
    use a `Docker Container`_ or a `Singularity Container`_.
 
 Make sure all of fmriprep's `External Dependencies`_ are installed.
@@ -226,10 +226,10 @@ FMRIPREP uses FreeSurfer tools, which require a license to run.
 To obtain a FreeSurfer license, simply register for free at
 https://surfer.nmr.mgh.harvard.edu/registration.html.
 
-When using manually-prepared environments or singularity, FreeSurfer will search
-for a license key file first using the ``$FS_LICENSE`` environment variable and then
-in the default path to the license key file (``$FREESURFER_HOME/license.txt``).
-If using the ``--cleanenv`` flag and ``$FS_LICENSE`` is set, use ``--fs-license-file $FS_LICENSE``
+When using manually-prepared environments or singularity, FreeSurfer will search 
+for a license key file first using the ``$FS_LICENSE`` environment variable and then 
+in the default path to the license key file (``$FREESURFER_HOME/license.txt``). 
+If using the ``--cleanenv`` flag and ``$FS_LICENSE`` is set, use ``--fs-license-file $FS_LICENSE`` 
 to pass the license file location to fMRIPrep.
 
 It is possible to run the docker container pointing the image to a local path
