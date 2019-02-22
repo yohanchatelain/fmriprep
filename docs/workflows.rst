@@ -53,14 +53,10 @@ is presented below:
         template_out_grid='native',
         use_aroma=False,
         aroma_melodic_dim=-200,
-<<<<<<< HEAD
-        ignore_aroma_err=False,
+        err_on_aroma_warn=False,
         return_all_components=False,
         fd_spike_thr=0.5,
         dv_spike_thr=1.5
-=======
-        err_on_aroma_warn=False,
->>>>>>> 38d0550dcde6d0e212e115b31ea57f7732254406
     )
 
 
