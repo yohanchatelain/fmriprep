@@ -2,7 +2,7 @@
 FROM ubuntu:xenial-20161213
 
 # Pre-cache neurodebian key
-COPY docker/files/neurodebian.gpg /root/.neurodebian.gpg
+COPY docker/files/neurodebian.gpg /usr/local/etc/neurodebian.gpg
 
 # Prepare environment
 RUN apt-get update && \
@@ -67,7 +67,7 @@ ENV PERL5LIB="$MINC_LIB_DIR/perl5/5.8.5" \
 
 # Installing Neurodebian packages (FSL, AFNI, git)
 RUN curl -sSL "http://neuro.debian.net/lists/$( lsb_release -c | cut -f2 ).us-ca.full" >> /etc/apt/sources.list.d/neurodebian.sources.list && \
-    apt-key add /root/.neurodebian.gpg && \
+    apt-key add /usr/local/etc/neurodebian.gpg && \
     (apt-key adv --refresh-keys --keyserver hkp://ha.pool.sks-keyservers.net 0xA5D32F012649A5A9 || true)
 
 RUN apt-get update && \
@@ -97,6 +97,10 @@ RUN mkdir -p $ANTSPATH && \
     curl -sSL "https://dl.dropbox.com/s/2f4sui1z6lcgyek/ANTs-Linux-centos5_x86_64-v2.2.0-0740f91.tar.gz" \
     | tar -xzC $ANTSPATH --strip-components 1
 ENV PATH=$ANTSPATH:$PATH
+
+# Create a shared $HOME directory
+WORKDIR /home/fmriprep
+ENV HOME="/home/fmriprep"
 
 # Installing SVGO
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
@@ -142,14 +146,13 @@ RUN conda install -y python=3.7.1 \
                      zlib; sync && \
     chmod -R a+rX /usr/local/miniconda; sync && \
     chmod +x /usr/local/miniconda/bin/*; sync && \
-    conda clean --all -y; sync && \
+    conda build purge-all; sync && \
     conda clean -tipsy && sync
 
 # Precaching fonts, set 'Agg' as default backend for matplotlib
 RUN python -c "from matplotlib import font_manager" && \
     sed -i 's/\(backend *: \).*$/\1Agg/g' $( python -c "import matplotlib; print(matplotlib.matplotlib_fname())" )
-RUN pip install "datalad==0.10.0" && \
-    rm -rf ~/.cache/pip
+RUN pip install --no-cache-dir "datalad==0.10.0"
 
 # Unless otherwise specified each process should only use one thread - nipype
 # will handle parallelization
@@ -157,26 +160,26 @@ ENV MKL_NUM_THREADS=1 \
     OMP_NUM_THREADS=1
 
 # Precaching atlases
-RUN git config --global user.name "fMRIPrep User" && \
-    git config --global user.email "mail@domain.tld"
-ENV TEMPLATEFLOW_HOME="/opt/templateflow"
-WORKDIR /opt
+WORKDIR /home/fmriprep/.cache
 RUN datalad install -r https://github.com/templateflow/templateflow.git
-RUN datalad get $TEMPLATEFLOW_HOME/tpl-MNI152NLin2009cAsym/* \
-                $TEMPLATEFLOW_HOME/tpl-MNI152Lin/* \
-                $TEMPLATEFLOW_HOME/tpl-OASIS30ANTs/* \
-                $TEMPLATEFLOW_HOME/tpl-NKI/*
-RUN git -C $TEMPLATEFLOW_HOME config annex.merge-annex-branches false && \
-    git -C $TEMPLATEFLOW_HOME/tpl-MNI152NLin2009cAsym config annex.merge-annex-branches false && \
-    git -C $TEMPLATEFLOW_HOME/tpl-MNI152Lin config annex.merge-annex-branches false && \
-    git -C $TEMPLATEFLOW_HOME/tpl-OASIS30ANTs config annex.merge-annex-branches false && \
-    git -C $TEMPLATEFLOW_HOME/tpl-NKI config annex.merge-annex-branches false
+WORKDIR /home/fmriprep/.cache/templateflow
+RUN git config user.name "fMRIPrep User" && \
+    git config user.email "mail@domain.tld"
+RUN datalad get tpl-MNI152NLin2009cAsym/* \
+                tpl-MNI152Lin/* \
+                tpl-OASIS30ANTs/* \
+                tpl-NKI/* && \
+    rm -rf /home/fmriprep/.cache/datalad
+RUN git -C . config annex.merge-annex-branches false && \
+    git -C tpl-MNI152NLin2009cAsym config annex.merge-annex-branches false && \
+    git -C tpl-MNI152Lin config annex.merge-annex-branches false && \
+    git -C tpl-OASIS30ANTs config annex.merge-annex-branches false && \
+    git -C tpl-NKI config annex.merge-annex-branches false
 
 # Installing dev requirements (packages that are not in pypi)
 WORKDIR /src/
 COPY requirements.txt requirements.txt
-RUN pip install -r requirements.txt && \
-    rm -rf ~/.cache/pip
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Installing FMRIPREP
 COPY . /src/fmriprep
@@ -185,12 +188,14 @@ ARG VERSION
 RUN echo "${VERSION}" > /src/fmriprep/fmriprep/VERSION && \
     echo "include fmriprep/VERSION" >> /src/fmriprep/MANIFEST.in && \
     cd /src/fmriprep && \
-    pip install .[all] && \
-    rm -rf ~/.cache/pip
+    pip install --no-cache-dir .[all]
 
 RUN install -m 0755 \
     /src/fmriprep/scripts/generate_reference_mask.py \
     /usr/local/bin/generate_reference_mask
+
+RUN find $HOME -type d -exec chmod go=u {} + && \
+    find $HOME -type f -exec chmod go=u {} +
 
 ENV IS_DOCKER_8395080871=1
 
