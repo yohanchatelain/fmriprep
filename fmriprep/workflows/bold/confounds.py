@@ -76,7 +76,10 @@ def init_bold_confs_wf(mem_gb, metadata, return_all_components=False,
         from fmriprep.workflows.bold.confounds import init_bold_confs_wf
         wf = init_bold_confs_wf(
             mem_gb=1,
-            metadata={})
+            metadata={},
+            return_all_components=False,
+            fd_spike_thr=0.5,
+            dv_spike_thr=1.5)
 
     **Parameters**
 

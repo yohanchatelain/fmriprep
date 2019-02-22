@@ -52,6 +52,9 @@ is presented below:
         use_aroma=False,
         aroma_melodic_dim=-200,
         ignore_aroma_err=False,
+        return_all_components=False,
+        fd_spike_thr=0.5,
+        dv_spike_thr=1.5
     )
 
 
@@ -274,6 +277,9 @@ BOLD preprocessing
         use_aroma=False,
         aroma_melodic_dim=-200,
         ignore_aroma_err=False,
+        return_all_components=False,
+        fd_spike_thr=0.5,
+        dv_spike_thr=1.5
     )
 
 Preprocessing of :abbr:`BOLD (blood-oxygen level-dependent)` files is
@@ -518,7 +524,10 @@ Confounds estimation
         name="discover_wf",
         mem_gb=1,
         metadata={"RepetitionTime": 2.0,
-                  "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]})
+                  "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]},
+        return_all_components=False,
+        fd_spike_thr=0.5,
+        dv_spike_thr=1.5)
 
 Given a motion-corrected fMRI, a brain mask, ``mcflirt`` movement parameters and a
 segmentation, the `discover_wf` sub-workflow calculates potential
