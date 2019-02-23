@@ -27,7 +27,7 @@ In order to run fmriprep in a Docker container, Docker must be `installed
 Once Docker is installed, the recommended way to run fmriprep is to use the
 fmriprep-docker_ wrapper, which requires Python and an Internet connection.
 ``fmriprep-docker`` is a command that allows you to write your command line 
-as if you were running ``fmriprep`` directly, converts it into a ``docker`` 
+as if you were running ``fmriprep`` directly, and converts it into a ``docker`` 
 command.
 
 To install::
@@ -52,7 +52,6 @@ We have published a `step-by-step tutorial
 illustrating how to run ``fmriprep-docker``. 
 This tutorial also provides valuable troubleshooting insights and advice on 
 what to do after fmriprep has run.
-
 
 You may also invoke ``docker`` directly::
 
