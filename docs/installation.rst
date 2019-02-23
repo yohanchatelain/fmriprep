@@ -27,14 +27,14 @@ In order to run fmriprep in a Docker container, Docker must be `installed
 Once Docker is installed, the recommended way to run fmriprep is to use the
 fmriprep-docker_ wrapper, which requires Python and an Internet connection.
 ``fmriprep-docker`` is a streamlined command to run fmriprep without having to
-properly mount directories (``fmriprep-docker`` does this for you)
+properly mount directories (``fmriprep-docker`` does this for you).
 
 To install::
 
     $ pip install --user --upgrade fmriprep-docker
 
-When you run, ``fmriprep-docker`` it will generate a Docker command line for you,
-print it out for reporting purposes, and then run the command without further action
+When you run ``fmriprep-docker``, it will generate a Docker command line for you,
+print it out for reporting purposes, and then execute it without further action
 needed, e.g.::
 
     $ fmriprep-docker /path/to/data/dir /path/to/output/dir participant
@@ -43,14 +43,16 @@ needed, e.g.::
         /data /out participant
     ...
 
-For ``fmriprep-docker`` all the options you would typically pass to fmriprep,
-you can use for ``fmriprep-docker``. ``fmriprep-docker`` is mostly mounting
-the paths and environmental variables.
+For ``fmriprep-docker`` all the arguments you would typically pass to fmriprep,
+you can use for ``fmriprep-docker`` (i.e. ignoring slice time corrections). 
+Additionally, ``fmriprep-docker`` handles mounting the paths and environmental
+variables automatically.
 
 We have published a `step-by-step tutorial
 <http://reproducibility.stanford.edu/fmriprep-tutorial-running-the-docker-image/>`_
-illustrating how to run ``fmriprep-docker``. This tutorial also provides valuable
-troubleshooting insights and advice on what to do after fmriprep has run.
+illustrating how to run ``fmriprep-docker``. 
+This tutorial also provides valuable troubleshooting insights and advice on 
+what to do after fmriprep has run.
 
 
 You may also invoke ``docker`` directly::
