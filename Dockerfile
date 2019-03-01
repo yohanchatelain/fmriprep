@@ -163,6 +163,7 @@ ENV MKL_NUM_THREADS=1 \
 # Precaching atlases
 WORKDIR /home/fmriprep/.cache
 RUN datalad install -r https://github.com/templateflow/templateflow.git
+
 WORKDIR /home/fmriprep/.cache/templateflow
 RUN git config user.name "fMRIPrep User" && \
     git config user.email "mail@domain.tld"
