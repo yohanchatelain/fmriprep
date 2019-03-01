@@ -99,6 +99,7 @@ RUN mkdir -p $ANTSPATH && \
 ENV PATH=$ANTSPATH:$PATH
 
 # Create a shared $HOME directory
+RUN useradd -m -s /bin/bash -G users fmriprep
 WORKDIR /home/fmriprep
 ENV HOME="/home/fmriprep"
 
