@@ -1,3 +1,13 @@
+1.3.0.post3 (March 1, 2019)
+===========================
+
+Hotfix release intended for Docker users, smoothing the experience of TemplateFlow
+when using the ``-u UID`` flag is necessary.
+
+* [ENH] TemplateFlow + ``docker run -u ...`` (#1525) @oesteban
+* [ENH] Include repetition time in functional summary (#1508) @wiheto
+* [FIX] Do not crash if all aroma components are classified as noise (#1467) @jdkent
+
 1.3.0.post2 (February 14, 2019)
 ===============================
 
