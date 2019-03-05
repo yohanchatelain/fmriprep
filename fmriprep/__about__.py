@@ -99,7 +99,7 @@ REQUIRES = [
     'smriprep>=0.0.5,<0.1.0a0',
     'statsmodels',
     'tedana>=0.0.5',
-    'templateflow>=0.0.4',
+    'templateflow>=0.0.5',
 ]
 
 
