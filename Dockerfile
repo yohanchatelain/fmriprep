@@ -150,33 +150,22 @@ RUN conda install -y python=3.7.1 \
     conda build purge-all; sync && \
     conda clean -tipsy && sync
 
-# Precaching fonts, set 'Agg' as default backend for matplotlib
-RUN python -c "from matplotlib import font_manager" && \
-    sed -i 's/\(backend *: \).*$/\1Agg/g' $( python -c "import matplotlib; print(matplotlib.matplotlib_fname())" )
-RUN pip install --no-cache-dir "datalad==0.10.0"
-
 # Unless otherwise specified each process should only use one thread - nipype
 # will handle parallelization
 ENV MKL_NUM_THREADS=1 \
     OMP_NUM_THREADS=1
 
-# Precaching atlases
-WORKDIR /home/fmriprep/.cache
-RUN datalad install -r https://github.com/templateflow/templateflow.git
+# Precaching fonts, set 'Agg' as default backend for matplotlib
+RUN python -c "from matplotlib import font_manager" && \
+    sed -i 's/\(backend *: \).*$/\1Agg/g' $( python -c "import matplotlib; print(matplotlib.matplotlib_fname())" )
 
-WORKDIR /home/fmriprep/.cache/templateflow
-RUN git config user.name "fMRIPrep User" && \
-    git config user.email "mail@domain.tld"
-RUN datalad get tpl-MNI152NLin2009cAsym/* \
-                tpl-MNI152Lin/* \
-                tpl-OASIS30ANTs/* \
-                tpl-NKI/* && \
-    rm -rf /home/fmriprep/.cache/datalad
-RUN git -C . config annex.merge-annex-branches false && \
-    git -C tpl-MNI152NLin2009cAsym config annex.merge-annex-branches false && \
-    git -C tpl-MNI152Lin config annex.merge-annex-branches false && \
-    git -C tpl-OASIS30ANTs config annex.merge-annex-branches false && \
-    git -C tpl-NKI config annex.merge-annex-branches false
+# Precaching atlases
+RUN pip install --no-cache-dir "templateflow>=0.0.5.post1" && \
+    python -c "from templateflow import api as tfapi; \
+               tfapi.get('MNI152Lin'); \
+               tfapi.get('MNI152NLin2009cAsym'); \
+               tfapi.get('OASIS30ANTs'); \
+               tfapi.get('NKI');"
 
 # Installing dev requirements (packages that are not in pypi)
 WORKDIR /src/
