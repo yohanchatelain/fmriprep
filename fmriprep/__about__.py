@@ -89,21 +89,23 @@ REQUIRES = [
     'nilearn',
     'nipype>=1.1.6',
     'nitime',
-    'niworkflows>=0.7.2,<0.8.0a0',
+    'niworkflows',
     'numpy',
     'pandas',
     'psutil>=5.4',
-    'pybids>=0.7.0,<0.8.0a0',
+    'pybids',
     'pyyaml',
     'scikit-image',
-    'smriprep>=0.0.5,<0.1.0a0',
+    'smriprep',
     'statsmodels',
     'tedana>=0.0.5',
-    'templateflow>=0.0.4',
+    'templateflow',
 ]
 
 
 LINKS_REQUIRES = [
+    'git+https://github.com/oesteban/smriprep@'
+    '1cfa100ab7fc92d07d988f0a99b720739d3812d3#smriprep-0.0.5',
 ]
 
 TESTS_REQUIRES = [
