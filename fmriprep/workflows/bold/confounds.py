@@ -360,8 +360,9 @@ def init_carpetplot_wf(mem_gb, metadata, name="bold_carpet_wf"):
     # Warp segmentation into EPI space
     resample_parc = pe.Node(ApplyTransforms(
         float=True,
-        input_image=get_template('MNI152NLin2009cAsym',
-                                 '_res-01_desc-carpet_dseg.nii.gz'),
+        input_image=str(get_template(
+            'MNI152NLin2009cAsym', resolution=1, desc='carpet',
+            suffix='dseg', extensions=['.nii', '.nii.gz'])),
         dimension=3, default_value=0, interpolation='MultiLabel'),
         name='resample_parc')
 
@@ -536,7 +537,9 @@ in the corresponding confounds file.
         freesurfer=False,
         mem_gb=mem_gb,
         omp_nthreads=omp_nthreads,
-        template_out_grid=get_template('MNI152Lin', 'res-02_T1w.nii.gz'),
+        template_out_grid=str(get_template(
+            'MNI152Lin', resolution=2, desc=None, suffix='T1w',
+            extensions=['.nii', '.nii.gz'])),
         use_compression=False,
         use_fieldwarp=use_fieldwarp,
         name='bold_mni_trans_wf'
