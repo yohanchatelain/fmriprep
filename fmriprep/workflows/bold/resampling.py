@@ -282,7 +282,9 @@ generating a *preprocessed BOLD run in {tpl} space*.
 
     gen_ref = pe.Node(GenerateSamplingReference(), name='gen_ref',
                       mem_gb=0.3)  # 256x256x256 * 64 / 8 ~ 150MB)
-    gen_ref.inputs.fixed_image = get_template(template, '_res-01_T1w.nii.gz')
+    gen_ref.inputs.fixed_image = str(get_template(
+        template, resolution=1, desc=None, suffix='T1w',
+        extensions=['.nii', '.nii.gz']))
 
     mask_mni_tfm = pe.Node(
         ApplyTransforms(interpolation='MultiLabel', float=True),
@@ -342,10 +344,11 @@ generating a *preprocessed BOLD run in {tpl} space*.
         ])
     elif template_out_grid in ['1mm', '2mm']:
         res = int(template_out_grid[0])
-        mask_mni_tfm.inputs.reference_image = get_template(
-            template, '_res-%02d_desc-brain_mask.nii.gz' % res)
-        bold_to_mni_transform.inputs.reference_image = get_template(
-            template, '_res-%02d_T1w.nii.gz' % res)
+        mask_mni_tfm.inputs.reference_image = str(get_template(
+            template, resolution=res, desc='brain', suffix='mask'))
+        bold_to_mni_transform.inputs.reference_image = str(get_template(
+            template, resolution=res, desc=None, suffix='T1w',
+            extensions=['.nii', '.nii.gz']))
     else:
         mask_mni_tfm.inputs.reference_image = template_out_grid
         bold_to_mni_transform.inputs.reference_image = template_out_grid
@@ -373,11 +376,13 @@ generating a *preprocessed BOLD run in {tpl} space*.
                 (gen_ref, aparc_mni_tfm, [('out_file', 'reference_image')]),
             ])
         elif template_out_grid in ['1mm', '2mm']:
-            res = int(template_out_grid[0])
-            aseg_mni_tfm.inputs.reference_image = get_template(
-                template, '_res-%02d_desc-brain_mask.nii.gz' % res)
-            aparc_mni_tfm.inputs.reference_image = get_template(
-                template, '_res-%02d_desc-brain_mask.nii.gz' % res)
+            entities = {'resolution': int(template_out_grid[0]),
+                        'desc': 'brain', 'suffix': 'mask',
+                        'extensions': ['.nii', '.nii.gz']}
+            aseg_mni_tfm.inputs.reference_image = str(
+                get_template(template, **entities))
+            aparc_mni_tfm.inputs.reference_image = str(
+                get_template(template, **entities))
         else:
             aseg_mni_tfm.inputs.reference_image = template_out_grid
             aparc_mni_tfm.inputs.reference_image = template_out_grid
