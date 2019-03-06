@@ -88,6 +88,7 @@ REQUIRES = [
     'nibabel>=2.2.1',
     'nilearn',
     'nipype>=1.1.6',
+    'nitime',
     'niworkflows<0.9.0a0,>=0.8.0',
     'numpy',
     'pandas',
