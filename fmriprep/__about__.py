@@ -104,8 +104,8 @@ REQUIRES = [
 
 
 LINKS_REQUIRES = [
-    'git+https://github.com/oesteban/smriprep@'
-    '1cfa100ab7fc92d07d988f0a99b720739d3812d3#smriprep-0.0.5',
+    'git+https://github.com/poldracklab/smriprep@'
+    '8d238200484ef4f4ea957a380758211612b8a265#smriprep-0.0.5',
 ]
 
 TESTS_REQUIRES = [
