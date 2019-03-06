@@ -88,18 +88,17 @@ REQUIRES = [
     'nibabel>=2.2.1',
     'nilearn',
     'nipype>=1.1.6',
-    'nitime',
-    'niworkflows',
+    'niworkflows<0.9.0a0,>=0.8.0',
     'numpy',
     'pandas',
     'psutil>=5.4',
-    'pybids',
+    'pybids<0.8.0a0,>=0.7.1',
     'pyyaml',
     'scikit-image',
     'smriprep<0.2.0a0,>=0.1.0',
     'statsmodels',
     'tedana>=0.0.5',
-    'templateflow',
+    'templateflow<0.2.0a0,>=0.1.0',
 ]
 
 
