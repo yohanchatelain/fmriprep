@@ -1,3 +1,14 @@
+1.3.0.post3 (March 1, 2019)
+===========================
+
+Hotfix release intended for Docker users, smoothing the experience of TemplateFlow
+when using the ``-u UID`` flag is necessary.
+
+* [FIX] Orientation problem with niworkflows<0.7.2 (poldracklab/niworkflows#312) @effigies
+* [ENH] TemplateFlow + ``docker run -u ...`` (#1525) @oesteban
+* [ENH] Include repetition time in functional summary (#1508) @wiheto
+* [FIX] Do not crash if all aroma components are classified as noise (#1467) @jdkent
+
 1.3.0.post2 (February 14, 2019)
 ===============================
 
@@ -7,7 +18,7 @@ that didn't fix the problem (#1510) @effigies.
 1.3.0.post1 (February 8, 2019)
 ==============================
 
-Hotfix release intended for Singularity users. For further detail, please see 
+Hotfix release intended for Singularity users. For further detail, please see
 `#1500 <https://github.com/poldracklab/fmriprep/issues/1500>`__.
 
 1.3.0 (February 7, 2019)
@@ -15,7 +26,7 @@ Hotfix release intended for Singularity users. For further detail, please see
 
 We start the 1.3.x series including a few bugfixes, housekeeping duty and a refactors
 to leverage `sMRIPrep <https://github.com/poldracklab/smriprep>`__ (which is a fork of
-fMRIPrep's anatomical workflow), pybids>=0.7 for querying dataset, and 
+fMRIPrep's anatomical workflow), pybids>=0.7 for querying dataset, and
 `TemplateFlow <https://github.com/templateflow>`__ for handling standard spaces.
 
 * [FIX] Bad ``fsnative`` replacement in CIfTI workflow (#1476) @oesteban
@@ -77,7 +88,7 @@ Hotfix release.
 1.2.4 (December 3, 2018)
 ========================
 
-Bugfixes, an additional iteration over Sentry reporting and some relevant ME-EPI updates 
+Bugfixes, an additional iteration over Sentry reporting and some relevant ME-EPI updates
 (with thanks to @emdupre).
 
 * [ENH] Update ME-EPI workflow to create optimal combination (#1263) @emdupre
@@ -159,7 +170,7 @@ With many thanks to Ali Cohen, James Kent, Inge Amlien, Sebastian Urchs, and Zhi
 * [TST] Add heavily-nonuniform boldrefs for regression tests (#1329) @oesteban
 * [TST] Fix expectations for CIFTI outputs & ds005 (#1344) @oesteban
 * [MAINT] Ignore project settings files from popular python/code editors (#1336) @jdkent
-* [CI] Deploy poldracklab/fmriprep:unstable tracking master (#1307) @effigies 
+* [CI] Deploy poldracklab/fmriprep:unstable tracking master (#1307) @effigies
 
 1.1.8 (October 4, 2018)
 =======================
