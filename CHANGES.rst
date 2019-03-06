@@ -1,3 +1,16 @@
+1.3.1 (March 6, 2019)
+=====================
+
+Updated ecosystem's versions (TemplateFlow 0.1.x, Niworkflows 0.8.x, and sMRIPrep 0.1.x)
+to include latest improvements (bugfixes from niworkflows and the new pybids interface
+of templateflow).
+TemplateFlow 0.1.0 does not require datalad anymore.
+With thanks to @franklin-feingold for contributions.
+
+* UX: Reduce warning levels (#1513) @effigies
+* DOC: ``fmriprep-docker`` documentation (#1515) @franklin-feingold
+* REL: 1.3.1 (#1527) @oesteban
+
 1.3.0.post3 (March 1, 2019)
 ===========================
 
