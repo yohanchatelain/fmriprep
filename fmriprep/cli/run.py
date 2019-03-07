@@ -573,7 +573,19 @@ def build_workflow(opts, retval):
       * Run identifier: {uuid}.
     """.format
 
-    output_spaces = opts.output_space or []
+    # Reduce to unique space identifiers
+    output_spaces = sorted(set(opts.output_space))
+
+    # If FS is not run, drop all fs* output spaces
+    if not opts.run_reconall:
+        output_spaces = [item for item in output_spaces if not item.startswith('fs')]
+
+    # Map fsaverage to fsaverage6
+    if 'fsaverage' in output_spaces:
+        logger.warning('Selected "fsaverage" output space has been mapped to "fsaverage6"')
+        output_spaces.remove('fsaverage')
+        if 'fsaverage6' not in output_spaces:
+            output_spaces = sorted(output_spaces + ['fsaverage6'])
 
     # Validity of some inputs
     # ERROR check if use_aroma was specified, but the correct template was not
