@@ -580,13 +580,6 @@ def build_workflow(opts, retval):
     if not opts.run_reconall:
         output_spaces = [item for item in output_spaces if not item.startswith('fs')]
 
-    # Map fsaverage to fsaverage6
-    if 'fsaverage' in output_spaces:
-        logger.warning('Selected "fsaverage" output space has been mapped to "fsaverage6"')
-        output_spaces.remove('fsaverage')
-        if 'fsaverage6' not in output_spaces:
-            output_spaces = sorted(output_spaces + ['fsaverage6'])
-
     # Validity of some inputs
     # ERROR check if use_aroma was specified, but the correct template was not
     if opts.use_aroma and (opts.template != 'MNI152NLin2009cAsym' or
@@ -598,14 +591,19 @@ def build_workflow(opts, retval):
             'spaces (option "--output-space").'
         )
 
-    if opts.cifti_output and (opts.template != 'MNI152NLin2009cAsym' or
-                              'template' not in output_spaces):
-        output_spaces.append('template')
-        logger.warning(
-            'Option "--cifti-output" requires functional images to be resampled to MNI space. '
-            'The argument "template" has been automatically added to the list of output '
-            'spaces (option "--output-space").'
-        )
+    if opts.cifti_output:
+        if 'template' not in output_spaces:
+            output_spaces.append('template')
+            logger.warning(
+                'Option "--cifti-output" requires functional images to be resampled to MNI '
+                'space. The argument "template" has been automatically added to the list of '
+                'output spaces (option "--output-space").')
+        if not [s for s in output_spaces if s in ('fsaverage5', 'fsaverage6')]:
+            output_spaces = sorted(output_spaces + ['fsaverage5'])
+            logger.warning(
+                'Option "--cifti-output" requires functional images to be resampled to fsaverage '
+                'space. The argument "fsaverage5" has been automatically added to the list of '
+                'output spaces (option "--output-space").')
 
     # Check output_space
     if 'template' not in output_spaces and (opts.use_syn_sdc or opts.force_syn):
