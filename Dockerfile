@@ -160,6 +160,8 @@ RUN python -c "from matplotlib import font_manager" && \
     sed -i 's/\(backend *: \).*$/\1Agg/g' $( python -c "import matplotlib; print(matplotlib.matplotlib_fname())" )
 
 # Precaching atlases
+ENV TEMPLATEFLOW_HOME="/opt/templateflow"
+RUN mkdir -p $TEMPLATEFLOW_HOME
 RUN pip install --no-cache-dir "templateflow>=0.1.0,<0.2.0a0" && \
     python -c "from templateflow import api as tfapi; \
                tfapi.get('MNI152Lin'); \
