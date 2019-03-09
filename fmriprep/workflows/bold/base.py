@@ -879,7 +879,7 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     if 'T1w' in output_spaces:
         ds_bold_t1 = pe.Node(
             DerivativesDataSink(base_directory=output_dir, space='T1w', desc='preproc',
-                                keep_dtype=True, compress=True),
+                                keep_dtype=True, compress=True, SkullStripped=False),
             name='ds_bold_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_t1_ref = pe.Node(
@@ -920,7 +920,7 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     if 'template' in output_spaces:
         ds_bold_mni = pe.Node(
             DerivativesDataSink(base_directory=output_dir, space=template, desc='preproc',
-                                keep_dtype=True, compress=True),
+                                keep_dtype=True, compress=True, SkullStripped=False),
             name='ds_bold_mni', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_mni_ref = pe.Node(
