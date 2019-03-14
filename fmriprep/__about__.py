@@ -89,23 +89,25 @@ REQUIRES = [
     'nilearn',
     'nipype>=1.1.6',
     'nitime',
-    'niworkflows<0.9.0a0,>=0.8.0',
+    'niworkflows',
     'numpy',
     'pandas',
     'psutil>=5.4',
     'pybids<0.8.0a0,>=0.7.1',
     'pyyaml',
     'scikit-image',
-    'smriprep<0.2.0a0,>=0.1.0',
+    'smriprep',
     'statsmodels',
     'tedana>=0.0.5',
-    'templateflow<0.2.0a0,>=0.1.0',
+    'templateflow<0.2.0a0,>=0.1.3',
 ]
 
 
 LINKS_REQUIRES = [
     'git+https://github.com/oesteban/niworkflows.git@'
-    '7dd12a501dc9eb6c0bbfc699b99742d3481ae9a2#egg=niworkflows-0.8.0'
+    '627d5810350127e5806c62dda8296cfa1177b202#egg=niworkflows-0.8.0',
+    'git+https://github.com/oesteban/smriprep.git@'
+    '3b4f62661c10603f3e48197bc4b27341e72cbad9#egg=smriprep-0.1.0',
 ]
 
 TESTS_REQUIRES = [
