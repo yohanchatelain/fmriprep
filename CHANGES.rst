@@ -1,3 +1,8 @@
+1.3.1.post2 (March 13, 2019)
+============================
+
+A hotfix release addressing issues related to TemplateFlow for Singularity users, via pinning templateflow>=0.1.2.
+
 1.3.1.post1 (March 11, 2019)
 ============================
 
