@@ -1,3 +1,16 @@
+1.3.1.post2 (March 13, 2019)
+============================
+
+A hotfix release addressing issues related to TemplateFlow for Singularity users, via pinning templateflow>=0.1.2.
+
+1.3.1.post1 (March 11, 2019)
+============================
+
+A hotfix release addressing issues related to TemplateFlow for Singularity users.
+
+* FIX: Make sure ``--cifti-output`` requires at least one of ``fsaverage{5,6}`` (#1514) @oesteban
+* [FIX] Avoid using ``$HOME`` for storing templates (#1529) @chrisfilo
+
 1.3.1 (March 6, 2019)
 =====================
 
