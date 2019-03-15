@@ -859,7 +859,6 @@ def init_func_derivatives_wf(bids_root, cifti_output, freesurfer,
     """
     Set up a battery of datasinks to store derivatives in the right location
     """
-    from niworkflows.interfaces.bids import ReadSidecarJSON
     from smriprep.workflows.outputs import _bids_relative
     workflow = Workflow(name=name)
 
