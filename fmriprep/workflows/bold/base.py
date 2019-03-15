@@ -881,7 +881,7 @@ def init_func_derivatives_wf(bids_root, cifti_output, freesurfer,
         name="ds_confounds", run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
     workflow.connect([
-        (inputnode, raw_sources, [('source_file', 'in_file')]),
+        (inputnode, raw_sources, [('source_file', 'in_files')]),
         (inputnode, ds_confounds, [('source_file', 'source_file'),
                                    ('confounds', 'in_file')]),
     ])
@@ -919,7 +919,7 @@ def init_func_derivatives_wf(bids_root, cifti_output, freesurfer,
                 name='ds_bold_aseg_t1', run_without_submitting=True,
                 mem_gb=DEFAULT_MEMORY_MIN_GB)
             ds_bold_aparc_t1 = pe.Node(DerivativesDataSink(
-                base_directory=output_dir,  space='T1w', desc='aparcaseg', suffix='dseg'),
+                base_directory=output_dir, space='T1w', desc='aparcaseg', suffix='dseg'),
                 name='ds_bold_aparc_t1', run_without_submitting=True,
                 mem_gb=DEFAULT_MEMORY_MIN_GB)
             workflow.connect([
@@ -963,7 +963,7 @@ def init_func_derivatives_wf(bids_root, cifti_output, freesurfer,
                 name='ds_bold_aseg_mni', run_without_submitting=True,
                 mem_gb=DEFAULT_MEMORY_MIN_GB)
             ds_bold_aparc_mni = pe.Node(DerivativesDataSink(
-                base_directory=output_dir,  space=template, desc='aparcaseg', suffix='dseg'),
+                base_directory=output_dir, space=template, desc='aparcaseg', suffix='dseg'),
                 name='ds_bold_aparc_mni', run_without_submitting=True,
                 mem_gb=DEFAULT_MEMORY_MIN_GB)
             workflow.connect([
