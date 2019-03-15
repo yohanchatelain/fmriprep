@@ -71,7 +71,7 @@ T1w/T2w preprocessing
         debug=False,
         freesurfer=True,
         fs_spaces=['T1w', 'fsnative',
-            'template', 'fsaverage5'],
+                   'template', 'fsaverage5'],
         hires=True,
         longitudinal=False,
         num_t1w=1,
