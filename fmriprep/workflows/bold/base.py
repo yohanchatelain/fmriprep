@@ -61,6 +61,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         :simple_form: yes
 
         from fmriprep.workflows.bold import init_func_preproc_wf
+        from collections import namedtuple
+        BIDSLayout = namedtuple('BIDSLayout', ['root'], defaults='.')
         wf = init_func_preproc_wf('/completely/made/up/path/sub-01_task-nback_bold.nii.gz',
                                   omp_nthreads=1,
                                   ignore=[],
@@ -85,7 +87,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                   use_aroma=False,
                                   err_on_aroma_warn=False,
                                   aroma_melodic_dim=-200,
-                                  num_bold=1)
+                                  num_bold=1,
+                                  layout=BIDSLayout())
 
     **Parameters**
 
