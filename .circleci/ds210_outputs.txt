@@ -1,7 +1,5 @@
 fmriprep
 fmriprep/dataset_description.json
-fmriprep/desc-aparcaseg_dseg.tsv
-fmriprep/desc-aseg_dseg.tsv
 fmriprep/logs
 fmriprep/logs/CITATION.bib
 fmriprep/logs/CITATION.html
