@@ -440,13 +440,14 @@ def main():
             sentry_sdk.capture_exception(e)
             raise
     else:
-        from templateflow import api
-        from niworkflows.utils.misc import _copy_any
-        dseg_tsv = str(api.get('fsaverage', suffix='dseg', extensions=['.tsv']))
-        _copy_any(dseg_tsv,
-                  str(Path(output_dir) / 'fmriprep' / 'desc-aseg_dseg.tsv'))
-        _copy_any(dseg_tsv,
-                  str(Path(output_dir) / 'fmriprep' / 'desc-aparcaseg_dseg.tsv'))
+        if opts.run_reconall:
+            from templateflow import api
+            from niworkflows.utils.misc import _copy_any
+            dseg_tsv = str(api.get('fsaverage', suffix='dseg', extensions=['.tsv']))
+            _copy_any(dseg_tsv,
+                      str(Path(output_dir) / 'fmriprep' / 'desc-aseg_dseg.tsv'))
+            _copy_any(dseg_tsv,
+                      str(Path(output_dir) / 'fmriprep' / 'desc-aparcaseg_dseg.tsv'))
         logger.log(25, 'fMRIPrep finished without errors')
     finally:
         # Generate reports phase
