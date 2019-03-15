@@ -66,19 +66,22 @@ T1w/T2w preprocessing
     :simple_form: yes
 
     from fmriprep.workflows.anatomical import init_anat_preproc_wf
-    wf = init_anat_preproc_wf(omp_nthreads=1,
-                              reportlets_dir='.',
-                              output_dir='.',
-                              template='MNI152NLin2009cAsym',
-                              fs_spaces=['T1w', 'fsnative',
-                                         'template', 'fsaverage5'],
-                              skull_strip_template='OASIS30ANTs',
-                              skull_strip_fixed_seed=False,
-                              freesurfer=True,
-                              longitudinal=False,
-                              debug=False,
-                              hires=True,
-                              num_t1w=1)
+    wf = init_anat_preproc_wf(
+        bids_root='.',
+        debug=False,
+        freesurfer=True,
+        fs_spaces=['T1w', 'fsnative',
+            'template', 'fsaverage5'],
+        hires=True,
+        longitudinal=False,
+        num_t1w=1,
+        omp_nthreads=1,
+        output_dir='.',
+        reportlets_dir='.',
+        skull_strip_template='MNI152NLin2009cAsym',
+        skull_strip_fixed_seed=False,
+        template='MNI152NLin2009cAsym',
+    )
 
 The anatomical sub-workflow begins by constructing an average image by
 conforming all found T1w images to RAS orientation and

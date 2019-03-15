@@ -1,5 +1,7 @@
 fmriprep
 fmriprep/dataset_description.json
+fmriprep/desc-aparcaseg_dseg.tsv
+fmriprep/desc-aseg_dseg.tsv
 fmriprep/logs
 fmriprep/logs/CITATION.bib
 fmriprep/logs/CITATION.html
@@ -31,6 +33,7 @@ fmriprep/sub-02/func/sub-02_task-cuedSGT_run-01_desc-confounds_regressors.tsv
 fmriprep/sub-02/func/sub-02_task-cuedSGT_run-01_space-MNI152NLin2009cAsym_boldref.nii.gz
 fmriprep/sub-02/func/sub-02_task-cuedSGT_run-01_space-MNI152NLin2009cAsym_desc-brain_mask.json
 fmriprep/sub-02/func/sub-02_task-cuedSGT_run-01_space-MNI152NLin2009cAsym_desc-brain_mask.nii.gz
+fmriprep/sub-02/func/sub-02_task-cuedSGT_run-01_space-MNI152NLin2009cAsym_desc-preproc_bold.json
 fmriprep/sub-02/func/sub-02_task-cuedSGT_run-01_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz
 fmriprep/sub-02.html
 /tmp/ds210/derivatives

@@ -368,12 +368,16 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     # CIfTI output: currently, we only support fsaverage{5,6}
     cifti_spaces = [s for s in output_spaces if s in ('fsaverage5', 'fsaverage6')]
     cifti_output = cifti_output and cifti_spaces
-    func_derivatives_wf = init_func_derivatives_wf(output_dir=output_dir,
-                                                   output_spaces=output_spaces,
-                                                   template=template,
-                                                   freesurfer=freesurfer,
-                                                   use_aroma=use_aroma,
-                                                   cifti_output=cifti_output)
+    func_derivatives_wf = init_func_derivatives_wf(
+        bids_root=layout.root,
+        cifti_output=cifti_output,
+        freesurfer=freesurfer,
+        metadata=metadata,
+        output_dir=output_dir,
+        output_spaces=output_spaces,
+        template=template,
+        use_aroma=use_aroma,
+    )
 
     workflow.connect([
         (outputnode, func_derivatives_wf, [
@@ -848,11 +852,15 @@ data and volume-sampled data, were also generated.
     return workflow
 
 
-def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
-                             use_aroma, cifti_output, name='func_derivatives_wf'):
+def init_func_derivatives_wf(bids_root, cifti_output, freesurfer,
+                             metadata, output_dir, output_spaces,
+                             template, use_aroma,
+                             name='func_derivatives_wf'):
     """
     Set up a battery of datasinks to store derivatives in the right location
     """
+    from niworkflows.interfaces.bids import ReadSidecarJSON
+    from smriprep.workflows.outputs import _bids_relative
     workflow = Workflow(name=name)
 
     inputnode = pe.Node(
@@ -866,11 +874,15 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
                     'nonaggr_denoised_file', 'bold_cifti', 'cifti_variant']),
         name='inputnode')
 
+    raw_sources = pe.Node(niu.Function(function=_bids_relative), name='raw_sources')
+    raw_sources.inputs.bids_root = bids_root
+
     ds_confounds = pe.Node(DerivativesDataSink(
         base_directory=output_dir, desc='confounds', suffix='regressors'),
         name="ds_confounds", run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
     workflow.connect([
+        (inputnode, raw_sources, [('source_file', 'in_file')]),
         (inputnode, ds_confounds, [('source_file', 'source_file'),
                                    ('confounds', 'in_file')]),
     ])
@@ -879,7 +891,8 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     if 'T1w' in output_spaces:
         ds_bold_t1 = pe.Node(
             DerivativesDataSink(base_directory=output_dir, space='T1w', desc='preproc',
-                                keep_dtype=True, compress=True, SkullStripped=False),
+                                keep_dtype=True, compress=True, SkullStripped=False,
+                                RepetitionTime=metadata.get('RepetitionTime')),
             name='ds_bold_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_t1_ref = pe.Node(
@@ -899,6 +912,7 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
                                          ('bold_t1_ref', 'in_file')]),
             (inputnode, ds_bold_mask_t1, [('source_file', 'source_file'),
                                           ('bold_mask_t1', 'in_file')]),
+            (raw_sources, ds_bold_mask_t1, [('out', 'RawSources')]),
         ])
         if freesurfer:
             ds_bold_aseg_t1 = pe.Node(DerivativesDataSink(
@@ -920,7 +934,8 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     if 'template' in output_spaces:
         ds_bold_mni = pe.Node(
             DerivativesDataSink(base_directory=output_dir, space=template, desc='preproc',
-                                keep_dtype=True, compress=True, SkullStripped=False),
+                                keep_dtype=True, compress=True, SkullStripped=False,
+                                RepetitionTime=metadata.get('RepetitionTime')),
             name='ds_bold_mni', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_mni_ref = pe.Node(
@@ -940,6 +955,7 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
                                           ('bold_mni_ref', 'in_file')]),
             (inputnode, ds_bold_mask_mni, [('source_file', 'source_file'),
                                            ('bold_mask_mni', 'in_file')]),
+            (raw_sources, ds_bold_mask_mni, [('out', 'RawSources')]),
         ])
 
         if freesurfer:
