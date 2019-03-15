@@ -9,12 +9,102 @@
     },
     {
       "name": "Blair, Ross",
-      "affiliation": "Department of Psychology, Stanford University"
+      "affiliation": "Department of Psychology, Stanford University",
+      "orcid": "0000-0003-3007-1056"
     },
     {
       "name": "Markiewicz, Christopher J.",
       "affiliation": "Department of Psychology, Stanford University",
       "orcid": "0000-0002-6533-164X"
+    },
+    {
+      "name": "Berleant, Shoshana L.",
+      "affiliation": "Department of Psychology, Stanford University"
+    },
+    {
+      "name": "Moodie, Craig",
+      "affiliation": "Stanford University",
+      "orcid": "0000-0003-0867-1469"
+    },
+    {
+      "name": "Ma, Feilong",
+      "affiliation": "Dartmouth College",
+      "orcid": "0000-0002-6838-3971"
+    },
+    {
+      "name": "Isik, Ayse Ilkay",
+      "affiliation": "Max Planck Institute for Empirical Aesthetics",
+      "orcid": "0000-0002-1652-9297"
+    },
+    {
+      "name": "Erramuzpe, Asier",
+      "affiliation": "Computational Neuroimaging Lab, BioCruces Health Research Institute",
+      "orcid": "0000-0002-9402-2184"
+    },
+    {
+      "name": "Kent, James D.",
+      "affiliation": "Neuroscience Program, University of Iowa",
+      "orcid": "0000-0002-4892-2659"
+    },
+    {
+      "name": "Goncalves, Mathias",
+      "affiliation": "MIT",
+      "orcid": "0000-0002-7252-7771"
+    },
+    {
+      "name": "DuPre, Elizabeth",
+      "affiliation": "Montreal Neurological Institute, McGill University",
+      "orcid": "0000-0003-1358-196X"
+    },
+    {
+      "name": "Sitek, Kevin R.",
+      "affiliation": "Speech & Hearing Bioscience & Technology Program, Harvard University",
+      "orcid": "0000-0002-2172-5786"
+    },
+    {
+      "name": "Gomez, Daniel E. P.",
+      "affiliation": "Donders Institute for Brain, Cognition and Behaviour, Radboud University Nijmegen",
+      "orcid": "0000-0001-8635-021X"
+    },
+    {
+      "name": "Lurie, Daniel J.",
+      "affiliation": "Department of Psychology, University of California, Berkeley",
+      "orcid": "0000-0001-8012-6399"
+    },
+    {
+      "name": "Ye, Zhifang",
+      "affiliation": "State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University",
+      "orcid": "0000-0003-0489-2619"
+    },
+    {
+      "name": "Salo, Taylor",
+      "affiliation": "Department of Psychology, Florida International University",
+      "orcid": "0000-0001-9813-3167"
+    },
+    {
+      "name": "Valabregue, Romain",
+      "affiliation": "Cenir, ICM, Paris",
+      "orcid": "0000-0002-1814-9570"
+    },
+    {
+      "name": "Amlien, Inge K.",
+      "affiliation": "Department of Psychology, University of Oslo",
+      "orcid": "0000-0002-8508-9088"
+    },
+    {
+      "name": "Liem, Franz",
+      "affiliation": "University of Zurich",
+      "orcid": "0000-0003-0646-4810"
+    },
+    {
+      "name": "Jacoby, Nir",
+      "affiliation": "Department of Psychology, Columbia University",
+      "orcid": "0000-0001-7936-9991"
+    },
+    {
+      "name": "Stojic, Hrvoje",
+      "affiliation": "University College London",
+      "orcid": "0000-0002-9699-9052"
     },
     {
       "name": "Poldrack, Russell A.",
@@ -25,115 +115,6 @@
       "name": "Gorgolewski, Krzysztof J.",
       "affiliation": "Department of Psychology, Stanford University",
       "orcid": "0000-0003-3321-7583"
-    }
-  ],
-  "contributors": [
-    {
-      "name": "Berleant, Shoshana L.",
-      "affiliation": "Department of Psychology, Stanford University",
-      "type": "Researcher"
-    },
-    {
-      "name": "Moodie, Craig",
-      "affiliation": "Stanford University",
-      "orcid": "0000-0003-0867-1469",
-      "type": "Researcher"
-    },
-    {
-      "name": "Ma, Feilong",
-      "affiliation": "Dartmouth College",
-      "orcid": "0000-0002-6838-3971",
-      "type": "Researcher"
-    },
-    {
-      "name": "Isik, Ayse Ilkay",
-      "affiliation": "Max Planck Institute for Empirical Aesthetics",
-      "orcid": "0000-0002-1652-9297",
-      "type": "Researcher"
-    },
-    {
-      "name": "Erramuzpe, Asier",
-      "affiliation": "Computational Neuroimaging Lab, BioCruces Health Research Institute",
-      "orcid": "0000-0002-9402-2184",
-      "type": "Researcher"
-    },
-    {
-      "name": "Kent, James D.",
-      "affiliation": "Neuroscience Program, University of Iowa",
-      "orcid": "0000-0002-4892-2659",
-      "type": "Researcher"
-    },
-    {
-      "name": "Goncalves, Mathias",
-      "affiliation": "MIT",
-      "orcid": "0000-0002-7252-7771",
-      "type": "Researcher"
-    },
-    {
-      "name": "DuPre, Elizabeth",
-      "affiliation": "Montreal Neurological Institute, McGill University",
-      "orcid": "0000-0003-1358-196X",
-      "type": "Researcher"
-    },
-    {
-      "name": "Sitek, Kevin R.",
-      "affiliation": "Speech & Hearing Bioscience & Technology Program, Harvard University",
-      "orcid": "0000-0002-2172-5786",
-      "type": "Researcher"
-    },
-    {
-      "name": "Gomez, Daniel E. P.",
-      "affiliation": "Donders Institute for Brain, Cognition and Behaviour, Radboud University Nijmegen",
-      "orcid": "0000-0001-8635-021X",
-      "type": "Researcher"
-    },
-    {
-      "name": "Lurie, Daniel J.",
-      "affiliation": "Department of Psychology, University of California, Berkeley",
-      "orcid": "0000-0001-8012-6399",
-      "type": "Researcher"
-    },
-    {
-      "name": "Ye, Zhifang",
-      "affiliation": "State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University",
-      "orcid": "0000-0003-0489-2619",
-      "type": "Researcher"
-    },
-    {
-      "name": "Salo, Taylor",
-      "affiliation": "Department of Psychology, Florida International University",
-      "orcid": "0000-0001-9813-3167",
-      "type": "Researcher"
-    },
-    {
-      "name": "Valabregue, Romain",
-      "affiliation": "Cenir, ICM, Paris",
-      "orcid": "0000-0002-1814-9570",
-      "type": "Researcher"
-    },
-    {
-      "name": "Amlien, Inge K.",
-      "affiliation": "Department of Psychology, University of Oslo",
-      "orcid": "0000-0002-8508-9088",
-      "type": "Researcher"
-    },
-    {
-      "name": "Liem, Franz",
-      "affiliation": "University of Zurich",
-      "orcid": "0000-0003-0646-4810",
-      "type": "Researcher"
-    },
-    {
-      "name": "Jacoby, Nir",
-      "affiliation": "Department of Psychology, Columbia University",
-      "orcid": "0000-0001-7936-9991",
-      "type": "Researcher"
-    },
-    {
-      "name": "Stojic, Hrvoje",
-      "affiliation": "University College London",
-      "orcid": "0000-0002-9699-9052",
-      "type": "Researcher"
     }
   ],
   "keywords": [
