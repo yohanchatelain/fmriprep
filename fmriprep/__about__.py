@@ -89,21 +89,23 @@ REQUIRES = [
     'nilearn',
     'nipype>=1.1.6',
     'nitime',
-    'niworkflows<0.9.0a0,>=0.8.0',
+    'niworkflows<0.9.0a0,>=0.8.1',
     'numpy',
     'pandas',
     'psutil>=5.4',
     'pybids<0.8.0a0,>=0.7.1',
     'pyyaml',
     'scikit-image',
-    'smriprep<0.2.0a0,>=0.1.0',
+    'smriprep',
     'statsmodels',
     'tedana>=0.0.5',
-    'templateflow<0.2.0a0,>=0.1.0',
+    'templateflow<0.2.0a0,>=0.1.3',
 ]
 
 
 LINKS_REQUIRES = [
+    'git+https://github.com/poldracklab/smriprep.git@'
+    '423bcc43ab7300177eb3b98da62817b2cad8eb87#egg=smriprep-0.1.0',
 ]
 
 TESTS_REQUIRES = [

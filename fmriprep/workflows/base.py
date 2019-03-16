@@ -446,19 +446,20 @@ to workflows in *fMRIPrep*'s documentation]\
 
     # Preprocessing of T1w (includes registration to MNI)
     anat_preproc_wf = init_anat_preproc_wf(
-        skull_strip_template=skull_strip_template,
-        fs_spaces=output_spaces,
-        template=template,
+        bids_root=layout.root,
         debug=debug,
         freesurfer=freesurfer,
-        longitudinal=longitudinal,
-        omp_nthreads=omp_nthreads,
+        fs_spaces=output_spaces,
         hires=hires,
-        reportlets_dir=reportlets_dir,
-        output_dir=output_dir,
-        num_t1w=len(subject_data['t1w']),
-        skull_strip_fixed_seed=skull_strip_fixed_seed,
+        longitudinal=longitudinal,
         name="anat_preproc_wf",
+        num_t1w=len(subject_data['t1w']),
+        omp_nthreads=omp_nthreads,
+        output_dir=output_dir,
+        reportlets_dir=reportlets_dir,
+        skull_strip_fixed_seed=skull_strip_fixed_seed,
+        skull_strip_template=skull_strip_template,
+        template=template,
     )
 
     workflow.connect([
@@ -517,7 +518,7 @@ to workflows in *fMRIPrep*'s documentation]\
 
         workflow.connect([
             (anat_preproc_wf, func_preproc_wf,
-             [('outputnode.t1_preproc', 'inputnode.t1_preproc'),
+             [(('outputnode.t1_preproc', _pop), 'inputnode.t1_preproc'),
               ('outputnode.t1_brain', 'inputnode.t1_brain'),
               ('outputnode.t1_mask', 'inputnode.t1_mask'),
               ('outputnode.t1_seg', 'inputnode.t1_seg'),
@@ -542,3 +543,9 @@ def _prefix(subid):
     if subid.startswith('sub-'):
         return subid
     return '-'.join(('sub', subid))
+
+
+def _pop(inlist):
+    if isinstance(inlist, (list, tuple)):
+        return inlist[0]
+    return inlist

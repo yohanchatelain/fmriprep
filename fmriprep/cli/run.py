@@ -185,7 +185,7 @@ def get_parser():
     #  ANTs options
     g_ants = parser.add_argument_group('Specific options for ANTs registrations')
     g_ants.add_argument('--skull-strip-template', action='store', default='OASIS30ANTs',
-                        choices=['OASIS30ANTs', 'NKI'],
+                        choices=['OASIS30ANTs', 'NKI', 'MNI152NLin2009cAsym'],
                         help='select ANTs skull-stripping template (default: OASIS30ANTs))')
     g_ants.add_argument('--skull-strip-fixed-seed', action='store_true',
                         help='do not use a random seed for skull-stripping - will ensure '
@@ -439,6 +439,16 @@ def main():
         if "Workflow did not execute cleanly" not in str(e):
             sentry_sdk.capture_exception(e)
             raise
+    else:
+        if opts.run_reconall:
+            from templateflow import api
+            from niworkflows.utils.misc import _copy_any
+            dseg_tsv = str(api.get('fsaverage', suffix='dseg', extensions=['.tsv']))
+            _copy_any(dseg_tsv,
+                      str(Path(output_dir) / 'fmriprep' / 'desc-aseg_dseg.tsv'))
+            _copy_any(dseg_tsv,
+                      str(Path(output_dir) / 'fmriprep' / 'desc-aparcaseg_dseg.tsv'))
+        logger.log(25, 'fMRIPrep finished without errors')
     finally:
         # Generate reports phase
         errno += generate_reports(subject_list, output_dir, work_dir, run_uuid,
