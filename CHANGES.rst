@@ -1,3 +1,11 @@
+1.3.2 (March 18, 2019)
+============================
+
+A new release providing better support for BIDS-Derivatives, an wrapping-up all the developments around TemplateFlow and stability of singularity images. With thanks to @sarenseeley for contributions.
+
+* ENH: Write derivatives metadata (#1546) @oesteban
+* DOC: Indicate that interpolation is NN above the EPI-to-T1w reportlet (#1542) @sarenseeley
+
 1.3.1.post2 (March 13, 2019)
 ============================
 
@@ -9,7 +17,7 @@ A hotfix release addressing issues related to TemplateFlow for Singularity users
 A hotfix release addressing issues related to TemplateFlow for Singularity users.
 
 * FIX: Make sure ``--cifti-output`` requires at least one of ``fsaverage{5,6}`` (#1514) @oesteban
-* [FIX] Avoid using ``$HOME`` for storing templates (#1529) @chrisfilo
+* FIX: Avoid using ``$HOME`` for storing templates (#1529) @chrisfilo
 
 1.3.1 (March 6, 2019)
 =====================
