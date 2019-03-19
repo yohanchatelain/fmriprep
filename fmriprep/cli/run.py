@@ -17,6 +17,7 @@ import uuid
 import json
 import tempfile
 import psutil
+import hashlib
 import warnings
 import subprocess
 from argparse import ArgumentParser
@@ -321,6 +322,11 @@ def main():
 
             if exec_env == 'fmriprep-docker':
                 scope.set_tag('docker_version', os.getenv('DOCKER_VERSION_8395080871'))
+
+            dset_desc_path = os.path.join(opts.bids_dir, 'dataset_description.json')
+            if os.path.exists(dset_desc_path):
+                with open(dset_desc_path, 'rb') as fp:
+                    scope.set_tag('dset_desc_sha256', hashlib.sha256(fp.read()).hexdigest())
 
             free_mem_at_start = round(psutil.virtual_memory().free / 1024**3, 1)
             scope.set_tag('free_mem_at_start', free_mem_at_start)
