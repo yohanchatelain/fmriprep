@@ -208,13 +208,14 @@ were classified as motion outliers.
 
     tcompcor = pe.Node(
         TCompCor(components_file='tcompcor.tsv', header_prefix='t_comp_cor_', pre_filter='cosine',
-                 save_pre_filter=True, save_metadata=True, percentile_threshold=.05),
+                 save_pre_filter=True, save_metadata=True, percentile_threshold=.05,
+                 failure_mode='NaN'),
         name="tcompcor", mem_gb=mem_gb)
 
     acompcor = pe.Node(
         ACompCor(components_file='acompcor.tsv', header_prefix='a_comp_cor_', pre_filter='cosine',
                  save_pre_filter=True, save_metadata=True, mask_names=['combined', 'CSF', 'WM'],
-                 merge_method='none'),
+                 merge_method='none', failure_mode='NaN'),
         name="acompcor", mem_gb=mem_gb)
 
     # Set number of components
