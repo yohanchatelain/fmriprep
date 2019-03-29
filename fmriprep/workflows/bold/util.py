@@ -34,7 +34,8 @@ DEFAULT_MEMORY_MIN_GB = 0.01
 
 
 def init_bold_reference_wf(omp_nthreads, bold_file=None, pre_mask=False,
-                           name='bold_reference_wf', gen_report=False):
+                           name='bold_reference_wf', gen_report=False,
+                           skip_vols_num=None):
     """
     This workflow generates reference BOLD images for a series
 
@@ -136,6 +137,13 @@ using a custom methodology of *fMRIPrep*.
             ('outputnode.mask_file', 'bold_mask'),
             ('outputnode.skull_stripped_file', 'ref_image_brain')]),
     ])
+
+    # override algorithmic selection of non-steady state volumes
+    if skip_vols_num:
+        workflow.disconnect([
+            (gen_ref, outputnode, [('n_volumes_to_discard', 'skip_vols')]),
+        ])
+        outputnode.inputs.skip_vols = skip_vols_num
 
     if gen_report:
         mask_reportlet = pe.Node(SimpleShowMaskRPT(), name='mask_reportlet')
