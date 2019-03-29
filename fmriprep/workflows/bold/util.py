@@ -121,6 +121,12 @@ using a custom methodology of *fMRIPrep*.
     enhance_and_skullstrip_bold_wf = init_enhance_and_skullstrip_bold_wf(
         omp_nthreads=omp_nthreads, pre_mask=pre_mask)
 
+    calc_skip_vols_num = pe.Node(niu.Function(function=_pass_skip_vols_num,
+                                              output_names=['skip_vols_num']),
+                                 name='calc_skip_vols_num',
+                                 mem_gb=DEFAULT_MEMORY_MIN_GB)
+    calc_skip_vols_num.inputs.man_skip_vols = skip_vols_num
+
     workflow.connect([
         (inputnode, enhance_and_skullstrip_bold_wf, [('bold_mask', 'inputnode.pre_mask')]),
         (inputnode, validate, [('bold_file', 'in_file')]),
@@ -130,7 +136,8 @@ using a custom methodology of *fMRIPrep*.
         (validate_ref, enhance_and_skullstrip_bold_wf, [('out_file', 'inputnode.in_file')]),
         (validate, outputnode, [('out_file', 'bold_file'),
                                 ('out_report', 'validation_report')]),
-        (gen_ref, outputnode, [('n_volumes_to_discard', 'skip_vols')]),
+        (gen_ref, calc_skip_vols_num, [('n_volumes_to_discard', 'gen_skip_vols')]),
+        (calc_skip_vols_num, outputnode, [('skip_vols_num', 'skip_vols')]),
         (validate_ref, outputnode, [('out_file', 'raw_ref_image')]),
         (enhance_and_skullstrip_bold_wf, outputnode, [
             ('outputnode.bias_corrected_file', 'ref_image'),
@@ -423,3 +430,31 @@ def init_skullstrip_bold_wf(name='skullstrip_bold_wf'):
     ])
 
     return workflow
+
+
+def _pass_skip_vols_num(gen_skip_vols, man_skip_vols):
+    """
+    **Parameters**
+
+    gen_skip_vols : int
+        number of volumes to skip determined by an algorithm
+    man_skip_vols : int or None
+        number of volumes to skip determined by the user
+
+    **Returns**
+    skip_vols_num : int
+        number of volumes to skip
+    """
+    from nipype import logging
+    LOGGER = logging.getLogger('nipype.workflow')
+
+    if man_skip_vols:
+        if gen_skip_vols > man_skip_vols:
+            LOGGER.warning("The non steady state algorithm detected "
+                           "more volumes than what was manually specified")
+
+        skip_vols_num = man_skip_vols
+    else:
+        skip_vols_num = gen_skip_vols
+
+    return skip_vols_num
