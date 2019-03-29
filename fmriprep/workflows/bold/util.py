@@ -446,7 +446,7 @@ def _pass_skip_vols_num(gen_skip_vols, man_skip_vols):
         number of volumes to skip
     """
     from nipype import logging
-    LOGGER = logging.getLogger('nipype.workflow')
+    LOGGER = logging.getLogger('nipype.interface')
 
     if man_skip_vols:
         if gen_skip_vols > man_skip_vols:
