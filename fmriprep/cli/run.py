@@ -173,6 +173,10 @@ def get_parser():
         '--medial-surface-nan', required=False, action='store_true', default=False,
         help='Replace medial wall values with NaNs on functional GIFTI files. Only '
         'performed for GIFTI files mapped to a freesurfer subject (fsaverage or fsnative).')
+    g_conf.add_argument(
+        '--skip-vols-num', required=False, action='store', default=None, type=int,
+        help='Number of non steady state volumes specified'
+    )
 
     # ICA_AROMA options
     g_aroma = parser.add_argument_group('Specific options for running ICA_AROMA')
@@ -779,6 +783,7 @@ def build_workflow(opts, retval):
         use_aroma=opts.use_aroma,
         aroma_melodic_dim=opts.aroma_melodic_dimensionality,
         err_on_aroma_warn=opts.error_on_aroma_warnings,
+        skip_vols_num=opts.skip_vols_num,
     )
     retval['return_code'] = 0
 
