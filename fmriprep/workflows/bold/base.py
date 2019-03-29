@@ -86,6 +86,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                   cifti_output=False,
                                   use_aroma=False,
                                   err_on_aroma_warn=False,
+                                  skip_vols_num=None,
                                   aroma_melodic_dim=-200,
                                   num_bold=1,
                                   layout=BIDSLayout())
