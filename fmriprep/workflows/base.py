@@ -38,7 +38,8 @@ def init_fmriprep_wf(layout, subject_list, task_id, echo_idx, run_uuid, work_dir
                      omp_nthreads, skull_strip_template, skull_strip_fixed_seed,
                      freesurfer, output_spaces, template, medial_surface_nan, cifti_output, hires,
                      use_bbr, bold2t1w_dof, fmap_bspline, fmap_demean, use_syn, force_syn,
-                     use_aroma, err_on_aroma_warn, aroma_melodic_dim, template_out_grid):
+                     use_aroma, err_on_aroma_warn, aroma_melodic_dim, template_out_grid,
+                     skip_vols_num):
     """
     This workflow organizes the execution of FMRIPREP, with a sub-workflow for
     each subject.
@@ -87,7 +88,8 @@ def init_fmriprep_wf(layout, subject_list, task_id, echo_idx, run_uuid, work_dir
                               use_aroma=False,
                               err_on_aroma_warn=False,
                               aroma_melodic_dim=-200,
-                              template_out_grid='native')
+                              template_out_grid='native',
+                              skip_vols_num=None)
 
 
     Parameters
@@ -168,6 +170,8 @@ def init_fmriprep_wf(layout, subject_list, task_id, echo_idx, run_uuid, work_dir
         template_out_grid : str
             Keyword ('native', '1mm' or '2mm') or path of custom reference
             image for normalization
+        skip_vols_num : int or None
+            Number of volumes to consider as non steady state
 
     """
     fmriprep_wf = Workflow(name='fmriprep_wf')
@@ -216,6 +220,7 @@ def init_fmriprep_wf(layout, subject_list, task_id, echo_idx, run_uuid, work_dir
             use_aroma=use_aroma,
             aroma_melodic_dim=aroma_melodic_dim,
             err_on_aroma_warn=err_on_aroma_warn,
+            skip_vols_num=skip_vols_num,
         )
 
         single_subject_wf.config['execution']['crashdump_dir'] = (
@@ -238,7 +243,7 @@ def init_single_subject_wf(layout, subject_id, task_id, echo_idx, name, reportle
                            freesurfer, output_spaces, template, medial_surface_nan,
                            cifti_output, hires, use_bbr, bold2t1w_dof, fmap_bspline, fmap_demean,
                            use_syn, force_syn, template_out_grid,
-                           use_aroma, aroma_melodic_dim, err_on_aroma_warn):
+                           use_aroma, aroma_melodic_dim, err_on_aroma_warn, skip_vols_num):
     """
     This workflow organizes the preprocessing pipeline for a single subject.
     It collects and reports information about the subject, and prepares
@@ -288,7 +293,8 @@ def init_single_subject_wf(layout, subject_id, task_id, echo_idx, name, reportle
                                     template_out_grid='native',
                                     use_aroma=False,
                                     aroma_melodic_dim=-200,
-                                    err_on_aroma_warn=False)
+                                    err_on_aroma_warn=False,
+                                    skip_vols_num=None)
 
     Parameters
 
@@ -368,6 +374,9 @@ def init_single_subject_wf(layout, subject_id, task_id, echo_idx, name, reportle
             Perform ICA-AROMA on MNI-resampled functional series
         err_on_aroma_warn : bool
             Do not fail on ICA-AROMA errors
+        skip_vols_num : int or None
+            Number of volumes to consider as non steady state
+
 
     Inputs
 
@@ -514,7 +523,8 @@ to workflows in *fMRIPrep*'s documentation]\
                                                use_aroma=use_aroma,
                                                aroma_melodic_dim=aroma_melodic_dim,
                                                err_on_aroma_warn=err_on_aroma_warn,
-                                               num_bold=len(subject_data['bold']))
+                                               num_bold=len(subject_data['bold']),
+                                               skip_vols_num=skip_vols_num)
 
         workflow.connect([
             (anat_preproc_wf, func_preproc_wf,

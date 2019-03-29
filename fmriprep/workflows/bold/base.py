@@ -51,7 +51,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                          fmap_bspline, fmap_demean, use_syn, force_syn,
                          use_aroma, err_on_aroma_warn, aroma_melodic_dim,
                          medial_surface_nan, cifti_output,
-                         debug, low_mem, template_out_grid,
+                         debug, low_mem, template_out_grid, skip_vols_num,
                          layout=None, num_bold=1):
     """
     This workflow controls the functional preprocessing stages of FMRIPREP.
@@ -150,6 +150,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         template_out_grid : str
             Keyword ('native', '1mm' or '2mm') or path of custom reference
             image for normalization
+        skip_vols_num : int or None
+            Number of volumes to consider as non steady state
         layout : BIDSLayout
             BIDSLayout structure to enable metadata retrieval
         num_bold : int
@@ -406,7 +408,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     ])
 
     # Generate a tentative boldref
-    bold_reference_wf = init_bold_reference_wf(omp_nthreads=omp_nthreads)
+    bold_reference_wf = init_bold_reference_wf(omp_nthreads=omp_nthreads,
+                                               skip_vols_num=skip_vols_num)
 
     # Top-level BOLD splitter
     bold_split = pe.Node(FSLSplit(dimension='t'), name='bold_split',
