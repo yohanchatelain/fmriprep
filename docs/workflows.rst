@@ -54,6 +54,7 @@ is presented below:
         use_aroma=False,
         aroma_melodic_dim=-200,
         err_on_aroma_warn=False,
+        skip_vols_num=None,
     )
 
 
@@ -293,6 +294,7 @@ BOLD preprocessing
         use_aroma=False,
         use_bbr=True,
         use_syn=True,
+        skip_vols_num=None,
     )
 
 Preprocessing of :abbr:`BOLD (blood-oxygen level-dependent)` files is
