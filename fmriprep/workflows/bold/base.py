@@ -404,11 +404,13 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         # Artifacts resampled in MNI space can only be sinked if they
         # were actually generated. See #1348.
         workflow.connect([
-            ('bold_mni_ref', 'inputnode.bold_mni_ref'),
-            ('bold_mni', 'inputnode.bold_mni'),
-            ('bold_aseg_mni', 'inputnode.bold_aseg_mni'),
-            ('bold_aparc_mni', 'inputnode.bold_aparc_mni'),
-            ('bold_mask_mni', 'inputnode.bold_mask_mni'),
+            (outputnode, func_derivatives_wf, [
+                ('bold_mni_ref', 'inputnode.bold_mni_ref'),
+                ('bold_mni', 'inputnode.bold_mni'),
+                ('bold_aseg_mni', 'inputnode.bold_aseg_mni'),
+                ('bold_aparc_mni', 'inputnode.bold_aparc_mni'),
+                ('bold_mask_mni', 'inputnode.bold_mask_mni'),
+            ]),
         ])
 
     # Generate a tentative boldref
