@@ -389,11 +389,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('bold_aseg_t1', 'inputnode.bold_aseg_t1'),
             ('bold_aparc_t1', 'inputnode.bold_aparc_t1'),
             ('bold_mask_t1', 'inputnode.bold_mask_t1'),
-            ('bold_mni', 'inputnode.bold_mni'),
-            ('bold_mni_ref', 'inputnode.bold_mni_ref'),
-            ('bold_aseg_mni', 'inputnode.bold_aseg_mni'),
-            ('bold_aparc_mni', 'inputnode.bold_aparc_mni'),
-            ('bold_mask_mni', 'inputnode.bold_mask_mni'),
             ('confounds', 'inputnode.confounds'),
             ('surfaces', 'inputnode.surfaces'),
             ('aroma_noise_ics', 'inputnode.aroma_noise_ics'),
@@ -404,6 +399,19 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('cifti_variant_key', 'inputnode.cifti_variant_key')
         ]),
     ])
+
+    if 'template' in output_spaces:
+        # Artifacts resampled in MNI space can only be sinked if they
+        # were actually generated. See #1348.
+        workflow.connect([
+            (outputnode, func_derivatives_wf, [
+                ('bold_mni_ref', 'inputnode.bold_mni_ref'),
+                ('bold_mni', 'inputnode.bold_mni'),
+                ('bold_aseg_mni', 'inputnode.bold_aseg_mni'),
+                ('bold_aparc_mni', 'inputnode.bold_aparc_mni'),
+                ('bold_mask_mni', 'inputnode.bold_mask_mni'),
+            ]),
+        ])
 
     # Generate a tentative boldref
     bold_reference_wf = init_bold_reference_wf(omp_nthreads=omp_nthreads)
