@@ -145,13 +145,6 @@ using a custom methodology of *fMRIPrep*.
             ('outputnode.skull_stripped_file', 'ref_image_brain')]),
     ])
 
-    # override algorithmic selection of non-steady state volumes
-    if skip_vols_num:
-        workflow.disconnect([
-            (gen_ref, outputnode, [('n_volumes_to_discard', 'skip_vols')]),
-        ])
-        outputnode.inputs.skip_vols = skip_vols_num
-
     if gen_report:
         mask_reportlet = pe.Node(SimpleShowMaskRPT(), name='mask_reportlet')
         workflow.connect([
