@@ -119,6 +119,8 @@ Try to keep the changes focused.
 If you feel tempted to "branch out" then please make a [new branch][link_branches].
 It can also be helpful to test your changes locally,
 using an [fMRIPrep development environment][link_devel].
+Once you are satisfied with your local changes, [add/commit/push them][link_add_commit_push]
+to the branch on your forked repository.
 
 **4. Submit a [pull request][link_pullrequest].**
 
@@ -127,14 +129,14 @@ that they can be merged into the main code base.
 
 Pull requests titles should begin with a descriptive prefix:
 
-* ``ENH``: enhancements or new features
-* ``FIX``: bug fixes
-* ``TST``: new or updated tests
-* ``DOC``: new or updated documentation
-* ``STY``: style changes
-* ``REF``: refactoring existing code
-* ``CI``: updates to continous integration infrastructure
-* ``MAINT``: general maintenance
+* ``ENH``: enhancements or new features ([example][enh_ex])
+* ``FIX``: bug fixes ([example][fix_ex])
+* ``TST``: new or updated tests ([example][tst_ex])
+* ``DOC``: new or updated documentation ([example][doc_ex])
+* ``STY``: style changes ([example][sty_ex])
+* ``REF``: refactoring existing code ([example][ref_ex])
+* ``CI``: updates to continous integration infrastructure ([example][ci_ex])
+* ``MAINT``: general maintenance ([example][maint_ex])
 
 For example: `[ENH] Support for SB-reference in multi-band datasets`
 
@@ -229,11 +231,21 @@ You're awesome. :wave::smiley:
 [link_helpwanted]: https://github.com/poldracklab/fmriprep/labels/help%20wanted
 [link_feature]: https://github.com/poldracklab/fmriprep/labels/feature
 
-[link_pullrequest]: https://help.github.com/articles/creating-a-pull-request/
+[link_pullrequest]:https://help.github.com/en/articles/creating-a-pull-request-from-a-fork
 [link_fork]: https://help.github.com/articles/fork-a-repo/
 [link_pushpullblog]: https://www.igvita.com/2011/12/19/dont-push-your-pull-requests/
 [link_branches]: https://help.github.com/articles/creating-and-deleting-branches-within-your-repository/
+[link_add_commit_push]: https://help.github.com/en/articles/adding-a-file-to-a-repository-using-the-command-line
 [link_updateupstreamwiki]: https://help.github.com/articles/syncing-a-fork/
 [link_stemmrolemodels]: https://github.com/KirstieJane/STEMMRoleModels
 [link_zenodo]: https://github.com/poldracklab/fmriprep/blob/master/.zenodo.json
 [link_devel]: https://fmriprep.readthedocs.io/en/latest/contributors.html
+
+[enh_ex]: https://github.com/poldracklab/fmriprep/pull/1508
+[fix_ex]: https://github.com/poldracklab/fmriprep/pull/1378
+[tst_ex]: https://github.com/poldracklab/fmriprep/pull/1098
+[doc_ex]: https://github.com/poldracklab/fmriprep/pull/1515
+[sty_ex]: https://github.com/poldracklab/fmriprep/pull/675
+[ref_ex]: https://github.com/poldracklab/fmriprep/pull/816
+[ci_ex]: https://github.com/poldracklab/fmriprep/pull/1048
+[maint_ex]: https://github.com/poldracklab/fmriprep/pull/1239
