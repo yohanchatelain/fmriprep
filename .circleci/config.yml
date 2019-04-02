@@ -221,7 +221,7 @@ jobs:
           command: |
             cd /home/circleci/src/fmriprep
             if [[ "$( git log --format=oneline -n 1 $CIRCLE_SHA1 | grep -i -E '\[skip[ _]?tests\]' )" != "" ]]; then
-              echo "Skipping doc building job"
+              echo "Skipping pytest job"
               circleci step halt
             fi
 
@@ -305,7 +305,7 @@ jobs:
           command: |
             cd /home/circleci/src/fmriprep
             if [[ "$( git log --format=oneline -n 1 $CIRCLE_SHA1 | grep -i -E '\[skip[ _]?docs\]' )" != "" ]]; then
-              echo "Skipping pytest job"
+              echo "Skipping doc building job"
               circleci step halt
             fi
 
