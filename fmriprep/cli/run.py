@@ -786,7 +786,18 @@ def build_workflow(opts, retval):
     boilerplate = retval['workflow'].visit_desc()
 
     if boilerplate:
-        (logs_path / 'CITATION.md').write_text(boilerplate)
+        # To please git-annex users and also to guarantee consistency
+        # among different renderings of the same file, first remove any
+        # existing one
+        citation_files = {
+            ext: str(logs_path / 'CITATION.' + ext)
+            for ext in ('bib', 'tex', 'md', 'html')
+        }
+        for citation_file in citation_files.values():
+            if op.lexists(citation_file):
+                citation_file.unlink()
+
+        Path(citation_files['md']).write_text(boilerplate)
         logger.log(25, 'Works derived from this fMRIPrep execution should '
                    'include the following boilerplate:\n\n%s', boilerplate)
 
@@ -795,8 +806,8 @@ def build_workflow(opts, retval):
                pkgrf('fmriprep', 'data/boilerplate.bib'),
                '--filter', 'pandoc-citeproc',
                '--metadata', 'pagetitle="fMRIPrep citation boilerplate"',
-               str(logs_path / 'CITATION.md'),
-               '-o', str(logs_path / 'CITATION.html')]
+               citation_files['md'],
+               '-o', citation_files['html']]
         try:
             check_call(cmd, timeout=10)
         except (FileNotFoundError, CalledProcessError, TimeoutExpired):
@@ -806,8 +817,8 @@ def build_workflow(opts, retval):
         # Generate LaTex file resolving citations
         cmd = ['pandoc', '-s', '--bibliography',
                pkgrf('fmriprep', 'data/boilerplate.bib'),
-               '--natbib', str(logs_path / 'CITATION.md'),
-               '-o', str(logs_path / 'CITATION.tex')]
+               '--natbib', citation_files['md'],
+               '-o', citation_files['tex']]
         try:
             check_call(cmd, timeout=10)
         except (FileNotFoundError, CalledProcessError, TimeoutExpired):
@@ -815,7 +826,7 @@ def build_workflow(opts, retval):
                            ' '.join(cmd))
         else:
             copyfile(pkgrf('fmriprep', 'data/boilerplate.bib'),
-                     (logs_path / 'CITATION.bib'))
+                     citation_files['bib'])
 
     return retval
 
