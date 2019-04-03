@@ -111,9 +111,34 @@ is so useful to everyone involved.
 This is now your own unique copy of ``fMRIPrep``.
 Changes here won't effect anyone else's work, so it's a safe space to explore edits to the code!
 
-Make sure to [keep your fork up to date][link_updateupstreamwiki] with the master repository.
+**3. [Clone][link_clone] your forked fMRIPrep repository to your machine/computer**
 
-**3. Make the changes you've discussed, following the [fMRIPrep coding style guide](#fMRIPrep-coding-style-guide).**
+While you can edit files [directly on github][link_githubedit], sometimes the changes
+you want to make will be complex and you will want to use a [text editor][link_texteditor]
+that you have installed on your local machine/computer.
+(One great text editor is [vscode][link_vscode]).
+
+In order to work on the code locally, you must clone your forked repository.
+
+To keep up with changes in the fmriprep repository,
+add the ["upstream" fmriprep repository as a remote][link_addremote]
+to your locally cloned repository.
+
+```Shell
+git remote add upstream https://github.com/poldracklab/fmriprep.git
+```
+
+Make sure to [keep your fork up to date][link_updateupstreamwiki] with the upstream repository.
+
+For example, to update your master branch on your local cloned repository:
+
+```Shell
+git fetch upstream
+git checkout master
+git merge upstream/master
+```
+
+**4. Make the changes you've discussed, following the [fMRIPrep coding style guide](#fMRIPrep-coding-style-guide).**
 
 Try to keep the changes focused.
 If you feel tempted to "branch out" then please make a [new branch][link_branches].
@@ -122,7 +147,7 @@ using an [fMRIPrep development environment][link_devel].
 Once you are satisfied with your local changes, [add/commit/push them][link_add_commit_push]
 to the branch on your forked repository.
 
-**4. Submit a [pull request][link_pullrequest].**
+**5. Submit a [pull request][link_pullrequest].**
 
 A member of the development team will review your changes to confirm
 that they can be merged into the main code base.
@@ -233,6 +258,11 @@ You're awesome. :wave::smiley:
 
 [link_pullrequest]:https://help.github.com/en/articles/creating-a-pull-request-from-a-fork
 [link_fork]: https://help.github.com/articles/fork-a-repo/
+[link_clone]: https://help.github.com/articles/cloning-a-repository
+[link_githubedit]: https://help.github.com/articles/editing-files-in-your-repository
+[link_texteditor]: https://en.wikipedia.org/wiki/Text_editor
+[link_vscode]: https://code.visualstudio.com/
+[link_addremote]: https://help.github.com/articles/configuring-a-remote-for-a-fork
 [link_pushpullblog]: https://www.igvita.com/2011/12/19/dont-push-your-pull-requests/
 [link_branches]: https://help.github.com/articles/creating-and-deleting-branches-within-your-repository/
 [link_add_commit_push]: https://help.github.com/en/articles/adding-a-file-to-a-repository-using-the-command-line
