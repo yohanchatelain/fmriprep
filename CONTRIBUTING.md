@@ -256,7 +256,7 @@ You're awesome. :wave::smiley:
 [link_helpwanted]: https://github.com/poldracklab/fmriprep/labels/help%20wanted
 [link_feature]: https://github.com/poldracklab/fmriprep/labels/feature
 
-[link_pullrequest]:https://help.github.com/en/articles/creating-a-pull-request-from-a-fork
+[link_pullrequest]: https://help.github.com/articles/creating-a-pull-request-from-a-fork
 [link_fork]: https://help.github.com/articles/fork-a-repo/
 [link_clone]: https://help.github.com/articles/cloning-a-repository
 [link_githubedit]: https://help.github.com/articles/editing-files-in-your-repository
@@ -265,7 +265,7 @@ You're awesome. :wave::smiley:
 [link_addremote]: https://help.github.com/articles/configuring-a-remote-for-a-fork
 [link_pushpullblog]: https://www.igvita.com/2011/12/19/dont-push-your-pull-requests/
 [link_branches]: https://help.github.com/articles/creating-and-deleting-branches-within-your-repository/
-[link_add_commit_push]: https://help.github.com/en/articles/adding-a-file-to-a-repository-using-the-command-line
+[link_add_commit_push]: https://help.github.com/articles/adding-a-file-to-a-repository-using-the-command-line
 [link_updateupstreamwiki]: https://help.github.com/articles/syncing-a-fork/
 [link_stemmrolemodels]: https://github.com/KirstieJane/STEMMRoleModels
 [link_zenodo]: https://github.com/poldracklab/fmriprep/blob/master/.zenodo.json
