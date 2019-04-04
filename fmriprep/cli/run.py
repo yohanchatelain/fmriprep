@@ -790,14 +790,14 @@ def build_workflow(opts, retval):
         # among different renderings of the same file, first remove any
         # existing one
         citation_files = {
-            ext: str(logs_path / 'CITATION.' + ext)
+            ext: logs_path / ('CITATION.%s' % ext)
             for ext in ('bib', 'tex', 'md', 'html')
         }
         for citation_file in citation_files.values():
-            if op.lexists(citation_file):
+            if citation_file.exists() or citation_file.is_symlink():
                 citation_file.unlink()
 
-        Path(citation_files['md']).write_text(boilerplate)
+        citation_files['md'].write_text(boilerplate)
         logger.log(25, 'Works derived from this fMRIPrep execution should '
                    'include the following boilerplate:\n\n%s', boilerplate)
 
@@ -806,8 +806,8 @@ def build_workflow(opts, retval):
                pkgrf('fmriprep', 'data/boilerplate.bib'),
                '--filter', 'pandoc-citeproc',
                '--metadata', 'pagetitle="fMRIPrep citation boilerplate"',
-               citation_files['md'],
-               '-o', citation_files['html']]
+               str(citation_files['md']),
+               '-o', str(citation_files['html'])]
         try:
             check_call(cmd, timeout=10)
         except (FileNotFoundError, CalledProcessError, TimeoutExpired):
@@ -817,8 +817,8 @@ def build_workflow(opts, retval):
         # Generate LaTex file resolving citations
         cmd = ['pandoc', '-s', '--bibliography',
                pkgrf('fmriprep', 'data/boilerplate.bib'),
-               '--natbib', citation_files['md'],
-               '-o', citation_files['tex']]
+               '--natbib', str(citation_files['md']),
+               '-o', str(citation_files['tex'])]
         try:
             check_call(cmd, timeout=10)
         except (FileNotFoundError, CalledProcessError, TimeoutExpired):
