@@ -146,9 +146,9 @@ in the same space and resolution as the T1 image, and follow the naming conventi
 This file should be placed in the ``sub-*/anat`` directory of the BIDS dataset
 to be run through ``fmriprep``.
 Because lesion masks are not currently part of the BIDS specification, it is also necessary to 
-include a `.bidsignore` file in the root of your dataset directory. This will prevent 
+include a ``.bidsignore`` file in the root of your dataset directory. This will prevent 
 `bids-validator <https://github.com/bids-standard/bids-validator#bidsignore>`_ from complaining that your dataset not BIDS valid, which prevents 
-``fmriprep`` from running. Your `.bidsignore` file should include the following line::
+``fmriprep`` from running. Your ``.bidsignore`` file should include the following line::
 
 *lesion_roi.nii.gz
 
