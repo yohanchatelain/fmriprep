@@ -28,7 +28,7 @@ from niworkflows.interfaces.plotting import (
 )
 from niworkflows.interfaces.segmentation import ICA_AROMARPT
 from niworkflows.interfaces.utils import (
-    TPM2ROI, AddTPMs, AddTSVHeader, TSV2JSON
+    TPM2ROI, AddTPMs, AddTSVHeader, TSV2JSON, DictMerge
 )
 
 from ...interfaces import (
@@ -127,6 +127,8 @@ def init_bold_confs_wf(mem_gb, metadata, return_all_components=False,
         rois_report
             Reportlet visualizing white-matter/CSF mask used for aCompCor,
             the ROI for tCompCor and the BOLD brain mask.
+        confounds_metadata
+            Confounds metadata dictionary.
 
     """
     workflow = Workflow(name=name)
@@ -166,7 +168,7 @@ were classified as motion outliers.
                 't1_mask', 't1_tpms', 't1_bold_xform']),
         name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['confounds_file', 'tcompcor_metadata', 'acompcor_metadata']),
+        fields=['confounds_file', 'confounds_metadata']),
         name='outputnode')
 
     # Get masks ready in T1w space
@@ -250,13 +252,17 @@ were classified as motion outliers.
 
     # CompCor metadata
     tcc_metadata_fmt = pe.Node(
-        TSV2JSON(index_column='component', drop_columns=['mask'],
+        TSV2JSON(index_column='component', drop_columns=['mask'], output=None,
                  additional_metadata={'Method': 'tCompCor'}, enforce_case=True),
         name='tcc_metadata_fmt')
     acc_metadata_fmt = pe.Node(
-        TSV2JSON(index_column='component',
+        TSV2JSON(index_column='component', output=None,
                  additional_metadata={'Method': 'aCompCor'}, enforce_case=True),
         name='acc_metadata_fmt')
+    mrg_conf_metadata = pe.Node(niu.Merge(2), name='merge_confound_metadata',
+                                run_without_submitting=True)
+    mrg_conf_metadata2 = pe.Node(DictMerge(), name='merge_confound_metadata2',
+                                 run_without_submitting=True)
 
     # Expand model to include derivatives and quadratics
     model_expand = pe.Node(ExpandModel(
@@ -378,6 +384,9 @@ were classified as motion outliers.
         # Confounds metadata
         (tcompcor, tcc_metadata_fmt, [('metadata_file', 'in_file')]),
         (acompcor, acc_metadata_fmt, [('metadata_file', 'in_file')]),
+        (tcc_metadata_fmt, mrg_conf_metadata, [('output', 'in1')]),
+        (acc_metadata_fmt, mrg_conf_metadata, [('output', 'in2')]),
+        (mrg_conf_metadata, mrg_conf_metadata2, [('out', 'in_dicts')]),
 
         # Expand the model with derivatives, quadratics, and spikes
         (concat, model_expand, [('confounds_file', 'confounds_file')]),
@@ -385,8 +394,7 @@ were classified as motion outliers.
 
         # Set outputs
         (spike_regress, outputnode, [('confounds_file', 'confounds_file')]),
-        (tcc_metadata_fmt, outputnode, [('out_file', 'tcompcor_metadata')]),
-        (acc_metadata_fmt, outputnode, [('out_file', 'acompcor_metadata')]),
+        (mrg_conf_metadata2, outputnode, [('out_dict', 'confounds_metadata')]),
         (inputnode, rois_plot, [('bold', 'in_file'),
                                 ('bold_mask', 'in_mask')]),
         (tcompcor, mrg_compcor, [('high_variance_masks', 'in1')]),
