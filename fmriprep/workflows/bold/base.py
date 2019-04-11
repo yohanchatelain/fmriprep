@@ -338,7 +338,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 """
 
     inputnode = pe.Node(niu.IdentityInterface(
-        fields=['bold_file', 'sbref_file', 'subjects_dir', 'subject_id',
+        fields=['bold_file', 'subjects_dir', 'subject_id',
                 't1_preproc', 't1_brain', 't1_mask', 't1_seg', 't1_tpms',
                 't1_aseg', 't1_aparc',
                 't1_2_mni_forward_transform', 't1_2_mni_reverse_transform',
@@ -347,11 +347,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     inputnode.inputs.bold_file = bold_file
     if sbref_file is not None:
         from niworkflows.interfaces.images import ValidateImage
-        val_sbref = pe.Node(ValidateImage(), name='val_sbref')
-        val_sbref.inputs.in_file = sbref_file
-        workflow.connect([
-            (val_sbref, inputnode, [('out_file', 'sbref_file')]),
-        ])
+        val_sbref = pe.Node(ValidateImage(in_file=sbref_file), name='val_sbref')
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_t1', 'bold_t1_ref', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1',
@@ -420,6 +416,10 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
     # Generate a tentative boldref
     bold_reference_wf = init_bold_reference_wf(omp_nthreads=omp_nthreads)
+    if sbref_file is not None:
+        workflow.connect([
+            (val_sbref, bold_reference_wf, [('out_file', 'inputnode.sbref_file')]),
+        ])
 
     # Top-level BOLD splitter
     bold_split = pe.Node(FSLSplit(dimension='t'), name='bold_split',
@@ -538,8 +538,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     # MAIN WORKFLOW STRUCTURE #######################################################
     workflow.connect([
         # Generate early reference
-        (inputnode, bold_reference_wf, [('bold_file', 'inputnode.bold_file'),
-                                        ('sbref_file', 'inputnode.sbref_file')]),
+        (inputnode, bold_reference_wf, [('bold_file', 'inputnode.bold_file')]),
         # BOLD buffer has slice-time corrected if it was run, original otherwise
         (boldbuffer, bold_split, [('bold_file', 'in_file')]),
         # HMC
