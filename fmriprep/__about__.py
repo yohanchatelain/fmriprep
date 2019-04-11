@@ -89,7 +89,7 @@ REQUIRES = [
     'nilearn',
     'nipype>=1.1.6',
     'nitime',
-    'niworkflows<0.9.0a0,>=0.8.1',
+    'niworkflows',
     'numpy',
     'pandas',
     'psutil>=5.4',
@@ -104,6 +104,8 @@ REQUIRES = [
 
 
 LINKS_REQUIRES = [
+    'git+https://github.com/oesteban/niworkflows.git@'
+    '98d40bda2f8c36a061ada6788f3265ae40ab765a#egg=niworkflows',
     'git+https://github.com/poldracklab/smriprep.git@'
     '423bcc43ab7300177eb3b98da62817b2cad8eb87#egg=smriprep-0.1.0',
 ]
