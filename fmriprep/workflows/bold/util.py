@@ -112,7 +112,6 @@ using a custom methodology of *fMRIPrep*.
         inputnode.inputs.bold_file = bold_file
 
     validate = pe.Node(ValidateImage(), name='validate', mem_gb=DEFAULT_MEMORY_MIN_GB)
-    val_sbref = pe.Node(ValidateImage(), name='val_sbref')
 
     gen_ref = pe.Node(EstimateReferenceImage(), name="gen_ref",
                       mem_gb=1)  # OE: 128x128x128x50 * 64 / 8 ~ 900MB.
@@ -124,9 +123,8 @@ using a custom methodology of *fMRIPrep*.
     workflow.connect([
         (inputnode, enhance_and_skullstrip_bold_wf, [('bold_mask', 'inputnode.pre_mask')]),
         (inputnode, validate, [('bold_file', 'in_file')]),
-        (inputnode, val_sbref, [('sbref_file', 'in_file')]),
+        (inputnode, gen_ref, [('sbref_file', 'sbref_file')]),
         (validate, gen_ref, [('out_file', 'in_file')]),
-        (val_sbref, gen_ref, [('out_file', 'sbref_file')]),
         (gen_ref, validate_ref, [('ref_image', 'in_file')]),
         (validate_ref, enhance_and_skullstrip_bold_wf, [('out_file', 'inputnode.in_file')]),
         (validate, outputnode, [('out_file', 'bold_file'),

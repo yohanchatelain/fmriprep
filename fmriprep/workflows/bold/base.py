@@ -346,7 +346,12 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         name='inputnode')
     inputnode.inputs.bold_file = bold_file
     if sbref_file is not None:
-        inputnode.inputs.sbref_file = sbref_file
+        from niworkflows.interfaces.images import ValidateImage
+        val_sbref = pe.Node(ValidateImage(), name='val_sbref')
+        val_sbref.inputs.in_file = sbref_file
+        workflow.connect([
+            (val_sbref, inputnode, [('out_file', 'sbref_file')]),
+        ])
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_t1', 'bold_t1_ref', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1',
