@@ -69,19 +69,22 @@ T1w/T2w preprocessing
     :simple_form: yes
 
     from fmriprep.workflows.anatomical import init_anat_preproc_wf
-    wf = init_anat_preproc_wf(omp_nthreads=1,
-                              reportlets_dir='.',
-                              output_dir='.',
-                              template='MNI152NLin2009cAsym',
-                              fs_spaces=['T1w', 'fsnative',
-                                         'template', 'fsaverage5'],
-                              skull_strip_template='OASIS30ANTs',
-                              skull_strip_fixed_seed=False,
-                              freesurfer=True,
-                              longitudinal=False,
-                              debug=False,
-                              hires=True,
-                              num_t1w=1)
+    wf = init_anat_preproc_wf(
+        bids_root='.',
+        debug=False,
+        freesurfer=True,
+        fs_spaces=['T1w', 'fsnative',
+                   'template', 'fsaverage5'],
+        hires=True,
+        longitudinal=False,
+        num_t1w=1,
+        omp_nthreads=1,
+        output_dir='.',
+        reportlets_dir='.',
+        skull_strip_template='MNI152NLin2009cAsym',
+        skull_strip_fixed_seed=False,
+        template='MNI152NLin2009cAsym',
+    )
 
 The anatomical sub-workflow begins by constructing an average image by
 conforming all found T1w images to RAS orientation and
@@ -93,8 +96,19 @@ single reference template (see `Longitudinal processing`_).
 Brain extraction, brain tissue segmentation and spatial normalization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Then, the T1w image/average is skull-stripped using ANTs' ``antsBrainExtraction.sh``,
-which is an atlas-based brain extraction workflow.
+Then, the T1w reference is skull-stripped using a Nipype implementation of
+the ``antsBrainExtraction.sh`` tool (ANTs), which is an atlas-based 
+brain extraction workflow:
+
+.. workflow::
+    :graph2use: orig
+    :simple_form: yes
+
+    from niworkflows.anat.ants import init_brain_extraction_wf
+    wf = init_brain_extraction_wf()
+
+
+An example of brain extraction is shown below:
 
 .. figure:: _static/brainextraction_t1.svg
     :scale: 100%
@@ -115,6 +129,14 @@ in a multiscale, mutual-information based, nonlinear registration scheme.
 In particular, spatial normalization is done using the `ICBM 2009c Nonlinear
 Asymmetric template (1×1×1mm) <http://nist.mni.mcgill.ca/?p=904>`_ [Fonov2011]_.
 
+.. figure:: _static/T1MNINormalization.svg
+    :scale: 100%
+
+    Animation showing T1w to MNI normalization
+
+Cost function masking during spatial normalization
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 When processing images from patients with focal brain lesions (e.g. stroke, tumor
 resection), it is possible to provide a lesion mask to be used during spatial
 normalization to MNI-space [Brett2001]_.
@@ -126,11 +148,12 @@ in the same space and resolution as the T1 image, and follow the naming conventi
 (e.g. ``sub-001_T1w_label-lesion_roi.nii.gz``).
 This file should be placed in the ``sub-*/anat`` directory of the BIDS dataset
 to be run through ``fmriprep``.
+Because lesion masks are not currently part of the BIDS specification, it is also necessary to 
+include a ``.bidsignore`` file in the root of your dataset directory. This will prevent 
+`bids-validator <https://github.com/bids-standard/bids-validator#bidsignore>`_ from complaining that your dataset not BIDS valid, which prevents 
+``fmriprep`` from running. Your ``.bidsignore`` file should include the following line::
 
-.. figure:: _static/T1MNINormalization.svg
-    :scale: 100%
-
-    Animation showing T1w to MNI normalization
+*lesion_roi.nii.gz
 
 
 Longitudinal processing
@@ -254,34 +277,37 @@ BOLD preprocessing
     :graph2use: orig
     :simple_form: yes
 
+    from collections import namedtuple
+    BIDSLayout = namedtuple('BIDSLayout', ['root'], defaults='.')
     from fmriprep.workflows.bold import init_func_preproc_wf
     wf = init_func_preproc_wf(
         '/completely/made/up/path/sub-01_task-nback_bold.nii.gz',
-        omp_nthreads=1,
-        ignore=[],
-        freesurfer=True,
-        reportlets_dir='.',
-        output_dir='.',
-        template='MNI152NLin2009cAsym',
-        output_spaces=['T1w', 'fsnative', 'template', 'fsaverage5'],
-        medial_surface_nan=False,
+        aroma_melodic_dim=-200,
+        bold2t1w_dof=9,
         cifti_output=False,
         debug=False,
-        low_mem=False,
-        use_bbr=True,
-        t2s_coreg=False,
-        bold2t1w_dof=9,
+        err_on_aroma_warn=False,
         fmap_bspline=True,
         fmap_demean=True,
-        use_syn=True,
         force_syn=True,
+        freesurfer=True,
+        ignore=[],
+        layout=BIDSLayout(),
+        low_mem=False,
+        medial_surface_nan=False,
+        omp_nthreads=1,
+        output_dir='.',
+        output_spaces=['T1w', 'fsnative', 'template', 'fsaverage5'],
+        reportlets_dir='.',
+        t2s_coreg=False,
+        template='MNI152NLin2009cAsym',
         template_out_grid='native',
         use_aroma=False,
-        aroma_melodic_dim=-200,
-        err_on_aroma_warn=False,
         return_all_components=False,
         fd_spike_thr=0.5,
-        dv_spike_thr=1.5
+        dv_spike_thr=1.5,
+        use_bbr=True,
+        use_syn=True,
     )
 
 Preprocessing of :abbr:`BOLD (blood-oxygen level-dependent)` files is

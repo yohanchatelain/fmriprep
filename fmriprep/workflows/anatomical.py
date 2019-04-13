@@ -6,7 +6,6 @@ Anatomical reference preprocessing workflows
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autofunction:: init_anat_preproc_wf
-.. autofunction:: init_skullstrip_ants_wf
 
 Surface preprocessing
 +++++++++++++++++++++
@@ -21,7 +20,6 @@ structural images.
 """
 from smriprep.workflows.anatomical import (
     init_anat_preproc_wf,
-    init_skullstrip_ants_wf,
 )
 from smriprep.workflows.surfaces import (
     init_surface_recon_wf,
@@ -31,7 +29,6 @@ from smriprep.workflows.surfaces import (
 
 __all__ = [
     'init_anat_preproc_wf',
-    'init_skullstrip_ants_wf',
     'init_surface_recon_wf',
     'init_autorecon_resume_wf',
     'init_gifti_surface_wf',

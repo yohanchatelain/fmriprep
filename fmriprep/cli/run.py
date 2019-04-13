@@ -17,6 +17,7 @@ import uuid
 import json
 import tempfile
 import psutil
+import hashlib
 import warnings
 import subprocess
 from argparse import ArgumentParser
@@ -201,7 +202,7 @@ def get_parser():
     #  ANTs options
     g_ants = parser.add_argument_group('Specific options for ANTs registrations')
     g_ants.add_argument('--skull-strip-template', action='store', default='OASIS30ANTs',
-                        choices=['OASIS30ANTs', 'NKI'],
+                        choices=['OASIS30ANTs', 'NKI', 'MNI152NLin2009cAsym'],
                         help='select ANTs skull-stripping template (default: OASIS30ANTs))')
     g_ants.add_argument('--skull-strip-fixed-seed', action='store_true',
                         help='do not use a random seed for skull-stripping - will ensure '
@@ -338,6 +339,11 @@ def main():
             if exec_env == 'fmriprep-docker':
                 scope.set_tag('docker_version', os.getenv('DOCKER_VERSION_8395080871'))
 
+            dset_desc_path = os.path.join(opts.bids_dir, 'dataset_description.json')
+            if os.path.exists(dset_desc_path):
+                with open(dset_desc_path, 'rb') as fp:
+                    scope.set_tag('dset_desc_sha256', hashlib.sha256(fp.read()).hexdigest())
+
             free_mem_at_start = round(psutil.virtual_memory().free / 1024**3, 1)
             scope.set_tag('free_mem_at_start', free_mem_at_start)
             scope.set_tag('cpu_count', cpu_count())
@@ -455,6 +461,16 @@ def main():
         if "Workflow did not execute cleanly" not in str(e):
             sentry_sdk.capture_exception(e)
             raise
+    else:
+        if opts.run_reconall:
+            from templateflow import api
+            from niworkflows.utils.misc import _copy_any
+            dseg_tsv = str(api.get('fsaverage', suffix='dseg', extensions=['.tsv']))
+            _copy_any(dseg_tsv,
+                      str(Path(output_dir) / 'fmriprep' / 'desc-aseg_dseg.tsv'))
+            _copy_any(dseg_tsv,
+                      str(Path(output_dir) / 'fmriprep' / 'desc-aparcaseg_dseg.tsv'))
+        logger.log(25, 'fMRIPrep finished without errors')
     finally:
         # Generate reports phase
         errno += generate_reports(subject_list, output_dir, work_dir, run_uuid,
@@ -589,7 +605,12 @@ def build_workflow(opts, retval):
       * Run identifier: {uuid}.
     """.format
 
-    output_spaces = opts.output_space or []
+    # Reduce to unique space identifiers
+    output_spaces = sorted(set(opts.output_space))
+
+    # If FS is not run, drop all fs* output spaces
+    if not opts.run_reconall:
+        output_spaces = [item for item in output_spaces if not item.startswith('fs')]
 
     # Validity of some inputs
     # ERROR check if use_aroma was specified, but the correct template was not
@@ -602,14 +623,19 @@ def build_workflow(opts, retval):
             'spaces (option "--output-space").'
         )
 
-    if opts.cifti_output and (opts.template != 'MNI152NLin2009cAsym' or
-                              'template' not in output_spaces):
-        output_spaces.append('template')
-        logger.warning(
-            'Option "--cifti-output" requires functional images to be resampled to MNI space. '
-            'The argument "template" has been automatically added to the list of output '
-            'spaces (option "--output-space").'
-        )
+    if opts.cifti_output:
+        if 'template' not in output_spaces:
+            output_spaces.append('template')
+            logger.warning(
+                'Option "--cifti-output" requires functional images to be resampled to MNI '
+                'space. The argument "template" has been automatically added to the list of '
+                'output spaces (option "--output-space").')
+        if not [s for s in output_spaces if s in ('fsaverage5', 'fsaverage6')]:
+            output_spaces = sorted(output_spaces + ['fsaverage5'])
+            logger.warning(
+                'Option "--cifti-output" requires functional images to be resampled to fsaverage '
+                'space. The argument "fsaverage5" has been automatically added to the list of '
+                'output spaces (option "--output-space").')
 
     # Check output_space
     if 'template' not in output_spaces and (opts.use_syn_sdc or opts.force_syn):
@@ -779,7 +805,18 @@ def build_workflow(opts, retval):
     boilerplate = retval['workflow'].visit_desc()
 
     if boilerplate:
-        (logs_path / 'CITATION.md').write_text(boilerplate)
+        # To please git-annex users and also to guarantee consistency
+        # among different renderings of the same file, first remove any
+        # existing one
+        citation_files = {
+            ext: logs_path / ('CITATION.%s' % ext)
+            for ext in ('bib', 'tex', 'md', 'html')
+        }
+        for citation_file in citation_files.values():
+            if citation_file.exists() or citation_file.is_symlink():
+                citation_file.unlink()
+
+        citation_files['md'].write_text(boilerplate)
         logger.log(25, 'Works derived from this fMRIPrep execution should '
                    'include the following boilerplate:\n\n%s', boilerplate)
 
@@ -788,8 +825,8 @@ def build_workflow(opts, retval):
                pkgrf('fmriprep', 'data/boilerplate.bib'),
                '--filter', 'pandoc-citeproc',
                '--metadata', 'pagetitle="fMRIPrep citation boilerplate"',
-               str(logs_path / 'CITATION.md'),
-               '-o', str(logs_path / 'CITATION.html')]
+               str(citation_files['md']),
+               '-o', str(citation_files['html'])]
         try:
             check_call(cmd, timeout=10)
         except (FileNotFoundError, CalledProcessError, TimeoutExpired):
@@ -799,8 +836,8 @@ def build_workflow(opts, retval):
         # Generate LaTex file resolving citations
         cmd = ['pandoc', '-s', '--bibliography',
                pkgrf('fmriprep', 'data/boilerplate.bib'),
-               '--natbib', str(logs_path / 'CITATION.md'),
-               '-o', str(logs_path / 'CITATION.tex')]
+               '--natbib', str(citation_files['md']),
+               '-o', str(citation_files['tex'])]
         try:
             check_call(cmd, timeout=10)
         except (FileNotFoundError, CalledProcessError, TimeoutExpired):
@@ -808,7 +845,7 @@ def build_workflow(opts, retval):
                            ' '.join(cmd))
         else:
             copyfile(pkgrf('fmriprep', 'data/boilerplate.bib'),
-                     (logs_path / 'CITATION.bib'))
+                     citation_files['bib'])
 
     return retval
 

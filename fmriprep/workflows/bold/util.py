@@ -275,8 +275,10 @@ def init_enhance_and_skullstrip_bold_wf(
     apply_mask = pe.Node(fsl.ApplyMask(), name='apply_mask')
 
     if not pre_mask:
-        bold_template = get_template('MNI152NLin2009cAsym', 'res-02_desc-fMRIPrep_boldref.nii.gz')
-        brain_mask = get_template('MNI152NLin2009cAsym', 'res-02_desc-brain_mask.nii.gz')
+        bold_template = get_template(
+            'MNI152NLin2009cAsym', resolution=2, desc='fMRIPrep', suffix='boldref')
+        brain_mask = get_template(
+            'MNI152NLin2009cAsym', resolution=2, desc='brain', suffix='mask')
 
         # Initialize transforms with antsAI
         init_aff = pe.Node(AI(

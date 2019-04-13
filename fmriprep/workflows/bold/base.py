@@ -62,6 +62,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         :simple_form: yes
 
         from fmriprep.workflows.bold import init_func_preproc_wf
+        from collections import namedtuple
+        BIDSLayout = namedtuple('BIDSLayout', ['root'], defaults='.')
         wf = init_func_preproc_wf('/completely/made/up/path/sub-01_task-nback_bold.nii.gz',
                                   omp_nthreads=1,
                                   ignore=[],
@@ -89,7 +91,8 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                   return_all_components=False,
                                   fd_spike_thr=0.5,
                                   dv_spike_thr=1.5,
-                                  num_bold=1)
+                                  num_bold=1,
+                                  layout=BIDSLayout()))
 
     **Parameters**
 
@@ -376,12 +379,19 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                           tr=metadata.get("RepetitionTime")),
         name='summary', mem_gb=DEFAULT_MEMORY_MIN_GB, run_without_submitting=True)
 
-    func_derivatives_wf = init_func_derivatives_wf(output_dir=output_dir,
-                                                   output_spaces=output_spaces,
-                                                   template=template,
-                                                   freesurfer=freesurfer,
-                                                   use_aroma=use_aroma,
-                                                   cifti_output=cifti_output)
+    # CIfTI output: currently, we only support fsaverage{5,6}
+    cifti_spaces = [s for s in output_spaces if s in ('fsaverage5', 'fsaverage6')]
+    cifti_output = cifti_output and cifti_spaces
+    func_derivatives_wf = init_func_derivatives_wf(
+        bids_root=layout.root,
+        cifti_output=cifti_output,
+        freesurfer=freesurfer,
+        metadata=metadata,
+        output_dir=output_dir,
+        output_spaces=output_spaces,
+        template=template,
+        use_aroma=use_aroma,
+    )
 
     workflow.connect([
         (outputnode, func_derivatives_wf, [
@@ -390,11 +400,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('bold_aseg_t1', 'inputnode.bold_aseg_t1'),
             ('bold_aparc_t1', 'inputnode.bold_aparc_t1'),
             ('bold_mask_t1', 'inputnode.bold_mask_t1'),
-            ('bold_mni', 'inputnode.bold_mni'),
-            ('bold_mni_ref', 'inputnode.bold_mni_ref'),
-            ('bold_aseg_mni', 'inputnode.bold_aseg_mni'),
-            ('bold_aparc_mni', 'inputnode.bold_aparc_mni'),
-            ('bold_mask_mni', 'inputnode.bold_mask_mni'),
             ('confounds', 'inputnode.confounds'),
             ('surfaces', 'inputnode.surfaces'),
             ('aroma_noise_ics', 'inputnode.aroma_noise_ics'),
@@ -406,6 +411,19 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('confounds_metadata', 'inputnode.confounds_metadata'),
         ]),
     ])
+
+    if 'template' in output_spaces:
+        # Artifacts resampled in MNI space can only be sinked if they
+        # were actually generated. See #1348.
+        workflow.connect([
+            (outputnode, func_derivatives_wf, [
+                ('bold_mni_ref', 'inputnode.bold_mni_ref'),
+                ('bold_mni', 'inputnode.bold_mni'),
+                ('bold_aseg_mni', 'inputnode.bold_aseg_mni'),
+                ('bold_aparc_mni', 'inputnode.bold_aparc_mni'),
+                ('bold_mask_mni', 'inputnode.bold_mask_mni'),
+            ]),
+        ])
 
     # Generate a tentative boldref
     bold_reference_wf = init_bold_reference_wf(omp_nthreads=omp_nthreads)
@@ -816,8 +834,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (bold_surf_wf, outputnode, [('outputnode.surfaces', 'surfaces')]),
         ])
 
-        # CIFTI output
-        if cifti_output and surface_spaces:
+        if cifti_output:
             bold_surf_wf.__desc__ += """\
 *Grayordinates* files [@hcppipelines], which combine surface-sampled
 data and volume-sampled data, were also generated.
@@ -825,8 +842,7 @@ data and volume-sampled data, were also generated.
             gen_cifti = pe.MapNode(GenerateCifti(), iterfield=["surface_target", "gifti_files"],
                                    name="gen_cifti")
             gen_cifti.inputs.TR = metadata.get("RepetitionTime")
-            gen_cifti.inputs.surface_target = [s for s in surface_spaces
-                                               if s.startswith('fsaverage')]
+            gen_cifti.inputs.surface_target = cifti_spaces
 
             workflow.connect([
                 (bold_surf_wf, gen_cifti, [
@@ -865,11 +881,14 @@ data and volume-sampled data, were also generated.
     return workflow
 
 
-def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
-                             use_aroma, cifti_output, name='func_derivatives_wf'):
+def init_func_derivatives_wf(bids_root, cifti_output, freesurfer,
+                             metadata, output_dir, output_spaces,
+                             template, use_aroma,
+                             name='func_derivatives_wf'):
     """
     Set up a battery of datasinks to store derivatives in the right location
     """
+    from smriprep.workflows.outputs import _bids_relative
     workflow = Workflow(name=name)
 
     inputnode = pe.Node(
@@ -884,11 +903,15 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
                     'confounds_metadata']),
         name='inputnode')
 
+    raw_sources = pe.Node(niu.Function(function=_bids_relative), name='raw_sources')
+    raw_sources.inputs.bids_root = bids_root
+
     ds_confounds = pe.Node(DerivativesDataSink(
         base_directory=output_dir, desc='confounds', suffix='regressors'),
         name="ds_confounds", run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
     workflow.connect([
+        (inputnode, raw_sources, [('source_file', 'in_files')]),
         (inputnode, ds_confounds, [('source_file', 'source_file'),
                                    ('confounds', 'in_file'),
                                    ('confounds_metadata', 'meta_dict')]),
@@ -898,7 +921,8 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     if 'T1w' in output_spaces:
         ds_bold_t1 = pe.Node(
             DerivativesDataSink(base_directory=output_dir, space='T1w', desc='preproc',
-                                keep_dtype=True, compress=True),
+                                keep_dtype=True, compress=True, SkullStripped=False,
+                                RepetitionTime=metadata.get('RepetitionTime')),
             name='ds_bold_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_t1_ref = pe.Node(
@@ -918,6 +942,7 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
                                          ('bold_t1_ref', 'in_file')]),
             (inputnode, ds_bold_mask_t1, [('source_file', 'source_file'),
                                           ('bold_mask_t1', 'in_file')]),
+            (raw_sources, ds_bold_mask_t1, [('out', 'RawSources')]),
         ])
         if freesurfer:
             ds_bold_aseg_t1 = pe.Node(DerivativesDataSink(
@@ -925,7 +950,7 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
                 name='ds_bold_aseg_t1', run_without_submitting=True,
                 mem_gb=DEFAULT_MEMORY_MIN_GB)
             ds_bold_aparc_t1 = pe.Node(DerivativesDataSink(
-                base_directory=output_dir,  space='T1w', desc='aparcaseg', suffix='dseg'),
+                base_directory=output_dir, space='T1w', desc='aparcaseg', suffix='dseg'),
                 name='ds_bold_aparc_t1', run_without_submitting=True,
                 mem_gb=DEFAULT_MEMORY_MIN_GB)
             workflow.connect([
@@ -939,7 +964,8 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
     if 'template' in output_spaces:
         ds_bold_mni = pe.Node(
             DerivativesDataSink(base_directory=output_dir, space=template, desc='preproc',
-                                keep_dtype=True, compress=True),
+                                keep_dtype=True, compress=True, SkullStripped=False,
+                                RepetitionTime=metadata.get('RepetitionTime')),
             name='ds_bold_mni', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_mni_ref = pe.Node(
@@ -959,6 +985,7 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
                                           ('bold_mni_ref', 'in_file')]),
             (inputnode, ds_bold_mask_mni, [('source_file', 'source_file'),
                                            ('bold_mask_mni', 'in_file')]),
+            (raw_sources, ds_bold_mask_mni, [('out', 'RawSources')]),
         ])
 
         if freesurfer:
@@ -967,7 +994,7 @@ def init_func_derivatives_wf(output_dir, output_spaces, template, freesurfer,
                 name='ds_bold_aseg_mni', run_without_submitting=True,
                 mem_gb=DEFAULT_MEMORY_MIN_GB)
             ds_bold_aparc_mni = pe.Node(DerivativesDataSink(
-                base_directory=output_dir,  space=template, desc='aparcaseg', suffix='dseg'),
+                base_directory=output_dir, space=template, desc='aparcaseg', suffix='dseg'),
                 name='ds_bold_aparc_mni', run_without_submitting=True,
                 mem_gb=DEFAULT_MEMORY_MIN_GB)
             workflow.connect([
