@@ -109,7 +109,7 @@ LINKS_REQUIRES = [
     'git+https://github.com/rciric/nipype.git@'
     '329c74d63a1e1fb963d8e01035e36617acfaaec9#egg=nipype',
     'git+https://github.com/rciric/niworkflows.git@'
-    '3946b126c7466e80c4b0347fe27f38ccc16b688f#egg=niworkflows',
+    'a7d976dddb0d7e266822cecc16c9ee3a2c3ba1cf#egg=niworkflows',
 ]
 
 TESTS_REQUIRES = [
