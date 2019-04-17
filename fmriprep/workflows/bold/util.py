@@ -115,8 +115,6 @@ using a custom methodology of *fMRIPrep*.
 
     gen_ref = pe.Node(EstimateReferenceImage(), name="gen_ref",
                       mem_gb=1)  # OE: 128x128x128x50 * 64 / 8 ~ 900MB.
-    # Re-run validation; no effect if no sbref; otherwise apply same validation to sbref as bold
-    validate_ref = pe.Node(ValidateImage(), name='validate_ref', mem_gb=DEFAULT_MEMORY_MIN_GB)
     enhance_and_skullstrip_bold_wf = init_enhance_and_skullstrip_bold_wf(
         omp_nthreads=omp_nthreads, pre_mask=pre_mask)
 
@@ -125,12 +123,11 @@ using a custom methodology of *fMRIPrep*.
         (inputnode, validate, [('bold_file', 'in_file')]),
         (inputnode, gen_ref, [('sbref_file', 'sbref_file')]),
         (validate, gen_ref, [('out_file', 'in_file')]),
-        (gen_ref, validate_ref, [('ref_image', 'in_file')]),
-        (validate_ref, enhance_and_skullstrip_bold_wf, [('out_file', 'inputnode.in_file')]),
+        (gen_ref,  enhance_and_skullstrip_bold_wf, [('ref_image', 'inputnode.in_file')]),
         (validate, outputnode, [('out_file', 'bold_file'),
                                 ('out_report', 'validation_report')]),
         (gen_ref, outputnode, [('n_volumes_to_discard', 'skip_vols')]),
-        (validate_ref, outputnode, [('out_file', 'raw_ref_image')]),
+        (gen_ref, outputnode, [('ref_image', 'raw_ref_image')]),
         (enhance_and_skullstrip_bold_wf, outputnode, [
             ('outputnode.bias_corrected_file', 'ref_image'),
             ('outputnode.mask_file', 'bold_mask'),
