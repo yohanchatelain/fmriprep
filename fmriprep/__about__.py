@@ -86,7 +86,7 @@ SETUP_REQUIRES = [
 REQUIRES = [
     'indexed_gzip>=0.8.8',
     'nibabel>=2.2.1',
-    'nilearn',
+    'nilearn!=0.5.0,!=0.5.1',
     'nipype>=1.1.6',
     'nitime',
     'niworkflows',
