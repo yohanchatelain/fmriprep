@@ -393,28 +393,15 @@ def main():
         p.start()
         p.join()
 
-        if p.exitcode != 0:
-            sys.exit(p.exitcode)
+        retcode = p.exitcode or retval.get('return_code', 0)
 
-        fmriprep_wf = retval['workflow']
-        plugin_settings = retval['plugin_settings']
-        bids_dir = retval['bids_dir']
-        output_dir = retval['output_dir']
-        work_dir = retval['work_dir']
-        subject_list = retval['subject_list']
-        run_uuid = retval['run_uuid']
-        if not opts.notrack:
-            with sentry_sdk.configure_scope() as scope:
-                scope.set_tag('run_uuid', run_uuid)
-                scope.set_tag('npart', len(subject_list))
-
-        retcode = retval['return_code']
-
-    if fmriprep_wf is None:
-        sys.exit(1)
-
-    if opts.write_graph:
-        fmriprep_wf.write_graph(graph2use="colored", format='svg', simple_form=True)
+        bids_dir = retval.get('bids_dir')
+        output_dir = retval.get('output_dir')
+        work_dir = retval.get('work_dir')
+        plugin_settings = retval.get('plugin_settings', None)
+        subject_list = retval.get('subject_list', None)
+        fmriprep_wf = retval.get('workflow', None)
+        run_uuid = retval.get('run_uuid', None)
 
     if opts.reports_only:
         sys.exit(int(retcode > 0))
@@ -422,10 +409,12 @@ def main():
     if opts.boilerplate:
         sys.exit(int(retcode > 0))
 
-    # Sentry tracking
-    if not opts.notrack:
-        sentry_sdk.add_breadcrumb(message='fMRIPrep started', level='info')
-        sentry_sdk.capture_message('fMRIPrep started', level='info')
+    if fmriprep_wf and opts.write_graph:
+        fmriprep_wf.write_graph(graph2use="colored", format='svg', simple_form=True)
+
+    retcode = retcode or int(fmriprep_wf is None)
+    if retcode != 0:
+        sys.exit(retcode)
 
     # Check workflow for missing commands
     missing = check_deps(fmriprep_wf)
@@ -434,9 +423,19 @@ def main():
         for iface, cmd in missing:
             print("\t{} (Interface: {})".format(cmd, iface))
         sys.exit(2)
-
     # Clean up master process before running workflow, which may create forks
     gc.collect()
+
+    # Sentry tracking
+    if not opts.notrack:
+        with sentry_sdk.configure_scope() as scope:
+            if run_uuid:
+                scope.set_tag('run_uuid', run_uuid)
+            if subject_list:
+                scope.set_tag('npart', len(subject_list))
+        sentry_sdk.add_breadcrumb(message='fMRIPrep started', level='info')
+        sentry_sdk.capture_message('fMRIPrep started', level='info')
+
     try:
         fmriprep_wf.run(**plugin_settings)
     except RuntimeError as e:
@@ -588,6 +587,24 @@ def build_workflow(opts, retval):
       * Run identifier: {uuid}.
     """.format
 
+    bids_dir = opts.bids_dir.resolve()
+    output_dir = opts.output_dir.resolve()
+    work_dir = opts.work_dir
+
+    retval['return_code'] = 1
+    retval['workflow'] = None
+    retval['bids_dir'] = str(bids_dir)
+    retval['output_dir'] = str(output_dir)
+    retval['work_dir'] = str(work_dir)
+
+    if output_dir == bids_dir:
+        logger.error(
+            'The selected output folder is the same as the input BIDS folder. '
+            'Please modify the output path (suggestion: %s).',
+            bids_dir / 'derivatives' / ('fmriprep-%s' % __version__.split('+')[0]))
+        retval['return_code'] = 1
+        return retval
+
     # Reduce to unique space identifiers
     output_spaces = sorted(set(opts.output_space))
 
@@ -633,12 +650,13 @@ def build_workflow(opts, retval):
 
     # Set up some instrumental utilities
     run_uuid = '%s_%s' % (strftime('%Y%m%d-%H%M%S'), uuid.uuid4())
+    retval['run_uuid'] = run_uuid
 
     # First check that bids_dir looks like a BIDS folder
-    bids_dir = opts.bids_dir.resolve()
     layout = BIDSLayout(str(bids_dir), validate=False)
     subject_list = collect_participants(
         layout, participant_label=opts.participant_label)
+    retval['subject_list'] = subject_list
 
     # Load base plugin_settings from file if --use-plugin
     if opts.use_plugin is not None:
@@ -678,19 +696,10 @@ def build_workflow(opts, retval):
         logger.warning(
             'Per-process threads (--omp-nthreads=%d) exceed total '
             'threads (--nthreads/--n_cpus=%d)', omp_nthreads, nthreads)
+    retval['plugin_settings'] = plugin_settings
 
     # Set up directories
-    output_dir = opts.output_dir.resolve()
-    if output_dir == bids_dir:
-        output_dir = bids_dir / 'derivatives' / ('fmriprep-%s' % __version__.split('+')[0])
-        logger.warning(
-            'The selected output folder is the same as the input BIDS folder. '
-            'Cowardly redirecting outputs to %s', output_dir
-        )
-
     log_dir = output_dir / 'fmriprep' / 'logs'
-    work_dir = opts.work_dir
-
     # Check and create output and working directories
     output_dir.mkdir(exist_ok=True, parents=True)
     log_dir.mkdir(exist_ok=True, parents=True)
@@ -718,20 +727,12 @@ def build_workflow(opts, retval):
     if opts.resource_monitor:
         ncfg.enable_resource_monitor()
 
-    retval['return_code'] = 0
-    retval['plugin_settings'] = plugin_settings
-    retval['bids_dir'] = str(bids_dir)
-    retval['output_dir'] = str(output_dir)
-    retval['work_dir'] = str(work_dir)
-    retval['subject_list'] = subject_list
-    retval['run_uuid'] = run_uuid
-    retval['workflow'] = None
-
     # Called with reports only
     if opts.reports_only:
         logger.log(25, 'Running --reports-only on participants %s', ', '.join(subject_list))
         if opts.run_uuid is not None:
             run_uuid = opts.run_uuid
+            retval['run_uuid'] = run_uuid
         retval['return_code'] = generate_reports(
             subject_list, str(output_dir), str(work_dir), run_uuid)
         return retval
