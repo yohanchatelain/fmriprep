@@ -56,10 +56,10 @@ def get_parser():
     # Arguments as specified by BIDS-Apps
     # required, positional arguments
     # IMPORTANT: they must go directly with the parser object
-    parser.add_argument('bids_dir', action='store',
+    parser.add_argument('bids_dir', action='store', type=Path,
                         help='the root folder of a BIDS valid dataset (sub-XXXXX folders should '
                              'be found at the top level in this folder).')
-    parser.add_argument('output_dir', action='store',
+    parser.add_argument('output_dir', action='store', type=Path,
                         help='the output path for the outcomes of preprocessing and visual '
                              'reports')
     parser.add_argument('analysis_level', choices=['participant'],
@@ -228,7 +228,7 @@ def get_parser():
                              ' Use `--fs-no-reconall` instead.')
 
     g_other = parser.add_argument_group('Other options')
-    g_other.add_argument('-w', '--work-dir', action='store',
+    g_other.add_argument('-w', '--work-dir', action='store', type=Path, default=Path('work'),
                          help='path where intermediate results should be stored')
     g_other.add_argument(
         '--resource-monitor', action='store_true', default=False,
@@ -323,10 +323,10 @@ def main():
             if exec_env == 'fmriprep-docker':
                 scope.set_tag('docker_version', os.getenv('DOCKER_VERSION_8395080871'))
 
-            dset_desc_path = os.path.join(opts.bids_dir, 'dataset_description.json')
-            if os.path.exists(dset_desc_path):
-                with open(dset_desc_path, 'rb') as fp:
-                    scope.set_tag('dset_desc_sha256', hashlib.sha256(fp.read()).hexdigest())
+            dset_desc_path = opts.bids_dir / 'dataset_description.json'
+            if dset_desc_path.exists():
+                desc_content = dset_desc_path.read_bytes()
+                scope.set_tag('dset_desc_sha256', hashlib.sha256(desc_content).hexdigest())
 
             free_mem_at_start = round(psutil.virtual_memory().free / 1024**3, 1)
             scope.set_tag('free_mem_at_start', free_mem_at_start)
@@ -361,7 +361,7 @@ def main():
     if not opts.skip_bids_validation:
         print("Making sure the input data is BIDS compliant (warnings can be ignored in most "
               "cases).")
-        validate_input_dir(exec_env, opts.bids_dir, opts.participant_label)
+        validate_input_dir(exec_env, str(opts.bids_dir), opts.participant_label)
 
     # FreeSurfer license
     default_license = str(Path(os.getenv('FREESURFER_HOME')) / 'license.txt')
@@ -636,8 +636,8 @@ def build_workflow(opts, retval):
     run_uuid = '%s_%s' % (strftime('%Y%m%d-%H%M%S'), uuid.uuid4())
 
     # First check that bids_dir looks like a BIDS folder
-    bids_dir = os.path.abspath(opts.bids_dir)
-    layout = BIDSLayout(bids_dir, validate=False)
+    bids_dir = opts.bids_dir.resolve()
+    layout = BIDSLayout(str(bids_dir), validate=False)
     subject_list = collect_participants(
         layout, participant_label=opts.participant_label)
 
@@ -681,26 +681,33 @@ def build_workflow(opts, retval):
             'threads (--nthreads/--n_cpus=%d)', omp_nthreads, nthreads)
 
     # Set up directories
-    output_dir = op.abspath(opts.output_dir)
-    log_dir = op.join(output_dir, 'fmriprep', 'logs')
-    work_dir = op.abspath(opts.work_dir or 'work')  # Set work/ as default
+    output_dir = opts.output_dir.resolve()
+    if output_dir == bids_dir:
+        output_dir = bids_dir / 'derivatives' / ('fmriprep-%s' % __version__.split('+')[0])
+        logger.warning(
+            'The selected output folder is the same as the input BIDS folder. '
+            'Cowardly redirecting outputs to %s', output_dir
+        )
+
+    log_dir = output_dir / 'fmriprep' / 'logs'
+    work_dir = opts.work_dir
 
     # Check and create output and working directories
-    os.makedirs(output_dir, exist_ok=True)
-    os.makedirs(log_dir, exist_ok=True)
-    os.makedirs(work_dir, exist_ok=True)
+    output_dir.mkdir(exist_ok=True, parents=True)
+    log_dir.mkdir(exist_ok=True, parents=True)
+    work_dir.mkdir(exist_ok=True, parents=True)
 
     # Nipype config (logs and execution)
     ncfg.update_config({
         'logging': {
-            'log_directory': log_dir,
+            'log_directory': str(log_dir),
             'log_to_file': True
         },
         'execution': {
-            'crashdump_dir': log_dir,
+            'crashdump_dir': str(log_dir),
             'crashfile_format': 'txt',
             'get_linked_libs': False,
-            'stop_on_first_crash': opts.stop_on_first_crash or opts.work_dir is None,
+            'stop_on_first_crash': opts.stop_on_first_crash,
         },
         'monitoring': {
             'enabled': opts.resource_monitor,
@@ -714,9 +721,9 @@ def build_workflow(opts, retval):
 
     retval['return_code'] = 0
     retval['plugin_settings'] = plugin_settings
-    retval['bids_dir'] = bids_dir
-    retval['output_dir'] = output_dir
-    retval['work_dir'] = work_dir
+    retval['bids_dir'] = str(bids_dir)
+    retval['output_dir'] = str(output_dir)
+    retval['work_dir'] = str(work_dir)
     retval['subject_list'] = subject_list
     retval['run_uuid'] = run_uuid
     retval['workflow'] = None
@@ -726,7 +733,8 @@ def build_workflow(opts, retval):
         logger.log(25, 'Running --reports-only on participants %s', ', '.join(subject_list))
         if opts.run_uuid is not None:
             run_uuid = opts.run_uuid
-        retval['return_code'] = generate_reports(subject_list, output_dir, work_dir, run_uuid)
+        retval['return_code'] = generate_reports(
+            subject_list, str(output_dir), str(work_dir), run_uuid)
         return retval
 
     # Build main workflow
@@ -761,8 +769,8 @@ def build_workflow(opts, retval):
         omp_nthreads=omp_nthreads,
         skull_strip_template=opts.skull_strip_template,
         skull_strip_fixed_seed=opts.skull_strip_fixed_seed,
-        work_dir=work_dir,
-        output_dir=output_dir,
+        work_dir=str(work_dir),
+        output_dir=str(output_dir),
         freesurfer=opts.run_reconall,
         output_spaces=output_spaces,
         template=opts.template,
