@@ -7,7 +7,6 @@ fMRI preprocessing workflow
 """
 
 import os
-import os.path as op
 from pathlib import Path
 import logging
 import sys
