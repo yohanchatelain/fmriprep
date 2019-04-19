@@ -174,9 +174,8 @@ def get_parser():
         help='Replace medial wall values with NaNs on functional GIFTI files. Only '
         'performed for GIFTI files mapped to a freesurfer subject (fsaverage or fsnative).')
     g_conf.add_argument(
-        '--skip-vols-num', required=False, action='store', default=None, type=int,
-        help='Number of non steady state volumes specified'
-    )
+        '--dummy-scans', required=False, action='store', default=None, type=int,
+        help='Number of non steady state volumes.')
 
     # ICA_AROMA options
     g_aroma = parser.add_argument_group('Specific options for running ICA_AROMA')
