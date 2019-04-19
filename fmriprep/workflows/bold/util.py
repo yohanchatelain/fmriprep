@@ -79,7 +79,12 @@ def init_bold_reference_wf(omp_nthreads, bold_file=None, pre_mask=False,
         raw_ref_image
             Reference image to which BOLD series is motion corrected
         skip_vols
-            Number of non-steady-state volumes detected at beginning of ``bold_file``
+            Number of non-steady-state volumes selected at beginning of ``bold_file``
+        dummy_scans
+            Number of non-steady-state volumes specified by user at beginning of ``bold_file``
+        algo_dummy_scans
+            Number of non-steady-state volumes agorithmically detected at
+            beginning of ``bold_file``
         ref_image
             Contrast-enhanced reference image
         ref_image_brain
@@ -103,9 +108,9 @@ using a custom methodology of *fMRIPrep*.
     inputnode = pe.Node(niu.IdentityInterface(fields=['bold_file', 'sbref_file', 'bold_mask']),
                         name='inputnode')
     outputnode = pe.Node(
-        niu.IdentityInterface(fields=['bold_file', 'raw_ref_image', 'skip_vols', 'ref_image',
-                                      'ref_image_brain', 'bold_mask', 'validation_report',
-                                      'mask_report']),
+        niu.IdentityInterface(fields=['bold_file', 'raw_ref_image', 'skip_vols', 'dummy_scans',
+                                      'algo_dummy_scans', 'ref_image', 'ref_image_brain',
+                                      'bold_mask', 'validation_report', 'mask _report']),
         name='outputnode')
 
     # Simplify manually setting input image
@@ -120,11 +125,12 @@ using a custom methodology of *fMRIPrep*.
         omp_nthreads=omp_nthreads, pre_mask=pre_mask)
 
     calc_dummy_scans = pe.Node(niu.Function(function=_pass_dummy_scans,
-                                            output_names=['dummy_scans']),
+                                            output_names=['dummy_scans',
+                                                          'algo_dummy_scans',
+                                                          'skip_vols_num']),
                                name='calc_dummy_scans',
                                mem_gb=DEFAULT_MEMORY_MIN_GB)
-
-    calc_dummy_scans.inputs.man_skip_vols = dummy_scans
+    calc_dummy_scans.inputs.dummy_scans = dummy_scans
 
     workflow.connect([
         (inputnode, enhance_and_skullstrip_bold_wf, [('bold_mask', 'inputnode.pre_mask')]),
@@ -134,8 +140,10 @@ using a custom methodology of *fMRIPrep*.
         (gen_ref,  enhance_and_skullstrip_bold_wf, [('ref_image', 'inputnode.in_file')]),
         (validate, outputnode, [('out_file', 'bold_file'),
                                 ('out_report', 'validation_report')]),
-        (gen_ref, calc_dummy_scans, [('n_volumes_to_discard', 'gen_skip_vols')]),
-        (calc_dummy_scans, outputnode, [('dummy_scans', 'skip_vols')]),
+        (gen_ref, calc_dummy_scans, [('n_volumes_to_discard', 'algo_dummy_scans')]),
+        (calc_dummy_scans, outputnode, [('dummy_scans', 'dummy_scans'),
+                                        ('algo_dummy_scans', 'algo_dummy_scans'),
+                                        ('skip_vols_num', 'skip_vols')]),
         (gen_ref, outputnode, [('ref_image', 'raw_ref_image')]),
         (enhance_and_skullstrip_bold_wf, outputnode, [
             ('outputnode.bias_corrected_file', 'ref_image'),
@@ -423,29 +431,32 @@ def init_skullstrip_bold_wf(name='skullstrip_bold_wf'):
     return workflow
 
 
-def _pass_dummy_scans(gen_skip_vols, man_skip_vols):
+def _pass_dummy_scans(algo_dummy_scans, dummy_scans):
     """
     **Parameters**
 
-    gen_skip_vols : int
+    algo_dummy_scans : int
         number of volumes to skip determined by an algorithm
-    man_skip_vols : int or None
+    dummy_scans : int or None
         number of volumes to skip determined by the user
 
     **Returns**
-    dummy_scans : int
+    dummy_scans : int or None
+        number of volumes user specified to skip
+    algo_dummy_scans : int
+        number of volumes algorithm detected to skip
+    skip_vols_num : int
         number of volumes to skip
     """
     from nipype import logging
     LOGGER = logging.getLogger('nipype.interface')
-
-    if man_skip_vols:
-        if gen_skip_vols > man_skip_vols:
+    if dummy_scans:
+        if algo_dummy_scans > dummy_scans:
             LOGGER.warning("The non steady state algorithm detected "
                            "more volumes than what was manually specified")
 
-        dummy_scans = man_skip_vols
+        skip_vols_num = dummy_scans
     else:
-        dummy_scans = gen_skip_vols
+        skip_vols_num = algo_dummy_scans
 
-    return dummy_scans
+    return dummy_scans, algo_dummy_scans, skip_vols_num

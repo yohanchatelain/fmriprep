@@ -418,7 +418,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         ])
 
     # Generate a tentative boldref
-    bold_reference_wf = init_bold_reference_wf(omp_nthreads=omp_nthreads)
+    bold_reference_wf = init_bold_reference_wf(omp_nthreads=omp_nthreads,
+                                               dummy_scans=dummy_scans)
     if sbref_file is not None:
         workflow.connect([
             (val_sbref, bold_reference_wf, [('out_file', 'inputnode.sbref_file')]),
@@ -548,6 +549,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         (bold_reference_wf, bold_hmc_wf, [
             ('outputnode.raw_ref_image', 'inputnode.raw_ref_image'),
             ('outputnode.bold_file', 'inputnode.bold_file')]),
+        (bold_reference_wf, summary, [
+            ('outputnode.dummy_scans', 'dummy_scans'),
+            ('outputnode.algo_dummy_scans', 'algo_dummy_scans')]),
         # EPI-T1 registration workflow
         (inputnode, bold_reg_wf, [
             ('t1_brain', 'inputnode.t1_brain'),
