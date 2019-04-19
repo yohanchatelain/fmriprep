@@ -54,7 +54,7 @@ is presented below:
         use_aroma=False,
         aroma_melodic_dim=-200,
         err_on_aroma_warn=False,
-        skip_vols_num=None,
+        dummy_scans=None,
     )
 
 
@@ -127,6 +127,14 @@ in a multiscale, mutual-information based, nonlinear registration scheme.
 In particular, spatial normalization is done using the `ICBM 2009c Nonlinear
 Asymmetric template (1×1×1mm) <http://nist.mni.mcgill.ca/?p=904>`_ [Fonov2011]_.
 
+.. figure:: _static/T1MNINormalization.svg
+    :scale: 100%
+
+    Animation showing T1w to MNI normalization
+
+Cost function masking during spatial normalization
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 When processing images from patients with focal brain lesions (e.g. stroke, tumor
 resection), it is possible to provide a lesion mask to be used during spatial
 normalization to MNI-space [Brett2001]_.
@@ -138,11 +146,12 @@ in the same space and resolution as the T1 image, and follow the naming conventi
 (e.g. ``sub-001_T1w_label-lesion_roi.nii.gz``).
 This file should be placed in the ``sub-*/anat`` directory of the BIDS dataset
 to be run through ``fmriprep``.
+Because lesion masks are not currently part of the BIDS specification, it is also necessary to 
+include a ``.bidsignore`` file in the root of your dataset directory. This will prevent 
+`bids-validator <https://github.com/bids-standard/bids-validator#bidsignore>`_ from complaining that your dataset not BIDS valid, which prevents 
+``fmriprep`` from running. Your ``.bidsignore`` file should include the following line::
 
-.. figure:: _static/T1MNINormalization.svg
-    :scale: 100%
-
-    Animation showing T1w to MNI normalization
+*lesion_roi.nii.gz
 
 
 Longitudinal processing
@@ -294,7 +303,7 @@ BOLD preprocessing
         use_aroma=False,
         use_bbr=True,
         use_syn=True,
-        skip_vols_num=None,
+        dummy_scans=None,
     )
 
 Preprocessing of :abbr:`BOLD (blood-oxygen level-dependent)` files is

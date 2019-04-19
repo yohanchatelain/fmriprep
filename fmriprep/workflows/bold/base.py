@@ -51,7 +51,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                          fmap_bspline, fmap_demean, use_syn, force_syn,
                          use_aroma, err_on_aroma_warn, aroma_melodic_dim,
                          medial_surface_nan, cifti_output,
-                         debug, low_mem, template_out_grid, skip_vols_num,
+                         debug, low_mem, template_out_grid, dummy_scans,
                          layout=None, num_bold=1):
     """
     This workflow controls the functional preprocessing stages of FMRIPREP.
@@ -86,7 +86,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
                                   cifti_output=False,
                                   use_aroma=False,
                                   err_on_aroma_warn=False,
-                                  skip_vols_num=None,
+                                  dummy_scans=None,
                                   aroma_melodic_dim=-200,
                                   num_bold=1,
                                   layout=BIDSLayout())
@@ -151,7 +151,7 @@ def init_func_preproc_wf(bold_file, ignore, freesurfer,
         template_out_grid : str
             Keyword ('native', '1mm' or '2mm') or path of custom reference
             image for normalization
-        skip_vols_num : int or None
+        dummy_scans : int or None
             Number of volumes to consider as non steady state
         layout : BIDSLayout
             BIDSLayout structure to enable metadata retrieval
@@ -341,7 +341,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 """
 
     inputnode = pe.Node(niu.IdentityInterface(
-        fields=['bold_file', 'sbref_file', 'subjects_dir', 'subject_id',
+        fields=['bold_file', 'subjects_dir', 'subject_id',
                 't1_preproc', 't1_brain', 't1_mask', 't1_seg', 't1_tpms',
                 't1_aseg', 't1_aparc',
                 't1_2_mni_forward_transform', 't1_2_mni_reverse_transform',
@@ -349,7 +349,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         name='inputnode')
     inputnode.inputs.bold_file = bold_file
     if sbref_file is not None:
-        inputnode.inputs.sbref_file = sbref_file
+        from niworkflows.interfaces.images import ValidateImage
+        val_sbref = pe.Node(ValidateImage(in_file=sbref_file), name='val_sbref')
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_t1', 'bold_t1_ref', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1',
@@ -392,11 +393,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('bold_aseg_t1', 'inputnode.bold_aseg_t1'),
             ('bold_aparc_t1', 'inputnode.bold_aparc_t1'),
             ('bold_mask_t1', 'inputnode.bold_mask_t1'),
-            ('bold_mni', 'inputnode.bold_mni'),
-            ('bold_mni_ref', 'inputnode.bold_mni_ref'),
-            ('bold_aseg_mni', 'inputnode.bold_aseg_mni'),
-            ('bold_aparc_mni', 'inputnode.bold_aparc_mni'),
-            ('bold_mask_mni', 'inputnode.bold_mask_mni'),
             ('confounds', 'inputnode.confounds'),
             ('surfaces', 'inputnode.surfaces'),
             ('aroma_noise_ics', 'inputnode.aroma_noise_ics'),
@@ -408,9 +404,25 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         ]),
     ])
 
+    if 'template' in output_spaces:
+        # Artifacts resampled in MNI space can only be sinked if they
+        # were actually generated. See #1348.
+        workflow.connect([
+            (outputnode, func_derivatives_wf, [
+                ('bold_mni_ref', 'inputnode.bold_mni_ref'),
+                ('bold_mni', 'inputnode.bold_mni'),
+                ('bold_aseg_mni', 'inputnode.bold_aseg_mni'),
+                ('bold_aparc_mni', 'inputnode.bold_aparc_mni'),
+                ('bold_mask_mni', 'inputnode.bold_mask_mni'),
+            ]),
+        ])
+
     # Generate a tentative boldref
-    bold_reference_wf = init_bold_reference_wf(omp_nthreads=omp_nthreads,
-                                               skip_vols_num=skip_vols_num)
+    bold_reference_wf = init_bold_reference_wf(omp_nthreads=omp_nthreads)
+    if sbref_file is not None:
+        workflow.connect([
+            (val_sbref, bold_reference_wf, [('out_file', 'inputnode.sbref_file')]),
+        ])
 
     # Top-level BOLD splitter
     bold_split = pe.Node(FSLSplit(dimension='t'), name='bold_split',
@@ -529,8 +541,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     # MAIN WORKFLOW STRUCTURE #######################################################
     workflow.connect([
         # Generate early reference
-        (inputnode, bold_reference_wf, [('bold_file', 'inputnode.bold_file'),
-                                        ('sbref_file', 'inputnode.sbref_file')]),
+        (inputnode, bold_reference_wf, [('bold_file', 'inputnode.bold_file')]),
         # BOLD buffer has slice-time corrected if it was run, original otherwise
         (boldbuffer, bold_split, [('bold_file', 'in_file')]),
         # HMC

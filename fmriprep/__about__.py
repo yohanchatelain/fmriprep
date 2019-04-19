@@ -86,10 +86,10 @@ SETUP_REQUIRES = [
 REQUIRES = [
     'indexed_gzip>=0.8.8',
     'nibabel>=2.2.1',
-    'nilearn',
+    'nilearn!=0.5.0,!=0.5.1',
     'nipype>=1.1.6',
     'nitime',
-    'niworkflows<0.9.0a0,>=0.8.1',
+    'niworkflows',
     'numpy',
     'pandas',
     'psutil>=5.4',
@@ -104,6 +104,8 @@ REQUIRES = [
 
 
 LINKS_REQUIRES = [
+    'git+https://github.com/poldracklab/niworkflows.git@'
+    'b7d111c8fd36a099c74be5e7671677eedb175533#egg=niworkflows',
     'git+https://github.com/poldracklab/smriprep.git@'
     '423bcc43ab7300177eb3b98da62817b2cad8eb87#egg=smriprep-0.1.0',
 ]

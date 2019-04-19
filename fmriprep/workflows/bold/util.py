@@ -35,7 +35,7 @@ DEFAULT_MEMORY_MIN_GB = 0.01
 
 def init_bold_reference_wf(omp_nthreads, bold_file=None, pre_mask=False,
                            name='bold_reference_wf', gen_report=False,
-                           skip_vols_num=None):
+                           dummy_scans=None):
     """
     This workflow generates reference BOLD images for a series
 
@@ -116,29 +116,27 @@ using a custom methodology of *fMRIPrep*.
 
     gen_ref = pe.Node(EstimateReferenceImage(), name="gen_ref",
                       mem_gb=1)  # OE: 128x128x128x50 * 64 / 8 ~ 900MB.
-    # Re-run validation; no effect if no sbref; otherwise apply same validation to sbref as bold
-    validate_ref = pe.Node(ValidateImage(), name='validate_ref', mem_gb=DEFAULT_MEMORY_MIN_GB)
     enhance_and_skullstrip_bold_wf = init_enhance_and_skullstrip_bold_wf(
         omp_nthreads=omp_nthreads, pre_mask=pre_mask)
 
-    calc_skip_vols_num = pe.Node(niu.Function(function=_pass_skip_vols_num,
-                                              output_names=['skip_vols_num']),
-                                 name='calc_skip_vols_num',
-                                 mem_gb=DEFAULT_MEMORY_MIN_GB)
-    calc_skip_vols_num.inputs.man_skip_vols = skip_vols_num
+    calc_dummy_scans = pe.Node(niu.Function(function=_pass_dummy_scans,
+                                            output_names=['dummy_scans']),
+                               name='calc_dummy_scans',
+                               mem_gb=DEFAULT_MEMORY_MIN_GB)
+
+    calc_dummy_scans.inputs.man_skip_vols = dummy_scans
 
     workflow.connect([
         (inputnode, enhance_and_skullstrip_bold_wf, [('bold_mask', 'inputnode.pre_mask')]),
         (inputnode, validate, [('bold_file', 'in_file')]),
         (inputnode, gen_ref, [('sbref_file', 'sbref_file')]),
         (validate, gen_ref, [('out_file', 'in_file')]),
-        (gen_ref, validate_ref, [('ref_image', 'in_file')]),
-        (validate_ref, enhance_and_skullstrip_bold_wf, [('out_file', 'inputnode.in_file')]),
+        (gen_ref,  enhance_and_skullstrip_bold_wf, [('ref_image', 'inputnode.in_file')]),
         (validate, outputnode, [('out_file', 'bold_file'),
                                 ('out_report', 'validation_report')]),
-        (gen_ref, calc_skip_vols_num, [('n_volumes_to_discard', 'gen_skip_vols')]),
-        (calc_skip_vols_num, outputnode, [('skip_vols_num', 'skip_vols')]),
-        (validate_ref, outputnode, [('out_file', 'raw_ref_image')]),
+        (gen_ref, calc_dummy_scans, [('n_volumes_to_discard', 'gen_skip_vols')]),
+        (calc_dummy_scans, outputnode, [('dummy_scans', 'skip_vols')]),
+        (gen_ref, outputnode, [('ref_image', 'raw_ref_image')]),
         (enhance_and_skullstrip_bold_wf, outputnode, [
             ('outputnode.bias_corrected_file', 'ref_image'),
             ('outputnode.mask_file', 'bold_mask'),
@@ -425,7 +423,7 @@ def init_skullstrip_bold_wf(name='skullstrip_bold_wf'):
     return workflow
 
 
-def _pass_skip_vols_num(gen_skip_vols, man_skip_vols):
+def _pass_dummy_scans(gen_skip_vols, man_skip_vols):
     """
     **Parameters**
 
@@ -435,7 +433,7 @@ def _pass_skip_vols_num(gen_skip_vols, man_skip_vols):
         number of volumes to skip determined by the user
 
     **Returns**
-    skip_vols_num : int
+    dummy_scans : int
         number of volumes to skip
     """
     from nipype import logging
@@ -446,8 +444,8 @@ def _pass_skip_vols_num(gen_skip_vols, man_skip_vols):
             LOGGER.warning("The non steady state algorithm detected "
                            "more volumes than what was manually specified")
 
-        skip_vols_num = man_skip_vols
+        dummy_scans = man_skip_vols
     else:
-        skip_vols_num = gen_skip_vols
+        dummy_scans = gen_skip_vols
 
-    return skip_vols_num
+    return dummy_scans
