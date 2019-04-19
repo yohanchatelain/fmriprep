@@ -41,6 +41,7 @@ FUNCTIONAL_TEMPLATE = """\t\t<h3 class="elem-title">Summary</h3>
 \t\t\t<li>Registration: {registration}</li>
 \t\t\t<li>Functional series resampled to spaces: {output_spaces}</li>
 \t\t\t<li>Confounds collected: {confounds}</li>
+\t\t\t<li>Non-steady-state volumes: {dummy_scan_desc}</li>
 \t\t</ul>
 """
 
@@ -156,6 +157,8 @@ class FunctionalSummaryInputSpec(BaseInterfaceInputSpec):
     output_spaces = traits.List(desc='Target spaces')
     confounds_file = File(exists=True, desc='Confounds file')
     tr = traits.Float(desc='Repetition time', mandatory=True)
+    dummy_scans = traits.Either(traits.Int(), None, desc='number of dummy scans specified by user')
+    algo_dummy_scans = traits.Int(desc='number of dummy scans determined by algorithm')
 
 
 class FunctionalSummary(SummaryInterface):
@@ -184,10 +187,27 @@ class FunctionalSummary(SummaryInterface):
         if isdefined(self.inputs.confounds_file):
             with open(self.inputs.confounds_file) as cfh:
                 conflist = cfh.readline().strip('\n').strip()
+
+        dummy_scan_tmp = "{n_dum}"
+        if self.inputs.dummy_scans:
+            if self.inputs.dummy_scans == self.inputs.algo_dummy_scans:
+                dummy_scan_msg = (
+                    ' '.join([dummy_scan_tmp, "(Confirmed: {n_alg} automatically detected)"])
+                    .format(n_dum=self.inputs.dummy_scans, n_alg=self.inputs.algo_dummy_scans)
+                )
+            else:
+                dummy_scan_msg = (
+                    ' '.join([dummy_scan_tmp, "(Warning: {n_alg} automatically detected)"])
+                    .format(n_dum=self.inputs.dummy_scans, n_alg=self.inputs.algo_dummy_scans)
+                )
+        else:
+            dummy_scan_msg = dummy_scan_tmp.format(n_dum=self.inputs.algo_dummy_scans)
+
         return FUNCTIONAL_TEMPLATE.format(
             pedir=pedir, stc=stc, sdc=self.inputs.distortion_correction, registration=reg,
             output_spaces=', '.join(self.inputs.output_spaces),
-            confounds=re.sub(r'[\t ]+', ', ', conflist), tr=self.inputs.tr)
+            confounds=re.sub(r'[\t ]+', ', ', conflist), tr=self.inputs.tr,
+            dummy_scan_desc=dummy_scan_msg)
 
 
 class AboutSummaryInputSpec(BaseInterfaceInputSpec):
