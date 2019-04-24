@@ -109,7 +109,7 @@ RUN apt-get install -y nodejs
 RUN npm install -g svgo
 
 # Installing bids-validator
-RUN npm install -g bids-validator@1.1.3
+RUN npm install -g bids-validator@1.2.3
 
 # Installing and setting up ICA_AROMA
 RUN mkdir -p /opt/ICA-AROMA && \
