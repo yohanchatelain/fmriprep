@@ -16,18 +16,19 @@ import re
 from collections import Counter
 from nipype.interfaces.base import (
     traits, TraitedSpec, BaseInterfaceInputSpec,
-    File, Directory, InputMultiPath, Str, isdefined,
+    File, Directory, InputMultiObject, Str, isdefined,
     SimpleInterface)
 from nipype.interfaces import freesurfer as fs
 from niworkflows.utils.bids import BIDS_NAME
 
 
-SUBJECT_TEMPLATE = """\t<ul class="elem-desc">
+SUBJECT_TEMPLATE = """\
+\t<ul class="elem-desc">
 \t\t<li>Subject ID: {subject_id}</li>
 \t\t<li>Structural images: {n_t1s:d} T1-weighted {t2w}</li>
 \t\t<li>Functional series: {n_bold:d}</li>
 {tasks}
-\t\t<li>Resampling targets: {output_spaces}
+\t\t<li>Standard output spaces: {output_spaces}</li>
 \t\t<li>FreeSurfer reconstruction: {freesurfer_status}</li>
 \t</ul>
 """
@@ -45,8 +46,8 @@ FUNCTIONAL_TEMPLATE = """\t\t<h3 class="elem-title">Summary</h3>
 """
 
 ABOUT_TEMPLATE = """\t<ul>
-\t\t<li>FMRIPrep version: {version}</li>
-\t\t<li>FMRIPrep command: <code>{command}</code></li>
+\t\t<li>fMRIPrep version: {version}</li>
+\t\t<li>fMRIPrep command: <code>{command}</code></li>
 \t\t<li>Date preprocessed: {date}</li>
 \t</ul>
 </div>
@@ -68,17 +69,19 @@ class SummaryInterface(SimpleInterface):
         self._results['out_report'] = fname
         return runtime
 
+    def _generate_segment(self):
+        raise NotImplementedError
+
 
 class SubjectSummaryInputSpec(BaseInterfaceInputSpec):
-    t1w = InputMultiPath(File(exists=True), desc='T1w structural images')
-    t2w = InputMultiPath(File(exists=True), desc='T2w structural images')
+    t1w = InputMultiObject(File(exists=True), desc='T1w structural images')
+    t2w = InputMultiObject(File(exists=True), desc='T2w structural images')
     subjects_dir = Directory(desc='FreeSurfer subjects directory')
     subject_id = Str(desc='Subject ID')
-    bold = InputMultiPath(traits.Either(File(exists=True),
-                                        traits.List(File(exists=True))),
-                          desc='BOLD functional series')
-    output_spaces = traits.List(desc='Target spaces')
-    template = traits.Enum('MNI152NLin2009cAsym', desc='Template space')
+    bold = InputMultiObject(traits.Either(
+        File(exists=True), traits.List(File(exists=True))),
+        desc='BOLD functional series')
+    output_spaces = InputMultiObject(Str, desc='list of standard spaces')
 
 
 class SubjectSummaryOutputSpec(SummaryOutputSpec):
@@ -109,9 +112,6 @@ class SubjectSummary(SummaryInterface):
             else:
                 freesurfer_status = 'Run by fMRIPrep'
 
-        output_spaces = [self.inputs.template if space == 'template' else space
-                         for space in self.inputs.output_spaces]
-
         t2w_seg = ''
         if self.inputs.t2w:
             t2w_seg = '(+ {:d} T2-weighted)'.format(len(self.inputs.t2w))
@@ -132,13 +132,14 @@ class SubjectSummary(SummaryInterface):
                      for task_id, n_runs in sorted(counts.items())]
             tasks = '\n'.join([header] + lines + [footer])
 
-        return SUBJECT_TEMPLATE.format(subject_id=self.inputs.subject_id,
-                                       n_t1s=len(self.inputs.t1w),
-                                       t2w=t2w_seg,
-                                       n_bold=len(bold_series),
-                                       tasks=tasks,
-                                       output_spaces=', '.join(output_spaces),
-                                       freesurfer_status=freesurfer_status)
+        return SUBJECT_TEMPLATE.format(
+            subject_id=self.inputs.subject_id,
+            n_t1s=len(self.inputs.t1w),
+            t2w=t2w_seg,
+            n_bold=len(bold_series),
+            tasks=tasks,
+            output_spaces=', '.join(self.inputs.output_spaces),
+            freesurfer_status=freesurfer_status)
 
 
 class FunctionalSummaryInputSpec(BaseInterfaceInputSpec):

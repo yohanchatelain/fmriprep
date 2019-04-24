@@ -472,14 +472,14 @@ Excessive deviation will result in rejecting the BBR refinement and accepting th
 
 EPI to MNI transformation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.bold.resampling.init_bold_mni_trans_wf`
+:mod:`fmriprep.workflows.bold.resampling.init_bold_std_trans_wf`
 
 .. workflow::
     :graph2use: colored
     :simple_form: yes
 
-    from fmriprep.workflows.bold import init_bold_mni_trans_wf
-    wf = init_bold_mni_trans_wf(
+    from fmriprep.workflows.bold import init_bold_std_trans_wf
+    wf = init_bold_std_trans_wf(
         template='MNI152NLin2009cAsym',
 		freesurfer=True,
         mem_gb=1,

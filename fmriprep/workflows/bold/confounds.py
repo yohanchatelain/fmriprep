@@ -18,6 +18,7 @@ from niworkflows.engine.workflows import LiterateWorkflow as Workflow
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
 from niworkflows.interfaces.images import SignalExtraction
 from niworkflows.interfaces.masks import ROIsPlot
+from niworkflows.interfaces.utility import KeySelect
 from niworkflows.interfaces.patches import (
     RobustACompCor as ACompCor,
     RobustTCompCor as TCompCor,
@@ -32,7 +33,7 @@ from ...interfaces import (
     FMRISummary, DerivativesDataSink
 )
 
-from .resampling import init_bold_mni_trans_wf
+from .resampling import init_bold_std_trans_wf
 
 DEFAULT_MEMORY_MIN_GB = 0.01
 
@@ -219,7 +220,7 @@ placed within the corresponding confounds file.
                         name='rois_plot', mem_gb=mem_gb)
 
     ds_report_bold_rois = pe.Node(
-        DerivativesDataSink(suffix='rois'),
+        DerivativesDataSink(desc='rois', keep_dtype=True),
         name='ds_report_bold_rois', run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 
@@ -308,7 +309,7 @@ placed within the corresponding confounds file.
     return workflow
 
 
-def init_carpetplot_wf(mem_gb, metadata, name="bold_carpet_wf"):
+def init_carpetplot_wf(standard_spaces, mem_gb, metadata, name="bold_carpet_wf"):
     """
 
     Resamples the MNI parcellation (ad-hoc parcellation derived from the
@@ -337,7 +338,7 @@ def init_carpetplot_wf(mem_gb, metadata, name="bold_carpet_wf"):
         t1_bold_xform
             Affine matrix that maps the T1w space into alignment with
             the native BOLD space
-        t1_2_mni_reverse_transform
+        std2anat_xfm
             ANTs-compatible affine-and-warp transform file
 
     **Outputs**
@@ -348,11 +349,16 @@ def init_carpetplot_wf(mem_gb, metadata, name="bold_carpet_wf"):
     """
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['bold', 'bold_mask', 'confounds_file',
-                't1_bold_xform', 't1_2_mni_reverse_transform']),
+                't1_bold_xform', 'std2anat_xfm']),
         name='inputnode')
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['out_carpetplot']), name='outputnode')
+
+    select_std = pe.Node(KeySelect(
+        keys=list(standard_spaces.keys()), fields=['std2anat_xfm']),
+        name='select_std', run_without_submitting=True)
+    select_std.inputs.key = 'MNI152NLin2009cAsym'
 
     # List transforms
     mrg_xfms = pe.Node(niu.Merge(2), name='mrg_xfms')
@@ -377,15 +383,16 @@ def init_carpetplot_wf(mem_gb, metadata, name="bold_carpet_wf"):
             ('framewise_displacement', 'mm', 'FD')]),
         name='conf_plot', mem_gb=mem_gb)
     ds_report_bold_conf = pe.Node(
-        DerivativesDataSink(suffix='carpetplot'),
+        DerivativesDataSink(desc='carpetplot', keep_dtype=True),
         name='ds_report_bold_conf', run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 
     workflow = Workflow(name=name)
     workflow.connect([
-        (inputnode, mrg_xfms, [('t1_bold_xform', 'in1'),
-                               ('t1_2_mni_reverse_transform', 'in2')]),
+        (inputnode, select_std, [('std2anat_xfm', 'std2anat_xfm')]),
+        (inputnode, mrg_xfms, [('t1_bold_xform', 'in1')]),
         (inputnode, resample_parc, [('bold_mask', 'reference_image')]),
+        (select_std, mrg_xfms, [('std2anat_xfm', 'in2')]),
         (mrg_xfms, resample_parc, [('out', 'transforms')]),
         # Carpetplot
         (inputnode, conf_plot, [
@@ -399,7 +406,7 @@ def init_carpetplot_wf(mem_gb, metadata, name="bold_carpet_wf"):
     return workflow
 
 
-def init_ica_aroma_wf(template, metadata, mem_gb, omp_nthreads,
+def init_ica_aroma_wf(metadata, mem_gb, omp_nthreads,
                       name='ica_aroma_wf',
                       susan_fwhm=6.0,
                       err_on_aroma_warn=False,
@@ -441,7 +448,7 @@ def init_ica_aroma_wf(template, metadata, mem_gb, omp_nthreads,
 
     **Parameters**
 
-        template : str
+        standard_spaces : str
             Spatial normalization template used as target when that
             registration step was previously calculated with
             :py:func:`~fmriprep.workflows.bold.registration.init_bold_reg_wf`.
@@ -454,7 +461,7 @@ def init_ica_aroma_wf(template, metadata, mem_gb, omp_nthreads,
         omp_nthreads : int
             Maximum number of threads an individual process may use
         name : str
-            Name of workflow (default: ``bold_mni_trans_wf``)
+            Name of workflow (default: ``bold_tpl_trans_wf``)
         susan_fwhm : float
             Kernel width (FWHM in mm) for the smoothing step with
             FSL ``susan`` (default: 6.0mm)
@@ -472,7 +479,7 @@ def init_ica_aroma_wf(template, metadata, mem_gb, omp_nthreads,
 
         itk_bold_to_t1
             Affine transform from ``ref_bold_brain`` to T1 space (ITK format)
-        t1_2_mni_forward_transform
+        anat2std_xfm
             ANTs-compatible affine-and-warp transform file
         name_source
             BOLD series NIfTI file
@@ -518,33 +525,22 @@ in the corresponding confounds file.
 
     inputnode = pe.Node(niu.IdentityInterface(
         fields=[
-            'itk_bold_to_t1',
-            't1_2_mni_forward_transform',
+            'bold_std',
+            'bold_mask_std',
+            'movpar_file',
             'name_source',
             'skip_vols',
-            'bold_split',
-            'bold_mask',
-            'hmc_xforms',
-            'fieldwarp',
-            'movpar_file']), name='inputnode')
+            'templates',
+        ]), name='inputnode')
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['aroma_confounds', 'aroma_noise_ics', 'melodic_mix',
                 'nonaggr_denoised_file']), name='outputnode')
 
-    bold_mni_trans_wf = init_bold_mni_trans_wf(
-        template=template,
-        freesurfer=False,
-        mem_gb=mem_gb,
-        omp_nthreads=omp_nthreads,
-        template_out_grid=str(get_template(
-            'MNI152Lin', resolution=2, desc=None, suffix='T1w',
-            extensions=['.nii', '.nii.gz'])),
-        use_compression=False,
-        use_fieldwarp=use_fieldwarp,
-        name='bold_mni_trans_wf'
-    )
-    bold_mni_trans_wf.__desc__ = None
+    select_std = pe.Node(KeySelect(
+        fields=['bold_mask_std', 'bold_std']),
+        name='select_std', run_without_submitting=True)
+    select_std.inputs.key = 'MNI152NLin6Asym'
 
     rm_non_steady_state = pe.Node(niu.Function(function=_remove_volumes,
                                                output_names=['bold_cut']),
@@ -579,7 +575,7 @@ in the corresponding confounds file.
                                             name='ica_aroma_confound_extraction')
 
     ds_report_ica_aroma = pe.Node(
-        DerivativesDataSink(suffix='ica_aroma'),
+        DerivativesDataSink(desc='aroma', keep_dtype=True),
         name='ds_report_ica_aroma', run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 
@@ -588,21 +584,16 @@ in the corresponding confounds file.
 
     # connect the nodes
     workflow.connect([
-        (inputnode, bold_mni_trans_wf, [
-            ('name_source', 'inputnode.name_source'),
-            ('bold_split', 'inputnode.bold_split'),
-            ('bold_mask', 'inputnode.bold_mask'),
-            ('hmc_xforms', 'inputnode.hmc_xforms'),
-            ('itk_bold_to_t1', 'inputnode.itk_bold_to_t1'),
-            ('t1_2_mni_forward_transform', 'inputnode.t1_2_mni_forward_transform'),
-            ('fieldwarp', 'inputnode.fieldwarp')]),
+        (inputnode, select_std, [('templates', 'keys'),
+                                 ('bold_std', 'bold_std'),
+                                 ('bold_mask_std', 'bold_mask_std')]),
         (inputnode, ica_aroma, [('movpar_file', 'motion_parameters')]),
         (inputnode, rm_non_steady_state, [
             ('skip_vols', 'skip_vols')]),
-        (bold_mni_trans_wf, rm_non_steady_state, [
-            ('outputnode.bold_mni', 'bold_file')]),
-        (bold_mni_trans_wf, calc_median_val, [
-            ('outputnode.bold_mask_mni', 'mask_file')]),
+        (select_std, rm_non_steady_state, [
+            ('bold_std', 'bold_file')]),
+        (select_std, calc_median_val, [
+            ('bold_mask_std', 'mask_file')]),
         (rm_non_steady_state, calc_median_val, [
             ('bold_cut', 'in_file')]),
         (rm_non_steady_state, calc_bold_mean, [
@@ -616,13 +607,13 @@ in the corresponding confounds file.
         (calc_median_val, smooth, [(('out_stat', _getbtthresh), 'brightness_threshold')]),
         # connect smooth to melodic
         (smooth, melodic, [('smoothed_file', 'in_files')]),
-        (bold_mni_trans_wf, melodic, [
-            ('outputnode.bold_mask_mni', 'mask')]),
+        (select_std, melodic, [
+            ('bold_mask_std', 'mask')]),
         # connect nodes to ICA-AROMA
         (smooth, ica_aroma, [('smoothed_file', 'in_file')]),
-        (bold_mni_trans_wf, ica_aroma, [
-            ('outputnode.bold_mask_mni', 'report_mask'),
-            ('outputnode.bold_mask_mni', 'mask')]),
+        (select_std, ica_aroma, [
+            ('bold_mask_std', 'report_mask'),
+            ('bold_mask_std', 'mask')]),
         (melodic, ica_aroma, [('out_dir', 'melodic_dir')]),
         # generate tsvs from ICA-AROMA
         (ica_aroma, ica_aroma_confound_extraction, [('out_dir', 'in_directory')]),
@@ -632,11 +623,10 @@ in the corresponding confounds file.
         (ica_aroma_confound_extraction, outputnode, [('aroma_confounds', 'aroma_confounds'),
                                                      ('aroma_noise_ics', 'aroma_noise_ics'),
                                                      ('melodic_mix', 'melodic_mix')]),
-        # TODO change melodic report to reflect noise and non-noise components
         (ica_aroma, add_non_steady_state, [
             ('nonaggr_denoised_file', 'bold_cut_file')]),
-        (bold_mni_trans_wf, add_non_steady_state, [
-            ('outputnode.bold_mni', 'bold_file')]),
+        (select_std, add_non_steady_state, [
+            ('bold_std', 'bold_file')]),
         (inputnode, add_non_steady_state, [
             ('skip_vols', 'skip_vols')]),
         (add_non_steady_state, outputnode, [('bold_add', 'nonaggr_denoised_file')]),

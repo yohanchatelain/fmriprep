@@ -156,7 +156,7 @@ def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
 
     if write_report:
         ds_report_reg = pe.Node(
-            DerivativesDataSink(),
+            DerivativesDataSink(keep_dtype=True),
             name='ds_report_reg', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
 
@@ -168,7 +168,7 @@ def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
         workflow.connect([
             (bbr_wf, ds_report_reg, [
                 ('outputnode.out_report', 'in_file'),
-                (('outputnode.fallback', _bold_reg_suffix, freesurfer), 'suffix')]),
+                (('outputnode.fallback', _bold_reg_suffix, freesurfer), 'desc')]),
         ])
 
     return workflow
@@ -275,7 +275,7 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, multiecho=False, use
         name='outputnode'
     )
 
-    gen_ref = pe.Node(GenerateSamplingReference(), name='gen_ref',
+    gen_ref = pe.Node(GenerateSamplingReference(resolution='native'), name='gen_ref',
                       mem_gb=0.3)  # 256x256x256 * 64 / 8 ~ 150MB
 
     mask_t1w_tfm = pe.Node(
