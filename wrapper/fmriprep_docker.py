@@ -174,7 +174,7 @@ def merge_help(wrapper_help, target_help):
     overlap = set(w_flags).intersection(t_flags)
     expected_overlap = set(['h', 'version', 'w', 'template-resampling-grid',
                             'fs-license-file', 'use-plugin'])
-    print(overlap, expected_overlap)
+
     assert overlap == expected_overlap, "Clobbering options: {}".format(
         ', '.join(overlap - expected_overlap))
 
