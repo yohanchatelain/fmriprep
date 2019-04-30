@@ -53,13 +53,13 @@ def sentry_setup(opts, exec_env):
     import psutil
     import hashlib
     from ..__about__ import __version__
-    from ..utils.sentry import before_send
+
     environment = "prod"
     release = __version__
     if not __version__:
         environment = "dev"
         release = "dev"
-    elif int(os.getenv('FMRIPREP_DEV', 0)) or ('+' in __version__):
+    elif int(os.getenv('FMRIPREP_DEV', '0')) or ('+' in __version__):
         environment = "dev"
 
     sentry_sdk.init("https://d5a16b0c38d84d1584dfc93b9fb1ade6@sentry.io/1137693",
@@ -180,9 +180,9 @@ def before_send(event, hints):
         msg = event['logentry']['message']
         if msg.startswith("could not run node:"):
             return None
-        elif msg.startswith("Saving crash info to "):
+        if msg.startswith("Saving crash info to "):
             return None
-        elif re.match("Node .+ failed to run on host .+", msg):
+        if re.match("Node .+ failed to run on host .+", msg):
             return None
 
     if 'breadcrumbs' in event and isinstance(event['breadcrumbs'], list):
@@ -201,9 +201,9 @@ def _chunks(string, length=CHUNK_SIZE):
     """
     Splits a string into smaller chunks
 
-    >>> list(_chunks('some longer string', length=3))
+    >>> list(_chunks('some longer string.', length=3))
     ['som', 'e l', 'ong', 'er ', 'str', 'ing', '.']
 
     """
-    return (string[i:i + CHUNK_SIZE]
+    return (string[i:i + length]
             for i in range(0, len(string), length))
