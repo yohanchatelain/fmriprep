@@ -653,3 +653,4 @@ def _is_native(in_value):
 def _tpl_res(in_value):
     if in_value == 'native':
         return 2
+    return in_value
