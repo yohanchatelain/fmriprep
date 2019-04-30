@@ -38,6 +38,8 @@ Command-Line Arguments
    :nodefaultconst:
 
 
+.. _output_spaces:
+
 Defining standard and nonstandard spaces where data will be resampled
 =====================================================================
 

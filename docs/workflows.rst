@@ -4,7 +4,7 @@
 Processing pipeline details
 ===========================
 
-``fmriprep`` adapts its pipeline depending on what data and metadata are
+*fMRIPrep* adapts its pipeline depending on what data and metadata are
 available and are used as the input.
 For example, slice timing correction will be
 performed only if the ``SliceTiming`` metadata field is found for the input
@@ -118,22 +118,23 @@ Once the brain mask is computed, FSL ``fast`` is utilized for brain tissue segme
     Brain tissue segmentation.
 
 
-Finally, spatial normalization to MNI-space is performed using ANTs' ``antsRegistration``
+Finally, spatial normalization to standard spaces is performed using ANTs' ``antsRegistration``
 in a multiscale, mutual-information based, nonlinear registration scheme.
-In particular, spatial normalization is done using the `ICBM 2009c Nonlinear
-Asymmetric template (1×1×1mm) <http://nist.mni.mcgill.ca/?p=904>`_ [Fonov2011]_.
+See `output_spaces`_ for information about how standard and nonstandard spaces can
+be set to resample the preprocessed data onto the final output spaces.
+
 
 .. figure:: _static/T1MNINormalization.svg
     :scale: 100%
 
-    Animation showing T1w to MNI normalization
+    Animation showing spatial normalization of T1w onto the ``MNI152NLin2009cAsym`` template.
 
 Cost function masking during spatial normalization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When processing images from patients with focal brain lesions (e.g. stroke, tumor
 resection), it is possible to provide a lesion mask to be used during spatial
-normalization to MNI-space [Brett2001]_.
+normalization to standard space [Brett2001]_.
 ANTs will use this mask to minimize warping of healthy tissue into damaged
 areas (or vice-versa).
 Lesion masks should be binary NIfTI images (damaged areas = 1, everywhere else = 0)
@@ -141,11 +142,11 @@ in the same space and resolution as the T1 image, and follow the naming conventi
 `BIDS Extension Proposal 3: Common Derivatives <https://docs.google.com/document/d/1Wwc4A6Mow4ZPPszDIWfCUCRNstn7d_zzaWPcfcHmgI4/edit#heading=h.9146wuepclkt>`_
 (e.g. ``sub-001_T1w_label-lesion_roi.nii.gz``).
 This file should be placed in the ``sub-*/anat`` directory of the BIDS dataset
-to be run through ``fmriprep``.
+to be run through *fMRIPrep*.
 Because lesion masks are not currently part of the BIDS specification, it is also necessary to 
 include a ``.bidsignore`` file in the root of your dataset directory. This will prevent 
 `bids-validator <https://github.com/bids-standard/bids-validator#bidsignore>`_ from complaining that your dataset not BIDS valid, which prevents 
-``fmriprep`` from running. Your ``.bidsignore`` file should include the following line::
+*fMRIPrep* from running. Your ``.bidsignore`` file should include the following line::
 
 *lesion_roi.nii.gz
 
@@ -159,7 +160,7 @@ aligned to the first image (determined lexicographically by session label).
 For two images, the additional cost of estimating an unbiased template is
 trivial and is the default behavior, but, for greater than two images, the cost
 can be a slowdown of an order of magnitude.
-Therefore, in the case of three or more images, ``fmriprep`` constructs
+Therefore, in the case of three or more images, *fMRIPrep* constructs
 templates aligned to the first image, unless passed the ``--longitudinal``
 flag, which forces the estimation of an unbiased template.
 
@@ -186,17 +187,17 @@ Surface preprocessing
     wf = init_surface_recon_wf(omp_nthreads=1,
                                hires=True)
 
-``fmriprep`` uses FreeSurfer_ to reconstruct surfaces from T1w/T2w
+*fMRIPrep* uses FreeSurfer_ to reconstruct surfaces from T1w/T2w
 structural images.
-If enabled, several steps in the ``fmriprep`` pipeline are added or replaced.
+If enabled, several steps in the *fMRIPrep* pipeline are added or replaced.
 All surface preprocessing may be disabled with the ``--fs-no-reconall`` flag.
 
 .. note::
     Surface processing will be skipped if the outputs already exist.
 
-    In order to bypass reconstruction in ``fmriprep``, place existing reconstructed
+    In order to bypass reconstruction in *fMRIPrep*, place existing reconstructed
     subjects in ``<output dir>/freesurfer`` prior to the run.
-    ``fmriprep`` will perform any missing ``recon-all`` steps, but will not perform
+    *fMRIPrep* will perform any missing ``recon-all`` steps, but will not perform
     any steps whose outputs already exist.
 
 
@@ -258,7 +259,7 @@ will contain some innaccuracies including small amounts of MR signal from
 outside the brain.
 Based on the tissue segmentation of FreeSurfer (located in ``mri/aseg.mgz``)
 and only when the :ref:`Surface Processing <workflows_surface>` step has been
-executed, FMRIPREP replaces the brain mask with a refined one that derives
+executed, *fMRIPrep* replaces the brain mask with a refined one that derives
 from the ``aseg.mgz`` file as described in
 :mod:`fmriprep.interfaces.freesurfer.grow_mask`.
 
@@ -468,8 +469,8 @@ If FreeSurfer processing is disabled, FSL ``flirt`` is run with the
 After :abbr:`BBR (boundary-based registration)` is run, the resulting affine transform will be compared to the initial transform found by FLIRT.
 Excessive deviation will result in rejecting the BBR refinement and accepting the original, affine registration.
 
-EPI to MNI transformation
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Resampling BOLD runs onto standard spaces
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 :mod:`fmriprep.workflows.bold.resampling.init_bold_std_trans_wf`
 
 .. workflow::
@@ -487,22 +488,17 @@ EPI to MNI transformation
 
 This sub-workflow concatenates the transforms calculated upstream (see
 `Head-motion estimation`_, `Susceptibility Distortion Correction (SDC)`_ --if
-fieldmaps are available--, `EPI to T1w registration`_, and a T1w-to-MNI
+fieldmaps are available--, `EPI to T1w registration`_, and an anatomical-to-standard
 transform from `T1w/T2w preprocessing`_) to map the :abbr:`EPI (echo-planar imaging)`
-image to standard MNI space.
-It also maps the T1w-based mask to MNI space.
+image to the standard spaces given by the ``--output-spaces`` argument (see
+`output_spaces`_.
+It also maps the T1w-based mask to each of those standard spaces.
 
 Transforms are concatenated and applied all at once, with one interpolation (Lanczos)
 step, so as little information is lost as possible.
 
-The output space grid can be specified using the ``template_out_grid`` argument.
-This option accepts the following (``str``) values:
-
-  * ``'native'``: the original resolution of the BOLD image will be used.
-  * ``'1mm'``: uses the 1:math:`\times`1:math:`\times`1 [mm] version of the template.
-  * ``'2mm'``: uses the 2:math:`\times`2:math:`\times`2 [mm] version of the template.
-  * **Path to arbitrary reference file**: the output will be resampled on a grid with
-    same resolution as this reference.
+The output space grid can be specified using modifiers to the ``--output-spaces``
+argument.
 
 
 EPI sampled to FreeSurfer surfaces
@@ -562,23 +558,25 @@ ICA-AROMA
 ~~~~~~~~~
 :mod:`fmriprep.workflows.bold.confounds.init_ica_aroma_wf`
 
-When one of the `--output-spaces` selected is in MNI space, ICA-AROMA denoising
-can be automatically appended to the workflow.
-The number of ICA-AROMA components depends on a dimensionality estimate made by MELODIC.
+ICA-AROMA denoising is performed in ``MNI152NLin6Asym`` space, which is automatically
+added to the list of ``--output-spaces`` if it was not already requested by the user.
+The number of ICA-AROMA components depends on a dimensionality estimate made by 
+FSL MELODIC.
 For datasets with a very short TR and a large number of timepoints, this may result
 in an unusually high number of components.
 By default, dimensionality is limited to a maximum of 200 components.
 To override this upper limit one may specify the number of components to be extracted
 with ``--aroma-melodic-dimensionality``.
-Further details on the implementation are given within the workflow generation function (:mod:`fmriprep.workflows.bold.confounds.init_ica_aroma_wf`).
+Further details on the implementation are given within the workflow generation
+function (:mod:`fmriprep.workflows.bold.confounds.init_ica_aroma_wf`).
 
 *Note*: *non*-aggressive AROMA denoising is a fundamentally different procedure
 from its "aggressive" counterpart and cannot be performed only by using a set of noise
 regressors (a separate GLM with both noise and signal regressors needs to be used).
-Therefore instead of regressors FMRIPREP produces *non*-aggressive denoised 4D NIFTI
+Therefore instead of regressors, *fMRIPrep* produces *non*-aggressive denoised 4D NIFTI
 files in the MNI space:
 
-``*bold_space-MNI152NLin2009cAsym_variant-smoothAROMAnonaggr_brainmask.nii.gz``
+``*bold_space-MNI152NLin6Asym-smoothAROMAnonaggr_brainmask.nii.gz``
 
 Additionally, the MELODIC mix and noise component indices will
 be generated, so non-aggressive denoising can be manually performed in the T1w space with ``fsl_regfilt``, *e.g.*::

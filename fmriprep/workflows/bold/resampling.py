@@ -177,8 +177,8 @@ def init_bold_std_trans_wf(
     use_fieldwarp=False
 ):
     """
-    This workflow samples functional images to the MNI template in a "single shot"
-    from the original BOLD series.
+    This workflow samples functional images into standard space with a single
+    resampling of the original BOLD series.
 
     .. workflow::
         :graph2use: colored
