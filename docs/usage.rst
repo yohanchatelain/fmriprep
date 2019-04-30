@@ -37,6 +37,7 @@ Command-Line Arguments
    :nodefault:
    :nodefaultconst:
 
+
 Defining standard and nonstandard spaces where data will be resampled
 =====================================================================
 
@@ -46,7 +47,7 @@ That is achieved using the ``--output-spaces`` argument, where standard and
 nonstandard spaces can be inserted.
 
 Standard spaces
----------------
+"""""""""""""""
 
 When using fMRIPrep in a workflow that will investigate effects that span across
 analytical groupings, neuroimagers typically resample their data on to a standard,
@@ -88,7 +89,7 @@ FreeSurfer will be supported (e.g. ``fsaverage5``) although the use of the densi
 modifier would be preferred (i.e. ``fsaverage:den-10k`` for ``fsaverage5``).
 
 Custom standard spaces
-----------------------
+""""""""""""""""""""""
 
 Although the functionality is not available yet, the interface of the
 ``--output-spaces`` permits providing paths to custom templates that
@@ -107,7 +108,7 @@ must be found under under ``/path/to/custom/templates/tpl-MyCustom``: ::
 Although a more comprehensive coverage of standard files would be advised.
 
 Nonstandard spaces
-------------------
+""""""""""""""""""
 
 Additionally, ``--output-spaces`` accepts identifiers of spatial references
 that do not generate *standardized* coordinate spaces:
@@ -125,7 +126,7 @@ that do not generate *standardized* coordinate spaces:
 Modifiers are not allowed when providing nonstandard spaces.
 
 Preprocessing blocks depending on standard templates
-----------------------------------------------------
+""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 Some modules of the pipeline (e.g. the ICA-AROMA denoising, the generation of
 HCP compatible *grayordinates* files, or the *fieldmap-less* distortion correction)

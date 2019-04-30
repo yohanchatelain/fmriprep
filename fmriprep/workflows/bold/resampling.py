@@ -191,7 +191,7 @@ def init_bold_std_trans_wf(
                                          ('fsaverage', {'density': '10k'})]),
             mem_gb=3,
             omp_nthreads=1,
-            template_out_grid='native')
+        )
 
     **Parameters**
 

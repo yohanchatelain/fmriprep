@@ -439,8 +439,7 @@ def init_ica_aroma_wf(metadata, mem_gb, omp_nthreads,
         :simple_form: yes
 
         from fmriprep.workflows.bold.confounds import init_ica_aroma_wf
-        wf = init_ica_aroma_wf(template='MNI152NLin2009cAsym',
-                               metadata={'RepetitionTime': 1.0},
+        wf = init_ica_aroma_wf(metadata={'RepetitionTime': 1.0},
                                mem_gb=3,
                                omp_nthreads=1)
 

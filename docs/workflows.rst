@@ -19,43 +19,42 @@ is presented below:
     :simple_form: yes
 
     from fmriprep.workflows.base import init_single_subject_wf
-    from collections import namedtuple
+    from collections import namedtuple, OrderedDict
     BIDSLayout = namedtuple('BIDSLayout', ['root'], defaults='.')
     wf = init_single_subject_wf(
-        layout=BIDSLayout(),
-        subject_id='test',
-        name='single_subject_wf',
-        task_id='',
-        echo_idx=None,
-        longitudinal=False,
-        t2s_coreg=False,
-        omp_nthreads=1,
-        freesurfer=True,
-        reportlets_dir='.',
-        output_dir='.',
-        skull_strip_template='OASIS30ANTs',
-        skull_strip_fixed_seed=False,
-        template='MNI152NLin2009cAsym',
-        output_spaces=['T1w', 'fsnative', 'template', 'fsaverage5'],
-        medial_surface_nan=False,
-        cifti_output=False,
-        ignore=[],
-        debug=False,
-        low_mem=False,
         anat_only=False,
-        hires=True,
-        use_bbr=True,
+        aroma_melodic_dim=-200,
         bold2t1w_dof=9,
+        cifti_output=False,
+        debug=False,
+        echo_idx=None,
+        err_on_aroma_warn=False,
         fmap_bspline=False,
         fmap_demean=True,
-        use_syn=True,
         force_syn=True,
-        template_out_grid='native',
+        freesurfer=True,
+        hires=True,
+        ignore=[],
+        layout=BIDSLayout(),
+        longitudinal=False,
+        low_mem=False,
+        medial_surface_nan=False,
+        name='single_subject_wf',
+        omp_nthreads=1,
+        output_dir='.',
+        output_spaces=OrderedDict([
+            ('MNI152Lin', {}), ('fsaverage', {'density': '10k'}),
+            ('T1w', {}), ('fsnative', {})]),
+        reportlets_dir='.',
+        skull_strip_fixed_seed=False,
+        skull_strip_template='OASIS30ANTs',
+        subject_id='test',
+        t2s_coreg=False,
+        task_id='',
         use_aroma=False,
-        aroma_melodic_dim=-200,
-        err_on_aroma_warn=False,
+        use_bbr=True,
+        use_syn=True,
     )
-
 
 T1w/T2w preprocessing
 ---------------------
@@ -65,22 +64,20 @@ T1w/T2w preprocessing
     :graph2use: orig
     :simple_form: yes
 
+    from collections import OrderedDict
     from fmriprep.workflows.anatomical import init_anat_preproc_wf
     wf = init_anat_preproc_wf(
         bids_root='.',
-        debug=False,
         freesurfer=True,
-        fs_spaces=['T1w', 'fsnative',
-                   'template', 'fsaverage5'],
         hires=True,
         longitudinal=False,
         num_t1w=1,
         omp_nthreads=1,
         output_dir='.',
+        output_spaces=OrderedDict([
+            ('MNI152NLin2009cAsym', {}), ('fsaverage5', {})]),
         reportlets_dir='.',
         skull_strip_template='MNI152NLin2009cAsym',
-        skull_strip_fixed_seed=False,
-        template='MNI152NLin2009cAsym',
     )
 
 The anatomical sub-workflow begins by constructing an average image by
@@ -274,13 +271,13 @@ BOLD preprocessing
     :graph2use: orig
     :simple_form: yes
 
-    from collections import namedtuple
+    from collections import namedtuple, OrderedDict
+    from fmriprep.workflows.bold.base import init_func_preproc_wf
     BIDSLayout = namedtuple('BIDSLayout', ['root'], defaults='.')
-    from fmriprep.workflows.bold import init_func_preproc_wf
     wf = init_func_preproc_wf(
-        '/completely/made/up/path/sub-01_task-nback_bold.nii.gz',
         aroma_melodic_dim=-200,
         bold2t1w_dof=9,
+        bold_file='/completely/made/up/path/sub-01_task-nback_bold.nii.gz',
         cifti_output=False,
         debug=False,
         err_on_aroma_warn=False,
@@ -289,19 +286,20 @@ BOLD preprocessing
         force_syn=True,
         freesurfer=True,
         ignore=[],
-        layout=BIDSLayout(),
         low_mem=False,
         medial_surface_nan=False,
         omp_nthreads=1,
         output_dir='.',
-        output_spaces=['T1w', 'fsnative', 'template', 'fsaverage5'],
+        output_spaces=OrderedDict([
+            ('MNI152Lin', {}), ('fsaverage', {'density': '10k'}),
+            ('T1w', {}), ('fsnative', {})]),
         reportlets_dir='.',
         t2s_coreg=False,
-        template='MNI152NLin2009cAsym',
-        template_out_grid='native',
         use_aroma=False,
         use_bbr=True,
         use_syn=True,
+        layout=BIDSLayout(),
+        num_bold=1,
     )
 
 Preprocessing of :abbr:`BOLD (blood-oxygen level-dependent)` files is
@@ -478,13 +476,14 @@ EPI to MNI transformation
     :graph2use: colored
     :simple_form: yes
 
+    from collections import OrderedDict
     from fmriprep.workflows.bold import init_bold_std_trans_wf
     wf = init_bold_std_trans_wf(
-        template='MNI152NLin2009cAsym',
-		freesurfer=True,
-        mem_gb=1,
+        standard_spaces=OrderedDict([('MNI152Lin', {}),
+                                     ('fsaverage', {'density': '10k'})]),
+        mem_gb=3,
         omp_nthreads=1,
-        template_out_grid='native')
+    )
 
 This sub-workflow concatenates the transforms calculated upstream (see
 `Head-motion estimation`_, `Susceptibility Distortion Correction (SDC)`_ --if
