@@ -728,10 +728,19 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('outputnode.out_warp', 'inputnode.fieldwarp')]),
             (bold_std_trans_wf, outputnode, [('outputnode.bold_std', 'bold_std'),
                                              ('outputnode.bold_std_ref', 'bold_std_ref'),
-                                             ('outputnode.bold_mask_std', 'bold_mask_std'),
-                                             ('outputnode.bold_aseg_std', 'bold_aseg_std'),
-                                             ('outputnode.bold_aparc_std', 'bold_aparc_std')]),
+                                             ('outputnode.bold_mask_std', 'bold_mask_std')]),
         ])
+
+        if freesurfer:
+            workflow.connect([
+                (bold_std_trans_wf, func_derivatives_wf, [
+                    ('poutputnode.bold_aseg_std', 'inputnode.bold_aseg_std'),
+                    ('poutputnode.bold_aparc_std', 'inputnode.bold_aparc_std'),
+                ]),
+                (bold_std_trans_wf, outputnode, [
+                    ('outputnode.bold_aseg_std', 'bold_aseg_std'),
+                    ('outputnode.bold_aparc_std', 'bold_aparc_std')]),
+            ])
 
         if 'MNI152NLin2009cAsym' in std_spaces:
             carpetplot_wf = init_carpetplot_wf(
@@ -773,8 +782,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (bold_std_trans_wf, func_derivatives_wf, [
                 ('poutputnode.bold_std_ref', 'inputnode.bold_std_ref'),
                 ('poutputnode.bold_std', 'inputnode.bold_std'),
-                ('poutputnode.bold_aseg_std', 'inputnode.bold_aseg_std'),
-                ('poutputnode.bold_aparc_std', 'inputnode.bold_aparc_std'),
                 ('poutputnode.bold_mask_std', 'inputnode.bold_mask_std'),
             ]),
         ])
