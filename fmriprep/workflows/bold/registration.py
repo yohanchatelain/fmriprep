@@ -275,7 +275,7 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, multiecho=False, use
         name='outputnode'
     )
 
-    gen_ref = pe.Node(GenerateSamplingReference(resolution='native'), name='gen_ref',
+    gen_ref = pe.Node(GenerateSamplingReference(keep_native=True), name='gen_ref',
                       mem_gb=0.3)  # 256x256x256 * 64 / 8 ~ 150MB
 
     mask_t1w_tfm = pe.Node(

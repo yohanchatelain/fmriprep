@@ -33,8 +33,6 @@ from ...interfaces import (
     FMRISummary, DerivativesDataSink
 )
 
-from .resampling import init_bold_std_trans_wf
-
 DEFAULT_MEMORY_MIN_GB = 0.01
 
 

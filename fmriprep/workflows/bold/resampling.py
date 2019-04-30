@@ -332,9 +332,9 @@ preprocessed BOLD runs*: {tpl}.
         (inputnode, gen_ref, [(('bold_split', _first), 'moving_image')]),
         (inputnode, mask_merge_tfms, [(('itk_bold_to_t1', _aslist), 'in2')]),
         (select_std, select_tpl, [('key', 'template')]),
-        (select_std, select_tpl, [('resolution', 'resolution')]),
+        (select_std, select_tpl, [(('resolution', _tpl_res), 'resolution')]),
         (select_std, mask_merge_tfms, [('anat2std_xfm', 'in1')]),
-        (select_std, gen_ref, [('resolution', 'resolution')]),
+        (select_std, gen_ref, [(('resolution', _is_native), 'keep_native')]),
         (select_tpl, gen_ref, [('out', 'fixed_image')]),
         (mask_merge_tfms, mask_std_tfm, [('out', 'transforms')]),
         (gen_ref, mask_std_tfm, [('out_file', 'reference_image')]),
@@ -646,7 +646,10 @@ def _aslist(in_value):
     return [in_value]
 
 
-def _res(in_value):
+def _is_native(in_value):
+    return in_value == 'native'
+
+
+def _tpl_res(in_value):
     if in_value == 'native':
         return 2
-    return in_value
