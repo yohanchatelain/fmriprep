@@ -22,3 +22,4 @@ Contents
    contributors
    citing
    api/index.rst
+   faq_tips_tricks
