@@ -91,7 +91,7 @@ Brain extraction, brain tissue segmentation and spatial normalization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Then, the T1w reference is skull-stripped using a Nipype implementation of
-the ``antsBrainExtraction.sh`` tool (ANTs), which is an atlas-based 
+the ``antsBrainExtraction.sh`` tool (ANTs), which is an atlas-based
 brain extraction workflow:
 
 .. workflow::
@@ -120,7 +120,7 @@ Once the brain mask is computed, FSL ``fast`` is utilized for brain tissue segme
 
 Finally, spatial normalization to standard spaces is performed using ANTs' ``antsRegistration``
 in a multiscale, mutual-information based, nonlinear registration scheme.
-See `output_spaces`_ for information about how standard and nonstandard spaces can
+See :ref:`output-spaces` for information about how standard and nonstandard spaces can
 be set to resample the preprocessed data onto the final output spaces.
 
 
@@ -143,9 +143,9 @@ in the same space and resolution as the T1 image, and follow the naming conventi
 (e.g. ``sub-001_T1w_label-lesion_roi.nii.gz``).
 This file should be placed in the ``sub-*/anat`` directory of the BIDS dataset
 to be run through *fMRIPrep*.
-Because lesion masks are not currently part of the BIDS specification, it is also necessary to 
-include a ``.bidsignore`` file in the root of your dataset directory. This will prevent 
-`bids-validator <https://github.com/bids-standard/bids-validator#bidsignore>`_ from complaining that your dataset not BIDS valid, which prevents 
+Because lesion masks are not currently part of the BIDS specification, it is also necessary to
+include a ``.bidsignore`` file in the root of your dataset directory. This will prevent
+`bids-validator <https://github.com/bids-standard/bids-validator#bidsignore>`_ from complaining that your dataset not BIDS valid, which prevents
 *fMRIPrep* from running. Your ``.bidsignore`` file should include the following line::
 
 *lesion_roi.nii.gz
@@ -491,7 +491,7 @@ This sub-workflow concatenates the transforms calculated upstream (see
 fieldmaps are available--, `EPI to T1w registration`_, and an anatomical-to-standard
 transform from `T1w/T2w preprocessing`_) to map the :abbr:`EPI (echo-planar imaging)`
 image to the standard spaces given by the ``--output-spaces`` argument (see
-`output_spaces`_.
+:ref:`output-spaces`.
 It also maps the T1w-based mask to each of those standard spaces.
 
 Transforms are concatenated and applied all at once, with one interpolation (Lanczos)
@@ -560,7 +560,7 @@ ICA-AROMA
 
 ICA-AROMA denoising is performed in ``MNI152NLin6Asym`` space, which is automatically
 added to the list of ``--output-spaces`` if it was not already requested by the user.
-The number of ICA-AROMA components depends on a dimensionality estimate made by 
+The number of ICA-AROMA components depends on a dimensionality estimate made by
 FSL MELODIC.
 For datasets with a very short TR and a large number of timepoints, this may result
 in an unusually high number of components.

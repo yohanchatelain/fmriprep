@@ -7,7 +7,7 @@ Usage
    As of FMRIPREP 1.0.12, the software includes a tracking system
    to report usage statistics and errors. Users can opt-out using
    the ``--notrack`` command line argument.
-   
+
 
 Execution and the BIDS format
 =============================
@@ -38,7 +38,7 @@ Command-Line Arguments
    :nodefaultconst:
 
 
-.. _output_spaces:
+.. _output-spaces:
 
 Defining standard and nonstandard spaces where data will be resampled
 =====================================================================
@@ -71,9 +71,9 @@ the original data gridding.
 However, many users will be interested in utilizing a coarse gridding (typically 2mm isotropic)
 of the target template.
 Such a behavior can be achieved applying modifiers to the template identifier, separated by
-a ``:`` character. 
+a ``:`` character.
 For instance, ``--output-spaces MNI152NLin6Asym:res-2 MNI152NLin2009cAsym`` will generate
-preprocessed BOLD 4D files on two standard spaces (``MNI152NLin6Asym``, 
+preprocessed BOLD 4D files on two standard spaces (``MNI152NLin6Asym``,
 and ``MNI152NLin2009cAsym``) with the template's 2mm isotropic resolution for
 the data on ``MNI152NLin6Asym`` space and the original BOLD resolution
 (say, e.g., 2x2x2.5 [mm]) for the case of ``MNI152NLin2009cAsym``.
@@ -116,7 +116,7 @@ Additionally, ``--output-spaces`` accepts identifiers of spatial references
 that do not generate *standardized* coordinate spaces:
 
   * ``T1w`` or ``anat``: data are resampled into the individual's anatomical
-    reference generated with the T1w and T2w images available within the 
+    reference generated with the T1w and T2w images available within the
     BIDS structure.
   * ``fsnative``: similarly to the ``anat`` space for volumetric references,
     including the ``fsnative`` space will instruct fMRIPrep to sample the
@@ -189,7 +189,7 @@ make your data available within that system first.
 
 For instance, here at the Poldrack Lab we use Stanford's
 :abbr:`HPC (high-performance computing)` system, called Sherlock.
-Sherlock enables `the following data transfer options 
+Sherlock enables `the following data transfer options
 <https://www.sherlock.stanford.edu/docs/user-guide/storage/data-transfer/>`_.
 
 Alternatively, more comprehensive solutions such as `Datalad
