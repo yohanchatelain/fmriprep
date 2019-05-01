@@ -45,14 +45,14 @@ Note the ``-i`` flag allows you to specify an image.
 When invoking ``docker`` directly, the mount options must be specified
 with the ``-v`` flag::
 
-    -v $HOME/projects/fmriprep/fmriprep:/usr/local/miniconda/lib/python3.6/site-packages/fmriprep:ro
-    -v $HOME/projects/niworkflows/niworkflows:/usr/local/miniconda/lib/python3.6/site-packages/niworkflows:ro
-    -v $HOME/projects/nipype/nipype:/usr/local/miniconda/lib/python3.6/site-packages/nipype:ro
+    -v $HOME/projects/fmriprep/fmriprep:/usr/local/miniconda/lib/python3.7/site-packages/fmriprep:ro
+    -v $HOME/projects/niworkflows/niworkflows:/usr/local/miniconda/lib/python3.7/site-packages/niworkflows:ro
+    -v $HOME/projects/nipype/nipype:/usr/local/miniconda/lib/python3.7/site-packages/nipype:ro
 
 For example, ::
 
     $ docker run --rm -v $HOME/fullds005:/data:ro -v $HOME/dockerout:/out \
-        -v $HOME/projects/fmriprep/fmriprep:/usr/local/miniconda/lib/python3.6/site-packages/fmriprep:ro \
+        -v $HOME/projects/fmriprep/fmriprep:/usr/local/miniconda/lib/python3.7/site-packages/fmriprep:ro \
         poldracklab/fmriprep:latest /data /out/out participant \
         -w /out/work/
 
@@ -65,14 +65,14 @@ This is the equivalent of using ``--entrypoint=bash`` and omitting the fmriprep
 arguments in a ``docker`` command::
 
     $ docker run --rm -v $HOME/fullds005:/data:ro -v $HOME/dockerout:/out \
-        -v $HOME/projects/fmriprep/fmriprep:/usr/local/miniconda/lib/python3.6/site-packages/fmriprep:ro --entrypoint=bash \
+        -v $HOME/projects/fmriprep/fmriprep:/usr/local/miniconda/lib/python3.7/site-packages/fmriprep:ro --entrypoint=bash \
         poldracklab/fmriprep:latest
 
 Patching containers can be achieved in Singularity analogous to ``docker``
 using the ``--bind`` (``-B``) option: ::
 
     $ singularity run \
-        -B $HOME/projects/fmriprep/fmriprep:/usr/local/miniconda/lib/python3.6/site-packages/fmriprep \
+        -B $HOME/projects/fmriprep/fmriprep:/usr/local/miniconda/lib/python3.7/site-packages/fmriprep \
         fmriprep.img \
         /scratch/dataset /scratch/out participant -w /out/work/
 

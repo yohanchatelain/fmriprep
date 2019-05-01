@@ -7,7 +7,6 @@ fMRI preprocessing workflow
 """
 
 import os
-import os.path as op
 from pathlib import Path
 import logging
 import sys
@@ -17,6 +16,7 @@ import uuid
 import json
 import tempfile
 import psutil
+import hashlib
 import warnings
 import subprocess
 from argparse import ArgumentParser
@@ -55,10 +55,10 @@ def get_parser():
     # Arguments as specified by BIDS-Apps
     # required, positional arguments
     # IMPORTANT: they must go directly with the parser object
-    parser.add_argument('bids_dir', action='store',
+    parser.add_argument('bids_dir', action='store', type=Path,
                         help='the root folder of a BIDS valid dataset (sub-XXXXX folders should '
                              'be found at the top level in this folder).')
-    parser.add_argument('output_dir', action='store',
+    parser.add_argument('output_dir', action='store', type=Path,
                         help='the output path for the outcomes of preprocessing and visual '
                              'reports')
     parser.add_argument('analysis_level', choices=['participant'],
@@ -185,7 +185,7 @@ def get_parser():
     #  ANTs options
     g_ants = parser.add_argument_group('Specific options for ANTs registrations')
     g_ants.add_argument('--skull-strip-template', action='store', default='OASIS30ANTs',
-                        choices=['OASIS30ANTs', 'NKI'],
+                        choices=['OASIS30ANTs', 'NKI', 'MNI152NLin2009cAsym'],
                         help='select ANTs skull-stripping template (default: OASIS30ANTs))')
     g_ants.add_argument('--skull-strip-fixed-seed', action='store_true',
                         help='do not use a random seed for skull-stripping - will ensure '
@@ -227,7 +227,7 @@ def get_parser():
                              ' Use `--fs-no-reconall` instead.')
 
     g_other = parser.add_argument_group('Other options')
-    g_other.add_argument('-w', '--work-dir', action='store',
+    g_other.add_argument('-w', '--work-dir', action='store', type=Path, default=Path('work'),
                          help='path where intermediate results should be stored')
     g_other.add_argument(
         '--resource-monitor', action='store_true', default=False,
@@ -322,6 +322,11 @@ def main():
             if exec_env == 'fmriprep-docker':
                 scope.set_tag('docker_version', os.getenv('DOCKER_VERSION_8395080871'))
 
+            dset_desc_path = opts.bids_dir / 'dataset_description.json'
+            if dset_desc_path.exists():
+                desc_content = dset_desc_path.read_bytes()
+                scope.set_tag('dset_desc_sha256', hashlib.sha256(desc_content).hexdigest())
+
             free_mem_at_start = round(psutil.virtual_memory().free / 1024**3, 1)
             scope.set_tag('free_mem_at_start', free_mem_at_start)
             scope.set_tag('cpu_count', cpu_count())
@@ -355,7 +360,7 @@ def main():
     if not opts.skip_bids_validation:
         print("Making sure the input data is BIDS compliant (warnings can be ignored in most "
               "cases).")
-        validate_input_dir(exec_env, opts.bids_dir, opts.participant_label)
+        validate_input_dir(exec_env, str(opts.bids_dir), opts.participant_label)
 
     # FreeSurfer license
     default_license = str(Path(os.getenv('FREESURFER_HOME')) / 'license.txt')
@@ -388,28 +393,15 @@ def main():
         p.start()
         p.join()
 
-        if p.exitcode != 0:
-            sys.exit(p.exitcode)
+        retcode = p.exitcode or retval.get('return_code', 0)
 
-        fmriprep_wf = retval['workflow']
-        plugin_settings = retval['plugin_settings']
-        bids_dir = retval['bids_dir']
-        output_dir = retval['output_dir']
-        work_dir = retval['work_dir']
-        subject_list = retval['subject_list']
-        run_uuid = retval['run_uuid']
-        if not opts.notrack:
-            with sentry_sdk.configure_scope() as scope:
-                scope.set_tag('run_uuid', run_uuid)
-                scope.set_tag('npart', len(subject_list))
-
-        retcode = retval['return_code']
-
-    if fmriprep_wf is None:
-        sys.exit(1)
-
-    if opts.write_graph:
-        fmriprep_wf.write_graph(graph2use="colored", format='svg', simple_form=True)
+        bids_dir = retval.get('bids_dir')
+        output_dir = retval.get('output_dir')
+        work_dir = retval.get('work_dir')
+        plugin_settings = retval.get('plugin_settings', None)
+        subject_list = retval.get('subject_list', None)
+        fmriprep_wf = retval.get('workflow', None)
+        run_uuid = retval.get('run_uuid', None)
 
     if opts.reports_only:
         sys.exit(int(retcode > 0))
@@ -417,10 +409,12 @@ def main():
     if opts.boilerplate:
         sys.exit(int(retcode > 0))
 
-    # Sentry tracking
-    if not opts.notrack:
-        sentry_sdk.add_breadcrumb(message='fMRIPrep started', level='info')
-        sentry_sdk.capture_message('fMRIPrep started', level='info')
+    if fmriprep_wf and opts.write_graph:
+        fmriprep_wf.write_graph(graph2use="colored", format='svg', simple_form=True)
+
+    retcode = retcode or int(fmriprep_wf is None)
+    if retcode != 0:
+        sys.exit(retcode)
 
     # Check workflow for missing commands
     missing = check_deps(fmriprep_wf)
@@ -429,9 +423,19 @@ def main():
         for iface, cmd in missing:
             print("\t{} (Interface: {})".format(cmd, iface))
         sys.exit(2)
-
     # Clean up master process before running workflow, which may create forks
     gc.collect()
+
+    # Sentry tracking
+    if not opts.notrack:
+        with sentry_sdk.configure_scope() as scope:
+            if run_uuid:
+                scope.set_tag('run_uuid', run_uuid)
+            if subject_list:
+                scope.set_tag('npart', len(subject_list))
+        sentry_sdk.add_breadcrumb(message='fMRIPrep started', level='info')
+        sentry_sdk.capture_message('fMRIPrep started', level='info')
+
     try:
         fmriprep_wf.run(**plugin_settings)
     except RuntimeError as e:
@@ -439,6 +443,16 @@ def main():
         if "Workflow did not execute cleanly" not in str(e):
             sentry_sdk.capture_exception(e)
             raise
+    else:
+        if opts.run_reconall:
+            from templateflow import api
+            from niworkflows.utils.misc import _copy_any
+            dseg_tsv = str(api.get('fsaverage', suffix='dseg', extensions=['.tsv']))
+            _copy_any(dseg_tsv,
+                      str(Path(output_dir) / 'fmriprep' / 'desc-aseg_dseg.tsv'))
+            _copy_any(dseg_tsv,
+                      str(Path(output_dir) / 'fmriprep' / 'desc-aparcaseg_dseg.tsv'))
+        logger.log(25, 'fMRIPrep finished without errors')
     finally:
         # Generate reports phase
         errno += generate_reports(subject_list, output_dir, work_dir, run_uuid,
@@ -573,7 +587,30 @@ def build_workflow(opts, retval):
       * Run identifier: {uuid}.
     """.format
 
-    output_spaces = opts.output_space or []
+    bids_dir = opts.bids_dir.resolve()
+    output_dir = opts.output_dir.resolve()
+    work_dir = opts.work_dir.resolve()
+
+    retval['return_code'] = 1
+    retval['workflow'] = None
+    retval['bids_dir'] = str(bids_dir)
+    retval['output_dir'] = str(output_dir)
+    retval['work_dir'] = str(work_dir)
+
+    if output_dir == bids_dir:
+        logger.error(
+            'The selected output folder is the same as the input BIDS folder. '
+            'Please modify the output path (suggestion: %s).',
+            bids_dir / 'derivatives' / ('fmriprep-%s' % __version__.split('+')[0]))
+        retval['return_code'] = 1
+        return retval
+
+    # Reduce to unique space identifiers
+    output_spaces = sorted(set(opts.output_space))
+
+    # If FS is not run, drop all fs* output spaces
+    if not opts.run_reconall:
+        output_spaces = [item for item in output_spaces if not item.startswith('fs')]
 
     # Validity of some inputs
     # ERROR check if use_aroma was specified, but the correct template was not
@@ -586,14 +623,19 @@ def build_workflow(opts, retval):
             'spaces (option "--output-space").'
         )
 
-    if opts.cifti_output and (opts.template != 'MNI152NLin2009cAsym' or
-                              'template' not in output_spaces):
-        output_spaces.append('template')
-        logger.warning(
-            'Option "--cifti-output" requires functional images to be resampled to MNI space. '
-            'The argument "template" has been automatically added to the list of output '
-            'spaces (option "--output-space").'
-        )
+    if opts.cifti_output:
+        if 'template' not in output_spaces:
+            output_spaces.append('template')
+            logger.warning(
+                'Option "--cifti-output" requires functional images to be resampled to MNI '
+                'space. The argument "template" has been automatically added to the list of '
+                'output spaces (option "--output-space").')
+        if not [s for s in output_spaces if s in ('fsaverage5', 'fsaverage6')]:
+            output_spaces = sorted(output_spaces + ['fsaverage5'])
+            logger.warning(
+                'Option "--cifti-output" requires functional images to be resampled to fsaverage '
+                'space. The argument "fsaverage5" has been automatically added to the list of '
+                'output spaces (option "--output-space").')
 
     # Check output_space
     if 'template' not in output_spaces and (opts.use_syn_sdc or opts.force_syn):
@@ -608,12 +650,13 @@ def build_workflow(opts, retval):
 
     # Set up some instrumental utilities
     run_uuid = '%s_%s' % (strftime('%Y%m%d-%H%M%S'), uuid.uuid4())
+    retval['run_uuid'] = run_uuid
 
     # First check that bids_dir looks like a BIDS folder
-    bids_dir = os.path.abspath(opts.bids_dir)
-    layout = BIDSLayout(bids_dir, validate=False)
+    layout = BIDSLayout(str(bids_dir), validate=False)
     subject_list = collect_participants(
         layout, participant_label=opts.participant_label)
+    retval['subject_list'] = subject_list
 
     # Load base plugin_settings from file if --use-plugin
     if opts.use_plugin is not None:
@@ -653,28 +696,26 @@ def build_workflow(opts, retval):
         logger.warning(
             'Per-process threads (--omp-nthreads=%d) exceed total '
             'threads (--nthreads/--n_cpus=%d)', omp_nthreads, nthreads)
+    retval['plugin_settings'] = plugin_settings
 
     # Set up directories
-    output_dir = op.abspath(opts.output_dir)
-    log_dir = op.join(output_dir, 'fmriprep', 'logs')
-    work_dir = op.abspath(opts.work_dir or 'work')  # Set work/ as default
-
+    log_dir = output_dir / 'fmriprep' / 'logs'
     # Check and create output and working directories
-    os.makedirs(output_dir, exist_ok=True)
-    os.makedirs(log_dir, exist_ok=True)
-    os.makedirs(work_dir, exist_ok=True)
+    output_dir.mkdir(exist_ok=True, parents=True)
+    log_dir.mkdir(exist_ok=True, parents=True)
+    work_dir.mkdir(exist_ok=True, parents=True)
 
     # Nipype config (logs and execution)
     ncfg.update_config({
         'logging': {
-            'log_directory': log_dir,
+            'log_directory': str(log_dir),
             'log_to_file': True
         },
         'execution': {
-            'crashdump_dir': log_dir,
+            'crashdump_dir': str(log_dir),
             'crashfile_format': 'txt',
             'get_linked_libs': False,
-            'stop_on_first_crash': opts.stop_on_first_crash or opts.work_dir is None,
+            'stop_on_first_crash': opts.stop_on_first_crash,
         },
         'monitoring': {
             'enabled': opts.resource_monitor,
@@ -686,21 +727,14 @@ def build_workflow(opts, retval):
     if opts.resource_monitor:
         ncfg.enable_resource_monitor()
 
-    retval['return_code'] = 0
-    retval['plugin_settings'] = plugin_settings
-    retval['bids_dir'] = bids_dir
-    retval['output_dir'] = output_dir
-    retval['work_dir'] = work_dir
-    retval['subject_list'] = subject_list
-    retval['run_uuid'] = run_uuid
-    retval['workflow'] = None
-
     # Called with reports only
     if opts.reports_only:
         logger.log(25, 'Running --reports-only on participants %s', ', '.join(subject_list))
         if opts.run_uuid is not None:
             run_uuid = opts.run_uuid
-        retval['return_code'] = generate_reports(subject_list, output_dir, work_dir, run_uuid)
+            retval['run_uuid'] = run_uuid
+        retval['return_code'] = generate_reports(
+            subject_list, str(output_dir), str(work_dir), run_uuid)
         return retval
 
     # Build main workflow
@@ -735,8 +769,8 @@ def build_workflow(opts, retval):
         omp_nthreads=omp_nthreads,
         skull_strip_template=opts.skull_strip_template,
         skull_strip_fixed_seed=opts.skull_strip_fixed_seed,
-        work_dir=work_dir,
-        output_dir=output_dir,
+        work_dir=str(work_dir),
+        output_dir=str(output_dir),
         freesurfer=opts.run_reconall,
         output_spaces=output_spaces,
         template=opts.template,
@@ -760,7 +794,18 @@ def build_workflow(opts, retval):
     boilerplate = retval['workflow'].visit_desc()
 
     if boilerplate:
-        (logs_path / 'CITATION.md').write_text(boilerplate)
+        # To please git-annex users and also to guarantee consistency
+        # among different renderings of the same file, first remove any
+        # existing one
+        citation_files = {
+            ext: logs_path / ('CITATION.%s' % ext)
+            for ext in ('bib', 'tex', 'md', 'html')
+        }
+        for citation_file in citation_files.values():
+            if citation_file.exists() or citation_file.is_symlink():
+                citation_file.unlink()
+
+        citation_files['md'].write_text(boilerplate)
         logger.log(25, 'Works derived from this fMRIPrep execution should '
                    'include the following boilerplate:\n\n%s', boilerplate)
 
@@ -769,8 +814,8 @@ def build_workflow(opts, retval):
                pkgrf('fmriprep', 'data/boilerplate.bib'),
                '--filter', 'pandoc-citeproc',
                '--metadata', 'pagetitle="fMRIPrep citation boilerplate"',
-               str(logs_path / 'CITATION.md'),
-               '-o', str(logs_path / 'CITATION.html')]
+               str(citation_files['md']),
+               '-o', str(citation_files['html'])]
         try:
             check_call(cmd, timeout=10)
         except (FileNotFoundError, CalledProcessError, TimeoutExpired):
@@ -780,8 +825,8 @@ def build_workflow(opts, retval):
         # Generate LaTex file resolving citations
         cmd = ['pandoc', '-s', '--bibliography',
                pkgrf('fmriprep', 'data/boilerplate.bib'),
-               '--natbib', str(logs_path / 'CITATION.md'),
-               '-o', str(logs_path / 'CITATION.tex')]
+               '--natbib', str(citation_files['md']),
+               '-o', str(citation_files['tex'])]
         try:
             check_call(cmd, timeout=10)
         except (FileNotFoundError, CalledProcessError, TimeoutExpired):
@@ -789,7 +834,7 @@ def build_workflow(opts, retval):
                            ' '.join(cmd))
         else:
             copyfile(pkgrf('fmriprep', 'data/boilerplate.bib'),
-                     (logs_path / 'CITATION.bib'))
+                     citation_files['bib'])
 
     return retval
 
