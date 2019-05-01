@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
 """
@@ -44,7 +43,13 @@ from .util import init_bold_reference_wf
 
 DEFAULT_MEMORY_MIN_GB = 0.01
 LOGGER = logging.getLogger('nipype.workflow')
-
+FSAVERAGE_DENSITY = {
+    '642': 'fsaverage3',
+    '2562': 'fsaverage4',
+    '10k': 'fsaverage5',
+    '41k': 'fsaverage6',
+    '164k': 'fsaverage7',
+}
 
 def init_func_preproc_wf(
     aroma_melodic_dim,
@@ -395,7 +400,10 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         name='summary', mem_gb=DEFAULT_MEMORY_MIN_GB, run_without_submitting=True)
 
     # CIfTI output: currently, we only support fsaverage{5,6}
-    cifti_spaces = [s for s in output_spaces.keys() if s in ('fsaverage5', 'fsaverage6')]
+    cifti_spaces = set([s for s in output_spaces.keys() if s in ('fsaverage5', 'fsaverage6')])
+    fsaverage_den = output_spaces.get('fsaverage', {}).get('den')
+    if fsaverage_den:
+        cifti_spaces.add(FSAVERAGE_DENSITY[fsaverage_den])
     cifti_output = cifti_output and cifti_spaces
     func_derivatives_wf = init_func_derivatives_wf(
         bids_root=layout.root,
@@ -848,20 +856,28 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         ])
 
         if cifti_output:
+            from niworkflows.interfaces.utility import KeySelect
             bold_surf_wf.__desc__ += """\
 *Grayordinates* files [@hcppipelines], which combine surface-sampled
 data and volume-sampled data, were also generated.
 """
+            select_std = pe.Node(KeySelect(fields=['bold_std']),
+                                 name='select_std', run_without_submitting=True)
+            select_std.inputs.key = 'MNI152NLin2009cAsym'
+
             gen_cifti = pe.MapNode(GenerateCifti(), iterfield=["surface_target", "gifti_files"],
                                    name="gen_cifti")
             gen_cifti.inputs.TR = metadata.get("RepetitionTime")
-            gen_cifti.inputs.surface_target = cifti_spaces
+            gen_cifti.inputs.surface_target = list(cifti_spaces)
 
             workflow.connect([
+                (bold_std_trans_wf, select_std, [
+                    ('outputnode.templates', 'keys'),
+                    ('outputnode.bold_std', 'bold_std')]),
                 (bold_surf_wf, gen_cifti, [
                     ('outputnode.surfaces', 'gifti_files')]),
                 (inputnode, gen_cifti, [('subjects_dir', 'subjects_dir')]),
-                (bold_std_trans_wf, gen_cifti, [('outputnode.bold_std', 'bold_file')]),
+                (select_std, gen_cifti, [('bold_std', 'bold_file')]),
                 (gen_cifti, outputnode, [('out_file', 'bold_cifti'),
                                          ('variant', 'cifti_variant'),
                                          ('variant_key', 'cifti_variant_key')]),

@@ -684,9 +684,9 @@ Option "--use-aroma" requires functional images to be resampled to MNI152NLin6As
 The argument "MNI152NLin6Asym:res-2" has been automatically added to the list of output spaces \
 (option ``--output-spaces``).""", file=stderr)
 
-    if opts.cifti_output and 'fsLR' not in output_spaces:
-        if 'MNI152NLin6Asym' not in output_spaces:
-            output_spaces['MNI152NLin6Asym'] = {'res': 2}
+    if opts.cifti_output and 'MNI152NLin2009cAsym' not in output_spaces:
+        if 'MNI152NLin2009cAsym' not in output_spaces:
+            output_spaces['MNI152NLin2009cAsym'] = {'res': 2}
             print("""Option ``--cifti-output`` requires functional images to be resampled to \
 ``MNI152NLin6Asym`` space. Such template identifier has been automatically added to the list \
 of output spaces (option "--output-space").""", file=stderr)
