@@ -281,7 +281,7 @@ were classified as motion outliers.
                         name='rois_plot', mem_gb=mem_gb)
 
     ds_report_bold_rois = pe.Node(
-        DerivativesDataSink(suffix='rois'),
+        DerivativesDataSink(desc='rois', keep_dtype=True),
         name='ds_report_bold_rois', run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 
@@ -481,7 +481,7 @@ def init_carpetplot_wf(mem_gb, metadata, name="bold_carpet_wf"):
             ('framewise_displacement', 'mm', 'FD')]),
         name='conf_plot', mem_gb=mem_gb)
     ds_report_bold_conf = pe.Node(
-        DerivativesDataSink(suffix='carpetplot'),
+        DerivativesDataSink(desc='carpetplot', keep_dtype=True),
         name='ds_report_bold_conf', run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 
@@ -683,7 +683,7 @@ in the corresponding confounds file.
                                             name='ica_aroma_confound_extraction')
 
     ds_report_ica_aroma = pe.Node(
-        DerivativesDataSink(suffix='ica_aroma'),
+        DerivativesDataSink(desc='aroma', keep_dtype=True),
         name='ds_report_ica_aroma', run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 

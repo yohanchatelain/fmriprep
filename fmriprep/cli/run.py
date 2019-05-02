@@ -276,7 +276,6 @@ def main():
     """Entry point"""
     from nipype import logging as nlogging
     from multiprocessing import set_start_method, Process, Manager
-    from ..viz.reports import generate_reports
     from ..utils.bids import write_derivative_description
     set_start_method('forkserver')
 
@@ -400,8 +399,6 @@ def main():
     nlogging.getLogger('nipype.interface').setLevel(log_level)
     nlogging.getLogger('nipype.utils').setLevel(log_level)
 
-    errno = 0
-
     # Call build_workflow(opts, retval)
     with Manager() as mgr:
         retval = mgr.dict()
@@ -411,9 +408,9 @@ def main():
 
         retcode = p.exitcode or retval.get('return_code', 0)
 
-        bids_dir = retval.get('bids_dir')
-        output_dir = retval.get('output_dir')
-        work_dir = retval.get('work_dir')
+        bids_dir = Path(retval.get('bids_dir'))
+        output_dir = Path(retval.get('output_dir'))
+        work_dir = Path(retval.get('work_dir'))
         plugin_settings = retval.get('plugin_settings', None)
         subject_list = retval.get('subject_list', None)
         fmriprep_wf = retval.get('workflow', None)
@@ -452,32 +449,48 @@ def main():
         sentry_sdk.add_breadcrumb(message='fMRIPrep started', level='info')
         sentry_sdk.capture_message('fMRIPrep started', level='info')
 
+    errno = 1  # Default is error exit unless otherwise set
     try:
         fmriprep_wf.run(**plugin_settings)
-    except RuntimeError as e:
-        errno = 1
-        if "Workflow did not execute cleanly" not in str(e):
-            sentry_sdk.capture_exception(e)
-            raise
+    except Exception as e:
+        if not opts.notrack:
+            from ..utils.sentry import process_crashfile
+            crashfolders = [output_dir / 'fmriprep' / 'sub-{}'.format(s) / 'log' / run_uuid
+                            for s in subject_list]
+            for crashfolder in crashfolders:
+                for crashfile in crashfolder.glob('crash*.*'):
+                    process_crashfile(crashfile)
+
+            if "Workflow did not execute cleanly" not in str(e):
+                sentry_sdk.capture_exception(e)
+        logger.critical('fMRIPrep failed: %s', e)
+        raise
     else:
         if opts.run_reconall:
             from templateflow import api
             from niworkflows.utils.misc import _copy_any
             dseg_tsv = str(api.get('fsaverage', suffix='dseg', extensions=['.tsv']))
             _copy_any(dseg_tsv,
-                      str(Path(output_dir) / 'fmriprep' / 'desc-aseg_dseg.tsv'))
+                      str(output_dir / 'fmriprep' / 'desc-aseg_dseg.tsv'))
             _copy_any(dseg_tsv,
-                      str(Path(output_dir) / 'fmriprep' / 'desc-aparcaseg_dseg.tsv'))
+                      str(output_dir / 'fmriprep' / 'desc-aparcaseg_dseg.tsv'))
+        errno = 0
         logger.log(25, 'fMRIPrep finished without errors')
+        if not opts.notrack:
+            sentry_sdk.capture_message('fMRIPrep finished without errors',
+                                       level='info')
     finally:
+        from niworkflows.reports import generate_reports
         # Generate reports phase
-        errno += generate_reports(subject_list, output_dir, work_dir, run_uuid,
-                                  sentry_sdk=sentry_sdk)
-        write_derivative_description(bids_dir, str(Path(output_dir) / 'fmriprep'))
+        failed_reports = generate_reports(
+            subject_list, output_dir, work_dir, run_uuid, packagename='fmriprep')
+        write_derivative_description(bids_dir, output_dir / 'fmriprep')
 
-    if not opts.notrack and errno == 0:
-        sentry_sdk.capture_message('fMRIPrep finished without errors', level='info')
-    sys.exit(int(errno > 0))
+        if failed_reports and not opts.notrack:
+            sentry_sdk.capture_message(
+                'Report generation failed for %d subjects' % failed_reports,
+                level='error')
+        sys.exit(int((errno + failed_reports) > 0))
 
 
 def validate_input_dir(exec_env, bids_dir, participant_label):
@@ -590,9 +603,9 @@ def build_workflow(opts, retval):
 
     from nipype import logging, config as ncfg
     from niworkflows.utils.bids import collect_participants
+    from niworkflows.reports import generate_reports
     from ..__about__ import __version__
     from ..workflows.base import init_fmriprep_wf
-    from ..viz.reports import generate_reports
 
     logger = logging.getLogger('nipype.workflow')
 
@@ -750,7 +763,8 @@ def build_workflow(opts, retval):
             run_uuid = opts.run_uuid
             retval['run_uuid'] = run_uuid
         retval['return_code'] = generate_reports(
-            subject_list, str(output_dir), str(work_dir), run_uuid)
+            subject_list, output_dir, work_dir, run_uuid,
+            packagename='fmriprep')
         return retval
 
     # Build main workflow

@@ -656,11 +656,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
     if fmaps:
         from ..fieldmap.unwarp import init_fmap_unwarp_report_wf
-        sdc_type = fmaps[0]['suffix']
-
         # Report on BOLD correction
-        fmap_unwarp_report_wf = init_fmap_unwarp_report_wf(
-            suffix='sdc_%s' % sdc_type)
+        fmap_unwarp_report_wf = init_fmap_unwarp_report_wf()
         workflow.connect([
             (inputnode, fmap_unwarp_report_wf, [
                 ('t1_seg', 'inputnode.in_seg')]),
@@ -672,9 +669,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('outputnode.bold_ref', 'inputnode.in_post')]),
         ])
 
-        if force_syn and sdc_type != 'syn':
+        if force_syn and fmaps[0]['suffix'] != 'syn':
             syn_unwarp_report_wf = init_fmap_unwarp_report_wf(
-                suffix='forcedsyn', name='syn_unwarp_report_wf')
+                name='syn_unwarp_report_wf', forcedsyn=True)
             workflow.connect([
                 (inputnode, syn_unwarp_report_wf, [
                     ('t1_seg', 'inputnode.in_seg')]),
@@ -862,13 +859,13 @@ data and volume-sampled data, were also generated.
 
     # REPORTING ############################################################
     ds_report_summary = pe.Node(
-        DerivativesDataSink(suffix='summary'),
+        DerivativesDataSink(desc='summary', keep_dtype=True),
         name='ds_report_summary', run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 
     ds_report_validation = pe.Node(
         DerivativesDataSink(base_directory=reportlets_dir,
-                            suffix='validation'),
+                            desc='validation', keep_dtype=True),
         name='ds_report_validation', run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 

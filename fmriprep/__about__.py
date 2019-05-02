@@ -107,9 +107,9 @@ LINKS_REQUIRES = [
     'git+https://github.com/nipy/nipype.git@'
     'd353f0d879826031334b09d33e9443b8c9b3e7fe#egg=nipype',
     'git+https://github.com/poldracklab/niworkflows.git@'
-    '8ee3168e508f3e21e67c20b5104897869e728bc3#egg=niworkflows',
+    '076aed98962b10d107c83110c05e42466a89bbc4#egg=niworkflows',
     'git+https://github.com/poldracklab/smriprep.git@'
-    '423bcc43ab7300177eb3b98da62817b2cad8eb87#egg=smriprep-0.1.0',
+    'f1cfc37bcdc346549dbf1d037cdade3a3b32d5de#egg=smriprep-0.1.0',
 ]
 
 TESTS_REQUIRES = [

@@ -39,8 +39,6 @@ def main():
             'data/boilerplate.bib',
             'data/itkIdentityTransform.txt',
             'data/flirtsch/bbr.sch',
-            'viz/*.tpl',
-            'viz/*.json',
         ]
     }
 
