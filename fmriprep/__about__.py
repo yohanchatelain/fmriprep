@@ -105,9 +105,9 @@ REQUIRES = [
 
 LINKS_REQUIRES = [
     'git+https://github.com/poldracklab/niworkflows.git@'
-    'b7d111c8fd36a099c74be5e7671677eedb175533#egg=niworkflows',
+    '076aed98962b10d107c83110c05e42466a89bbc4#egg=niworkflows',
     'git+https://github.com/poldracklab/smriprep.git@'
-    '423bcc43ab7300177eb3b98da62817b2cad8eb87#egg=smriprep-0.1.0',
+    'f1cfc37bcdc346549dbf1d037cdade3a3b32d5de#egg=smriprep-0.1.0',
 ]
 
 TESTS_REQUIRES = [

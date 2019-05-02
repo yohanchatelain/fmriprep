@@ -70,17 +70,15 @@ T1w/T2w preprocessing
         bids_root='.',
         debug=False,
         freesurfer=True,
-        fs_spaces=['T1w', 'fsnative',
-                   'template', 'fsaverage5'],
         hires=True,
         longitudinal=False,
         num_t1w=1,
         omp_nthreads=1,
         output_dir='.',
+        output_spaces={'MNI152NLin2009cAsym': {'res': 2}},
         reportlets_dir='.',
         skull_strip_template='MNI152NLin2009cAsym',
         skull_strip_fixed_seed=False,
-        template='MNI152NLin2009cAsym',
     )
 
 The anatomical sub-workflow begins by constructing an average image by

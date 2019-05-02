@@ -436,12 +436,12 @@ to workflows in *fMRIPrep*'s documentation]\
 
     ds_report_summary = pe.Node(
         DerivativesDataSink(base_directory=reportlets_dir,
-                            suffix='summary'),
+                            desc='summary', keep_dtype=True),
         name='ds_report_summary', run_without_submitting=True)
 
     ds_report_about = pe.Node(
         DerivativesDataSink(base_directory=reportlets_dir,
-                            suffix='about'),
+                            desc='about', keep_dtype=True),
         name='ds_report_about', run_without_submitting=True)
 
     # Preprocessing of T1w (includes registration to MNI)
@@ -449,17 +449,17 @@ to workflows in *fMRIPrep*'s documentation]\
         bids_root=layout.root,
         debug=debug,
         freesurfer=freesurfer,
-        fs_spaces=output_spaces,
         hires=hires,
         longitudinal=longitudinal,
         name="anat_preproc_wf",
         num_t1w=len(subject_data['t1w']),
         omp_nthreads=omp_nthreads,
         output_dir=output_dir,
+        output_spaces={template: {} if template_out_grid == 'native'
+                       else {'res': template_out_grid[0]}},
         reportlets_dir=reportlets_dir,
         skull_strip_fixed_seed=skull_strip_fixed_seed,
         skull_strip_template=skull_strip_template,
-        template=template,
     )
 
     workflow.connect([
@@ -525,8 +525,10 @@ to workflows in *fMRIPrep*'s documentation]\
               ('outputnode.t1_aseg', 'inputnode.t1_aseg'),
               ('outputnode.t1_aparc', 'inputnode.t1_aparc'),
               ('outputnode.t1_tpms', 'inputnode.t1_tpms'),
-              ('outputnode.t1_2_mni_forward_transform', 'inputnode.t1_2_mni_forward_transform'),
-              ('outputnode.t1_2_mni_reverse_transform', 'inputnode.t1_2_mni_reverse_transform'),
+              (('outputnode.joint_forward_transform', _pop),
+                  'inputnode.t1_2_mni_forward_transform'),
+              (('outputnode.joint_reverse_transform', _pop),
+                  'inputnode.t1_2_mni_reverse_transform'),
               # Undefined if --no-freesurfer, but this is safe
               ('outputnode.subjects_dir', 'inputnode.subjects_dir'),
               ('outputnode.subject_id', 'inputnode.subject_id'),
