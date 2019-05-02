@@ -78,6 +78,7 @@ T1w/T2w preprocessing
             ('MNI152NLin2009cAsym', {}), ('fsaverage5', {})]),
         reportlets_dir='.',
         skull_strip_template='MNI152NLin2009cAsym',
+        skull_strip_fixed_seed=False,
     )
 
 The anatomical sub-workflow begins by constructing an average image by

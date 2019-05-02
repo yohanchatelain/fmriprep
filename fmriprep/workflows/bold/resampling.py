@@ -617,20 +617,20 @@ def init_bold_preproc_report_wf(mem_gb, reportlets_dir, name='bold_preproc_repor
 
     bold_rpt = pe.Node(SimpleBeforeAfter(), name='bold_rpt',
                        mem_gb=0.1)
-    bold_rpt_ds = pe.Node(
+    ds_report_bold = pe.Node(
         DerivativesDataSink(base_directory=reportlets_dir, desc='preproc',
-                            keep_dtype=True), name='bold_rpt_ds',
+                            keep_dtype=True), name='ds_report_bold',
         mem_gb=DEFAULT_MEMORY_MIN_GB,
         run_without_submitting=True
     )
 
     workflow.connect([
-        (inputnode, bold_rpt_ds, [('name_source', 'source_file')]),
+        (inputnode, ds_report_bold, [('name_source', 'source_file')]),
         (inputnode, pre_tsnr, [('in_pre', 'in_file')]),
         (inputnode, pos_tsnr, [('in_post', 'in_file')]),
         (pre_tsnr, bold_rpt, [('stddev_file', 'before')]),
         (pos_tsnr, bold_rpt, [('stddev_file', 'after')]),
-        (bold_rpt, bold_rpt_ds, [('out_report', 'in_file')]),
+        (bold_rpt, ds_report_bold, [('out_report', 'in_file')]),
     ])
 
     return workflow

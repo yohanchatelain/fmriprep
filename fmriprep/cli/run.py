@@ -322,9 +322,9 @@ license file at several paths, in this order: 1) command line argument ``--fs-li
 
         retcode = p.exitcode or retval.get('return_code', 0)
 
-        bids_dir = retval.get('bids_dir')
+        bids_dir = Path(retval.get('bids_dir'))
         output_dir = Path(retval.get('output_dir'))
-        work_dir = retval.get('work_dir')
+        work_dir = Path(retval.get('work_dir'))
         plugin_settings = retval.get('plugin_settings', None)
         subject_list = retval.get('subject_list', None)
         fmriprep_wf = retval.get('workflow', None)
@@ -372,7 +372,7 @@ license file at several paths, in this order: 1) command line argument ``--fs-li
 
             if "Workflow did not execute cleanly" not in str(e):
                 sentry_sdk.capture_exception(e)
-        logger.error('Error: %s', e)
+        logger.critical('fMRIPrep failed: %s', e)
         raise
     else:
         if opts.run_reconall:
@@ -420,8 +420,8 @@ def build_workflow(opts, retval):
     from bids import BIDSLayout
 
     from nipype import logging, config as ncfg
-    from niworkflows.reports import generate_reports
     from niworkflows.utils.bids import collect_participants
+    from niworkflows.reports import generate_reports
     from ..__about__ import __version__
     from ..workflows.base import init_fmriprep_wf
 
@@ -540,7 +540,7 @@ def build_workflow(opts, retval):
             run_uuid = opts.run_uuid
             retval['run_uuid'] = run_uuid
         retval['return_code'] = generate_reports(
-            subject_list, str(output_dir), str(work_dir), run_uuid,
+            subject_list, output_dir, work_dir, run_uuid,
             packagename='fmriprep')
         return retval
 

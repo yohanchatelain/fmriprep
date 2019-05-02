@@ -305,7 +305,7 @@ jobs:
           command: |
             cd /home/circleci/src/fmriprep
             if [[ "$( git log --format=oneline -n 1 $CIRCLE_SHA1 | grep -i -E '\[skip[ _]?docs\]' )" != "" ]]; then
-              echo "Skipping pytest job"
+              echo "Skipping doc building job"
               circleci step halt
             fi
 
@@ -395,6 +395,12 @@ jobs:
                 --output-spaces MNI152NLin2009cAsym MNI152NLin6Asym \
                 --sloppy --write-graph --mem_mb 4096 \
                 --nthreads 2 --anat-only -vv
+      - run:
+          name: Clean-up after anatomical run
+          command: |
+            rm -rf /tmp/ds005/work/fmriprep_wf/fsdir*
+            rm -rf /tmp/ds005/work/reportlets
+            rm -rf /tmp/ds005/derivatives/fmriprep
       - save_cache:
          key: ds005-anat-v14-{{ .Branch }}-{{ epoch }}
          paths:
@@ -526,6 +532,12 @@ jobs:
                 /tmp/data/ds054 /tmp/ds054/derivatives participant \
                 --fs-no-reconall --sloppy --write-graph \
                 --mem_mb 4096 --nthreads 2 --anat-only -vv
+      - run:
+          name: Clean-up after anatomical run
+          command: |
+            rm -rf /tmp/ds054/work/fmriprep_wf/fsdir*
+            rm -rf /tmp/ds054/work/reportlets
+            rm -rf /tmp/ds054/derivatives/fmriprep
       - save_cache:
          key: ds054-anat-v12-{{ .Branch }}-{{ epoch }}
          paths:
@@ -644,6 +656,12 @@ jobs:
                 /tmp/data/ds210 /tmp/ds210/derivatives participant \
                 --fs-no-reconall --sloppy --write-graph \
                 --mem_mb 4096 --nthreads 2 --anat-only -vv
+      - run:
+          name: Clean-up after anatomical run
+          command: |
+            rm -rf /tmp/ds210/work/fmriprep_wf/fsdir*
+            rm -rf /tmp/ds210/work/reportlets
+            rm -rf /tmp/ds210/derivatives/fmriprep
       - save_cache:
          key: ds210-anat-v10-{{ .Branch }}-{{ epoch }}
          paths:

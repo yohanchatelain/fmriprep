@@ -51,6 +51,7 @@ FSAVERAGE_DENSITY = {
     '164k': 'fsaverage7',
 }
 
+
 def init_func_preproc_wf(
     aroma_melodic_dim,
     bold2t1w_dof,
@@ -675,7 +676,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
         if force_syn and fmaps[0]['suffix'] != 'syn':
             syn_unwarp_report_wf = init_fmap_unwarp_report_wf(
-                suffix='forcedsyn', name='syn_unwarp_report_wf')
+                name='syn_unwarp_report_wf', forcedsyn=True)
             workflow.connect([
                 (inputnode, syn_unwarp_report_wf, [
                     ('t1_seg', 'inputnode.in_seg')]),
