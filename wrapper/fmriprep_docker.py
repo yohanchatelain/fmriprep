@@ -396,8 +396,8 @@ def main():
         unknown_args.extend(['-w', '/scratch'])
 
     if opts.config:
-        command.extend(['-v', ':'.join((opts.config,
-                                        '/root/.nipype/nipype.cfg', 'ro'))])
+        command.extend(['-v', ':'.join((
+            opts.config, '/home/fmriprep/.nipype/nipype.cfg', 'ro'))])
 
     if opts.use_plugin:
         command.extend(['-v', ':'.join((opts.use_plugin, '/tmp/plugin.yml',
