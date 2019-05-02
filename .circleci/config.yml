@@ -399,7 +399,7 @@ jobs:
           command: |
             rm -rf /tmp/ds005/work/fmriprep_wf/fsdir*
             rm -rf /tmp/ds005/work/reportlets
-            rm -rf /tmp/ds005/derivatives/*
+            rm -rf /tmp/ds005/derivatives/fmriprep
       - save_cache:
          key: ds005-anat-v14-{{ .Branch }}-{{ epoch }}
          paths:
@@ -536,7 +536,7 @@ jobs:
           command: |
             rm -rf /tmp/ds054/work/fmriprep_wf/fsdir*
             rm -rf /tmp/ds054/work/reportlets
-            rm -rf /tmp/ds054/derivatives/*
+            rm -rf /tmp/ds054/derivatives/fmriprep
       - save_cache:
          key: ds054-anat-v12-{{ .Branch }}-{{ epoch }}
          paths:
@@ -660,7 +660,7 @@ jobs:
           command: |
             rm -rf /tmp/ds210/work/fmriprep_wf/fsdir*
             rm -rf /tmp/ds210/work/reportlets
-            rm -rf /tmp/ds210/derivatives/*
+            rm -rf /tmp/ds210/derivatives/fmriprep
       - save_cache:
          key: ds210-anat-v10-{{ .Branch }}-{{ epoch }}
          paths:
