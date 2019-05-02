@@ -7,7 +7,8 @@ FAQ, Tips, and Tricks
 
 Yes. You should as well before any other processing/analysis.
 
-Oftentimes (more often than we would like), images have fatal artifacts and problems. Those would not pass any QC check.
+Oftentimes (more often than we would like), images have fatal artifacts and problems. 
+Those would not pass any QC check.
 Some other times, QC checks will flag some images that we should carefully track throughout processing.
 
 When using publicly available datasets, an additional concern is that images may have gone through some kind of preprocessing (see next question).
@@ -24,4 +25,7 @@ So for OpenFMRI, we've been excluding these subjects, and for user-supplied data
 
 **My ``FMRIPREP`` run is hanging...**
 
-There is a Python bug that affects ``FMRIPREP`` when processes are killed for running out of memory. While we are working on finding a solution that does not run up against this bug, this may take some time. This can be most easily resolved by allocating more memory to the process, if possible. Additionally, consider using the ``--low-mem`` flag, which will make some memory optimizations at the cost of disk space in the working directory.
+There is a Python bug that affects ``FMRIPREP`` when processes are killed for running out of memory. 
+While we are working on finding a solution that does not run up against this bug, this may take some time. 
+This can be most easily resolved by allocating more memory to the process, if possible. 
+Additionally, consider using the ``--low-mem`` flag, which will make some memory optimizations at the cost of disk space in the working directory.
