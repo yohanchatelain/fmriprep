@@ -293,7 +293,7 @@ were classified as motion outliers.
                             metadata_sources=['tCompCor', 'aCompCor']),
         name='compcor_plot')
     ds_report_compcor = pe.Node(
-        DerivativesDataSink(suffix='compcor'),
+        DerivativesDataSink(desc='compcorvar', keep_dtype=True),
         name='ds_report_compcor', run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 
@@ -302,7 +302,7 @@ were classified as motion outliers.
         ConfoundsCorrelationPlot(reference_column='global_signal', max_dim=70),
         name='conf_corr_plot')
     ds_report_conf_corr = pe.Node(
-        DerivativesDataSink(suffix='confounds_correlation'),
+        DerivativesDataSink(desc='confoundcorr', keep_dtype=True),
         name='ds_report_conf_corr', run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 
