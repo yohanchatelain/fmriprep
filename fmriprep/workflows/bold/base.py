@@ -929,13 +929,14 @@ def init_func_derivatives_wf(bids_root, cifti_output, freesurfer,
             name='ds_bold_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_t1_ref = pe.Node(
-            DerivativesDataSink(base_directory=output_dir, space='T1w', suffix='boldref'),
+            DerivativesDataSink(base_directory=output_dir, space='T1w', suffix='boldref',
+                                compress=True),
             name='ds_bold_t1_ref', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
 
         ds_bold_mask_t1 = pe.Node(
             DerivativesDataSink(base_directory=output_dir, space='T1w', desc='brain',
-                                suffix='mask'),
+                                suffix='mask', compress=True),
             name='ds_bold_mask_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         workflow.connect([
@@ -949,11 +950,13 @@ def init_func_derivatives_wf(bids_root, cifti_output, freesurfer,
         ])
         if freesurfer:
             ds_bold_aseg_t1 = pe.Node(DerivativesDataSink(
-                base_directory=output_dir, space='T1w', desc='aseg', suffix='dseg'),
+                base_directory=output_dir, space='T1w', desc='aseg', suffix='dseg',
+                compress=True),
                 name='ds_bold_aseg_t1', run_without_submitting=True,
                 mem_gb=DEFAULT_MEMORY_MIN_GB)
             ds_bold_aparc_t1 = pe.Node(DerivativesDataSink(
-                base_directory=output_dir, space='T1w', desc='aparcaseg', suffix='dseg'),
+                base_directory=output_dir, space='T1w', desc='aparcaseg', suffix='dseg',
+                compress=True),
                 name='ds_bold_aparc_t1', run_without_submitting=True,
                 mem_gb=DEFAULT_MEMORY_MIN_GB)
             workflow.connect([
@@ -972,13 +975,14 @@ def init_func_derivatives_wf(bids_root, cifti_output, freesurfer,
             name='ds_bold_mni', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_mni_ref = pe.Node(
-            DerivativesDataSink(base_directory=output_dir, space=template, suffix='boldref'),
+            DerivativesDataSink(base_directory=output_dir, space=template, suffix='boldref',
+                                compress=True),
             name='ds_bold_mni_ref', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
 
         ds_bold_mask_mni = pe.Node(
             DerivativesDataSink(base_directory=output_dir, space=template, desc='brain',
-                                suffix='mask'),
+                                suffix='mask', compress=True),
             name='ds_bold_mask_mni', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         workflow.connect([
@@ -993,11 +997,13 @@ def init_func_derivatives_wf(bids_root, cifti_output, freesurfer,
 
         if freesurfer:
             ds_bold_aseg_mni = pe.Node(DerivativesDataSink(
-                base_directory=output_dir, space=template, desc='aseg', suffix='dseg'),
+                base_directory=output_dir, space=template, desc='aseg', suffix='dseg',
+                compress=True),
                 name='ds_bold_aseg_mni', run_without_submitting=True,
                 mem_gb=DEFAULT_MEMORY_MIN_GB)
             ds_bold_aparc_mni = pe.Node(DerivativesDataSink(
-                base_directory=output_dir, space=template, desc='aparcaseg', suffix='dseg'),
+                base_directory=output_dir, space=template, desc='aparcaseg', suffix='dseg',
+                compress=True),
                 name='ds_bold_aparc_mni', run_without_submitting=True,
                 mem_gb=DEFAULT_MEMORY_MIN_GB)
             workflow.connect([
@@ -1059,7 +1065,8 @@ def init_func_derivatives_wf(bids_root, cifti_output, freesurfer,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_aroma_mni = pe.Node(
             DerivativesDataSink(base_directory=output_dir, space=template,
-                                desc='smoothAROMAnonaggr', keep_dtype=True),
+                                desc='smoothAROMAnonaggr', keep_dtype=True,
+                                compress=True),
             name='ds_aroma_mni', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
 
