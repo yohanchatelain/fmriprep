@@ -1,7 +1,7 @@
 .. include:: links.rst
 
 FAQ, Tips, and Tricks
------
+------------------------------
 
 **Should I run quality control of my images before running ``FMRIPREP``?**
 
@@ -17,7 +17,7 @@ When using publicly available datasets, an additional concern is that images may
 
 These images imply an unknown level of preprocessing (e.g. was it already bias-field corrected?), which makes it difficult to decide on best-practices for further processing.
 Hence, supporting such images was considered very low priority for ``FMRIPREP``.
-For example, see `#707 <https://github.com/poldracklab/smriprep/issues/12>` and an illustration of downstream consequences in `#939 <https://github.com/poldracklab/fmriprep/issues/939>`).
+For example, see `#707 <https://github.com/poldracklab/smriprep/issues/12>`_ and an illustration of downstream consequences in `#939 <https://github.com/poldracklab/fmriprep/issues/939>`_).
 
 So for OpenFMRI, we've been excluding these subjects, and for user-supplied data, we would recommend reverting to the original, defaced, T1w images to ensure more uniform preprocessing.
 
