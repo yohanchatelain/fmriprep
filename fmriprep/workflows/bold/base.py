@@ -401,7 +401,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         name='summary', mem_gb=DEFAULT_MEMORY_MIN_GB, run_without_submitting=True)
 
     # CIfTI output: currently, we only support fsaverage{5,6}
-    cifti_spaces = set([s for s in output_spaces.keys() if s in ('fsaverage5', 'fsaverage6')])
+    cifti_spaces = set(s for s in output_spaces.keys() if s in ('fsaverage5', 'fsaverage6'))
     fsaverage_den = output_spaces.get('fsaverage', {}).get('den')
     if fsaverage_den:
         cifti_spaces.add(FSAVERAGE_DENSITY[fsaverage_den])

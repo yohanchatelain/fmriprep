@@ -146,8 +146,9 @@ This file should be placed in the ``sub-*/anat`` directory of the BIDS dataset
 to be run through *fMRIPrep*.
 Because lesion masks are not currently part of the BIDS specification, it is also necessary to
 include a ``.bidsignore`` file in the root of your dataset directory. This will prevent
-`bids-validator <https://github.com/bids-standard/bids-validator#bidsignore>`_ from complaining that your dataset not BIDS valid, which prevents
-*fMRIPrep* from running. Your ``.bidsignore`` file should include the following line::
+`bids-validator <https://github.com/bids-standard/bids-validator#bidsignore>`_ from complaining
+that your dataset is not valid BIDS, which prevents *fMRIPrep* from running.
+Your ``.bidsignore`` file should include the following line::
 
 *lesion_roi.nii.gz
 
@@ -577,7 +578,7 @@ regressors (a separate GLM with both noise and signal regressors needs to be use
 Therefore instead of regressors, *fMRIPrep* produces *non*-aggressive denoised 4D NIFTI
 files in the MNI space:
 
-``*bold_space-MNI152NLin6Asym-smoothAROMAnonaggr_brainmask.nii.gz``
+``*bold_space-MNI152NLin6Asym_desc-smoothAROMAnonaggr_brainmask.nii.gz``
 
 Additionally, the MELODIC mix and noise component indices will
 be generated, so non-aggressive denoising can be manually performed in the T1w space with ``fsl_regfilt``, *e.g.*::

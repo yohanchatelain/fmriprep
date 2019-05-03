@@ -86,7 +86,7 @@ Therefore, in upcoming versions of fMRIPrep, it will be possible to run it with
 ``--output-spaces MNIPediatricAsym:res-2:cohort-2`` where ``cohort-2`` would select
 the template instance for the, say, 24-48 months old range.
 
-When specifying surface spaces (e.g. ``fsaverage``), the legacy identifiers from
+When specifying surface spaces (e.g., ``fsaverage``), the legacy identifiers from
 FreeSurfer will be supported (e.g. ``fsaverage5``) although the use of the density
 modifier would be preferred (i.e. ``fsaverage:den-10k`` for ``fsaverage5``).
 
@@ -132,7 +132,7 @@ Preprocessing blocks depending on standard templates
 
 Some modules of the pipeline (e.g. the ICA-AROMA denoising, the generation of
 HCP compatible *grayordinates* files, or the *fieldmap-less* distortion correction)
-perform on specific template spaces.
+operate in specific template spaces.
 When selecting those modules to be included (using any of the following flags:
 ``--use-aroma``, ``--cifti-outputs``, ``--use-syn-sdc``) will modify the list of
 output spaces to include the space identifiers they require, should the
