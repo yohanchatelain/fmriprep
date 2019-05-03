@@ -475,8 +475,10 @@ to workflows in *fMRIPrep*'s documentation]\
     bids_info = pe.Node(BIDSInfo(
         bids_dir=layout.root, bids_validate=False), name='bids_info')
 
-    summary = pe.Node(SubjectSummary(output_spaces=list(std_spaces.keys())),
-                      name='summary', run_without_submitting=True)
+    summary = pe.Node(SubjectSummary(
+        std_spaces=list(std_spaces.keys()),
+        nstd_spaces=list(set(NONSTANDARD_REFERENCES).intersection(output_spaces.keys()))),
+        name='summary', run_without_submitting=True)
 
     about = pe.Node(AboutSummary(version=__version__,
                                  command=' '.join(sys.argv)),

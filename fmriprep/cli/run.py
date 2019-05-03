@@ -130,14 +130,14 @@ def get_parser():
     g_conf.add_argument(
         '--output-spaces', nargs='+', action=ParseTemplates,
         help="""\
-Paths or keywords prescribing standard spaces to which normalize the input T1w image \
-and nonstandard spaces in which BOLD runs will be resampled (valid keywords are: \
-%s and paths poing to templates) with modifiers (optional parameters).
-Output spaces may be templates with modifiers or dataset-specific references. \
-Templates take the form ``<TEMPLATE>[:res-<resolution>][:cohort-<label>][...]``,  \
-with optional, colon-separated parameters, while dataset-specific references imply \
-a specific orientation and sampling grid.\
-""" % ', '.join('"%s"' % s for s in templates() + NONSTANDARD_REFERENCES))
+Standard and non-standard spaces to resample anatomical and functional images to. \
+Standard spaces may be specified by the form \
+``<TEMPLATE>[:res-<resolution>][:cohort-<label>][...]``, where ``<TEMPLATE>`` is \
+a keyword (valid keywords: %s) or path pointing to a user-supplied template, and \
+may be followed by optional, colon-separated parameters. \
+Non-standard spaces (valid keywords: %s) imply specific orientations and sampling \
+grids""" % (', '.join('"%s"' % s for s in templates()),
+            ', '.join(NONSTANDARD_REFERENCES)))
 
     g_conf.add_argument(
         '--output-space', required=False, action='store', type=str, nargs='+',
@@ -209,7 +209,7 @@ a specific orientation and sampling grid.\
     # FreeSurfer options
     g_fs = parser.add_argument_group('Specific options for FreeSurfer preprocessing')
     g_fs.add_argument(
-        '--fs-license-file', type=Path,
+        '--fs-license-file', metavar='PATH', type=Path,
         help='Path to FreeSurfer license key file. Get it (for free) by registering'
              ' at https://surfer.nmr.mgh.harvard.edu/registration.html')
 
@@ -688,8 +688,8 @@ The argument "MNI152NLin6Asym:res-2" has been automatically added to the list of
         if 'MNI152NLin2009cAsym' not in output_spaces:
             output_spaces['MNI152NLin2009cAsym'] = {'res': 2}
             print("""Option ``--cifti-output`` requires functional images to be resampled to \
-``MNI152NLin6Asym`` space. Such template identifier has been automatically added to the list \
-of output spaces (option "--output-space").""", file=stderr)
+``MNI152NLin2009cAsym`` space. Such template identifier has been automatically added to the \
+list of output spaces (option "--output-space").""", file=stderr)
         if not [s for s in output_spaces if s in ('fsaverage5', 'fsaverage6')]:
             output_spaces['fsaverage5'] = {}
             print("""Option ``--cifti-output`` requires functional images to be resampled to \

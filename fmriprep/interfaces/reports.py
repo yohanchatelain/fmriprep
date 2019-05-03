@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
 """
@@ -28,7 +26,8 @@ SUBJECT_TEMPLATE = """\
 \t\t<li>Structural images: {n_t1s:d} T1-weighted {t2w}</li>
 \t\t<li>Functional series: {n_bold:d}</li>
 {tasks}
-\t\t<li>Standard output spaces: {output_spaces}</li>
+\t\t<li>Standard output spaces: {std_spaces}</li>
+\t\t<li>Non-standard output spaces: {nstd_spaces}</li>
 \t\t<li>FreeSurfer reconstruction: {freesurfer_status}</li>
 \t</ul>
 """
@@ -40,7 +39,6 @@ FUNCTIONAL_TEMPLATE = """\t\t<h3 class="elem-title">Summary</h3>
 \t\t\t<li>Slice timing correction: {stc}</li>
 \t\t\t<li>Susceptibility distortion correction: {sdc}</li>
 \t\t\t<li>Registration: {registration}</li>
-\t\t\t<li>Functional series resampled to spaces: {output_spaces}</li>
 \t\t\t<li>Confounds collected: {confounds}</li>
 \t\t</ul>
 """
@@ -81,7 +79,8 @@ class SubjectSummaryInputSpec(BaseInterfaceInputSpec):
     bold = InputMultiObject(traits.Either(
         File(exists=True), traits.List(File(exists=True))),
         desc='BOLD functional series')
-    output_spaces = InputMultiObject(Str, desc='list of standard spaces')
+    std_spaces = InputMultiObject(Str, desc='list of standard spaces')
+    nstd_spaces = InputMultiObject(Str, desc='list of non-standard spaces')
 
 
 class SubjectSummaryOutputSpec(SummaryOutputSpec):
@@ -138,7 +137,8 @@ class SubjectSummary(SummaryInterface):
             t2w=t2w_seg,
             n_bold=len(bold_series),
             tasks=tasks,
-            output_spaces=', '.join(self.inputs.output_spaces),
+            std_spaces=', '.join(self.inputs.std_spaces),
+            nstd_spaces=', '.join(self.inputs.nstd_spaces),
             freesurfer_status=freesurfer_status)
 
 
@@ -154,7 +154,6 @@ class FunctionalSummaryInputSpec(BaseInterfaceInputSpec):
     fallback = traits.Bool(desc='Boundary-based registration rejected')
     registration_dof = traits.Enum(6, 9, 12, desc='Registration degrees of freedom',
                                    mandatory=True)
-    output_spaces = traits.List(desc='Target spaces')
     confounds_file = File(exists=True, desc='Confounds file')
     tr = traits.Float(desc='Repetition time', mandatory=True)
 
@@ -187,7 +186,6 @@ class FunctionalSummary(SummaryInterface):
                 conflist = cfh.readline().strip('\n').strip()
         return FUNCTIONAL_TEMPLATE.format(
             pedir=pedir, stc=stc, sdc=self.inputs.distortion_correction, registration=reg,
-            output_spaces=', '.join(self.inputs.output_spaces),
             confounds=re.sub(r'[\t ]+', ', ', conflist), tr=self.inputs.tr)
 
 
