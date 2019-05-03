@@ -97,8 +97,7 @@ REQUIRES = [
     'pybids<0.8.0a0,>=0.7.1',
     'pyyaml',
     'scikit-image',
-    'smriprep @ ',
-    'git+https://github.com/poldracklab/smriprep.git@f1cfc37bcdc346549dbf1d037cdade3a3b32d5de',
+    'smriprep<0.3.0a0,>=0.2.0',
     'statsmodels',
     'tedana>=0.0.5',
     'templateflow<0.2.0a0,>=0.1.3',
@@ -106,6 +105,8 @@ REQUIRES = [
 
 
 LINKS_REQUIRES = [
+    'git+https://github.com/effigies/niworkflows.git@'
+    '5e9daf0b08fcad2b17350a71ecaf71fa9ce4eff7#egg=niworkflows',
 ]
 
 TESTS_REQUIRES = [
