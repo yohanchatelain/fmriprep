@@ -294,47 +294,30 @@ jobs:
 
 
   build_docs:
-    machine:
-      image: circleci/classic:201711-01
-    working_directory: /home/circleci/out/docs
+    docker:
+        - image: python:latest
+    working_directory: /tmp/src/fmriprep
     steps:
-      - checkout:
-          path: /home/circleci/src/fmriprep
+      - checkout
       - run:
           name: Check whether build should be skipped
           command: |
-            cd /home/circleci/src/fmriprep
             if [[ "$( git log --format=oneline -n 1 $CIRCLE_SHA1 | grep -i -E '\[skip[ _]?docs\]' )" != "" ]]; then
               echo "Skipping doc building job"
               circleci step halt
             fi
-
-      - attach_workspace:
-          at: /tmp
       - run:
-          name: Load Docker image layer cache
-          no_output_timeout: 30m
+          name: Check Python version and upgrade pip
           command: |
-            docker info
-            set +o pipefail
-            if [ -f /tmp/cache/docker.tar.gz ]; then
-              sudo apt update && sudo apt -y install pigz
-              pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
-              docker images
-            fi
+            python --version
+            python -m pip install -U pip setuptools numpy
       - run:
-          name: Build fMRIPrep documentation
-          no_output_timeout: 2h
+          name: Install fMRIPrep
           command: |
-            docker run -ti --rm=false -v $PWD:/_build_html \
-              --entrypoint=sphinx-build poldracklab/fmriprep:latest \
-              -T -E -b html -d _build/doctrees-readthedocs -W -D \
-              language=en /src/fmriprep/docs/ /_build_html 2>&1 \
-              | tee $PWD/builddocs.log
-            cat $PWD/builddocs.log
-            grep -qv "ERROR" $PWD/builddocs.log
+            python -m pip install ".[doc]"
+            make -C docs html
       - store_artifacts:
-          path: /home/circleci/out/docs
+          path: /tmp/src/fmriprep/docs/_build/html
 
   ds005:
     machine:
@@ -801,6 +784,9 @@ workflows:
     jobs:
       - build:
           filters:
+            branches:
+              ignore:
+                - /docs?\/.*/
             tags:
               only: /.*/
 
@@ -827,8 +813,6 @@ workflows:
               only: /.*/
 
       - build_docs:
-          requires:
-            - build
           filters:
             branches:
               ignore:
