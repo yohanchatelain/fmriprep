@@ -79,7 +79,7 @@ def init_fmriprep_wf(
 
         import os
         from collections import namedtuple, OrderedDict
-        BIDSLayout = namedtuple('BIDSLayout', ['root'], defaults='.')
+        BIDSLayout = namedtuple('BIDSLayout', ['root'])
         from fmriprep.workflows.base import init_fmriprep_wf
         os.environ['FREESURFER_HOME'] = os.getcwd()
         wf = init_fmriprep_wf(
@@ -96,7 +96,7 @@ def init_fmriprep_wf(
             freesurfer=True,
             hires=True,
             ignore=[],
-            layout=BIDSLayout(),
+            layout=BIDSLayout('.'),
             longitudinal=False,
             low_mem=False,
             medial_surface_nan=False,
@@ -300,7 +300,7 @@ def init_single_subject_wf(
 
         from fmriprep.workflows.base import init_single_subject_wf
         from collections import namedtuple, OrderedDict
-        BIDSLayout = namedtuple('BIDSLayout', ['root'], defaults='.')
+        BIDSLayout = namedtuple('BIDSLayout', ['root'])
         wf = init_single_subject_wf(
             anat_only=False,
             aroma_melodic_dim=-200,
@@ -315,7 +315,7 @@ def init_single_subject_wf(
             freesurfer=True,
             hires=True,
             ignore=[],
-            layout=BIDSLayout(),
+            layout=BIDSLayout('.'),
             longitudinal=False,
             low_mem=False,
             medial_surface_nan=False,
@@ -335,6 +335,7 @@ def init_single_subject_wf(
             use_bbr=True,
             use_syn=True,
         )
+
 
     Parameters
 

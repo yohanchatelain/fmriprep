@@ -20,7 +20,7 @@ is presented below:
 
     from fmriprep.workflows.base import init_single_subject_wf
     from collections import namedtuple, OrderedDict
-    BIDSLayout = namedtuple('BIDSLayout', ['root'], defaults='.')
+    BIDSLayout = namedtuple('BIDSLayout', ['root'])
     wf = init_single_subject_wf(
         anat_only=False,
         aroma_melodic_dim=-200,
@@ -35,7 +35,7 @@ is presented below:
         freesurfer=True,
         hires=True,
         ignore=[],
-        layout=BIDSLayout(),
+        layout=BIDSLayout('.'),
         longitudinal=False,
         low_mem=False,
         medial_surface_nan=False,
@@ -276,7 +276,7 @@ BOLD preprocessing
 
     from collections import namedtuple, OrderedDict
     from fmriprep.workflows.bold.base import init_func_preproc_wf
-    BIDSLayout = namedtuple('BIDSLayout', ['root'], defaults='.')
+    BIDSLayout = namedtuple('BIDSLayout', ['root'])
     wf = init_func_preproc_wf(
         aroma_melodic_dim=-200,
         bold2t1w_dof=9,
@@ -301,7 +301,7 @@ BOLD preprocessing
         use_aroma=False,
         use_bbr=True,
         use_syn=True,
-        layout=BIDSLayout(),
+        layout=BIDSLayout('.'),
         num_bold=1,
     )
 

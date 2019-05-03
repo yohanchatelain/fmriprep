@@ -86,7 +86,7 @@ def init_func_preproc_wf(
 
         from fmriprep.workflows.bold import init_func_preproc_wf
         from collections import namedtuple, OrderedDict
-        BIDSLayout = namedtuple('BIDSLayout', ['root'], defaults='.')
+        BIDSLayout = namedtuple('BIDSLayout', ['root'])
         wf = init_func_preproc_wf(
             aroma_melodic_dim=-200,
             bold2t1w_dof=9,
@@ -111,7 +111,7 @@ def init_func_preproc_wf(
             use_aroma=False,
             use_bbr=True,
             use_syn=True,
-            layout=BIDSLayout(),
+            layout=BIDSLayout('.'),
             num_bold=1,
         )
 
