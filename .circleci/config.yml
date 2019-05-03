@@ -307,10 +307,10 @@ jobs:
               circleci step halt
             fi
       - run:
-          name: Check Python version and upgrade setup requirements
+          name: Check Python version and upgrade pip
           command: |
             python --version
-            python -m pip install -U pip setuptools numpy
+            python -m pip install -U pip
       - run:
           name: Install graphviz
           command: |
@@ -318,9 +318,7 @@ jobs:
               apt-get install -y graphviz
       - run:
           name: Install fMRIPrep
-          command: |
-              python -m pip install -r requirements.txt
-              python -m pip install ".[doc]"
+          command: python -m pip install ".[doc]"
       - run:
           name: Build documentation
           command: make SPHINXOPTS="-W" -C docs html
