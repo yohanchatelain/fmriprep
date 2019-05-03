@@ -164,10 +164,11 @@ ENV TEMPLATEFLOW_HOME="/opt/templateflow"
 RUN mkdir -p $TEMPLATEFLOW_HOME
 RUN pip install --no-cache-dir "templateflow>=0.1.3,<0.2.0a0" && \
     python -c "from templateflow import api as tfapi; \
-               tfapi.get('MNI152Lin'); \
+               tfapi.get('MNI152NLin6Asym'); \
                tfapi.get('MNI152NLin2009cAsym'); \
-               tfapi.get('OASIS30ANTs'); \
-               tfapi.get('NKI');"
+               tfapi.get('OASIS30ANTs');" && \
+    find $TEMPLATEFLOW_HOME -type d -exec chmod go=u {} + && \
+    find $TEMPLATEFLOW_HOME -type f -exec chmod go=u {} +
 
 # Installing dev requirements (packages that are not in pypi)
 WORKDIR /src/

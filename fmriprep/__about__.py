@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
 """
@@ -89,8 +88,8 @@ REQUIRES = [
     'nilearn!=0.5.0,!=0.5.1',
     'nipype>=1.1.6',
     'nitime',
-    'niworkflows @ '
-    'git+https://github.com/effigies/niworkflows.git@5e9daf0b08fcad2b17350a71ecaf71fa9ce4eff7',
+    'niworkflows @ git+https://github.com/poldracklab/niworkflows.git@'
+    'e8f677a0407fc312b7f3d87a4c47726ceb8cd975',
     'numpy',
     'pandas',
     'psutil>=5.4',
@@ -105,8 +104,8 @@ REQUIRES = [
 
 
 LINKS_REQUIRES = [
-    'git+https://github.com/effigies/niworkflows.git@'
-    '5e9daf0b08fcad2b17350a71ecaf71fa9ce4eff7#egg=niworkflows',
+    'git+https://github.com/poldracklab/niworkflows.git@'
+    'e8f677a0407fc312b7f3d87a4c47726ceb8cd975#egg=niworkflows',
 ]
 
 TESTS_REQUIRES = [
