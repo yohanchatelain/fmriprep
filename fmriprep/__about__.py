@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
 """
@@ -104,8 +103,8 @@ REQUIRES = [
 
 
 LINKS_REQUIRES = [
-    'git+https://github.com/oesteban/niworkflows.git@'
-    'c37dda4b7ab28fa8dd6c2136b20721310dd3e91d#egg=niworkflows',
+    'git+https://github.com/poldracklab/niworkflows.git@'
+    '121ab5df2988d794f915c595ae4bc6dc8259ba2a#egg=niworkflows',
     'git+https://github.com/poldracklab/smriprep.git@'
     'f1cfc37bcdc346549dbf1d037cdade3a3b32d5de#egg=smriprep-0.1.0',
 ]
