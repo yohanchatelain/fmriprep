@@ -318,7 +318,9 @@ jobs:
               apt-get install -y graphviz
       - run:
           name: Install fMRIPrep
-          command: python -m pip install ".[doc]"
+          command: |
+              python -m pip install -r requirements.txt
+              python -m pip install ".[doc]"
       - run:
           name: Build documentation
           command: make SPHINXOPTS="-W" -C docs html
