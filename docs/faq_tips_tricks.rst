@@ -2,6 +2,7 @@
 
 ========================
 FAQ, Tips, and Tricks
+========================
 
 Should I run quality control of my images before running fMRIPrep?
 --------------------------------------------------------------------
