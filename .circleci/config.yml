@@ -307,15 +307,21 @@ jobs:
               circleci step halt
             fi
       - run:
-          name: Check Python version and upgrade pip
+          name: Check Python version and upgrade setup requirements
           command: |
             python --version
             python -m pip install -U pip setuptools numpy
       - run:
-          name: Install fMRIPrep
+          name: Install graphviz
           command: |
-            python -m pip install ".[doc]"
-            make -C docs html
+              apt-get update
+              apt-get install -y graphviz
+      - run:
+          name: Install fMRIPrep
+          command: python -m pip install ".[doc]"
+      - run:
+          name: Build documentation
+          command: make -C docs html
       - store_artifacts:
           path: /tmp/src/fmriprep/docs/_build/html
 
