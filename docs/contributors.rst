@@ -126,7 +126,7 @@ repository, located in ``~/projects/fmriprep``: ::
 To work in this image, replace ``poldracklab/fmriprep:latest`` with
 ``fmriprep`` in any of the above commands.
 This image may be accessed by the `fmriprep-docker`_ wrapper via the
-``-i`` flag, e.g. ::
+``-i`` flag, e.g., ::
 
     $ fmriprep-docker -i fmriprep --shell
 
@@ -151,7 +151,7 @@ You can then use the Bibtex handle within the Markdown text.
 For example, if the Bibtex handle is ``myreference``, a citation
 will be generated in Markdown language with ``@myreference``.
 To generate citations with parenthesis and/or additional content,
-brackets should be used: e.g. ``[see @myreference]`` will produce
+brackets should be used: e.g., ``[see @myreference]`` will produce
 a citation like *(see Doe J. et al 2018)*.
 
 

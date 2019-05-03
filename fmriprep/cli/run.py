@@ -106,7 +106,7 @@ def get_parser():
     g_perfm.add_argument('--error-on-aroma-warnings', action='store_true',
                          default=False,
                          help='Raise an error if ICA_AROMA does not produce sensible output '
-                              '(e.g. if all the components are classified as signal or noise)')
+                              '(e.g., if all the components are classified as signal or noise)')
     g_perfm.add_argument("-v", "--verbose", dest="verbose_count", action="count", default=0,
                          help="increases log verbosity for each occurence, debug level is -vvv")
     g_perfm.add_argument('--debug', action='store_true', default=False,
@@ -670,7 +670,7 @@ your scripts to use ``--output-spaces``.""" % ', '.join(opts.output_space), file
     FS_SPACES = set(['fsnative', 'fsaverage', 'fsaverage6', 'fsaverage5'])
     if opts.run_reconall and not list(FS_SPACES.intersection(output_spaces.keys())):
         print("""\
-Although ``--fs-no-reconall`` was not set (i.e. FreeSurfer is to be run), no FreeSurfer \
+Although ``--fs-no-reconall`` was not set (i.e., FreeSurfer is to be run), no FreeSurfer \
 output space (valid values are: %s) was selected. Adding default "fsaverage5" to the \
 list of output spaces.""" % ', '.join(FS_SPACES), file=stderr)
         output_spaces['fsaverage5'] = {}

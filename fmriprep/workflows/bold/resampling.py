@@ -196,10 +196,10 @@ def init_bold_std_trans_wf(
     **Parameters**
 
         standard_spaces : OrderedDict
-            Ordered dictionary where keys are TemplateFlow ID strings (e.g. ``MNI152Lin``,
-            ``MNI152NLin6Asym``, ``MNI152NLin2009cAsym``, or ``fsLR``),
+            Ordered dictionary where keys are TemplateFlow ID strings (e.g.,
+            ``MNI152Lin``, ``MNI152NLin6Asym``, ``MNI152NLin2009cAsym``, or ``fsLR``),
             or paths pointing to custom templates organized in a TemplateFlow-like structure.
-            Values of the dictionary aggregate modifiers (e.g. the value for the key ``MNI152Lin``
+            Values of the dictionary aggregate modifiers (e.g., the value for the key ``MNI152Lin``
             could be ``{'resolution': 2}`` if one wants the resampling to be done on the 2mm
             resolution version of the selected template).
         mem_gb : float
@@ -241,9 +241,11 @@ def init_bold_std_trans_wf(
             List of templates that were applied as targets during
             spatial normalization.
 
-    **Outputs** - Two outputnodes are available. One output node will be parameterized
-    (with name ``poutputnode``) and a second node (``outputnode``) will collapse the
-    parameterized outputs into synchronous lists of the following fields:
+    **Outputs** - Two outputnodes are available. One output node (with name ``poutputnode``)
+    will be parameterized in a Nipype sense (see `Nipype iterables
+    <https://miykael.github.io/nipype_tutorial/notebooks/basic_iteration.html>`__), and a
+    second node (``outputnode``) will collapse the parameterized outputs into synchronous
+    lists of the following fields:
 
         bold_std
             BOLD series, resampled to template space

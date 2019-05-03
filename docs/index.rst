@@ -18,6 +18,7 @@ Contents
    usage
    workflows
    sdc
+   spaces
    outputs
    contributors
    citing

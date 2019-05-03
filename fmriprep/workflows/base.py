@@ -158,11 +158,11 @@ def init_fmriprep_wf(
         freesurfer : bool
             Enable FreeSurfer surface reconstruction (may increase runtime)
         output_spaces : OrderedDict
-            Ordered dictionary where keys are TemplateFlow ID strings (e.g. ``MNI152Lin``,
+            Ordered dictionary where keys are TemplateFlow ID strings (e.g., ``MNI152Lin``,
             ``MNI152NLin6Asym``, ``MNI152NLin2009cAsym``, or ``fsLR``) strings designating
-            nonstandard references (e.g. ``T1w`` or ``anat``, ``sbref``, ``run``, etc.),
+            nonstandard references (e.g., ``T1w`` or ``anat``, ``sbref``, ``run``, etc.),
             or paths pointing to custom templates organized in a TemplateFlow-like structure.
-            Values of the dictionary aggregate modifiers (e.g. the value for the key ``MNI152Lin``
+            Values of the dictionary aggregate modifiers (e.g., the value for the key ``MNI152Lin``
             could be ``{'resolution': 2}`` if one wants the resampling to be done on the 2mm
             resolution version of the selected template).
         medial_surface_nan : bool
@@ -342,7 +342,7 @@ def init_single_subject_wf(
             Disable functional workflows
         aroma_melodic_dim : int
             Maximum number of components identified by MELODIC within ICA-AROMA
-            (default is -200, ie. no limitation).
+            (default is -200, i.e., no limitation).
         bold2t1w_dof : 6, 9 or 12
             Degrees-of-freedom for BOLD-T1w registration
         cifti_output : bool
@@ -382,11 +382,11 @@ def init_single_subject_wf(
         output_dir : str
             Directory in which to save derivatives
         output_spaces : OrderedDict
-            Ordered dictionary where keys are TemplateFlow ID strings (e.g. ``MNI152Lin``,
+            Ordered dictionary where keys are TemplateFlow ID strings (e.g., ``MNI152Lin``,
             ``MNI152NLin6Asym``, ``MNI152NLin2009cAsym``, or ``fsLR``) strings designating
-            nonstandard references (e.g. ``T1w`` or ``anat``, ``sbref``, ``run``, etc.),
+            nonstandard references (e.g., ``T1w`` or ``anat``, ``sbref``, ``run``, etc.),
             or paths pointing to custom templates organized in a TemplateFlow-like structure.
-            Values of the dictionary aggregate modifiers (e.g. the value for the key ``MNI152Lin``
+            Values of the dictionary aggregate modifiers (e.g., the value for the key ``MNI152Lin``
             could be ``{'resolution': 2}`` if one wants the resampling to be done on the 2mm
             resolution version of the selected template).
         reportlets_dir : str

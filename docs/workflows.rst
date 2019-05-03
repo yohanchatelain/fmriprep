@@ -133,7 +133,7 @@ be set to resample the preprocessed data onto the final output spaces.
 Cost function masking during spatial normalization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When processing images from patients with focal brain lesions (e.g. stroke, tumor
+When processing images from patients with focal brain lesions (e.g., stroke, tumor
 resection), it is possible to provide a lesion mask to be used during spatial
 normalization to standard space [Brett2001]_.
 ANTs will use this mask to minimize warping of healthy tissue into damaged
@@ -141,7 +141,7 @@ areas (or vice-versa).
 Lesion masks should be binary NIfTI images (damaged areas = 1, everywhere else = 0)
 in the same space and resolution as the T1 image, and follow the naming convention specified in
 `BIDS Extension Proposal 3: Common Derivatives <https://docs.google.com/document/d/1Wwc4A6Mow4ZPPszDIWfCUCRNstn7d_zzaWPcfcHmgI4/edit#heading=h.9146wuepclkt>`_
-(e.g. ``sub-001_T1w_label-lesion_roi.nii.gz``).
+(e.g., ``sub-001_T1w_label-lesion_roi.nii.gz``).
 This file should be placed in the ``sub-*/anat`` directory of the BIDS dataset
 to be run through *fMRIPrep*.
 Because lesion masks are not currently part of the BIDS specification, it is also necessary to
@@ -367,7 +367,7 @@ Additionally, a list of 6-parameters (three rotations,
 three translations) per time-step is written and fed to the
 :ref:`confounds workflow <bold_confounds>`.
 For a more accurate estimation of head-motion, we calculate its parameters
-before any time-domain filtering (i.e. :ref:`slice-timing correction <bold_stc>`),
+before any time-domain filtering (i.e., :ref:`slice-timing correction <bold_stc>`),
 as recommended in [Power2017]_.
 
 .. _bold_stc:

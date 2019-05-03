@@ -119,7 +119,7 @@ def init_func_preproc_wf(
 
         aroma_melodic_dim : int
             Maximum number of components identified by MELODIC within ICA-AROMA
-            (default is -200, ie. no limitation).
+            (default is -200, i.e., no limitation).
         bold2t1w_dof : 6, 9 or 12
             Degrees-of-freedom for BOLD-T1w registration
         bold_file : str
@@ -150,13 +150,13 @@ def init_func_preproc_wf(
         output_dir : str
             Directory in which to save derivatives
         output_spaces : OrderedDict
-            Ordered dictionary where keys are TemplateFlow ID strings (e.g. ``MNI152Lin``,
+            Ordered dictionary where keys are TemplateFlow ID strings (e.g., ``MNI152Lin``,
             ``MNI152NLin6Asym``, ``MNI152NLin2009cAsym``, or ``fsLR``) strings designating
-            nonstandard references (e.g. ``T1w`` or ``anat``, ``sbref``, ``run``, etc.),
+            nonstandard references (e.g., ``T1w`` or ``anat``, ``sbref``, ``run``, etc.),
             or paths pointing to custom templates organized in a TemplateFlow-like structure.
-            Values of the dictionary aggregate modifiers (e.g. the value for the key ``MNI152Lin``
-            could be ``{'resolution': 2}`` if one wants the resampling to be done on the 2mm
-            resolution version of the selected template).
+            Values of the dictionary aggregate modifiers (e.g., the value for the key
+            ``MNI152Lin`` could be ``{'resolution': 2}`` if one wants the resampling to be
+            done on the 2mm resolution version of the selected template).
         reportlets_dir : str
             Absolute path of a directory in which reportlets will be temporarily stored
         t2s_coreg : bool
@@ -357,7 +357,7 @@ tasks and sessions), the following preprocessing was performed.
 
     workflow.__postdesc__ = """\
 All resamplings can be performed with *a single interpolation
-step* by composing all the pertinent transformations (i.e. head-motion
+step* by composing all the pertinent transformations (i.e., head-motion
 transform matrices, susceptibility distortion correction when available,
 and co-registrations to anatomical and output spaces).
 Gridded (volumetric) resamplings were performed using `antsApplyTransforms` (ANTs),

@@ -114,7 +114,7 @@ Limitations and reasons not to use ``fmriprep``
    Also, problems may arise when extracting the brain from these data.
    Supporting these particular images is already a future line of the development
    road-map.
-2. ``fmriprep`` may also underperform for particular populations (e.g. infants) and
+2. ``fmriprep`` may also underperform for particular populations (e.g., infants) and
    non-human brains, although appropriate templates can be provided to overcome the
    issue.
 3. The "EPInorm" approach is currently not supported, although we plan to implement
