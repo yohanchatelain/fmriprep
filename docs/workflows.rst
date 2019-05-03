@@ -492,8 +492,8 @@ This sub-workflow concatenates the transforms calculated upstream (see
 `Head-motion estimation`_, `Susceptibility Distortion Correction (SDC)`_ --if
 fieldmaps are available--, `EPI to T1w registration`_, and an anatomical-to-standard
 transform from `T1w/T2w preprocessing`_) to map the :abbr:`EPI (echo-planar imaging)`
-image to the standard spaces given by the ``--output-spaces`` argument (see
-:ref:`output-spaces`.
+image to the standard spaces given by the ``--output-spaces`` argument
+(see :ref:`output-spaces`).
 It also maps the T1w-based mask to each of those standard spaces.
 
 Transforms are concatenated and applied all at once, with one interpolation (Lanczos)
