@@ -461,14 +461,20 @@ jobs:
             exit $?
       - run:
           name: Clean working directory
-          when: always
+          when: on_success
           command: |
             sudo chown $(id -un):$(id -gn) -R /tmp/ds005
-            find /tmp/ds005/work -not -name "*.svg" -not -name "*.html" -not -name "*.rst" \
-                -not -name "*.mat" -not -name "*.lta" -not -name "*.json" -not -name "*.txt" -not -name "*.pklz" -type f -delete
-            find /tmp/ds005/work_partial -not -name "*.svg" -not -name "*.html" -not -name "*.rst" \
-                -not -name "*.mat" -not -name "*.lta" -not -name "*.json" -not -name "*.txt" -not -name "*.pklz" -type f -delete
-            # tar cf - work_partial/ | pigz -2 -p 2 > ds005_workdir.tar.gz && sudo rm -fr work work_partial
+            sudo rm -rf /tmp/ds005/work
+            sudo rm -rf /tmp/ds005/work_partial
+      - run:
+          name: Clean working directory
+          when: on_fail
+          command: |
+            sudo chown $(id -un):$(id -gn) -R /tmp/ds005
+            find /tmp/ds005/work \( -name "*.nii.gz" -or -name "*.nii" -or "*.gii" -or "*.h5" \) \
+                -exec sh -c 'rm -f {}; touch {}' \;
+            find /tmp/ds005/work_partial \( -name "*.nii.gz" -or -name "*.nii" -or "*.gii" -or "*.h5" \) \
+                -exec sh -c 'rm -f {}; touch {}' \;
 
       - store_artifacts:
           path: /tmp/ds005
@@ -587,13 +593,18 @@ jobs:
             set -e
             [[ "$RET" -eq "1" ]]
       - run:
-          name: Clean-up work directory
-          when: always
+          name: Clean working directory
+          when: on_success
           command: |
             sudo chown $(id -un):$(id -gn) -R /tmp/ds054
-            find /tmp/ds054/work -not -name "*.svg" -not -name "*.html" -not -name "*.rst" \
-                -not -name "*.mat" -not -name "*.lta" -not -name "*.json" -not -name "*.txt" -not -name "*.pklz" -type f -delete
-            # tar cf - work/ | pigz -2 -p 2 > ds054_workdir.tar.gz && sudo rm -fr work
+            sudo rm -rf /tmp/ds054/work
+      - run:
+          name: Clean working directory
+          when: on_fail
+          command: |
+            sudo chown $(id -un):$(id -gn) -R /tmp/ds054
+            find /tmp/ds054/work \( -name "*.nii.gz" -or -name "*.nii" -or "*.gii" -or "*.h5" \) \
+                -exec sh -c 'rm -f {}; touch {}' \;
       - store_artifacts:
           path: /tmp/ds054
 
@@ -685,13 +696,18 @@ jobs:
             diff /tmp/src/fmriprep/.circleci/ds210_outputs.txt /tmp/ds210/test/outputs.out
             exit $?
       - run:
-          name: Clean-up work directory
-          when: always
+          name: Clean working directory
+          when: on_success
           command: |
             sudo chown $(id -un):$(id -gn) -R /tmp/ds210
-            find /tmp/ds210/work -not -name "*.svg" -not -name "*.html" -not -name "*.rst" \
-                -not -name "*.mat" -not -name "*.lta" -not -name "*.json" -not -name "*.txt" -not -name "*.pklz" -type f -delete
-            # tar cf - work/ | pigz -2 -p 2 > ds054_workdir.tar.gz && sudo rm -fr work
+            sudo rm -rf /tmp/ds210/work
+      - run:
+          name: Clean working directory
+          when: on_fail
+          command: |
+            sudo chown $(id -un):$(id -gn) -R /tmp/ds210
+            find /tmp/ds210/work \( -name "*.nii.gz" -or -name "*.nii" -or "*.gii" -or "*.h5" \) \
+                -exec sh -c 'rm -f {}; touch {}' \;
       - store_artifacts:
           path: /tmp/ds210
 
