@@ -88,14 +88,15 @@ REQUIRES = [
     'nilearn!=0.5.0,!=0.5.1',
     'nipype>=1.1.6',
     'nitime',
-    'niworkflows',
+    'niworkflows @ git+https://github.com/poldracklab/niworkflows.git@'
+    'e8f677a0407fc312b7f3d87a4c47726ceb8cd975',
     'numpy',
     'pandas',
     'psutil>=5.4',
     'pybids<0.8.0a0,>=0.7.1',
     'pyyaml',
     'scikit-image',
-    'smriprep',
+    'smriprep<0.3.0a0,>=0.2.0',
     'statsmodels',
     'tedana>=0.0.5',
     'templateflow<0.2.0a0,>=0.1.3',
@@ -104,9 +105,7 @@ REQUIRES = [
 
 LINKS_REQUIRES = [
     'git+https://github.com/poldracklab/niworkflows.git@'
-    '121ab5df2988d794f915c595ae4bc6dc8259ba2a#egg=niworkflows',
-    'git+https://github.com/poldracklab/smriprep.git@'
-    'f1cfc37bcdc346549dbf1d037cdade3a3b32d5de#egg=smriprep-0.1.0',
+    'e8f677a0407fc312b7f3d87a4c47726ceb8cd975#egg=niworkflows',
 ]
 
 TESTS_REQUIRES = [

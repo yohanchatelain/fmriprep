@@ -86,7 +86,7 @@ def init_func_preproc_wf(
 
         from fmriprep.workflows.bold import init_func_preproc_wf
         from collections import namedtuple, OrderedDict
-        BIDSLayout = namedtuple('BIDSLayout', ['root'], defaults='.')
+        BIDSLayout = namedtuple('BIDSLayout', ['root'])
         wf = init_func_preproc_wf(
             aroma_melodic_dim=-200,
             bold2t1w_dof=9,
@@ -111,7 +111,7 @@ def init_func_preproc_wf(
             use_aroma=False,
             use_bbr=True,
             use_syn=True,
-            layout=BIDSLayout(),
+            layout=BIDSLayout('.'),
             num_bold=1,
         )
 
@@ -392,12 +392,12 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     boldbuffer = pe.Node(niu.IdentityInterface(fields=['bold_file']), name='boldbuffer')
 
     summary = pe.Node(
-        FunctionalSummary(output_spaces=list(output_spaces.keys()),
-                          slice_timing=run_stc,
-                          registration='FreeSurfer' if freesurfer else 'FSL',
-                          registration_dof=bold2t1w_dof,
-                          pe_direction=metadata.get("PhaseEncodingDirection"),
-                          tr=metadata.get("RepetitionTime")),
+        FunctionalSummary(
+            slice_timing=run_stc,
+            registration='FreeSurfer' if freesurfer else 'FSL',
+            registration_dof=bold2t1w_dof,
+            pe_direction=metadata.get("PhaseEncodingDirection"),
+            tr=metadata.get("RepetitionTime")),
         name='summary', mem_gb=DEFAULT_MEMORY_MIN_GB, run_without_submitting=True)
 
     # CIfTI output: currently, we only support fsaverage{5,6}
