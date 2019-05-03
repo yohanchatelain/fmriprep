@@ -79,8 +79,8 @@ class SubjectSummaryInputSpec(BaseInterfaceInputSpec):
     bold = InputMultiObject(traits.Either(
         File(exists=True), traits.List(File(exists=True))),
         desc='BOLD functional series')
-    std_spaces = InputMultiObject(Str, desc='list of standard spaces')
-    nstd_spaces = InputMultiObject(Str, desc='list of non-standard spaces')
+    std_spaces = traits.List(Str, desc='list of standard spaces')
+    nstd_spaces = traits.List(Str, desc='list of non-standard spaces')
 
 
 class SubjectSummaryOutputSpec(SummaryOutputSpec):
