@@ -20,9 +20,9 @@ is presented below:
 
     from fmriprep.workflows.base import init_single_subject_wf
     from collections import namedtuple
-    BIDSLayout = namedtuple('BIDSLayout', ['root'], defaults='.')
+    BIDSLayout = namedtuple('BIDSLayout', ['root'])
     wf = init_single_subject_wf(
-        layout=BIDSLayout(),
+        layout=BIDSLayout('.'),
         subject_id='test',
         name='single_subject_wf',
         task_id='',
@@ -273,7 +273,7 @@ BOLD preprocessing
     :simple_form: yes
 
     from collections import namedtuple
-    BIDSLayout = namedtuple('BIDSLayout', ['root'], defaults='.')
+    BIDSLayout = namedtuple('BIDSLayout', ['root'])
     from fmriprep.workflows.bold import init_func_preproc_wf
     wf = init_func_preproc_wf(
         '/completely/made/up/path/sub-01_task-nback_bold.nii.gz',
@@ -287,7 +287,7 @@ BOLD preprocessing
         force_syn=True,
         freesurfer=True,
         ignore=[],
-        layout=BIDSLayout(),
+        layout=BIDSLayout('.'),
         low_mem=False,
         medial_surface_nan=False,
         omp_nthreads=1,
