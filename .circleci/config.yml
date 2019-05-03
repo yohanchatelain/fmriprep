@@ -321,7 +321,7 @@ jobs:
           command: python -m pip install ".[doc]"
       - run:
           name: Build documentation
-          command: make -C docs html
+          command: make SPHINXOPTS="-W" -C docs html
       - store_artifacts:
           path: /tmp/src/fmriprep/docs/_build/html
 
