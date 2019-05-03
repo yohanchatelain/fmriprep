@@ -19,7 +19,7 @@ Contents
    workflows
    sdc
    outputs
+   faq_tips_tricks
    contributors
    citing
    api/index.rst
-   faq_tips_tricks
