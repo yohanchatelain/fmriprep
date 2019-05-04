@@ -66,7 +66,7 @@ jobs:
           command: |
             mkdir -p /tmp/cache
             docker save ubuntu:xenial-20161213 poldracklab/fmriprep:latest \
-            | pigz -8 -p 3 > /tmp/cache/docker.tar.gz
+            | pigz -3 > /tmp/cache/docker.tar.gz
 
       - persist_to_workspace:
           root: /tmp
