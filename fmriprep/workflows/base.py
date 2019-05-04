@@ -55,6 +55,9 @@ def init_fmriprep_wf(
     omp_nthreads,
     output_dir,
     output_spaces,
+    regressors_all_comps,
+    regressors_dvars_th,
+    regressors_fd_th,
     run_uuid,
     skull_strip_fixed_seed,
     skull_strip_template,
@@ -105,6 +108,9 @@ def init_fmriprep_wf(
             output_spaces=OrderedDict([
                 ('MNI152Lin', {}), ('fsaverage', {'density': '10k'}),
                 ('T1w', {}), ('fsnative', {})]),
+            regressors_all_comps=False,
+            regressors_dvars_th=1.5,
+            regressors_fd_th=0.5,
             run_uuid='X',
             skull_strip_fixed_seed=False,
             skull_strip_template='OASIS30ANTs',
@@ -120,43 +126,44 @@ def init_fmriprep_wf(
 
     Parameters
 
-        layout : BIDSLayout object
-            BIDS dataset layout
-        subject_list : list
-            List of subject labels
-        task_id : str or None
-            Task ID of BOLD series to preprocess, or ``None`` to preprocess all
+        anat_only : bool
+            Disable functional workflows
+        bold2t1w_dof : 6, 9 or 12
+            Degrees-of-freedom for BOLD-T1w registration
+        cifti_output : bool
+            Generate bold CIFTI file in output spaces
+        debug : bool
+            Enable debugging outputs
         echo_idx : int or None
             Index of echo to preprocess in multiecho BOLD series,
             or ``None`` to preprocess all
-        run_uuid : str
-            Unique identifier for execution instance
-        work_dir : str
-            Directory in which to store workflow execution state and temporary files
-        output_dir : str
-            Directory in which to save derivatives
+        err_on_aroma_warn : bool
+            Do not fail on ICA-AROMA errors
+        fmap_bspline : bool
+            **Experimental**: Fit B-Spline field using least-squares
+        fmap_demean : bool
+            Demean voxel-shift map during unwarp
+        force_syn : bool
+            **Temporary**: Always run SyN-based SDC
+        freesurfer : bool
+            Enable FreeSurfer surface reconstruction (may increase runtime)
+        hires : bool
+            Enable sub-millimeter preprocessing in FreeSurfer
         ignore : list
             Preprocessing steps to skip (may include "slicetiming", "fieldmaps")
-        debug : bool
-            Enable debugging outputs
-        low_mem : bool
-            Write uncompressed .nii files in some cases to reduce memory usage
-        anat_only : bool
-            Disable functional workflows
+        layout : BIDSLayout object
+            BIDS dataset layout
         longitudinal : bool
             Treat multiple sessions as longitudinal (may increase runtime)
             See sub-workflows for specific differences
-        t2s_coreg : bool
-            For multi-echo EPI, use the calculated T2*-map for T2*-driven coregistration
+        low_mem : bool
+            Write uncompressed .nii files in some cases to reduce memory usage
+        medial_surface_nan : bool
+            Replace medial wall values with NaNs on functional GIFTI files
         omp_nthreads : int
             Maximum number of threads an individual process may use
-        skull_strip_template : str
-            Name of ANTs skull-stripping template ('OASIS30ANTs' or 'NKI')
-        skull_strip_fixed_seed : bool
-            Do not use a random seed for skull-stripping - will ensure
-            run-to-run replicability when used with --omp-nthreads 1
-        freesurfer : bool
-            Enable FreeSurfer surface reconstruction (may increase runtime)
+        output_dir : str
+            Directory in which to save derivatives
         output_spaces : OrderedDict
             Ordered dictionary where keys are TemplateFlow ID strings (e.g. ``MNI152Lin``,
             ``MNI152NLin6Asym``, ``MNI152NLin2009cAsym``, or ``fsLR``) strings designating
@@ -165,30 +172,35 @@ def init_fmriprep_wf(
             Values of the dictionary aggregate modifiers (e.g. the value for the key ``MNI152Lin``
             could be ``{'resolution': 2}`` if one wants the resampling to be done on the 2mm
             resolution version of the selected template).
-        medial_surface_nan : bool
-            Replace medial wall values with NaNs on functional GIFTI files
-        cifti_output : bool
-            Generate bold CIFTI file in output spaces
-        hires : bool
-            Enable sub-millimeter preprocessing in FreeSurfer
+        regressors_all_comps
+            Return all CompCor component time series instead of the top fraction
+        regressors_dvars_th
+            Criterion for flagging DVARS outliers
+        regressors_fd_th
+            Criterion for flagging framewise displacement outliers
+        run_uuid : str
+            Unique identifier for execution instance
+        skull_strip_template : str
+            Name of ANTs skull-stripping template ('OASIS30ANTs' or 'NKI')
+        skull_strip_fixed_seed : bool
+            Do not use a random seed for skull-stripping - will ensure
+            run-to-run replicability when used with --omp-nthreads 1
+        subject_list : list
+            List of subject labels
+        t2s_coreg : bool
+            For multi-echo EPI, use the calculated T2*-map for T2*-driven coregistration
+        task_id : str or None
+            Task ID of BOLD series to preprocess, or ``None`` to preprocess all
+        use_aroma : bool
+            Perform ICA-AROMA on MNI-resampled functional series
         use_bbr : bool or None
             Enable/disable boundary-based registration refinement.
             If ``None``, test BBR result for distortion before accepting.
-        bold2t1w_dof : 6, 9 or 12
-            Degrees-of-freedom for BOLD-T1w registration
-        fmap_bspline : bool
-            **Experimental**: Fit B-Spline field using least-squares
-        fmap_demean : bool
-            Demean voxel-shift map during unwarp
         use_syn : bool
             **Experimental**: Enable ANTs SyN-based susceptibility distortion correction (SDC).
             If fieldmaps are present and enabled, this is not run, by default.
-        force_syn : bool
-            **Temporary**: Always run SyN-based SDC
-        use_aroma : bool
-            Perform ICA-AROMA on MNI-resampled functional series
-        err_on_aroma_warn : bool
-            Do not fail on ICA-AROMA errors
+        work_dir : str
+            Directory in which to store workflow execution state and temporary files
 
     """
     fmriprep_wf = Workflow(name='fmriprep_wf')
@@ -206,36 +218,39 @@ def init_fmriprep_wf(
     reportlets_dir = os.path.join(work_dir, 'reportlets')
     for subject_id in subject_list:
         single_subject_wf = init_single_subject_wf(
-            layout=layout,
-            subject_id=subject_id,
-            task_id=task_id,
-            echo_idx=echo_idx,
-            name="single_subject_" + subject_id + "_wf",
-            reportlets_dir=reportlets_dir,
-            output_dir=output_dir,
-            ignore=ignore,
-            debug=debug,
-            low_mem=low_mem,
             anat_only=anat_only,
-            longitudinal=longitudinal,
-            t2s_coreg=t2s_coreg,
-            omp_nthreads=omp_nthreads,
-            skull_strip_template=skull_strip_template,
-            skull_strip_fixed_seed=skull_strip_fixed_seed,
-            freesurfer=freesurfer,
-            output_spaces=output_spaces,
-            medial_surface_nan=medial_surface_nan,
-            cifti_output=cifti_output,
-            hires=hires,
-            use_bbr=use_bbr,
+            aroma_melodic_dim=aroma_melodic_dim,
             bold2t1w_dof=bold2t1w_dof,
+            cifti_output=cifti_output,
+            debug=debug,
+            echo_idx=echo_idx,
+            err_on_aroma_warn=err_on_aroma_warn,
             fmap_bspline=fmap_bspline,
             fmap_demean=fmap_demean,
-            use_syn=use_syn,
             force_syn=force_syn,
+            freesurfer=freesurfer,
+            hires=hires,
+            ignore=ignore,
+            layout=layout,
+            longitudinal=longitudinal,
+            low_mem=low_mem,
+            medial_surface_nan=medial_surface_nan,
+            name="single_subject_" + subject_id + "_wf",
+            omp_nthreads=omp_nthreads,
+            output_dir=output_dir,
+            output_spaces=output_spaces,
+            regressors_all_comps=regressors_all_comps,
+            regressors_dvars_th=regressors_dvars_th,
+            regressors_fd_th=regressors_fd_th,
+            reportlets_dir=reportlets_dir,
+            skull_strip_fixed_seed=skull_strip_fixed_seed,
+            skull_strip_template=skull_strip_template,
+            subject_id=subject_id,
+            t2s_coreg=t2s_coreg,
+            task_id=task_id,
             use_aroma=use_aroma,
-            aroma_melodic_dim=aroma_melodic_dim,
-            err_on_aroma_warn=err_on_aroma_warn,
+            use_bbr=use_bbr,
+            use_syn=use_syn,
         )
 
         single_subject_wf.config['execution']['crashdump_dir'] = (
@@ -275,6 +290,9 @@ def init_single_subject_wf(
     output_dir,
     output_spaces,
     reportlets_dir,
+    regressors_all_comps,
+    regressors_dvars_th,
+    regressors_fd_th,
     skull_strip_fixed_seed,
     skull_strip_template,
     subject_id,
@@ -326,6 +344,9 @@ def init_single_subject_wf(
                 ('MNI152Lin', {}), ('fsaverage', {'density': '10k'}),
                 ('T1w', {}), ('fsnative', {})]),
             reportlets_dir='.',
+            regressors_all_comps=False,
+            regressors_dvars_th=1.5,
+            regressors_fd_th=0.5,
             skull_strip_fixed_seed=False,
             skull_strip_template='OASIS30ANTs',
             subject_id='test',
@@ -392,6 +413,12 @@ def init_single_subject_wf(
             resolution version of the selected template).
         reportlets_dir : str
             Directory in which to save reportlets
+        regressors_all_comps
+            Return all CompCor component time series instead of the top fraction
+        regressors_fd_th
+            Criterion for flagging framewise displacement outliers
+        regressors_dvars_th
+            Criterion for flagging DVARS outliers
         skull_strip_fixed_seed : bool
             Do not use a random seed for skull-stripping - will ensure
             run-to-run replicability when used with --omp-nthreads 1
@@ -411,6 +438,7 @@ def init_single_subject_wf(
         use_syn : bool
             **Experimental**: Enable ANTs SyN-based susceptibility distortion correction (SDC).
             If fieldmaps are present and enabled, this is not run, by default.
+
 
     Inputs
 
@@ -560,6 +588,9 @@ to workflows in *fMRIPrep*'s documentation]\
             output_dir=output_dir,
             output_spaces=output_spaces,
             reportlets_dir=reportlets_dir,
+            regressors_all_comps=regressors_all_comps,
+            regressors_fd_th=regressors_fd_th,
+            regressors_dvars_th=regressors_dvars_th,
             t2s_coreg=t2s_coreg,
             use_aroma=use_aroma,
             use_bbr=use_bbr,

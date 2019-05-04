@@ -69,6 +69,9 @@ def init_func_preproc_wf(
     omp_nthreads,
     output_dir,
     output_spaces,
+    regressors_all_comps,
+    regressors_dvars_th,
+    regressors_fd_th,
     reportlets_dir,
     t2s_coreg,
     use_aroma,
@@ -106,6 +109,9 @@ def init_func_preproc_wf(
             output_spaces=OrderedDict([
                 ('MNI152Lin', {}), ('fsaverage', {'density': '10k'}),
                 ('T1w', {}), ('fsnative', {})]),
+            regressors_all_comps=False,
+            regressors_dvars_th=1.5,
+            regressors_fd_th=0.5,
             reportlets_dir='.',
             t2s_coreg=False,
             use_aroma=False,
@@ -157,6 +163,12 @@ def init_func_preproc_wf(
             Values of the dictionary aggregate modifiers (e.g. the value for the key ``MNI152Lin``
             could be ``{'resolution': 2}`` if one wants the resampling to be done on the 2mm
             resolution version of the selected template).
+        regressors_all_comps
+            Return all CompCor component time series instead of the top fraction
+        regressors_dvars_th
+            Criterion for flagging DVARS outliers
+        regressors_fd_th
+            Criterion for flagging framewise displacement outliers
         reportlets_dir : str
             Absolute path of a directory in which reportlets will be temporarily stored
         t2s_coreg : bool
@@ -384,7 +396,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         fields=['bold_t1', 'bold_t1_ref', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1',
                 'bold_std', 'bold_std_ref' 'bold_mask_std', 'bold_aseg_std', 'bold_aparc_std',
                 'bold_cifti', 'cifti_variant', 'cifti_variant_key', 'confounds', 'surfaces',
-                'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file']),
+                'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file',
+                'confounds_metadata']),
         name='outputnode')
 
     # BOLD buffer: an identity used as a pointer to either the original BOLD
@@ -433,7 +446,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('nonaggr_denoised_file', 'inputnode.nonaggr_denoised_file'),
             ('bold_cifti', 'inputnode.bold_cifti'),
             ('cifti_variant', 'inputnode.cifti_variant'),
-            ('cifti_variant_key', 'inputnode.cifti_variant_key')
+            ('cifti_variant_key', 'inputnode.cifti_variant_key'),
+            ('confounds_metadata', 'inputnode.confounds_metadata'),
         ]),
     ])
 
@@ -475,6 +489,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     bold_confounds_wf = init_bold_confs_wf(
         mem_gb=mem_gb['largemem'],
         metadata=metadata,
+        regressors_all_comps=regressors_all_comps,
+        regressors_fd_th=regressors_fd_th,
+        regressors_dvars_th=regressors_dvars_th,
         name='bold_confounds_wf')
     bold_confounds_wf.get_node('inputnode').inputs.t1_transform_flags = [False]
 
@@ -624,6 +641,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('outputnode.skip_vols', 'inputnode.skip_vols')]),
         (bold_confounds_wf, outputnode, [
             ('outputnode.confounds_file', 'confounds'),
+        ]),
+        (bold_confounds_wf, outputnode, [
+            ('outputnode.confounds_metadata', 'confounds_metadata'),
         ]),
         # Connect bold_bold_trans_wf
         (bold_split, bold_bold_trans_wf, [

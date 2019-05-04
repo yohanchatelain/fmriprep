@@ -41,15 +41,12 @@ def init_func_derivatives_wf(
     from smriprep.workflows.outputs import _bids_relative
     workflow = Workflow(name=name)
 
-    inputnode = pe.Node(
-        niu.IdentityInterface(
-            fields=['template', 'source_file',
-                    'bold_t1', 'bold_t1_ref', 'bold_mask_t1',
-                    'bold_std', 'bold_std_ref', 'bold_mask_std',
-                    'bold_aseg_t1', 'bold_aparc_t1', 'bold_aseg_std',
-                    'bold_aparc_std', 'cifti_variant_key',
-                    'confounds', 'surfaces', 'aroma_noise_ics', 'melodic_mix',
-                    'nonaggr_denoised_file', 'bold_cifti', 'cifti_variant']),
+    inputnode = pe.Node(niu.IdentityInterface(fields=[
+        'aroma_noise_ics', 'bold_aparc_std', 'bold_aparc_t1', 'bold_aseg_std',
+        'bold_aseg_t1', 'bold_cifti', 'bold_mask_std', 'bold_mask_t1', 'bold_std',
+        'bold_std_ref', 'bold_t1', 'bold_t1_ref', 'cifti_variant', 'cifti_variant_key',
+        'confounds', 'confounds_metadata', 'melodic_mix', 'nonaggr_denoised_file',
+        'source_file', 'surfaces', 'template']),
         name='inputnode')
 
     raw_sources = pe.Node(niu.Function(function=_bids_relative), name='raw_sources')
@@ -62,7 +59,8 @@ def init_func_derivatives_wf(
     workflow.connect([
         (inputnode, raw_sources, [('source_file', 'in_files')]),
         (inputnode, ds_confounds, [('source_file', 'source_file'),
-                                   ('confounds', 'in_file')]),
+                                   ('confounds', 'in_file'),
+                                   ('confounds_metadata', 'meta_dict')]),
     ])
 
     # Resample to T1w space
