@@ -71,8 +71,11 @@ jobs:
       - persist_to_workspace:
           root: /tmp
           paths:
-            - cache/docker.tar.gz
             - src/fmriprep
+      - save_cache:
+         key: docker-v3-{{ .Branch }}-{{ epoch }}
+         paths:
+            - /tmp/cache/docker.tar.gz
 
   get_data:
     machine:
@@ -144,10 +147,8 @@ jobs:
       - persist_to_workspace:
           root: /tmp
           paths:
-            - data
             - fslicense
             - ds005/nipype.cfg
-            - ds005/derivatives
             - ds054/nipype.cfg
             - ds210/nipype.cfg
       - save_cache:
@@ -187,27 +188,10 @@ jobs:
             else
               echo "Pre-computed masks were cached"
             fi
-      - persist_to_workspace:
-          root: /tmp
-          paths:
-            - data
       - save_cache:
          key: regression-v3-{{ epoch }}
          paths:
             - /tmp/data
-
-  update_cache:
-    machine:
-      # Ubuntu 14.04 with Docker 17.10.0-ce
-      image: circleci/classic:201711-01
-    working_directory: /tmp/src/fmriprep
-    steps:
-      - attach_workspace:
-          at: /tmp
-      - save_cache:
-         key: docker-v3-{{ .Branch }}-{{ epoch }}
-         paths:
-            - /tmp/cache/docker.tar.gz
 
   test_pytest:
     machine:
@@ -227,6 +211,12 @@ jobs:
 
       - attach_workspace:
           at: /tmp
+      - restore_cache:
+          keys:
+            - docker-v3-{{ .Branch }}-
+      - restore_cache:
+          keys:
+            - regression-v3-
       - run:
           name: Load Docker image layer cache
           no_output_timeout: 30m
@@ -338,6 +328,12 @@ jobs:
 
       - attach_workspace:
           at: /tmp
+      - restore_cache:
+          keys:
+            - docker-v3-{{ .Branch }}-
+      - restore_cache:
+          keys:
+            - data-v6-
       - restore_cache:
           keys:
             - ds005-anat-v14-{{ .Branch }}-{{ epoch }}
@@ -484,6 +480,12 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
+            - docker-v3-{{ .Branch }}-
+      - restore_cache:
+          keys:
+            - data-v6-
+      - restore_cache:
+          keys:
             - ds054-anat-v12-{{ .Branch }}-{{ epoch }}
             - ds054-anat-v12-{{ .Branch }}
             - ds054-anat-v12-master
@@ -613,6 +615,12 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
+            - docker-v3-{{ .Branch }}-
+      - restore_cache:
+          keys:
+            - data-v6-
+      - restore_cache:
+          keys:
             - ds210-anat-v10-{{ .Branch }}-{{ epoch }}
             - ds210-anat-v10-{{ .Branch }}
             - ds210-anat-v10-master
@@ -700,8 +708,9 @@ jobs:
     working_directory: /tmp/src/fmriprep
     steps:
 
-      - attach_workspace:
-          at: /tmp
+      - restore_cache:
+          keys:
+            - docker-v3-{{ .Branch }}-
       - run:
           name: Load Docker image layer cache
           no_output_timeout: 30m
@@ -728,9 +737,9 @@ jobs:
       image: circleci/classic:201711-01
     working_directory: /tmp/src/fmriprep
     steps:
-
-      - attach_workspace:
-          at: /tmp
+      - restore_cache:
+          keys:
+            - docker-v3-{{ .Branch }}-
       - run:
           name: Load Docker image layer cache
           no_output_timeout: 30m
@@ -933,18 +942,6 @@ workflows:
           filters:
             branches:
               ignore:
-                - /docker\/.*/
-            tags:
-              only: /.*/
-
-      - update_cache:
-          requires:
-            - build
-          filters:
-            branches:
-              ignore:
-                - /docs?\/.*/
-                - /tests?\/.*/
                 - /docker\/.*/
             tags:
               only: /.*/
