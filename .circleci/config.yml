@@ -15,7 +15,7 @@ jobs:
             apk add --no-cache pigz python3
       - restore_cache:
           keys:
-            - docker-v3-{{ .Branch }}-{{ epoch }}
+            - docker-v3-{{ .Branch }}-{{ .Revision }}
             - docker-v3-{{ .Branch }}-
             - docker-v3-master-
             - docker-v3-
@@ -73,7 +73,7 @@ jobs:
           paths:
             - src/fmriprep
       - save_cache:
-         key: docker-v3-{{ .Branch }}-{{ epoch }}
+         key: docker-v3-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
          paths:
             - /tmp/cache/docker.tar.gz
 
@@ -85,7 +85,7 @@ jobs:
     steps:
       - restore_cache:
           keys:
-            - data-v6-{{ epoch }}
+            - data-v6-{{ .Revision }}
             - data-v6-
       - run:
           name: Get test data from ds000005
@@ -152,7 +152,7 @@ jobs:
             - ds054/nipype.cfg
             - ds210/nipype.cfg
       - save_cache:
-         key: data-v6-{{ epoch }}
+         key: data-v6-{{ .Revision }}-{{ epoch }}
          paths:
             - /tmp/data
             - /tmp/ds005/derivatives/freesurfer
@@ -165,7 +165,7 @@ jobs:
     steps:
       - restore_cache:
           keys:
-            - regression-v3-{{ epoch }}
+            - regression-v3-{{ .Revision }}
             - regression-v3-
       - run:
           name: Get truncated BOLD series
@@ -189,7 +189,7 @@ jobs:
               echo "Pre-computed masks were cached"
             fi
       - save_cache:
-         key: regression-v3-{{ epoch }}
+         key: regression-v3-{{ .Revision }}-{{ epoch }}
          paths:
             - /tmp/data
 
@@ -213,10 +213,10 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - docker-v3-{{ .Branch }}-
+            - docker-v3-{{ .Branch }}-{{ .Revision }}
       - restore_cache:
           keys:
-            - regression-v3-
+            - regression-v3-{{ .Revision }}
       - run:
           name: Load Docker image layer cache
           no_output_timeout: 30m
@@ -330,13 +330,13 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - docker-v3-{{ .Branch }}-
+            - docker-v3-{{ .Branch }}-{{ .Revision }}
       - restore_cache:
           keys:
-            - data-v6-
+            - data-v6-{{ .Revision }}
       - restore_cache:
           keys:
-            - ds005-anat-v14-{{ .Branch }}-{{ epoch }}
+            - ds005-anat-v14-{{ .Branch }}-{{ .Revision }}
             - ds005-anat-v14-{{ .Branch }}
             - ds005-anat-v14-master
             - ds005-anat-v14-
@@ -380,7 +380,7 @@ jobs:
             rm -rf /tmp/ds005/work/reportlets
             rm -rf /tmp/ds005/derivatives/fmriprep
       - save_cache:
-         key: ds005-anat-v14-{{ .Branch }}-{{ epoch }}
+         key: ds005-anat-v14-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
          paths:
             - /tmp/ds005/work
 
@@ -480,13 +480,13 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - docker-v3-{{ .Branch }}-
+            - docker-v3-{{ .Branch }}-{{ .Revision }}
       - restore_cache:
           keys:
-            - data-v6-
+            - data-v6-{{ .Revision }}
       - restore_cache:
           keys:
-            - ds054-anat-v12-{{ .Branch }}-{{ epoch }}
+            - ds054-anat-v12-{{ .Branch }}-{{ .Revision }}
             - ds054-anat-v12-{{ .Branch }}
             - ds054-anat-v12-master
             - ds054-anat-v12-
@@ -529,7 +529,7 @@ jobs:
             rm -rf /tmp/ds054/work/reportlets
             rm -rf /tmp/ds054/derivatives/fmriprep
       - save_cache:
-         key: ds054-anat-v12-{{ .Branch }}-{{ epoch }}
+         key: ds054-anat-v12-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
          paths:
             - /tmp/ds054/work
 
@@ -615,14 +615,14 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - docker-v3-{{ .Branch }}-
+            - docker-v3-{{ .Branch }}-{{ .Revision }}
       - restore_cache:
           keys:
-            - data-v6-
+            - data-v6-{{ .Revision }}
       - restore_cache:
           keys:
-            - ds210-anat-v10-{{ .Branch }}-{{ epoch }}
-            - ds210-anat-v10-{{ .Branch }}
+            - ds210-anat-v10-{{ .Branch }}-{{ .Revision }}
+            - ds210-anat-v10-{{ .Branch }}-
             - ds210-anat-v10-master
             - ds210-anat-v10-
       - run:
@@ -664,7 +664,7 @@ jobs:
             rm -rf /tmp/ds210/work/reportlets
             rm -rf /tmp/ds210/derivatives/fmriprep
       - save_cache:
-         key: ds210-anat-v10-{{ .Branch }}-{{ epoch }}
+         key: ds210-anat-v10-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
          paths:
             - /tmp/ds210/work
 
@@ -710,7 +710,7 @@ jobs:
 
       - restore_cache:
           keys:
-            - docker-v3-{{ .Branch }}-
+            - docker-v3-{{ .Branch }}-{{ .Revision }}
       - run:
           name: Load Docker image layer cache
           no_output_timeout: 30m
@@ -739,7 +739,7 @@ jobs:
     steps:
       - restore_cache:
           keys:
-            - docker-v3-{{ .Branch }}-
+            - docker-v3-{{ .Branch }}-{{ .Revision }}
       - run:
           name: Load Docker image layer cache
           no_output_timeout: 30m
