@@ -46,6 +46,9 @@ is presented below:
             ('MNI152Lin', {}), ('fsaverage', {'density': '10k'}),
             ('T1w', {}), ('fsnative', {})]),
         reportlets_dir='.',
+        regressors_all_comps=False,
+        regressors_dvars_th=1.5,
+        regressors_fd_th=0.5,
         skull_strip_fixed_seed=False,
         skull_strip_template='OASIS30ANTs',
         subject_id='test',
@@ -299,6 +302,9 @@ BOLD preprocessing
         reportlets_dir='.',
         t2s_coreg=False,
         use_aroma=False,
+        regressors_all_comps=False,
+        regressors_fd_th=0.5,
+        regressors_dvars_th=1.5,
         use_bbr=True,
         use_syn=True,
         layout=BIDSLayout('.'),
@@ -543,7 +549,11 @@ Confounds estimation
         name="discover_wf",
         mem_gb=1,
         metadata={"RepetitionTime": 2.0,
-                  "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]})
+                  "SliceTiming": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]},
+        regressors_all_comps=False,
+        regressors_dvars_th=1.5,
+        regressors_fd_th=0.5,
+    )
 
 Given a motion-corrected fMRI, a brain mask, ``mcflirt`` movement parameters and a
 segmentation, the `discover_wf` sub-workflow calculates potential
