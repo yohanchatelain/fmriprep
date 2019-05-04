@@ -182,6 +182,22 @@ grids""" % (', '.join('"%s"' % s for s in templates()),
                          help='Exact or maximum number of MELODIC components to estimate '
                          '(positive = exact, negative = maximum)')
 
+    # Confounds options
+    g_confounds = parser.add_argument_group('Specific options for estimating confounds')
+    g_confounds.add_argument(
+        '--return-all-components', required=False, action='store_true', default=False,
+        help='Include all components estimated in CompCor decomposition in the confounds '
+             'file instead of only the components sufficient to explain 50 percent of '
+             'BOLD variance in each CompCor mask')
+    g_confounds.add_argument(
+        '--fd-spike-threshold', required=False, action='store', default=0.5, type=float,
+        help='Threshold for flagging a frame as an outlier on the basis of framewise '
+             'displacement')
+    g_confounds.add_argument(
+        '--dvars-spike-threshold', required=False, action='store', default=1.5, type=float,
+        help='Threshold for flagging a frame as an outlier on the basis of standardised '
+             'DVARS')
+
     #  ANTs options
     g_ants = parser.add_argument_group('Specific options for ANTs registrations')
     g_ants.add_argument('--skull-strip-template', action='store', default='OASIS30ANTs',
@@ -574,6 +590,9 @@ def build_workflow(opts, retval):
         output_dir=str(output_dir),
         output_spaces=output_spaces,
         run_uuid=run_uuid,
+        regressors_all_comps=opts.return_all_components,
+        regressors_fd_th=opts.fd_spike_threshold,
+        regressors_dvars_th=opts.dvars_spike_threshold,
         skull_strip_fixed_seed=opts.skull_strip_fixed_seed,
         skull_strip_template=opts.skull_strip_template,
         subject_list=subject_list,

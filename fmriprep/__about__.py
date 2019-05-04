@@ -86,10 +86,10 @@ REQUIRES = [
     'indexed_gzip>=0.8.8',
     'nibabel>=2.2.1',
     'nilearn!=0.5.0,!=0.5.1',
-    'nipype>=1.1.6',
+    'nipype @ git+https://github.com/nipy/nipype.git@'
+    'd353f0d879826031334b09d33e9443b8c9b3e7fe',
     'nitime',
-    'niworkflows @ git+https://github.com/poldracklab/niworkflows.git@'
-    'e8f677a0407fc312b7f3d87a4c47726ceb8cd975',
+    'niworkflows<0.10.0a0,>=0.9.1.post1',
     'numpy',
     'pandas',
     'psutil>=5.4',
@@ -104,8 +104,8 @@ REQUIRES = [
 
 
 LINKS_REQUIRES = [
-    'git+https://github.com/poldracklab/niworkflows.git@'
-    'e8f677a0407fc312b7f3d87a4c47726ceb8cd975#egg=niworkflows',
+    'git+https://github.com/nipy/nipype.git@'
+    'd353f0d879826031334b09d33e9443b8c9b3e7fe#egg=nipype',
 ]
 
 TESTS_REQUIRES = [
