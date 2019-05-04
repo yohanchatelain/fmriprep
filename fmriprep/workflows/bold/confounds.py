@@ -43,10 +43,10 @@ DEFAULT_MEMORY_MIN_GB = 0.01
 def init_bold_confs_wf(
     mem_gb,
     metadata,
+    regressors_all_comps,
+    regressors_dvars_th,
+    regressors_fd_th,
     name="bold_confs_wf",
-    regressors_all_comps=False,
-    regressors_dvars_th=1.5,
-    regressors_fd_th=0.5,
 ):
     """
     This workflow calculates confounds for a BOLD series, and aggregates them
