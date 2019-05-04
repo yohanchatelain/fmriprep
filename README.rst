@@ -1,5 +1,3 @@
-.. include:: links.rst
-
 fmriprep: A Robust Preprocessing Pipeline for fMRI Data
 =======================================================
 
@@ -136,5 +134,3 @@ Please acknowledge this work by mentioning explicitly the name of this software
 (fmriprep) and the version, along with a link to the `GitHub repository
 <https://github.com/poldracklab/fmriprep>`_ or the Zenodo reference.
 For more details, please see :ref:`citation`.
-
-.. include:: license.rst

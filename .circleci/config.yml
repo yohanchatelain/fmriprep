@@ -228,14 +228,6 @@ jobs:
       - attach_workspace:
           at: /tmp
       - run:
-          name: Check PyPi preconditions
-          command: |
-            pyenv global 3.5.2
-            virtualenv venv
-            pip install "setuptools>=27.0" cython numpy twine docutils
-            python setup.py check -r -s
-            python setup.py sdist
-      - run:
           name: Load Docker image layer cache
           no_output_timeout: 30m
           command: |
@@ -273,6 +265,7 @@ jobs:
             pyenv local $PY2
             echo -n "Python version: "
             python --version
+            pip install --upgrade pip setuptools
             pip install --upgrade wrapper/
             which fmriprep-docker
             fmriprep-docker -i poldracklab/fmriprep:latest --help
@@ -285,13 +278,13 @@ jobs:
             pyenv local $PY3
             echo -n "Python version: "
             python --version
+            pip install --upgrade pip setuptools
             pip install --upgrade wrapper/
             which fmriprep-docker
             fmriprep-docker -i poldracklab/fmriprep:latest --help
             fmriprep-docker -i poldracklab/fmriprep:latest --version
       - store_artifacts:
           path: /tmp/data/reports
-
 
   build_docs:
     docker:
@@ -355,7 +348,7 @@ jobs:
           name: Setting up test
           command: |
             mkdir -p /tmp/ds005/derivatives && sudo setfacl -d -m group:$(id -gn):rwx /tmp/ds005/derivatives && sudo setfacl -m group:$(id -gn):rwx /tmp/ds005/derivatives
-            pip install future numpy
+            pip install --upgrade pip setuptools
             pip install --upgrade /tmp/src/fmriprep/wrapper/
       - run:
           name: Load Docker image layer cache
@@ -499,7 +492,7 @@ jobs:
           name: Setting up test
           command: |
             mkdir -p /tmp/ds054/derivatives && sudo setfacl -d -m group:$(id -gn):rwx /tmp/ds054/derivatives && sudo setfacl -m group:$(id -gn):rwx /tmp/ds054/derivatives
-            pip install future numpy
+            pip install --upgrade pip setuptools
             pip install --upgrade /tmp/src/fmriprep/wrapper/
       - run:
           name: Load Docker image layer cache
@@ -628,7 +621,7 @@ jobs:
           name: Setting up test
           command: |
             mkdir -p /tmp/ds210/derivatives && sudo setfacl -d -m group:$(id -gn):rwx /tmp/ds210/derivatives && sudo setfacl -m group:$(id -gn):rwx /tmp/ds210/derivatives
-            pip install future numpy
+            pip install --upgrade pip setuptools
             pip install --upgrade /tmp/src/fmriprep/wrapper/
       - run:
           name: Load Docker image layer cache
@@ -764,26 +757,131 @@ jobs:
               fi
             fi
 
+  test_deploy_pypi:
+    machine:
+      image: circleci/classic:201711-01
+    working_directory: /tmp/src/fmriprep
+    steps:
+      - checkout
+      - run:
+          name: Build fMRIPrep
+          command: |
+            pyenv local 3.5.2
+            pip install twine  # For use in checking distributions
+            THISVERSION=$( python get_version.py )
+            virtualenv --python=python build
+            source build/bin/activate
+            pip install --upgrade "pip>=19.1" numpy
+            echo "${CIRCLE_TAG:-$THISVERSION}" > fmriprep/VERSION
+            python setup.py sdist
+            pip wheel --no-deps -w dist/ .
+      - run:
+          name: Check sdist distribution
+          command: |
+            pyenv local 3.5.2
+            THISVERSION=$( python get_version.py )
+            twine check dist/fmriprep*.tar.gz
+            virtualenv --python=python sdist
+            source sdist/bin/activate
+            pip install --upgrade "pip>=19.1" numpy
+            pip install dist/fmriprep*.tar.gz
+            which fmriprep | grep sdist\\/bin
+            test "$(fmriprep --version)" = "fmriprep v${THISVERSION}"
+      - run:
+          name: Check wheel distribution
+          command: |
+            pyenv local 3.5.2
+            THISVERSION=$( python get_version.py )
+            twine check dist/fmriprep*.whl
+            virtualenv --python=python wheel
+            source wheel/bin/activate
+            pip install dist/fmriprep*.whl
+            which fmriprep | grep wheel\\/bin
+            test "$(fmriprep --version)" = "fmriprep v${THISVERSION}"
+      - run:
+          name: Build fmriprep-docker
+          command: |
+            pyenv local 3.5.2
+            THISVERSION=$( python get_version.py )
+            cd wrapper
+            virtualenv --python=python build
+            source build/bin/activate
+            pip install --upgrade "pip>=19.1"
+            sed -i -E "s/(__version__ = )'[A-Za-z0-9.-]+'/\1'${CIRCLE_TAG:-$THISVERSION}'/" fmriprep_docker.py
+            python setup.py sdist
+            pip wheel --no-deps -w dist/ .
+      - run:
+          name: Check sdist distribution
+          command: |
+            pyenv local 3.5.2
+            THISVERSION=$( python get_version.py )
+            cd wrapper
+            twine check dist/fmriprep*.tar.gz
+            virtualenv --python=python sdist
+            source sdist/bin/activate
+            pip install --upgrade "pip>=19.1"
+            pip install dist/fmriprep*.tar.gz
+            which fmriprep-docker | grep sdist\\/bin
+            test "$(yes n | fmriprep-docker --version | head -n 1)" \
+                = "fmriprep wrapper ${THISVERSION}"
+      - run:
+          name: Check wheel distribution
+          command: |
+            pyenv local 3.5.2
+            THISVERSION=$( python get_version.py )
+            cd wrapper
+            twine check dist/fmriprep*.whl
+            virtualenv --python=python wheel
+            source wheel/bin/activate
+            pip install dist/fmriprep*.whl
+            which fmriprep-docker | grep wheel\\/bin
+            test "$(yes n | fmriprep-docker --version | head -n 1)" \
+                = "fmriprep wrapper ${THISVERSION}"
+
   deploy_pypi:
     machine:
       image: circleci/classic:201711-01
     working_directory: /tmp/src/fmriprep
     steps:
-      - attach_workspace:
-          at: /tmp
+      - checkout
       - run:
-          name: Deploy to PyPi
+          name: Build fMRIPrep
           command: |
-            pyenv global 3.5.2
-            virtualenv venv
-            pip install "setuptools>=27.0" cython numpy twine docutils
-            echo "${CIRCLE_TAG}" > fmriprep/VERSION
-            echo "include fmriprep/VERSION" >> MANIFEST.in
-            python setup.py check -r -s
+            pyenv local 3.5.2
+            THISVERSION=$( python get_version.py )
+            virtualenv --python=python build
+            source build/bin/activate
+            pip install --upgrade "pip>=19.1" numpy
+            echo "${CIRCLE_TAG:-$THISVERSION}" > fmriprep/VERSION
             python setup.py sdist
-            twine upload dist/*
-            cd wrapper && python setup.py sdist
-            twine upload dist/*
+            pip wheel --no-deps -w dist/ .
+      - run:
+          name: Build fmriprep-docker
+          command: |
+            pyenv local 3.5.2
+            THISVERSION=$( python get_version.py )
+            cd wrapper
+            virtualenv --python=python build
+            source build/bin/activate
+            pip install --upgrade "pip>=19.1"
+            sed -i -E "s/(__version__ = )'[A-Za-z0-9.-]+'/\1'${CIRCLE_TAG:-$THISVERSION}'/" fmriprep_docker.py
+            python setup.py sdist
+            pip wheel --no-deps -w dist/ .
+      - run:
+          name: Upload packages to PyPI
+          command: |
+            pyenv local 3.5.2
+            pip install twine
+            twine upload dist/* wrapper/dist/*
+
+  deployable:
+    machine:
+      image: circleci/classic:201711-01
+    working_directory: /tmp/src/fmriprep
+    steps:
+      - run:
+          name: Ready!
+          command: echo "All tests passed!"
 
 workflows:
   version: 2
@@ -827,6 +925,14 @@ workflows:
                 - /ds005\/.*/
                 - /ds054\/.*/
                 - /ds210\/.*/
+                - /docker\/.*/
+            tags:
+              only: /.*/
+
+      - test_deploy_pypi:
+          filters:
+            branches:
+              ignore:
                 - /docker\/.*/
             tags:
               only: /.*/
@@ -911,9 +1017,9 @@ workflows:
             branches:
               only: /docker\/.*/
 
-      - deploy_docker:
+      - deployable:
           requires:
-            - build
+            - test_deploy_pypi
             - test_pytest
             - build_docs
             - ds005
@@ -925,14 +1031,18 @@ workflows:
             tags:
               only: /.*/
 
+      - deploy_docker:
+          requires:
+            - deployable
+          filters:
+            branches:
+              only: master
+            tags:
+              only: /.*/
+
       - deploy_pypi:
           requires:
-            - build
-            - test_pytest
-            - build_docs
-            - ds005
-            - ds054
-            - ds210
+            - deployable
           filters:
             branches:
               ignore: /.*/
