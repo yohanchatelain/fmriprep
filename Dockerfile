@@ -173,7 +173,7 @@ RUN pip install --no-cache-dir "templateflow>=0.1.3,<0.2.0a0" && \
 # Installing dev requirements (packages that are not in pypi)
 WORKDIR /src/
 COPY requirements.txt requirements.txt
-RUN pip install --no-cache-dir -U pip>=18.1 && \
+RUN pip install --no-cache-dir -U "pip==19.1" && \
     pip install --no-cache-dir -r requirements.txt
 
 # Installing FMRIPREP
