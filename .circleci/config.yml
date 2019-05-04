@@ -265,6 +265,7 @@ jobs:
             pyenv local $PY2
             echo -n "Python version: "
             python --version
+            pip install --upgrade pip setuptools
             pip install --upgrade wrapper/
             which fmriprep-docker
             fmriprep-docker -i poldracklab/fmriprep:latest --help
@@ -277,6 +278,7 @@ jobs:
             pyenv local $PY3
             echo -n "Python version: "
             python --version
+            pip install --upgrade pip setuptools
             pip install --upgrade wrapper/
             which fmriprep-docker
             fmriprep-docker -i poldracklab/fmriprep:latest --help
@@ -346,7 +348,7 @@ jobs:
           name: Setting up test
           command: |
             mkdir -p /tmp/ds005/derivatives && sudo setfacl -d -m group:$(id -gn):rwx /tmp/ds005/derivatives && sudo setfacl -m group:$(id -gn):rwx /tmp/ds005/derivatives
-            pip install future numpy
+            pip install --upgrade pip setuptools
             pip install --upgrade /tmp/src/fmriprep/wrapper/
       - run:
           name: Load Docker image layer cache
@@ -490,7 +492,7 @@ jobs:
           name: Setting up test
           command: |
             mkdir -p /tmp/ds054/derivatives && sudo setfacl -d -m group:$(id -gn):rwx /tmp/ds054/derivatives && sudo setfacl -m group:$(id -gn):rwx /tmp/ds054/derivatives
-            pip install future numpy
+            pip install --upgrade pip setuptools
             pip install --upgrade /tmp/src/fmriprep/wrapper/
       - run:
           name: Load Docker image layer cache
@@ -619,7 +621,7 @@ jobs:
           name: Setting up test
           command: |
             mkdir -p /tmp/ds210/derivatives && sudo setfacl -d -m group:$(id -gn):rwx /tmp/ds210/derivatives && sudo setfacl -m group:$(id -gn):rwx /tmp/ds210/derivatives
-            pip install future numpy
+            pip install --upgrade pip setuptools
             pip install --upgrade /tmp/src/fmriprep/wrapper/
       - run:
           name: Load Docker image layer cache
