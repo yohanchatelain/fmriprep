@@ -884,13 +884,10 @@ jobs:
             twine upload dist/* wrapper/dist/*
 
   deployable:
-    machine:
-      image: circleci/classic:201711-01
-    working_directory: /tmp/src/fmriprep
+    docker:
+      - image: busybox:latest
     steps:
-      - run:
-          name: Ready!
-          command: echo "All tests passed!"
+      - run: echo Deploying!
 
 workflows:
   version: 2
@@ -942,6 +939,7 @@ workflows:
           filters:
             branches:
               ignore:
+                - /docs\/.*/
                 - /docker\/.*/
             tags:
               only: /.*/
