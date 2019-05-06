@@ -15,7 +15,7 @@ jobs:
             apk add --no-cache pigz python3
       - restore_cache:
           keys:
-            - docker-v3-{{ .Branch }}-{{ epoch }}
+            - docker-v3-{{ .Branch }}-{{ .Revision }}
             - docker-v3-{{ .Branch }}-
             - docker-v3-master-
             - docker-v3-
@@ -66,13 +66,16 @@ jobs:
           command: |
             mkdir -p /tmp/cache
             docker save ubuntu:xenial-20161213 poldracklab/fmriprep:latest \
-            | pigz -8 -p 3 > /tmp/cache/docker.tar.gz
+            | pigz -3 > /tmp/cache/docker.tar.gz
 
       - persist_to_workspace:
           root: /tmp
           paths:
-            - cache/docker.tar.gz
             - src/fmriprep
+      - save_cache:
+         key: docker-v3-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
+         paths:
+            - /tmp/cache/docker.tar.gz
 
   get_data:
     machine:
@@ -82,7 +85,7 @@ jobs:
     steps:
       - restore_cache:
           keys:
-            - data-v6-{{ epoch }}
+            - data-v6-{{ .Revision }}
             - data-v6-
       - run:
           name: Get test data from ds000005
@@ -144,14 +147,12 @@ jobs:
       - persist_to_workspace:
           root: /tmp
           paths:
-            - data
             - fslicense
             - ds005/nipype.cfg
-            - ds005/derivatives
             - ds054/nipype.cfg
             - ds210/nipype.cfg
       - save_cache:
-         key: data-v6-{{ epoch }}
+         key: data-v6-{{ .Revision }}-{{ epoch }}
          paths:
             - /tmp/data
             - /tmp/ds005/derivatives/freesurfer
@@ -164,7 +165,7 @@ jobs:
     steps:
       - restore_cache:
           keys:
-            - regression-v3-{{ epoch }}
+            - regression-v3-{{ .Revision }}
             - regression-v3-
       - run:
           name: Get truncated BOLD series
@@ -187,27 +188,10 @@ jobs:
             else
               echo "Pre-computed masks were cached"
             fi
-      - persist_to_workspace:
-          root: /tmp
-          paths:
-            - data
       - save_cache:
-         key: regression-v3-{{ epoch }}
+         key: regression-v3-{{ .Revision }}-{{ epoch }}
          paths:
             - /tmp/data
-
-  update_cache:
-    machine:
-      # Ubuntu 14.04 with Docker 17.10.0-ce
-      image: circleci/classic:201711-01
-    working_directory: /tmp/src/fmriprep
-    steps:
-      - attach_workspace:
-          at: /tmp
-      - save_cache:
-         key: docker-v3-{{ .Branch }}-{{ epoch }}
-         paths:
-            - /tmp/cache/docker.tar.gz
 
   test_pytest:
     machine:
@@ -227,14 +211,12 @@ jobs:
 
       - attach_workspace:
           at: /tmp
-      - run:
-          name: Check PyPi preconditions
-          command: |
-            pyenv global 3.5.2
-            virtualenv venv
-            pip install "setuptools>=27.0" cython numpy twine docutils
-            python setup.py check -r -s
-            python setup.py sdist
+      - restore_cache:
+          keys:
+            - docker-v3-{{ .Branch }}-{{ .Revision }}
+      - restore_cache:
+          keys:
+            - regression-v3-{{ .Revision }}
       - run:
           name: Load Docker image layer cache
           no_output_timeout: 30m
@@ -273,6 +255,7 @@ jobs:
             pyenv local $PY2
             echo -n "Python version: "
             python --version
+            pip install --upgrade pip setuptools
             pip install --upgrade wrapper/
             which fmriprep-docker
             fmriprep-docker -i poldracklab/fmriprep:latest --help
@@ -285,6 +268,7 @@ jobs:
             pyenv local $PY3
             echo -n "Python version: "
             python --version
+            pip install --upgrade pip setuptools
             pip install --upgrade wrapper/
             which fmriprep-docker
             fmriprep-docker -i poldracklab/fmriprep:latest --help
@@ -292,49 +276,37 @@ jobs:
       - store_artifacts:
           path: /tmp/data/reports
 
-
   build_docs:
-    machine:
-      image: circleci/classic:201711-01
-    working_directory: /home/circleci/out/docs
+    docker:
+        - image: python:latest
+    working_directory: /tmp/src/fmriprep
     steps:
-      - checkout:
-          path: /home/circleci/src/fmriprep
+      - checkout
       - run:
           name: Check whether build should be skipped
           command: |
-            cd /home/circleci/src/fmriprep
             if [[ "$( git log --format=oneline -n 1 $CIRCLE_SHA1 | grep -i -E '\[skip[ _]?docs\]' )" != "" ]]; then
               echo "Skipping doc building job"
               circleci step halt
             fi
-
-      - attach_workspace:
-          at: /tmp
       - run:
-          name: Load Docker image layer cache
-          no_output_timeout: 30m
+          name: Check Python version and upgrade pip
           command: |
-            docker info
-            set +o pipefail
-            if [ -f /tmp/cache/docker.tar.gz ]; then
-              sudo apt update && sudo apt -y install pigz
-              pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
-              docker images
-            fi
+            python --version
+            python -m pip install -U pip
       - run:
-          name: Build fMRIPrep documentation
-          no_output_timeout: 2h
+          name: Install graphviz
           command: |
-            docker run -ti --rm=false -v $PWD:/_build_html \
-              --entrypoint=sphinx-build poldracklab/fmriprep:latest \
-              -T -E -b html -d _build/doctrees-readthedocs -W -D \
-              language=en /src/fmriprep/docs/ /_build_html 2>&1 \
-              | tee $PWD/builddocs.log
-            cat $PWD/builddocs.log
-            grep -qv "ERROR" $PWD/builddocs.log
+              apt-get update
+              apt-get install -y graphviz
+      - run:
+          name: Install fMRIPrep
+          command: python -m pip install ".[doc]"
+      - run:
+          name: Build documentation
+          command: make SPHINXOPTS="-W" -C docs html
       - store_artifacts:
-          path: /home/circleci/out/docs
+          path: /tmp/src/fmriprep/docs/_build/html
 
   ds005:
     machine:
@@ -358,7 +330,13 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - ds005-anat-v14-{{ .Branch }}-{{ epoch }}
+            - docker-v3-{{ .Branch }}-{{ .Revision }}
+      - restore_cache:
+          keys:
+            - data-v6-{{ .Revision }}
+      - restore_cache:
+          keys:
+            - ds005-anat-v14-{{ .Branch }}-{{ .Revision }}
             - ds005-anat-v14-{{ .Branch }}
             - ds005-anat-v14-master
             - ds005-anat-v14-
@@ -366,7 +344,7 @@ jobs:
           name: Setting up test
           command: |
             mkdir -p /tmp/ds005/derivatives && sudo setfacl -d -m group:$(id -gn):rwx /tmp/ds005/derivatives && sudo setfacl -m group:$(id -gn):rwx /tmp/ds005/derivatives
-            pip install future numpy
+            pip install --upgrade pip setuptools
             pip install --upgrade /tmp/src/fmriprep/wrapper/
       - run:
           name: Load Docker image layer cache
@@ -392,6 +370,7 @@ jobs:
                 -e FMRIPREP_DEV 1 -u $(id -u) \
                 --config $PWD/nipype.cfg -w /tmp/ds005/work \
                 /tmp/data/ds005 /tmp/ds005/derivatives participant \
+                --output-spaces MNI152NLin2009cAsym MNI152NLin6Asym \
                 --sloppy --write-graph --mem_mb 4096 \
                 --nthreads 2 --anat-only -vv
       - run:
@@ -401,7 +380,7 @@ jobs:
             rm -rf /tmp/ds005/work/reportlets
             rm -rf /tmp/ds005/derivatives/fmriprep
       - save_cache:
-         key: ds005-anat-v14-{{ .Branch }}-{{ epoch }}
+         key: ds005-anat-v14-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
          paths:
             - /tmp/ds005/work
 
@@ -501,7 +480,13 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - ds054-anat-v12-{{ .Branch }}-{{ epoch }}
+            - docker-v3-{{ .Branch }}-{{ .Revision }}
+      - restore_cache:
+          keys:
+            - data-v6-{{ .Revision }}
+      - restore_cache:
+          keys:
+            - ds054-anat-v12-{{ .Branch }}-{{ .Revision }}
             - ds054-anat-v12-{{ .Branch }}
             - ds054-anat-v12-master
             - ds054-anat-v12-
@@ -509,7 +494,7 @@ jobs:
           name: Setting up test
           command: |
             mkdir -p /tmp/ds054/derivatives && sudo setfacl -d -m group:$(id -gn):rwx /tmp/ds054/derivatives && sudo setfacl -m group:$(id -gn):rwx /tmp/ds054/derivatives
-            pip install future numpy
+            pip install --upgrade pip setuptools
             pip install --upgrade /tmp/src/fmriprep/wrapper/
       - run:
           name: Load Docker image layer cache
@@ -544,7 +529,7 @@ jobs:
             rm -rf /tmp/ds054/work/reportlets
             rm -rf /tmp/ds054/derivatives/fmriprep
       - save_cache:
-         key: ds054-anat-v12-{{ .Branch }}-{{ epoch }}
+         key: ds054-anat-v12-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
          paths:
             - /tmp/ds054/work
 
@@ -630,15 +615,21 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - ds210-anat-v10-{{ .Branch }}-{{ epoch }}
-            - ds210-anat-v10-{{ .Branch }}
+            - docker-v3-{{ .Branch }}-{{ .Revision }}
+      - restore_cache:
+          keys:
+            - data-v6-{{ .Revision }}
+      - restore_cache:
+          keys:
+            - ds210-anat-v10-{{ .Branch }}-{{ .Revision }}
+            - ds210-anat-v10-{{ .Branch }}-
             - ds210-anat-v10-master
             - ds210-anat-v10-
       - run:
           name: Setting up test
           command: |
             mkdir -p /tmp/ds210/derivatives && sudo setfacl -d -m group:$(id -gn):rwx /tmp/ds210/derivatives && sudo setfacl -m group:$(id -gn):rwx /tmp/ds210/derivatives
-            pip install future numpy
+            pip install --upgrade pip setuptools
             pip install --upgrade /tmp/src/fmriprep/wrapper/
       - run:
           name: Load Docker image layer cache
@@ -673,7 +664,7 @@ jobs:
             rm -rf /tmp/ds210/work/reportlets
             rm -rf /tmp/ds210/derivatives/fmriprep
       - save_cache:
-         key: ds210-anat-v10-{{ .Branch }}-{{ epoch }}
+         key: ds210-anat-v10-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
          paths:
             - /tmp/ds210/work
 
@@ -717,8 +708,9 @@ jobs:
     working_directory: /tmp/src/fmriprep
     steps:
 
-      - attach_workspace:
-          at: /tmp
+      - restore_cache:
+          keys:
+            - docker-v3-{{ .Branch }}-{{ .Revision }}
       - run:
           name: Load Docker image layer cache
           no_output_timeout: 30m
@@ -745,9 +737,9 @@ jobs:
       image: circleci/classic:201711-01
     working_directory: /tmp/src/fmriprep
     steps:
-
-      - attach_workspace:
-          at: /tmp
+      - restore_cache:
+          keys:
+            - docker-v3-{{ .Branch }}-{{ .Revision }}
       - run:
           name: Load Docker image layer cache
           no_output_timeout: 30m
@@ -774,26 +766,131 @@ jobs:
               fi
             fi
 
+  test_deploy_pypi:
+    machine:
+      image: circleci/classic:201711-01
+    working_directory: /tmp/src/fmriprep
+    steps:
+      - checkout
+      - run:
+          name: Build fMRIPrep
+          command: |
+            pyenv local 3.5.2
+            pip install twine  # For use in checking distributions
+            THISVERSION=$( python get_version.py )
+            virtualenv --python=python build
+            source build/bin/activate
+            pip install --upgrade "pip>=19.1" numpy
+            echo "${CIRCLE_TAG:-$THISVERSION}" > fmriprep/VERSION
+            python setup.py sdist
+            pip wheel --no-deps -w dist/ .
+      - run:
+          name: Check sdist distribution
+          command: |
+            pyenv local 3.5.2
+            THISVERSION=$( python get_version.py )
+            twine check dist/fmriprep*.tar.gz
+            virtualenv --python=python sdist
+            source sdist/bin/activate
+            pip install --upgrade "pip>=19.1" numpy
+            pip install dist/fmriprep*.tar.gz
+            which fmriprep | grep sdist\\/bin
+            test "$(fmriprep --version)" = "fmriprep v${THISVERSION}"
+      - run:
+          name: Check wheel distribution
+          command: |
+            pyenv local 3.5.2
+            THISVERSION=$( python get_version.py )
+            twine check dist/fmriprep*.whl
+            virtualenv --python=python wheel
+            source wheel/bin/activate
+            pip install dist/fmriprep*.whl
+            which fmriprep | grep wheel\\/bin
+            test "$(fmriprep --version)" = "fmriprep v${THISVERSION}"
+      - run:
+          name: Build fmriprep-docker
+          command: |
+            pyenv local 3.5.2
+            THISVERSION=$( python get_version.py )
+            cd wrapper
+            virtualenv --python=python build
+            source build/bin/activate
+            pip install --upgrade "pip>=19.1"
+            sed -i -E "s/(__version__ = )'[A-Za-z0-9.-]+'/\1'${CIRCLE_TAG:-$THISVERSION}'/" fmriprep_docker.py
+            python setup.py sdist
+            pip wheel --no-deps -w dist/ .
+      - run:
+          name: Check sdist distribution
+          command: |
+            pyenv local 3.5.2
+            THISVERSION=$( python get_version.py )
+            cd wrapper
+            twine check dist/fmriprep*.tar.gz
+            virtualenv --python=python sdist
+            source sdist/bin/activate
+            pip install --upgrade "pip>=19.1"
+            pip install dist/fmriprep*.tar.gz
+            which fmriprep-docker | grep sdist\\/bin
+            test "$(yes n | fmriprep-docker --version | head -n 1)" \
+                = "fmriprep wrapper ${THISVERSION}"
+      - run:
+          name: Check wheel distribution
+          command: |
+            pyenv local 3.5.2
+            THISVERSION=$( python get_version.py )
+            cd wrapper
+            twine check dist/fmriprep*.whl
+            virtualenv --python=python wheel
+            source wheel/bin/activate
+            pip install dist/fmriprep*.whl
+            which fmriprep-docker | grep wheel\\/bin
+            test "$(yes n | fmriprep-docker --version | head -n 1)" \
+                = "fmriprep wrapper ${THISVERSION}"
+
   deploy_pypi:
     machine:
       image: circleci/classic:201711-01
     working_directory: /tmp/src/fmriprep
     steps:
-      - attach_workspace:
-          at: /tmp
+      - checkout
       - run:
-          name: Deploy to PyPi
+          name: Build fMRIPrep
           command: |
-            pyenv global 3.5.2
-            virtualenv venv
-            pip install "setuptools>=27.0" cython numpy twine docutils
-            echo "${CIRCLE_TAG}" > fmriprep/VERSION
-            echo "include fmriprep/VERSION" >> MANIFEST.in
-            python setup.py check -r -s
+            pyenv local 3.5.2
+            THISVERSION=$( python get_version.py )
+            virtualenv --python=python build
+            source build/bin/activate
+            pip install --upgrade "pip>=19.1" numpy
+            echo "${CIRCLE_TAG:-$THISVERSION}" > fmriprep/VERSION
             python setup.py sdist
-            twine upload dist/*
-            cd wrapper && python setup.py sdist
-            twine upload dist/*
+            pip wheel --no-deps -w dist/ .
+      - run:
+          name: Build fmriprep-docker
+          command: |
+            pyenv local 3.5.2
+            THISVERSION=$( python get_version.py )
+            cd wrapper
+            virtualenv --python=python build
+            source build/bin/activate
+            pip install --upgrade "pip>=19.1"
+            sed -i -E "s/(__version__ = )'[A-Za-z0-9.-]+'/\1'${CIRCLE_TAG:-$THISVERSION}'/" fmriprep_docker.py
+            python setup.py sdist
+            pip wheel --no-deps -w dist/ .
+      - run:
+          name: Upload packages to PyPI
+          command: |
+            pyenv local 3.5.2
+            pip install twine
+            twine upload dist/* wrapper/dist/*
+
+  deployable:
+    machine:
+      image: circleci/classic:201711-01
+    working_directory: /tmp/src/fmriprep
+    steps:
+      - run:
+          name: Ready!
+          command: echo "All tests passed!"
 
 workflows:
   version: 2
@@ -801,6 +898,9 @@ workflows:
     jobs:
       - build:
           filters:
+            branches:
+              ignore:
+                - /docs?\/.*/
             tags:
               only: /.*/
 
@@ -827,8 +927,6 @@ workflows:
               only: /.*/
 
       - build_docs:
-          requires:
-            - build
           filters:
             branches:
               ignore:
@@ -840,14 +938,10 @@ workflows:
             tags:
               only: /.*/
 
-      - update_cache:
-          requires:
-            - build
+      - test_deploy_pypi:
           filters:
             branches:
               ignore:
-                - /docs?\/.*/
-                - /tests?\/.*/
                 - /docker\/.*/
             tags:
               only: /.*/
@@ -920,9 +1014,9 @@ workflows:
             branches:
               only: /docker\/.*/
 
-      - deploy_docker:
+      - deployable:
           requires:
-            - build
+            - test_deploy_pypi
             - test_pytest
             - build_docs
             - ds005
@@ -934,14 +1028,18 @@ workflows:
             tags:
               only: /.*/
 
+      - deploy_docker:
+          requires:
+            - deployable
+          filters:
+            branches:
+              only: master
+            tags:
+              only: /.*/
+
       - deploy_pypi:
           requires:
-            - build
-            - test_pytest
-            - build_docs
-            - ds005
-            - ds054
-            - ds210
+            - deployable
           filters:
             branches:
               ignore: /.*/

@@ -152,7 +152,7 @@ def init_enhance_and_skullstrip_bold_wf(
         omp_nthreads=1):
     """
     This workflow takes in a :abbr:`BOLD (blood-oxygen level-dependant)`
-    :abbr:`fMRI (functional MRI)` average/summary (e.g. a reference image
+    :abbr:`fMRI (functional MRI)` average/summary (e.g., a reference image
     averaging non-steady-state timepoints), and sharpens the histogram
     with the application of the N4 algorithm for removing the
     :abbr:`INU (intensity non-uniformity)` bias field and calculates a signal

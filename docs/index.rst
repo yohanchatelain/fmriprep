@@ -5,6 +5,7 @@
 
 .. include:: links.rst
 .. include:: ../README.rst
+.. include:: license.rst
 
 
 Contents
@@ -18,6 +19,7 @@ Contents
    usage
    workflows
    sdc
+   spaces
    outputs
    contributors
    citing
