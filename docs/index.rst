@@ -21,6 +21,7 @@ Contents
    sdc
    spaces
    outputs
+   faq_tips_tricks
    contributors
    citing
    api/index.rst
