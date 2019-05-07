@@ -40,9 +40,12 @@ components decompositions).
 Finally, several maintenance activity and documentation updates complete a long
 overdue series of changes to the codebase.
 
-With thanks to @yarikoptic, @danlurie, and @ariveradompenciel for contributions.
+With thanks to @yarikoptic, @danlurie, @ariveradompenciel, and @markushs for contributions.
 
 
+* DOC: Add FAQ, Tips, Tricks section to RTD (cont. #1601) (#1610) @franklin-feingold
+* ENH: Reduce ``BSplineFieldmap`` memory usage (#1609) @effigies
+* FIX: Update spline fitting distance for BOLD bias-field correction (#1603) @markushs
 * CI: Use caches to pass data between jobs (#1608) @effigies
 * MAINT: Consolidate build configuration in ``setup.cfg`` (#1607) @effigies
 * DOC: Companion of #1596 + punctual improvements of docs (#1605) @oesteban
