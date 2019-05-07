@@ -63,10 +63,13 @@ jobs:
           name: Smoke test Docker image
           command: |
             THISVERSION=$( python3 get_version.py )
+            THISVERSION=${THISVERSION%.dirty*}
             DOCKERVERSION=$(docker run --rm -it poldracklab/fmriprep:latest --version)
-            echo "VERSION: $THISVERSION"
-            echo "DOCKERVERSION: $DOCKERVERSION"
-            test "$DOCKERVERSION" = "fmriprep v${THISVERSION}"
+            DOCKERVERSION=${DOCKERVERSION%$'\r'}
+            DOCKERVERSION=${DOCKERVERSION#*"fmriprep v"}
+            echo "VERSION: \"$THISVERSION\""
+            echo "DOCKERVERSION: \"${DOCKERVERSION}\""
+            test "$DOCKERVERSION" = "$THISVERSION"
       - run:
           name: Docker save
           no_output_timeout: 40m
@@ -785,6 +788,7 @@ jobs:
             pyenv local 3.5.2
             pip install twine  # For use in checking distributions
             THISVERSION=$( python get_version.py )
+            THISVERSION=${THISVERSION%.dirty*}
             virtualenv --python=python build
             source build/bin/activate
             pip install --upgrade "pip>=19.1" numpy
@@ -798,6 +802,7 @@ jobs:
           command: |
             pyenv local 3.5.2
             THISVERSION=$( python get_version.py )
+            THISVERSION=${THISVERSION%.dirty*}
             twine check dist/fmriprep*.tar.gz
             virtualenv --python=python sdist
             source sdist/bin/activate
@@ -805,28 +810,34 @@ jobs:
             pip install dist/fmriprep*.tar.gz
             which fmriprep | grep sdist\\/bin
             INSTALLED_VERSION=$(fmriprep --version)
-            echo "VERSION: $THISVERSION"
-            echo "INSTALLED: $INSTALLED_VERSION"
-            test "$INSTALLED_VERSION" = "fmriprep v${THISVERSION}"
+            INSTALLED_VERSION=${INSTALLED_VERSION%$'\r'}
+            INSTALLED_VERSION=${INSTALLED_VERSION#*"fmriprep v"}
+            echo "VERSION: \"$THISVERSION\""
+            echo "INSTALLED: \"$INSTALLED_VERSION\""
+            test "$INSTALLED_VERSION" = "$THISVERSION"
       - run:
           name: Check wheel distribution
           command: |
             pyenv local 3.5.2
             THISVERSION=$( python get_version.py )
+            THISVERSION=${THISVERSION%.dirty*}
             twine check dist/fmriprep*.whl
             virtualenv --python=python wheel
             source wheel/bin/activate
             pip install dist/fmriprep*.whl
             which fmriprep | grep wheel\\/bin
             INSTALLED_VERSION=$(fmriprep --version)
-            echo "VERSION: $THISVERSION"
-            echo "INSTALLED: $INSTALLED_VERSION"
-            test "$INSTALLED_VERSION" = "fmriprep v${THISVERSION}"
+            INSTALLED_VERSION=${INSTALLED_VERSION%$'\r'}
+            INSTALLED_VERSION=${INSTALLED_VERSION#*"fmriprep v"}
+            echo "VERSION: \"$THISVERSION\""
+            echo "INSTALLED: \"$INSTALLED_VERSION\""
+            test "$INSTALLED_VERSION" = "$THISVERSION"
       - run:
           name: Build fmriprep-docker
           command: |
             pyenv local 3.5.2
             THISVERSION=$( python get_version.py )
+            THISVERSION=${THISVERSION%.dirty*}
             cd wrapper
             virtualenv --python=python build
             source build/bin/activate
@@ -841,6 +852,7 @@ jobs:
           command: |
             pyenv local 3.5.2
             THISVERSION=$( python get_version.py )
+            THISVERSION=${THISVERSION%.dirty*}
             cd wrapper
             twine check dist/fmriprep*.tar.gz
             virtualenv --python=python sdist
@@ -849,14 +861,18 @@ jobs:
             pip install dist/fmriprep*.tar.gz
             which fmriprep-docker | grep sdist\\/bin
             INSTALLED_VERSION=$(yes n | fmriprep-docker --version | head -n 1)
-            echo "VERSION: $THISVERSION"
-            echo "INSTALLED: $INSTALLED_VERSION"
-            test "$INSTALLED_VERSION" = "fmriprep wrapper ${THISVERSION}"
+            INSTALLED_VERSION=${INSTALLED_VERSION%$'\r'}
+            INSTALLED_VERSION=${INSTALLED_VERSION#*"fmriprep wrapper "}
+            echo "VERSION: \"$THISVERSION\""
+            echo "INSTALLED: \"$INSTALLED_VERSION\""
+            test "$INSTALLED_VERSION" = "$THISVERSION"
+            
       - run:
           name: Check wheel distribution
           command: |
             pyenv local 3.5.2
             THISVERSION=$( python get_version.py )
+            THISVERSION=${THISVERSION%.dirty*}
             cd wrapper
             twine check dist/fmriprep*.whl
             virtualenv --python=python wheel
@@ -864,9 +880,11 @@ jobs:
             pip install dist/fmriprep*.whl
             which fmriprep-docker | grep wheel\\/bin
             INSTALLED_VERSION=$(yes n | fmriprep-docker --version | head -n 1)
-            echo "VERSION: $THISVERSION"
-            echo "INSTALLED: $INSTALLED_VERSION"
-            test "$INSTALLED_VERSION" = "fmriprep wrapper ${THISVERSION}"
+            INSTALLED_VERSION=${INSTALLED_VERSION%$'\r'}
+            INSTALLED_VERSION=${INSTALLED_VERSION#*"fmriprep wrapper "}
+            echo "VERSION: \"$THISVERSION\""
+            echo "INSTALLED: \"$INSTALLED_VERSION\""
+            test "$INSTALLED_VERSION" = "$THISVERSION"
 
   deploy_pypi:
     machine:
