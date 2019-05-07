@@ -133,6 +133,7 @@ ENV PATH="/usr/local/miniconda/bin:$PATH" \
 
 # Installing precomputed python packages
 RUN conda install -y python=3.7.1 \
+                     pip=19.1 \
                      mkl=2018.0.3 \
                      mkl-service \
                      numpy=1.15.4 \
@@ -164,15 +165,11 @@ ENV TEMPLATEFLOW_HOME="/opt/templateflow"
 RUN mkdir -p $TEMPLATEFLOW_HOME
 RUN pip install --no-cache-dir "templateflow>=0.1.3,<0.2.0a0" && \
     python -c "from templateflow import api as tfapi; \
-               tfapi.get('MNI152Lin'); \
+               tfapi.get('MNI152NLin6Asym'); \
                tfapi.get('MNI152NLin2009cAsym'); \
-               tfapi.get('OASIS30ANTs'); \
-               tfapi.get('NKI');"
-
-# Installing dev requirements (packages that are not in pypi)
-WORKDIR /src/
-COPY requirements.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+               tfapi.get('OASIS30ANTs');" && \
+    find $TEMPLATEFLOW_HOME -type d -exec chmod go=u {} + && \
+    find $TEMPLATEFLOW_HOME -type f -exec chmod go=u {} +
 
 # Installing FMRIPREP
 COPY . /src/fmriprep
@@ -180,8 +177,7 @@ ARG VERSION
 # Force static versioning within container
 RUN echo "${VERSION}" > /src/fmriprep/fmriprep/VERSION && \
     echo "include fmriprep/VERSION" >> /src/fmriprep/MANIFEST.in && \
-    cd /src/fmriprep && \
-    pip install --no-cache-dir .[all]
+    pip install --no-cache-dir "/src/fmriprep[all]"
 
 RUN install -m 0755 \
     /src/fmriprep/scripts/generate_reference_mask.py \
