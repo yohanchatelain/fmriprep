@@ -155,7 +155,7 @@ def _gather_confounds(signals=None, dvars=None, std_dvars=None, fdisp=None,
     """
 
     def less_breakable(a_string):
-        ''' hardens the string to different envs (i.e. case insensitive, no whitespace, '#' '''
+        ''' hardens the string to different envs (i.e., case insensitive, no whitespace, '#' '''
         return ''.join(a_string.split()).strip('#')
 
     # Taken from https://stackoverflow.com/questions/1175208/
@@ -243,7 +243,7 @@ def _get_ica_confounds(ica_out_dir, skip_vols, newpath=None):
         LOGGER.warning('No noise components were classified')
         return None, motion_ics_out, melodic_mix_out
 
-    # the "good" ics, (e.g. not motion related)
+    # the "good" ics, (e.g., not motion related)
     good_ic_arr = np.delete(melodic_mix_arr, motion_ic_indices, 1).T
 
     # return dummy lists of zeros if no signal components were found

@@ -169,7 +169,7 @@ def init_enhance_and_skullstrip_bold_wf(
         omp_nthreads=1):
     """
     This workflow takes in a :abbr:`BOLD (blood-oxygen level-dependant)`
-    :abbr:`fMRI (functional MRI)` average/summary (e.g. a reference image
+    :abbr:`fMRI (functional MRI)` average/summary (e.g., a reference image
     averaging non-steady-state timepoints), and sharpens the histogram
     with the application of the N4 algorithm for removing the
     :abbr:`INU (intensity non-uniformity)` bias field and calculates a signal
@@ -255,8 +255,9 @@ def init_enhance_and_skullstrip_bold_wf(
                         run_without_submitting=True)
 
     # Run N4 normally, force num_threads=1 for stability (images are small, no need for >1)
-    n4_correct = pe.Node(ants.N4BiasFieldCorrection(dimension=3, copy_header=True),
-                         name='n4_correct', n_procs=1)
+    n4_correct = pe.Node(ants.N4BiasFieldCorrection(
+        dimension=3, copy_header=True, bspline_fitting_distance=200),
+        name='n4_correct', n_procs=1)
 
     # Create a generous BET mask out of the bias-corrected EPI
     skullstrip_first_pass = pe.Node(fsl.BET(frac=0.2, mask=True),
