@@ -34,21 +34,13 @@ from ..__about__ import __version__
 from .bold import init_func_preproc_wf
 
 
-<<<<<<< HEAD
-def init_fmriprep_wf(layout, subject_list, task_id, echo_idx, run_uuid, work_dir, output_dir,
-                     ignore, debug, low_mem, anat_only, longitudinal, t2s_coreg,
-                     omp_nthreads, skull_strip_template, skull_strip_fixed_seed,
-                     freesurfer, output_spaces, template, medial_surface_nan, cifti_output, hires,
-                     use_bbr, bold2t1w_dof, fmap_bspline, fmap_demean, use_syn, force_syn,
-                     use_aroma, err_on_aroma_warn, aroma_melodic_dim, template_out_grid,
-                     dummy_scans):
-=======
 def init_fmriprep_wf(
     anat_only,
     aroma_melodic_dim,
     bold2t1w_dof,
     cifti_output,
     debug,
+    dummy_scans,
     echo_idx,
     err_on_aroma_warn,
     fmap_bspline,
@@ -78,7 +70,6 @@ def init_fmriprep_wf(
     use_syn,
     work_dir,
 ):
->>>>>>> d82f80b02bb6c07d90b670cf717c0ba07683c76a
     """
     This workflow organizes the execution of FMRIPREP, with a sub-workflow for
     each subject.
@@ -95,48 +86,13 @@ def init_fmriprep_wf(
         BIDSLayout = namedtuple('BIDSLayout', ['root'])
         from fmriprep.workflows.base import init_fmriprep_wf
         os.environ['FREESURFER_HOME'] = os.getcwd()
-<<<<<<< HEAD
-        wf = init_fmriprep_wf(layout=BIDSLayout(),
-                              subject_list=['fmripreptest'],
-                              task_id='',
-                              echo_idx=None,
-                              run_uuid='X',
-                              work_dir='.',
-                              output_dir='.',
-                              ignore=[],
-                              debug=False,
-                              low_mem=False,
-                              anat_only=False,
-                              longitudinal=False,
-                              t2s_coreg=False,
-                              omp_nthreads=1,
-                              skull_strip_template='OASIS30ANTs',
-                              skull_strip_fixed_seed=False,
-                              freesurfer=True,
-                              output_spaces=['T1w', 'fsnative',
-                                            'template', 'fsaverage5'],
-                              template='MNI152NLin2009cAsym',
-                              medial_surface_nan=False,
-                              cifti_output=False,
-                              hires=True,
-                              use_bbr=True,
-                              bold2t1w_dof=9,
-                              fmap_bspline=False,
-                              fmap_demean=True,
-                              use_syn=True,
-                              force_syn=True,
-                              use_aroma=False,
-                              err_on_aroma_warn=False,
-                              aroma_melodic_dim=-200,
-                              template_out_grid='native',
-                              dummy_scans=None)
-=======
         wf = init_fmriprep_wf(
             anat_only=False,
             aroma_melodic_dim=-200,
             bold2t1w_dof=9,
             cifti_output=False,
             debug=False,
+            dummy_scans=None,
             echo_idx=None,
             err_on_aroma_warn=False,
             fmap_bspline=False,
@@ -168,7 +124,6 @@ def init_fmriprep_wf(
             use_syn=True,
             work_dir='.',
         )
->>>>>>> d82f80b02bb6c07d90b670cf717c0ba07683c76a
 
 
     Parameters
@@ -181,6 +136,8 @@ def init_fmriprep_wf(
             Generate bold CIFTI file in output spaces
         debug : bool
             Enable debugging outputs
+        dummy_scans : int or None
+            Number of volumes to consider as non steady state
         echo_idx : int or None
             Index of echo to preprocess in multiecho BOLD series,
             or ``None`` to preprocess all
@@ -246,22 +203,8 @@ def init_fmriprep_wf(
         use_syn : bool
             **Experimental**: Enable ANTs SyN-based susceptibility distortion correction (SDC).
             If fieldmaps are present and enabled, this is not run, by default.
-<<<<<<< HEAD
-        force_syn : bool
-            **Temporary**: Always run SyN-based SDC
-        use_aroma : bool
-            Perform ICA-AROMA on MNI-resampled functional series
-        err_on_aroma_warn : bool
-            Do not fail on ICA-AROMA errors
-        template_out_grid : str
-            Keyword ('native', '1mm' or '2mm') or path of custom reference
-            image for normalization
-        dummy_scans : int or None
-            Number of volumes to consider as non steady state
-=======
         work_dir : str
             Directory in which to store workflow execution state and temporary files
->>>>>>> d82f80b02bb6c07d90b670cf717c0ba07683c76a
 
     """
     fmriprep_wf = Workflow(name='fmriprep_wf')
@@ -284,6 +227,7 @@ def init_fmriprep_wf(
             bold2t1w_dof=bold2t1w_dof,
             cifti_output=cifti_output,
             debug=debug,
+            dummy_scans=dummy_scans,
             echo_idx=echo_idx,
             err_on_aroma_warn=err_on_aroma_warn,
             fmap_bspline=fmap_bspline,
@@ -312,15 +256,6 @@ def init_fmriprep_wf(
             use_aroma=use_aroma,
             use_bbr=use_bbr,
             use_syn=use_syn,
-<<<<<<< HEAD
-            force_syn=force_syn,
-            template_out_grid=template_out_grid,
-            use_aroma=use_aroma,
-            aroma_melodic_dim=aroma_melodic_dim,
-            err_on_aroma_warn=err_on_aroma_warn,
-            dummy_scans=dummy_scans,
-=======
->>>>>>> d82f80b02bb6c07d90b670cf717c0ba07683c76a
         )
 
         single_subject_wf.config['execution']['crashdump_dir'] = (
@@ -337,21 +272,13 @@ def init_fmriprep_wf(
     return fmriprep_wf
 
 
-<<<<<<< HEAD
-def init_single_subject_wf(layout, subject_id, task_id, echo_idx, name, reportlets_dir,
-                           output_dir, ignore, debug, low_mem, anat_only, longitudinal, t2s_coreg,
-                           omp_nthreads, skull_strip_template, skull_strip_fixed_seed,
-                           freesurfer, output_spaces, template, medial_surface_nan,
-                           cifti_output, hires, use_bbr, bold2t1w_dof, fmap_bspline, fmap_demean,
-                           use_syn, force_syn, template_out_grid,
-                           use_aroma, aroma_melodic_dim, err_on_aroma_warn, dummy_scans):
-=======
 def init_single_subject_wf(
     anat_only,
     aroma_melodic_dim,
     bold2t1w_dof,
     cifti_output,
     debug,
+    dummy_scans,
     echo_idx,
     err_on_aroma_warn,
     fmap_bspline,
@@ -381,7 +308,6 @@ def init_single_subject_wf(
     use_bbr,
     use_syn,
 ):
->>>>>>> d82f80b02bb6c07d90b670cf717c0ba07683c76a
     """
     This workflow organizes the preprocessing pipeline for a single subject.
     It collects and reports information about the subject, and prepares
@@ -452,6 +378,8 @@ def init_single_subject_wf(
             Generate bold CIFTI file in output spaces
         debug : bool
             Enable debugging outputs
+        dummy_scans : int or None
+            Number of volumes to consider as non steady state
         echo_idx : int or None
             Index of echo to preprocess in multiecho BOLD series,
             or ``None`` to preprocess all
@@ -519,20 +447,6 @@ def init_single_subject_wf(
         use_syn : bool
             **Experimental**: Enable ANTs SyN-based susceptibility distortion correction (SDC).
             If fieldmaps are present and enabled, this is not run, by default.
-<<<<<<< HEAD
-        force_syn : bool
-            **Temporary**: Always run SyN-based SDC
-        template_out_grid : str
-            Keyword ('native', '1mm' or '2mm') or path of custom reference
-            image for normalization
-        use_aroma : bool
-            Perform ICA-AROMA on MNI-resampled functional series
-        err_on_aroma_warn : bool
-            Do not fail on ICA-AROMA errors
-        dummy_scans : int or None
-            Number of volumes to consider as non steady state
-=======
->>>>>>> d82f80b02bb6c07d90b670cf717c0ba07683c76a
 
 
     Inputs
@@ -663,40 +577,13 @@ to workflows in *fMRIPrep*'s documentation]\
         return workflow
 
     for bold_file in subject_data['bold']:
-<<<<<<< HEAD
-        func_preproc_wf = init_func_preproc_wf(bold_file=bold_file,
-                                               layout=layout,
-                                               ignore=ignore,
-                                               freesurfer=freesurfer,
-                                               use_bbr=use_bbr,
-                                               t2s_coreg=t2s_coreg,
-                                               bold2t1w_dof=bold2t1w_dof,
-                                               reportlets_dir=reportlets_dir,
-                                               output_spaces=output_spaces,
-                                               template=template,
-                                               medial_surface_nan=medial_surface_nan,
-                                               cifti_output=cifti_output,
-                                               output_dir=output_dir,
-                                               omp_nthreads=omp_nthreads,
-                                               low_mem=low_mem,
-                                               fmap_bspline=fmap_bspline,
-                                               fmap_demean=fmap_demean,
-                                               use_syn=use_syn,
-                                               force_syn=force_syn,
-                                               debug=debug,
-                                               template_out_grid=template_out_grid,
-                                               use_aroma=use_aroma,
-                                               aroma_melodic_dim=aroma_melodic_dim,
-                                               err_on_aroma_warn=err_on_aroma_warn,
-                                               num_bold=len(subject_data['bold']),
-                                               dummy_scans=dummy_scans)
-=======
         func_preproc_wf = init_func_preproc_wf(
             aroma_melodic_dim=aroma_melodic_dim,
             bold2t1w_dof=bold2t1w_dof,
             bold_file=bold_file,
             cifti_output=cifti_output,
             debug=debug,
+            dummy_scans=dummy_scans,
             err_on_aroma_warn=err_on_aroma_warn,
             fmap_bspline=fmap_bspline,
             fmap_demean=fmap_demean,
@@ -719,7 +606,6 @@ to workflows in *fMRIPrep*'s documentation]\
             use_bbr=use_bbr,
             use_syn=use_syn,
         )
->>>>>>> d82f80b02bb6c07d90b670cf717c0ba07683c76a
 
         workflow.connect([
             (anat_preproc_wf, func_preproc_wf,

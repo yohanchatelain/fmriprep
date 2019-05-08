@@ -577,6 +577,7 @@ def build_workflow(opts, retval):
         bold2t1w_dof=opts.bold2t1w_dof,
         cifti_output=opts.cifti_output,
         debug=opts.sloppy,
+        dummy_scans=opts.dummy_scans,
         echo_idx=opts.echo_idx,
         err_on_aroma_warn=opts.error_on_aroma_warnings,
         fmap_bspline=opts.fmap_bspline,
