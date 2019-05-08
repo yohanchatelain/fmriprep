@@ -42,7 +42,8 @@ overdue series of changes to the codebase.
 
 With thanks to @yarikoptic, @danlurie, @ariveradompenciel, and @markushs for contributions.
 
-
+* FIX: Re-enable correct versioning within container (#1623) @oesteban
+* CI: Reduce pointless expenditures (#1614) @effigies
 * DOC: Add FAQ, Tips, Tricks section to RTD (cont. #1601) (#1610) @franklin-feingold
 * ENH: Reduce ``BSplineFieldmap`` memory usage (#1609) @effigies
 * FIX: Update spline fitting distance for BOLD bias-field correction (#1603) @markushs
