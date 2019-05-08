@@ -847,44 +847,6 @@ jobs:
             pip wheel --no-deps -w dist/ .
       - store_artifacts:
           path: /tmp/src/fmriprep/wrapper/dist
-      - run:
-          name: Check sdist distribution
-          command: |
-            pyenv local 3.5.2
-            THISVERSION=$( python get_version.py )
-            THISVERSION=${THISVERSION%.dirty*}
-            cd wrapper
-            twine check dist/fmriprep*.tar.gz
-            virtualenv --python=python sdist
-            source sdist/bin/activate
-            pip install --upgrade "pip>=19.1"
-            pip install dist/fmriprep*.tar.gz
-            which fmriprep-docker | grep sdist\\/bin
-            INSTALLED_VERSION=$(yes n | fmriprep-docker --version | head -n 1)
-            INSTALLED_VERSION=${INSTALLED_VERSION%$'\r'}
-            INSTALLED_VERSION=${INSTALLED_VERSION#*"fmriprep wrapper "}
-            echo "VERSION: \"$THISVERSION\""
-            echo "INSTALLED: \"$INSTALLED_VERSION\""
-            test "$INSTALLED_VERSION" = "$THISVERSION"
-            
-      - run:
-          name: Check wheel distribution
-          command: |
-            pyenv local 3.5.2
-            THISVERSION=$( python get_version.py )
-            THISVERSION=${THISVERSION%.dirty*}
-            cd wrapper
-            twine check dist/fmriprep*.whl
-            virtualenv --python=python wheel
-            source wheel/bin/activate
-            pip install dist/fmriprep*.whl
-            which fmriprep-docker | grep wheel\\/bin
-            INSTALLED_VERSION=$(yes n | fmriprep-docker --version | head -n 1)
-            INSTALLED_VERSION=${INSTALLED_VERSION%$'\r'}
-            INSTALLED_VERSION=${INSTALLED_VERSION#*"fmriprep wrapper "}
-            echo "VERSION: \"$THISVERSION\""
-            echo "INSTALLED: \"$INSTALLED_VERSION\""
-            test "$INSTALLED_VERSION" = "$THISVERSION"
 
   deploy_pypi:
     machine:
