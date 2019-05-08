@@ -64,6 +64,7 @@ jobs:
           command: |
             THISVERSION=$( python3 get_version.py )
             THISVERSION=${THISVERSION%.dirty*}
+            THISVERSION=${CIRCLE_TAG:-$THISVERSION}
             DOCKERVERSION=$(docker run --rm -it poldracklab/fmriprep:latest --version)
             DOCKERVERSION=${DOCKERVERSION%$'\r'}
             DOCKERVERSION=${DOCKERVERSION#*"fmriprep v"}
@@ -789,6 +790,7 @@ jobs:
             pip install twine  # For use in checking distributions
             THISVERSION=$( python get_version.py )
             THISVERSION=${THISVERSION%.dirty*}
+            THISVERSION=${CIRCLE_TAG:-$THISVERSION}
             virtualenv --python=python build
             source build/bin/activate
             pip install --upgrade "pip>=19.1" numpy
@@ -803,6 +805,7 @@ jobs:
             pyenv local 3.5.2
             THISVERSION=$( python get_version.py )
             THISVERSION=${THISVERSION%.dirty*}
+            THISVERSION=${CIRCLE_TAG:-$THISVERSION}
             twine check dist/fmriprep*.tar.gz
             virtualenv --python=python sdist
             source sdist/bin/activate
@@ -821,6 +824,7 @@ jobs:
             pyenv local 3.5.2
             THISVERSION=$( python get_version.py )
             THISVERSION=${THISVERSION%.dirty*}
+            THISVERSION=${CIRCLE_TAG:-$THISVERSION}
             twine check dist/fmriprep*.whl
             virtualenv --python=python wheel
             source wheel/bin/activate
