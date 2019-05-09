@@ -363,15 +363,15 @@ preprocessed BOLD runs*: {tpl}.
 
     workflow.connect([
         (inputnode, merge_xforms, [
-            ('anat2std_xfm', 'in1'),
             (('itk_bold_to_t1', _aslist), 'in2')]),
-        (merge_xforms, bold_to_std_transform, [('out', 'transforms')]),
         (inputnode, merge, [('name_source', 'header_source')]),
         (inputnode, bold_to_std_transform, [('bold_split', 'input_image')]),
+        (select_std, merge_xforms, [('anat2std_xfm', 'in1')]),
+        (merge_xforms, bold_to_std_transform, [('out', 'transforms')]),
+        (gen_ref, bold_to_std_transform, [('out_file', 'reference_image')]),
         (bold_to_std_transform, merge, [('out_files', 'in_files')]),
         (merge, gen_final_ref, [('out_file', 'inputnode.bold_file')]),
         (mask_std_tfm, gen_final_ref, [('output_image', 'inputnode.bold_mask')]),
-        (gen_ref, bold_to_std_transform, [('out_file', 'reference_image')]),
     ])
 
     # Connect output nodes
