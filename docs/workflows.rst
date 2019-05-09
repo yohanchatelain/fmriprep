@@ -27,6 +27,7 @@ is presented below:
         bold2t1w_dof=9,
         cifti_output=False,
         debug=False,
+        dummy_scans=None,
         echo_idx=None,
         err_on_aroma_warn=False,
         fmap_bspline=False,
@@ -57,15 +58,6 @@ is presented below:
         use_aroma=False,
         use_bbr=True,
         use_syn=True,
-<<<<<<< HEAD
-        force_syn=True,
-        template_out_grid='native',
-        use_aroma=False,
-        aroma_melodic_dim=-200,
-        err_on_aroma_warn=False,
-        dummy_scans=None,
-=======
->>>>>>> d82f80b02bb6c07d90b670cf717c0ba07683c76a
     )
 
 T1w/T2w preprocessing
