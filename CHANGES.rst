@@ -42,6 +42,7 @@ overdue series of changes to the codebase.
 
 With thanks to @yarikoptic, @danlurie, @ariveradompenciel, and @markushs for contributions.
 
+* FIX: Resampling of BOLD into standard spaces (#1627) @oesteban
 * FIX: Re-enable correct versioning within container (#1623) @oesteban
 * CI: Reduce pointless expenditures (#1614) @effigies
 * DOC: Add FAQ, Tips, Tricks section to RTD (cont. #1601) (#1610) @franklin-feingold
