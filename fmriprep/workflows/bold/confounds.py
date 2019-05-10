@@ -161,7 +161,7 @@ the aforementioned mask and the union of CSF and WM masks calculated
 in T1w space, after their projection to the native space of each
 functional run (using the inverse BOLD-to-T1w transformation). Components
 are also calculated separately within the WM and CSF masks.
-For each CompCor decomposition, the k components with the largest singular
+For each CompCor decomposition, the :math:`k` components with the largest singular
 values are retained, such that the retained components' time series are
 sufficient to explain 50 percent of variance across the nuisance mask (CSF,
 WM, combined, or temporal). The remaining components are dropped from

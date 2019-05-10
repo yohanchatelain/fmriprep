@@ -182,18 +182,19 @@ and the motion-related components identified by
 Four separate CompCor decompositions are performed to compute noise components: one temporal
 decomposition and three anatomical decompositions across three different noise ROIs: an eroded
 white matter compartment, an eroded CSF compartment, and a combined mask derived from the union
-of these. In general, only a subset of these decompositions should be used for further
-denoising. The original Behzadi aCompCor implementation ([Behzadi2007]_) can be applied using
+of these.
+In general, only a subset of these decompositions should be used for further denoising.
+The original Behzadi aCompCor implementation ([Behzadi2007]_) can be applied using
 components from the combined ROI, while the more recent Muschelli implementation
-([Muschelli2014]_) can be applied using the WM and CSF ROIs. To determine the provenance of
-each component, consult the metadata file (see below).
+([Muschelli2014]_) can be applied using the WM and CSF ROIs.
+To determine the provenance of each component, consult the metadata file (see below).
 
 All these confounds can be used to perform *scrubbing* and *censoring* of outliers,
 in the subsequent first-level analysis when building the design matrix,
-and in group level analysis. *Spike regressors* for outlier censoring can also be
-generated from within fMRIPrep using the command line options `--fd-spike-threshold`
-and `--dvars-spike-threshold`. Spike regressors are stored in separate `motion_outlier_XX`
-columns.
+and in group level analysis.
+*Spike regressors* for outlier censoring can also be generated from within fMRIPrep using
+the command line options ``--fd-spike-threshold`` and ``--dvars-spike-threshold``.
+Spike regressors are stored in separate ``motion_outlier_XX`` columns.
 
 Each confounds data file will also have a corresponding metadata file (``~desc-confounds_regressors.json``).
 Metadata files contain additional information about columns in the confounds TSV file: ::
@@ -218,12 +219,18 @@ Metadata files contain additional information about columns in the confounds TSV
   }
 
 For CompCor decompositions, entries include:
-- ``Method``: anatomical or temporal CompCor
-- ``Mask``: denotes the ROI where the decomposition that generated the component was performed: ``CSF``, ``WM``, or ``combined`` for anatomical CompCor
-- ``SingularValue``: Singular value of the component
-- ``VarianceExplained``: fraction of variance explained by the component across the decomposition ROI mask
-- ``CumulativeVarianceExplained``: total fraction of variance explained by the component and all preceding components
-- ``Retained``: Indicates whether the component was saved in ``desc-confounds_regressors.tsv`` for use in denoising. Entries that are not saved in the data file for denoising are still stored in metadata with the ``dropped`` prefix.
+
+  - ``Method``: anatomical or temporal CompCor.
+  - ``Mask``: denotes the ROI where the decomposition that generated the component
+    was performed: ``CSF``, ``WM``, or ``combined`` for anatomical CompCor.
+  - ``SingularValue``: singular value of the component.
+  - ``VarianceExplained``: the fraction of variance explained by the component across the decomposition ROI mask.
+  - ``CumulativeVarianceExplained``: the total fraction of variance explained by this particular component
+    and all preceding components.
+  - ``Retained``: Indicates whether the component was saved in ``desc-confounds_regressors.tsv``
+    for use in denoising.
+    Entries that are not saved in the data file for denoising are still stored in metadata with the
+    ``dropped`` prefix.
 
 Confounds and "carpet"-plot on the visual reports
 -------------------------------------------------
@@ -247,11 +254,12 @@ An example of these plots follows:
 
 Noise components computed during each CompCor decomposition are evaluated according
 to the fraction of variance that they explain across the nuisance ROI.
-This is used by fMRIPrep to determine whether each component should be saved for
+This is used by *fMRIPrep* to determine whether each component should be saved for
 use in denoising operations: a component is saved if it contributes to explaining
-the top 50 percent of variance in the nuisance ROI. fMRIPrep can be configured to
-save all components instead using the command line option ``--return-all-components``.
-FMRIPrep reports include a plot of the cumulative variance explained by each
+the top 50 percent of variance in the nuisance ROI.
+*fMRIPrep* can be configured to save all components instead using the command line
+option ``--return-all-components``.
+*fMRIPrep* reports include a plot of the cumulative variance explained by each
 component, ordered by descending singular value.
 
 .. figure:: _static/sub-01_task-rest_compcor.svg
@@ -259,26 +267,29 @@ component, ordered by descending singular value.
 
     The figure displays the cumulative variance explained by components for each
     of four CompCor decompositions (left to right: anatomical CSF mask, anatomical
-    white matter mask, anatomical combined mask, temporal). The number of
-    components is plotted on the abscissa and the cumulative variance explained
-    on the ordinate. Dotted lines indicate the minimum number of components
-    necessary to explain 50%, 70%, and 90% of variance in the nuisance mask. By
-    default, only the components that explain the top 50% of variance are saved.
+    white matter mask, anatomical combined mask, temporal).
+    The number of components is plotted on the abscissa and
+    the cumulative variance explained on the ordinate.
+    Dotted lines indicate the minimum number of components necessary
+    to explain 50%, 70%, and 90% of the variance in the nuisance mask.
+    By default, only the components that explain the top 50% of the variance
+    are saved.
 
-Also included is a plot of correlations among confound regressors. This can be
-used to guide selection of a confound model or to assess the extent to which
-tissue-specific regressors correlate with global signal.
+Also included is a plot of correlations among confound regressors.
+This can be used to guide selection of a confound model or to assess the extent
+to which tissue-specific regressors correlate with global signal.
 
 .. figure:: _static/sub-01_task-mixedgamblestask_run-01_confounds_correlation.svg
     :scale: 100%
 
     The left-hand panel shows the matrix of correlations among selected confound
-    time series as a heatmap. Note the zero-correlation blocks near the diagonal;
-    these correspond to each CompCor decomposition. The right-hand panel displays
-    correlation of selected confound time series with the mean global signal computed
-    across the whole brain; the regressors shown are those with greatest correlation
-    with the global signal. This information can be used to diagnose partial volume
-    effects.
+    time series as a heatmap.
+    Note the zero-correlation blocks near the diagonal; these correspond to each
+    CompCor decomposition.
+    The right-hand panel displays the correlation of selected confound time series
+    with the mean global signal computed across the whole brain; the regressors shown
+    are those with greatest correlation with the global signal.
+    This information can be used to diagnose partial volume effects.
 
 .. topic:: References
 
