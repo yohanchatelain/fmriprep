@@ -126,6 +126,7 @@ using a custom methodology of *fMRIPrep*.
     calc_dummy_scans = pe.Node(niu.Function(function=_pass_dummy_scans,
                                             output_names=['skip_vols_num']),
                                name='calc_dummy_scans',
+                               run_without_submitting=True,
                                mem_gb=DEFAULT_MEMORY_MIN_GB)
 
     workflow.connect([
@@ -438,17 +439,8 @@ def _pass_dummy_scans(algo_dummy_scans, dummy_scans=None):
         number of volumes to skip determined by the user
 
     **Returns**
-    dummy_scans : int or None
-        number of volumes user specified to skip
-    algo_dummy_scans : int
-        number of volumes algorithm detected to skip
     skip_vols_num : int
         number of volumes to skip
     """
 
-    if dummy_scans:
-        skip_vols_num = dummy_scans
-    else:
-        skip_vols_num = algo_dummy_scans
-
-    return skip_vols_num
+    return dummy_scans or algo_dummy_scans
