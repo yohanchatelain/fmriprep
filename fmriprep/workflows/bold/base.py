@@ -761,7 +761,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         if freesurfer:
             workflow.connect([
                 (bold_std_trans_wf, func_derivatives_wf, [
-                    ('poutputnode.templates', 'inputnode.template'),
                     ('poutputnode.bold_aseg_std', 'inputnode.bold_aseg_std'),
                     ('poutputnode.bold_aparc_std', 'inputnode.bold_aparc_std'),
                 ]),
@@ -808,6 +807,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         # Uses the parameterized outputnode to generate all outputs
         workflow.connect([
             (bold_std_trans_wf, func_derivatives_wf, [
+                ('poutputnode.templates', 'inputnode.template'),
                 ('poutputnode.bold_std_ref', 'inputnode.bold_std_ref'),
                 ('poutputnode.bold_std', 'inputnode.bold_std'),
                 ('poutputnode.bold_mask_std', 'inputnode.bold_mask_std'),
