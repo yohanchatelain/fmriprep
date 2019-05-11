@@ -431,8 +431,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     )
 
     workflow.connect([
-        (inputnode, func_derivatives_wf, [
-            ('template', 'inputnode.template')]),
         (outputnode, func_derivatives_wf, [
             ('bold_t1', 'inputnode.bold_t1'),
             ('bold_t1_ref', 'inputnode.bold_t1_ref'),
@@ -809,6 +807,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         # Uses the parameterized outputnode to generate all outputs
         workflow.connect([
             (bold_std_trans_wf, func_derivatives_wf, [
+                ('poutputnode.templates', 'inputnode.template'),
                 ('poutputnode.bold_std_ref', 'inputnode.bold_std_ref'),
                 ('poutputnode.bold_std', 'inputnode.bold_std'),
                 ('poutputnode.bold_mask_std', 'inputnode.bold_mask_std'),
