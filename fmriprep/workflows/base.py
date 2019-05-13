@@ -40,6 +40,7 @@ def init_fmriprep_wf(
     bold2t1w_dof,
     cifti_output,
     debug,
+    dummy_scans,
     echo_idx,
     err_on_aroma_warn,
     fmap_bspline,
@@ -91,6 +92,7 @@ def init_fmriprep_wf(
             bold2t1w_dof=9,
             cifti_output=False,
             debug=False,
+            dummy_scans=None,
             echo_idx=None,
             err_on_aroma_warn=False,
             fmap_bspline=False,
@@ -134,6 +136,8 @@ def init_fmriprep_wf(
             Generate bold CIFTI file in output spaces
         debug : bool
             Enable debugging outputs
+        dummy_scans : int or None
+            Number of volumes to consider as non steady state
         echo_idx : int or None
             Index of echo to preprocess in multiecho BOLD series,
             or ``None`` to preprocess all
@@ -223,6 +227,7 @@ def init_fmriprep_wf(
             bold2t1w_dof=bold2t1w_dof,
             cifti_output=cifti_output,
             debug=debug,
+            dummy_scans=dummy_scans,
             echo_idx=echo_idx,
             err_on_aroma_warn=err_on_aroma_warn,
             fmap_bspline=fmap_bspline,
@@ -273,6 +278,7 @@ def init_single_subject_wf(
     bold2t1w_dof,
     cifti_output,
     debug,
+    dummy_scans,
     echo_idx,
     err_on_aroma_warn,
     fmap_bspline,
@@ -325,6 +331,7 @@ def init_single_subject_wf(
             bold2t1w_dof=9,
             cifti_output=False,
             debug=False,
+            dummy_scans=None,
             echo_idx=None,
             err_on_aroma_warn=False,
             fmap_bspline=False,
@@ -371,6 +378,8 @@ def init_single_subject_wf(
             Generate bold CIFTI file in output spaces
         debug : bool
             Enable debugging outputs
+        dummy_scans : int or None
+            Number of volumes to consider as non steady state
         echo_idx : int or None
             Index of echo to preprocess in multiecho BOLD series,
             or ``None`` to preprocess all
@@ -574,6 +583,7 @@ to workflows in *fMRIPrep*'s documentation]\
             bold_file=bold_file,
             cifti_output=cifti_output,
             debug=debug,
+            dummy_scans=dummy_scans,
             err_on_aroma_warn=err_on_aroma_warn,
             fmap_bspline=fmap_bspline,
             fmap_demean=fmap_demean,

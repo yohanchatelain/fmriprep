@@ -172,6 +172,9 @@ grids""" % (', '.join('"%s"' % s for s in templates()),
         '--medial-surface-nan', required=False, action='store_true', default=False,
         help='Replace medial wall values with NaNs on functional GIFTI files. Only '
         'performed for GIFTI files mapped to a freesurfer subject (fsaverage or fsnative).')
+    g_conf.add_argument(
+        '--dummy-scans', required=False, action='store', default=None, type=int,
+        help='Number of non steady state volumes.')
 
     # ICA_AROMA options
     g_aroma = parser.add_argument_group('Specific options for running ICA_AROMA')
@@ -574,6 +577,7 @@ def build_workflow(opts, retval):
         bold2t1w_dof=opts.bold2t1w_dof,
         cifti_output=opts.cifti_output,
         debug=opts.sloppy,
+        dummy_scans=opts.dummy_scans,
         echo_idx=opts.echo_idx,
         err_on_aroma_warn=opts.error_on_aroma_warnings,
         fmap_bspline=opts.fmap_bspline,

@@ -27,6 +27,7 @@ is presented below:
         bold2t1w_dof=9,
         cifti_output=False,
         debug=False,
+        dummy_scans=None,
         echo_idx=None,
         err_on_aroma_warn=False,
         fmap_bspline=False,
@@ -307,6 +308,7 @@ BOLD preprocessing
         regressors_dvars_th=1.5,
         use_bbr=True,
         use_syn=True,
+        dummy_scans=None,
         layout=BIDSLayout('.'),
         num_bold=1,
     )

@@ -688,7 +688,7 @@ jobs:
                 --config $PWD/nipype.cfg -w /tmp/ds210/work \
                 /tmp/data/ds210 /tmp/ds210/derivatives participant \
                 --fs-no-reconall --t2s-coreg --use-syn-sdc \
-                --template-resampling-grid native \
+                --template-resampling-grid native --dummy-scans 1 \
                 --sloppy --write-graph --mem_mb 4096 --nthreads 2 -vv
       - run:
           name: Checking outputs of fMRIPrep

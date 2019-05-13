@@ -59,9 +59,6 @@ def init_bold_reference_wf(omp_nthreads, bold_file=None, pre_mask=False,
             Name of workflow (default: ``bold_reference_wf``)
         gen_report : bool
             Whether a mask report node should be appended in the end
-        enhance_t2 : bool
-            Perform logarithmic transform of input BOLD image to improve contrast
-            before calculating the preliminary mask
 
     **Inputs**
 
@@ -70,6 +67,10 @@ def init_bold_reference_wf(omp_nthreads, bold_file=None, pre_mask=False,
         bold_mask : bool
             A tentative brain mask to initialize the workflow (requires ``pre_mask``
             parameter set ``True``).
+        dummy_scans : int or None
+            Number of non-steady-state volumes specified by user at beginning of ``bold_file``
+        sbref_file
+            single band (as opposed to multi band) reference NIfTI file
 
     **Outputs**
 
@@ -78,7 +79,10 @@ def init_bold_reference_wf(omp_nthreads, bold_file=None, pre_mask=False,
         raw_ref_image
             Reference image to which BOLD series is motion corrected
         skip_vols
-            Number of non-steady-state volumes detected at beginning of ``bold_file``
+            Number of non-steady-state volumes selected at beginning of ``bold_file``
+        algo_dummy_scans
+            Number of non-steady-state volumes agorithmically detected at
+            beginning of ``bold_file``
         ref_image
             Contrast-enhanced reference image
         ref_image_brain
@@ -99,12 +103,13 @@ def init_bold_reference_wf(omp_nthreads, bold_file=None, pre_mask=False,
 First, a reference volume and its skull-stripped version were generated
 using a custom methodology of *fMRIPrep*.
 """
-    inputnode = pe.Node(niu.IdentityInterface(fields=['bold_file', 'sbref_file', 'bold_mask']),
+    inputnode = pe.Node(niu.IdentityInterface(fields=['bold_file', 'bold_mask', 'dummy_scans',
+                                                      'sbref_file']),
                         name='inputnode')
     outputnode = pe.Node(
-        niu.IdentityInterface(fields=['bold_file', 'raw_ref_image', 'skip_vols', 'ref_image',
-                                      'ref_image_brain', 'bold_mask', 'validation_report',
-                                      'mask_report']),
+        niu.IdentityInterface(fields=['bold_file', 'raw_ref_image', 'skip_vols',
+                                      'algo_dummy_scans', 'ref_image', 'ref_image_brain',
+                                      'bold_mask', 'validation_report', 'mask _report']),
         name='outputnode')
 
     # Simplify manually setting input image
@@ -118,16 +123,25 @@ using a custom methodology of *fMRIPrep*.
     enhance_and_skullstrip_bold_wf = init_enhance_and_skullstrip_bold_wf(
         omp_nthreads=omp_nthreads, pre_mask=pre_mask)
 
+    calc_dummy_scans = pe.Node(niu.Function(function=_pass_dummy_scans,
+                                            output_names=['skip_vols_num']),
+                               name='calc_dummy_scans',
+                               run_without_submitting=True,
+                               mem_gb=DEFAULT_MEMORY_MIN_GB)
+
     workflow.connect([
         (inputnode, enhance_and_skullstrip_bold_wf, [('bold_mask', 'inputnode.pre_mask')]),
         (inputnode, validate, [('bold_file', 'in_file')]),
         (inputnode, gen_ref, [('sbref_file', 'sbref_file')]),
+        (inputnode, calc_dummy_scans, [('dummy_scans', 'dummy_scans')]),
         (validate, gen_ref, [('out_file', 'in_file')]),
         (gen_ref,  enhance_and_skullstrip_bold_wf, [('ref_image', 'inputnode.in_file')]),
         (validate, outputnode, [('out_file', 'bold_file'),
                                 ('out_report', 'validation_report')]),
-        (gen_ref, outputnode, [('n_volumes_to_discard', 'skip_vols')]),
-        (gen_ref, outputnode, [('ref_image', 'raw_ref_image')]),
+        (gen_ref, calc_dummy_scans, [('n_volumes_to_discard', 'algo_dummy_scans')]),
+        (calc_dummy_scans, outputnode, [('skip_vols_num', 'skip_vols')]),
+        (gen_ref, outputnode, [('ref_image', 'raw_ref_image'),
+                               ('n_volumes_to_discard', 'algo_dummy_scans')]),
         (enhance_and_skullstrip_bold_wf, outputnode, [
             ('outputnode.bias_corrected_file', 'ref_image'),
             ('outputnode.mask_file', 'bold_mask'),
@@ -413,3 +427,20 @@ def init_skullstrip_bold_wf(name='skullstrip_bold_wf'):
     ])
 
     return workflow
+
+
+def _pass_dummy_scans(algo_dummy_scans, dummy_scans=None):
+    """
+    **Parameters**
+
+    algo_dummy_scans : int
+        number of volumes to skip determined by an algorithm
+    dummy_scans : int or None
+        number of volumes to skip determined by the user
+
+    **Returns**
+    skip_vols_num : int
+        number of volumes to skip
+    """
+
+    return dummy_scans or algo_dummy_scans

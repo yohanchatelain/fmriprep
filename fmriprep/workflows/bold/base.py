@@ -58,6 +58,7 @@ def init_func_preproc_wf(
     bold_file,
     cifti_output,
     debug,
+    dummy_scans,
     err_on_aroma_warn,
     fmap_bspline,
     fmap_demean,
@@ -96,6 +97,7 @@ def init_func_preproc_wf(
             bold_file='/completely/made/up/path/sub-01_task-nback_bold.nii.gz',
             cifti_output=False,
             debug=False,
+            dummy_scans=None,
             err_on_aroma_warn=False,
             fmap_bspline=True,
             fmap_demean=True,
@@ -134,6 +136,8 @@ def init_func_preproc_wf(
             Generate bold CIFTI file in output spaces
         debug : bool
             Enable debugging outputs
+        dummy_scans : int or None
+            Number of volumes to consider as non steady state
         err_on_aroma_warn : bool
             Do not crash on ICA-AROMA errors
         fmap_bspline : bool
@@ -412,6 +416,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             pe_direction=metadata.get("PhaseEncodingDirection"),
             tr=metadata.get("RepetitionTime")),
         name='summary', mem_gb=DEFAULT_MEMORY_MIN_GB, run_without_submitting=True)
+    summary.inputs.dummy_scans = dummy_scans
 
     # CIfTI output: currently, we only support fsaverage{5,6}
     cifti_spaces = set(s for s in output_spaces.keys() if s in ('fsaverage5', 'fsaverage6'))
@@ -451,6 +456,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
     # Generate a tentative boldref
     bold_reference_wf = init_bold_reference_wf(omp_nthreads=omp_nthreads)
+    bold_reference_wf.inputs.inputnode.dummy_scans = dummy_scans
     if sbref_file is not None:
         workflow.connect([
             (val_sbref, bold_reference_wf, [('out_file', 'inputnode.sbref_file')]),
@@ -584,6 +590,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         (bold_reference_wf, bold_hmc_wf, [
             ('outputnode.raw_ref_image', 'inputnode.raw_ref_image'),
             ('outputnode.bold_file', 'inputnode.bold_file')]),
+        (bold_reference_wf, summary, [
+            ('outputnode.algo_dummy_scans', 'algo_dummy_scans')]),
         # EPI-T1 registration workflow
         (inputnode, bold_reg_wf, [
             ('t1_brain', 'inputnode.t1_brain'),
