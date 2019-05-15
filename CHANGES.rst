@@ -1,5 +1,5 @@
-1.4.0 (TBA, 2019)
-=================
+1.4.0 (May 15, 2019)
+====================
 
 The new 1.4 series include several new features, several maintenance patches,
 and numerous bugfixes.
@@ -13,7 +13,7 @@ providing a path.
 For example, the following *fMRIPrep* options: ::
 
   --template MNI152NLin6Asym --output-space template T1w fsaverage5 ----template-resampling-grid 2mm
-   
+
 now would be accomplished with: ::
 
   --output-spaces MNI152NLin6Asym:res-2 anat fsaverage:den-10k
@@ -21,7 +21,7 @@ now would be accomplished with: ::
 with the difference that more templates could be specified if needed, e.g., ::
 
   --output-spaces MNI152NLin6Asym:res-2 anat fsaverage:den-10k MNI152NLin2009cAsym:native
-  
+
 Related anatomical preprocessing workflows from *sMRIPrep* have gone through
 thorough revisions.
 In particular, the brain extraction workflow now is implemented
@@ -40,8 +40,14 @@ components decompositions).
 Finally, several maintenance activity and documentation updates complete a long
 overdue series of changes to the codebase.
 
-With thanks to @yarikoptic, @danlurie, @ariveradompenciel, and @markushs for contributions.
+With thanks to @yarikoptic, @danlurie, @ariveradompenciel, @franklin-feingold,
+@markushs, @anibalsolon, and @jdkent for contributions.
 
+* FIX: Incorrect transforms being applied to aparc/asegs in standard space (#1636) @oesteban
+* DOC: Improve appearance of parameter types in API docs (#1633) @anibalsolon
+* ENH: add ``--skip-vols-num`` option (#1559) @jdkent
+* FIX: Writing functional derivatives in standard spaces (#1632) @oesteban
+* DOC: Confound enhancement documentation (#1625) @rciric
 * FIX: Resampling of BOLD into standard spaces (#1627) @oesteban
 * FIX: Re-enable correct versioning within container (#1623) @oesteban
 * CI: Reduce pointless expenditures (#1614) @effigies
@@ -69,6 +75,7 @@ With thanks to @yarikoptic, @danlurie, @ariveradompenciel, and @markushs for con
 * FIX: Not having ``template`` as one ``--output-space`` crashes fMRIPrep (#1560) @oesteban
 * MAINT: Group all 'finished running with errors' sentry messages (#1552) @chrisgorgo
 * MAINT: Include hash of ``dataset_description.json`` in sentry metadata (#1553) @chrisgorgo
+
 
 1.3.2 (March 18, 2019)
 ======================
