@@ -400,10 +400,10 @@ preprocessed BOLD runs*: {tpl}.
             name='aparc_std_tfm', mem_gb=1)
 
         workflow.connect([
-            (inputnode, aseg_std_tfm, [('bold_aseg', 'input_image'),
-                                       ('anat2std_xfm', 'transforms')]),
-            (inputnode, aparc_std_tfm, [('bold_aparc', 'input_image'),
-                                        ('anat2std_xfm', 'transforms')]),
+            (inputnode, aseg_std_tfm, [('bold_aseg', 'input_image')]),
+            (inputnode, aparc_std_tfm, [('bold_aparc', 'input_image')]),
+            (select_std, aseg_std_tfm, [('anat2std_xfm', 'transforms')]),
+            (select_std, aparc_std_tfm, [('anat2std_xfm', 'transforms')]),
             (gen_ref, aseg_std_tfm, [('out_file', 'reference_image')]),
             (gen_ref, aparc_std_tfm, [('out_file', 'reference_image')]),
             (aseg_std_tfm, poutputnode, [('output_image', 'bold_aseg_std')]),
