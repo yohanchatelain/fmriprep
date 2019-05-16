@@ -868,7 +868,8 @@ jobs:
             pip install --upgrade "pip>=19.1" numpy
             echo "${CIRCLE_TAG:-$THISVERSION}" > fmriprep/VERSION
             python setup.py sdist
-            pip wheel --no-deps -w dist/ .
+            docker run --rm=false -e PLAT='manylinux1_x86_64' -e PKGNAME='fmriprep' -v `pwd`:/io \
+                quay.io/pypa/manylinux1_x86_64 /io/.circleci/pypi_wheel/build-wheels.sh
       - run:
           name: Build fmriprep-docker
           command: |
@@ -886,7 +887,7 @@ jobs:
           command: |
             pyenv local 3.5.2
             pip install twine
-            twine upload dist/* wrapper/dist/*
+            twine upload dist/fmriprep-* wrapper/dist/fmriprep-*
 
   deployable:
     docker:
