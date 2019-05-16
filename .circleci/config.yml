@@ -887,7 +887,7 @@ jobs:
           command: |
             pyenv local 3.5.2
             pip install twine
-            twine upload dist/fmriprep-* wrapper/dist/fmriprep-*
+            twine upload dist/fmriprep* wrapper/dist/fmriprep*
 
   deployable:
     docker:
