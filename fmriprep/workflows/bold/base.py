@@ -411,7 +411,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     summary = pe.Node(
         FunctionalSummary(
             slice_timing=run_stc,
-            registration='FreeSurfer' if freesurfer else 'FSL',
+            registration=('FSL', 'FreeSurfer')[freesurfer],
             registration_dof=bold2t1w_dof,
             pe_direction=metadata.get("PhaseEncodingDirection"),
             tr=metadata.get("RepetitionTime")),
@@ -739,12 +739,13 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         # Apply transforms in 1 shot
         # Only use uncompressed output if AROMA is to be run
         bold_std_trans_wf = init_bold_std_trans_wf(
-            standard_spaces=std_spaces,
+            freesurfer=freesurfer,
             mem_gb=mem_gb['resampled'],
             omp_nthreads=omp_nthreads,
+            standard_spaces=std_spaces,
+            name='bold_std_trans_wf',
             use_compression=not low_mem,
             use_fieldwarp=fmaps is not None,
-            name='bold_std_trans_wf'
         )
         workflow.connect([
             (inputnode, bold_std_trans_wf, [
