@@ -84,7 +84,11 @@ that do not generate *standardized* coordinate spaces:
     including the ``fsnative`` space will instruct fMRIPrep to sample the
     original BOLD data onto FreeSurfer's reconstructed surfaces for this
     individual.
-  * **Additional nonstandard spaces** which are being discussed
+  * ``func``, ``bold``, ``run``, ``boldref`` or ``sbref`` can be used to
+    generate BOLD data in their original grid, after slice-timing,
+    head-motion, and susceptibility-distortion corrections.
+    These keywords are experimental, and expected to change because
+    **additional nonstandard spaces** are currently being discussed
     `here <https://github.com/poldracklab/fmriprep/issues/1604>`__.
 
 Modifiers are not allowed when providing nonstandard spaces.
