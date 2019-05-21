@@ -44,7 +44,8 @@ def init_func_derivatives_wf(
     inputnode = pe.Node(niu.IdentityInterface(fields=[
         'aroma_noise_ics', 'bold_aparc_std', 'bold_aparc_t1', 'bold_aseg_std',
         'bold_aseg_t1', 'bold_cifti', 'bold_mask_std', 'bold_mask_t1', 'bold_std',
-        'bold_std_ref', 'bold_t1', 'bold_t1_ref', 'cifti_variant', 'cifti_variant_key',
+        'bold_std_ref', 'bold_t1', 'bold_t1_ref', 'bold_native', 'bold_native_ref',
+        'bold_mask_native', 'cifti_variant', 'cifti_variant_key',
         'confounds', 'confounds_metadata', 'melodic_mix', 'nonaggr_denoised_file',
         'source_file', 'surfaces', 'template']),
         name='inputnode')
@@ -62,6 +63,33 @@ def init_func_derivatives_wf(
                                    ('confounds', 'in_file'),
                                    ('confounds_metadata', 'meta_dict')]),
     ])
+
+    if set(['func', 'run', 'bold', 'boldref', 'sbref']).intersection(output_spaces):
+        ds_bold_native = pe.Node(
+            DerivativesDataSink(base_directory=output_dir, desc='preproc',
+                                keep_dtype=True, compress=True, SkullStripped=False,
+                                RepetitionTime=metadata.get('RepetitionTime')),
+            name='ds_bold_native', run_without_submitting=True,
+            mem_gb=DEFAULT_MEMORY_MIN_GB)
+        ds_bold_native_ref = pe.Node(
+            DerivativesDataSink(base_directory=output_dir, suffix='boldref'),
+            name='ds_bold_native_ref', run_without_submitting=True,
+            mem_gb=DEFAULT_MEMORY_MIN_GB)
+        ds_bold_mask_native = pe.Node(
+            DerivativesDataSink(base_directory=output_dir, desc='brain',
+                                suffix='mask'),
+            name='ds_bold_mask_native', run_without_submitting=True,
+            mem_gb=DEFAULT_MEMORY_MIN_GB)
+
+        workflow.connect([
+            (inputnode, ds_bold_native, [('source_file', 'source_file'),
+                                         ('bold_native', 'in_file')]),
+            (inputnode, ds_bold_native_ref, [('source_file', 'source_file'),
+                                             ('bold_native_ref', 'in_file')]),
+            (inputnode, ds_bold_mask_native, [('source_file', 'source_file'),
+                                              ('bold_mask_native', 'in_file')]),
+            (raw_sources, ds_bold_mask_native, [('out', 'RawSources')]),
+        ])
 
     # Resample to T1w space
     if 'T1w' in output_spaces or 'anat' in output_spaces:

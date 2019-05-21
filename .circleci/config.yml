@@ -577,8 +577,7 @@ jobs:
                 --config $PWD/nipype.cfg -w /tmp/ds054/work \
                 /tmp/data/ds054 /tmp/ds054/derivatives participant \
                 --fs-no-reconall --sloppy \
-                --output-space T1w template \
-                --template-resampling-grid 2mm \
+                --output-spaces MNI152NLin2009cAsym:res-2 anat func \
                 --mem_mb 4096 --nthreads 2 -vv
       - run:
           name: Checking outputs of fMRIPrep
@@ -602,8 +601,7 @@ jobs:
                 --config $PWD/nipype.cfg -w /tmp/ds054/work \
                 /tmp/data/ds054 /tmp/ds054/derivatives participant \
                 --fs-no-reconall --sloppy --write-graph \
-                --output-space T1w template \
-                --template-resampling-grid 2mm \
+                --output-spaces MNI152NLin2009cAsym:res-2 anat func \
                 --reports-only --run-uuid $UUID
             RET=$?
             set -e

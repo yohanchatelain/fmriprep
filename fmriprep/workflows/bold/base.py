@@ -399,8 +399,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_t1', 'bold_t1_ref', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1',
                 'bold_std', 'bold_std_ref' 'bold_mask_std', 'bold_aseg_std', 'bold_aparc_std',
-                'bold_cifti', 'cifti_variant', 'cifti_variant_key', 'confounds', 'surfaces',
-                'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file',
+                'bold_native', 'bold_cifti', 'cifti_variant', 'cifti_variant_key', 'surfaces',
+                'confounds', 'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file',
                 'confounds_metadata']),
         name='outputnode')
 
@@ -442,6 +442,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('bold_aseg_t1', 'inputnode.bold_aseg_t1'),
             ('bold_aparc_t1', 'inputnode.bold_aparc_t1'),
             ('bold_mask_t1', 'inputnode.bold_mask_t1'),
+            ('bold_native', 'inputnode.bold_native'),
             ('confounds', 'inputnode.confounds'),
             ('surfaces', 'inputnode.surfaces'),
             ('aroma_noise_ics', 'inputnode.aroma_noise_ics'),
@@ -733,6 +734,15 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('outputnode.bold_mask', 'input_image')]),
             (boldmask_to_t1w, outputnode, [
                 ('output_image', 'bold_mask_t1')]),
+        ])
+
+    if set(['func', 'run', 'bold', 'boldref', 'sbref']).intersection(output_spaces):
+        workflow.connect([
+            (bold_bold_trans_wf, outputnode, [
+                ('outputnode.bold', 'bold_native')]),
+            (bold_bold_trans_wf, func_derivatives_wf, [
+                ('outputnode.bold_ref', 'inputnode.bold_native_ref'),
+                ('outputnode.bold_mask', 'inputnode.bold_mask_native')]),
         ])
 
     if volume_std_spaces:
