@@ -490,10 +490,11 @@ Resampling BOLD runs onto standard spaces
     from collections import OrderedDict
     from fmriprep.workflows.bold import init_bold_std_trans_wf
     wf = init_bold_std_trans_wf(
-        standard_spaces=OrderedDict([('MNI152Lin', {}),
-                                     ('fsaverage', {'density': '10k'})]),
+        freesurfer=True,
         mem_gb=3,
         omp_nthreads=1,
+        standard_spaces=OrderedDict([('MNI152Lin', {}),
+                                     ('fsaverage', {'density': '10k'})]),
     )
 
 This sub-workflow concatenates the transforms calculated upstream (see

@@ -169,9 +169,10 @@ spaces: {out_spaces}.
 
 
 def init_bold_std_trans_wf(
-    standard_spaces,
+    freesurfer,
     mem_gb,
     omp_nthreads,
+    standard_spaces,
     name='bold_std_trans_wf',
     use_compression=True,
     use_fieldwarp=False
@@ -187,14 +188,21 @@ def init_bold_std_trans_wf(
         from collections import OrderedDict
         from fmriprep.workflows.bold import init_bold_std_trans_wf
         wf = init_bold_std_trans_wf(
-            standard_spaces=OrderedDict([('MNI152Lin', {}),
-                                         ('fsaverage', {'density': '10k'})]),
+            freesurfer=True,
             mem_gb=3,
             omp_nthreads=1,
+            standard_spaces=OrderedDict([('MNI152Lin', {}),
+                                         ('fsaverage', {'density': '10k'})]),
         )
 
     **Parameters**
 
+        freesurfer : bool
+            Whether to generate FreeSurfer's aseg/aparc segmentations on BOLD space.
+        mem_gb : float
+            Size of BOLD file in GB
+        omp_nthreads : int
+            Maximum number of threads an individual process may use
         standard_spaces : OrderedDict
             Ordered dictionary where keys are TemplateFlow ID strings (e.g.,
             ``MNI152Lin``, ``MNI152NLin6Asym``, ``MNI152NLin2009cAsym``, or ``fsLR``),
@@ -202,10 +210,6 @@ def init_bold_std_trans_wf(
             Values of the dictionary aggregate modifiers (e.g., the value for the key ``MNI152Lin``
             could be ``{'resolution': 2}`` if one wants the resampling to be done on the 2mm
             resolution version of the selected template).
-        mem_gb : float
-            Size of BOLD file in GB
-        omp_nthreads : int
-            Maximum number of threads an individual process may use
         name : str
             Name of workflow (default: ``bold_std_trans_wf``)
         use_compression : bool
@@ -268,8 +272,6 @@ def init_bold_std_trans_wf(
 
     # Filter ``standard_spaces``
     vol_std_spaces = [k for k in standard_spaces.keys() if not k.startswith('fs')]
-    freesurfer = [k for k in standard_spaces.keys()
-                  if k.startswith('fs') and k != 'fsLR']
 
     workflow = Workflow(name=name)
 
