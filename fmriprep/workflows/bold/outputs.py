@@ -72,12 +72,12 @@ def init_func_derivatives_wf(
             name='ds_bold_native', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_native_ref = pe.Node(
-            DerivativesDataSink(base_directory=output_dir, suffix='boldref'),
+            DerivativesDataSink(base_directory=output_dir, suffix='boldref', compress=True),
             name='ds_bold_native_ref', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_mask_native = pe.Node(
             DerivativesDataSink(base_directory=output_dir, desc='brain',
-                                suffix='mask'),
+                                suffix='mask', compress=True),
             name='ds_bold_mask_native', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
 
