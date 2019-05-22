@@ -100,13 +100,14 @@ def init_func_derivatives_wf(
             name='ds_bold_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_t1_ref = pe.Node(
-            DerivativesDataSink(base_directory=output_dir, space='T1w', suffix='boldref'),
+            DerivativesDataSink(base_directory=output_dir, space='T1w',
+                                suffix='boldref', compress=True),
             name='ds_bold_t1_ref', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
 
         ds_bold_mask_t1 = pe.Node(
             DerivativesDataSink(base_directory=output_dir, space='T1w', desc='brain',
-                                suffix='mask'),
+                                suffix='mask', compress=True),
             name='ds_bold_mask_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         workflow.connect([
