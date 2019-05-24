@@ -51,7 +51,7 @@ Markus Sneve, Anibal Heinsfeld, and James Kent for contributions.
 * [FIX] Update spline fitting distance for BOLD bias-field correction (#1603) @markushs
 * [FIX] Mount Nipype config file under new ``$HOME`` (#1602) @oesteban
 * [FIX] Not having ``template`` as one ``--output-space`` crashes fMRIPrep (#1560) @oesteban
-* [ENH] Add ``--skip-vols-num`` option (#1559) @jdkent
+* [ENH] Add ``--dummy-scans`` option (#1559) @jdkent
 * [ENH] Reduce ``BSplineFieldmap`` memory usage (#1609) @effigies
 * [ENH] Confound model enhancement (#1487, #1586) @rciric
 * [ENH] Allow multiple {non,}standard spaces (``--output-spaces``) (#1596) @oesteban
