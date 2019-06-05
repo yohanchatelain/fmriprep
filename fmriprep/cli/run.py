@@ -38,7 +38,7 @@ def check_deps(workflow):
 
 def get_parser():
     """Build parser object"""
-    from smriprep.cli.utils import ParseTemplates
+    from smriprep.cli.utils import ParseTemplates, output_space as _output_space
     from templateflow.api import templates
     from ..__about__ import __version__
     from ..workflows.bold.resampling import NONSTANDARD_REFERENCES
@@ -203,9 +203,9 @@ grids""" % (', '.join('"%s"' % s for s in templates()),
 
     #  ANTs options
     g_ants = parser.add_argument_group('Specific options for ANTs registrations')
-    g_ants.add_argument('--skull-strip-template', action='store', default='OASIS30ANTs',
-                        choices=['OASIS30ANTs', 'NKI', 'MNI152NLin2009cAsym'],
-                        help='select ANTs skull-stripping template (default: OASIS30ANTs))')
+    g_ants.add_argument(
+        '--skull-strip-template', action='store', default='OASIS30ANTs', type=_output_space,
+        help='select a template for skull-stripping with antsBrainExtraction')
     g_ants.add_argument('--skull-strip-fixed-seed', action='store_true',
                         help='do not use a random seed for skull-stripping - will ensure '
                              'run-to-run replicability when used with --omp-nthreads 1')

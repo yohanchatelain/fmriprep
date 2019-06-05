@@ -51,7 +51,7 @@ is presented below:
         regressors_dvars_th=1.5,
         regressors_fd_th=0.5,
         skull_strip_fixed_seed=False,
-        skull_strip_template='OASIS30ANTs',
+        skull_strip_template=('OASIS30ANTs', {}),
         subject_id='test',
         t2s_coreg=False,
         task_id='',
@@ -81,7 +81,7 @@ T1w/T2w preprocessing
         output_spaces=OrderedDict([
             ('MNI152NLin2009cAsym', {}), ('fsaverage5', {})]),
         reportlets_dir='.',
-        skull_strip_template='MNI152NLin2009cAsym',
+        skull_strip_template=('MNI152NLin2009cAsym', {}),
         skull_strip_fixed_seed=False,
     )
 
