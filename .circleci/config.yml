@@ -397,6 +397,7 @@ jobs:
                 -e FMRIPREP_DEV 1 -u $(id -u) \
                 --config $PWD/nipype.cfg -w /tmp/ds005/work \
                 /tmp/data/ds005 /tmp/ds005/derivatives participant \
+                --skull-strip-template OASIS30ANTs:res-1 \
                 --output-spaces MNI152NLin2009cAsym MNI152NLin6Asym \
                 --sloppy --write-graph --mem_mb 4096 \
                 --nthreads 2 --anat-only -vv
@@ -425,6 +426,7 @@ jobs:
                 /tmp/data/ds005 /tmp/ds005/derivatives participant \
                 --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
                 --use-aroma \
+                --skull-strip-template OASIS30ANTs:res-1 \
                 --output-space T1w template fsaverage5 fsnative \
                 --template-resampling-grid native \
                 --use-plugin /home/circleci/src/fmriprep/.circleci/legacy.yml \

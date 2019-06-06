@@ -115,7 +115,7 @@ def init_fmriprep_wf(
             regressors_fd_th=0.5,
             run_uuid='X',
             skull_strip_fixed_seed=False,
-            skull_strip_template='OASIS30ANTs',
+            skull_strip_template=('OASIS30ANTs', {}),
             subject_list=['fmripreptest'],
             t2s_coreg=False,
             task_id='',
@@ -184,8 +184,9 @@ def init_fmriprep_wf(
             Criterion for flagging framewise displacement outliers
         run_uuid : str
             Unique identifier for execution instance
-        skull_strip_template : str
-            Name of ANTs skull-stripping template ('OASIS30ANTs' or 'NKI')
+        skull_strip_template : tuple
+            Name of target template for brain extraction with ANTs' ``antsBrainExtraction``,
+            and corresponding dictionary of output-space modifiers.
         skull_strip_fixed_seed : bool
             Do not use a random seed for skull-stripping - will ensure
             run-to-run replicability when used with --omp-nthreads 1
@@ -355,7 +356,7 @@ def init_single_subject_wf(
             regressors_dvars_th=1.5,
             regressors_fd_th=0.5,
             skull_strip_fixed_seed=False,
-            skull_strip_template='OASIS30ANTs',
+            skull_strip_template=('OASIS30ANTs', {}),
             subject_id='test',
             t2s_coreg=False,
             task_id='',
@@ -431,8 +432,9 @@ def init_single_subject_wf(
         skull_strip_fixed_seed : bool
             Do not use a random seed for skull-stripping - will ensure
             run-to-run replicability when used with --omp-nthreads 1
-        skull_strip_template : str
-            Name of ANTs skull-stripping template ('OASIS30ANTs' or 'NKI')
+        skull_strip_template : tuple
+            Name of target template for brain extraction with ANTs' ``antsBrainExtraction``,
+            and corresponding dictionary of output-space modifiers.
         subject_id : str
             List of subject labels
         t2s_coreg : bool
