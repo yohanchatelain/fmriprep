@@ -1,3 +1,15 @@
+1.4.1 (June 7, 2019)
+====================
+
+As of 1.4.1, the new infant and pediatric templates added to TemplateFlow are available to
+brain extraction and spatial normalization.
+Additionally, BOLD files in native space can be generated and a minor bug related to the
+handling of FreeSurfer outputs have been included.
+
+* ENH: Allow template modifiers (a la ``--output-spaces``) in skull-stripping (#1666) @oesteban
+* ENH: Write outputs in native-BOLD space (#1646) @oesteban
+* FIX: FreeSurfer failed without adding some ``fs*`` to ``--output-spaces`` (#1643) @oesteban
+
 1.4.0 (May 15, 2019)
 ====================
 
