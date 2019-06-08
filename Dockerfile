@@ -163,8 +163,8 @@ RUN python -c "from matplotlib import font_manager" && \
 # Precaching atlases
 RUN pip install --no-cache-dir "templateflow>=0.3.0,<0.4.0a0" && \
     python -c "from templateflow import api as tfapi; \
-               tfapi.get('MNI152NLin6Asym'); \
-               tfapi.get('MNI152NLin2009cAsym'); \
+               tfapi.get('MNI152NLin6Asym', atlas=None); \
+               tfapi.get('MNI152NLin2009cAsym', atlas=None); \
                tfapi.get('OASIS30ANTs');" && \
     find $HOME/.cache/templateflow -type d -exec chmod go=u {} + && \
     find $HOME/.cache/templateflow -type f -exec chmod go=u {} +
