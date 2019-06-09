@@ -363,10 +363,10 @@ jobs:
             - data-v6-{{ .Revision }}
       - restore_cache:
           keys:
-            - ds005-anat-v14-{{ .Branch }}-{{ .Revision }}
-            - ds005-anat-v14-{{ .Branch }}
-            - ds005-anat-v14-master
-            - ds005-anat-v14-
+            - ds005-anat-v15-{{ .Branch }}-{{ .Revision }}
+            - ds005-anat-v15-{{ .Branch }}
+            - ds005-anat-v15-master
+            - ds005-anat-v15-
       - run:
           name: Setting up test
           command: |
@@ -408,7 +408,7 @@ jobs:
             rm -rf /tmp/ds005/work/reportlets
             rm -rf /tmp/ds005/derivatives/fmriprep
       - save_cache:
-         key: ds005-anat-v14-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
+         key: ds005-anat-v15-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
          paths:
             - /tmp/ds005/work
 
@@ -519,10 +519,10 @@ jobs:
             - data-v6-{{ .Revision }}
       - restore_cache:
           keys:
-            - ds054-anat-v12-{{ .Branch }}-{{ .Revision }}
-            - ds054-anat-v12-{{ .Branch }}
-            - ds054-anat-v12-master
-            - ds054-anat-v12-
+            - ds054-anat-v13-{{ .Branch }}-{{ .Revision }}
+            - ds054-anat-v13-{{ .Branch }}
+            - ds054-anat-v13-master
+            - ds054-anat-v13-
       - run:
           name: Setting up test
           command: |
@@ -562,7 +562,7 @@ jobs:
             rm -rf /tmp/ds054/work/reportlets
             rm -rf /tmp/ds054/derivatives/fmriprep
       - save_cache:
-         key: ds054-anat-v12-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
+         key: ds054-anat-v13-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
          paths:
             - /tmp/ds054/work
 
@@ -656,10 +656,10 @@ jobs:
             - data-v6-{{ .Revision }}
       - restore_cache:
           keys:
-            - ds210-anat-v10-{{ .Branch }}-{{ .Revision }}
-            - ds210-anat-v10-{{ .Branch }}-
-            - ds210-anat-v10-master
-            - ds210-anat-v10-
+            - ds210-anat-v11-{{ .Branch }}-{{ .Revision }}
+            - ds210-anat-v11-{{ .Branch }}-
+            - ds210-anat-v11-master
+            - ds210-anat-v11-
       - run:
           name: Setting up test
           command: |
@@ -699,7 +699,7 @@ jobs:
             rm -rf /tmp/ds210/work/reportlets
             rm -rf /tmp/ds210/derivatives/fmriprep
       - save_cache:
-         key: ds210-anat-v10-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
+         key: ds210-anat-v11-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
          paths:
             - /tmp/ds210/work
 
