@@ -639,8 +639,8 @@ def init_bold_preproc_report_wf(mem_gb, reportlets_dir, name='bold_preproc_repor
 
 
 def _select_template(template, template_specs):
-    from smriprep.workflows.norm import get_template_spec
-    return get_template_spec(template, template_spec=template_specs[template])[0]
+    from niworkflows.utils.misc import get_template_specs
+    return get_template_spec(template, template_specs=template_specs[template])[0]
 
 
 def _first(inlist):
