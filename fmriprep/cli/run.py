@@ -136,7 +136,9 @@ Standard spaces may be specified by the form \
 a keyword (valid keywords: %s) or path pointing to a user-supplied template, and \
 may be followed by optional, colon-separated parameters. \
 Non-standard spaces (valid keywords: %s) imply specific orientations and sampling \
-grids""" % (', '.join('"%s"' % s for s in templates()),
+grids. \
+Important to note, the ``res-*`` modifier does not define the resolution used for \
+the spatial normalization """ % (', '.join('"%s"' % s for s in templates()),
             ', '.join(NONSTANDARD_REFERENCES)))
 
     g_conf.add_argument(
