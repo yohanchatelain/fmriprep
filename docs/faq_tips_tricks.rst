@@ -61,6 +61,6 @@ Please find more information regarding this error from discussions on
 Additionally, consider using the ``--low-mem`` flag, which will make some memory optimizations at the cost of disk space in the working directory.
 
 ``recon-all`` is already running
-------------------------------
+--------------------------------
 
 When running `FreeSurfer <https://surfer.nmr.mgh.harvard.edu/`_ an error may say that FreeSurfer is already running. FreeSurfer determines if it is already running by reading the is_running file inside of the scripts folder. If the file is present then FreeSurfer reads out it is running. Deleting this file will enable FreeSurfer to be run again and it may be helpful to delete that run. In general, please be cautious of deleting files and mindful why a file may exist. 
