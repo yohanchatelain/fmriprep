@@ -270,7 +270,7 @@ were annotated as motion outliers.
         TSV2JSON(index_column='component', output=None,
                  additional_metadata={'Method': 'aCompCor'}, enforce_case=True),
         name='acc_metadata_fmt')
-    mrg_conf_metadata = pe.Node(niu.Merge(2), name='merge_confound_metadata',
+    mrg_conf_metadata = pe.Node(niu.Merge(3), name='merge_confound_metadata',
                                 run_without_submitting=True)
     mrg_conf_metadata2 = pe.Node(DictMerge(), name='merge_confound_metadata2',
                                  run_without_submitting=True)
@@ -397,6 +397,7 @@ were annotated as motion outliers.
         (acompcor, acc_metadata_fmt, [('metadata_file', 'in_file')]),
         (tcc_metadata_fmt, mrg_conf_metadata, [('output', 'in1')]),
         (acc_metadata_fmt, mrg_conf_metadata, [('output', 'in2')]),
+        (signals, mrg_conf_metadata, [('metadata', 'in3')]),
         (mrg_conf_metadata, mrg_conf_metadata2, [('out', 'in_dicts')]),
 
         # Expand the model with derivatives, quadratics, and spikes
