@@ -64,3 +64,11 @@ Additionally, consider using the ``--low-mem`` flag, which will make some memory
 --------------------------------
 
 When running `FreeSurfer <https://surfer.nmr.mgh.harvard.edu/`_ an error may say that FreeSurfer is already running. FreeSurfer determines if it is already running by reading the is_running file inside of the scripts folder. If the file is present then FreeSurfer reads out it is running. Deleting this file will enable FreeSurfer to be run again and it may be helpful to delete that run. In general, please be cautious of deleting files and mindful why a file may exist. 
+
+
+Running subjects in parallel
+----------------------------
+
+When you would like to run *fMRIPrep* in parallel on multiple subjects please use this method:
+Please use a different working directory for each subject. For example dataset/name/sub-01 and dataset/name/sub-02. 
+This should allow for *fMRIPrep* to be run in parallel
