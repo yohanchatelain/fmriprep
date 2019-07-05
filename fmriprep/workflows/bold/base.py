@@ -338,9 +338,16 @@ def init_func_preproc_wf(
         # Find fieldmaps. Options: (phase1|phase2|phasediff|epi|fieldmap|syn)
         fmaps = []
         if 'fieldmaps' not in ignore:
-            fmaps = layout.get_fieldmap(ref_file, return_list=True)
-            for fmap in fmaps:
-                fmap['metadata'] = layout.get_metadata(fmap[fmap['suffix']])
+            for fmap in layout.get_fieldmap(ref_file, return_list=True):
+                if fmap['suffix'] == 'phase':
+                    LOGGER.warning("""\
+Found phase1/2 type of fieldmaps, which are not currently supported. \
+fMRIPrep will discard them for susceptibility distortion correction. \
+Please, follow up on this issue at \
+https://github.com/poldracklab/fmriprep/issues/1655.""")
+                else:
+                    fmap['metadata'] = layout.get_metadata(fmap[fmap['suffix']])
+                    fmaps.append(fmap)
 
         # Run SyN if forced or in the absence of fieldmap correction
         if force_syn or (use_syn and not fmaps):
