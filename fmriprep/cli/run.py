@@ -139,7 +139,7 @@ Non-standard spaces (valid keywords: %s) imply specific orientations and samplin
 grids. \
 Important to note, the ``res-*`` modifier does not define the resolution used for \
 the spatial normalization """ % (', '.join('"%s"' % s for s in templates()),
-            ', '.join(NONSTANDARD_REFERENCES)))
+                                 ', '.join(NONSTANDARD_REFERENCES)))
 
     g_conf.add_argument(
         '--output-space', required=False, action='store', type=str, nargs='+',
