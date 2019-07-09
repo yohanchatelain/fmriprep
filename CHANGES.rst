@@ -1,5 +1,5 @@
-1.4.1 (TBD)
-===========
+1.4.1 (July 9, 2019)
+====================
 
 As of 1.4.1, the new infant and pediatric templates added to TemplateFlow are available to
 brain extraction and spatial normalization.
