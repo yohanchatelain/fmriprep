@@ -161,15 +161,13 @@ RUN python -c "from matplotlib import font_manager" && \
     sed -i 's/\(backend *: \).*$/\1Agg/g' $( python -c "import matplotlib; print(matplotlib.matplotlib_fname())" )
 
 # Precaching atlases
-ENV TEMPLATEFLOW_HOME="/opt/templateflow"
-RUN mkdir -p $TEMPLATEFLOW_HOME
 RUN pip install --no-cache-dir "templateflow>=0.3.0,<0.4.0a0" && \
     python -c "from templateflow import api as tfapi; \
-               tfapi.get('MNI152NLin6Asym'); \
-               tfapi.get('MNI152NLin2009cAsym'); \
+               tfapi.get('MNI152NLin6Asym', atlas=None); \
+               tfapi.get('MNI152NLin2009cAsym', atlas=None); \
                tfapi.get('OASIS30ANTs');" && \
-    find $TEMPLATEFLOW_HOME -type d -exec chmod go=u {} + && \
-    find $TEMPLATEFLOW_HOME -type f -exec chmod go=u {} +
+    find $HOME/.cache/templateflow -type d -exec chmod go=u {} + && \
+    find $HOME/.cache/templateflow -type f -exec chmod go=u {} +
 
 # Installing FMRIPREP
 COPY . /src/fmriprep

@@ -132,6 +132,11 @@
       "orcid": "0000-0002-2050-0614"
     },
     {
+      "name": "Thompson, William H",
+      "Affiliation": "Department of Psychology, Stanford University",
+      "orcid": "0000-0002-0533-6035"
+    },
+    {
       "name": "Poldrack, Russell A.",
       "affiliation": "Department of Psychology, Stanford University",
       "orcid": "0000-0001-6755-0259"
@@ -165,3 +170,4 @@
   "license": "BSD-3-Clause",
   "upload_type": "software"
 }
+

@@ -268,7 +268,6 @@ def init_bold_std_trans_wf(
             described outputs.
 
     """
-    from smriprep.workflows.norm import _templateflow_ds
 
     # Filter ``standard_spaces``
     vol_std_spaces = [k for k in standard_spaces.keys() if not k.startswith('fs')]
@@ -312,9 +311,9 @@ preprocessed BOLD runs*: {tpl}.
                                     if k in vol_std_spaces]
     select_std.iterables = ('key', vol_std_spaces)
 
-    select_tpl = pe.Node(niu.Function(
-        input_names=['template', 'resolution'], function=_templateflow_ds),
-        name='select_tpl', run_without_submitting=True)
+    select_tpl = pe.Node(niu.Function(function=_select_template),
+                         name='select_tpl', run_without_submitting=True)
+    select_tpl.inputs.template_specs = standard_spaces
 
     gen_ref = pe.Node(GenerateSamplingReference(), name='gen_ref',
                       mem_gb=0.3)  # 256x256x256 * 64 / 8 ~ 150MB)
@@ -336,7 +335,6 @@ preprocessed BOLD runs*: {tpl}.
         (inputnode, gen_ref, [(('bold_split', _first), 'moving_image')]),
         (inputnode, mask_merge_tfms, [(('itk_bold_to_t1', _aslist), 'in2')]),
         (select_std, select_tpl, [('key', 'template')]),
-        (select_std, select_tpl, [(('resolution', _tpl_res), 'resolution')]),
         (select_std, mask_merge_tfms, [('anat2std_xfm', 'in1')]),
         (select_std, gen_ref, [(('resolution', _is_native), 'keep_native')]),
         (select_tpl, gen_ref, [('out', 'fixed_image')]),
@@ -638,6 +636,13 @@ def init_bold_preproc_report_wf(mem_gb, reportlets_dir, name='bold_preproc_repor
     ])
 
     return workflow
+
+
+def _select_template(template, template_specs):
+    from niworkflows.utils.misc import get_template_specs
+    specs = template_specs[template]
+    specs['suffix'] = specs.get('suffix', 'T1w')
+    return get_template_specs(template, template_spec=specs)[0]
 
 
 def _first(inlist):
