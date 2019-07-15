@@ -774,6 +774,14 @@ jobs:
       image: circleci/classic:201711-01
     working_directory: /tmp/src/fmriprep
     steps:
+      - run:
+          name: Check whether build should be skipped
+          command: |
+            cd /home/circleci/src/fmriprep
+            if [[ "$( git log --format='format:%s' -n 1 $CIRCLE_SHA1 | grep -i -E '^docs?(\(\w+\))?:' )" != "" ]]; then
+              echo "Only docs build"
+              circleci step halt
+            fi
       - restore_cache:
           keys:
             - docker-v3-{{ .Branch }}-{{ .Revision }}
@@ -884,14 +892,6 @@ jobs:
     working_directory: /tmp/src/fmriprep
     steps:
       - checkout
-      - run:
-          name: Check whether build should be skipped
-          command: |
-            cd /home/circleci/src/fmriprep
-            if [[ "$( git log --format='format:%s' -n 1 $CIRCLE_SHA1 | grep -i -E '^docs?(\(\w+\))?:' )" != "" ]]; then
-              echo "Only docs build"
-              circleci step halt
-            fi
       - run:
           name: Build fMRIPrep
           command: |
