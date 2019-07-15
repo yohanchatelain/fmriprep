@@ -303,6 +303,8 @@ jobs:
     docker:
         - image: python:latest
     working_directory: /tmp/src/fmriprep
+    environment:
+      - FSLOUTPUTTYPE: 'NIFTI'
     steps:
       - checkout
       - run:
