@@ -547,8 +547,11 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     bold_sdc_wf = init_sdc_wf(
         fmaps, metadata, omp_nthreads=omp_nthreads,
         debug=debug, fmap_demean=fmap_demean, fmap_bspline=fmap_bspline)
-    bold_sdc_wf.inputs.inputnode.template = 'MNI152NLin2009cAsym' \
-        if 'MNI152NLin2009cAsym' in volume_std_spaces else next(iter(volume_std_spaces))
+    # If no standard space is given, use the default for SyN-SDC
+    if not volume_std_spaces or 'MNI152NLin2009cAsym' in volume_std_spaces:
+        bold_sdc_wf.inputs.inputnode.template = 'MNI152NLin2009cAsym'
+    else:
+        bold_sdc_wf.inputs.inputnode.template = next(iter(volume_std_spaces))
 
     if not fmaps:
         LOGGER.warning('SDC: no fieldmaps found or they were ignored (%s).',
