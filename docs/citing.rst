@@ -37,7 +37,7 @@ we recommend to include in your paper.
    }
 
    function toggle() {
-        var controlElementsIds = ["freesurfer","slicetime", "AROMA", "ss_template", "SDC"];
+        var controlElementsIds = ["freesurfer","slicetime", "AROMA", "ss_template", "SDC", "dof"];
         var controlElementsIdsLength = controlElementsIds.length;
 
         for (var i = 0; i < controlElementsIdsLength; i++) {
@@ -74,6 +74,11 @@ we recommend to include in your paper.
      <option value="NKI">NKI</option>
    </select><br />
    With slicetime correction: <input id="slicetime" type="checkbox" checked="true" onclick="toggle();"/><br />
+   BOLD-T1w coregistration degrees-of-freedom: <select id="dof" onclick="toggle();">
+     <option value="six" selected="true">6</option>
+     <option value="nine">9</option>
+     <option value="twelve">12</option>
+   </select><br />
    </p>
 
    <p style="font-style: italic;">
@@ -111,7 +116,9 @@ we recommend to include in your paper.
      the same-subject T1w image with intensity inverted [13,14] constrained with an average fieldmap
      template [15], implemented with <code>antsRegistration</code> (ANTs).</span>
      This was followed by co-registration to the corresponding T1w using boundary-based registration [16]
-     with 9 degrees of freedom, using
+     with <span class="dof_text_six">six</span>
+     <span class="dof_text_nine" style="display: none">nine</span>
+     <span class="dof_text_twelve" style="display: none">twelve</span> degrees of freedom, using
      <span class="freesurfer_text_true"><code>bbregister</code> (FreeSurfer v6.0.1).</span>
      <span class="freesurfer_text_false" style="display: none"><code>flirt</code> (FSL).</span>
      Motion correcting transformations,
