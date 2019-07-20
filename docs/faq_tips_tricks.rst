@@ -63,12 +63,25 @@ Additionally, consider using the ``--low-mem`` flag, which will make some memory
 ``recon-all`` is already running
 --------------------------------
 
-When running `FreeSurfer <https://surfer.nmr.mgh.harvard.edu/`_ an error may say that FreeSurfer is already running. FreeSurfer determines if it is already running by reading the is_running file inside of the scripts folder. If the file is present then FreeSurfer reads out it is running. Deleting this file will enable FreeSurfer to be run again and it may be helpful to delete that run. In general, please be cautious of deleting files and mindful why a file may exist. 
+When running FreeSurfer_,
+an error may say *FreeSurfer is already running*.
+FreeSurfer creates files (called ``IsRunning.{rh,lh,lh+rh}``, under the ``scripts/`` folder)
+to determine whether it is already executing ``recon-all`` on that particular subject
+in another process, compute node, etc.
+If a FreeSurfer execution terminates abruptly, those files are not wiped out, and therefore,
+the next time you try to execute ``recon-all``, FreeSurfer *thinks* it is still running.
+Deleting these files will enable FreeSurfer to execute ``recon-all`` again.
+In general, please be cautious of deleting files and mindful why a file may exist.
 
 
 Running subjects in parallel
 ----------------------------
 
-When you would like to run *fMRIPrep* in parallel on multiple subjects please use this method:
-Please use a different working directory for each subject. For example dataset/name/sub-01 and dataset/name/sub-02. 
-This should allow for *fMRIPrep* to be run in parallel
+When running several subjects in parallel, and depending on your settings, fMRIPrep may
+fall into race conditions.
+A symptomatic output looks like: ::
+
+  FileNotFoundError: [Errno 2] No such file or directory: '/scratch/03201/jbwexler/openneuro_fmriprep/data/ds000003_work/ds000003-download/derivatives/fmriprep-1.4.0/fmriprep/logs/CITATION.md'
+
+If you would like to run *fMRIPrep* in parallel on multiple subjects please use
+`this method <https://neurostars.org/t/fmriprep-workaround-for-running-subjects-in-parallel/4449>`__.
