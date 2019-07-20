@@ -38,7 +38,7 @@ def check_deps(workflow):
 
 def get_parser():
     """Build parser object"""
-    from smriprep.cli.utils import ParseTemplates
+    from smriprep.cli.utils import ParseTemplates, output_space as _output_space
     from templateflow.api import templates
     from ..__about__ import __version__
     from ..workflows.bold.resampling import NONSTANDARD_REFERENCES
@@ -136,8 +136,10 @@ Standard spaces may be specified by the form \
 a keyword (valid keywords: %s) or path pointing to a user-supplied template, and \
 may be followed by optional, colon-separated parameters. \
 Non-standard spaces (valid keywords: %s) imply specific orientations and sampling \
-grids""" % (', '.join('"%s"' % s for s in templates()),
-            ', '.join(NONSTANDARD_REFERENCES)))
+grids. \
+Important to note, the ``res-*`` modifier does not define the resolution used for \
+the spatial normalization """ % (', '.join('"%s"' % s for s in templates()),
+                                 ', '.join(NONSTANDARD_REFERENCES)))
 
     g_conf.add_argument(
         '--output-space', required=False, action='store', type=str, nargs='+',
@@ -172,6 +174,9 @@ grids""" % (', '.join('"%s"' % s for s in templates()),
         '--medial-surface-nan', required=False, action='store_true', default=False,
         help='Replace medial wall values with NaNs on functional GIFTI files. Only '
         'performed for GIFTI files mapped to a freesurfer subject (fsaverage or fsnative).')
+    g_conf.add_argument(
+        '--dummy-scans', required=False, action='store', default=None, type=int,
+        help='Number of non steady state volumes.')
 
     # ICA_AROMA options
     g_aroma = parser.add_argument_group('Specific options for running ICA_AROMA')
@@ -200,9 +205,9 @@ grids""" % (', '.join('"%s"' % s for s in templates()),
 
     #  ANTs options
     g_ants = parser.add_argument_group('Specific options for ANTs registrations')
-    g_ants.add_argument('--skull-strip-template', action='store', default='OASIS30ANTs',
-                        choices=['OASIS30ANTs', 'NKI', 'MNI152NLin2009cAsym'],
-                        help='select ANTs skull-stripping template (default: OASIS30ANTs))')
+    g_ants.add_argument(
+        '--skull-strip-template', action='store', default='OASIS30ANTs', type=_output_space,
+        help='select a template for skull-stripping with antsBrainExtraction')
     g_ants.add_argument('--skull-strip-fixed-seed', action='store_true',
                         help='do not use a random seed for skull-stripping - will ensure '
                              'run-to-run replicability when used with --omp-nthreads 1')
@@ -574,6 +579,7 @@ def build_workflow(opts, retval):
         bold2t1w_dof=opts.bold2t1w_dof,
         cifti_output=opts.cifti_output,
         debug=opts.sloppy,
+        dummy_scans=opts.dummy_scans,
         echo_idx=opts.echo_idx,
         err_on_aroma_warn=opts.error_on_aroma_warnings,
         fmap_bspline=opts.fmap_bspline,

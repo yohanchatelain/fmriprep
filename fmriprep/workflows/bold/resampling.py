@@ -169,9 +169,10 @@ spaces: {out_spaces}.
 
 
 def init_bold_std_trans_wf(
-    standard_spaces,
+    freesurfer,
     mem_gb,
     omp_nthreads,
+    standard_spaces,
     name='bold_std_trans_wf',
     use_compression=True,
     use_fieldwarp=False
@@ -187,14 +188,21 @@ def init_bold_std_trans_wf(
         from collections import OrderedDict
         from fmriprep.workflows.bold import init_bold_std_trans_wf
         wf = init_bold_std_trans_wf(
-            standard_spaces=OrderedDict([('MNI152Lin', {}),
-                                         ('fsaverage', {'density': '10k'})]),
+            freesurfer=True,
             mem_gb=3,
             omp_nthreads=1,
+            standard_spaces=OrderedDict([('MNI152Lin', {}),
+                                         ('fsaverage', {'density': '10k'})]),
         )
 
     **Parameters**
 
+        freesurfer : bool
+            Whether to generate FreeSurfer's aseg/aparc segmentations on BOLD space.
+        mem_gb : float
+            Size of BOLD file in GB
+        omp_nthreads : int
+            Maximum number of threads an individual process may use
         standard_spaces : OrderedDict
             Ordered dictionary where keys are TemplateFlow ID strings (e.g.,
             ``MNI152Lin``, ``MNI152NLin6Asym``, ``MNI152NLin2009cAsym``, or ``fsLR``),
@@ -202,10 +210,6 @@ def init_bold_std_trans_wf(
             Values of the dictionary aggregate modifiers (e.g., the value for the key ``MNI152Lin``
             could be ``{'resolution': 2}`` if one wants the resampling to be done on the 2mm
             resolution version of the selected template).
-        mem_gb : float
-            Size of BOLD file in GB
-        omp_nthreads : int
-            Maximum number of threads an individual process may use
         name : str
             Name of workflow (default: ``bold_std_trans_wf``)
         use_compression : bool
@@ -264,12 +268,9 @@ def init_bold_std_trans_wf(
             described outputs.
 
     """
-    from smriprep.workflows.norm import _templateflow_ds
 
     # Filter ``standard_spaces``
     vol_std_spaces = [k for k in standard_spaces.keys() if not k.startswith('fs')]
-    freesurfer = [k for k in standard_spaces.keys()
-                  if k.startswith('fs') and k != 'fsLR']
 
     workflow = Workflow(name=name)
 
@@ -310,9 +311,9 @@ preprocessed BOLD runs*: {tpl}.
                                     if k in vol_std_spaces]
     select_std.iterables = ('key', vol_std_spaces)
 
-    select_tpl = pe.Node(niu.Function(
-        input_names=['template', 'resolution'], function=_templateflow_ds),
-        name='select_tpl', run_without_submitting=True)
+    select_tpl = pe.Node(niu.Function(function=_select_template),
+                         name='select_tpl', run_without_submitting=True)
+    select_tpl.inputs.template_specs = standard_spaces
 
     gen_ref = pe.Node(GenerateSamplingReference(), name='gen_ref',
                       mem_gb=0.3)  # 256x256x256 * 64 / 8 ~ 150MB)
@@ -334,7 +335,6 @@ preprocessed BOLD runs*: {tpl}.
         (inputnode, gen_ref, [(('bold_split', _first), 'moving_image')]),
         (inputnode, mask_merge_tfms, [(('itk_bold_to_t1', _aslist), 'in2')]),
         (select_std, select_tpl, [('key', 'template')]),
-        (select_std, select_tpl, [(('resolution', _tpl_res), 'resolution')]),
         (select_std, mask_merge_tfms, [('anat2std_xfm', 'in1')]),
         (select_std, gen_ref, [(('resolution', _is_native), 'keep_native')]),
         (select_tpl, gen_ref, [('out', 'fixed_image')]),
@@ -363,15 +363,15 @@ preprocessed BOLD runs*: {tpl}.
 
     workflow.connect([
         (inputnode, merge_xforms, [
-            ('anat2std_xfm', 'in1'),
             (('itk_bold_to_t1', _aslist), 'in2')]),
-        (merge_xforms, bold_to_std_transform, [('out', 'transforms')]),
         (inputnode, merge, [('name_source', 'header_source')]),
         (inputnode, bold_to_std_transform, [('bold_split', 'input_image')]),
+        (select_std, merge_xforms, [('anat2std_xfm', 'in1')]),
+        (merge_xforms, bold_to_std_transform, [('out', 'transforms')]),
+        (gen_ref, bold_to_std_transform, [('out_file', 'reference_image')]),
         (bold_to_std_transform, merge, [('out_files', 'in_files')]),
         (merge, gen_final_ref, [('out_file', 'inputnode.bold_file')]),
         (mask_std_tfm, gen_final_ref, [('output_image', 'inputnode.bold_mask')]),
-        (gen_ref, bold_to_std_transform, [('out_file', 'reference_image')]),
     ])
 
     # Connect output nodes
@@ -400,10 +400,10 @@ preprocessed BOLD runs*: {tpl}.
             name='aparc_std_tfm', mem_gb=1)
 
         workflow.connect([
-            (inputnode, aseg_std_tfm, [('bold_aseg', 'input_image'),
-                                       ('anat2std_xfm', 'transforms')]),
-            (inputnode, aparc_std_tfm, [('bold_aparc', 'input_image'),
-                                        ('anat2std_xfm', 'transforms')]),
+            (inputnode, aseg_std_tfm, [('bold_aseg', 'input_image')]),
+            (inputnode, aparc_std_tfm, [('bold_aparc', 'input_image')]),
+            (select_std, aseg_std_tfm, [('anat2std_xfm', 'transforms')]),
+            (select_std, aparc_std_tfm, [('anat2std_xfm', 'transforms')]),
             (gen_ref, aseg_std_tfm, [('out_file', 'reference_image')]),
             (gen_ref, aparc_std_tfm, [('out_file', 'reference_image')]),
             (aseg_std_tfm, poutputnode, [('output_image', 'bold_aseg_std')]),
@@ -636,6 +636,13 @@ def init_bold_preproc_report_wf(mem_gb, reportlets_dir, name='bold_preproc_repor
     ])
 
     return workflow
+
+
+def _select_template(template, template_specs):
+    from niworkflows.utils.misc import get_template_specs
+    specs = template_specs[template]
+    specs['suffix'] = specs.get('suffix', 'T1w')
+    return get_template_specs(template, template_spec=specs)[0]
 
 
 def _first(inlist):

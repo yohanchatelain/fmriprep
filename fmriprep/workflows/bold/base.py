@@ -58,6 +58,7 @@ def init_func_preproc_wf(
     bold_file,
     cifti_output,
     debug,
+    dummy_scans,
     err_on_aroma_warn,
     fmap_bspline,
     fmap_demean,
@@ -96,6 +97,7 @@ def init_func_preproc_wf(
             bold_file='/completely/made/up/path/sub-01_task-nback_bold.nii.gz',
             cifti_output=False,
             debug=False,
+            dummy_scans=None,
             err_on_aroma_warn=False,
             fmap_bspline=True,
             fmap_demean=True,
@@ -134,6 +136,8 @@ def init_func_preproc_wf(
             Generate bold CIFTI file in output spaces
         debug : bool
             Enable debugging outputs
+        dummy_scans : int or None
+            Number of volumes to consider as non steady state
         err_on_aroma_warn : bool
             Do not crash on ICA-AROMA errors
         fmap_bspline : bool
@@ -334,9 +338,16 @@ def init_func_preproc_wf(
         # Find fieldmaps. Options: (phase1|phase2|phasediff|epi|fieldmap|syn)
         fmaps = []
         if 'fieldmaps' not in ignore:
-            fmaps = layout.get_fieldmap(ref_file, return_list=True)
-            for fmap in fmaps:
-                fmap['metadata'] = layout.get_metadata(fmap[fmap['suffix']])
+            for fmap in layout.get_fieldmap(ref_file, return_list=True):
+                if fmap['suffix'] == 'phase':
+                    LOGGER.warning("""\
+Found phase1/2 type of fieldmaps, which are not currently supported. \
+fMRIPrep will discard them for susceptibility distortion correction. \
+Please, follow up on this issue at \
+https://github.com/poldracklab/fmriprep/issues/1655.""")
+                else:
+                    fmap['metadata'] = layout.get_metadata(fmap[fmap['suffix']])
+                    fmaps.append(fmap)
 
         # Run SyN if forced or in the absence of fieldmap correction
         if force_syn or (use_syn and not fmaps):
@@ -395,8 +406,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_t1', 'bold_t1_ref', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1',
                 'bold_std', 'bold_std_ref' 'bold_mask_std', 'bold_aseg_std', 'bold_aparc_std',
-                'bold_cifti', 'cifti_variant', 'cifti_variant_key', 'confounds', 'surfaces',
-                'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file',
+                'bold_native', 'bold_cifti', 'cifti_variant', 'cifti_variant_key', 'surfaces',
+                'confounds', 'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file',
                 'confounds_metadata']),
         name='outputnode')
 
@@ -407,11 +418,12 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     summary = pe.Node(
         FunctionalSummary(
             slice_timing=run_stc,
-            registration='FreeSurfer' if freesurfer else 'FSL',
+            registration=('FSL', 'FreeSurfer')[freesurfer],
             registration_dof=bold2t1w_dof,
             pe_direction=metadata.get("PhaseEncodingDirection"),
             tr=metadata.get("RepetitionTime")),
         name='summary', mem_gb=DEFAULT_MEMORY_MIN_GB, run_without_submitting=True)
+    summary.inputs.dummy_scans = dummy_scans
 
     # CIfTI output: currently, we only support fsaverage{5,6}
     cifti_spaces = set(s for s in output_spaces.keys() if s in ('fsaverage5', 'fsaverage6'))
@@ -431,14 +443,13 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     )
 
     workflow.connect([
-        (inputnode, func_derivatives_wf, [
-            ('template', 'inputnode.template')]),
         (outputnode, func_derivatives_wf, [
             ('bold_t1', 'inputnode.bold_t1'),
             ('bold_t1_ref', 'inputnode.bold_t1_ref'),
             ('bold_aseg_t1', 'inputnode.bold_aseg_t1'),
             ('bold_aparc_t1', 'inputnode.bold_aparc_t1'),
             ('bold_mask_t1', 'inputnode.bold_mask_t1'),
+            ('bold_native', 'inputnode.bold_native'),
             ('confounds', 'inputnode.confounds'),
             ('surfaces', 'inputnode.surfaces'),
             ('aroma_noise_ics', 'inputnode.aroma_noise_ics'),
@@ -453,6 +464,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
     # Generate a tentative boldref
     bold_reference_wf = init_bold_reference_wf(omp_nthreads=omp_nthreads)
+    bold_reference_wf.inputs.inputnode.dummy_scans = dummy_scans
     if sbref_file is not None:
         workflow.connect([
             (val_sbref, bold_reference_wf, [('out_file', 'inputnode.sbref_file')]),
@@ -535,8 +547,11 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     bold_sdc_wf = init_sdc_wf(
         fmaps, metadata, omp_nthreads=omp_nthreads,
         debug=debug, fmap_demean=fmap_demean, fmap_bspline=fmap_bspline)
-    bold_sdc_wf.inputs.inputnode.template = 'MNI152NLin2009cAsym' \
-        if 'MNI152NLin2009cAsym' in volume_std_spaces else next(iter(volume_std_spaces))
+    # If no standard space is given, use the default for SyN-SDC
+    if not volume_std_spaces or 'MNI152NLin2009cAsym' in volume_std_spaces:
+        bold_sdc_wf.inputs.inputnode.template = 'MNI152NLin2009cAsym'
+    else:
+        bold_sdc_wf.inputs.inputnode.template = next(iter(volume_std_spaces))
 
     if not fmaps:
         LOGGER.warning('SDC: no fieldmaps found or they were ignored (%s).',
@@ -586,6 +601,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         (bold_reference_wf, bold_hmc_wf, [
             ('outputnode.raw_ref_image', 'inputnode.raw_ref_image'),
             ('outputnode.bold_file', 'inputnode.bold_file')]),
+        (bold_reference_wf, summary, [
+            ('outputnode.algo_dummy_scans', 'algo_dummy_scans')]),
         # EPI-T1 registration workflow
         (inputnode, bold_reg_wf, [
             ('t1_brain', 'inputnode.t1_brain'),
@@ -729,16 +746,26 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('output_image', 'bold_mask_t1')]),
         ])
 
+    if set(['func', 'run', 'bold', 'boldref', 'sbref']).intersection(output_spaces):
+        workflow.connect([
+            (bold_bold_trans_wf, outputnode, [
+                ('outputnode.bold', 'bold_native')]),
+            (bold_bold_trans_wf, func_derivatives_wf, [
+                ('outputnode.bold_ref', 'inputnode.bold_native_ref'),
+                ('outputnode.bold_mask', 'inputnode.bold_mask_native')]),
+        ])
+
     if volume_std_spaces:
         # Apply transforms in 1 shot
         # Only use uncompressed output if AROMA is to be run
         bold_std_trans_wf = init_bold_std_trans_wf(
-            standard_spaces=std_spaces,
+            freesurfer=freesurfer,
             mem_gb=mem_gb['resampled'],
             omp_nthreads=omp_nthreads,
+            standard_spaces=std_spaces,
+            name='bold_std_trans_wf',
             use_compression=not low_mem,
             use_fieldwarp=fmaps is not None,
-            name='bold_std_trans_wf'
         )
         workflow.connect([
             (inputnode, bold_std_trans_wf, [
@@ -809,6 +836,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         # Uses the parameterized outputnode to generate all outputs
         workflow.connect([
             (bold_std_trans_wf, func_derivatives_wf, [
+                ('poutputnode.templates', 'inputnode.template'),
                 ('poutputnode.bold_std_ref', 'inputnode.bold_std_ref'),
                 ('poutputnode.bold_std', 'inputnode.bold_std'),
                 ('poutputnode.bold_mask_std', 'inputnode.bold_mask_std'),

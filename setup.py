@@ -1,19 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Author: oesteban
-# @Date:   2015-11-19 16:44:27
 """ fmriprep setup script """
+import sys
+from setuptools import setup
+from setuptools.extension import Extension
+import versioneer
 
 
-def main():
-    """ Install entry-point """
-    from setuptools import setup
-    from setuptools.extension import Extension
+# Give setuptools a hint to complain if it's too old a version
+# 30.3.0 allows us to put most metadata in setup.cfg
+# Should match pyproject.toml
+# Not going to help us much without numpy or new pip, but gives us a shot
+SETUP_REQUIRES = ['setuptools >= 40.8', 'numpy', 'cython']
+# This enables setuptools to install wheel on-the-fly
+SETUP_REQUIRES += ['wheel'] if 'bdist_wheel' in sys.argv else []
+
+
+if __name__ == '__main__':
     from numpy import get_include
-    from fmriprep.__about__ import __version__, DOWNLOAD_URL
-
-    import versioneer
-    cmdclass = versioneer.get_cmdclass()
 
     extensions = [Extension(
         "fmriprep.utils.maths",
@@ -22,15 +26,9 @@ def main():
         library_dirs=["/usr/lib/"]),
     ]
 
-    setup(
-        version=__version__,
-        cmdclass=cmdclass,
-        download_url=DOWNLOAD_URL,
-        # Dependencies handling
-        zip_safe=False,
-        ext_modules=extensions,
-    )
-
-
-if __name__ == '__main__':
-    main()
+    setup(name='fmriprep',
+          version=versioneer.get_version(),
+          cmdclass=versioneer.get_cmdclass(),
+          setup_requires=SETUP_REQUIRES,
+          ext_modules=extensions,
+          )

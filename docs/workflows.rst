@@ -27,6 +27,7 @@ is presented below:
         bold2t1w_dof=9,
         cifti_output=False,
         debug=False,
+        dummy_scans=None,
         echo_idx=None,
         err_on_aroma_warn=False,
         fmap_bspline=False,
@@ -50,7 +51,7 @@ is presented below:
         regressors_dvars_th=1.5,
         regressors_fd_th=0.5,
         skull_strip_fixed_seed=False,
-        skull_strip_template='OASIS30ANTs',
+        skull_strip_template=('OASIS30ANTs', {}),
         subject_id='test',
         t2s_coreg=False,
         task_id='',
@@ -80,7 +81,7 @@ T1w/T2w preprocessing
         output_spaces=OrderedDict([
             ('MNI152NLin2009cAsym', {}), ('fsaverage5', {})]),
         reportlets_dir='.',
-        skull_strip_template='MNI152NLin2009cAsym',
+        skull_strip_template=('MNI152NLin2009cAsym', {}),
         skull_strip_fixed_seed=False,
     )
 
@@ -307,6 +308,7 @@ BOLD preprocessing
         regressors_dvars_th=1.5,
         use_bbr=True,
         use_syn=True,
+        dummy_scans=None,
         layout=BIDSLayout('.'),
         num_bold=1,
     )
@@ -488,10 +490,11 @@ Resampling BOLD runs onto standard spaces
     from collections import OrderedDict
     from fmriprep.workflows.bold import init_bold_std_trans_wf
     wf = init_bold_std_trans_wf(
-        standard_spaces=OrderedDict([('MNI152Lin', {}),
-                                     ('fsaverage', {'density': '10k'})]),
+        freesurfer=True,
         mem_gb=3,
         omp_nthreads=1,
+        standard_spaces=OrderedDict([('MNI152Lin', {}),
+                                     ('fsaverage', {'density': '10k'})]),
     )
 
 This sub-workflow concatenates the transforms calculated upstream (see
@@ -560,8 +563,8 @@ segmentation, the `discover_wf` sub-workflow calculates potential
 confounds per volume.
 
 Calculated confounds include the mean global signal, mean tissue class signal,
-tCompCor, aCompCor, Frame-wise Displacement, 6 motion parameters, DVARS, and, if
-the ``--use-aroma`` flag is enabled, the noise components identified by ICA-AROMA
+tCompCor, aCompCor, Frame-wise Displacement, 6 motion parameters, DVARS, spike regressors,
+and, if the ``--use-aroma`` flag is enabled, the noise components identified by ICA-AROMA
 (those to be removed by the "aggressive" denoising strategy).
 Particular details about ICA-AROMA are given below.
 
