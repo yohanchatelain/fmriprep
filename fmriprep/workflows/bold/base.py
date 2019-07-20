@@ -565,6 +565,11 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         LOGGER.log(25, 'SDC: fieldmap estimation of type "%s" intended for %s found.',
                    fmaps[0]['suffix'], ref_file)
 
+    # Overwrite ``out_path_base`` of sdcflows' DataSinks
+    for node in bold_sdc_wf.list_node_names():
+        if node.split('.')[-1].startswith('ds_'):
+            bold_sdc_wf.get_node(node).interface.out_path_base = 'fmriprep'
+
     # MULTI-ECHO EPI DATA #############################################
     if multiecho:
         from .util import init_skullstrip_bold_wf
