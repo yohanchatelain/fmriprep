@@ -716,6 +716,11 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('outputnode.bold_ref', 'inputnode.in_post')]),
         ])
 
+        # Overwrite ``out_path_base`` of unwarping DataSinks
+        for node in fmap_unwarp_report_wf.list_node_names():
+            if node.split('.')[-1].startswith('ds_'):
+                fmap_unwarp_report_wf.get_node(node).interface.out_path_base = 'fmriprep'
+
         if force_syn and fmaps[0]['suffix'] != 'syn':
             syn_unwarp_report_wf = init_fmap_unwarp_report_wf(
                 name='syn_unwarp_report_wf', forcedsyn=True)
@@ -729,6 +734,11 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 (bold_sdc_wf, syn_unwarp_report_wf, [
                     ('outputnode.syn_bold_ref', 'inputnode.in_post')]),
             ])
+
+            # Overwrite ``out_path_base`` of unwarping DataSinks
+            for node in syn_unwarp_report_wf.list_node_names():
+                if node.split('.')[-1].startswith('ds_'):
+                    syn_unwarp_report_wf.get_node(node).interface.out_path_base = 'fmriprep'
 
     # Map final BOLD mask into T1w space (if required)
     if 'T1w' in output_spaces or 'anat' in output_spaces:
