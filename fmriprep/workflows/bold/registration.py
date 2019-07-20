@@ -433,9 +433,10 @@ def init_bbreg_wf(use_bbr, bold2t1w_dof, omp_nthreads, name='bbreg_wf'):
     workflow.__desc__ = """\
 The BOLD reference was then co-registered to the T1w reference using
 `bbregister` (FreeSurfer) which implements boundary-based registration [@bbr].
-Co-registration was configured with nine degrees of freedom to account
-for distortions remaining in the BOLD reference.
-"""
+Co-registration was configured with {dof} degrees of freedom{reason}.
+""".format(dof={6: 'six', 9: 'nine', 12: 'twelve'}[bold2t1w_dof],
+           reason='' if bold2t1w_dof == 6 else
+                  'to account for distortions remaining in the BOLD reference')
 
     inputnode = pe.Node(
         niu.IdentityInterface([
