@@ -411,6 +411,43 @@ license file at several paths, in this order: 1) command line argument ``--fs-li
                                        level='info')
     finally:
         from niworkflows.reports import generate_reports
+        from subprocess import check_call, CalledProcessError, TimeoutExpired
+        from pkg_resources import resource_filename as pkgrf
+        from shutil import copyfile
+
+        citation_files = {
+            ext: output_dir / 'fmriprep' / 'logs' / ('CITATION.%s' % ext)
+            for ext in ('bib', 'tex', 'md', 'html')
+        }
+
+        if citation_files['md'].exists():
+            # Generate HTML file resolving citations
+            cmd = ['pandoc', '-s', '--bibliography',
+                   pkgrf('fmriprep', 'data/boilerplate.bib'),
+                   '--filter', 'pandoc-citeproc',
+                   '--metadata', 'pagetitle="fMRIPrep citation boilerplate"',
+                   str(citation_files['md']),
+                   '-o', str(citation_files['html'])]
+            try:
+                check_call(cmd, timeout=10)
+            except (FileNotFoundError, CalledProcessError, TimeoutExpired):
+                logger.warning('Could not generate CITATION.html file:\n%s',
+                               ' '.join(cmd))
+
+            # Generate LaTex file resolving citations
+            cmd = ['pandoc', '-s', '--bibliography',
+                   pkgrf('fmriprep', 'data/boilerplate.bib'),
+                   '--natbib', str(citation_files['md']),
+                   '-o', str(citation_files['tex'])]
+            try:
+                check_call(cmd, timeout=10)
+            except (FileNotFoundError, CalledProcessError, TimeoutExpired):
+                logger.warning('Could not generate CITATION.tex file:\n%s',
+                               ' '.join(cmd))
+            else:
+                copyfile(pkgrf('fmriprep', 'data/boilerplate.bib'),
+                         citation_files['bib'])
+
         # Generate reports phase
         failed_reports = generate_reports(
             subject_list, output_dir, work_dir, run_uuid, packagename='fmriprep')
@@ -435,18 +472,15 @@ def build_workflow(opts, retval):
     a hard-limited memory-scope.
 
     """
-    from subprocess import check_call, CalledProcessError, TimeoutExpired
-    from pkg_resources import resource_filename as pkgrf
-    from shutil import copyfile
     from bids import BIDSLayout
 
-    from nipype import logging, config as ncfg
+    from nipype import logging as nlogging, config as ncfg
     from niworkflows.utils.bids import collect_participants
     from niworkflows.reports import generate_reports
     from ..__about__ import __version__
     from ..workflows.base import init_fmriprep_wf
 
-    logger = logging.getLogger('nipype.workflow')
+    build_log = nlogging.getLogger('nipype.workflow')
 
     INIT_MSG = """
     Running fMRIPREP version {version}:
@@ -466,7 +500,7 @@ def build_workflow(opts, retval):
     retval['work_dir'] = str(work_dir)
 
     if output_dir == bids_dir:
-        logger.error(
+        build_log.error(
             'The selected output folder is the same as the input BIDS folder. '
             'Please modify the output path (suggestion: %s).',
             bids_dir / 'derivatives' / ('fmriprep-%s' % __version__.split('+')[0]))
@@ -520,7 +554,7 @@ def build_workflow(opts, retval):
         omp_nthreads = min(nthreads - 1 if nthreads > 1 else cpu_count(), 8)
 
     if 1 < nthreads < omp_nthreads:
-        logger.warning(
+        build_log.warning(
             'Per-process threads (--omp-nthreads=%d) exceed total '
             'threads (--nthreads/--n_cpus=%d)', omp_nthreads, nthreads)
     retval['plugin_settings'] = plugin_settings
@@ -556,7 +590,7 @@ def build_workflow(opts, retval):
 
     # Called with reports only
     if opts.reports_only:
-        logger.log(25, 'Running --reports-only on participants %s', ', '.join(subject_list))
+        build_log.log(25, 'Running --reports-only on participants %s', ', '.join(subject_list))
         if opts.run_uuid is not None:
             run_uuid = opts.run_uuid
             retval['run_uuid'] = run_uuid
@@ -566,7 +600,7 @@ def build_workflow(opts, retval):
         return retval
 
     # Build main workflow
-    logger.log(25, INIT_MSG(
+    build_log.log(25, INIT_MSG(
         version=__version__,
         bids_dir=bids_dir,
         subject_list=subject_list,
@@ -615,48 +649,22 @@ def build_workflow(opts, retval):
     boilerplate = retval['workflow'].visit_desc()
 
     if boilerplate:
-        # To please git-annex users and also to guarantee consistency
-        # among different renderings of the same file, first remove any
-        # existing one
         citation_files = {
             ext: logs_path / ('CITATION.%s' % ext)
             for ext in ('bib', 'tex', 'md', 'html')
         }
+        # To please git-annex users and also to guarantee consistency
+        # among different renderings of the same file, first remove any
+        # existing one
         for citation_file in citation_files.values():
-            if citation_file.exists() or citation_file.is_symlink():
+            try:
                 citation_file.unlink()
+            except FileNotFoundError:
+                pass
 
         citation_files['md'].write_text(boilerplate)
-        logger.log(25, 'Works derived from this fMRIPrep execution should '
+        build_log.log(25, 'Works derived from this fMRIPrep execution should '
                    'include the following boilerplate:\n\n%s', boilerplate)
-
-        # Generate HTML file resolving citations
-        cmd = ['pandoc', '-s', '--bibliography',
-               pkgrf('fmriprep', 'data/boilerplate.bib'),
-               '--filter', 'pandoc-citeproc',
-               '--metadata', 'pagetitle="fMRIPrep citation boilerplate"',
-               str(citation_files['md']),
-               '-o', str(citation_files['html'])]
-        try:
-            check_call(cmd, timeout=10)
-        except (FileNotFoundError, CalledProcessError, TimeoutExpired):
-            logger.warning('Could not generate CITATION.html file:\n%s',
-                           ' '.join(cmd))
-
-        # Generate LaTex file resolving citations
-        cmd = ['pandoc', '-s', '--bibliography',
-               pkgrf('fmriprep', 'data/boilerplate.bib'),
-               '--natbib', str(citation_files['md']),
-               '-o', str(citation_files['tex'])]
-        try:
-            check_call(cmd, timeout=10)
-        except (FileNotFoundError, CalledProcessError, TimeoutExpired):
-            logger.warning('Could not generate CITATION.tex file:\n%s',
-                           ' '.join(cmd))
-        else:
-            copyfile(pkgrf('fmriprep', 'data/boilerplate.bib'),
-                     citation_files['bib'])
-
     return retval
 
 
