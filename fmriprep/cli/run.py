@@ -664,7 +664,7 @@ def build_workflow(opts, retval):
 
         citation_files['md'].write_text(boilerplate)
         build_log.log(25, 'Works derived from this fMRIPrep execution should '
-                   'include the following boilerplate:\n\n%s', boilerplate)
+                      'include the following boilerplate:\n\n%s', boilerplate)
     return retval
 
 
