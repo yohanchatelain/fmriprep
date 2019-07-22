@@ -428,6 +428,8 @@ license file at several paths, in this order: 1) command line argument ``--fs-li
                    '--metadata', 'pagetitle="fMRIPrep citation boilerplate"',
                    str(citation_files['md']),
                    '-o', str(citation_files['html'])]
+
+            logger.info('Generating an HTML version of the citation boilerplate...')
             try:
                 check_call(cmd, timeout=10)
             except (FileNotFoundError, CalledProcessError, TimeoutExpired):
@@ -439,6 +441,7 @@ license file at several paths, in this order: 1) command line argument ``--fs-li
                    pkgrf('fmriprep', 'data/boilerplate.bib'),
                    '--natbib', str(citation_files['md']),
                    '-o', str(citation_files['tex'])]
+            logger.info('Generating a LaTeX version of the citation boilerplate...')
             try:
                 check_call(cmd, timeout=10)
             except (FileNotFoundError, CalledProcessError, TimeoutExpired):
@@ -447,6 +450,10 @@ license file at several paths, in this order: 1) command line argument ``--fs-li
             else:
                 copyfile(pkgrf('fmriprep', 'data/boilerplate.bib'),
                          citation_files['bib'])
+        else:
+            logger.warning('fMRIPrep could not find the markdown version of '
+                           'the citation boilerplate (%s). HTML and LaTeX versions'
+                           ' of it will not be available', citation_files['md'])
 
         # Generate reports phase
         failed_reports = generate_reports(
