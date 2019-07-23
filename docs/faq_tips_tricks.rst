@@ -59,3 +59,70 @@ Please find more information regarding this error from discussions on
  * `fMRIPrep v1.0.12 hanging <https://neurostars.org/t/fmriprep-v1-0-12-hanging/1661>`_.
 
 Additionally, consider using the ``--low-mem`` flag, which will make some memory optimizations at the cost of disk space in the working directory.
+
+ERROR: it appears that ``recon-all`` is already running
+-------------------------------------------------------
+
+When running FreeSurfer_'s ``recon-all``, an error may say *it appears it is already running*.
+FreeSurfer creates files (called ``IsRunning.{rh,lh,lh+rh}``, under the ``scripts/`` folder)
+to determine whether it is already executing ``recon-all`` on that particular subject
+in another process, compute node, etc.
+If a FreeSurfer execution terminates abruptly, those files are not wiped out, and therefore,
+the next time you try to execute ``recon-all``, FreeSurfer *thinks* it is still running.
+The output you get from fMRIPrep will contain something like: ::
+
+  RuntimeError: Command:
+  recon-all -autorecon2-volonly -openmp 8 -subjid sub-020 -sd /outputs/freesurfer -nogcareg -nocanorm -nocareg -nonormalization2 -nomaskbfs -nosegmentation -nofill
+  Standard output:
+  Subject Stamp: freesurfer-Linux-centos6_x86_64-stable-pub-v6.0.1-f53a55a
+  Current Stamp: freesurfer-Linux-centos6_x86_64-stable-pub-v6.0.1-f53a55a
+  INFO: SUBJECTS_DIR is /outputs/freesurfer
+  Actual FREESURFER_HOME /opt/freesurfer
+  -rw-rw-r-- 1 11239 users 207798 Apr  1 16:19 /outputs/freesurfer/sub-020/scripts/recon-all.log
+  Linux 62324c0da859 4.4.0-142-generic #168-Ubuntu SMP Wed Jan 16 21:00:45 UTC 2019 x86_64 x86_64 x86_64 GNU/Linux
+
+  ERROR: it appears that recon-all is already running
+  for sub-020 based on the presence of /outputs/freesurfer/sub-020/scripts/IsRunning.lh+rh. It could
+  also be that recon-all was running at one point but
+  died in an unexpected way. If it is the case that there
+  is a process running, you can kill it and start over or
+  just let it run. If the process has died, you should type:
+
+  rm /outputs/freesurfer/sub-020/scripts/IsRunning.lh+rh
+
+  and re-run. Or you can add -no-isrunning to the recon-all
+  command-line. The contents of this file are:
+  ----------------------------------------------------------
+  ------------------------------
+  SUBJECT sub-020
+  HEMI    lh rh
+  DATE Fri Mar 22 20:33:09 UTC 2019
+  USER root
+  HOST 622795a21a5f
+  PROCESSID 55530
+  PROCESSOR x86_64
+  OS Linux
+  Linux 622795a21a5f 4.4.0-142-generic #168-Ubuntu SMP Wed Jan 16 21:00:45 UTC 2019 x86_64 x86_64 x86_64 GNU/Linux
+  $Id: recon-all,v 1.580.2.16 2017/01/18 14:11:24 oesteban Exp $
+  ----------------------------------------------------------
+  Standard error:
+
+  Return code: 1
+
+
+As suggested by the ``recon-all`` output message, deleting these files will enable
+FreeSurfer to execute ``recon-all`` again.
+In general, please be cautious of deleting files and mindful why a file may exist.
+
+
+Running subjects in parallel
+----------------------------
+
+When running several subjects in parallel, and depending on your settings, fMRIPrep may
+fall into race conditions.
+A symptomatic output looks like: ::
+
+  FileNotFoundError: [Errno 2] No such file or directory: '/scratch/03201/jbwexler/openneuro_fmriprep/data/ds000003_work/ds000003-download/derivatives/fmriprep-1.4.0/fmriprep/logs/CITATION.md'
+
+If you would like to run *fMRIPrep* in parallel on multiple subjects please use
+`this method <https://neurostars.org/t/fmriprep-workaround-for-running-subjects-in-parallel/4449>`__.

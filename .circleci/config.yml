@@ -774,6 +774,8 @@ jobs:
       image: circleci/classic:201711-01
     working_directory: /tmp/src/fmriprep
     steps:
+      - checkout:
+          path: /home/circleci/src/fmriprep
       - run:
           name: Check whether build should be skipped
           command: |
