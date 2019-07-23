@@ -399,7 +399,7 @@ license file at several paths, in this order: 1) command line argument ``--fs-li
         if opts.run_reconall:
             from templateflow import api
             from niworkflows.utils.misc import _copy_any
-            dseg_tsv = str(api.get('fsaverage', suffix='dseg', extensions=['.tsv']))
+            dseg_tsv = str(api.get('fsaverage', suffix='dseg', extension=['.tsv']))
             _copy_any(dseg_tsv,
                       str(output_dir / 'fmriprep' / 'desc-aseg_dseg.tsv'))
             _copy_any(dseg_tsv,

@@ -482,7 +482,7 @@ def init_carpetplot_wf(standard_spaces, mem_gb, metadata, name="bold_carpet_wf")
         float=True,
         input_image=str(get_template(
             'MNI152NLin2009cAsym', resolution=1, desc='carpet',
-            suffix='dseg', extensions=['.nii', '.nii.gz'])),
+            suffix='dseg', extension=['.nii', '.nii.gz'])),
         dimension=3, default_value=0, interpolation='MultiLabel'),
         name='resample_parc')
 
