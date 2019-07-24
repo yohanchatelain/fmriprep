@@ -68,7 +68,8 @@ def init_func_derivatives_wf(
         ds_bold_native = pe.Node(
             DerivativesDataSink(base_directory=output_dir, desc='preproc',
                                 keep_dtype=True, compress=True, SkullStripped=False,
-                                RepetitionTime=metadata.get('RepetitionTime')),
+                                RepetitionTime=metadata.get('RepetitionTime'),
+                                TaskName=metadata.get('TaskName')),
             name='ds_bold_native', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_native_ref = pe.Node(
@@ -96,7 +97,8 @@ def init_func_derivatives_wf(
         ds_bold_t1 = pe.Node(
             DerivativesDataSink(base_directory=output_dir, space='T1w', desc='preproc',
                                 keep_dtype=True, compress=True, SkullStripped=False,
-                                RepetitionTime=metadata.get('RepetitionTime')),
+                                RepetitionTime=metadata.get('RepetitionTime'),
+                                TaskName=metadata.get('TaskName')),
             name='ds_bold_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_t1_ref = pe.Node(
@@ -140,7 +142,8 @@ def init_func_derivatives_wf(
         ds_bold_std = pe.Node(
             DerivativesDataSink(base_directory=output_dir, desc='preproc',
                                 keep_dtype=True, compress=True, SkullStripped=False,
-                                RepetitionTime=metadata.get('RepetitionTime')),
+                                RepetitionTime=metadata.get('RepetitionTime'),
+                                TaskName=metadata.get('TaskName')),
             name='ds_bold_std', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_std_ref = pe.Node(
