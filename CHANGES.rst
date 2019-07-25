@@ -1,3 +1,28 @@
+1.5.0 (TBD)
+===========
+
+Two hallmark changes conducive to a new minor release line have been included in
+version 1.5.0: the upgrade of *PyBIDS* to the 0.9 series and the split of *SDCflows*
+off from *fMRIPrep* codebase.
+*PyBIDS* 0.9.x has a better handling of the indexed dataset that will permit some
+optimizations to *fMRIPrep*'s memory fingerprint.
+*SDCflows* now are found at `poldracklab/sdcflows <https://github.com/poldracklab/sdcflows>`__,
+and have been split to allow a more granular and thorough testing in collaboration
+with M. Cieslak, A. Adebimpe, and T. Satterthwaite.
+Some other bugfixes, improvements to the documentation and minor features are also
+shipped with the new release.
+
+
+* ENH: Add TaskName metadata to BOLD outputs (#1714) @effigies
+* REF: Separate SDCflows from fMRIPrep (#1670) @oesteban
+* MAINT: Remove old ``extensions`` entity selector for PyBIDS queries (#1707) @oesteban
+* FIX: Postpone ``pandoc`` conversion of boilerplate after workflow has fully run (#1710) @oesteban
+* DOC: adding recon-all issue to faq (#1622) @franklin-feingold
+* FIX: Use MNI152NLin2009cAsym for SDC if no templates are specified (#1703) @effigies
+* FIX: Correct BOLD-T1w registration description if DoF != 9 (#1701) @effigies
+* MAINT: Use PyBIDS 0.9.x via niworkflows/smriprep PRs (#1695) @effigies
+* DOC: Add copyright waiver to boilerplate and reviewer note to docs (#1691) @effigies
+
 1.4.1 (July 9, 2019)
 ====================
 
