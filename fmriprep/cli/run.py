@@ -40,8 +40,10 @@ def get_parser():
     """Build parser object"""
     from smriprep.cli.utils import ParseTemplates, output_space as _output_space
     from templateflow.api import templates
+    from packaging.version import Version
     from ..__about__ import __version__
     from ..workflows.bold.resampling import NONSTANDARD_REFERENCES
+    from ._version import check_latest, is_flagged
 
     verstr = 'fmriprep v{}'.format(__version__)
 
@@ -274,6 +276,26 @@ the spatial normalization """ % (', '.join('"%s"' % s for s in templates()),
     g_other.add_argument('--sloppy', action='store_true', default=False,
                          help='Use low-quality tools for speed - TESTING ONLY')
 
+    currentv = Version(__version__)
+    latest = check_latest()
+
+    if latest is not None and currentv < latest:
+        print("""\
+WARNING: The current version of fMRIPrep (%s) is outdated.
+Please consider upgrading to the latest version %s.
+Before upgrading, please consider that mixing fMRIPrep versions
+within a single study is strongly discouraged.""" % (
+            __version__, latest), file=sys.stderr)
+
+    _blist = is_flagged()
+    if _blist[0]:
+        _reason = _blist[1] or 'unknown'
+        print("""\
+WARNING: Version %s of fMRIPrep (current) has been FLAGGED
+(reason: %s).
+That means some severe flaw was found in it and we strongly
+discourage its usage.""" % (__version__, _reason), file=sys.stderr)
+
     return parser
 
 
@@ -283,7 +305,6 @@ def main():
     from multiprocessing import set_start_method, Process, Manager
     from ..utils.bids import write_derivative_description, validate_input_dir
     set_start_method('forkserver')
-
     warnings.showwarning = _warn_redirect
     opts = get_parser().parse_args()
 
