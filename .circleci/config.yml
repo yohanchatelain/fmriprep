@@ -216,10 +216,8 @@ jobs:
           name: Run fMRIPrep tests
           no_output_timeout: 2h
           command: |
-            mkdir /tmp/data/reports && \
             docker run -ti --rm=false \
-              -v /tmp/data:/tmp/data \
-              --entrypoint="py.test" poldracklab/fmriprep:latest \
+              --entrypoint="pytest" poldracklab/fmriprep:latest \
               /src/fmriprep/fmriprep -svx --doctest-modules
 
       - run:
