@@ -176,42 +176,6 @@ jobs:
             - /tmp/data
             - /tmp/ds005/derivatives/freesurfer
 
-  get_regression_data:
-    machine:
-      # Ubuntu 14.04 with Docker 17.10.0-ce
-      image: circleci/classic:201711-01
-    working_directory: /home/circleci/data
-    steps:
-      - restore_cache:
-          keys:
-            - regression-v3-{{ .Revision }}
-            - regression-v3-
-      - run:
-          name: Get truncated BOLD series
-          command: |
-            mkdir -p /tmp/data
-            if [[ ! -d /tmp/data/fmriprep_bold_truncated ]]; then
-              wget --retry-connrefused --waitretry=5 --read-timeout=20 --timeout=15 -t 0 -q \
-                -O fmriprep_bold_truncated.tar.gz "https://osf.io/286yr/download"
-              tar xvzf fmriprep_bold_truncated.tar.gz -C /tmp/data/
-            else
-              echo "Truncated BOLD series were cached"
-            fi
-      - run:
-          name: Get pre-computed masks
-          command: |
-            if [[ ! -d /tmp/data/fmriprep_bold_mask ]]; then
-              wget --retry-connrefused --waitretry=5 --read-timeout=20 --timeout=15 -t 0 -q \
-                -O fmriprep_bold_mask.tar.gz "https://osf.io/s4f7b/download"
-              tar xvzf fmriprep_bold_mask.tar.gz -C /tmp/data/
-            else
-              echo "Pre-computed masks were cached"
-            fi
-      - save_cache:
-         key: regression-v3-{{ .Revision }}-{{ epoch }}
-         paths:
-            - /tmp/data
-
   test_pytest:
     machine:
       image: circleci/classic:201711-01
@@ -237,9 +201,6 @@ jobs:
       - restore_cache:
           keys:
             - docker-v3-{{ .Branch }}-{{ .Revision }}
-      - restore_cache:
-          keys:
-            - regression-v3-{{ .Revision }}
       - run:
           name: Load Docker image layer cache
           no_output_timeout: 30m
@@ -255,21 +216,10 @@ jobs:
           name: Run fMRIPrep tests
           no_output_timeout: 2h
           command: |
-            mkdir /tmp/data/reports && \
             docker run -ti --rm=false \
-              -v /tmp/data:/tmp/data \
-              -e FMRIPREP_REGRESSION_SOURCE=/tmp/data/fmriprep_bold_truncated \
-              -e FMRIPREP_REGRESSION_TARGETS=/tmp/data/fmriprep_bold_mask \
-              -e FMRIPREP_REGRESSION_REPORTS=/tmp/data/reports \
-              --entrypoint="py.test" poldracklab/fmriprep:latest \
-              /src/fmriprep/ \
-              -svx --doctest-modules --ignore=/src/fmriprep/docs --ignore=setup.py
-      - run:
-          name: Package new masks
-          no_output_timeout: 10m
-          working_directory: /tmp/data/reports
-          command: |
-            tar cfz fmriprep_bold_mask.tar.gz fmriprep_bold_mask/*/*.nii.gz
+              --entrypoint="pytest" poldracklab/fmriprep:latest \
+              /src/fmriprep/fmriprep -svx --doctest-modules
+
       - run:
           name: Test fmriprep-wrapper (Python 2)
           command: |
@@ -953,18 +903,6 @@ workflows:
             tags:
               only: /.*/
 
-      - get_regression_data:
-          filters:
-            branches:
-              ignore:
-                - /docs?\/.*/
-                - /ds005\/.*/
-                - /ds054\/.*/
-                - /ds210\/.*/
-                - /docker\/.*/
-            tags:
-              only: /.*/
-
       - build_docs:
           filters:
             branches:
@@ -989,7 +927,6 @@ workflows:
       - test_pytest:
           requires:
             - build
-            - get_regression_data
           filters:
             branches:
               ignore:
