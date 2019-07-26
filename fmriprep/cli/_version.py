@@ -38,7 +38,7 @@ def check_latest():
 
     if latest is None or outdated is True:
         try:
-            response = requests.get(url='https://pypi.org/pypi/fmriprep/json')
+            response = requests.get(url='https://pypi.org/pypi/fmriprep/json', timeout=1.0)
         except Exception:
             pass
 
@@ -65,7 +65,7 @@ def is_flagged():
     flagged = tuple()
     try:
         response = requests.get(url="""\
-https://raw.githubusercontent.com/poldracklab/fmriprep/master/.versions.json""")
+https://raw.githubusercontent.com/poldracklab/fmriprep/master/.versions.json""", timeout=1.0)
     except Exception:
         pass
 
