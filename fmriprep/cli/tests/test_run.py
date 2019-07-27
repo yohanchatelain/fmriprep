@@ -1,7 +1,7 @@
 """Test CLI."""
 from packaging.version import Version
 import pytest
-from .. import _version
+from .. import version as _version
 from ... import __about__
 from ..run import get_parser
 
@@ -24,10 +24,9 @@ def test_get_parser_update(monkeypatch, capsys, current, latest):
     captured = capsys.readouterr().err
 
     msg = """\
-WARNING: The current version of fMRIPrep (%s) is outdated.
-Please consider upgrading to the latest version %s.
-Before upgrading, please consider that mixing fMRIPrep versions
-within a single study is strongly discouraged.""" % (current, latest)
+You are using fMRIPrep-%s, and a newer version of fMRIPrep is available: %s.
+Please check out our documentation about how and when to upgrade:
+https://fmriprep.readthedocs.io/en/latest/faq.html#upgrading""" % (current, latest)
 
     assert (msg in captured) is expectation
 

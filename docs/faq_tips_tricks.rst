@@ -126,3 +126,23 @@ A symptomatic output looks like: ::
 
 If you would like to run *fMRIPrep* in parallel on multiple subjects please use
 `this method <https://neurostars.org/t/fmriprep-workaround-for-running-subjects-in-parallel/4449>`__.
+
+
+.. _upgrading:
+
+A new version of *fMRIPrep* has been published, when should I upgrade?
+----------------------------------------------------------------------
+
+We follow a philosophy of releasing very often, although the pace is slowing down
+with the maturation of the software.
+It is very likely that your version gets outdated over the extent of your study.
+If that is the case (an ongoing study), then we discourage changing versions.
+In other words, **the whole dataset should be processed with the same version (and
+same container build if they are being used) of *fMRIPrep*.**
+
+On the other hand, if the project is about to start, then we strongly recommend
+using the latest version of the tool.
+
+In any case, if you can find your release listed as *flagged* in `this file
+of our repo <https://github.com/poldracklab/fmriprep/blob/master/.versions.json>`__,
+then please update as soon as possible.

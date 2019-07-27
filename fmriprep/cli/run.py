@@ -43,7 +43,7 @@ def get_parser():
     from packaging.version import Version
     from ..__about__ import __version__
     from ..workflows.bold.resampling import NONSTANDARD_REFERENCES
-    from ._version import check_latest, is_flagged
+    from .version import check_latest, is_flagged
 
     verstr = 'fmriprep v{}'.format(__version__)
 
@@ -281,10 +281,9 @@ the spatial normalization """ % (', '.join('"%s"' % s for s in templates()),
 
     if latest is not None and currentv < latest:
         print("""\
-WARNING: The current version of fMRIPrep (%s) is outdated.
-Please consider upgrading to the latest version %s.
-Before upgrading, please consider that mixing fMRIPrep versions
-within a single study is strongly discouraged.""" % (
+You are using fMRIPrep-%s, and a newer version of fMRIPrep is available: %s.
+Please check out our documentation about how and when to upgrade:
+https://fmriprep.readthedocs.io/en/latest/faq.html#upgrading""" % (
             __version__, latest), file=sys.stderr)
 
     _blist = is_flagged()

@@ -39,7 +39,7 @@ def check_latest():
         try:
             response = requests.get(url='https://pypi.org/pypi/fmriprep/json', timeout=1.0)
         except Exception:
-            pass
+            response = None
 
         if response and response.status_code == 200:
             versions = [Version(rel) for rel in response.json()['releases'].keys()]
@@ -66,7 +66,7 @@ def is_flagged():
         response = requests.get(url="""\
 https://raw.githubusercontent.com/poldracklab/fmriprep/master/.versions.json""", timeout=1.0)
     except Exception:
-        pass
+        response = None
 
     if response and response.status_code == 200:
         flagged = response.json().get('flagged', {}) or {}

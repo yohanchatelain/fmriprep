@@ -3,8 +3,8 @@ from datetime import datetime
 from pathlib import Path
 from packaging.version import Version
 import pytest
-from .. import _version
-from .._version import check_latest, DATE_FMT, requests, is_flagged
+from .. import version as _version
+from ..version import check_latest, DATE_FMT, requests, is_flagged
 
 
 class MockResponse:
@@ -63,6 +63,24 @@ def test_check_latest1(tmpdir, monkeypatch):
     v = check_latest()
     assert isinstance(v, Version)
     assert v == Version('1.1.0')
+
+    # Mock timeouts
+    def mock_get(*args, **kwargs):
+        raise requests.exceptions.Timeout
+    monkeypatch.setattr(requests, "get", mock_get)
+
+    cachefile.write_text('|'.join(('1.0.0', cachefile.read_text().split('|')[1])))
+    v = check_latest()
+    assert isinstance(v, Version)
+    assert v == Version('1.0.0')
+
+    cachefile.write_text('2.0.0|20180121')
+    v = check_latest()
+    assert v is None
+
+    cachefile.unlink()
+    v = check_latest()
+    assert v is None
 
 
 @pytest.mark.parametrize(('result', 'code', 'json'), [
