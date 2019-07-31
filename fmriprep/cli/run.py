@@ -46,6 +46,7 @@ def get_parser():
     from .version import check_latest, is_flagged
 
     verstr = 'fmriprep v{}'.format(__version__)
+    currentv = Version(__version__)
 
     parser = ArgumentParser(description='FMRIPREP: fMRI PREProcessing workflows',
                             formatter_class=RawTextHelpFormatter)
@@ -140,8 +141,11 @@ may be followed by optional, colon-separated parameters. \
 Non-standard spaces (valid keywords: %s) imply specific orientations and sampling \
 grids. \
 Important to note, the ``res-*`` modifier does not define the resolution used for \
-the spatial normalization """ % (', '.join('"%s"' % s for s in templates()),
-                                 ', '.join(NONSTANDARD_REFERENCES)))
+the spatial normalization.
+For further details, please check out \
+https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (
+            ', '.join('"%s"' % s for s in templates()), ', '.join(NONSTANDARD_REFERENCES),
+            currentv.base_version))
 
     g_conf.add_argument(
         '--output-space', required=False, action='store', type=str, nargs='+',
@@ -276,9 +280,7 @@ the spatial normalization """ % (', '.join('"%s"' % s for s in templates()),
     g_other.add_argument('--sloppy', action='store_true', default=False,
                          help='Use low-quality tools for speed - TESTING ONLY')
 
-    currentv = Version(__version__)
     latest = check_latest()
-
     if latest is not None and currentv < latest:
         print("""\
 You are using fMRIPrep-%s, and a newer version of fMRIPrep is available: %s.
