@@ -117,10 +117,12 @@ class ICAConfounds(SimpleInterface):
     output_spec = ICAConfoundsOutputSpec
 
     def _run_interface(self, runtime):
-        (aroma_confounds, motion_ics_out, melodic_mix_out, aroma_metadata
-            ) = _get_ica_confounds(self.inputs.in_directory,
-                                   self.inputs.skip_vols,
-                                   newpath=runtime.cwd)
+        (aroma_confounds,
+         motion_ics_out,
+         melodic_mix_out,
+         aroma_metadata) = _get_ica_confounds(self.inputs.in_directory,
+                                              self.inputs.skip_vols,
+                                              newpath=runtime.cwd)
 
         if self.inputs.err_on_aroma_warn and aroma_confounds is None:
             raise RuntimeError('ICA-AROMA failed')
