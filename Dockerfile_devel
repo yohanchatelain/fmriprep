@@ -55,9 +55,19 @@ RUN mkdir -p /tmp/ds005/derivatives &&\
    tar xvzf ds005_derivatives_freesurfer.tar.gz -C /tmp/ds005/derivatives &&\
    rm ds005_derivatives_freesurfer.tar.gz
 
+# Download truncated bold images
+RUN wget --retry-connrefused --waitretry=5 --read-timeout=20 --timeout=15 -t 0 -q \
+         -O fmriprep_bold_truncated.tar.gz "https://osf.io/286yr/download" &&\
+    tar xvzf fmriprep_bold_truncated.tar.gz -C /tmp/data &&\
+    rm fmriprep_bold_truncated.tar.gz
+
+# Download precomputed masks
+RUN wget --retry-connrefused --waitretry=5 --read-timeout=20 --timeout=15 -t 0 -q \
+         -O fmriprep_bold_mask.tar.gz "https://osf.io/s4f7b/download" &&\
+    tar xvzf fmriprep_bold_mask.tar.gz -C /tmp/data &&\
+    rm fmriprep_bold_mask.tar.gz
+
 # set up code-server (need net-tools for initialization)
-
-
 RUN curl -o /tmp/code-server.tar.gz -SL https://github.com/cdr/code-server/releases/download/2.preview.4-vsc1.37.0/code-server2.preview.4-vsc1.37.0-linux-x86_64.tar.gz
 
 RUN mkdir /src/codeserver &&\
