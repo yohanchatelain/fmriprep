@@ -150,6 +150,16 @@ We can start a docker container using the image we built (``fmriprep_devel``)::
 
     $ docker run -it -p 127.0.0.1:8445:8080 -v ${PWD}:/src/fmriprep fmriprep_devel:latest
 
+.. Note::
+
+    If you are using Docker-Toolbox, you will need to change your virtualbox settings
+    using `these steps as a guide
+    <https://github.com/jdkent/tutDockerRstudio#additional-setup-for-docker-toolbox>`_.
+    For step ``6``, instead of ``Name = rstudio; Host Port = 8787; Guest Port = 8787``,
+    have ``Name = code-server; Host Port = 8443; Guest Port = 8080``.
+    Then in the docker command above, change ``127.0.0.1:8445:8080``
+    to ``192.168.99.100:8445:8080``.
+
 If the container started correctly, you should see the following on your console::
 
     INFO  Server listening on http://localhost:8080
