@@ -9,7 +9,7 @@ update an existing environment, as necessary.
 
 Development in Docker is encouraged, for the sake of consistency and
 portability.
-By default, work should be built off of `poldracklab/fmriprep:latest
+By default, work should be built off of `poldracklab/fmriprep:unstable
 <https://hub.docker.com/r/poldracklab/fmriprep/>`_ (see the
 installation_ guide for the basic procedure for running).
 
@@ -129,6 +129,48 @@ This image may be accessed by the `fmriprep-docker`_ wrapper via the
 ``-i`` flag, e.g., ::
 
     $ fmriprep-docker -i fmriprep --shell
+
+Code-Server Development Environment (Experimental)
+==================================================
+To get the best of working with containers and having an interactive
+development environment, we have an experimental setup with `code-server
+<https://github.com/cdr/code-server>`_.
+
+1. build the docker image
+~~~~~~~~~~~~~~~~~~~~~~~~~
+We will use the ``Dockerfile_devel`` file to build 
+our development docker image::
+
+    $ cd $HOME/projects/fmriprep
+    $ docker build -t fmriprep_devel -f Dockerfile_devel .
+
+2. run the docker image
+~~~~~~~~~~~~~~~~~~~~~~~
+We can start a docker container using the image we built (``fmriprep_devel``)::
+
+    $ docker run -it -p 127.0.0.1:8445:8080 -v ${PWD}:/src/fmriprep fmriprep_devel:latest
+
+If the container started correctly, you should see the following on your console::
+
+    INFO  Server listening on http://localhost:8080
+    INFO    - No authentication
+    INFO    - Not serving HTTPS
+
+Now you can switch to your favorite browser and go to: ``127.0.0.1:8445``.
+
+Code-Server Development Environment Features
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- The editor is `vscode <https://code.visualstudio.com/docs>`_
+
+- There are several preconfigured debugging tests under
+  the debugging icon in the activity bar
+
+  - see `vscode debugging python <https://code.visualstudio.com/docs/python/debugging>`_
+    for details.
+
+- The ``gitlens`` and ``python`` extensions are preinstalled to improve
+  the development experience in vscode.
 
 
 Adding new features to the citation boilerplate
