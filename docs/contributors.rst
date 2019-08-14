@@ -136,6 +136,10 @@ To get the best of working with containers and having an interactive
 development environment, we have an experimental setup with `code-server
 <https://github.com/cdr/code-server>`_.
 
+.. Note::
+    We have `a video walking through the process
+    <https://youtu.be/bkZ-NyUaTvg>`_ if you want a visual guide.
+
 1. build the docker image
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 We will use the ``Dockerfile_devel`` file to build 
@@ -151,14 +155,16 @@ We can start a docker container using the image we built (``fmriprep_devel``)::
     $ docker run -it -p 127.0.0.1:8445:8080 -v ${PWD}:/src/fmriprep fmriprep_devel:latest
 
 .. Note::
+    `code-server is not currently working with docker toolbox
+    <https://github.com/cdr/code-server/issues/903>`_.
 
-    If you are using Docker-Toolbox, you will need to change your virtualbox settings
+    |ss| If you are using Docker-Toolbox, you will need to change your virtualbox settings
     using `these steps as a guide
     <https://github.com/jdkent/tutDockerRstudio#additional-setup-for-docker-toolbox>`_.
     For step ``6``, instead of ``Name = rstudio; Host Port = 8787; Guest Port = 8787``,
     have ``Name = code-server; Host Port = 8443; Guest Port = 8080``.
     Then in the docker command above, change ``127.0.0.1:8445:8080``
-    to ``192.168.99.100:8445:8080``.
+    to ``192.168.99.100:8445:8080``. |se|
 
 If the container started correctly, you should see the following on your console::
 
@@ -216,3 +222,11 @@ An example of how this works is shown here: ::
     parameters) are estimated before any spatiotemporal filtering using
     `mcflirt` [FSL {fsl_ver}, @mcflirt].
     """.format(fsl_ver=fsl.Info().version() or '<ver>')
+
+.. |ss| raw:: html
+
+   <strike>
+
+.. |se| raw:: html
+
+   </strike>
