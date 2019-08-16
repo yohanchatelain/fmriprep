@@ -47,6 +47,7 @@ def get_parser():
 
     verstr = 'fmriprep v{}'.format(__version__)
     currentv = Version(__version__)
+    is_release = not any(currentv.is_devrelease, currentv.is_prerelease, currentv.is_postrelease)
 
     parser = ArgumentParser(description='FMRIPREP: fMRI PREProcessing workflows',
                             formatter_class=RawTextHelpFormatter)
@@ -145,7 +146,7 @@ the spatial normalization.
 For further details, please check out \
 https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (
             ', '.join('"%s"' % s for s in templates()), ', '.join(NONSTANDARD_REFERENCES),
-            currentv.base_version))
+            currentv.base_version if is_release else 'latest'))
 
     g_conf.add_argument(
         '--output-space', required=False, action='store', type=str, nargs='+',
