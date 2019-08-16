@@ -47,7 +47,7 @@ def get_parser():
 
     verstr = 'fmriprep v{}'.format(__version__)
     currentv = Version(__version__)
-    is_release = not any(currentv.is_devrelease, currentv.is_prerelease, currentv.is_postrelease)
+    is_release = not any((currentv.is_devrelease, currentv.is_prerelease, currentv.is_postrelease))
 
     parser = ArgumentParser(description='FMRIPREP: fMRI PREProcessing workflows',
                             formatter_class=RawTextHelpFormatter)
