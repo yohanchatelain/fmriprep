@@ -14,7 +14,7 @@ import gc
 import uuid
 import warnings
 from argparse import ArgumentParser
-from argparse import RawTextHelpFormatter
+from argparse import ArgumentDefaultsHelpFormatter
 from multiprocessing import cpu_count
 from time import strftime
 
@@ -50,7 +50,7 @@ def get_parser():
     is_release = not any((currentv.is_devrelease, currentv.is_prerelease, currentv.is_postrelease))
 
     parser = ArgumentParser(description='FMRIPREP: fMRI PREProcessing workflows',
-                            formatter_class=RawTextHelpFormatter)
+                            formatter_class=ArgumentDefaultsHelpFormatter)
 
     # Arguments as specified by BIDS-Apps
     # required, positional arguments
