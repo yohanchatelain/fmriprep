@@ -155,16 +155,17 @@ We can start a docker container using the image we built (``fmriprep_devel``)::
     $ docker run -it -p 127.0.0.1:8445:8080 -v ${PWD}:/src/fmriprep fmriprep_devel:latest
 
 .. Note::
-    `code-server is not currently working with docker toolbox
-    <https://github.com/cdr/code-server/issues/903>`_.
+    If you are using windows shell, ${PWD} may not be defined, instead use the absolute
+    path to your fmriprep directory.
 
-    |ss| If you are using Docker-Toolbox, you will need to change your virtualbox settings
+.. Note::
+    If you are using Docker-Toolbox, you will need to change your virtualbox settings
     using `these steps as a guide
     <https://github.com/jdkent/tutDockerRstudio#additional-setup-for-docker-toolbox>`_.
     For step ``6``, instead of ``Name = rstudio; Host Port = 8787; Guest Port = 8787``,
     have ``Name = code-server; Host Port = 8443; Guest Port = 8080``.
     Then in the docker command above, change ``127.0.0.1:8445:8080``
-    to ``192.168.99.100:8445:8080``. |se|
+    to ``192.168.99.100:8445:8080``.
 
 If the container started correctly, you should see the following on your console::
 
@@ -172,7 +173,16 @@ If the container started correctly, you should see the following on your console
     INFO    - No authentication
     INFO    - Not serving HTTPS
 
-Now you can switch to your favorite browser and go to: ``127.0.0.1:8445``.
+Now you can switch to your favorite browser and go to: ``127.0.0.1:8445``
+(or ``192.168.99.100:8445`` for Docker Toolbox).
+
+3. copy fmriprep.egg-info into your fmriprep directory
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``fmriprep.egg-info`` contains the necessary information for the fmriprep package for it
+to be run inside the docker container. Open a terminal in vscode and type the following::
+
+    $ cp -R /src/fmriprep.egg-info /src/fmriprep/
+
 
 Code-Server Development Environment Features
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -222,11 +232,3 @@ An example of how this works is shown here: ::
     parameters) are estimated before any spatiotemporal filtering using
     `mcflirt` [FSL {fsl_ver}, @mcflirt].
     """.format(fsl_ver=fsl.Info().version() or '<ver>')
-
-.. |ss| raw:: html
-
-   <strike>
-
-.. |se| raw:: html
-
-   </strike>
