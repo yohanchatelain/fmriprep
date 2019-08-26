@@ -68,7 +68,7 @@ RUN wget --retry-connrefused --waitretry=5 --read-timeout=20 --timeout=15 -t 0 -
     rm fmriprep_bold_mask.tar.gz
 
 # set up code-server (need net-tools for initialization)
-RUN curl -o /tmp/code-server.tar.gz -SL https://github.com/cdr/code-server/releases/download/2.preview.4-vsc1.37.0/code-server2.preview.4-vsc1.37.0-linux-x86_64.tar.gz
+RUN curl -o /tmp/code-server.tar.gz -SL https://github.com/cdr/code-server/releases/download/2.preview.9-vsc1.37.0/code-server2.preview.9-vsc1.37.0-linux-x86_64.tar.gz
 
 RUN mkdir /src/codeserver &&\
     tar -xvf /tmp/code-server.tar.gz -C /src/codeserver --strip-components=1
