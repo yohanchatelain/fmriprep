@@ -14,7 +14,7 @@ import gc
 import uuid
 import warnings
 from argparse import ArgumentParser
-from argparse import RawTextHelpFormatter
+from argparse import ArgumentDefaultsHelpFormatter
 from multiprocessing import cpu_count
 from time import strftime
 
@@ -46,9 +46,11 @@ def get_parser():
     from .version import check_latest, is_flagged
 
     verstr = 'fmriprep v{}'.format(__version__)
+    currentv = Version(__version__)
+    is_release = not any((currentv.is_devrelease, currentv.is_prerelease, currentv.is_postrelease))
 
     parser = ArgumentParser(description='FMRIPREP: fMRI PREProcessing workflows',
-                            formatter_class=RawTextHelpFormatter)
+                            formatter_class=ArgumentDefaultsHelpFormatter)
 
     # Arguments as specified by BIDS-Apps
     # required, positional arguments
@@ -140,8 +142,11 @@ may be followed by optional, colon-separated parameters. \
 Non-standard spaces (valid keywords: %s) imply specific orientations and sampling \
 grids. \
 Important to note, the ``res-*`` modifier does not define the resolution used for \
-the spatial normalization """ % (', '.join('"%s"' % s for s in templates()),
-                                 ', '.join(NONSTANDARD_REFERENCES)))
+the spatial normalization.
+For further details, please check out \
+https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (
+            ', '.join('"%s"' % s for s in templates()), ', '.join(NONSTANDARD_REFERENCES),
+            currentv.base_version if is_release else 'latest'))
 
     g_conf.add_argument(
         '--output-space', required=False, action='store', type=str, nargs='+',
@@ -276,9 +281,7 @@ the spatial normalization """ % (', '.join('"%s"' % s for s in templates()),
     g_other.add_argument('--sloppy', action='store_true', default=False,
                          help='Use low-quality tools for speed - TESTING ONLY')
 
-    currentv = Version(__version__)
     latest = check_latest()
-
     if latest is not None and currentv < latest:
         print("""\
 You are using fMRIPrep-%s, and a newer version of fMRIPrep is available: %s.

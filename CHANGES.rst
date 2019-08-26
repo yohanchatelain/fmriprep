@@ -12,16 +12,21 @@ with M. Cieslak, A. Adebimpe, and T. Satterthwaite.
 Some other bugfixes, improvements to the documentation and minor features are also
 shipped with the new release.
 
-
-* ENH: Add TaskName metadata to BOLD outputs (#1714) @effigies
-* REF: Separate SDCflows from fMRIPrep (#1670) @oesteban
-* MAINT: Remove old ``extensions`` entity selector for PyBIDS queries (#1707) @oesteban
 * FIX: Postpone ``pandoc`` conversion of boilerplate after workflow has fully run (#1710) @oesteban
-* DOC: adding recon-all issue to faq (#1622) @franklin-feingold
 * FIX: Use MNI152NLin2009cAsym for SDC if no templates are specified (#1703) @effigies
 * FIX: Correct BOLD-T1w registration description if DoF != 9 (#1701) @effigies
-* MAINT: Use PyBIDS 0.9.x via niworkflows/smriprep PRs (#1695) @effigies
+* ENH: Make fmriprep print defaults for arguments with help (#1735) @gdevenyi
+* ENH: Add check for updates and check whether version has been flagged. (#1715) @oesteban
+* ENH: Add TaskName metadata to BOLD outputs (#1714) @effigies
+* REF: Separate SDCflows from fMRIPrep (#1670) @oesteban
+* DOC: Update .zenodo.json (#1732) @utooley
+* DOC: Add link to documentation in help of ``--output-spaces`` argument (#1722) @oesteban
+* DOC: adding recon-all issue to faq (#1622) @franklin-feingold
 * DOC: Add copyright waiver to boilerplate and reviewer note to docs (#1691) @effigies
+* MAINT: Bump pybids and nipype dependencies (#1744) @effigies
+* MAINT: Move regression tests of EPI masks over to Niworkflows (#1716) @oesteban
+* MAINT: Remove old ``extensions`` entity selector for PyBIDS queries (#1707) @oesteban
+* MAINT: Use PyBIDS 0.9.x via niworkflows/smriprep PRs (#1695) @effigies
 
 1.4.1 (July 9, 2019)
 ====================
