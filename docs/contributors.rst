@@ -10,7 +10,8 @@ update an existing environment, as necessary.
 Development in Docker is encouraged, for the sake of consistency and
 portability.
 By default, work should be built off of `poldracklab/fmriprep:unstable
-<https://hub.docker.com/r/poldracklab/fmriprep/>`_ (see the
+<https://hub.docker.com/r/poldracklab/fmriprep/>`_, which tracks the ``master`` branch,
+or ``poldracklab/fmriprep:latest``, which tracks the latest release version (see the
 installation_ guide for the basic procedure for running).
 
 It will be assumed the developer has a working repository in
@@ -140,7 +141,7 @@ development environment, we have an experimental setup with `code-server
     We have `a video walking through the process
     <https://youtu.be/bkZ-NyUaTvg>`_ if you want a visual guide.
 
-1. build the docker image
+1. Build the Docker image
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 We will use the ``Dockerfile_devel`` file to build 
 our development docker image::
@@ -148,7 +149,7 @@ our development docker image::
     $ cd $HOME/projects/fmriprep
     $ docker build -t fmriprep_devel -f Dockerfile_devel .
 
-2. run the docker image
+2. Run the Docker image
 ~~~~~~~~~~~~~~~~~~~~~~~
 We can start a docker container using the image we built (``fmriprep_devel``)::
 
@@ -162,8 +163,8 @@ We can start a docker container using the image we built (``fmriprep_devel``)::
     If you are using Docker-Toolbox, you will need to change your virtualbox settings
     using `these steps as a guide
     <https://github.com/jdkent/tutDockerRstudio#additional-setup-for-docker-toolbox>`_.
-    For step ``6``, instead of ``Name = rstudio; Host Port = 8787; Guest Port = 8787``,
-    have ``Name = code-server; Host Port = 8443; Guest Port = 8080``.
+    (For step ``6``, instead of ``Name = rstudio; Host Port = 8787; Guest Port = 8787``,
+    have ``Name = code-server; Host Port = 8443; Guest Port = 8080``.)
     Then in the docker command above, change ``127.0.0.1:8445:8080``
     to ``192.168.99.100:8445:8080``.
 
@@ -176,10 +177,10 @@ If the container started correctly, you should see the following on your console
 Now you can switch to your favorite browser and go to: ``127.0.0.1:8445``
 (or ``192.168.99.100:8445`` for Docker Toolbox).
 
-3. copy fmriprep.egg-info into your fmriprep directory
+3. Copy fmriprep.egg-info into your fmriprep directory
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-``fmriprep.egg-info`` contains the necessary information for the fmriprep package for it
-to be run inside the docker container. Open a terminal in vscode and type the following::
+``fmriprep.egg-info`` makes the fmriprep package exacutable inside the docker container.
+Open a terminal in vscode and type the following::
 
     $ cp -R /src/fmriprep.egg-info /src/fmriprep/
 
