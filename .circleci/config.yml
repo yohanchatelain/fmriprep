@@ -67,6 +67,15 @@ jobs:
                 --build-arg VERSION="${CIRCLE_TAG:-$THISVERSION}" . \
               && e=0 && break || sleep 15
             done && [ "$e" -eq "0" ]
+            # test if development image should be built
+            if [[ "$( git log --format=oneline -n 1 $CIRCLE_SHA1 | grep -i -E '\[build[ _]?devel\]' )" != "" ]]; then
+              echo "building development container"
+              docker tag poldracklab/fmriprep poldracklab/fmriprep:unstable
+              docker build \
+                --rm=false \
+                -t poldracklab/fmriprep_devel \
+                -f Dockerfile_devel .
+            fi
       - run:
           name: Smoke test Docker image
           command: |
