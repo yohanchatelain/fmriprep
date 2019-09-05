@@ -525,7 +525,7 @@ It is released under the [CC0]\
 
     summary = pe.Node(SubjectSummary(
         std_spaces=list(std_spaces.keys()),
-        nstd_spaces=list(set(NONSTANDARD_REFERENCES).intersection(output_spaces.keys()))),
+        nstd_spaces=sorted(set(NONSTANDARD_REFERENCES).intersection(output_spaces.keys()))),
         name='summary', run_without_submitting=True)
 
     about = pe.Node(AboutSummary(version=__version__,
