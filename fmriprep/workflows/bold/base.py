@@ -778,7 +778,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             freesurfer=freesurfer,
             mem_gb=mem_gb['resampled'],
             omp_nthreads=omp_nthreads,
-            standard_spaces=std_spaces,
+            standard_spaces=volume_std_spaces,
             name='bold_std_trans_wf',
             use_compression=not low_mem,
             use_fieldwarp=fmaps is not None,

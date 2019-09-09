@@ -388,8 +388,7 @@ jobs:
                 --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
                 --use-aroma \
                 --skull-strip-template OASIS30ANTs:res-1 \
-                --output-space T1w template fsaverage5 fsnative \
-                --template-resampling-grid native \
+                --output-spaces MNI152NLin2009cAsym fsaverage5 fsnative MNI152NLin6Asym anat \
                 --use-plugin /home/circleci/src/fmriprep/.circleci/legacy.yml \
                 --nthreads 2 --cifti-output -vv
       - run:
@@ -416,9 +415,8 @@ jobs:
                 --config $PWD/nipype.cfg -w /tmp/ds005/work_partial \
                 /tmp/data/ds005 /tmp/ds005/derivatives_partial participant \
                 --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
-                --output-space T1w template fsaverage5 fsnative \
+                --output-spaces MNI152NLin2009cAsym fsaverage5 fsnative MNI152NLin6Asym anat \
                 --aroma-melodic-dimensionality 2 --use-aroma \
-                --template-resampling-grid native \
                 --nthreads 2 --cifti-output -vv
       - run:
           name: Checking outputs of partial fMRIPrep run
