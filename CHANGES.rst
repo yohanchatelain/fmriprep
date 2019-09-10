@@ -1,5 +1,5 @@
-1.5.0 (TBD)
-===========
+1.5.0 (September 9, 2019)
+=========================
 
 Two hallmark changes conducive to a new minor release line have been included in
 version 1.5.0: the upgrade of *PyBIDS* to the 0.9 series and the split of *SDCflows*
@@ -11,18 +11,24 @@ and have been split to allow a more granular and thorough testing in collaborati
 with M. Cieslak, A. Adebimpe, and T. Satterthwaite.
 Some other bugfixes, improvements to the documentation and minor features are also
 shipped with the new release.
+With thanks to Ursula Tooley, Sebastian Urchs and Gabriel A. Devenyi for contributions.
 
+* FIX: Minor improvements for templateflow installation in Docker images (#1764) @oesteban
+* FIX: Passing surface template keywords into carpetplot workflow (#1755) @oesteban
 * FIX: Postpone ``pandoc`` conversion of boilerplate after workflow has fully run (#1710) @oesteban
 * FIX: Use MNI152NLin2009cAsym for SDC if no templates are specified (#1703) @effigies
 * FIX: Correct BOLD-T1w registration description if DoF != 9 (#1701) @effigies
+* ENH: Set up code-server docker recipe for interactive development (#1730) @jdkent
 * ENH: Make fmriprep print defaults for arguments with help (#1735) @gdevenyi
 * ENH: Add check for updates and check whether version has been flagged. (#1715) @oesteban
 * ENH: Add TaskName metadata to BOLD outputs (#1714) @effigies
 * REF: Separate SDCflows from fMRIPrep (#1670) @oesteban
+* DOC: Adding fmriprep benchmark info to FAQs (#1759) @surchs
 * DOC: Update .zenodo.json (#1732) @utooley
 * DOC: Add link to documentation in help of ``--output-spaces`` argument (#1722) @oesteban
 * DOC: adding recon-all issue to faq (#1622) @franklin-feingold
 * DOC: Add copyright waiver to boilerplate and reviewer note to docs (#1691) @effigies
+* MAINT: niworkflows and nipype to use latest ``N4BiasFieldCorrection`` (#1752) @oesteban
 * MAINT: Bump pybids and nipype dependencies (#1744) @effigies
 * MAINT: Move regression tests of EPI masks over to Niworkflows (#1716) @oesteban
 * MAINT: Remove old ``extensions`` entity selector for PyBIDS queries (#1707) @oesteban
