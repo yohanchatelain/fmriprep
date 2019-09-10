@@ -162,11 +162,15 @@ RUN python -c "from matplotlib import font_manager" && \
     sed -i 's/\(backend *: \).*$/\1Agg/g' $( python -c "import matplotlib; print(matplotlib.matplotlib_fname())" )
 
 # Precaching atlases
-RUN pip install --no-cache-dir "templateflow>=0.3.0,<0.4.0a0" && \
+COPY setup.cfg fmriprep-setup.cfg
+RUN pip install --no-cache-dir "$( grep templateflow fmriprep-setup.cfg | xargs )" && \
     python -c "from templateflow import api as tfapi; \
-               tfapi.get('MNI152NLin6Asym', atlas=None); \
-               tfapi.get('MNI152NLin2009cAsym', atlas=None); \
-               tfapi.get('OASIS30ANTs');" && \
+               tfapi.get('MNI152NLin6Asym', atlas=None, resolution=[1, 2], \
+                         desc=None, extension=['.nii', '.nii.gz']); \
+               tfapi.get('MNI152NLin6Asym', atlas=None, resolution=[1, 2], \
+                         desc='brain', extension=['.nii', '.nii.gz']); \
+               tfapi.get('MNI152NLin2009cAsym', atlas=None, extension=['.nii', '.nii.gz']); \
+               tfapi.get('OASIS30ANTs', extension=['.nii', '.nii.gz']);" && \
     find $HOME/.cache/templateflow -type d -exec chmod go=u {} + && \
     find $HOME/.cache/templateflow -type f -exec chmod go=u {} +
 
