@@ -127,6 +127,29 @@ A symptomatic output looks like: ::
 If you would like to run *fMRIPrep* in parallel on multiple subjects please use
 `this method <https://neurostars.org/t/fmriprep-workaround-for-running-subjects-in-parallel/4449>`__.
 
+How much CPU time and RAM should I allocate for a typical fMRIPrep run?
+-----------------------------------------------------------------------
+The recommended way to run fMRIPrep is to process one subject per container instance. A typical preprocessing run
+without surface processing with freesurfer can be completed in about 2 hours with 4 CPUs or in about 1 hour with 16 CPUs.
+More than 16 CPUs do not translate into faster processing times for a single subject. About 8GB of memory should be
+available for a single subject preprocessing run.
+
+Below are some benchmark data that have been computed on a high performance cluster compute node with Intel E5-2683 v4
+CPUs and 64 GB of physical memory:
+
+.. figure:: _static/fmriprep_benchmark.svg
+    :scale: 100%
+
+**Compute Time**: time in hours to complete the preprocessing for all subjects. **Physical Memory**: the maximum of RAM usage
+used across all fMRIPrep processes as reported by the HCP job manager. **Virtual Memory**: the maximum of virtual memory used
+across all fMRIPrep processes as reported by the HCP job manager. **Threads**: the maximum number of threads per process as
+specified with ``–omp-nthreads`` in the fMRIPrep command.
+
+The above figure illustrates that processing 2 subjects in 2 fMRIPrep instances with 8 CPUs each is approximately as fast as
+processing 2 subjects in one fMRIPrep instance with 16 CPUs. However, on a distributed compute cluster, the two 8 CPU
+instances may be allocated faster than the single 16 CPU instance, thus completing faster in practice. If more than one
+subject is processed in a single fMRIPrep instance, then limiting the number of threads per process to roughly the
+number of CPUs divided by the number of subjects is most efficient.
 
 .. _upgrading:
 
