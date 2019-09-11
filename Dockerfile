@@ -99,11 +99,6 @@ RUN mkdir -p $ANTSPATH && \
     | tar -xzC $ANTSPATH --strip-components 1
 ENV PATH=$ANTSPATH:$PATH
 
-# Create a shared $HOME directory
-RUN useradd -m -s /bin/bash -G users fmriprep
-WORKDIR /home/fmriprep
-ENV HOME="/home/fmriprep"
-
 # Installing SVGO
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
 RUN apt-get install -y nodejs
@@ -117,7 +112,6 @@ RUN mkdir -p /opt/ICA-AROMA && \
   curl -sSL "https://github.com/maartenmennes/ICA-AROMA/archive/v0.4.4-beta.tar.gz" \
   | tar -xzC /opt/ICA-AROMA --strip-components 1 && \
   chmod +x /opt/ICA-AROMA/ICA_AROMA.py
-
 ENV PATH=/opt/ICA-AROMA:$PATH
 
 # Installing and setting up miniconda
@@ -157,6 +151,11 @@ RUN conda install -y python=3.7.1 \
 ENV MKL_NUM_THREADS=1 \
     OMP_NUM_THREADS=1
 
+# Create a shared $HOME directory
+RUN useradd -m -s /bin/bash -G users fmriprep
+WORKDIR /home/fmriprep
+ENV HOME="/home/fmriprep"
+
 # Precaching fonts, set 'Agg' as default backend for matplotlib
 RUN python -c "from matplotlib import font_manager" && \
     sed -i 's/\(backend *: \).*$/\1Agg/g' $( python -c "import matplotlib; print(matplotlib.matplotlib_fname())" )
@@ -171,6 +170,7 @@ RUN pip install --no-cache-dir "$( grep templateflow fmriprep-setup.cfg | xargs 
                          desc='brain', extension=['.nii', '.nii.gz']); \
                tfapi.get('MNI152NLin2009cAsym', atlas=None, extension=['.nii', '.nii.gz']); \
                tfapi.get('OASIS30ANTs', extension=['.nii', '.nii.gz']);" && \
+    rm fmriprep-setup.cfg && \
     find $HOME/.cache/templateflow -type d -exec chmod go=u {} + && \
     find $HOME/.cache/templateflow -type f -exec chmod go=u {} +
 
@@ -187,7 +187,8 @@ RUN install -m 0755 \
     /usr/local/bin/generate_reference_mask
 
 RUN find $HOME -type d -exec chmod go=u {} + && \
-    find $HOME -type f -exec chmod go=u {} +
+    find $HOME -type f -exec chmod go=u {} + && \
+    rm -rf $HOME/.npm $HOME/.conda $HOME/.empty
 
 ENV IS_DOCKER_8395080871=1
 
