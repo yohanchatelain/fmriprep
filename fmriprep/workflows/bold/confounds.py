@@ -9,6 +9,7 @@ Calculate BOLD confounds
 .. autofunction:: init_ica_aroma_wf
 
 """
+from os import getenv
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, fsl
 from nipype.algorithms import confounds as nac
@@ -694,7 +695,7 @@ in the corresponding confounds file.
         TSV2JSON(index_column='IC', output=None, enforce_case=True,
                  additional_metadata={'Method': {
                                       'Name': 'ICA-AROMA',
-                                      'Version': '0.3-beta'}}),
+                                      'Version': getenv('AROMA_VERSION', 'n/a')}}),
         name='ica_aroma_metadata_fmt')
 
     ds_report_ica_aroma = pe.Node(
