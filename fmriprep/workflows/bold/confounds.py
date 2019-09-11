@@ -692,9 +692,9 @@ in the corresponding confounds file.
 
     ica_aroma_metadata_fmt = pe.Node(
         TSV2JSON(index_column='IC', output=None, enforce_case=True,
-                 additional_metadata={
-                    'Method': {'Name': 'ICA-AROMA', 'Version': '0.3-beta'}
-                 }),
+                 additional_metadata={'Method': {
+                                      'Name': 'ICA-AROMA',
+                                      'Version': '0.3-beta'}}),
         name='ica_aroma_metadata_fmt')
 
     ds_report_ica_aroma = pe.Node(
