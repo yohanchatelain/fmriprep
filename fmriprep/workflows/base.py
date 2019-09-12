@@ -69,6 +69,7 @@ def init_fmriprep_wf(
     use_bbr,
     use_syn,
     work_dir,
+    bids_filters,
 ):
     """
     This workflow organizes the execution of FMRIPREP, with a sub-workflow for
@@ -123,6 +124,7 @@ def init_fmriprep_wf(
             use_bbr=True,
             use_syn=True,
             work_dir='.',
+            bids_filters=None,
         )
 
 
@@ -257,6 +259,7 @@ def init_fmriprep_wf(
             use_aroma=use_aroma,
             use_bbr=use_bbr,
             use_syn=use_syn,
+            bids_filters=bids_filters,
         )
 
         single_subject_wf.config['execution']['crashdump_dir'] = (
@@ -308,6 +311,7 @@ def init_single_subject_wf(
     use_aroma,
     use_bbr,
     use_syn,
+    bids_filters,
 ):
     """
     This workflow organizes the preprocessing pipeline for a single subject.
@@ -363,6 +367,7 @@ def init_single_subject_wf(
             use_aroma=False,
             use_bbr=True,
             use_syn=True,
+            bids_filters=None,
         )
 
 
@@ -449,7 +454,8 @@ def init_single_subject_wf(
         use_syn : bool
             **Experimental**: Enable ANTs SyN-based susceptibility distortion correction (SDC).
             If fieldmaps are present and enabled, this is not run, by default.
-
+        bids_filters : dict
+            For BIDSDataGrabber output_query
 
     Inputs
 
@@ -517,7 +523,7 @@ It is released under the [CC0]\
     inputnode = pe.Node(niu.IdentityInterface(fields=['subjects_dir']),
                         name='inputnode')
 
-    bidssrc = pe.Node(BIDSDataGrabber(subject_data=subject_data, anat_only=anat_only),
+    bidssrc = pe.Node(BIDSDataGrabber(subject_data=subject_data, anat_only=anat_only, output_query=bids_filters),
                       name='bidssrc')
 
     bids_info = pe.Node(BIDSInfo(

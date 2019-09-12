@@ -13,6 +13,7 @@ import sys
 import gc
 import uuid
 import warnings
+import json
 from argparse import ArgumentParser
 from argparse import ArgumentDefaultsHelpFormatter
 from multiprocessing import cpu_count
@@ -81,6 +82,8 @@ def get_parser():
     # Re-enable when option is actually implemented
     # g_bids.add_argument('-r', '--run-id', action='store', default='single_run',
     #                     help='select a specific run to be processed')
+    g_bids.add_argument('bids_filters', action='store', type=Path,
+                        help='the path to a JSON file describing custom BIDS input filter')
     g_bids.add_argument('-t', '--task-id', action='store',
                         help='select a specific task to be processed')
     g_bids.add_argument('--echo-idx', action='store', type=int,
@@ -509,6 +512,7 @@ def build_workflow(opts, retval):
     from niworkflows.reports import generate_reports
     from ..__about__ import __version__
     from ..workflows.base import init_fmriprep_wf
+    from nipype.interfaces.base import Undefined
 
     build_log = nlogging.getLogger('nipype.workflow')
 
@@ -522,6 +526,8 @@ def build_workflow(opts, retval):
     bids_dir = opts.bids_dir.resolve()
     output_dir = opts.output_dir.resolve()
     work_dir = opts.work_dir.resolve()
+    bids_filters_file = opts.bids_filters.resolve()
+    bids_filters = json.load(bids_filters_file) if bids_filters_file else Undefined
 
     retval['return_code'] = 1
     retval['workflow'] = None
@@ -672,6 +678,7 @@ def build_workflow(opts, retval):
         use_bbr=opts.use_bbr,
         use_syn=opts.use_syn_sdc,
         work_dir=str(work_dir),
+        bids_filters=bids_filters,
     )
     retval['return_code'] = 0
 
