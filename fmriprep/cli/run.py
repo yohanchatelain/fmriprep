@@ -7,6 +7,7 @@ fMRI preprocessing workflow
 """
 
 import os
+import re
 from pathlib import Path
 import logging
 import sys
@@ -544,7 +545,9 @@ def build_workflow(opts, retval):
     retval['run_uuid'] = run_uuid
 
     # First check that bids_dir looks like a BIDS folder
-    layout = BIDSLayout(str(bids_dir), validate=False)
+    layout = BIDSLayout(str(bids_dir), validate=False,
+                        ignore=("code", "stimuli", "sourcedata", "models",
+                                "derivatives", re.compile(r'^\.')))
     subject_list = collect_participants(
         layout, participant_label=opts.participant_label)
     retval['subject_list'] = subject_list
