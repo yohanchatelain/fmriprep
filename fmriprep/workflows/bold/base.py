@@ -407,7 +407,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_t1', 'bold_t1_ref', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1',
-                'bold_std', 'bold_std_ref' 'bold_mask_std', 'bold_aseg_std', 'bold_aparc_std',
+                'bold_std', 'bold_std_ref', 'bold_mask_std', 'bold_aseg_std', 'bold_aparc_std',
                 'bold_native', 'bold_cifti', 'cifti_variant', 'cifti_variant_key', 'surfaces',
                 'confounds', 'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file',
                 'confounds_metadata']),
