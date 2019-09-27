@@ -122,7 +122,12 @@ If it is necessary to rebuild the Docker image, a local image named
 ``fmriprep`` may be built from within the working fmriprep
 repository, located in ``~/projects/fmriprep``: ::
 
-    ~/projects/fmriprep$ docker build -t fmriprep .
+    ~/projects/fmriprep$ VERSION=$( python get_version.py )
+    ~/projects/fmriprep$ docker build -t fmriprep --build-arg VERSION=$VERSION .
+
+The ``VERSION`` build argument is necessary to ensure that help text
+can be reliably generated. The ``get_version.py`` tool constructs the
+version string from the current repository state.
 
 To work in this image, replace ``poldracklab/fmriprep:latest`` with
 ``fmriprep`` in any of the above commands.
