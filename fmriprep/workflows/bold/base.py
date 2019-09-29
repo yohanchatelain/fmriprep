@@ -646,10 +646,10 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         (bold_sdc_wf if not t2s_coreg else bold_t2s_wf, bold_reg_wf, [
             ('outputnode.bold_ref_brain', 'inputnode.ref_bold_brain')]),
         (bold_sdc_wf if not t2s_coreg else bold_t2s_wf, bold_t1_trans_wf, [
-            ('outputnode.bold_ref_brain', 'inputnode.ref_bold_brain'),
-            ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
+            ('outputnode.bold_ref_brain', 'inputnode.ref_bold_brain')]),
         (bold_sdc_wf, bold_t1_trans_wf, [
-            ('outputnode.out_warp', 'inputnode.fieldwarp')]),
+            ('outputnode.out_warp', 'inputnode.fieldwarp'),
+            ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
         (bold_sdc_wf, bold_bold_trans_wf, [
             ('outputnode.out_warp', 'inputnode.fieldwarp'),
             ('outputnode.bold_mask', 'inputnode.bold_mask')]),
@@ -659,6 +659,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                                         ('t1_mask', 'inputnode.t1_mask')]),
         (bold_hmc_wf, bold_confounds_wf, [
             ('outputnode.movpar_file', 'inputnode.movpar_file')]),
+        (bold_bold_trans_wf, bold_confounds_wf, [
+            ('outputnode.bold_mask', 'inputnode.bold_mask')]),
         (bold_reg_wf, bold_confounds_wf, [
             ('outputnode.itk_t1_to_bold', 'inputnode.t1_bold_xform')]),
         (bold_reference_wf, bold_confounds_wf, [
@@ -684,8 +686,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (inputnode, func_derivatives_wf, [
                 ('bold_file', 'inputnode.source_file')]),
             (bold_bold_trans_wf, bold_confounds_wf, [
-                ('outputnode.bold', 'inputnode.bold'),
-                ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+                ('outputnode.bold', 'inputnode.bold')]),
             (bold_split, bold_t1_trans_wf, [
                 ('out_files', 'inputnode.bold_split')]),
         ])
@@ -697,8 +698,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (bold_bold_trans_wf, skullstrip_bold_wf, [
                 ('outputnode.bold', 'inputnode.in_file')]),
             (bold_t2s_wf, bold_confounds_wf, [
-                ('outputnode.bold', 'inputnode.bold'),
-                ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+                ('outputnode.bold', 'inputnode.bold')]),
             (bold_t2s_wf, bold_t1_trans_wf, [
                 ('outputnode.bold', 'inputnode.bold_split')]),
         ])
@@ -757,7 +757,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('outputnode.itk_bold_to_t1', 'transforms')]),
             (bold_t1_trans_wf, boldmask_to_t1w, [
                 ('outputnode.bold_mask_t1', 'reference_image')]),
-            (bold_bold_trans_wf if not multiecho else bold_t2s_wf, boldmask_to_t1w, [
+            (bold_bold_trans_wf, boldmask_to_t1w, [
                 ('outputnode.bold_mask', 'input_image')]),
             (boldmask_to_t1w, outputnode, [
                 ('output_image', 'bold_mask_t1')]),
@@ -795,7 +795,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('outputnode.xforms', 'inputnode.hmc_xforms')]),
             (bold_reg_wf, bold_std_trans_wf, [
                 ('outputnode.itk_bold_to_t1', 'inputnode.itk_bold_to_t1')]),
-            (bold_bold_trans_wf if not multiecho else bold_t2s_wf, bold_std_trans_wf, [
+            (bold_bold_trans_wf, bold_std_trans_wf, [
                 ('outputnode.bold_mask', 'inputnode.bold_mask')]),
             (bold_sdc_wf, bold_std_trans_wf, [
                 ('outputnode.out_warp', 'inputnode.fieldwarp')]),
@@ -825,7 +825,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 (inputnode, carpetplot_wf, [
                     ('joint_std2anat_xfm', 'inputnode.std2anat_xfm')]),
                 (bold_bold_trans_wf if not multiecho else bold_t2s_wf, carpetplot_wf, [
-                    ('outputnode.bold', 'inputnode.bold'),
+                    ('outputnode.bold', 'inputnode.bold')]),
+                (bold_bold_trans_wf, carpetplot_wf, [
                     ('outputnode.bold_mask', 'inputnode.bold_mask')]),
                 (bold_reg_wf, carpetplot_wf, [
                     ('outputnode.itk_t1_to_bold', 'inputnode.t1_bold_xform')]),

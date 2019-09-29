@@ -79,21 +79,18 @@ The optimally combined time series was carried forward as the *preprocessed BOLD
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['bold_file']), name='inputnode')
 
-    outputnode = pe.Node(niu.IdentityInterface(fields=['bold', 'bold_mask', 'bold_ref_brain']),
+    outputnode = pe.Node(niu.IdentityInterface(fields=['bold', 'bold_ref_brain']),
                          name='outputnode')
 
     LOGGER.log(25, 'Generating T2* map and optimally combined ME-EPI time series.')
 
     t2smap_node = pe.Node(T2SMap(echo_times=echo_times), name='t2smap_node')
-    skullstrip_t2smap_wf = init_skullstrip_bold_wf(name='skullstrip_t2smap_wf')
 
     workflow.connect([
         (inputnode, t2smap_node, [('bold_file', 'in_files')]),
-        (t2smap_node, outputnode, [('optimal_comb', 'bold')]),
-        (t2smap_node, skullstrip_t2smap_wf, [('t2star_map', 'inputnode.in_file')]),
-        (skullstrip_t2smap_wf, outputnode, [
-            ('outputnode.mask_file', 'bold_mask'),
-            ('outputnode.skull_stripped_file', 'bold_ref_brain')]),
+        (t2smap_node, outputnode, [
+            ('optimal_comb', 'bold'),
+            ('t2star_map', 'bold_ref_brain')]),
     ])
 
     return workflow
