@@ -9,6 +9,7 @@ Calculate BOLD confounds
 .. autofunction:: init_ica_aroma_wf
 
 """
+from os import getenv
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, fsl
 from nipype.algorithms import confounds as nac
@@ -245,8 +246,9 @@ were annotated as motion outliers.
         acompcor.inputs.repetition_time = metadata['RepetitionTime']
 
     # Global and segment regressors
+    signals_class_labels = ["csf", "white_matter", "global_signal"]
     mrg_lbl = pe.Node(niu.Merge(3), name='merge_rois', run_without_submitting=True)
-    signals = pe.Node(SignalExtraction(class_labels=["csf", "white_matter", "global_signal"]),
+    signals = pe.Node(SignalExtraction(class_labels=signals_class_labels),
                       name="signals", mem_gb=mem_gb)
 
     # Arrange confounds
@@ -270,8 +272,10 @@ were annotated as motion outliers.
         TSV2JSON(index_column='component', output=None,
                  additional_metadata={'Method': 'aCompCor'}, enforce_case=True),
         name='acc_metadata_fmt')
-    mrg_conf_metadata = pe.Node(niu.Merge(2), name='merge_confound_metadata',
+    mrg_conf_metadata = pe.Node(niu.Merge(3), name='merge_confound_metadata',
                                 run_without_submitting=True)
+    mrg_conf_metadata.inputs.in3 = {label: {'Method': 'Mean'}
+                                    for label in signals_class_labels}
     mrg_conf_metadata2 = pe.Node(DictMerge(), name='merge_confound_metadata2',
                                  run_without_submitting=True)
 
@@ -648,7 +652,7 @@ in the corresponding confounds file.
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['aroma_confounds', 'aroma_noise_ics', 'melodic_mix',
-                'nonaggr_denoised_file']), name='outputnode')
+                'nonaggr_denoised_file', 'aroma_metadata']), name='outputnode')
 
     select_std = pe.Node(KeySelect(
         fields=['bold_mask_std', 'bold_std']),
@@ -686,6 +690,13 @@ in the corresponding confounds file.
     # extract the confound ICs from the results
     ica_aroma_confound_extraction = pe.Node(ICAConfounds(err_on_aroma_warn=err_on_aroma_warn),
                                             name='ica_aroma_confound_extraction')
+
+    ica_aroma_metadata_fmt = pe.Node(
+        TSV2JSON(index_column='IC', output=None, enforce_case=True,
+                 additional_metadata={'Method': {
+                                      'Name': 'ICA-AROMA',
+                                      'Version': getenv('AROMA_VERSION', 'n/a')}}),
+        name='ica_aroma_metadata_fmt')
 
     ds_report_ica_aroma = pe.Node(
         DerivativesDataSink(desc='aroma', keep_dtype=True),
@@ -732,10 +743,13 @@ in the corresponding confounds file.
         (ica_aroma, ica_aroma_confound_extraction, [('out_dir', 'in_directory')]),
         (inputnode, ica_aroma_confound_extraction, [
             ('skip_vols', 'skip_vols')]),
+        (ica_aroma_confound_extraction, ica_aroma_metadata_fmt, [
+            ('aroma_metadata', 'in_file')]),
         # output for processing and reporting
         (ica_aroma_confound_extraction, outputnode, [('aroma_confounds', 'aroma_confounds'),
                                                      ('aroma_noise_ics', 'aroma_noise_ics'),
                                                      ('melodic_mix', 'melodic_mix')]),
+        (ica_aroma_metadata_fmt, outputnode, [('output', 'aroma_metadata')]),
         (ica_aroma, add_non_steady_state, [
             ('nonaggr_denoised_file', 'bold_cut_file')]),
         (select_std, add_non_steady_state, [

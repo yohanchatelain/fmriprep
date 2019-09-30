@@ -260,7 +260,7 @@ jobs:
 
   build_docs:
     docker:
-        - image: python:latest
+      - image: python:latest
     working_directory: /tmp/src/fmriprep
     environment:
       - FSLOUTPUTTYPE: 'NIFTI'
@@ -771,16 +771,15 @@ jobs:
             fi
 
   test_deploy_pypi:
-    machine:
-      image: circleci/classic:201711-01
+    docker:
+      - image: circleci/python:3.7.4
     working_directory: /tmp/src/fmriprep
     steps:
       - checkout
       - run:
           name: Build fMRIPrep
           command: |
-            pyenv local 3.5.2
-            pip install twine  # For use in checking distributions
+            pip install --user twine  # For use in checking distributions
             THISVERSION=$( python get_version.py )
             THISVERSION=${THISVERSION%.dirty*}
             THISVERSION=${CIRCLE_TAG:-$THISVERSION}
@@ -795,7 +794,6 @@ jobs:
       - run:
           name: Check sdist distribution
           command: |
-            pyenv local 3.5.2
             THISVERSION=$( python get_version.py )
             THISVERSION=${THISVERSION%.dirty*}
             THISVERSION=${CIRCLE_TAG:-$THISVERSION}
@@ -814,7 +812,6 @@ jobs:
       - run:
           name: Check wheel distribution
           command: |
-            pyenv local 3.5.2
             THISVERSION=$( python get_version.py )
             THISVERSION=${THISVERSION%.dirty*}
             THISVERSION=${CIRCLE_TAG:-$THISVERSION}
@@ -832,7 +829,6 @@ jobs:
       - run:
           name: Build fmriprep-docker
           command: |
-            pyenv local 3.5.2
             THISVERSION=$( python get_version.py )
             THISVERSION=${THISVERSION%.dirty*}
             cd wrapper
@@ -846,15 +842,14 @@ jobs:
           path: /tmp/src/fmriprep/wrapper/dist
 
   deploy_pypi:
-    machine:
-      image: circleci/classic:201711-01
+    docker:
+      - image: circleci/python:3.7.4
     working_directory: /tmp/src/fmriprep
     steps:
       - checkout
       - run:
           name: Build fMRIPrep
           command: |
-            pyenv local 3.5.2
             THISVERSION=$( python get_version.py )
             virtualenv --python=python build
             source build/bin/activate
@@ -866,7 +861,6 @@ jobs:
       - run:
           name: Build fmriprep-docker
           command: |
-            pyenv local 3.5.2
             THISVERSION=$( python get_version.py )
             cd wrapper
             virtualenv --python=python build
@@ -878,8 +872,7 @@ jobs:
       - run:
           name: Upload packages to PyPI
           command: |
-            pyenv local 3.5.2
-            pip install twine
+            pip install --user twine
             twine upload dist/fmriprep* wrapper/dist/fmriprep*
 
   deployable:
