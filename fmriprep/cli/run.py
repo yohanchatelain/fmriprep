@@ -525,7 +525,6 @@ def build_workflow(opts, retval):
     bids_dir = opts.bids_dir.resolve()
     output_dir = opts.output_dir.resolve()
     work_dir = opts.work_dir.resolve()
-    bids_filters_file = opts.bids_filters.resolve()
     bids_filters = json.loads(opts.bids_filters.read_text()) \
         if opts.bids_filters else None
 
