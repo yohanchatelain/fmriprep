@@ -58,6 +58,7 @@ is presented below:
         use_aroma=False,
         use_bbr=True,
         use_syn=True,
+        bids_filters=None,
     )
 
 T1w/T2w preprocessing

@@ -471,7 +471,8 @@ def init_single_subject_wf(
             'bold': ['/completely/made/up/path/sub-01_task-nback_bold.nii.gz']
         }
     else:
-        subject_data = collect_data(layout, subject_id, task_id, echo_idx, bids_filters=bids_filters)[0]
+        subject_data = collect_data(layout, subject_id, task_id, echo_idx,
+            bids_filters=bids_filters)[0]
 
     # Make sure we always go through these two checks
     if not anat_only and subject_data['bold'] == []:
