@@ -1,4 +1,4 @@
-
+.. include:: links.rst
 
 .. _output-spaces:
 
@@ -106,3 +106,14 @@ identifier not be found within the ``--output-spaces`` list already.
 In other words, running fMRIPrep with ``--output-spaces MNI152NLin6Asym:res-2
 --use-syn-sdc`` will expand the list of output spaces to be
 ``MNI152NLin6Asym:res-2 MNI152NLin2009cAsym``.
+
+.. _TemplateFlow:
+
+*TemplateFlow*
+==============
+*TemplateFlow* comprehends a repository for the redistribution of neuroimaging
+templatates and a Python client tool to access them programmatically when used
+as a library by other software, or interactively by humans.
+
+Therefore *TemplateFlow* is the software module that allows *fMRIPrep* to flexibly
+change, and dynamically pull down, new standardized template information.
