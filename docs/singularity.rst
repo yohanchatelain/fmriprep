@@ -107,7 +107,7 @@ access the host's filesystem in write mode.
 By default, Singularity automatically binds (mounts) the user's *home* directory and
 a *scratch* directory.
 In addition, Singularity generally allows binding the necessary folders with
-the ``-B <host_folder>:<container_folder>`` Singularity argument.
+the ``-B <host_folder>:<container_folder>[:<permissions>]`` Singularity argument.
 For example: ::
 
     $ singularity run --cleanenv -B /work:/work fmriprep.smig \
@@ -129,6 +129,8 @@ argument (``--home``) as follows: ::
 
     $ singularity run -B $HOME:/home/fmriprep --home /home/fmriprep \
           --cleanenv fmriprep.simg <fmriprep arguments>
+
+.. _singularity_tf:
 
 *TemplateFlow* and Singularity
 ------------------------------
@@ -218,6 +220,68 @@ Finally, run the singularity image binding the appropriate folder:
   $ export SINGULARITYENV_TEMPLATEFLOW_HOME=/templateflow
   $ singularity run -B ${TEMPLATEFLOW_HOME:-$HOME/.cache/templateflow}:/templateflow \
         --cleanenv fmriprep.simg <fmriprep arguments>
+
+
+Troubleshooting
+---------------
+Setting up a functional execution framework with Singularity might be tricky in some
+:abbr:`HPC (high-performance computing)` systems.
+Please make sure you have read the relevant `documentation of Singularity
+<https://sylabs.io/docs/>`__, and checked all the defaults and configuration in your
+system.
+The next step is checking the environment and access to *fMRIPrep* resources, using
+``singularity shell``.
+
+  1. Check access to input data folder, and BIDS validity:
+     ::
+
+       $ singularity shell -B path/to/data:/data fmriprep.simg
+       Singularity fmriprep.simg:~> ls /data
+       CHANGES  README  dataset_description.json  participants.tsv  sub-01  sub-02  sub-03  sub-04  sub-05  sub-06  sub-07  sub-08  sub-09  sub-10  sub-11  sub-12  sub-13  sub-14  sub-15  sub-16  task-balloonanalogrisktask_bold.json
+       Singularity fmriprep.simg:~> bids-validator /data
+          1: [WARN] You should define 'SliceTiming' for this file. If you don't provide this information slice time correction will not be possible. (code: 13 - SLICE_TIMING_NOT_DEFINED)
+                  ./sub-01/func/sub-01_task-balloonanalogrisktask_run-01_bold.nii.gz
+                  ./sub-01/func/sub-01_task-balloonanalogrisktask_run-02_bold.nii.gz
+                  ./sub-01/func/sub-01_task-balloonanalogrisktask_run-03_bold.nii.gz
+                  ./sub-02/func/sub-02_task-balloonanalogrisktask_run-01_bold.nii.gz
+                  ./sub-02/func/sub-02_task-balloonanalogrisktask_run-02_bold.nii.gz
+                  ./sub-02/func/sub-02_task-balloonanalogrisktask_run-03_bold.nii.gz
+                  ./sub-03/func/sub-03_task-balloonanalogrisktask_run-01_bold.nii.gz
+                  ./sub-03/func/sub-03_task-balloonanalogrisktask_run-02_bold.nii.gz
+                  ./sub-03/func/sub-03_task-balloonanalogrisktask_run-03_bold.nii.gz
+                  ./sub-04/func/sub-04_task-balloonanalogrisktask_run-01_bold.nii.gz
+                  ... and 38 more files having this issue (Use --verbose to see them all).
+          Please visit https://neurostars.org/search?q=SLICE_TIMING_NOT_DEFINED for existing conversations about this issue.
+
+  2. Check access to output data folder, and whether you have write permissions.
+     ::
+
+       $ singularity shell -B path/to/data/derivatives/fmriprep-1.5.0:/out fmriprep.simg
+       Singularity fmriprep.simg:~> ls /out
+       Singularity fmriprep.simg:~> touch /out/test
+       Singularity fmriprep.simg:~> rm /out/test
+
+  3. Check access and permissions to ``$HOME``:
+     ::
+
+       $ singularity shell fmriprep.simg
+       Singularity fmriprep.simg:~> mkdir -p $HOME/.cache/testfolder
+       Singularity fmriprep.simg:~> rmdir $HOME/.cache/testfolder
+
+  4. Check *TemplateFlow* operation:
+     ::
+
+       $ singularity shell -B path/to/templateflow:/templateflow fmriprep.simg
+       Singularity fmriprep.simg:~> echo ${TEMPLATEFLOW_HOME:-$HOME/.cache/templateflow}
+       /home/users/oesteban/.cache/templateflow
+       Singularity fmriprep.simg:~> python -c "from templateflow.api import get; get(['MNI152NLin2009cAsym', 'MNI152NLin6Asym', 'OASIS30ANTs', 'MNIPediatricAsym', 'MNIInfant'])"
+         Downloading https://templateflow.s3.amazonaws.com/tpl-MNI152NLin6Asym/tpl-MNI152NLin6Asym_res-01_atlas-HOCPA_desc-th0_dseg.nii.gz
+         304B [00:00, 1.28kB/s]
+         Downloading https://templateflow.s3.amazonaws.com/tpl-MNI152NLin6Asym/tpl-MNI152NLin6Asym_res-01_atlas-HOCPA_desc-th25_dseg.nii.gz
+         261B [00:00, 1.04kB/s]
+         Downloading https://templateflow.s3.amazonaws.com/tpl-MNI152NLin6Asym/tpl-MNI152NLin6Asym_res-01_atlas-HOCPA_desc-th50_dseg.nii.gz
+         219B [00:00, 867B/s]
+         ...
 
 
 Running Singularity on a SLURM system
