@@ -12,9 +12,9 @@
 .. _AFNI: https://afni.nimh.nih.gov/
 .. _GIFTI: https://www.nitrc.org/projects/gifti/
 .. _`Connectome Workbench`: https://www.humanconnectome.org/software/connectome-workbench.html
-.. _DockerWrapper: https://pypi.python.org/pypi/fmriprep-docker
-.. _DockerEngine: https://www.docker.com/products/container-runtime
-.. _DockerInstallation: https://docs.docker.com/install/
+.. _`Docker wrapper`: https://pypi.python.org/pypi/fmriprep-docker
+.. _`Docker Engine`: https://www.docker.com/products/container-runtime
+.. _`Docker installation`: https://docs.docker.com/install/
 .. _`Docker Hub`: https://hub.docker.com/r/poldracklab/fmriprep/tags
 .. _Singularity: https://github.com/singularityware/singularity
 .. _TACC: https://www.tacc.utexas.edu/

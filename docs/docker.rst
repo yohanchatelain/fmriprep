@@ -24,7 +24,7 @@ command line, or you can use a lightweight wrapper we created for convenience.
 Running *fMRIPrep* with the ``fmriprep-docker`` wrapper
 -------------------------------------------------------
 This is the easiest way to run *fMRIPrep*.
-`*fMRIPrep* Docker-Wrapper utility <DockerWrapper>`_ is a command that allows 
+The `Docker wrapper`_ script is a command that allows 
 you to write your command line as if you were running ``fmriprep`` directly,
 and converts it into a ``docker`` command.
 The wrapper just requires Python and an Internet connection.

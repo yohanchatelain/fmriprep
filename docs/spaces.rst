@@ -110,7 +110,7 @@ In other words, running fMRIPrep with ``--output-spaces MNI152NLin6Asym:res-2
 .. _TemplateFlow:
 
 *TemplateFlow*
-==============
+""""""""""""""
 Group inference and reporting of neuroimaging studies require that individual's
 features are spatially aligned into a common frame where their location can be
 called *standard*.

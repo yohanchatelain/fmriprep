@@ -27,10 +27,10 @@ This is a lightweight approach to virtualization, as compares to virtual machine
 Docker (recommended for PC/laptop and commercial Cloud)
 -------------------------------------------------------
 
-Probably, the most popular framework to execute containers is DockerEngine_.
+Probably, the most popular framework to execute containers is Docker.
 If you are to run *fMRIPrep* on your PC/laptop, this is the RECOMMENDED way of execution.
-Please make sure you follow the DockerInstallation_ instructions.
-You can check your Docker Engine installation running their ``hello-world`` image: ::
+Please make sure you follow the `Docker installation`_ instructions.
+You can check your `Docker Engine`_ installation running their ``hello-world`` image: ::
 
     $ docker run --rm hello-world
 
@@ -58,7 +58,7 @@ If you have a functional installation, then you should obtain the following outp
      https://docs.docker.com/get-started/
 
 After checking your Docker Engine is capable of running Docker images, then go ahead
-and `check out our documentation <run_docker>`_ to run the *fMRIPrep* image.
+and `check out our documentation <docker.html>`_ to run the *fMRIPrep* image.
 The list of Docker images ready to use is found at the `Docker Hub`_, 
 under the ``poldracklab/fmriprep`` identifier.
 
@@ -70,8 +70,8 @@ For security reasons, many :abbr:`HPCs (High-Performance Computing)` (e.g., TACC
 do not allow Docker containers, but do allow Singularity_ containers.
 The improved security for multi-tenant systems comes at the price of some limitations
 and extra steps necessary for execution.
-Please make sure you `follow our tips and tricks to run *fMRIPrep*'s Singularity images
-<run_singularity>`_.
+Please make sure you `follow our tips and tricks to run fMRIPrep's Singularity images
+<singularity.html>`_.
 
 
 Manually Prepared Environment (Python 3.5+)
@@ -79,8 +79,8 @@ Manually Prepared Environment (Python 3.5+)
 
 .. warning::
 
-   This method is not recommended! Make sure you would rather do this than 
-   use a :ref:`run_docker` or a :ref:`run_singularity`.
+   This method is not recommended! Please checkout container alternatives
+   in :ref:`run_docker`, and :ref:`run_singularity`.
 
 Make sure all of *fMRIPRep*'s `External Dependencies`_ are installed.
 These tools must be installed and their binaries available in the
