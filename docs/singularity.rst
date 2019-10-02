@@ -19,7 +19,7 @@ want to download.
 
 **Singularity version < 2.5**.
 In this case, start with a machine (e.g., your personal computer) with Docker installed.
-Use `docker2singularity <https://github.com/singularityware/docker2singularity>`_ to 
+Use `docker2singularity <https://github.com/singularityware/docker2singularity>`_ to
 create a singularity image.
 You will need an active internet connection and some time. ::
 
@@ -29,7 +29,7 @@ You will need an active internet connection and some time. ::
         singularityware/docker2singularity \
         poldracklab/fmriprep:<version>
 
-Where ``<version>`` should be replaced with the desired version of *fMRIPrep* that you want 
+Where ``<version>`` should be replaced with the desired version of *fMRIPrep* that you want
 to download.
 
 Beware of the back slashes, expected for Windows systems.
@@ -57,7 +57,7 @@ If the data to be preprocessed is also on the HPC, you are ready to run *fMRIPre
 
 Handling environment variables
 ------------------------------
-Singularity by default `exposes all environment variables from the host inside 
+Singularity by default `exposes all environment variables from the host inside
 the container <https://github.com/singularityware/singularity/issues/445>`__.
 Because of this, your host libraries (e.g., nipype_ or a Python 2.7 environment)
 could be accidentally used instead of the ones inside the container.
@@ -71,7 +71,7 @@ all scenarios. For example: ::
       --omp-nthreads 16
 
 
-Alternatively, conflicts might be preempted and some problems mitigated by 
+Alternatively, conflicts might be preempted and some problems mitigated by
 unsetting potentially problematic settings, such as the ``PYTHONPATH`` variable,
 before running: ::
 
@@ -96,7 +96,7 @@ prefix ``SINGULARITYENV_``.
 
 Accessing the host's filesystem
 -------------------------------
-Depending on how Singularity is configured on your cluster it might or might not 
+Depending on how Singularity is configured on your cluster it might or might not
 automatically bind (mount or expose) host folders to the container.
 This is particularly relevant because, *if you can't run Singularity in privileged
 mode* (which is almost certainly true in all the scenarios), **Singularity containers
@@ -166,6 +166,60 @@ points setting the ``SINGULARITYENV_TEMPLATEFLOW_HOME`` variable. ::
     $ singularity run -B <writable-path-on-host>:/opt/templateflow \
           --cleanenv fmriprep.simg <fmriprep arguments>
 
+Internet access problems
+------------------------
+We have identified several conditions in which running *fMRIPrep* might fail because
+of spotty or impossible access to Internet.
+
+If your compute node cannot have access to Internet, then you'll need to make sure
+you run *fMRIPrep* with the ``--notrack`` argument and pull down from TemplateFlow
+all the resources that will be necessary.
+
+If that is not the case (i.e., you should be able to hit HTTP/s endpoints), then
+you can try the following:
+
+``VerifiedHTTPSConnection ... Failed to establish a new connection: [Errno 110] Connection timed out``.
+If you encounter an error like this, probably you'll need to set up an http proxy exporting
+``SINGULARITYENV_http_proxy`` (see `\#1778 (comment)
+<https://github.com/poldracklab/fmriprep/issues/1778#issuecomment-532297622>`__).
+For example:
+::
+
+  $ export SINGULARITYENV_https_proxy=http://<ip or proxy name>:<port>
+
+``requests.exceptions.SSLError: HTTPSConnectionPool ...``.
+In this case, you container seems to be able to reach the Internet, but unable to use SSL
+encription.
+There are two potential solutions to the issue.
+The `recommended one <https://neurostars.org/t/problems-using-pediatric-template-from-templateflow/4566/17>`__
+is setting ``REQUESTS_CA_BUNDLE`` to the appropriate path, and/or binding
+the appropriate filesystem:
+::
+
+  $ export SINGULARITYENV_REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+  $ singularity run -B <path-to-certs-folder>:/etc/ssl/certs \
+        --cleanenv fmriprep.simg <fmriprep arguments>
+
+Otherwise, `some users have succeeded pre-fetching the necessary templates onto
+the TemplateFlow directory to then bind the folder at execution
+<https://neurostars.org/t/problems-using-pediatric-template-from-templateflow/4566/15>`__:
+::
+
+  $ export TEMPLATEFLOW_HOME=/path/to/keep/templateflow
+  $ python -m pip install -U templateflow  # Install the client
+  $ python
+  >>> import templateflow.api
+  >>> templateflow.api.TF_S3_ROOT = 'http://templateflow.s3.amazonaws.com'
+  >>> api.get(‘MNI152NLin6Asym’)
+
+Finally, run the singularity image binding the appropriate folder:
+::
+
+  $ export SINGULARITYENV_TEMPLATEFLOW_HOME=/templateflow
+  $ singularity run -B ${TEMPLATEFLOW_HOME:-$HOME/.cache/templateflow}:/templateflow \
+        --cleanenv fmriprep.simg <fmriprep arguments>
+
+
 Running Singularity on a SLURM system
 -------------------------------------
 An example of ``sbatch`` script to run *fMRIPrep* on a SLURM system with Singularity
@@ -186,7 +240,7 @@ available is given below: ::
     #SBATCH --mail-user=%u@domain.tld
     #SBATCH --mail-type=ALL
     # ------------------------------------------
-    
+
     BIDS_DIR="$PROJECT/data/ds000109"
     DERIVS_DIR="derivatives/fmriprep-1.5.0"
 
@@ -200,7 +254,7 @@ available is given below: ::
     export SINGULARITYENV_TEMPLATEFLOW_HOME="/templateflow"
     SINGULARITY_CMD="singularity run --cleanenv -B $PROJECT:/project -B $HOME/.cache/templateflow:/templateflow -B $L_SCRATCH:/work $PROJECT/images/poldracklab_fmriprep_1.5.0-2019-09-10-6157fec3d0ea.simg"
 
-    
+
     subject=$( sed -n -E "$((${SLURM_ARRAY_TASK_ID} + 1))s/sub-(\S*)\>.*/\1/gp" ${BIDS_DIR}/participants.tsv )
     cmd="${SINGULARITY_CMD} /project/data/ds000109 /project/data/ds000109/${DERIVS_DIR} participant --participant-label $subject -w /work/ -vv --omp-nthreads 8 --nthreads 12 --mem_mb 30000 --output-spaces MNI152NLin2009cAsym:res-2 anat fsnative fsaverage5 --cifti-output --use-aroma"
 
@@ -209,7 +263,7 @@ available is given below: ::
     echo Commandline: $cmd
     eval $cmd
     exitcode=$?
-    
+
     # Output results to a table
     echo "sub-$subject   ${SLURM_ARRAY_TASK_ID}    $exitcode" \
           >> ${SLURM_JOB_NAME}.${SLURM_ARRAY_JOB_ID}.tsv
