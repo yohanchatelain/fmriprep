@@ -4,15 +4,37 @@
 Installation
 ------------
 
-There are two ways to use *fMRIPrep*:
+There are two ways to get *fMRIPrep* installed:
 
-* within a `Manually Prepared Environment (Python 3.5+)`_; or
+* within a `Manually Prepared Environment (Python 3.5+)`_, also known as
+  *bare-metal installation*; or
 * using container technologies (RECOMMENDED), such as :ref:`run_docker`
   or :ref:`run_singularity`.
 
-Once you are ready to run *fMRIPrep* via either of the options above,
-see :ref:`usage` for details.
+Once you have your *bare-metal* environment set-up (first option above),
+the next step is executing the ``fmriprep`` command-line.
+The ``fmriprep`` command-line options are documented in the :ref:`usage`
+section.
+The ``fmriprep`` command-line adheres to the `BIDS-Apps recommendations
+for the user interface <usage.html#execution-and-the-bids-format>`__.
+Therefore, the command-line has the following structure:
+::
 
+  $ fmriprep <input_bids_path> <derivatives_path> <analysis_level> <named_options>
+
+On the other hand, if you chose a container infrastructure, then
+the command-line will be composed of a preamble to configure the
+container execution followed by the ``fmriprep`` command-line options
+as if you were running it on a *bare-metal* installation.
+The command-line structure above is then modified as follows:
+::
+
+  $ <container_command_and_options> <container_image> \
+       <input_bids_path> <derivatives_path> <analysis_level> <fmriprep_named_options>
+
+Therefore, once specified the container options and the image to be run
+the command line is the same as for the *bare-metal* installation but dropping
+the ``fmriprep`` executable name.
 
 Container technologies: Docker and Singularity
 ==============================================
