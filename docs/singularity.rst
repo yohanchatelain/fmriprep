@@ -97,7 +97,8 @@ prefix ``SINGULARITYENV_``.
 Accessing the host's filesystem
 -------------------------------
 Depending on how Singularity is configured on your cluster it might or might not
-automatically bind (mount or expose) host folders to the container.
+automatically bind (mount or expose) host's folders to the container (e.g., ``/scratch``,
+or ``$HOME``).
 This is particularly relevant because, *if you can't run Singularity in privileged
 mode* (which is almost certainly true in all the scenarios), **Singularity containers
 are read only**.
@@ -110,13 +111,42 @@ In addition, Singularity generally allows binding the necessary folders with
 the ``-B <host_folder>:<container_folder>[:<permissions>]`` Singularity argument.
 For example: ::
 
-    $ singularity run --cleanenv -B /work:/work fmriprep.smig \
+    $ singularity run --cleanenv -B /work:/work fmriprep.simg \
       /work/my_dataset/ /work/my_dataset/derivatives/fmriprep \
       participant \
       --participant-label 387 --nthreads 16 \
       --omp-nthreads 16
 
-**Relevant aspects of the ``$HOME`` directory within the container**.
+.. warning::
+
+   If your Singularity installation doesn't allow you to bind non-existent bind points,
+   you'll get an error saying ``WARNING: Skipping user bind, non existent bind point
+   (directory) in container``.
+   In this scenario, you can either try to bind things onto some other bind point you
+   know it exists in the image or rebuild your singularity image with ``docker2singularity``
+   as follows:
+   ::
+
+     $ docker run --privileged -ti --rm -v /var/run/docker.sock:/var/run/docker.sock \
+              -v $PWD:/output singularityware/docker2singularity \
+              -m "/gpfs /scratch /work /share /lscratch /opt/templateflow"
+
+   In the example above, the following bind points are created: ``/gpfs``, ``/scratch``,
+   ``/work``, ``/share``, ``/opt/templateflow``.
+
+.. note::
+
+   One great feature of containers is their confinement or isolation from the host
+   system.
+   Binding mount points breaks this principle, as the container has now access to
+   create changes in the host.
+   Therefore, it is generally recommended to use binding scarcely and granting
+   very limited access to the minimum necessary resources.
+   In other words, it is preferred to bind just one subdirectory of ``$HOME`` than
+   the full ``$HOME`` directory of the host (see `\#1778 (comment)
+   <https://github.com/poldracklab/fmriprep/issues/1778#issuecomment-538009563>`_).
+
+**Relevant aspects of the** ``$HOME`` **directory within the container**.
 By default, Singularity will bind the user's ``$HOME`` directory in the host
 into the ``/home/$USER`` (or equivalent) in the container.
 Most of the times, it will also redefine the ``$HOME`` environment variable and
@@ -129,6 +159,7 @@ argument (``--home``) as follows: ::
 
     $ singularity run -B $HOME:/home/fmriprep --home /home/fmriprep \
           --cleanenv fmriprep.simg <fmriprep arguments>
+
 
 .. _singularity_tf:
 
@@ -190,7 +221,7 @@ For example:
   $ export SINGULARITYENV_https_proxy=http://<ip or proxy name>:<port>
 
 ``requests.exceptions.SSLError: HTTPSConnectionPool ...``.
-In this case, you container seems to be able to reach the Internet, but unable to use SSL
+In this case, your container seems to be able to reach the Internet, but unable to use SSL
 encription.
 There are two potential solutions to the issue.
 The `recommended one <https://neurostars.org/t/problems-using-pediatric-template-from-templateflow/4566/17>`__
