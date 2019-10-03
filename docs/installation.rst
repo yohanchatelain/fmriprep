@@ -16,7 +16,6 @@ see :ref:`usage` for details.
 
 Container technologies: Docker and Singularity
 ==============================================
-
 Container technologies are operating-system-level virtualization methods to run Linux systems
 using the host's Linux kernel.
 This is a lightweight approach to virtualization, as compares to virtual machines.
@@ -26,7 +25,6 @@ This is a lightweight approach to virtualization, as compares to virtual machine
 
 Docker (recommended for PC/laptop and commercial Cloud)
 -------------------------------------------------------
-
 Probably, the most popular framework to execute containers is Docker.
 If you are to run *fMRIPrep* on your PC/laptop, this is the RECOMMENDED way of execution.
 Please make sure you follow the `Docker installation`_ instructions.
@@ -62,6 +60,18 @@ and `check out our documentation <docker.html>`_ to run the *fMRIPrep* image.
 The list of Docker images ready to use is found at the `Docker Hub`_, 
 under the ``poldracklab/fmriprep`` identifier.
 
+The ``fmriprep-docker`` wrapper
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This is the easiest way to `run fMRIPrep using Docker
+<docker.html#running-fmriprep-with-the-fmriprep-docker-wrapper>`__.
+The `Docker wrapper`_ is a Python script that operates the Docker Engine seamlessly
+as if you were running ``fmriprep`` directly.
+To that end, ``fmriprep-docker`` reinterprets the command-line you are passing and
+converts it into a ``docker run`` command.
+The wrapper just requires Python and an Internet connection.
+Install the wrapper using a Python distribution system, e.g.::
+
+    $ python -m pip install --user --upgrade fmriprep-docker
 
 Singularity (recommended for HPC)
 ---------------------------------

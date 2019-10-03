@@ -23,15 +23,8 @@ command line, or you can use a lightweight wrapper we created for convenience.
 
 Running *fMRIPrep* with the ``fmriprep-docker`` wrapper
 -------------------------------------------------------
-This is the easiest way to run *fMRIPrep*.
-The `Docker wrapper`_ script is a command that allows 
-you to write your command line as if you were running ``fmriprep`` directly,
-and converts it into a ``docker`` command.
-The wrapper just requires Python and an Internet connection.
-Install the wrapper using a Python distribution system, e.g.::
-
-    $ pip install --user --upgrade fmriprep-docker
-
+Before starting, make sure you
+`have the wrapper installed <installation.html#the-fmriprep-docker-wrapper>`__.
 When you run ``fmriprep-docker``, it will generate a Docker command line for you,
 print it out for reporting purposes, and then execute it without further action
 needed, e.g.::
