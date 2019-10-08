@@ -315,53 +315,22 @@ The next step is checking the environment and access to *fMRIPrep* resources, us
          ...
 
 
+
 Running Singularity on a SLURM system
 -------------------------------------
-An example of ``sbatch`` script to run *fMRIPrep* on a SLURM system with Singularity
-available is given below: ::
+An example of ``sbatch`` script to run *fMRIPrep* on a SLURM system [#1]_ is given `below <singularity.html#sbatch-slurm>`__.
+The submission script will generate one task per subject using a *job array*.
+Submission is as easy as:
+::
 
-    #!/bin/bash
-    #
-    #SBATCH -J fmriprep
-    #SBATCH --array=1-36  # Replace indices with the right number of subjects
-    #SBATCH --time=48:00:00
-    #SBATCH -n 1
-    #SBATCH --cpus-per-task=16
-    #SBATCH --mem-per-cpu=4G
-    #SBATCH -p queues,you,can,submit  # Partition names, separated by comma
-    # Outputs ----------------------------------
-    #SBATCH -o log/%x-%A-%a.out
-    #SBATCH -e log/%x-%A-%a.err
-    #SBATCH --mail-user=%u@domain.tld
-    #SBATCH --mail-type=ALL
-    # ------------------------------------------
-
-    BIDS_DIR="$PROJECT/data/ds000109"
-    DERIVS_DIR="derivatives/fmriprep-1.5.0"
-
-    mkdir -p $HOME/.cache/templateflow
-    mkdir -p ${BIDS_DIR}/${DERIVS_DIR}
-    mkdir -p ${BIDS_DIR}/derivatives/freesurfer-6.0.1
-    ln -s ${BIDS_DIR}/derivatives/freesurfer-6.0.1 ${BIDS_DIR}/${DERIVS_DIR}/freesurfer
+  $ export STUDY=/path/to/some/folder
+  $ sbatch --array=1-$(( $( wc -l $STUDY/data/participants.tsv | cut -f1 -d' ' ) - 1 )) sbatch.slurm
 
 
-    export SINGULARITYENV_FS_LICENSE=$HOME/.freesurfer.txt
-    export SINGULARITYENV_TEMPLATEFLOW_HOME="/templateflow"
-    SINGULARITY_CMD="singularity run --cleanenv -B $PROJECT:/project -B $HOME/.cache/templateflow:/templateflow -B $L_SCRATCH:/work $PROJECT/images/poldracklab_fmriprep_1.5.0-2019-09-10-6157fec3d0ea.simg"
+.. literalinclude:: _static/sbatch.slurm
+   :language: bash
+   :name: sbatch.slurm
+   :caption: **sbatch.slurm**:
 
 
-    subject=$( sed -n -E "$((${SLURM_ARRAY_TASK_ID} + 1))s/sub-(\S*)\>.*/\1/gp" ${BIDS_DIR}/participants.tsv )
-    cmd="${SINGULARITY_CMD} /project/data/ds000109 /project/data/ds000109/${DERIVS_DIR} participant --participant-label $subject -w /work/ -vv --omp-nthreads 8 --nthreads 12 --mem_mb 30000 --output-spaces MNI152NLin2009cAsym:res-2 anat fsnative fsaverage5 --cifti-output --use-aroma"
-
-    # Setup done, run the command
-    echo Running task ${SLURM_ARRAY_TASK_ID}
-    echo Commandline: $cmd
-    eval $cmd
-    exitcode=$?
-
-    # Output results to a table
-    echo "sub-$subject   ${SLURM_ARRAY_TASK_ID}    $exitcode" \
-          >> ${SLURM_JOB_NAME}.${SLURM_ARRAY_JOB_ID}.tsv
-    echo Finished tasks ${SLURM_ARRAY_TASK_ID} with exit code $exitcode
-    exit $exitcode
-
+.. [#1]  assuming that *job arrays* and Singularity are available
