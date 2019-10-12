@@ -493,7 +493,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     # apply BOLD registration to T1w
     bold_t1_trans_wf = init_bold_t1_trans_wf(name='bold_t1_trans_wf',
                                              freesurfer=freesurfer,
-                                             use_fieldwarp=(fmaps or use_syn),
+                                             use_fieldwarp=(bool(fmaps) or use_syn),
                                              multiecho=multiecho,
                                              mem_gb=mem_gb['resampled'],
                                              omp_nthreads=omp_nthreads,
@@ -515,7 +515,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         mem_gb=mem_gb['resampled'],
         omp_nthreads=omp_nthreads,
         use_compression=not low_mem,
-        use_fieldwarp=(fmaps or use_syn),
+        use_fieldwarp=(bool(fmaps) or use_syn),
         name='bold_bold_trans_wf'
     )
     bold_bold_trans_wf.inputs.inputnode.name_source = ref_file
