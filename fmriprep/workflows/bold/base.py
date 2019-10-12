@@ -493,7 +493,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     # apply BOLD registration to T1w
     bold_t1_trans_wf = init_bold_t1_trans_wf(name='bold_t1_trans_wf',
                                              freesurfer=freesurfer,
-                                             use_fieldwarp=(fmaps is not None or use_syn),
+                                             use_fieldwarp=(fmaps or use_syn),
                                              multiecho=multiecho,
                                              mem_gb=mem_gb['resampled'],
                                              omp_nthreads=omp_nthreads,
@@ -515,7 +515,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         mem_gb=mem_gb['resampled'],
         omp_nthreads=omp_nthreads,
         use_compression=not low_mem,
-        use_fieldwarp=(fmaps is not None or use_syn),
+        use_fieldwarp=(fmaps or use_syn),
         name='bold_bold_trans_wf'
     )
     bold_bold_trans_wf.inputs.inputnode.name_source = ref_file
@@ -782,7 +782,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             standard_spaces=volume_std_spaces,
             name='bold_std_trans_wf',
             use_compression=not low_mem,
-            use_fieldwarp=fmaps is not None,
+            use_fieldwarp=bool(fmaps),
         )
         workflow.connect([
             (inputnode, bold_std_trans_wf, [
@@ -867,7 +867,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 metadata=metadata,
                 mem_gb=mem_gb['resampled'],
                 omp_nthreads=omp_nthreads,
-                use_fieldwarp=fmaps is not None,
+                use_fieldwarp=bool(fmaps),
                 err_on_aroma_warn=err_on_aroma_warn,
                 aroma_melodic_dim=aroma_melodic_dim,
                 name='ica_aroma_wf')
