@@ -11,7 +11,6 @@ RUN apt-get update && \
                     bzip2 \
                     ca-certificates \
                     xvfb \
-                    cython3 \
                     build-essential \
                     autoconf \
                     libtool \
