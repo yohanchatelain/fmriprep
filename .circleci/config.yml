@@ -226,6 +226,7 @@ jobs:
           no_output_timeout: 2h
           command: |
             docker run -ti --rm=false \
+              -e TEST_READONLY_FILESYSTEM=1 -v $HOME:/home/fmriprep:ro \
               --entrypoint="pytest" poldracklab/fmriprep:latest \
               /src/fmriprep/fmriprep -svx --doctest-modules
 

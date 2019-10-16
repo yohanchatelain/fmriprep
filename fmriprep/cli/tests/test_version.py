@@ -1,4 +1,5 @@
 """Test version checks."""
+from os import getenv
 from datetime import datetime
 from pathlib import Path
 from packaging.version import Version
@@ -165,9 +166,12 @@ def test_is_flagged(monkeypatch, result, version, code, json):
 
 def test_readonly(tmp_path, monkeypatch):
     """Test behavior when $HOME/.cache/fmriprep/latest can't be written out."""
-    monkeypatch.setenv('HOME', str(tmp_path))
-    cachedir = tmp_path / '.cache'
-    cachedir.mkdir(mode=0o555, exist_ok=True)
+    if getenv('TEST_READONLY_FILESYSTEM'):
+        cachedir = Path(getenv('HOME')) / '.cache'
+    else:
+        monkeypatch.setenv('HOME', str(tmp_path))
+        cachedir = tmp_path / '.cache'
+        cachedir.mkdir(mode=0o555, exist_ok=True)
 
     # Make sure creating the folder will raise the exception.
     with pytest.raises(OSError):
