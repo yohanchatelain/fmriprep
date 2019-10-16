@@ -457,7 +457,7 @@ def init_single_subject_wf(
             FreeSurfer SUBJECTS_DIR
 
     """
-    from .bold.resampling import NONSTANDARD_REFERENCES
+    from ..config import NONSTANDARD_REFERENCES
     if name in ('single_subject_wf', 'single_subject_fmripreptest_wf'):
         # for documentation purposes
         subject_data = {
