@@ -26,10 +26,10 @@ from niworkflows.interfaces.itk import MultiApplyTransforms
 from niworkflows.interfaces.utils import GenerateSamplingReference
 from niworkflows.interfaces.utility import KeySelect
 from niworkflows.interfaces.surf import GiftiSetAnatomicalStructure
+from niworkflows.interfaces.nilearn import Merge
 
 from ...config import DEFAULT_MEMORY_MIN_GB
 from ...interfaces import DerivativesDataSink
-from ...interfaces.nilearn import Merge
 
 from .util import init_bold_reference_wf
 
