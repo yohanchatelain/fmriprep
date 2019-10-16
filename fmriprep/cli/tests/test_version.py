@@ -161,3 +161,17 @@ def test_is_flagged(monkeypatch, result, version, code, json):
         assert reason == test_reason
     else:
         assert reason is None
+
+
+def test_readonly(tmp_path, monkeypatch):
+    """Test behavior when $HOME/.cache/fmriprep/latest can't be written out."""
+    monkeypatch.setenv('HOME', str(tmp_path))
+    cachedir = tmp_path / '.cache'
+    cachedir.mkdir(mode=0o555, exist_ok=True)
+
+    # Make sure creating the folder will raise the exception.
+    with pytest.raises(OSError):
+        (cachedir / 'fmriprep').mkdir()
+
+    # Should not raise
+    check_latest()
