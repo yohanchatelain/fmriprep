@@ -680,8 +680,8 @@ in the corresponding confounds file.
 
     # ica_aroma node
     ica_aroma = pe.Node(ICA_AROMARPT(
-        denoise_type='nonaggr', generate_report=True, TR=metadata['RepetitionTime']),
-        name='ica_aroma')
+        denoise_type='nonaggr', generate_report=True, TR=metadata['RepetitionTime'],
+        args='-np'), name='ica_aroma')
 
     add_non_steady_state = pe.Node(niu.Function(function=_add_volumes,
                                                 output_names=['bold_add']),
