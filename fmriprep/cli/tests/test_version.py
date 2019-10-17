@@ -166,16 +166,17 @@ def test_is_flagged(monkeypatch, result, version, code, json):
 
 def test_readonly(tmp_path, monkeypatch):
     """Test behavior when $HOME/.cache/fmriprep/latest can't be written out."""
-    if getenv('TEST_READONLY_FILESYSTEM'):
-        cachedir = Path(getenv('HOME')) / '.cache'
-    else:
-        monkeypatch.setenv('HOME', str(tmp_path))
-        cachedir = tmp_path / '.cache'
+    home_path = Path('/home/readonly') if getenv('TEST_READONLY_FILESYSTEM') \
+        else tmp_path
+    monkeypatch.setenv('HOME', str(home_path))
+    cachedir = home_path / '.cache'
+
+    if getenv('TEST_READONLY_FILESYSTEM') is None:
         cachedir.mkdir(mode=0o555, exist_ok=True)
 
     # Make sure creating the folder will raise the exception.
     with pytest.raises(OSError):
-        (cachedir / 'fmriprep').mkdir()
+        (cachedir / 'fmriprep').mkdir(parents=True)
 
     # Should not raise
     check_latest()
