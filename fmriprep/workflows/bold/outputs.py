@@ -6,10 +6,8 @@ from niworkflows.engine.workflows import LiterateWorkflow as Workflow
 from niworkflows.interfaces.cifti import CiftiNameSource
 from niworkflows.interfaces.surf import GiftiNameSource
 
+from ...config import DEFAULT_MEMORY_MIN_GB
 from ...interfaces import DerivativesDataSink
-
-
-DEFAULT_MEMORY_MIN_GB = 0.01
 
 
 def init_func_derivatives_wf(

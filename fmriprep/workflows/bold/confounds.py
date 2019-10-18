@@ -33,12 +33,11 @@ from niworkflows.interfaces.utils import (
     TPM2ROI, AddTPMs, AddTSVHeader, TSV2JSON, DictMerge
 )
 
+from ...config import DEFAULT_MEMORY_MIN_GB
 from ...interfaces import (
     GatherConfounds, ICAConfounds,
     FMRISummary, DerivativesDataSink
 )
-
-DEFAULT_MEMORY_MIN_GB = 0.01
 
 
 def init_bold_confs_wf(
