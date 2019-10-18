@@ -236,7 +236,7 @@ def init_func_derivatives_wf(
             name="ds_melodic_mix", run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_aroma_std = pe.Node(
-            DerivativesDataSink(base_directory=output_dir,
+            DerivativesDataSink(base_directory=output_dir, space='MNI152NLin6Asym',
                                 desc='smoothAROMAnonaggr', keep_dtype=True),
             name='ds_aroma_std', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
