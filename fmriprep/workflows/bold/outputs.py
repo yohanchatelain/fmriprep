@@ -247,8 +247,7 @@ def init_func_derivatives_wf(
             (inputnode, ds_melodic_mix, [('source_file', 'source_file'),
                                          ('melodic_mix', 'in_file')]),
             (inputnode, ds_aroma_std, [('source_file', 'source_file'),
-                                       ('nonaggr_denoised_file', 'in_file'),
-                                       ('template', 'space')]),
+                                       ('nonaggr_denoised_file', 'in_file')]),
         ])
 
     return workflow
