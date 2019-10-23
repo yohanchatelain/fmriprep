@@ -21,7 +21,9 @@ from nipype.interfaces import utility as niu
 
 from niworkflows.engine.workflows import LiterateWorkflow as Workflow
 from niworkflows.interfaces.cifti import GenerateCifti
+from niworkflows.interfaces.utils import DictMerge
 
+from ...config import DEFAULT_MEMORY_MIN_GB
 from ...utils.meepi import combine_meepi_source
 
 from ...interfaces import DerivativesDataSink
@@ -41,7 +43,7 @@ from .resampling import (
 from .outputs import init_func_derivatives_wf
 from .util import init_bold_reference_wf
 
-DEFAULT_MEMORY_MIN_GB = 0.01
+
 LOGGER = logging.getLogger('nipype.workflow')
 FSAVERAGE_DENSITY = {
     '642': 'fsaverage3',
@@ -265,7 +267,7 @@ def init_func_preproc_wf(
         * :py:func:`~fmriprep.workflows.fieldmap.init_nonlinear_sdc_wf`
 
     """
-    from .resampling import NONSTANDARD_REFERENCES
+    from ...config import NONSTANDARD_REFERENCES
     from ..fieldmap.base import init_sdc_wf  # Avoid circular dependency (#1066)
 
     # Filter out standard spaces to a separate dict
@@ -406,7 +408,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_t1', 'bold_t1_ref', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1',
-                'bold_std', 'bold_std_ref' 'bold_mask_std', 'bold_aseg_std', 'bold_aparc_std',
+                'bold_std', 'bold_std_ref', 'bold_mask_std', 'bold_aseg_std', 'bold_aparc_std',
                 'bold_native', 'bold_cifti', 'cifti_variant', 'cifti_variant_key', 'surfaces',
                 'confounds', 'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file',
                 'confounds_metadata']),
@@ -875,9 +877,16 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                                         function=_to_join),
                            name='aroma_confounds')
 
+            mrg_conf_metadata = pe.Node(niu.Merge(2), name='merge_confound_metadata',
+                                        run_without_submitting=True)
+            mrg_conf_metadata2 = pe.Node(DictMerge(), name='merge_confound_metadata2',
+                                         run_without_submitting=True)
             workflow.disconnect([
                 (bold_confounds_wf, outputnode, [
                     ('outputnode.confounds_file', 'confounds'),
+                ]),
+                (bold_confounds_wf, outputnode, [
+                    ('outputnode.confounds_metadata', 'confounds_metadata'),
                 ]),
             ])
             workflow.connect([
@@ -893,13 +902,19 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                     ('outputnode.skip_vols', 'inputnode.skip_vols')]),
                 (bold_confounds_wf, join, [
                     ('outputnode.confounds_file', 'in_file')]),
+                (bold_confounds_wf, mrg_conf_metadata,
+                    [('outputnode.confounds_metadata', 'in1')]),
                 (ica_aroma_wf, join,
                     [('outputnode.aroma_confounds', 'join_file')]),
+                (ica_aroma_wf, mrg_conf_metadata,
+                    [('outputnode.aroma_metadata', 'in2')]),
+                (mrg_conf_metadata, mrg_conf_metadata2, [('out', 'in_dicts')]),
                 (ica_aroma_wf, outputnode,
                     [('outputnode.aroma_noise_ics', 'aroma_noise_ics'),
                      ('outputnode.melodic_mix', 'melodic_mix'),
                      ('outputnode.nonaggr_denoised_file', 'nonaggr_denoised_file')]),
                 (join, outputnode, [('out_file', 'confounds')]),
+                (mrg_conf_metadata2, outputnode, [('out_dict', 'confounds_metadata')]),
             ])
 
     # SURFACES ##################################################################################
