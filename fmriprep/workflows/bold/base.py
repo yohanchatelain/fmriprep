@@ -357,7 +357,7 @@ https://github.com/poldracklab/fmriprep/issues/1655.""")
             fmaps.append({'suffix': 'syn'})
 
         # Short circuits: (True and True and (False or 'TooShort')) == 'TooShort'
-        run_stc = ("SliceTiming" in metadata and
+        run_stc = (metadata.get("SliceTiming") and
                    'slicetiming' not in ignore and
                    (_get_series_len(ref_file) > 4 or "TooShort"))
 
