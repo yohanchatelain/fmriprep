@@ -1,9 +1,17 @@
 {
+  "title": "fMRIPrep: a robust preprocessing pipeline for functional MRI",
+  "description": "<p>fMRIPrep is a robust and easy-to-use pipeline for preprocessing of diverse fMRI data. The transparent workflow dispenses of manual intervention, thereby ensuring the reproducibility of the results.</p>",
   "contributors": [
     {
       "affiliation": "Department of Psychology, Florida International University",
       "name": "Salo, Taylor",
       "orcid": "0000-0001-9813-3167",
+      "type": "Researcher"
+    },
+    {
+      "affiliation": "Department of Psychology, Stanford University",
+      "name": "Feingold, Franklin",
+      "orcid": "0000-0002-6533-2909",
       "type": "Researcher"
     },
     {
@@ -70,6 +78,12 @@
       "affiliation": "State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University",
       "name": "Ye, Zhifang",
       "orcid": "0000-0003-0489-2619",
+      "type": "Researcher"
+    },
+    {
+      "affiliation": "Center for Brain Imaging, New York University",
+      "name": "Velasco, Pablo",
+      "orcid": "0000-0002-5749-6049",
       "type": "Researcher"
     },
     {
@@ -216,7 +230,6 @@
       "orcid": "0000-0003-3321-7583"
     }
   ],
-  "description": "<p>fMRIPrep is a robust and easy-to-use pipeline for preprocessing of diverse fMRI data. The transparent workflow dispenses of manual intervention, thereby ensuring the reproducibility of the results.</p>",
   "keywords": [
     "neuroimaging",
     "workflow",
@@ -238,6 +251,5 @@
       "scheme": "doi"
     }
   ],
-  "title": "fMRIPrep: a robust preprocessing pipeline for functional MRI",
   "upload_type": "software"
 }
