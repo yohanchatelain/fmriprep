@@ -119,7 +119,7 @@ The following outlines how the *fMRIPrep* developers think about these tools.
 
 * **Issues** are individual pieces of work that need to be completed to move the project forward.
 A general guideline: if you find yourself tempted to write a great big issue that
-is difficult to be described as one unit of work, please consider splitting it into two or more issues.
+is difficult to describe as one unit of work, please consider splitting it into two or more issues.
 
     Issues are assigned [labels](#issue-labels) which explain how they relate to the overall project's
     goals and immediate next steps.
@@ -252,7 +252,7 @@ that generated it when debugging.
 
 Workflow variables should end in `_wf` to indicate that they refer to Workflows
 and not Nodes.
-For instance, a workflow whose base-name is `myworkflow` might be defined as
+For instance, a workflow whose basename is `myworkflow` might be defined as
 follows:
 
 ```Python
