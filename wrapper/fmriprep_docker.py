@@ -19,7 +19,6 @@ import os
 import re
 import subprocess
 from warnings import warn
-from pathlib import Path
 
 __version__ = '99.99.99'
 __copyright__ = 'Copyright 2019, Center for Reproducible Neuroscience, Stanford University'
@@ -186,6 +185,11 @@ def merge_help(wrapper_help, target_help):
     # All remaining sections, show target then wrapper (skipping duplicates)
     sections.extend(t_groups[3:] + w_groups[6:])
     return '\n\n'.join(sections)
+
+
+def is_in_directory(filepath, directory):
+    return os.path.realpath(filepath).startswith(
+        os.path.realpath(directory) + os.sep)
 
 
 def get_parser():
@@ -368,7 +372,7 @@ def main():
 
     # Check that work_dir is not a child of bids_dir
     if opts.work_dir and opts.bids_dir:
-        if Path(opts.bids_dir).resolve() in Path(opts.work_dir).resolve().parents:
+        if is_in_directory(opts.work_dir, opts.bids_dir):
             print(
                 'The selected working directory is a subdirectory of the input BIDS folder. '
                 'Please modify the output path.')
