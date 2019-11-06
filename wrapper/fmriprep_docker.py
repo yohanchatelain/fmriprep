@@ -372,6 +372,7 @@ def main():
             'The selected working directory is a subdirectory of the input BIDS folder. '
             'Please modify the output path.')
         return 1
+
     if opts.config:
         command.extend(['-v', ':'.join((
             opts.config, '/home/fmriprep/.nipype/nipype.cfg', 'ro'))])
