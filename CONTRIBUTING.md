@@ -160,8 +160,12 @@ For instance, one bug regression that has been reported to affect most of the us
 a release with an easy fix because it is a known old problem that came back.
 Such an issue will typically be assigned the following labels ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/bug) ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/impact%3A%20high) ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/effort%3A%20low), and its priority will be maximal since addressing low-effort high-impact deliver the maximum turnout without increasing the churn by much.
 
-Of course, the implementation of long-term goaled lines may include the scheduling of ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/impact%3A%20medium) ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/effort%3A%20high).
-Finally, ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/impact%3A%20low) ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/effort%3A%20high) issues are less likely to be addressed.
+Long-term goals may be labelled as a combination of:
+![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/effort%3A%20high) and  ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/impact%3A%20medium) or ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/impact%3A%high)
+since they will have a high-impact on the code-base, but require a medium or high amount of effort.
+Of note, issues with the labels:
+ ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/impact%3A%20low) or ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/effort%3A%20high)
+are less likely to be addressed because they are less likely to impact the code-base, or because they will require a very high activation energy to do so.
 
 ## Making a change
 
@@ -321,7 +325,7 @@ rigor of implementations, giving out support on the different communication
 channels ([mattermost][link_mattermost], [NeuroStars][link_neurostars], [GitHub issues][link_issues], etc.).
 If you are new to the project, don't forget to add your name and affiliation to the list
 of contributors there!
-Our Welcome Bot will send and automated message reminding this to first-time contributors.
+Our Welcome Bot will send an automated message reminding this to first-time contributors.
 Before every release, unlisted contributors will be invited again to add their names to the file
 (just in case they missed the automated message from our Welcome Bot).
 
