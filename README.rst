@@ -10,10 +10,6 @@ open-source software distribution.
   :target: https://hub.docker.com/r/poldracklab/fmriprep/tags/
   :alt: Docker image available!
 
-.. image:: https://img.shields.io/badge/OpenNeuro-Available!-brightgreen.svg
-  :target: https://openneuro.org
-  :alt: Available in OpenNeuro!
-  
 .. image:: https://codeocean.com/codeocean-assets/badge/open-in-code-ocean.svg
   :target: https://doi.org/10.24433/CO.ed5ddfef-76a3-4996-b298-e3200f69141b
   :alt: Available in CodeOcean!
@@ -28,11 +24,11 @@ open-source software distribution.
 .. image:: https://img.shields.io/pypi/v/fmriprep.svg
   :target: https://pypi.python.org/pypi/fmriprep/
   :alt: Latest Version
-  
+
 .. image:: https://img.shields.io/badge/doi-10.1038%2Fs41592--018--0235--4-blue.svg
   :target: https://doi.org/10.1038/s41592-018-0235-4
   :alt: Published in Nature Methods
-  
+
 .. image:: https://img.shields.io/badge/RRID-SCR__016216-blue.svg
   :target: https://doi.org/10.1038/s41592-018-0235-4
   :alt: RRID:SCR_016216
