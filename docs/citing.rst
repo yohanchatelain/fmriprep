@@ -21,7 +21,7 @@ we recommend to include in your paper.
 
       function cb(err, zenodoID) {
          getCitation(zenodoID, 'vancouver-brackets-no-et-al', function(err, citation) {
-            $('#fmriprep_citation').text(citation);
+            $('#fmriprep_citation').text(citation.substring(2));
          });
          getDOI(zenodoID, function(err, DOI) {
             $('#fmriprep_doi_url').text('https://doi.org/' + DOI);
