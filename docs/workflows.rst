@@ -591,18 +591,18 @@ regressors (a separate GLM with both noise and signal regressors needs to be use
 Therefore instead of regressors, *fMRIPrep* produces *non*-aggressive denoised 4D NIFTI
 files in the MNI space:
 
-``*bold_space-MNI152NLin6Asym_desc-smoothAROMAnonaggr_brainmask.nii.gz``
+``*space-MNI152NLin6Asym_desc-smoothAROMAnonaggr_bold.nii.gz``
 
 Additionally, the MELODIC mix and noise component indices will
 be generated, so non-aggressive denoising can be manually performed in the T1w space with ``fsl_regfilt``, *e.g.*::
 
-    fsl_regfilt -i sub-<subject_label>_task-<task_id>_bold_space-T1w_preproc.nii.gz \
-        -f $(cat sub-<subject_label>_task-<task_id>_bold_AROMAnoiseICs.csv) \
-        -d sub-<subject_label>_task-<task_id>_bold_MELODICmix.tsv \
-        -o sub-<subject_label>_task-<task_id>_bold_space-<space>_AromaNonAggressiveDenoised.nii.gz
+    fsl_regfilt -i sub-<subject_label>_task-<task_id>_space-T1w_desc-preproc_bold.nii.gz \
+        -f $(cat sub-<subject_label>_task-<task_id>_AROMAnoiseICs.csv) \
+        -d sub-<subject_label>_task-<task_id>_desc-MELODIC_mixing.tsv \
+        -o sub-<subject_label>_task-<task_id>_space-T1w_desc-AROMAnonaggr_bold.nii.gz
 
 *Note*: The non-steady state volumes are removed for the determination of components in melodic.
-Therefore ``*MELODICmix.tsv`` may have zero padded rows to account for the volumes not used in
+Therefore ``*MELODIC_mixing.tsv`` may have zero padded rows to account for the volumes not used in
 melodic's estimation of components.
 
 A visualization of the AROMA component classification is also included in the HTML reports.
