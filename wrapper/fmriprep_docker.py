@@ -19,6 +19,7 @@ import os
 import re
 import subprocess
 from warnings import warn
+from pathlib import Path
 
 __version__ = '99.99.99'
 __copyright__ = 'Copyright 2019, Center for Reproducible Neuroscience, Stanford University'
@@ -365,6 +366,12 @@ def main():
         command.extend(['-v', ':'.join((opts.work_dir, '/scratch'))])
         unknown_args.extend(['-w', '/scratch'])
 
+    # Check that work_dir is not a child of bids_dir
+    if Path(opts.bids_dir).resolve() in Path(opts.work_dir).resolve().parents:
+        print(
+            'The selected working directory is a subdirectory of the input BIDS folder. '
+            'Please modify the output path.')
+        return 1
     if opts.config:
         command.extend(['-v', ':'.join((
             opts.config, '/home/fmriprep/.nipype/nipype.cfg', 'ro'))])
