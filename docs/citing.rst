@@ -24,8 +24,14 @@ we recommend to include in your paper.
             $('#fmriprep_citation').text(citation.substring(2));
          });
          getDOI(zenodoID, function(err, DOI) {
-            $('#fmriprep_doi_url').text('https://doi.org/' + DOI);
-            $('#fmriprep_doi_url').attr('href', 'https://doi.org/' + DOI);
+
+            if(DOI == null) {
+               $('#fmriprep_doi_url').text("10.5281/zenodo.852659");
+               $('#fmriprep_doi_url').attr('href', 'https://doi.org/' + "10.5281/zenodo.852659");
+            } else {
+               $('#fmriprep_doi_url').text('https://doi.org/' + DOI);
+               $('#fmriprep_doi_url').attr('href', 'https://doi.org/' + DOI);
+            }
          });
       }
 
@@ -43,7 +49,7 @@ we recommend to include in your paper.
         for (var i = 0; i < controlElementsIdsLength; i++) {
             controlElement = document.getElementById(controlElementsIds[i])
 
-            if (controlElement.checked == null){
+            if (controlElement.checked == null) {
                 var value = controlElement.value;
             } else {
           	    var value = controlElement.checked;
@@ -160,7 +166,7 @@ we recommend to include in your paper.
         Nat Meth. 2018; doi:<a href="https://doi.org/10.1038/s41592-018-0235-4">10.1038/s41592-018-0235-4</a>
    </p>
    <p>
-     2. <span id="fmriprep_citation">fMRIPrep</span> Available from: <a id="fmriprep_doi_url" href="https://doi.org/10.5281/zenodo.852659">10.5281/zenodo.852659</a>.
+     2. <span id="fmriprep_citation">fMRIPrep</span> Available from: <a id="fmriprep_doi_url" > </a>.
      <img src onerror='fillCitation()' alt="" />
    </p>
    <p>
