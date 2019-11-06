@@ -54,7 +54,7 @@ These principles distill some design and organizational foundations:
      input/output metadata assessment, head-motion correction, susceptibility-distortion correction,
      co-registration with anatomical data, spatial normalization to neuroimaging templates, 
      noise components and other confounds extraction, etc.
-     In other words, the tool does not deal with time filtering, smoothing, modeling,
+     In other words, the tool does not deal with time filtering*, smoothing*, modeling,
      or connectivity extraction.
   1. The tool is **agnostic to subsequent analysis**, i.e., any software supporting BIDS-Derivatives
      for its inputs should be amenable to fit GLMs, extract time-series for connectivity analyses, etc.
@@ -62,6 +62,10 @@ These principles distill some design and organizational foundations:
      that can be used as scaffolds for understanding the underpinnings and design decisions of the tool).
   1. The tool is community-driven, with a very open concept of contribution that is always credited
      with authorship offers when writing relevant papers.
+
+\* if you specify `--use-aroma`, filtering of the ICA-AROMA noise components and smoothing of the data
+will be applied to the bold file containing the phrase `desc-smoothAROMAnonaggr_bold`.
+Please see the [fMRIPrep ICA-AROMA documentation][link_aroma] for details.
 
 ## Practical guide to submitting your contribution
 
@@ -410,6 +414,7 @@ You're awesome. :wave::smiley:
 [link_fmriprep]: http://fmriprep.org
 [link_bidsapps]: https://bids-apps.neuroimaging.io
 [link_mattermost]: https://mattermost.brainhack.org/brainhack/channels/fmriprep
+[link_aroma]: https://fmriprep.readthedocs.io/en/stable/workflows.html#ica-aroma
 
 [enh_ex]: https://github.com/poldracklab/fmriprep/pull/1508
 [fix_ex]: https://github.com/poldracklab/fmriprep/pull/1378
