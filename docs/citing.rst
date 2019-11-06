@@ -13,7 +13,7 @@ we recommend to include in your paper.
 .. raw:: html
 
    <script language="javascript">
-   var version = 'latest';
+   var version = window.location.pathname.split("/")[2];
    function fillCitation(){
       $('#fmriprep_version').text(version);
       $('#workflow_url').text('https://fmriprep.readthedocs.io/en/' + version + '/workflows.html');
