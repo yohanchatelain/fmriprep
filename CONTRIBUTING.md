@@ -159,10 +159,13 @@ we have two sets of special labels:
 | ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/impact%3A%20high) <br> ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/impact%3A%20medium) <br> ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/impact%3A%20low)    | Estimation of the downstream impact the proposed feature/bugfix will have.                |
 | ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/effort%3A%20high) <br> ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/effort%3A%20medium) <br> ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/effort%3A%20low)    | Estimation of effort required to implement the requested feature or fix the reported bug. |
 
-These labels help triage and set priorities to the development tasks.
-For instance, one bug regression that has been reported to affect most of the users after
-a release with an easy fix because it is a known old problem that came back.
-Such an issue will typically be assigned the following labels ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/bug) ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/impact%3A%20high) ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/effort%3A%20low), and its priority will be maximal since addressing low-effort high-impact deliver the maximum turnout without increasing the churn by much.
+One way to understand these labels is to consider how they would apply to an imaginary issue.
+For example, if -- after a release -- a bug is identified that re-introduces a previously solved issue
+(i.e., its regresses the code outputs to some undesired behavior), we might assign it the following labels:
+![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/bug)
+![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/impact%3A%20high)
+![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/effort%3A%20low).
+Its development priority would then be "high", since it is a low-effort, high-impact change.
 
 Long-term goals may be labelled as a combination of:
 ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/effort%3A%20high) and  ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/impact%3A%20medium) or ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/impact%3A%high)
@@ -247,9 +250,6 @@ but those accepted fastest will follow a workflow similar to the following:
 1. **Have your PR reviewed by the developers team, and update your changes accordingly in your branch.**<br />
    The reviewers will take special care in assisting you address their comments, as well as dealing with conflicts
    and other tricky situations that could emerge from distributed development.
-   And if you don't make the requested changes, we might ask
-   [@bedevere-bot](https://github.com/search?q=commenter%3Abedevere-bot+soft+cushions) 
-   to [poke you with soft cushions!](https://youtu.be/XnS49c9KZw8?t=1m7s)
 
 ## fMRIPrep coding style guide
 
