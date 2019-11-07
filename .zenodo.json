@@ -63,6 +63,18 @@
       "type": "Researcher"
     },
     {
+      "affiliation": "Computational Neuroimaging Lab, BioCruces Health Research Institute",
+      "name": "Erramuzpe, Asier",
+      "orcid": "0000-0002-9402-2184",
+      "type": "Researcher"
+    },
+    {
+      "affiliation": "Department of Psychiatry, McGill University",
+      "name": "Devenyi, Grabriel A.",
+      "orcid": "0000-0002-7766-1187",
+      "type": "Researcher"
+    },
+    {
       "affiliation": "URPP Dynamics of Healthy Aging, University of Zurich",
       "name": "Liem, Franz",
       "orcid": "0000-0003-0646-4810",
@@ -84,12 +96,6 @@
       "affiliation": "Center for Brain Imaging, New York University",
       "name": "Velasco, Pablo",
       "orcid": "0000-0002-5749-6049",
-      "type": "Researcher"
-    },
-    {
-      "affiliation": "Computational Neuroimaging Lab, BioCruces Health Research Institute",
-      "name": "Erramuzpe, Asier",
-      "orcid": "0000-0002-9402-2184",
       "type": "Researcher"
     },
     {
