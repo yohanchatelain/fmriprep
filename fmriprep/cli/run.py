@@ -538,6 +538,13 @@ def build_workflow(opts, retval):
         retval['return_code'] = 1
         return retval
 
+    if bids_dir in work_dir.parents:
+        build_log.error(
+            'The selected working directory is a subdirectory of the input BIDS folder. '
+            'Please modify the output path.')
+        retval['return_code'] = 1
+        return retval
+
     output_spaces = parse_spaces(opts)
 
     # Set up some instrumental utilities

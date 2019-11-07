@@ -187,6 +187,11 @@ def merge_help(wrapper_help, target_help):
     return '\n\n'.join(sections)
 
 
+def is_in_directory(filepath, directory):
+    return os.path.realpath(filepath).startswith(
+        os.path.realpath(directory) + os.sep)
+
+
 def get_parser():
     """Defines the command line interface of the wrapper"""
     import argparse
@@ -364,6 +369,14 @@ def main():
     if opts.work_dir:
         command.extend(['-v', ':'.join((opts.work_dir, '/scratch'))])
         unknown_args.extend(['-w', '/scratch'])
+
+    # Check that work_dir is not a child of bids_dir
+    if opts.work_dir and opts.bids_dir:
+        if is_in_directory(opts.work_dir, opts.bids_dir):
+            print(
+                'The selected working directory is a subdirectory of the input BIDS folder. '
+                'Please modify the output path.')
+            return 1
 
     if opts.config:
         command.extend(['-v', ':'.join((
