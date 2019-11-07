@@ -168,7 +168,7 @@ For example, if -- after a release -- a bug is identified that re-introduces a p
 Its development priority would then be "high", since it is a low-effort, high-impact change.
 
 Long-term goals may be labelled as a combination of:
-![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/effort%3A%20high) and  ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/impact%3A%20medium) or ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/impact%3A%high)
+![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/effort%3A%20high) and  ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/impact%3A%20medium) or ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/impact%3A%20high)
 since they will have a high-impact on the code-base, but require a medium or high amount of effort.
 Of note, issues with the labels:
  ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/impact%3A%20low) or ![GitHub labels](https://img.shields.io/github/labels/poldracklab/fmriprep/effort%3A%20high)
