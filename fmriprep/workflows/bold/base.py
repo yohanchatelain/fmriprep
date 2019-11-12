@@ -431,11 +431,15 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         name='summary', mem_gb=DEFAULT_MEMORY_MIN_GB, run_without_submitting=True)
     summary.inputs.dummy_scans = dummy_scans
 
-    # CIfTI output: currently, we only support fsaverage{5,6}
-    cifti_spaces = set(s for s in output_spaces.keys() if s in ('fsaverage5', 'fsaverage6'))
-    fsaverage_den = output_spaces.get('fsaverage', {}).get('den')
-    if fsaverage_den:
-        cifti_spaces.add(FSAVERAGE_DENSITY[fsaverage_den])
+    # CIfTI output
+    cifti_spaces = set()
+    if 'fsLR' in output_spaces:
+        cifti_spaces.add('fsLR')
+    else:
+        cifti_spaces.union(set(s for s in output_spaces.keys() if s in ('fsaverage5', 'fsaverage6'))
+        fsaverage_den = output_spaces.get('fsaverage', {}).get('den')
+        if fsaverage_den:
+            cifti_spaces.add(FSAVERAGE_DENSITY[fsaverage_den])
     cifti_output = cifti_output and cifti_spaces
     func_derivatives_wf = init_func_derivatives_wf(
         bids_root=layout.root,
@@ -946,7 +950,7 @@ data and volume-sampled data, were also generated.
 """
             select_std = pe.Node(KeySelect(fields=['bold_std']),
                                  name='select_std', run_without_submitting=True)
-            select_std.inputs.key = 'MNI152NLin2009cAsym'
+            select_std.inputs.key = "MNI152NLin6Asym" if 'fsLR' in cifti_spaces else "MNI152NLin2009cAsym"
 
             gen_cifti = pe.MapNode(GenerateCifti(), iterfield=["surface_target", "gifti_files"],
                                    name="gen_cifti")

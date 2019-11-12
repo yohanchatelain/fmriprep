@@ -12,6 +12,7 @@ Resampling workflows
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, freesurfer as fs
 from nipype.interfaces.fsl import Split as FSLSplit
+import nipype.interfaces.workbench as wb
 
 from niworkflows.engine.workflows import LiterateWorkflow as Workflow
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
@@ -60,6 +61,8 @@ def init_bold_surf_wf(mem_gb, output_spaces, medial_surface_nan, name='bold_surf
         such as ``fsaverage`` or related template spaces
         If the list contains ``fsnative``, images will be resampled to the
         individual subject's native surface
+        If the list contains ``fsLR``, images will be resampled twice;
+        first to ``fsaverage`` and then to ``fsLR``.
     medial_surface_nan : bool
         Replace medial wall values with NaNs on functional GIFTI files
 
@@ -97,6 +100,12 @@ spaces: {out_spaces}.
                                       't1w2fsnative_xfm']),
         name='inputnode')
 
+    to_fslr = False
+    if 'fsLR' in output_spaces:
+        fslr_den = output_spaces.get('fsLR', {}).get('den', '32k')
+        to_fslr = 'fsaverage' in output_spaces
+        output_spaces.pop(output_spaces.index('fsLR'))
+
     outputnode = pe.Node(niu.IdentityInterface(fields=['surfaces']), name='outputnode')
 
     def select_target(subject_id, space):
@@ -125,6 +134,30 @@ spaces: {out_spaces}.
         iterfield=['source_file', 'target_subject'],
         iterables=('hemi', ['lh', 'rh']),
         name='sampler', mem_gb=mem_gb * 3)
+
+    if to_fslr:
+
+        def filter_fsaverage(files):
+            """Select the fsaverage surface from available surfaces and identify hemisphere"""
+            import os
+            for f in files:
+                if f.endswith('fsaverage.gii'):
+                    hemi = 'R' if os.path.basename(f).startswith('rh') else 'L'
+                    return f, hemi
+            raise FileNotFoundError
+
+        filter_fsavg = pe.Node(niu.Function(function=filter_fsaverage,
+                                            output_names=['bold_fsaverage', 'hemi']),
+                               name='filter_fsaverage', mem_gb=DEFAULT_MEMORY_MIN_GB)
+
+
+        # fetch template data
+
+        # fsaverage sphere
+        # fsLR sphere
+        # fsLR midthickness
+        # fsaverage midthickness
+        fslr = pe.Node(wb.MetricResample(method='ADAP_BARY_AREA', area_metrics=True))
 
     medial_nans = pe.MapNode(MedialNaNs(), iterfield=['in_file', 'target_subject'],
                              name='medial_nans', mem_gb=DEFAULT_MEMORY_MIN_GB)

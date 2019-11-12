@@ -765,17 +765,35 @@ Option "--use-aroma" requires functional images to be resampled to MNI152NLin6As
 The argument "MNI152NLin6Asym:res-2" has been automatically added to the list of output spaces \
 (option ``--output-spaces``).""", file=stderr)
 
-    if opts.cifti_output and 'MNI152NLin2009cAsym' not in output_spaces:
-        if 'MNI152NLin2009cAsym' not in output_spaces:
-            output_spaces['MNI152NLin2009cAsym'] = {'res': 2}
+    if opts.cifti_output:
+        # HCP greyordinates CIFTI
+        if 'fsLR' in output_spaces:
+            # use low res by default
+            den = output_spaces.get('fsLR', {}).get('den', '32k')
+            # sample to fsLR from highest fsaverage resolution
+            if 'fsaverage' not in output_spaces:
+                output_spaces['fsaverage'] = {'den': '164k'}
+            # TO CONSIDER: support for multiple densities? can overwrite previous density
+            hcp_den_to_res = {  # surface densities to template resolution
+                '32k': 2,  #2mm
+                '59k': 5,  #1.6mm
+                '164k': 1,  #1mm
+            }
+            output_spaces['MNI152NLin6Asym'] = {'den': hcp_den_to_res['den']}
             print("""Option ``--cifti-output`` requires functional images to be resampled to \
+``MNI152NLin6Asym`` space. This space has been automatically added to the list of output \
+spaces (option ``output-spaces``).""", file=stderr)
+        else:
+            if 'MNI152NLin2009cAsym' not in output_spaces:
+                output_spaces['MNI152NLin2009cAsym'] = {'res': 2}
+                print("""Option ``--cifti-output`` requires functional images to be resampled to \
 ``MNI152NLin2009cAsym`` space. Such template identifier has been automatically added to the \
-list of output spaces (option "--output-space").""", file=stderr)
-        if not [s for s in output_spaces if s in ('fsaverage5', 'fsaverage6')]:
-            output_spaces['fsaverage5'] = {}
-            print("""Option ``--cifti-output`` requires functional images to be resampled to \
+list of output spaces (option "--output-spaces").""", file=stderr)
+            if not [s for s in output_spaces if s in ('fsaverage5', 'fsaverage6')]:
+                output_spaces['fsaverage5'] = {}
+                print("""Option ``--cifti-output`` requires functional images to be resampled to \
 ``fsaverage`` space. The argument ``fsaverage:den-10k`` (a.k.a ``fsaverage5``) has been \
-automatically added to the list of output spaces (option ``--output-space``).""", file=stderr)
+automatically added to the list of output spaces (option ``--output-spaces``).""", file=stderr)
 
     if opts.template_resampling_grid is not None:
         print("""Option ``--template-resampling-grid`` is deprecated, please specify \
