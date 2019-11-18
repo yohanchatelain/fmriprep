@@ -779,7 +779,7 @@ The argument "MNI152NLin6Asym:res-2" has been automatically added to the list of
                 '59k': 5,  #1.6mm
                 '164k': 1,  #1mm
             }
-            output_spaces['MNI152NLin6Asym'] = {'den': hcp_den_to_res['den']}
+            output_spaces['MNI152NLin6Asym'] = {'den': hcp_den_to_res[den]}
             print("""Option ``--cifti-output`` requires functional images to be resampled to \
 ``MNI152NLin6Asym`` space. This space has been automatically added to the list of output \
 spaces (option ``output-spaces``).""", file=stderr)

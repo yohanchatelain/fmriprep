@@ -436,7 +436,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     if 'fsLR' in output_spaces:
         cifti_spaces.add('fsLR')
     else:
-        cifti_spaces.union(set(s for s in output_spaces.keys() if s in ('fsaverage5', 'fsaverage6'))
+        cifti_spaces.union(set(s for s in output_spaces.keys() if s in ('fsaverage5', 'fsaverage6')))
         fsaverage_den = output_spaces.get('fsaverage', {}).get('den')
         if fsaverage_den:
             cifti_spaces.add(FSAVERAGE_DENSITY[fsaverage_den])
@@ -931,6 +931,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         bold_surf_wf = init_bold_surf_wf(mem_gb=mem_gb['resampled'],
                                          output_spaces=surface_spaces,
                                          medial_surface_nan=medial_surface_nan,
+                                         fslr_density=output_spaces.get('fsLR', {}).get('den'),
                                          name='bold_surf_wf')
         workflow.connect([
             (inputnode, bold_surf_wf, [

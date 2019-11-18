@@ -34,7 +34,7 @@ from ...interfaces import DerivativesDataSink
 from .util import init_bold_reference_wf
 
 
-def init_bold_surf_wf(mem_gb, output_spaces, medial_surface_nan, name='bold_surf_wf'):
+def init_bold_surf_wf(mem_gb, output_spaces, medial_surface_nan, fslr_density=None, name='bold_surf_wf'):
     """
     Sample functional images to FreeSurfer surfaces.
 
@@ -42,6 +42,7 @@ def init_bold_surf_wf(mem_gb, output_spaces, medial_surface_nan, name='bold_surf
     and averaged.
     Outputs are in GIFTI format.
 
+<<<<<<< HEAD
     Workflow Graph
         .. workflow::
             :graph2use: colored
@@ -83,6 +84,51 @@ def init_bold_surf_wf(mem_gb, output_spaces, medial_surface_nan, name='bold_surf
     -------
     surfaces
         BOLD series, resampled to FreeSurfer surfaces
+=======
+    .. workflow::
+        :graph2use: colored
+        :simple_form: yes
+
+        from fmriprep.workflows.bold import init_bold_surf_wf
+        wf = init_bold_surf_wf(mem_gb=0.1,
+                               output_spaces=['T1w', 'fsnative',
+                                             'template', 'fsaverage5'],
+                               medial_surface_nan=False)
+
+    **Parameters**
+
+        output_spaces : list
+            List of output spaces functional images are to be resampled to
+            Target spaces beginning with ``fs`` will be selected for resampling,
+            such as ``fsaverage`` or related template spaces
+            If the list contains ``fsnative``, images will be resampled to the
+            individual subject's native surface
+            If the list contains ``fsLR``, images will be resampled twice;
+            first to ``fsaverage`` and then to ``fsLR``.
+        medial_surface_nan : bool
+            Replace medial wall values with NaNs on functional GIFTI files
+        fslr_density : int, optional
+            Surface density for fsLR template, possible values: (32, 59, 164)
+
+
+    **Inputs**
+
+        source_file
+            Motion-corrected BOLD series in T1 space
+        t1_preproc
+            Bias-corrected structural template image
+        subjects_dir
+            FreeSurfer SUBJECTS_DIR
+        subject_id
+            FreeSurfer subject ID
+        t1_2_fsnative_forward_transform
+            LTA-style affine matrix translating from T1w to FreeSurfer-conformed subject space
+
+    **Outputs**
+
+        surfaces
+            BOLD series, resampled to FreeSurfer surfaces
+>>>>>>> fix: syntax, add density parameter to bold_surf_wf
 
     """
     # Ensure volumetric spaces do not sneak into this workflow
@@ -102,7 +148,6 @@ spaces: {out_spaces}.
 
     to_fslr = False
     if 'fsLR' in output_spaces:
-        fslr_den = output_spaces.get('fsLR', {}).get('den', '32')
         to_fslr = 'fsaverage' in output_spaces
         output_spaces.pop(output_spaces.index('fsLR'))
 
@@ -151,7 +196,7 @@ spaces: {out_spaces}.
                                   output_names=['fsaverage_sphere', 'fslr_sphere',
                                                 'fsaverage_midthick', 'fslr_midthick'],
                                   name='fetch_fslr_tpls', mem_gb=DEFAULT_MEMORY_MIN_GB)
-        fetch_fslr_tpls.inputs.den = fslr_den
+        fetch_fslr_tpls.inputs.den = fslr_density
 
         resample_fslr = pe.Node(wb.MetricResample(method='ADAP_BARY_AREA', area_metrics=True),
                                 name='resample_fslr')
