@@ -964,6 +964,7 @@ data and volume-sampled data, were also generated.
                     ('outputnode.bold_std', 'bold_std')]),
                 (bold_surf_wf, gen_cifti, [
                     ('outputnode.surfaces', 'gifti_files')]),
+
                 (inputnode, gen_cifti, [('subjects_dir', 'subjects_dir')]),
                 (select_std, gen_cifti, [('bold_std', 'bold_file')]),
                 (gen_cifti, outputnode, [('out_file', 'bold_cifti'),

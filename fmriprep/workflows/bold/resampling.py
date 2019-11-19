@@ -149,7 +149,7 @@ spaces: {out_spaces}.
     to_fslr = False
     if 'fsLR' in output_spaces:
         to_fslr = 'fsaverage' in output_spaces
-        output_spaces.pop(output_spaces.index('fsLR'))
+        spaces.pop(spaces.index('fsLR'))
 
     outputnode = pe.Node(niu.IdentityInterface(fields=['surfaces']), name='outputnode')
 
@@ -192,9 +192,9 @@ spaces: {out_spaces}.
                               name='rename_fslr', mem_gb=DEFAULT_MEMORY_MIN_GB,
                               run_without_submitting=True)
 
-        fetch_fslr_tpls = pe.Node(niu.Function(function=_fetch_fslr_templates),
-                                  output_names=['fsaverage_sphere', 'fslr_sphere',
-                                                'fsaverage_midthick', 'fslr_midthick'],
+        fetch_fslr_tpls = pe.Node(niu.Function(function=_fetch_fslr_templates,
+                                               output_names=['fsaverage_sphere', 'fslr_sphere',
+                                                             'fsaverage_midthick', 'fslr_midthick']),
                                   name='fetch_fslr_tpls', mem_gb=DEFAULT_MEMORY_MIN_GB)
         fetch_fslr_tpls.inputs.den = fslr_density
 
@@ -204,12 +204,16 @@ spaces: {out_spaces}.
         merge_fslr = pe.Node(niu.Merge(2), name='merge_fslr', mem_gb=DEFAULT_MEMORY_MIN_GB,
                              run_without_submitting=True)
 
+        def _basename(in_file):
+            import os
+            return os.path.basename(in_file)
+
         workflow.connect([
             (sampler, filter_fsavg, [('out_file', 'in_files')]),
             (filter_fsavg, fetch_fslr_tpls, [('hemi', 'hemi')]),
             (filter_fsavg, rename_fslr, [('fsaverage_bold', 'in_file')]),
             (rename_fslr, resample_fslr, [('out_file', 'in_file')]),
-            (rename_fslr, resample_fslr, [('out_file', 'out_file')]),
+            (rename_fslr, resample_fslr, [(('out_file', _basename), 'out_file')]),
             (fetch_fslr_tpls, resample_fslr, [('fsaverage_sphere', 'current_sphere'),
                                               ('fslr_sphere', 'new_sphere'),
                                               ('fsaverage_midthick', 'current_area'),
@@ -251,9 +255,10 @@ spaces: {out_spaces}.
     ])
 
     if to_fslr and medial_surface_nan:
-        workflow.connect(merge_fslr, 'out_file', medial_nans, 'in_file')
+        medial_nans.inputs.density = fslr_density
+        workflow.connect(merge_fslr, 'out', medial_nans, 'in_file')
     elif to_fslr:
-        workflow.connect(merge_fslr, 'out_file', merger, 'in1')
+        workflow.connect(merge_fslr, 'out', merger, 'in1')
     elif medial_surface_nan:
         workflow.connect(sampler, 'out_file', medial_nans, 'in_file')
     else:
@@ -780,12 +785,9 @@ def _select_fsaverage_hemi(in_files):
 def _fetch_fslr_templates(hemi, den):
     """Fetch the necessary templates for fsaverage to fsLR transform"""
     import templateflow.api as tf
-    tfkwargs = {
-        'hemi': hemi,
-        'density': den,
-    }
-    fsaverage_sphere = tf.get('fsLR', space='fsaverage', suffix='sphere', **tfkwargs)
-    fslr_sphere = tf.get('fsLR', space='fsLR', suffix='sphere', **tfkwargs)
-    fsaverage_midthick = tf.get('fsLR', space='fsaverage', suffix='midthickness', **tfkwargs)
-    fslr_midthick = tf.get('fsLR', space='fsLR', suffix='midthickness', **tfkwargs)
-    return fsaverage_sphere, fsaverage_midthick, fslr_sphere, fslr_midthick
+
+    fsaverage_sphere = tf.get('fsLR', space='fsaverage', suffix='sphere', hemi=hemi, density=164)
+    fslr_sphere = tf.get('fsLR', space='fsLR', suffix='sphere', hemi=hemi, density=den)
+    fsaverage_midthick = tf.get('fsLR', space='fsaverage', suffix='midthickness', hemi=hemi, density=164)
+    fslr_midthick = tf.get('fsLR', space='fsLR', suffix='midthickness', hemi=hemi, density=den)
+    return fsaverage_sphere, fslr_sphere, fsaverage_midthick, fslr_midthick

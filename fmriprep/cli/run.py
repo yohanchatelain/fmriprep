@@ -769,17 +769,20 @@ The argument "MNI152NLin6Asym:res-2" has been automatically added to the list of
         # HCP greyordinates CIFTI
         if 'fsLR' in output_spaces:
             # use low res by default
-            den = output_spaces.get('fsLR', {}).get('den', '32k')
+            den = output_spaces.get('fsLR', {}).get('den')
+            if den is None:
+                den = 32
+                output_spaces['fsLR'] = {'den': 32}
             # sample to fsLR from highest fsaverage resolution
             if 'fsaverage' not in output_spaces:
-                output_spaces['fsaverage'] = {'den': '164k'}
+                output_spaces['fsaverage'] = {'den': '164'}
             # TO CONSIDER: support for multiple densities? can overwrite previous density
             hcp_den_to_res = {  # surface densities to template resolution
-                '32k': 2,  #2mm
-                '59k': 5,  #1.6mm
-                '164k': 1,  #1mm
+                32: 2,  #2mm
+                59: 5,  #1.6mm
+                164: 1,  #1mm
             }
-            output_spaces['MNI152NLin6Asym'] = {'den': hcp_den_to_res[den]}
+            output_spaces['MNI152NLin6Asym'] = {'res': hcp_den_to_res[den]}
             print("""Option ``--cifti-output`` requires functional images to be resampled to \
 ``MNI152NLin6Asym`` space. This space has been automatically added to the list of output \
 spaces (option ``output-spaces``).""", file=stderr)
