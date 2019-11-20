@@ -433,13 +433,15 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
     # CIfTI output
     cifti_spaces = set()
-    if 'fsLR' in output_spaces:
-        cifti_spaces.add('fsLR')
-    else:
-        cifti_spaces.union(set(s for s in output_spaces.keys() if s in ('fsaverage5', 'fsaverage6')))
-        fsaverage_den = output_spaces.get('fsaverage', {}).get('den')
-        if fsaverage_den:
-            cifti_spaces.add(FSAVERAGE_DENSITY[fsaverage_den])
+    for space in output_spaces.keys():
+        if space == 'fsLR':
+            cifti_spaces = set(('fsLR',))
+            break
+        if space in ('fsaverage5', 'fsaverage6'):
+            cifti_spaces.add(space)
+        # fsaverage_den = output_spaces.get('fsaverage', {}).get('den')
+        # if fsaverage_den:
+        #     cifti_spaces.add(FSAVERAGE_DENSITY[fsaverage_den])
     cifti_output = cifti_output and cifti_spaces
     func_derivatives_wf = init_func_derivatives_wf(
         bids_root=layout.root,
@@ -949,24 +951,33 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 *Grayordinates* files [@hcppipelines], which combine surface-sampled
 data and volume-sampled data, were also generated.
 """
+            cifti_volume = "MNI152NLin6Asym" if 'fsLR' in cifti_spaces else "MNI152NLin2009cAsym"
             select_std = pe.Node(KeySelect(fields=['bold_std']),
                                  name='select_std', run_without_submitting=True)
-            select_std.inputs.key = "MNI152NLin6Asym" if 'fsLR' in cifti_spaces else "MNI152NLin2009cAsym"
+            select_std.inputs.key = cifti_volume
 
-            gen_cifti = pe.MapNode(GenerateCifti(), iterfield=["surface_target", "gifti_files"],
+            order_surfs = pe.Node(niu.Function(function=_order_surfs,
+                                               output_names=["surface_files"]),
+                                  name='order_surfs', run_without_submitting=True)
+            order_surfs.inputs.targets = list(cifti_spaces)
+
+            gen_cifti = pe.MapNode(GenerateCifti(), iterfield=["surface_target", "surface_bolds"],
                                    name="gen_cifti")
             gen_cifti.inputs.TR = metadata.get("RepetitionTime")
             gen_cifti.inputs.surface_target = list(cifti_spaces)
+            gen_cifti.inputs.resolution = output_spaces.get(cifti_volume, {}).get('res')
+
 
             workflow.connect([
                 (bold_std_trans_wf, select_std, [
                     ('outputnode.templates', 'keys'),
                     ('outputnode.bold_std', 'bold_std')]),
-                (bold_surf_wf, gen_cifti, [
-                    ('outputnode.surfaces', 'gifti_files')]),
-
+                (bold_surf_wf, order_surfs, [('outputnode.surfaces', 'in_surfs')]),
+                (order_surfs, gen_cifti, [('surface_files', 'surface_bolds')]),
                 (inputnode, gen_cifti, [('subjects_dir', 'subjects_dir')]),
-                (select_std, gen_cifti, [('bold_std', 'bold_file')]),
+                (select_std, gen_cifti, [
+                    ('bold_std', 'bold_file'),
+                    ('key', 'volume_target')]),
                 (gen_cifti, outputnode, [('out_file', 'bold_cifti'),
                                          ('variant', 'cifti_variant'),
                                          ('variant_key', 'cifti_variant_key')]),
@@ -1048,6 +1059,15 @@ def _to_join(in_file, join_file):
     from niworkflows.interfaces.utils import JoinTSVColumns
     if join_file is None:
         return in_file
-
     res = JoinTSVColumns(in_file=in_file, join_file=join_file).run()
     return res.outputs.out_file
+
+
+def _order_surfs(targets, in_surfs):
+    """Reorder list of surface_files into [L,R] sub-lists"""
+    surface_files = []
+    targets = targets if 'fsLR' not in targets else ['fsLR']
+    for target in targets:
+        target_files = [f for f in in_surfs if f.endswith("{}.gii".format(target))]
+        surface_files.append(target_files)
+    return surface_files
