@@ -33,6 +33,6 @@ False           False       False         HMC only
 
 
 """
-from sdcflows.workflows.base import init_sdc_wf
+from sdcflows.workflows.base import init_sdc_estimate_wf
 
-__all__ = ['init_sdc_wf']
+__all__ = ['init_sdc_estimate_wf']
