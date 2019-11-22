@@ -142,7 +142,44 @@ sampled to those subject spaces.
 Confounds
 ---------
 
-See implementation on :mod:`~fmriprep.workflows.bold.confounds.init_bold_confs_wf`.
+The :abbr:`BOLD (blood-oxygen level dependent)` signal measured with fMRI is a mixture of fluctuations
+of both neuronal and non-neuronal origin. Neuronal signals are measured indirectly as changes
+in the local concentration of oxygenated hemoglobin. Non-neuronal fluctuations in fMRI data
+may appear as a result of head motion, scanner noise, or physiological fluctuations
+(related to cardiac or respiratory effects) (see [Greve2013]_ for detailed review of the possible
+sources of noise in fMRI signal).
+
+*Confounds* (or nuisance regressors) are variables representing potential fluctuations
+of non-neuronal origin. Such non-neuronal fluctuations may drive spurious results in fMRI data analysis,
+including standard activation General Linear Model (GLM) and functional connectivity analyses.
+It is possible to minimize confounding effects of non-neuronal signals by including them as nuisance regressors
+in the GLM design matrix (activation analysis) or regressing them out from
+the fMRI data - a procedure known as *denoising* (functional connectivity analysis).
+There is currently no consensus on an optimal denoising strategy in the fMRI community.
+Rather, different strategies have been proposed, which achieve different levels of trade-off between
+how much of the non-neuronal fluctuations are effectively removed, and how much of neuronal fluctuations
+are damaged in the process. The fMRIprep pipeline generates a large array of possible confounds.
+The main categories and denoising strategies available are reviewed below.
+
+The best known confounding variables in neuroimaging are the six head motion parameters
+(three rotations and three translations) - the common output of the head motion correction (realignment)
+of popular fMRI preprocessing software such as SPM or FSL. One of the biggest advantages of fMRPrep
+is the automatic calculation of multiple potential confounding variables beyond standard head motion parameters.
+
+Confounding variables calculated in fMRIPrep are stored separately for each subject,
+session and run in `TSV (tab-separated value)` files.
+Such tabular files may include over 100 columns of potential confound regressors.
+We can classify them into three main classes, related to:
+(1) head motion, (2) physiological effects, and (3) scanner effects.
+
+.. warning::
+   Do not include all columns of `confounds_regressors.tsv` table
+   into your design matrix or denoising procedure. Filter the table first,
+   to include only the confounds you want to remove from your fMRI signal.
+   The choice of confounding variables may depend on the analysis you want to perform,
+   and may be not straightforward as no gold standard procedure exist.
+   For detailed description of various denoising strategies and their performance,
+   see [Parkes2018]_ and [Ciric2017]_.
 
 
 For each :abbr:`BOLD (blood-oxygen level dependent)` run processed with fMRIPrep, a
@@ -291,15 +328,34 @@ to which tissue-specific regressors correlate with global signal.
     are those with greatest correlation with the global signal.
     This information can be used to diagnose partial volume effects.
 
+See implementation on :mod:`~fmriprep.workflows.bold.confounds.init_bold_confs_wf`.
+
 .. topic:: References
 
   .. [Behzadi2007] Behzadi Y, Restom K, Liau J, Liu TT,
      A component-based noise correction method (CompCor) for BOLD and perfusion-based fMRI.
      NeuroImage. 2007. doi: `10.1016/j.neuroimage.2007.04.042 <http://doi.org/10.1016/j.neuroimage.2007.04.042>`_
 
+  .. [Ciric2017] Ciric R, Wolf DH, Power JD, Roalf DR, Baum GL, Ruparel K, Shinohara RT, Elliott MA,
+     Eickhoff SB, Davatzikos C., Gur RC, Gur RE, Bassett DS, Satterthwaite TD. Benchmarking of participant-level
+     confound regression strategies for the control of motion artifact in studies of functional connectivity.
+     Neuroimage. 2017. doi: `10.1016/j.neuroimage.2017.03.020 <https://doi.org/10.1016/j.neuroimage.2017.03.020>`_
+
+  .. [Greve2013] Greve DN, Brown GG, Mueller BA, Glover G, Liu TT. A Survey of the Sources of Noise in fMRI
+     Psychometrika. 2013. doi: `10.1007/s11336-013-9344-2 <http://dx.doi.org/10.1007/s11336-013-9344-2>`_
+
   .. [Muschelli2014] Muschelli J, Nebel MB, Caffo BS, Barber AD, Pekar JJ, Mostofsky SH,
      Reduction of motion-related artifacts in resting state fMRI using aCompCor.
      NeuroImage. 2014. doi: `10.1016/j.neuroimage.2014.03.028 <http://doi.org/10.1016/j.neuroimage.2014.03.028>`_
 
+  .. [Parkes2018] Parkes L, Fulcher B, Yücel M, Fornito A. An evaluation of the efficacy, reliability,
+     and sensitivity of motion correction strategies for resting-state functional MRI.
+     NeuroImage. 2018. doi: `10.1016/j.neuroimage.2017.12.073 <https://doi.org/10.1016/j.neuroimage.2017.12.073>`_
+
   .. [Power2016] Power JD, A simple but useful way to assess fMRI scan qualities.
      NeuroImage. 2016. doi: `10.1016/j.neuroimage.2016.08.009 <http://doi.org/10.1016/j.neuroimage.2016.08.009>`_
+
+
+
+
+
