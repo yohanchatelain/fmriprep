@@ -73,6 +73,9 @@ def get_parser():
     g_bids.add_argument('--skip_bids_validation', '--skip-bids-validation', action='store_true',
                         default=False,
                         help='assume the input dataset is BIDS compliant and skip the validation')
+    g_bids.add_argument('--skip_citation_process', '--skip-citation-process', action='store_true',
+                        default=False,
+                        help='skip processing HTML and LaTeX formatted citation with pandoc')
     g_bids.add_argument('--participant_label', '--participant-label', action='store', nargs='+',
                         help='a space delimited list of participant identifiers or a single '
                              'identifier (the sub- prefix can be removed)')
@@ -444,7 +447,7 @@ license file at several paths, in this order: 1) command line argument ``--fs-li
             for ext in ('bib', 'tex', 'md', 'html')
         }
 
-        if citation_files['md'].exists():
+        if not opts.skip_citation_process and citation_files['md'].exists():
             # Generate HTML file resolving citations
             cmd = ['pandoc', '-s', '--bibliography',
                    pkgrf('fmriprep', 'data/boilerplate.bib'),
