@@ -929,11 +929,12 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     # SURFACES ##################################################################################
     surface_spaces = [space for space in output_spaces.keys() if space.startswith('fs')]
     if freesurfer and surface_spaces:
+        fslr_density = output_spaces.get('fsLR', {}).get('den')
         LOGGER.log(25, 'Creating BOLD surface-sampling workflow.')
         bold_surf_wf = init_bold_surf_wf(mem_gb=mem_gb['resampled'],
                                          output_spaces=surface_spaces,
                                          medial_surface_nan=medial_surface_nan,
-                                         fslr_density=output_spaces.get('fsLR', {}).get('den'),
+                                         fslr_density=fslr_density,
                                          name='bold_surf_wf')
         workflow.connect([
             (inputnode, bold_surf_wf, [
@@ -966,7 +967,7 @@ data and volume-sampled data, were also generated.
             gen_cifti.inputs.TR = metadata.get("RepetitionTime")
             gen_cifti.inputs.surface_target = list(cifti_spaces)
             gen_cifti.inputs.resolution = output_spaces.get(cifti_volume, {}).get('res')
-
+            gen_cifti.inputs.density = fslr_density
 
             workflow.connect([
                 (bold_std_trans_wf, select_std, [
@@ -1066,7 +1067,7 @@ def _to_join(in_file, join_file):
 def _order_surfs(targets, in_surfs):
     """Reorder list of surface_files into [L,R] sub-lists"""
     surface_files = []
-    targets = targets if 'fsLR' not in targets else ['fsLR']
+    targets = targets if 'fsLR' not in targets else ('fslr',)
     for target in targets:
         target_files = [f for f in in_surfs if f.endswith("{}.gii".format(target))]
         surface_files.append(target_files)
