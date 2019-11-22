@@ -146,14 +146,14 @@ The :abbr:`BOLD (blood-oxygen level dependent)` signal measured with fMRI is a m
 of both neuronal and non-neuronal origin. Neuronal signals are measured indirectly as changes
 in the local concentration of oxygenated hemoglobin. Non-neuronal fluctuations in fMRI data
 may appear as a result of head motion, scanner noise, or physiological fluctuations
-(related to cardiac or respiratory effects) (see [Greve2013]_ for detailed review of the possible
+(related to cardiac or respiratory effects) (see Greve et al. [Greve2013]_ for detailed review of the possible
 sources of noise in fMRI signal).
 
 *Confounds* (or nuisance regressors) are variables representing potential fluctuations
 of non-neuronal origin. Such non-neuronal fluctuations may drive spurious results in fMRI data analysis,
-including standard activation General Linear Model (GLM) and functional connectivity analyses.
+including standard activation :abbr:`GLM (General Linear Model` and functional connectivity analyses.
 It is possible to minimize confounding effects of non-neuronal signals by including them as nuisance regressors
-in the GLM design matrix (activation analysis) or regressing them out from
+in the :abbr:`GLM (General Linear Model` design matrix (activation analysis) or regressing them out from
 the fMRI data - a procedure known as *denoising* (functional connectivity analysis).
 There is currently no consensus on an optimal denoising strategy in the fMRI community.
 Rather, different strategies have been proposed, which achieve different levels of trade-off between
@@ -163,23 +163,22 @@ The main categories and denoising strategies available are reviewed below.
 
 The best known confounding variables in neuroimaging are the six head motion parameters
 (three rotations and three translations) - the common output of the head motion correction (realignment)
-of popular fMRI preprocessing software such as SPM or FSL. One of the biggest advantages of fMRPrep
+of popular fMRI preprocessing software such as `SPM <https://www.fil.ion.ucl.ac.uk/spm/software/spm12/>`_
+or `FSL <https://fsl.fmrib.ox.ac.uk/fsl/fslwiki>`_. One of the biggest advantages of fMRPrep
 is the automatic calculation of multiple potential confounding variables beyond standard head motion parameters.
 
 Confounding variables calculated in fMRIPrep are stored separately for each subject,
-session and run in `TSV (tab-separated value)` files.
+session and run in `TSV (tab-separated value)` files - one column for each confound variable.
 Such tabular files may include over 100 columns of potential confound regressors.
-We can classify them into three main classes, related to:
-(1) head motion, (2) physiological effects, and (3) scanner effects.
 
 .. warning::
    Do not include all columns of `confounds_regressors.tsv` table
    into your design matrix or denoising procedure. Filter the table first,
    to include only the confounds you want to remove from your fMRI signal.
    The choice of confounding variables may depend on the analysis you want to perform,
-   and may be not straightforward as no gold standard procedure exist.
+   and may be not straightforward as no gold standard procedure exists.
    For detailed description of various denoising strategies and their performance,
-   see [Parkes2018]_ and [Ciric2017]_.
+   see Parkes et al. [Parkes2018]_ and Ciric et al. [Ciric2017]_.
 
 
 For each :abbr:`BOLD (blood-oxygen level dependent)` run processed with fMRIPrep, a
@@ -198,33 +197,70 @@ Each row of the file corresponds to one time point found in the
 corresponding :abbr:`BOLD (blood-oxygen level dependent)` time-series
 (stored in ``<output_folder>/fmriprep/sub-<sub_id>/func/sub-<sub_id>_task-<task_id>_run-<run_id>_desc-preproc_bold.nii.gz``).
 
-Columns represent the different confounds: ``csf`` and ``white_matter`` are the average signal
-inside the anatomically-derived :abbr:`CSF (cerebro-spinal fluid)` and :abbr:`WM (white matter)`
-masks across time;
-``global_signal`` corresponds to the mean time series within the brain mask; two columns relate to
-the derivative of RMS variance over voxels (or :abbr:`DVARS (defined in Power, et al. 2012)`), and
-both the original (``dvars``) and standardized (``std_dvars``) are provided;
-``framewise_displacement`` is a quantification of the estimated bulk-head motion;
-``trans_x``, ``trans_y``, ``trans_z``, ``rot_x``, ``rot_y``, ``rot_z`` are the 6 rigid-body
-motion-correction parameters estimated by fMRIPrep;
-if present, ``non_steady_state_outlier_XX`` columns indicate non-steady state volumes with a single
+Confound regressors description
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Basic confouds
+==================
+
+- ``trans_x``, ``trans_y``, ``trans_z``, ``rot_x``, ``rot_y``, ``rot_z`` - the 6 rigid-body motion
+  parameters (3 translations and 3 rotation) estimated relative to a reference image;
+
+- ``csf`` - the average signal inside the anatomically-derived eroded :abbr:`CSF (cerebro-spinal fluid)` eroded mask;
+
+- ``white_matter`` - the average signal inside the anatomically-derived eroded :abbr:`WM (white matter)` masks;
+
+- ``global_signal`` -  time series within the brain mask;
+
+Parameter expansion of basic confounds
+=====================
+Regressing out the standard six motion parameters may be not sufficient to remove all variance related to motion
+from the fMRI signal, therefore Friston et al. [Friston1996]_) and Satterthwaite et al. [Satterthwaite2013]_ proposed
+24-motion-parameter expansion. To take this into account, fMRIPrep’s confound table additionally includes the
+first temporal derivatives of six motion parameters, together with their quadratic terms,
+resulting in total 24 head motion parameters (6 standard motion parameters + 6 temporal derivatives of six motion
+parameters + 12 quadratic terms of 6 motion parameters and their 6 temporal derivatives).
+Derivatives and quadratic terms are stored under column names wih suffixes: ``_derivative1`` and powers ``_power2``,
+and are calculated for head motion estimates (``trans_`` and ``rot_``) and compartment signals
+(``wm``,``csf``, and ``global_signal``). These expansion terms are included in some confound regression pipelines
+in addition to the first-order term.
+
+CompCor
+==============
+
+:abbr:`CompCor (Component Based Noise Correction)` is a component-based noise correlation method. In the method
+principal components are are derived from :abbr:`ROI (Region of Interest)` which is unlikely to include signal
+related to brain activity. Signal from CompCor components can be further regressed out from the
+wich principal components of signal within noise ROI ([Behzadi2007]_)
+
+
+- ``a_comp_cor_XX`` - additional noise components are calculated using anatomical :abbr:`CompCor
+(Component Based Noise Correction)`,
+- ``t_comp_cor_XX``) - additional noise components are calculated using anatomical :abbr:`CompCor
+(Component Based Noise Correction)`;
+
+.. warning::
+    Four separate CompCor decompositions are performed to compute noise components: one temporal
+    decomposition (``t_comp_cor_XX``) and three anatomical decompositions across three different noise ROIs: an eroded
+    white matter mask, an eroded CSF mask, and a combined mask derived from the union
+    of these. Only a subset of these decompositions should be used for further denoising.
+    The original Behzadi aCompCor implementation ([Behzadi2007]_) can be applied using
+    components from the combined masks, while the more recent Muschelli implementation
+    ([Muschelli2014]_) can be applied using
+    the :abbr:`WM (white matter)` and :abbr:`CSF (cerebro-spinal fluid)` masks.
+
+
+Outlier confounds
+========================
+
+- (``dvars``) - the derivative of RMS variance over voxels (or :abbr:`DVARS (defined in Power, et al. 2012)`
+- ``std_dvars`` - standardized DVARS
+- ``framewise_displacement`` - is a quantification of the estimated bulk-head motion estimated using [Power2012]_
+formula;
+- ``non_steady_state_outlier_XX`` - if present, columns indicate non-steady state volumes with a single
 ``1`` value and ``0`` elsewhere (*i.e.*, there is one ``non_steady_state_outlier_XX`` column per
 outlier/volume);
-additional noise components are calculated using :abbr:`CompCor (Component Based Noise Correction)`,
-according to both the anatomical (``a_comp_cor_XX``) and temporal (``t_comp_cor_XX``) variants;
-and the motion-related components identified by
-:abbr:`ICA (independent components analysis)`-:abbr:`AROMA (Automatic Removal Of Motion Artifacts)`
-(if enabled) are indicated with ``aroma_motion_XX``.
 
-Four separate CompCor decompositions are performed to compute noise components: one temporal
-decomposition and three anatomical decompositions across three different noise ROIs: an eroded
-white matter compartment, an eroded CSF compartment, and a combined mask derived from the union
-of these.
-In general, only a subset of these decompositions should be used for further denoising.
-The original Behzadi aCompCor implementation ([Behzadi2007]_) can be applied using
-components from the combined ROI, while the more recent Muschelli implementation
-([Muschelli2014]_) can be applied using the WM and CSF ROIs.
-To determine the provenance of each component, consult the metadata file (see below).
 
 All these confounds can be used to perform *scrubbing* and *censoring* of outliers,
 in the subsequent first-level analysis when building the design matrix,
@@ -232,6 +268,19 @@ and in group level analysis.
 *Spike regressors* for outlier censoring can also be generated from within fMRIPrep using
 the command line options ``--fd-spike-threshold`` and ``--dvars-spike-threshold``.
 Spike regressors are stored in separate ``motion_outlier_XX`` columns.
+
+ICA-AROMA confounds
+========================
+
+To determine the provenance of each component, consult the metadata file (see below).
+- ``aroma_motion_XX`` - the motion-related components identified by :abbr:`ICA (independent components analysis)`
+-:abbr:`AROMA (Automatic Removal Of Motion Artifacts)`
+(if enabled with ``--use-aroma``) .
+
+.. warning::
+    If you are already using ICA-AROMA cleaned data (``~desc-smoothAROMAnonaggr_bold.nii.gz``),
+    do not include ICA-AROMA confounds during your design specification or denoising procedure.
+
 
 Each confounds data file will also have a corresponding metadata file (``~desc-confounds_regressors.json``).
 Metadata files contain additional information about columns in the confounds TSV file: ::
@@ -341,19 +390,32 @@ See implementation on :mod:`~fmriprep.workflows.bold.confounds.init_bold_confs_w
      confound regression strategies for the control of motion artifact in studies of functional connectivity.
      Neuroimage. 2017. doi: `10.1016/j.neuroimage.2017.03.020 <https://doi.org/10.1016/j.neuroimage.2017.03.020>`_
 
-  .. [Greve2013] Greve DN, Brown GG, Mueller BA, Glover G, Liu TT. A Survey of the Sources of Noise in fMRI
+  .. [Greve2013] Greve DN, Brown GG, Mueller BA, Glover G, Liu TT, A Survey of the Sources of Noise in fMRI
      Psychometrika. 2013. doi: `10.1007/s11336-013-9344-2 <http://dx.doi.org/10.1007/s11336-013-9344-2>`_
 
   .. [Muschelli2014] Muschelli J, Nebel MB, Caffo BS, Barber AD, Pekar JJ, Mostofsky SH,
      Reduction of motion-related artifacts in resting state fMRI using aCompCor.
      NeuroImage. 2014. doi: `10.1016/j.neuroimage.2014.03.028 <http://doi.org/10.1016/j.neuroimage.2014.03.028>`_
 
-  .. [Parkes2018] Parkes L, Fulcher B, Yücel M, Fornito A. An evaluation of the efficacy, reliability,
-     and sensitivity of motion correction strategies for resting-state functional MRI.
+  .. [Parkes2018] Parkes L, Fulcher B, Yücel M, Fornito A, An evaluation of the efficacy, reliability,
+     and sensitivity of motion correction strategies for resting-state functional MRI,
      NeuroImage. 2018. doi: `10.1016/j.neuroimage.2017.12.073 <https://doi.org/10.1016/j.neuroimage.2017.12.073>`_
 
   .. [Power2016] Power JD, A simple but useful way to assess fMRI scan qualities.
      NeuroImage. 2016. doi: `10.1016/j.neuroimage.2016.08.009 <http://doi.org/10.1016/j.neuroimage.2016.08.009>`_
+
+  .. [Satterthwaite2013] Satterthwaite TD, Elliott MA, Gerraty RT, Ruparel K, Loughead J, Calkins ME, Eickhoff SB,
+     Hakonarson H, Gur RC, Gur RE, Wolf DH, An improved framework for confound regression and filtering for control
+     of motion artifact in the preprocessing of resting-state functional connectivity data.
+     NeuroImage. 2013. doi: `10.1016/j.neuroimage.2012.08.052 <https://doi.org/10.1016/j.neuroimage.2012.08.052>`_
+
+  .. [Friston1996] Movement‐Related effects in fMRI time‐series,
+     Magnetic Resonance in Medicine. 1996. doi: `10.1002/mrm.191035031 < https://doi.org/10.1002/mrm.1910350312>`_
+
+
+
+
+
 
 
 
