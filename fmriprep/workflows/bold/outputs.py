@@ -1,4 +1,6 @@
-
+# emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
+# vi: set ft=python sts=4 ts=4 sw=4 et:
+"""Writing out derivative files."""
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 
@@ -22,18 +24,26 @@ def init_func_derivatives_wf(
     name='func_derivatives_wf',
 ):
     """
-    Set up a battery of datasinks to store derivatives in the right location
+    Set up a battery of datasinks to store derivatives in the right location.
 
-    **Parameters**
-
+    Parameters
+    ----------
     bids_root : str
+        Original BIDS dataset path.
     cifti_output : bool
+        Whether the ``--cifti-output`` flag was set.
     freesurfer : bool
+        Whether FreeSurfer anatomical processing was run.
     metadata : dict
+        Metadata dictionary associated to the BOLD run.
     output_dir : str
+        Where derivatives should be written out to.
     output_spaces : OrderedDict
+        List of selected ``--output-spaces``.
     use_aroma : bool
+        Whether ``--use-aroma`` flag was set.
     name : str
+        This workflow's identifier (default: ``func_derivatives_wf``).
 
     """
     from smriprep.workflows.outputs import _bids_relative

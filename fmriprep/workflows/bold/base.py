@@ -84,187 +84,190 @@ def init_func_preproc_wf(
     num_bold=1,
 ):
     """
-    This workflow controls the functional preprocessing stages of FMRIPREP.
+    This workflow controls the functional preprocessing stages of *fMRIPrep*.
 
-    .. workflow::
-        :graph2use: orig
-        :simple_form: yes
+    Workflow Graph
+        .. workflow::
+            :graph2use: orig
+            :simple_form: yes
 
-        from fmriprep.workflows.bold import init_func_preproc_wf
-        from collections import namedtuple, OrderedDict
-        BIDSLayout = namedtuple('BIDSLayout', ['root'])
-        wf = init_func_preproc_wf(
-            aroma_melodic_dim=-200,
-            bold2t1w_dof=9,
-            bold_file='/completely/made/up/path/sub-01_task-nback_bold.nii.gz',
-            cifti_output=False,
-            debug=False,
-            dummy_scans=None,
-            err_on_aroma_warn=False,
-            fmap_bspline=True,
-            fmap_demean=True,
-            force_syn=True,
-            freesurfer=True,
-            ignore=[],
-            low_mem=False,
-            medial_surface_nan=False,
-            omp_nthreads=1,
-            output_dir='.',
-            output_spaces=OrderedDict([
-                ('MNI152Lin', {}), ('fsaverage', {'density': '10k'}),
-                ('T1w', {}), ('fsnative', {})]),
-            regressors_all_comps=False,
-            regressors_dvars_th=1.5,
-            regressors_fd_th=0.5,
-            reportlets_dir='.',
-            t2s_coreg=False,
-            use_aroma=False,
-            use_bbr=True,
-            use_syn=True,
-            layout=BIDSLayout('.'),
-            num_bold=1,
-        )
+            from fmriprep.workflows.bold import init_func_preproc_wf
+            from collections import namedtuple, OrderedDict
+            BIDSLayout = namedtuple('BIDSLayout', ['root'])
+            wf = init_func_preproc_wf(
+                aroma_melodic_dim=-200,
+                bold2t1w_dof=9,
+                bold_file='/completely/made/up/path/sub-01_task-nback_bold.nii.gz',
+                cifti_output=False,
+                debug=False,
+                dummy_scans=None,
+                err_on_aroma_warn=False,
+                fmap_bspline=True,
+                fmap_demean=True,
+                force_syn=True,
+                freesurfer=True,
+                ignore=[],
+                low_mem=False,
+                medial_surface_nan=False,
+                omp_nthreads=1,
+                output_dir='.',
+                output_spaces=OrderedDict([
+                    ('MNI152Lin', {}), ('fsaverage', {'density': '10k'}),
+                    ('T1w', {}), ('fsnative', {})]),
+                regressors_all_comps=False,
+                regressors_dvars_th=1.5,
+                regressors_fd_th=0.5,
+                reportlets_dir='.',
+                t2s_coreg=False,
+                use_aroma=False,
+                use_bbr=True,
+                use_syn=True,
+                layout=BIDSLayout('.'),
+                num_bold=1,
+            )
 
-    **Parameters**
+    Parameters
+    ----------
+    aroma_melodic_dim : int
+        Maximum number of components identified by MELODIC within ICA-AROMA
+        (default is -200, ie. no limitation).
+    bold2t1w_dof : 6, 9 or 12
+        Degrees-of-freedom for BOLD-T1w registration
+    bold_file : str
+        BOLD series NIfTI file
+    cifti_output : bool
+        Generate bold CIFTI file in output spaces
+    debug : bool
+        Enable debugging outputs
+    dummy_scans : int or None
+        Number of volumes to consider as non steady state
+    err_on_aroma_warn : bool
+        Do not crash on ICA-AROMA errors
+    fmap_bspline : bool
+        **Experimental**: Fit B-Spline field using least-squares
+    fmap_demean : bool
+        Demean voxel-shift map during unwarp
+    force_syn : bool
+        **Temporary**: Always run SyN-based SDC
+    freesurfer : bool
+        Enable FreeSurfer functional registration (bbregister) and resampling
+        BOLD series to FreeSurfer surface meshes.
+    ignore : list
+        Preprocessing steps to skip (may include "slicetiming", "fieldmaps")
+    low_mem : bool
+        Write uncompressed .nii files in some cases to reduce memory usage
+    medial_surface_nan : bool
+        Replace medial wall values with NaNs on functional GIFTI files
+    omp_nthreads : int
+        Maximum number of threads an individual process may use
+    output_dir : str
+        Directory in which to save derivatives
+    output_spaces : OrderedDict
+        Ordered dictionary where keys are TemplateFlow ID strings (e.g. ``MNI152Lin``,
+        ``MNI152NLin6Asym``, ``MNI152NLin2009cAsym``, or ``fsLR``) strings designating
+        nonstandard references (e.g. ``T1w`` or ``anat``, ``sbref``, ``run``, etc.),
+        or paths pointing to custom templates organized in a TemplateFlow-like structure.
+        Values of the dictionary aggregate modifiers (e.g. the value for the key ``MNI152Lin``
+        could be ``{'resolution': 2}`` if one wants the resampling to be done on the 2mm
+        resolution version of the selected template).
+    regressors_all_comps
+        Return all CompCor component time series instead of the top fraction
+    regressors_dvars_th
+        Criterion for flagging DVARS outliers
+    regressors_fd_th
+        Criterion for flagging framewise displacement outliers
+    reportlets_dir : str
+        Absolute path of a directory in which reportlets will be temporarily stored
+    t2s_coreg : bool
+        For multiecho EPI, use the calculated T2*-map for T2*-driven coregistration
+    use_aroma : bool
+        Perform ICA-AROMA on MNI-resampled functional series
+    use_bbr : bool or None
+        Enable/disable boundary-based registration refinement.
+        If ``None``, test BBR result for distortion before accepting.
+        When using ``t2s_coreg``, BBR will be enabled by default unless
+        explicitly specified otherwise.
+    use_syn : bool
+        **Experimental**: Enable ANTs SyN-based susceptibility distortion correction (SDC).
+        If fieldmaps are present and enabled, this is not run, by default.
+    layout : BIDSLayout
+        BIDSLayout structure to enable metadata retrieval
+    num_bold : int
+        Total number of BOLD files that have been set for preprocessing
+        (default is 1)
 
-        aroma_melodic_dim : int
-            Maximum number of components identified by MELODIC within ICA-AROMA
-            (default is -200, ie. no limitation).
-        bold2t1w_dof : 6, 9 or 12
-            Degrees-of-freedom for BOLD-T1w registration
-        bold_file : str
-            BOLD series NIfTI file
-        cifti_output : bool
-            Generate bold CIFTI file in output spaces
-        debug : bool
-            Enable debugging outputs
-        dummy_scans : int or None
-            Number of volumes to consider as non steady state
-        err_on_aroma_warn : bool
-            Do not crash on ICA-AROMA errors
-        fmap_bspline : bool
-            **Experimental**: Fit B-Spline field using least-squares
-        fmap_demean : bool
-            Demean voxel-shift map during unwarp
-        force_syn : bool
-            **Temporary**: Always run SyN-based SDC
-        freesurfer : bool
-            Enable FreeSurfer functional registration (bbregister) and resampling
-            BOLD series to FreeSurfer surface meshes.
-        ignore : list
-            Preprocessing steps to skip (may include "slicetiming", "fieldmaps")
-        low_mem : bool
-            Write uncompressed .nii files in some cases to reduce memory usage
-        medial_surface_nan : bool
-            Replace medial wall values with NaNs on functional GIFTI files
-        omp_nthreads : int
-            Maximum number of threads an individual process may use
-        output_dir : str
-            Directory in which to save derivatives
-        output_spaces : OrderedDict
-            Ordered dictionary where keys are TemplateFlow ID strings (e.g. ``MNI152Lin``,
-            ``MNI152NLin6Asym``, ``MNI152NLin2009cAsym``, or ``fsLR``) strings designating
-            nonstandard references (e.g. ``T1w`` or ``anat``, ``sbref``, ``run``, etc.),
-            or paths pointing to custom templates organized in a TemplateFlow-like structure.
-            Values of the dictionary aggregate modifiers (e.g. the value for the key ``MNI152Lin``
-            could be ``{'resolution': 2}`` if one wants the resampling to be done on the 2mm
-            resolution version of the selected template).
-        regressors_all_comps
-            Return all CompCor component time series instead of the top fraction
-        regressors_dvars_th
-            Criterion for flagging DVARS outliers
-        regressors_fd_th
-            Criterion for flagging framewise displacement outliers
-        reportlets_dir : str
-            Absolute path of a directory in which reportlets will be temporarily stored
-        t2s_coreg : bool
-            For multiecho EPI, use the calculated T2*-map for T2*-driven coregistration
-        use_aroma : bool
-            Perform ICA-AROMA on MNI-resampled functional series
-        use_bbr : bool or None
-            Enable/disable boundary-based registration refinement.
-            If ``None``, test BBR result for distortion before accepting.
-            When using ``t2s_coreg``, BBR will be enabled by default unless
-            explicitly specified otherwise.
-        use_syn : bool
-            **Experimental**: Enable ANTs SyN-based susceptibility distortion correction (SDC).
-            If fieldmaps are present and enabled, this is not run, by default.
-        layout : BIDSLayout
-            BIDSLayout structure to enable metadata retrieval
-        num_bold : int
-            Total number of BOLD files that have been set for preprocessing
-            (default is 1)
+    Inputs
+    ------
+    bold_file
+        BOLD series NIfTI file
+    t1w_preproc
+        Bias-corrected structural template image
+    t1w_brain
+        Skull-stripped ``t1w_preproc``
+    t1w_mask
+        Mask of the skull-stripped template image
+    t1w_dseg
+        Segmentation of preprocessed structural image, including
+        gray-matter (GM), white-matter (WM) and cerebrospinal fluid (CSF)
+    t1w_asec
+        Segmentation of structural image, done with FreeSurfer.
+    t1w_aparc
+        Parcellation of structural image, done with FreeSurfer.
+    t1w_tpms
+        List of tissue probability maps in T1w space
+    anat2std_xfm
+        ANTs-compatible affine-and-warp transform file
+    std2anat_xfm
+        ANTs-compatible affine-and-warp transform file (inverse)
+    subjects_dir
+        FreeSurfer SUBJECTS_DIR
+    subject_id
+        FreeSurfer subject ID
+    t1w2fsnative_xfm
+        LTA-style affine matrix translating from T1w to FreeSurfer-conformed subject space
+    fsnative2t1w_xfm
+        LTA-style affine matrix translating from FreeSurfer-conformed subject space to T1w
 
-    **Inputs**
+    Outputs
+    -------
+    bold_t1
+        BOLD series, resampled to T1w space
+    bold_mask_t1
+        BOLD series mask in T1w space
+    bold_std
+        BOLD series, resampled to template space
+    bold_mask_std
+        BOLD series mask in template space
+    confounds
+        TSV of confounds
+    surfaces
+        BOLD series, resampled to FreeSurfer surfaces
+    aroma_noise_ics
+        Noise components identified by ICA-AROMA
+    melodic_mix
+        FSL MELODIC mixing matrix
+    bold_cifti
+        BOLD CIFTI image
+    cifti_variant
+        combination of target spaces for `bold_cifti`
 
-        bold_file
-            BOLD series NIfTI file
-        t1w_preproc
-            Bias-corrected structural template image
-        t1w_brain
-            Skull-stripped ``t1w_preproc``
-        t1w_mask
-            Mask of the skull-stripped template image
-        t1w_dseg
-            Segmentation of preprocessed structural image, including
-            gray-matter (GM), white-matter (WM) and cerebrospinal fluid (CSF)
-        t1w_tpms
-            List of tissue probability maps in T1w space
-        anat2std_xfm
-            ANTs-compatible affine-and-warp transform file
-        std2anat_xfm
-            ANTs-compatible affine-and-warp transform file (inverse)
-        subjects_dir
-            FreeSurfer SUBJECTS_DIR
-        subject_id
-            FreeSurfer subject ID
-        t1w2fsnative_xfm
-            LTA-style affine matrix translating from T1w to FreeSurfer-conformed subject space
-        fsnative2t1w_xfm
-            LTA-style affine matrix translating from FreeSurfer-conformed subject space to T1w
-
-
-    **Outputs**
-
-        bold_t1
-            BOLD series, resampled to T1w space
-        bold_mask_t1
-            BOLD series mask in T1w space
-        bold_std
-            BOLD series, resampled to template space
-        bold_mask_std
-            BOLD series mask in template space
-        confounds
-            TSV of confounds
-        surfaces
-            BOLD series, resampled to FreeSurfer surfaces
-        aroma_noise_ics
-            Noise components identified by ICA-AROMA
-        melodic_mix
-            FSL MELODIC mixing matrix
-        bold_cifti
-            BOLD CIFTI image
-        cifti_variant
-            combination of target spaces for `bold_cifti`
-
-
-    **Subworkflows**
-
-        * :py:func:`~fmriprep.workflows.bold.util.init_bold_reference_wf`
-        * :py:func:`~fmriprep.workflows.bold.stc.init_bold_stc_wf`
-        * :py:func:`~fmriprep.workflows.bold.hmc.init_bold_hmc_wf`
-        * :py:func:`~fmriprep.workflows.bold.t2s.init_bold_t2s_wf`
-        * :py:func:`~fmriprep.workflows.bold.registration.init_bold_t1_trans_wf`
-        * :py:func:`~fmriprep.workflows.bold.registration.init_bold_reg_wf`
-        * :py:func:`~fmriprep.workflows.bold.confounds.init_bold_confounds_wf`
-        * :py:func:`~fmriprep.workflows.bold.confounds.init_ica_aroma_wf`
-        * :py:func:`~fmriprep.workflows.bold.resampling.init_bold_std_trans_wf`
-        * :py:func:`~fmriprep.workflows.bold.resampling.init_bold_preproc_trans_wf`
-        * :py:func:`~fmriprep.workflows.bold.resampling.init_bold_surf_wf`
-        * :py:func:`~fmriprep.workflows.fieldmap.pepolar.init_pepolar_unwarp_wf`
-        * :py:func:`~fmriprep.workflows.fieldmap.init_fmap_estimator_wf`
-        * :py:func:`~fmriprep.workflows.fieldmap.init_sdc_unwarp_wf`
-        * :py:func:`~fmriprep.workflows.fieldmap.init_nonlinear_sdc_wf`
+    See also
+    --------
+      * :py:func:`~fmriprep.workflows.bold.util.init_bold_reference_wf`
+      * :py:func:`~fmriprep.workflows.bold.stc.init_bold_stc_wf`
+      * :py:func:`~fmriprep.workflows.bold.hmc.init_bold_hmc_wf`
+      * :py:func:`~fmriprep.workflows.bold.t2s.init_bold_t2s_wf`
+      * :py:func:`~fmriprep.workflows.bold.registration.init_bold_t1_trans_wf`
+      * :py:func:`~fmriprep.workflows.bold.registration.init_bold_reg_wf`
+      * :py:func:`~fmriprep.workflows.bold.confounds.init_bold_confounds_wf`
+      * :py:func:`~fmriprep.workflows.bold.confounds.init_ica_aroma_wf`
+      * :py:func:`~fmriprep.workflows.bold.resampling.init_bold_std_trans_wf`
+      * :py:func:`~fmriprep.workflows.bold.resampling.init_bold_preproc_trans_wf`
+      * :py:func:`~fmriprep.workflows.bold.resampling.init_bold_surf_wf`
+      * :py:func:`~fmriprep.workflows.fieldmap.pepolar.init_pepolar_unwarp_wf`
+      * :py:func:`~fmriprep.workflows.fieldmap.init_fmap_estimator_wf`
+      * :py:func:`~fmriprep.workflows.fieldmap.init_sdc_unwarp_wf`
+      * :py:func:`~fmriprep.workflows.fieldmap.init_nonlinear_sdc_wf`
 
     """
     from ...config import NONSTANDARD_REFERENCES
@@ -1015,12 +1018,13 @@ def _create_mem_gb(bold_fname):
 
 def _get_wf_name(bold_fname):
     """
-    Derives the workflow name for supplied BOLD file.
+    Derive the workflow name for supplied BOLD file.
 
     >>> _get_wf_name('/completely/made/up/path/sub-01_task-nback_bold.nii.gz')
     'func_preproc_task_nback_wf'
     >>> _get_wf_name('/completely/made/up/path/sub-01_task-nback_run-01_echo-1_bold.nii.gz')
     'func_preproc_task_nback_run_01_echo_1_wf'
+
     """
     from nipype.utils.filemanip import split_filename
     fname = split_filename(bold_fname)[1]
@@ -1034,12 +1038,10 @@ def _get_wf_name(bold_fname):
 
 
 def _to_join(in_file, join_file):
-    """
-    Joins two tsv files if the join_file is not None
-    """
+    """Join two tsv files if the join_file is not ``None``."""
     from niworkflows.interfaces.utils import JoinTSVColumns
     if join_file is None:
         return in_file
-    else:
-        res = JoinTSVColumns(in_file=in_file, join_file=join_file).run()
-        return res.outputs.out_file
+
+    res = JoinTSVColumns(in_file=in_file, join_file=join_file).run()
+    return res.outputs.out_file
