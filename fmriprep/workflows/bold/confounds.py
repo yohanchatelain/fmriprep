@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
 """
@@ -49,10 +48,11 @@ def init_bold_confs_wf(
     name="bold_confs_wf",
 ):
     """
+    Build a workflow to generate and write out confounding signals.
+
     This workflow calculates confounds for a BOLD series, and aggregates them
     into a :abbr:`TSV (tab-separated value)` file, for use as nuisance
     regressors in a :abbr:`GLM (general linear model)`.
-
     The following confounds are calculated, with column headings in parentheses:
 
     #. Region-wise average signal (``csf``, ``white_matter``, ``global_signal``)
@@ -74,67 +74,67 @@ def init_bold_confs_wf(
     The cosine basis, as well as one regressor per censored volume, are included
     for convenience.
 
-    .. workflow::
-        :graph2use: orig
-        :simple_form: yes
+    Workflow Graph
+        .. workflow::
+            :graph2use: orig
+            :simple_form: yes
 
-        from fmriprep.workflows.bold.confounds import init_bold_confs_wf
-        wf = init_bold_confs_wf(
-            mem_gb=1,
-            metadata={},
-            regressors_all_comps=False,
-            regressors_dvars_th=1.5,
-            regressors_fd_th=0.5,
-        )
+            from fmriprep.workflows.bold.confounds import init_bold_confs_wf
+            wf = init_bold_confs_wf(
+                mem_gb=1,
+                metadata={},
+                regressors_all_comps=False,
+                regressors_dvars_th=1.5,
+                regressors_fd_th=0.5,
+            )
 
-    **Parameters**
+    Parameters
+    ----------
+    mem_gb : float
+        Size of BOLD file in GB - please note that this size
+        should be calculated after resamplings that may extend
+        the FoV
+    metadata : dict
+        BIDS metadata for BOLD file
+    name : str
+        Name of workflow (default: ``bold_confs_wf``)
+    regressors_all_comps: bool
+        Indicates whether CompCor decompositions should return all
+        components instead of the minimal number of components necessary
+        to explain 50 percent of the variance in the decomposition mask.
+    regressors_dvars_th
+        Criterion for flagging DVARS outliers
+    regressors_fd_th
+        Criterion for flagging framewise displacement outliers
 
-        mem_gb : float
-            Size of BOLD file in GB - please note that this size
-            should be calculated after resamplings that may extend
-            the FoV
-        metadata : dict
-            BIDS metadata for BOLD file
-        name : str
-            Name of workflow (default: ``bold_confs_wf``)
-        regressors_all_comps: bool
-            Indicates whether CompCor decompositions should return all
-            components instead of the minimal number of components necessary
-            to explain 50 percent of the variance in the decomposition mask.
-        regressors_dvars_th
-            Criterion for flagging DVARS outliers
-        regressors_fd_th
-            Criterion for flagging framewise displacement outliers
+    Inputs
+    ------
+    bold
+        BOLD image, after the prescribed corrections (STC, HMC and SDC)
+        when available.
+    bold_mask
+        BOLD series mask
+    movpar_file
+        SPM-formatted motion parameters file
+    skip_vols
+        number of non steady state volumes
+    t1w_mask
+        Mask of the skull-stripped template image
+    t1w_tpms
+        List of tissue probability maps in T1w space
+    t1_bold_xform
+        Affine matrix that maps the T1w space into alignment with
+        the native BOLD space
 
-
-    **Inputs**
-
-        bold
-            BOLD image, after the prescribed corrections (STC, HMC and SDC)
-            when available.
-        bold_mask
-            BOLD series mask
-        movpar_file
-            SPM-formatted motion parameters file
-        skip_vols
-            number of non steady state volumes
-        t1w_mask
-            Mask of the skull-stripped template image
-        t1w_tpms
-            List of tissue probability maps in T1w space
-        t1_bold_xform
-            Affine matrix that maps the T1w space into alignment with
-            the native BOLD space
-
-    **Outputs**
-
-        confounds_file
-            TSV of all aggregated confounds
-        rois_report
-            Reportlet visualizing white-matter/CSF mask used for aCompCor,
-            the ROI for tCompCor and the BOLD brain mask.
-        confounds_metadata
-            Confounds metadata dictionary.
+    Outputs
+    -------
+    confounds_file
+        TSV of all aggregated confounds
+    rois_report
+        Reportlet visualizing white-matter/CSF mask used for aCompCor,
+        the ROI for tCompCor and the BOLD brain mask.
+    confounds_metadata
+        Confounds metadata dictionary.
 
     """
     workflow = Workflow(name=name)
@@ -428,40 +428,41 @@ were annotated as motion outliers.
 
 def init_carpetplot_wf(standard_spaces, mem_gb, metadata, name="bold_carpet_wf"):
     """
+    Build a workflow to generate *carpet plots*.
 
     Resamples the MNI parcellation (ad-hoc parcellation derived from the
     Harvard-Oxford template and others).
 
-    **Parameters**
+    Parameters
+    ----------
+    mem_gb : float
+        Size of BOLD file in GB - please note that this size
+        should be calculated after resamplings that may extend
+        the FoV
+    metadata : dict
+        BIDS metadata for BOLD file
+    name : str
+        Name of workflow (default: ``bold_carpet_wf``)
 
-        mem_gb : float
-            Size of BOLD file in GB - please note that this size
-            should be calculated after resamplings that may extend
-            the FoV
-        metadata : dict
-            BIDS metadata for BOLD file
-        name : str
-            Name of workflow (default: ``bold_carpet_wf``)
+    Inputs
+    ------
+    bold
+        BOLD image, after the prescribed corrections (STC, HMC and SDC)
+        when available.
+    bold_mask
+        BOLD series mask
+    confounds_file
+        TSV of all aggregated confounds
+    t1_bold_xform
+        Affine matrix that maps the T1w space into alignment with
+        the native BOLD space
+    std2anat_xfm
+        ANTs-compatible affine-and-warp transform file
 
-    **Inputs**
-
-        bold
-            BOLD image, after the prescribed corrections (STC, HMC and SDC)
-            when available.
-        bold_mask
-            BOLD series mask
-        confounds_file
-            TSV of all aggregated confounds
-        t1_bold_xform
-            Affine matrix that maps the T1w space into alignment with
-            the native BOLD space
-        std2anat_xfm
-            ANTs-compatible affine-and-warp transform file
-
-    **Outputs**
-
-        out_carpetplot
-            Path of the generated SVG file
+    Outputs
+    -------
+    out_carpetplot
+        Path of the generated SVG file
 
     """
     inputnode = pe.Node(niu.IdentityInterface(
@@ -530,6 +531,8 @@ def init_ica_aroma_wf(metadata, mem_gb, omp_nthreads,
                       aroma_melodic_dim=-200,
                       use_fieldwarp=True):
     """
+    Build a workflow that runs `ICA-AROMA`_.
+
     This workflow wraps `ICA-AROMA`_ to identify and remove motion-related
     independent components from a BOLD time series.
 
@@ -549,82 +552,82 @@ def init_ica_aroma_wf(metadata, mem_gb, omp_nthreads,
     resampled into MNI space.
 
     There is a current discussion on whether other confounds should be extracted
-    before or after denoising `here <http://nbviewer.jupyter.org/github/poldracklab/\
-    fmriprep-notebooks/blob/922e436429b879271fa13e76767a6e73443e74d9/issue-817_\
-    aroma_confounds.ipynb>`__.
-
-    .. workflow::
-        :graph2use: orig
-        :simple_form: yes
-
-        from fmriprep.workflows.bold.confounds import init_ica_aroma_wf
-        wf = init_ica_aroma_wf(metadata={'RepetitionTime': 1.0},
-                               mem_gb=3,
-                               omp_nthreads=1)
-
-    **Parameters**
-
-        standard_spaces : str
-            Spatial normalization template used as target when that
-            registration step was previously calculated with
-            :py:func:`~fmriprep.workflows.bold.registration.init_bold_reg_wf`.
-            The template must be one of the MNI templates (fMRIPrep uses
-            ``MNI152NLin2009cAsym`` by default).
-        metadata : dict
-            BIDS metadata for BOLD file
-        mem_gb : float
-            Size of BOLD file in GB
-        omp_nthreads : int
-            Maximum number of threads an individual process may use
-        name : str
-            Name of workflow (default: ``bold_tpl_trans_wf``)
-        susan_fwhm : float
-            Kernel width (FWHM in mm) for the smoothing step with
-            FSL ``susan`` (default: 6.0mm)
-        use_fieldwarp : bool
-            Include SDC warp in single-shot transform from BOLD to MNI
-        err_on_aroma_warn : bool
-            Do not fail on ICA-AROMA errors
-        aroma_melodic_dim: int
-            Set the dimensionality of the MELODIC ICA decomposition.
-            Negative numbers set a maximum on automatic dimensionality estimation.
-            Positive numbers set an exact number of components to extract.
-            (default: -200, i.e., estimate <=200 components)
-
-    **Inputs**
-
-        itk_bold_to_t1
-            Affine transform from ``ref_bold_brain`` to T1 space (ITK format)
-        anat2std_xfm
-            ANTs-compatible affine-and-warp transform file
-        name_source
-            BOLD series NIfTI file
-            Used to recover original information lost during processing
-        skip_vols
-            number of non steady state volumes
-        bold_split
-            Individual 3D BOLD volumes, not motion corrected
-        bold_mask
-            BOLD series mask in template space
-        hmc_xforms
-            List of affine transforms aligning each volume to ``ref_image`` in ITK format
-        fieldwarp
-            a :abbr:`DFM (displacements field map)` in ITK format
-        movpar_file
-            SPM-formatted motion parameters file
-
-    **Outputs**
-
-        aroma_confounds
-            TSV of confounds identified as noise by ICA-AROMA
-        aroma_noise_ics
-            CSV of noise components identified by ICA-AROMA
-        melodic_mix
-            FSL MELODIC mixing matrix
-        nonaggr_denoised_file
-            BOLD series with non-aggressive ICA-AROMA denoising applied
+    before or after denoising `here
+    <http://nbviewer.jupyter.org/github/poldracklab/fmriprep-notebooks/blob/922e436429b879271fa13e76767a6e73443e74d9/issue-817_aroma_confounds.ipynb>`__.
 
     .. _ICA-AROMA: https://github.com/maartenmennes/ICA-AROMA
+
+    Workflow Graph
+        .. workflow::
+            :graph2use: orig
+            :simple_form: yes
+
+            from fmriprep.workflows.bold.confounds import init_ica_aroma_wf
+            wf = init_ica_aroma_wf(metadata={'RepetitionTime': 1.0},
+                                   mem_gb=3,
+                                   omp_nthreads=1)
+
+    Parameters
+    ----------
+    standard_spaces : str
+        Spatial normalization template used as target when that
+        registration step was previously calculated with
+        :py:func:`~fmriprep.workflows.bold.registration.init_bold_reg_wf`.
+        The template must be one of the MNI templates (fMRIPrep uses
+        ``MNI152NLin2009cAsym`` by default).
+    metadata : dict
+        BIDS metadata for BOLD file
+    mem_gb : float
+        Size of BOLD file in GB
+    omp_nthreads : int
+        Maximum number of threads an individual process may use
+    name : str
+        Name of workflow (default: ``bold_tpl_trans_wf``)
+    susan_fwhm : float
+        Kernel width (FWHM in mm) for the smoothing step with
+        FSL ``susan`` (default: 6.0mm)
+    use_fieldwarp : bool
+        Include SDC warp in single-shot transform from BOLD to MNI
+    err_on_aroma_warn : bool
+        Do not fail on ICA-AROMA errors
+    aroma_melodic_dim: int
+        Set the dimensionality of the MELODIC ICA decomposition.
+        Negative numbers set a maximum on automatic dimensionality estimation.
+        Positive numbers set an exact number of components to extract.
+        (default: -200, i.e., estimate <=200 components)
+
+    Inputs
+    ------
+    itk_bold_to_t1
+        Affine transform from ``ref_bold_brain`` to T1 space (ITK format)
+    anat2std_xfm
+        ANTs-compatible affine-and-warp transform file
+    name_source
+        BOLD series NIfTI file
+        Used to recover original information lost during processing
+    skip_vols
+        number of non steady state volumes
+    bold_split
+        Individual 3D BOLD volumes, not motion corrected
+    bold_mask
+        BOLD series mask in template space
+    hmc_xforms
+        List of affine transforms aligning each volume to ``ref_image`` in ITK format
+    fieldwarp
+        a :abbr:`DFM (displacements field map)` in ITK format
+    movpar_file
+        SPM-formatted motion parameters file
+
+    Outputs
+    -------
+    aroma_confounds
+        TSV of confounds identified as noise by ICA-AROMA
+    aroma_noise_ics
+        CSV of noise components identified by ICA-AROMA
+    melodic_mix
+        FSL MELODIC mixing matrix
+    nonaggr_denoised_file
+        BOLD series with non-aggressive ICA-AROMA denoising applied
 
     """
     workflow = Workflow(name=name)
@@ -763,7 +766,7 @@ in the corresponding confounds file.
 
 
 def _remove_volumes(bold_file, skip_vols):
-    """remove skip_vols from bold_file"""
+    """Remove skip_vols from bold_file."""
     import nibabel as nb
     from nipype.utils.filemanip import fname_presuffix
 
@@ -779,7 +782,7 @@ def _remove_volumes(bold_file, skip_vols):
 
 
 def _add_volumes(bold_file, bold_cut_file, skip_vols):
-    """prepend skip_vols from bold_file onto bold_cut_file"""
+    """Prepend skip_vols from bold_file onto bold_cut_file."""
     import nibabel as nb
     import numpy as np
     from nipype.utils.filemanip import fname_presuffix

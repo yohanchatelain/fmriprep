@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
 """
@@ -45,79 +43,80 @@ LOGGER = logging.getLogger('nipype.workflow')
 def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
                      use_compression=True, write_report=True, name='bold_reg_wf'):
     """
-    Calculates the registration between a reference BOLD image and T1-space
-    using a boundary-based registration (BBR) cost function.
+    Build a workflow to run same-subject, BOLD-to-T1w image-registration.
 
+    Calculates the registration between a reference BOLD image and T1w-space
+    using a boundary-based registration (BBR) cost function.
     If FreeSurfer-based preprocessing is enabled, the ``bbregister`` utility
     is used to align the BOLD images to the reconstructed subject, and the
     resulting transform is adjusted to target the T1 space.
     If FreeSurfer-based preprocessing is disabled, FSL FLIRT is used with the
     BBR cost function to directly target the T1 space.
 
-    .. workflow::
-        :graph2use: orig
-        :simple_form: yes
+    Workflow Graph
+        .. workflow::
+            :graph2use: orig
+            :simple_form: yes
 
-        from fmriprep.workflows.bold.registration import init_bold_reg_wf
-        wf = init_bold_reg_wf(freesurfer=True,
-                              mem_gb=3,
-                              omp_nthreads=1,
-                              use_bbr=True,
-                              bold2t1w_dof=9)
+            from fmriprep.workflows.bold.registration import init_bold_reg_wf
+            wf = init_bold_reg_wf(freesurfer=True,
+                                  mem_gb=3,
+                                  omp_nthreads=1,
+                                  use_bbr=True,
+                                  bold2t1w_dof=9)
 
-    **Parameters**
+    Parameters
+    ----------
+    freesurfer : bool
+        Enable FreeSurfer functional registration (bbregister)
+    use_bbr : bool or None
+        Enable/disable boundary-based registration refinement.
+        If ``None``, test BBR result for distortion before accepting.
+    bold2t1w_dof : 6, 9 or 12
+        Degrees-of-freedom for BOLD-T1w registration
+    mem_gb : float
+        Size of BOLD file in GB
+    omp_nthreads : int
+        Maximum number of threads an individual process may use
+    name : str
+        Name of workflow (default: ``bold_reg_wf``)
+    use_compression : bool
+        Save registered BOLD series as ``.nii.gz``
+    use_fieldwarp : bool
+        Include SDC warp in single-shot transform from BOLD to T1
+    write_report : bool
+        Whether a reportlet should be stored
 
-        freesurfer : bool
-            Enable FreeSurfer functional registration (bbregister)
-        use_bbr : bool or None
-            Enable/disable boundary-based registration refinement.
-            If ``None``, test BBR result for distortion before accepting.
-        bold2t1w_dof : 6, 9 or 12
-            Degrees-of-freedom for BOLD-T1w registration
-        mem_gb : float
-            Size of BOLD file in GB
-        omp_nthreads : int
-            Maximum number of threads an individual process may use
-        name : str
-            Name of workflow (default: ``bold_reg_wf``)
-        use_compression : bool
-            Save registered BOLD series as ``.nii.gz``
-        use_fieldwarp : bool
-            Include SDC warp in single-shot transform from BOLD to T1
-        write_report : bool
-            Whether a reportlet should be stored
+    Inputs
+    ------
+    ref_bold_brain
+        Reference image to which BOLD series is aligned
+        If ``fieldwarp == True``, ``ref_bold_brain`` should be unwarped
+    t1w_brain
+        Skull-stripped ``t1w_preproc``
+    t1w_dseg
+        Segmentation of preprocessed structural image, including
+        gray-matter (GM), white-matter (WM) and cerebrospinal fluid (CSF)
+    subjects_dir
+        FreeSurfer SUBJECTS_DIR
+    subject_id
+        FreeSurfer subject ID
+    fsnative2t1w_xfm
+        LTA-style affine matrix translating from FreeSurfer-conformed subject space to T1w
 
-    **Inputs**
+    Outputs
+    -------
+    itk_bold_to_t1
+        Affine transform from ``ref_bold_brain`` to T1 space (ITK format)
+    itk_t1_to_bold
+        Affine transform from T1 space to BOLD space (ITK format)
+    fallback
+        Boolean indicating whether BBR was rejected (mri_coreg registration returned)
 
-        ref_bold_brain
-            Reference image to which BOLD series is aligned
-            If ``fieldwarp == True``, ``ref_bold_brain`` should be unwarped
-        t1w_brain
-            Skull-stripped ``t1w_preproc``
-        t1w_dseg
-            Segmentation of preprocessed structural image, including
-            gray-matter (GM), white-matter (WM) and cerebrospinal fluid (CSF)
-        subjects_dir
-            FreeSurfer SUBJECTS_DIR
-        subject_id
-            FreeSurfer subject ID
-        fsnative2t1w_xfm
-            LTA-style affine matrix translating from FreeSurfer-conformed subject space to T1w
-
-    **Outputs**
-
-        itk_bold_to_t1
-            Affine transform from ``ref_bold_brain`` to T1 space (ITK format)
-        itk_t1_to_bold
-            Affine transform from T1 space to BOLD space (ITK format)
-        fallback
-            Boolean indicating whether BBR was rejected (mri_coreg registration returned)
-
-
-    **Subworkflows**
-
-        * :py:func:`~fmriprep.workflows.bold.registration.init_bbreg_wf`
-        * :py:func:`~fmriprep.workflows.bold.registration.init_fsl_bbr_wf`
+    See also
+    --------
+      * :py:func:`~fmriprep.workflows.bold.registration.init_bbreg_wf`
+      * :py:func:`~fmriprep.workflows.bold.registration.init_fsl_bbr_wf`
 
     """
     workflow = Workflow(name=name)
@@ -176,84 +175,85 @@ def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
 def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, multiecho=False, use_fieldwarp=False,
                           use_compression=True, name='bold_t1_trans_wf'):
     """
-    This workflow registers the reference BOLD image to T1-space, using a
-    boundary-based registration (BBR) cost function.
+    Co-register the reference BOLD image to T1w-space.
 
-    .. workflow::
-        :graph2use: orig
-        :simple_form: yes
+    The workflow uses :abbr:`BBR (boundary-based registration)`.
 
-        from fmriprep.workflows.bold.registration import init_bold_t1_trans_wf
-        wf = init_bold_t1_trans_wf(freesurfer=True,
-                                   mem_gb=3,
-                                   omp_nthreads=1)
+    Workflow Graph
+        .. workflow::
+            :graph2use: orig
+            :simple_form: yes
 
-    **Parameters**
+            from fmriprep.workflows.bold.registration import init_bold_t1_trans_wf
+            wf = init_bold_t1_trans_wf(freesurfer=True,
+                                       mem_gb=3,
+                                       omp_nthreads=1)
 
-        freesurfer : bool
-            Enable FreeSurfer functional registration (bbregister)
-        use_fieldwarp : bool
-            Include SDC warp in single-shot transform from BOLD to T1
-        multiecho : bool
-            If multiecho data was supplied, HMC already performed
-        mem_gb : float
-            Size of BOLD file in GB
-        omp_nthreads : int
-            Maximum number of threads an individual process may use
-        use_compression : bool
-            Save registered BOLD series as ``.nii.gz``
-        name : str
-            Name of workflow (default: ``bold_reg_wf``)
+    Parameters
+    ----------
+    freesurfer : bool
+        Enable FreeSurfer functional registration (bbregister)
+    use_fieldwarp : bool
+        Include SDC warp in single-shot transform from BOLD to T1
+    multiecho : bool
+        If multiecho data was supplied, HMC already performed
+    mem_gb : float
+        Size of BOLD file in GB
+    omp_nthreads : int
+        Maximum number of threads an individual process may use
+    use_compression : bool
+        Save registered BOLD series as ``.nii.gz``
+    name : str
+        Name of workflow (default: ``bold_reg_wf``)
 
-    **Inputs**
+    Inputs
+    ------
+    name_source
+        BOLD series NIfTI file
+        Used to recover original information lost during processing
+    ref_bold_brain
+        Reference image to which BOLD series is aligned
+        If ``fieldwarp == True``, ``ref_bold_brain`` should be unwarped
+    ref_bold_mask
+        Skull-stripping mask of reference image
+    t1w_brain
+        Skull-stripped bias-corrected structural template image
+    t1w_mask
+        Mask of the skull-stripped template image
+    t1w_aseg
+        FreeSurfer's ``aseg.mgz`` atlas projected into the T1w reference
+        (only if ``recon-all`` was run).
+    t1w_aparc
+        FreeSurfer's ``aparc+aseg.mgz`` atlas projected into the T1w reference
+        (only if ``recon-all`` was run).
+    bold_split
+        Individual 3D BOLD volumes, not motion corrected
+    hmc_xforms
+        List of affine transforms aligning each volume to ``ref_image`` in ITK format
+    itk_bold_to_t1
+        Affine transform from ``ref_bold_brain`` to T1 space (ITK format)
+    fieldwarp
+        a :abbr:`DFM (displacements field map)` in ITK format
 
-        name_source
-            BOLD series NIfTI file
-            Used to recover original information lost during processing
-        ref_bold_brain
-            Reference image to which BOLD series is aligned
-            If ``fieldwarp == True``, ``ref_bold_brain`` should be unwarped
-        ref_bold_mask
-            Skull-stripping mask of reference image
-        t1w_brain
-            Skull-stripped bias-corrected structural template image
-        t1w_mask
-            Mask of the skull-stripped template image
-        t1w_aseg
-            FreeSurfer's ``aseg.mgz`` atlas projected into the T1w reference
-            (only if ``recon-all`` was run).
-        t1w_aparc
-            FreeSurfer's ``aparc+aseg.mgz`` atlas projected into the T1w reference
-            (only if ``recon-all`` was run).
-        bold_split
-            Individual 3D BOLD volumes, not motion corrected
-        hmc_xforms
-            List of affine transforms aligning each volume to ``ref_image`` in ITK format
-        itk_bold_to_t1
-            Affine transform from ``ref_bold_brain`` to T1 space (ITK format)
-        fieldwarp
-            a :abbr:`DFM (displacements field map)` in ITK format
+    Outputs
+    -------
+    bold_t1
+        Motion-corrected BOLD series in T1 space
+    bold_t1_ref
+        Reference, contrast-enhanced summary of the motion-corrected BOLD series in T1w space
+    bold_mask_t1
+        BOLD mask in T1 space
+    bold_aseg_t1
+        FreeSurfer's ``aseg.mgz`` atlas, in T1w-space at the BOLD resolution
+        (only if ``recon-all`` was run).
+    bold_aparc_t1
+        FreeSurfer's ``aparc+aseg.mgz`` atlas, in T1w-space at the BOLD resolution
+        (only if ``recon-all`` was run).
 
-    **Outputs**
-
-        bold_t1
-            Motion-corrected BOLD series in T1 space
-        bold_t1_ref
-            Reference, contrast-enhanced summary of the motion-corrected BOLD series in T1w space
-        bold_mask_t1
-            BOLD mask in T1 space
-        bold_aseg_t1
-            FreeSurfer's ``aseg.mgz`` atlas, in T1w-space at the BOLD resolution
-            (only if ``recon-all`` was run).
-        bold_aparc_t1
-            FreeSurfer's ``aparc+aseg.mgz`` atlas, in T1w-space at the BOLD resolution
-            (only if ``recon-all`` was run).
-
-
-    **Subworkflows**
-
-        * :py:func:`~fmriprep.workflows.bold.registration.init_bbreg_wf`
-        * :py:func:`~fmriprep.workflows.bold.registration.init_fsl_bbr_wf`
+    See also
+    --------
+      * :py:func:`~fmriprep.workflows.bold.registration.init_bbreg_wf`
+      * :py:func:`~fmriprep.workflows.bold.registration.init_fsl_bbr_wf`
 
     """
     from .util import init_bold_reference_wf
@@ -365,12 +365,13 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, multiecho=False, use
 
 def init_bbreg_wf(use_bbr, bold2t1w_dof, omp_nthreads, name='bbreg_wf'):
     """
+    Build a workflow to run FreeSurfer's ``bbregister``.
+
     This workflow uses FreeSurfer's ``bbregister`` to register a BOLD image to
     a T1-weighted structural image.
 
     It is a counterpart to :py:func:`~fmriprep.workflows.bold.registration.init_fsl_bbr_wf`,
     which performs the same task using FSL's FLIRT with a BBR cost function.
-
     The ``use_bbr`` option permits a high degree of control over registration.
     If ``False``, standard, affine coregistration will be performed using
     FreeSurfer's ``mri_coreg`` tool.
@@ -381,51 +382,50 @@ def init_bbreg_wf(use_bbr, bold2t1w_dof, omp_nthreads, name='bbreg_wf'):
     Excessive deviation will result in rejecting the BBR refinement and
     accepting the original, affine registration.
 
-    .. workflow ::
-        :graph2use: orig
-        :simple_form: yes
+    Workflow Graph
+        .. workflow ::
+            :graph2use: orig
+            :simple_form: yes
 
-        from fmriprep.workflows.bold.registration import init_bbreg_wf
-        wf = init_bbreg_wf(use_bbr=True, bold2t1w_dof=9, omp_nthreads=1)
+            from fmriprep.workflows.bold.registration import init_bbreg_wf
+            wf = init_bbreg_wf(use_bbr=True, bold2t1w_dof=9, omp_nthreads=1)
 
 
     Parameters
-
-        use_bbr : bool or None
-            Enable/disable boundary-based registration refinement.
-            If ``None``, test BBR result for distortion before accepting.
-        bold2t1w_dof : 6, 9 or 12
-            Degrees-of-freedom for BOLD-T1w registration
-        name : str, optional
-            Workflow name (default: bbreg_wf)
-
+    ----------
+    use_bbr : bool or None
+        Enable/disable boundary-based registration refinement.
+        If ``None``, test BBR result for distortion before accepting.
+    bold2t1w_dof : 6, 9 or 12
+        Degrees-of-freedom for BOLD-T1w registration
+    name : str, optional
+        Workflow name (default: bbreg_wf)
 
     Inputs
-
-        in_file
-            Reference BOLD image to be registered
-        fsnative2t1w_xfm
-            FSL-style affine matrix translating from FreeSurfer T1.mgz to T1w
-        subjects_dir
-            FreeSurfer SUBJECTS_DIR
-        subject_id
-            FreeSurfer subject ID (must have folder in SUBJECTS_DIR)
-        t1w_brain
-            Unused (see :py:func:`~fmriprep.workflows.bold.registration.init_fsl_bbr_wf`)
-        t1w_dseg
-            Unused (see :py:func:`~fmriprep.workflows.bold.registration.init_fsl_bbr_wf`)
-
+    ------
+    in_file
+        Reference BOLD image to be registered
+    fsnative2t1w_xfm
+        FSL-style affine matrix translating from FreeSurfer T1.mgz to T1w
+    subjects_dir
+        FreeSurfer SUBJECTS_DIR
+    subject_id
+        FreeSurfer subject ID (must have folder in SUBJECTS_DIR)
+    t1w_brain
+        Unused (see :py:func:`~fmriprep.workflows.bold.registration.init_fsl_bbr_wf`)
+    t1w_dseg
+        Unused (see :py:func:`~fmriprep.workflows.bold.registration.init_fsl_bbr_wf`)
 
     Outputs
-
-        itk_bold_to_t1
-            Affine transform from ``ref_bold_brain`` to T1 space (ITK format)
-        itk_t1_to_bold
-            Affine transform from T1 space to BOLD space (ITK format)
-        out_report
-            Reportlet for assessing registration quality
-        fallback
-            Boolean indicating whether BBR was rejected (mri_coreg registration returned)
+    -------
+    itk_bold_to_t1
+        Affine transform from ``ref_bold_brain`` to T1 space (ITK format)
+    itk_t1_to_bold
+        Affine transform from T1 space to BOLD space (ITK format)
+    out_report
+        Reportlet for assessing registration quality
+    fallback
+        Boolean indicating whether BBR was rejected (mri_coreg registration returned)
 
     """
     workflow = Workflow(name=name)
@@ -544,9 +544,10 @@ Co-registration was configured with {dof} degrees of freedom{reason}.
 
 def init_fsl_bbr_wf(use_bbr, bold2t1w_dof, name='fsl_bbr_wf'):
     """
+    Build a workflow to run FSL's ``flirt``.
+
     This workflow uses FSL FLIRT to register a BOLD image to a T1-weighted
     structural image, using a boundary-based registration (BBR) cost function.
-
     It is a counterpart to :py:func:`~fmriprep.workflows.bold.registration.init_bbreg_wf`,
     which performs the same task using FreeSurfer's ``bbregister``.
 
@@ -559,51 +560,50 @@ def init_fsl_bbr_wf(use_bbr, bold2t1w_dof, name='fsl_bbr_wf'):
     Excessive deviation will result in rejecting the BBR refinement and
     accepting the original, affine registration.
 
-    .. workflow ::
-        :graph2use: orig
-        :simple_form: yes
+    Workflow Graph
+        .. workflow ::
+            :graph2use: orig
+            :simple_form: yes
 
-        from fmriprep.workflows.bold.registration import init_fsl_bbr_wf
-        wf = init_fsl_bbr_wf(use_bbr=True, bold2t1w_dof=9)
+            from fmriprep.workflows.bold.registration import init_fsl_bbr_wf
+            wf = init_fsl_bbr_wf(use_bbr=True, bold2t1w_dof=9)
 
 
     Parameters
-
-        use_bbr : bool or None
-            Enable/disable boundary-based registration refinement.
-            If ``None``, test BBR result for distortion before accepting.
-        bold2t1w_dof : 6, 9 or 12
-            Degrees-of-freedom for BOLD-T1w registration
-        name : str, optional
-            Workflow name (default: fsl_bbr_wf)
-
+    ----------
+    use_bbr : bool or None
+        Enable/disable boundary-based registration refinement.
+        If ``None``, test BBR result for distortion before accepting.
+    bold2t1w_dof : 6, 9 or 12
+        Degrees-of-freedom for BOLD-T1w registration
+    name : str, optional
+        Workflow name (default: fsl_bbr_wf)
 
     Inputs
-
-        in_file
-            Reference BOLD image to be registered
-        t1w_brain
-            Skull-stripped T1-weighted structural image
-        t1w_dseg
-            FAST segmentation of ``t1w_brain``
-        fsnative2t1w_xfm
-            Unused (see :py:func:`~fmriprep.workflows.bold.registration.init_bbreg_wf`)
-        subjects_dir
-            Unused (see :py:func:`~fmriprep.workflows.bold.registration.init_bbreg_wf`)
-        subject_id
-            Unused (see :py:func:`~fmriprep.workflows.bold.registration.init_bbreg_wf`)
-
+    ------
+    in_file
+        Reference BOLD image to be registered
+    t1w_brain
+        Skull-stripped T1-weighted structural image
+    t1w_dseg
+        FAST segmentation of ``t1w_brain``
+    fsnative2t1w_xfm
+        Unused (see :py:func:`~fmriprep.workflows.bold.registration.init_bbreg_wf`)
+    subjects_dir
+        Unused (see :py:func:`~fmriprep.workflows.bold.registration.init_bbreg_wf`)
+    subject_id
+        Unused (see :py:func:`~fmriprep.workflows.bold.registration.init_bbreg_wf`)
 
     Outputs
-
-        itk_bold_to_t1
-            Affine transform from ``ref_bold_brain`` to T1w space (ITK format)
-        itk_t1_to_bold
-            Affine transform from T1 space to BOLD space (ITK format)
-        out_report
-            Reportlet for assessing registration quality
-        fallback
-            Boolean indicating whether BBR was rejected (rigid FLIRT registration returned)
+    -------
+    itk_bold_to_t1
+        Affine transform from ``ref_bold_brain`` to T1w space (ITK format)
+    itk_t1_to_bold
+        Affine transform from T1 space to BOLD space (ITK format)
+    out_report
+        Reportlet for assessing registration quality
+    fallback
+        Boolean indicating whether BBR was rejected (rigid FLIRT registration returned)
 
     """
     workflow = Workflow(name=name)
