@@ -635,10 +635,8 @@ It is released under the [CC0]\
               # Undefined if --no-freesurfer, but this is safe
               ('outputnode.subjects_dir', 'inputnode.subjects_dir'),
               ('outputnode.subject_id', 'inputnode.subject_id'),
-              ('outputnode.t1w2fsnative_xfm',
-               'inputnode.t1w2fsnative_xfm'),
-              ('outputnode.fsnative2t1w_xfm',
-               'inputnode.fsnative2t1w_xfm')]),
+              ('outputnode.t1w2fsnative_xfm', 'inputnode.t1w2fsnative_xfm'),
+              ('outputnode.fsnative2t1w_xfm', 'inputnode.fsnative2t1w_xfm')]),
         ])
 
     return workflow
