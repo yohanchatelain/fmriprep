@@ -21,6 +21,7 @@ With thanks to Marc Bue, Alejandro De La Vega, Tailor Salo, Asier Erramuzpe and 
 * DOC: Remove OpenNeuro badge (#1862) @adelavega
 * DOC: Improve documentation about TemplateFlow and Containers (#1802) @oesteban
 * DOC: Add ``VERSION`` argument to docker build instructions (#1797) @effigies
+* DOC: Revise docstrings of workflows for correct parsing with napoleon #1882 (@oesteban)
 * CI: Use recent Python image to build packages (#1790) @effigies
 * MAINT: Update to the new API of *sMRIPrep* (#1879) @adelavega
 * MAINT: Update ``CONTRIBUTING.md`` inspired by *dMRIPrep*'s (#1853) @oesteban
