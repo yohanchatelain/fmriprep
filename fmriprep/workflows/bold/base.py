@@ -439,9 +439,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             break
         if space in ('fsaverage5', 'fsaverage6'):
             cifti_spaces.add(space)
-        # fsaverage_den = output_spaces.get('fsaverage', {}).get('den')
-        # if fsaverage_den:
-        #     cifti_spaces.add(FSAVERAGE_DENSITY[fsaverage_den])
+        fsaverage_den = output_spaces.get('fsaverage', {}).get('den')
+        if fsaverage_den:
+            cifti_spaces.add(FSAVERAGE_DENSITY[fsaverage_den])
     cifti_output = cifti_output and cifti_spaces
     func_derivatives_wf = init_func_derivatives_wf(
         bids_root=layout.root,
@@ -966,7 +966,6 @@ data and volume-sampled data, were also generated.
                                    name="gen_cifti")
             gen_cifti.inputs.TR = metadata.get("RepetitionTime")
             gen_cifti.inputs.surface_target = list(cifti_spaces)
-            gen_cifti.inputs.resolution = output_spaces.get(cifti_volume, {}).get('res')
             gen_cifti.inputs.density = fslr_density
 
             workflow.connect([
