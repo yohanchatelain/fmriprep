@@ -48,7 +48,6 @@ def init_bold_surf_wf(
     and averaged.
     Outputs are in GIFTI format.
 
-<<<<<<< HEAD
     Workflow Graph
         .. workflow::
             :graph2use: colored
@@ -90,51 +89,6 @@ def init_bold_surf_wf(
     -------
     surfaces
         BOLD series, resampled to FreeSurfer surfaces
-=======
-    .. workflow::
-        :graph2use: colored
-        :simple_form: yes
-
-        from fmriprep.workflows.bold import init_bold_surf_wf
-        wf = init_bold_surf_wf(mem_gb=0.1,
-                               output_spaces=['T1w', 'fsnative',
-                                             'template', 'fsaverage5'],
-                               medial_surface_nan=False)
-
-    **Parameters**
-
-        output_spaces : list
-            List of output spaces functional images are to be resampled to
-            Target spaces beginning with ``fs`` will be selected for resampling,
-            such as ``fsaverage`` or related template spaces
-            If the list contains ``fsnative``, images will be resampled to the
-            individual subject's native surface
-            If the list contains ``fsLR``, images will be resampled twice;
-            first to ``fsaverage`` and then to ``fsLR``.
-        medial_surface_nan : bool
-            Replace medial wall values with NaNs on functional GIFTI files
-        fslr_density : str, optional
-            Surface density for fsLR template, possible values: (None, 32k, 59k, 164k)
-
-
-    **Inputs**
-
-        source_file
-            Motion-corrected BOLD series in T1 space
-        t1_preproc
-            Bias-corrected structural template image
-        subjects_dir
-            FreeSurfer SUBJECTS_DIR
-        subject_id
-            FreeSurfer subject ID
-        t1_2_fsnative_forward_transform
-            LTA-style affine matrix translating from T1w to FreeSurfer-conformed subject space
-
-    **Outputs**
-
-        surfaces
-            BOLD series, resampled to FreeSurfer surfaces
->>>>>>> fix: syntax, add density parameter to bold_surf_wf
 
     """
     # Ensure volumetric spaces do not sneak into this workflow
