@@ -214,7 +214,7 @@ def init_func_derivatives_wf(
         ])
 
         # CIFTI output
-        if cifti_output and 'MNI152NLin2009cAsym' in output_spaces:
+        if cifti_output:
             name_cifti = pe.MapNode(
                 CiftiNameSource(), iterfield=['variant'], name='name_cifti',
                 mem_gb=DEFAULT_MEMORY_MIN_GB, run_without_submitting=True)
