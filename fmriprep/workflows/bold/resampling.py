@@ -743,7 +743,7 @@ def _select_fsaverage_hemi(in_files):
         if fl.endswith('fsaverage.gii'):
             hemi = 'R' if os.path.basename(fl).startswith('rh') else 'L'
             return fl, hemi
-    raise FileNotFoundError
+    raise OSError
 
 
 def _fetch_fslr_templates(hemi, den):
