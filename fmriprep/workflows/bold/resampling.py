@@ -34,7 +34,13 @@ from ...interfaces import DerivativesDataSink
 from .util import init_bold_reference_wf
 
 
-def init_bold_surf_wf(mem_gb, output_spaces, medial_surface_nan, fslr_density=None, name='bold_surf_wf'):
+def init_bold_surf_wf(
+    mem_gb,
+    output_spaces,
+    medial_surface_nan,
+    fslr_density=None,
+    name='bold_surf_wf'
+):
     """
     Sample functional images to FreeSurfer surfaces.
 
@@ -107,8 +113,8 @@ def init_bold_surf_wf(mem_gb, output_spaces, medial_surface_nan, fslr_density=No
             first to ``fsaverage`` and then to ``fsLR``.
         medial_surface_nan : bool
             Replace medial wall values with NaNs on functional GIFTI files
-        fslr_density : int, optional
-            Surface density for fsLR template, possible values: (32, 59, 164)
+        fslr_density : str, optional
+            Surface density for fsLR template, possible values: (None, 32k, 59k, 164k)
 
 
     **Inputs**
@@ -193,8 +199,12 @@ spaces: {out_spaces}.
                               run_without_submitting=True)
 
         fetch_fslr_tpls = pe.Node(niu.Function(function=_fetch_fslr_templates,
-                                               output_names=['fsaverage_sphere', 'fslr_sphere',
-                                                             'fsaverage_midthick', 'fslr_midthick']),
+                                               output_names=[
+                                                   'fsaverage_sphere',
+                                                   'fslr_sphere',
+                                                   'fsaverage_midthick',
+                                                   'fslr_midthick'
+                                                ]),
                                   name='fetch_fslr_tpls', mem_gb=DEFAULT_MEMORY_MIN_GB)
         fetch_fslr_tpls.inputs.den = fslr_density
 
@@ -786,8 +796,12 @@ def _fetch_fslr_templates(hemi, den):
     """Fetch the necessary templates for fsaverage to fsLR transform"""
     import templateflow.api as tf
 
-    fsaverage_sphere = tf.get('fsLR', space='fsaverage', suffix='sphere', hemi=hemi, density=164)
-    fslr_sphere = tf.get('fsLR', space='fsLR', suffix='sphere', hemi=hemi, density=den)
-    fsaverage_midthick = tf.get('fsLR', space='fsaverage', suffix='midthickness', hemi=hemi, density=164)
-    fslr_midthick = tf.get('fsLR', space='fsLR', suffix='midthickness', hemi=hemi, density=den)
+    fsaverage_sphere = tf.get(
+        'fsLR', space='fsaverage', suffix='sphere', hemi=hemi, density='164k'
+    )
+    fslr_sphere = tf.get('fsLR', space=None, suffix='sphere', hemi=hemi, density=den)
+    fsaverage_midthick = tf.get(
+        'fsLR', space='fsaverage', suffix='midthickness', hemi=hemi, density='164k'
+    )
+    fslr_midthick = tf.get('fsLR', space=None, suffix='midthickness', hemi=hemi, density=den)
     return fsaverage_sphere, fslr_sphere, fsaverage_midthick, fslr_midthick
