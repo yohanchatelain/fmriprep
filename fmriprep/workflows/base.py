@@ -472,7 +472,7 @@ def init_single_subject_wf(
         }
     else:
         subject_data = collect_data(layout, subject_id, task_id, echo_idx,
-            bids_filters=bids_filters)[0]
+                                    bids_filters=bids_filters)[0]
 
     # Make sure we always go through these two checks
     if not anat_only and subject_data['bold'] == []:
