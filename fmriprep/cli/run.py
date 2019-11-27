@@ -748,14 +748,6 @@ your scripts to use ``--output-spaces``.""" % ', '.join(opts.output_space), file
         missing = missing - set(output_spaces.keys())
         output_spaces.update({tpl: {} for tpl in missing})
 
-    FS_SPACES = set(['fsnative', 'fsaverage', 'fsaverage6', 'fsaverage5'])
-    if opts.run_reconall and not list(FS_SPACES.intersection(output_spaces.keys())):
-        print("""\
-Although ``--fs-no-reconall`` was not set (i.e., FreeSurfer is to be run), no FreeSurfer \
-output space (valid values are: %s) was selected. Adding default "fsaverage5" to the \
-list of output spaces.""" % ', '.join(FS_SPACES), file=stderr)
-        output_spaces['fsaverage5'] = {}
-
     # Validity of some inputs
     # ERROR check if use_aroma was specified, but the correct template was not
     if opts.use_aroma and 'MNI152NLin6Asym' not in output_spaces:
@@ -766,37 +758,30 @@ The argument "MNI152NLin6Asym:res-2" has been automatically added to the list of
 (option ``--output-spaces``).""", file=stderr)
 
     if opts.cifti_output:
-        # HCP greyordinates CIFTI
+        # default to HCP grayordinates
+        FS_CIFTI = set(('fsaverage5', 'fsaverage6'))
+        if 'fsLR' not in output_spaces and not FS_CIFTI.intersection(output_spaces.keys()):
+            output_spaces['fsLR'] = {'den': '32k'}
+            print("""\
+By default, option ``--cifti-output`` resamples functional images to \
+``fsLR`` space. This space has been automatically added to the list of output \
+spaces (option ``--output-spaces``).""", file=stderr)
         if 'fsLR' in output_spaces:
-            # use low res by default
-            den = output_spaces.get('fsLR', {}).get('den')
-            if den is None:
-                den = 32
-                output_spaces['fsLR'] = {'den': 32}
-            # sample to fsLR from highest fsaverage resolution
-            if 'fsaverage' not in output_spaces:
-                output_spaces['fsaverage'] = {'den': '164'}
-            # TO CONSIDER: support for multiple densities? can overwrite previous density
-            hcp_den_to_res = {  # surface densities to template resolution
-                32: 2,  #2mm
-                59: 5,  #1.6mm
-                164: 1,  #1mm
-            }
-            output_spaces['MNI152NLin6Asym'] = {'res': hcp_den_to_res[den]}
-            print("""Option ``--cifti-output`` requires functional images to be resampled to \
+            den = output_spaces.get('fsLR', {}).get('den') or '32k'
+            output_spaces['fsLR'] = {'den': den}
+            if 'MNI152NLin6Asym' not in output_spaces:
+                output_spaces['MNI152NLin6Asym'] = {'res': '2'}
+                print("""\
+Option ``--cifti-output`` requires functional images to be resampled to \
 ``MNI152NLin6Asym`` space. This space has been automatically added to the list of output \
-spaces (option ``output-spaces``).""", file=stderr)
+spaces (option ``--output-spaces``).""", file=stderr)
+
         else:
             if 'MNI152NLin2009cAsym' not in output_spaces:
                 output_spaces['MNI152NLin2009cAsym'] = {'res': 2}
                 print("""Option ``--cifti-output`` requires functional images to be resampled to \
 ``MNI152NLin2009cAsym`` space. Such template identifier has been automatically added to the \
 list of output spaces (option "--output-spaces").""", file=stderr)
-            if not [s for s in output_spaces if s in ('fsaverage5', 'fsaverage6')]:
-                output_spaces['fsaverage5'] = {}
-                print("""Option ``--cifti-output`` requires functional images to be resampled to \
-``fsaverage`` space. The argument ``fsaverage:den-10k`` (a.k.a ``fsaverage5``) has been \
-automatically added to the list of output spaces (option ``--output-spaces``).""", file=stderr)
 
     if opts.template_resampling_grid is not None:
         print("""Option ``--template-resampling-grid`` is deprecated, please specify \
@@ -807,6 +792,17 @@ The configuration value will be applied to ALL output standard spaces.""")
                 if key in get_templates():
                     output_spaces[key]['res'] = opts.template_resampling_grid[0]
 
+    if 'fsLR' in output_spaces and 'fsaverage' not in output_spaces:
+        # resample to fsLR from highest density fsaverage
+        output_spaces['fsaverage'] = {'den': '164k'}
+
+    FS_SPACES = set(('fsnative', 'fsaverage', 'fsaverage6', 'fsaverage5'))
+    if opts.run_reconall and not FS_SPACES.intersection(output_spaces.keys()):
+        print("""\
+Although ``--fs-no-reconall`` was not set (i.e., FreeSurfer is to be run), no FreeSurfer \
+output space (valid values are: %s) was selected. Adding default "fsaverage5" to the \
+list of output spaces.""" % ', '.join(FS_SPACES), file=stderr)
+        output_spaces['fsaverage5'] = {}
     return output_spaces
 
 
