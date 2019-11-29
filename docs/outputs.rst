@@ -148,10 +148,10 @@ The :abbr:`BOLD (blood-oxygen level dependent)` signal measured with fMRI is a m
 of both neuronal and non-neuronal origin.
 Neuronal signals are measured indirectly as changes in the local concentration of oxygenated hemoglobin.
 Non-neuronal fluctuations in fMRI data may appear as a result of head motion, scanner noise,
-or physiological fluctuations (related to cardiac or respiratory effects)
-(see Greve et al. [Greve2013]_ for detailed review of the possible sources of noise in fMRI signal).
+or physiological fluctuations (related to cardiac or respiratory effects).
+For a detailed review of the possible sources of noise in the BOLD signal, refer to [Greve2013]_.
 
-*Confounds* (or nuisance regressors) are variables representing potential fluctuations of non-neuronal origin.
+*Confounds* (or nuisance regressors) are variables representing fluctuations of non-neuronal origin.
 Such non-neuronal fluctuations may drive spurious results in fMRI data analysis,
 including standard activation :abbr:`GLM (General Linear Model` and functional connectivity analyses.
 It is possible to minimize confounding effects of non-neuronal signals by including them as nuisance regressors
