@@ -166,9 +166,9 @@ The *fMRIPrep* pipeline generates a large array of possible confounds.
 The best known confounding variables in neuroimaging are the six head motion parameters
 (three rotations and three translations) - the common output of the head motion correction
 (also known as *realignment*) of popular fMRI preprocessing software
-such as `SPM <https://www.fil.ion.ucl.ac.uk/spm/software/spm12/>`_
-or `FSL <https://fsl.fmrib.ox.ac.uk/fsl/fslwiki>`_.
-One of the biggest advantages of fMRPrep is the automatic calculation of multiple potential confounding variables
+such as SPM_
+or FSL_.
+One of the biggest advantages of *fMRIPrep* is the automatic calculation of multiple potential confounding variables
 beyond standard head motion parameters.
 
 Confounding variables calculated in *fMRIPrep* are stored separately for each subject,
