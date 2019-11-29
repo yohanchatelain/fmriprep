@@ -142,15 +142,17 @@ sampled to those subject spaces.
 Confounds
 ---------
 
-The :abbr:`BOLD (blood-oxygen level dependent)` signal measured with fMRI is a mixture of fluctuations
-of both neuronal and non-neuronal origin. Neuronal signals are measured indirectly as changes
-in the local concentration of oxygenated hemoglobin. Non-neuronal fluctuations in fMRI data
-may appear as a result of head motion, scanner noise, or physiological fluctuations
-(related to cardiac or respiratory effects) (see Greve et al. [Greve2013]_ for detailed review of the possible
-sources of noise in fMRI signal).
+See implementation on :mod:`~fmriprep.workflows.bold.confounds.init_bold_confs_wf`.
 
-*Confounds* (or nuisance regressors) are variables representing potential fluctuations
-of non-neuronal origin. Such non-neuronal fluctuations may drive spurious results in fMRI data analysis,
+The :abbr:`BOLD (blood-oxygen level dependent)` signal measured with fMRI is a mixture of fluctuations
+of both neuronal and non-neuronal origin.
+Neuronal signals are measured indirectly as changes in the local concentration of oxygenated hemoglobin.
+Non-neuronal fluctuations in fMRI data may appear as a result of head motion, scanner noise,
+or physiological fluctuations (related to cardiac or respiratory effects)
+(see Greve et al. [Greve2013]_ for detailed review of the possible sources of noise in fMRI signal).
+
+*Confounds* (or nuisance regressors) are variables representing potential fluctuations of non-neuronal origin.
+Such non-neuronal fluctuations may drive spurious results in fMRI data analysis,
 including standard activation :abbr:`GLM (General Linear Model` and functional connectivity analyses.
 It is possible to minimize confounding effects of non-neuronal signals by including them as nuisance regressors
 in the :abbr:`GLM (General Linear Model` design matrix or regressing them out from
@@ -158,14 +160,16 @@ the fMRI data - a procedure known as *denoising*.
 There is currently no consensus on an optimal denoising strategy in the fMRI community.
 Rather, different strategies have been proposed, which achieve different levels of trade-off between
 how much of the non-neuronal fluctuations are effectively removed, and how much of neuronal fluctuations
-are damaged in the process. The fMRIprep pipeline generates a large array of possible confounds.
+are damaged in the process.
+The fMRIprep pipeline generates a large array of possible confounds.
 
 The best known confounding variables in neuroimaging are the six head motion parameters
 (three rotations and three translations) - the common output of the head motion correction
 (also known as *realignment*) of popular fMRI preprocessing software
 such as `SPM <https://www.fil.ion.ucl.ac.uk/spm/software/spm12/>`_
-or `FSL <https://fsl.fmrib.ox.ac.uk/fsl/fslwiki>`_. One of the biggest advantages of fMRPrep
-is the automatic calculation of multiple potential confounding variables beyond standard head motion parameters.
+or `FSL <https://fsl.fmrib.ox.ac.uk/fsl/fslwiki>`_.
+One of the biggest advantages of fMRPrep is the automatic calculation of multiple potential confounding variables
+beyond standard head motion parameters.
 
 Confounding variables calculated in fMRIPrep are stored separately for each subject,
 session and run in `TSV (tab-separated value)` files - one column for each confound variable.
@@ -173,8 +177,8 @@ Such tabular files may include over 100 columns of potential confound regressors
 
 .. warning::
    Do not include all columns of `confounds_regressors.tsv` table
-   into your design matrix or denoising procedure. Filter the table first,
-   to include only the confounds you want to remove from your fMRI signal.
+   into your design matrix or denoising procedure.
+   Filter the table first, to include only the confounds you want to remove from your fMRI signal.
    The choice of confounding variables may depend on the analysis you want to perform,
    and may be not straightforward as no gold standard procedure exists.
    For detailed description of various denoising strategies and their performance,
@@ -215,19 +219,21 @@ Basic confouds
 Parameter expansion of basic confounds
 =====================
 Regressing out the standard six motion parameters may not be sufficient to remove all variance related to head motion
-from the fMRI signal. Thus, Friston et al. ([Friston1996]_) and Satterthwaite et al. ([Satterthwaite2013]_)
+from the fMRI signal.
+Thus, Friston et al. ([Friston1996]_) and Satterthwaite et al. ([Satterthwaite2013]_)
 proposed *24-motion-parameter* expansion, with a goal of removing from fMRI signal as much of the motion-related
-variance as possible. To make this technique more accessible, fMRIPrep automaticaly calculates motion parameter
+variance as possible.
+To make this technique more accessible, fMRIPrep automaticaly calculates motion parameter
 expansion ([Satterthwaite2013]_), providing timeseries corresponding to first *temporal derivatives* of six motion
 parameters, together with their *quadratic terms*, resulting in the total 24 head motion parameters
 (6 standard motion parameters + 6 temporal derivatives of six motion parameters + 12 quadratic terms of 6 motion
-parameters and their 6 temporal derivatives). Additionally, fMRIPrep returns temporal derivatives and quadratic
-terms for the ``csf``, ``white_matter`` and ``global_signal`` to enable applying 36-parameter denoising strategy
+parameters and their 6 temporal derivatives).
+Additionally, fMRIPrep returns temporal derivatives and quadratic terms for the ``csf``, ``white_matter``
+and ``global_signal`` to enable applying 36-parameter denoising strategy
 proposed by Satterthwaite et al. ([Satterthwaite2013]_).
 
-Derivatives and quadratic terms are stored under column
-names with suffixes: ``_derivative1`` and powers ``_power2``. These were calculated for head motion estimates
-(``trans_`` and ``rot_``) and compartment signals
+Derivatives and quadratic terms are stored under column names with suffixes: ``_derivative1`` and powers ``_power2``.
+These were calculated for head motion estimates (``trans_`` and ``rot_``) and compartment signals
 (``white_matter``, ``csf``, and ``global_signal``).
 
 
@@ -269,10 +275,11 @@ ICA-AROMA confounds
 CompCor confounds
 =====================
 
-:abbr:`CompCor (Component Based Noise Correction)` is a component-based noise correlation method. In the method,
-principal components are derived from :abbr:`ROI (Region of Interest)` which is unlikely to include signal
-related to neuronal activity, such as :abbr:`CSF (cerebro-spinal fluid)` and abbr:`WM (white matter)`
-masks. Signals extracted from CompCor components can be further regressed out from the fMRI data during
+:abbr:`CompCor (Component Based Noise Correction)` is a component-based noise correlation method.
+In the method, principal components are derived from :abbr:`ROI (Region of Interest)` which is unlikely
+to include signal related to neuronal activity, such as :abbr:`CSF (cerebro-spinal fluid)`
+and abbr:`WM (white matter)` masks.
+Signals extracted from CompCor components can be further regressed out from the fMRI data during
 denoising procedure ([Behzadi2007]_).
 
 - ``a_comp_cor_XX`` - additional noise components are calculated using anatomical :abbr:`CompCor
@@ -388,8 +395,6 @@ to which tissue-specific regressors correlate with global signal.
     with the mean global signal computed across the whole brain; the regressors shown
     are those with greatest correlation with the global signal.
     This information can be used to diagnose partial volume effects.
-
-See implementation on :mod:`~fmriprep.workflows.bold.confounds.init_bold_confs_wf`.
 
 .. topic:: References
 
