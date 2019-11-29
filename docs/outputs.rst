@@ -6,12 +6,12 @@
 Outputs of fMRIPrep
 -------------------
 
-FMRIPrep generates three broad classes of outcomes:
+*FMRIPrep* generates three broad classes of outcomes:
 
   1. **Visual QA (quality assessment) reports**:
      one :abbr:`HTML (hypertext markup language)` per subject,
      that allows the user a thorough visual assessment of the quality
-     of processing and ensures the transparency of fMRIPrep operation.
+     of processing and ensures the transparency of *fMRIPrep* operation.
 
   2. **Pre-processed imaging data** which are derivatives of the original
      anatomical and functional images after various preparation procedures
@@ -25,13 +25,13 @@ FMRIPrep generates three broad classes of outcomes:
      between different spaces or the estimated confounds.
 
 
-fMRIPrep outputs conform to the :abbr:`BIDS (brain imaging data structure)`
+*FMRIPrep* outputs conform to the :abbr:`BIDS (brain imaging data structure)`
 Derivatives specification (see `BIDS Derivatives RC1`_).
 
 Visual Reports
 --------------
 
-FMRIPrep outputs summary reports, written to ``<output dir>/fmriprep/sub-<subject_label>.html``.
+*FMRIPrep* outputs summary reports, written to ``<output dir>/fmriprep/sub-<subject_label>.html``.
 These reports provide a quick way to make visual inspection of the results easy.
 Each report is self contained and thus can be easily shared with collaborators (for example via email).
 `View a sample report. <_static/sample_report.html>`_
@@ -161,7 +161,7 @@ There is currently no consensus on an optimal denoising strategy in the fMRI com
 Rather, different strategies have been proposed, which achieve different levels of trade-off between
 how much of the non-neuronal fluctuations are effectively removed, and how much of neuronal fluctuations
 are damaged in the process.
-The fMRIprep pipeline generates a large array of possible confounds.
+The *fMRIPrep* pipeline generates a large array of possible confounds.
 
 The best known confounding variables in neuroimaging are the six head motion parameters
 (three rotations and three translations) - the common output of the head motion correction
@@ -171,7 +171,7 @@ or `FSL <https://fsl.fmrib.ox.ac.uk/fsl/fslwiki>`_.
 One of the biggest advantages of fMRPrep is the automatic calculation of multiple potential confounding variables
 beyond standard head motion parameters.
 
-Confounding variables calculated in fMRIPrep are stored separately for each subject,
+Confounding variables calculated in *fMRIPrep* are stored separately for each subject,
 session and run in `TSV (tab-separated value)` files - one column for each confound variable.
 Such tabular files may include over 100 columns of potential confound regressors.
 
@@ -185,7 +185,7 @@ Such tabular files may include over 100 columns of potential confound regressors
    see Parkes et al. ([Parkes2018]_) and Ciric et al. ([Ciric2017]_).
 
 
-For each :abbr:`BOLD (blood-oxygen level dependent)` run processed with fMRIPrep, a
+For each :abbr:`BOLD (blood-oxygen level dependent)` run processed with *fMRIPrep*, a
 ``<output_folder>/fmriprep/sub-<sub_id>/func/sub-<sub_id>_task-<task_id>_run-<run_id>_desc-confounds_regressors.tsv``
 file will be generated.
 These are :abbr:`TSV (tab-separated values)` tables, which look like the example below: ::
@@ -223,12 +223,12 @@ from the fMRI signal.
 Thus, Friston et al. ([Friston1996]_) and Satterthwaite et al. ([Satterthwaite2013]_)
 proposed *24-motion-parameter* expansion, with a goal of removing from fMRI signal as much of the motion-related
 variance as possible.
-To make this technique more accessible, fMRIPrep automaticaly calculates motion parameter
+To make this technique more accessible, *fMRIPrep* automaticaly calculates motion parameter
 expansion ([Satterthwaite2013]_), providing timeseries corresponding to first *temporal derivatives* of six motion
 parameters, together with their *quadratic terms*, resulting in the total 24 head motion parameters
 (6 standard motion parameters + 6 temporal derivatives of six motion parameters + 12 quadratic terms of 6 motion
 parameters and their 6 temporal derivatives).
-Additionally, fMRIPrep returns temporal derivatives and quadratic terms for the ``csf``, ``white_matter``
+Additionally, *fMRIPrep* returns temporal derivatives and quadratic terms for the ``csf``, ``white_matter``
 and ``global_signal`` to enable applying 36-parameter denoising strategy
 proposed by Satterthwaite et al. ([Satterthwaite2013]_).
 
@@ -255,7 +255,7 @@ or including outlier points in the subsequent first-level analysis when building
 Averaged value of confound (for example, mean ``framewise_displacement``)
 can be added as a regressor in group level analysis ([Yan2013]_).
 
-*Spike regressors* for outlier censoring can also be generated from within fMRIPrep using
+*Spike regressors* for outlier censoring can also be generated from within *fMRIPrep* using
 the command line options ``--fd-spike-threshold`` and ``--dvars-spike-threshold``
 (default: FD > 0.5 mm or DVARS > 1.5). Spike regressors are stored in separate ``motion_outlier_XX``
 columns.
@@ -362,9 +362,9 @@ to the fraction of variance that they explain across the nuisance ROI.
 This is used by *fMRIPrep* to determine whether each component should be saved for
 use in denoising operations: a component is saved if it contributes to explaining
 the top 50 percent of variance in the nuisance ROI.
-*fMRIPrep* can be configured to save all components instead using the command line
+*FMRIPrep* can be configured to save all components instead using the command line
 option ``--return-all-components``.
-*fMRIPrep* reports include a plot of the cumulative variance explained by each
+*FMRIPrep* reports include a plot of the cumulative variance explained by each
 component, ordered by descending singular value.
 
 .. figure:: _static/sub-01_task-rest_compcor.svg
