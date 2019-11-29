@@ -158,7 +158,7 @@ It is possible to minimize confounding effects of non-neuronal signals by includ
 in the :abbr:`GLM (General Linear Model` design matrix or regressing them out from
 the fMRI data - a procedure known as *denoising*.
 There is currently no consensus on an optimal denoising strategy in the fMRI community.
-Rather, different strategies have been proposed, which achieve different levels of trade-off between
+Rather, different strategies have been proposed, which achieve different compromises between
 how much of the non-neuronal fluctuations are effectively removed, and how much of neuronal fluctuations
 are damaged in the process.
 The *fMRIPrep* pipeline generates a large array of possible confounds.
@@ -438,7 +438,6 @@ to which tissue-specific regressors correlate with global signal.
      Milham MP, A comprehensive assessment of regional variation in the impact of head micromovements
      on functional connectomics.
      NeuroImage. 2013. doi: `10.1016/j.neuroimage.2013.03.004 <https://doi.org/10.1016/j.neuroimage.2013.03.004>`_
-
 
 
 
