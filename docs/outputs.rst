@@ -155,7 +155,7 @@ or physiological fluctuations (related to cardiac or respiratory effects)
 Such non-neuronal fluctuations may drive spurious results in fMRI data analysis,
 including standard activation :abbr:`GLM (General Linear Model)` and functional connectivity analyses.
 It is possible to minimize confounding effects of non-neuronal signals by including them as nuisance regressors
-in the :abbr:`GLM (General Linear Model` design matrix or regressing them out from
+in the :abbr:`GLM (General Linear Model)` design matrix or regressing them out from
 the fMRI data - a procedure known as *denoising*.
 There is currently no consensus on an optimal denoising strategy in the fMRI community.
 Rather, different strategies have been proposed, which achieve different compromises between
@@ -438,6 +438,5 @@ to which tissue-specific regressors correlate with global signal.
      Milham MP, A comprehensive assessment of regional variation in the impact of head micromovements
      on functional connectomics.
      NeuroImage. 2013. doi: `10.1016/j.neuroimage.2013.03.004 <https://doi.org/10.1016/j.neuroimage.2013.03.004>`_
-
 
 
