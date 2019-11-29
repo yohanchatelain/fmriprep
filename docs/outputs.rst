@@ -142,8 +142,6 @@ sampled to those subject spaces.
 Confounds
 ---------
 
-See implementation on :mod:`~fmriprep.workflows.bold.confounds.init_bold_confs_wf`.
-
 The :abbr:`BOLD (blood-oxygen level dependent)` signal measured with fMRI is a mixture of fluctuations
 of both neuronal and non-neuronal origin.
 Neuronal signals are measured indirectly as changes in the local concentration of oxygenated hemoglobin.
@@ -151,7 +149,7 @@ Non-neuronal fluctuations in fMRI data may appear as a result of head motion, sc
 or physiological fluctuations (related to cardiac or respiratory effects).
 For a detailed review of the possible sources of noise in the BOLD signal, refer to [Greve2013]_.
 
-*Confounds* (or nuisance regressors) are variables representing fluctuations of non-neuronal origin.
+*Confounds* (or nuisance regressors) are variables representing fluctuations with a potential non-neuronal origin.
 Such non-neuronal fluctuations may drive spurious results in fMRI data analysis,
 including standard activation :abbr:`GLM (General Linear Model)` and functional connectivity analyses.
 It is possible to minimize confounding effects of non-neuronal signals by including them as nuisance regressors
@@ -166,8 +164,7 @@ The *fMRIPrep* pipeline generates a large array of possible confounds.
 The best known confounding variables in neuroimaging are the six head motion parameters
 (three rotations and three translations) - the common output of the head motion correction
 (also known as *realignment*) of popular fMRI preprocessing software
-such as SPM_
-or FSL_.
+such as SPM_ or FSL_.
 One of the biggest advantages of *fMRIPrep* is the automatic calculation of multiple potential confounding variables
 beyond standard head motion parameters.
 
@@ -395,6 +392,8 @@ to which tissue-specific regressors correlate with global signal.
     with the mean global signal computed across the whole brain; the regressors shown
     are those with greatest correlation with the global signal.
     This information can be used to diagnose partial volume effects.
+
+See implementation on :mod:`~fmriprep.workflows.bold.confounds.init_bold_confs_wf`.
 
 .. topic:: References
 
