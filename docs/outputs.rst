@@ -153,12 +153,12 @@ For a detailed review of the possible sources of noise in the BOLD signal, refer
 
 *Confounds* (or nuisance regressors) are variables representing fluctuations of non-neuronal origin.
 Such non-neuronal fluctuations may drive spurious results in fMRI data analysis,
-including standard activation :abbr:`GLM (General Linear Model` and functional connectivity analyses.
+including standard activation :abbr:`GLM (General Linear Model)` and functional connectivity analyses.
 It is possible to minimize confounding effects of non-neuronal signals by including them as nuisance regressors
-in the :abbr:`GLM (General Linear Model` design matrix or regressing them out from
+in the :abbr:`GLM (General Linear Model)` design matrix or regressing them out from
 the fMRI data - a procedure known as *denoising*.
 There is currently no consensus on an optimal denoising strategy in the fMRI community.
-Rather, different strategies have been proposed, which achieve different levels of trade-off between
+Rather, different strategies have been proposed, which achieve different compromises between
 how much of the non-neuronal fluctuations are effectively removed, and how much of neuronal fluctuations
 are damaged in the process.
 The *fMRIPrep* pipeline generates a large array of possible confounds.
@@ -172,7 +172,7 @@ One of the biggest advantages of *fMRIPrep* is the automatic calculation of mult
 beyond standard head motion parameters.
 
 Confounding variables calculated in *fMRIPrep* are stored separately for each subject,
-session and run in `TSV (tab-separated value)` files - one column for each confound variable.
+session and run in :abbr:`TSV (tab-separated value)` files - one column for each confound variable.
 Such tabular files may include over 100 columns of potential confound regressors.
 
 .. warning::
@@ -438,9 +438,5 @@ to which tissue-specific regressors correlate with global signal.
      Milham MP, A comprehensive assessment of regional variation in the impact of head micromovements
      on functional connectomics.
      NeuroImage. 2013. doi: `10.1016/j.neuroimage.2013.03.004 <https://doi.org/10.1016/j.neuroimage.2013.03.004>`_
-
-
-
-
 
 
