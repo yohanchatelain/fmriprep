@@ -172,7 +172,7 @@ One of the biggest advantages of *fMRIPrep* is the automatic calculation of mult
 beyond standard head motion parameters.
 
 Confounding variables calculated in *fMRIPrep* are stored separately for each subject,
-session and run in `TSV (tab-separated value)` files - one column for each confound variable.
+session and run in :abbr:`TSV (tab-separated value)` files - one column for each confound variable.
 Such tabular files may include over 100 columns of potential confound regressors.
 
 .. warning::
@@ -438,7 +438,6 @@ to which tissue-specific regressors correlate with global signal.
      Milham MP, A comprehensive assessment of regional variation in the impact of head micromovements
      on functional connectomics.
      NeuroImage. 2013. doi: `10.1016/j.neuroimage.2013.03.004 <https://doi.org/10.1016/j.neuroimage.2013.03.004>`_
-
 
 
 
