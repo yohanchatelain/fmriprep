@@ -153,7 +153,7 @@ or physiological fluctuations (related to cardiac or respiratory effects)
 
 *Confounds* (or nuisance regressors) are variables representing potential fluctuations of non-neuronal origin.
 Such non-neuronal fluctuations may drive spurious results in fMRI data analysis,
-including standard activation :abbr:`GLM (General Linear Model` and functional connectivity analyses.
+including standard activation :abbr:`GLM (General Linear Model)` and functional connectivity analyses.
 It is possible to minimize confounding effects of non-neuronal signals by including them as nuisance regressors
 in the :abbr:`GLM (General Linear Model` design matrix or regressing them out from
 the fMRI data - a procedure known as *denoising*.
@@ -438,7 +438,6 @@ to which tissue-specific regressors correlate with global signal.
      Milham MP, A comprehensive assessment of regional variation in the impact of head micromovements
      on functional connectomics.
      NeuroImage. 2013. doi: `10.1016/j.neuroimage.2013.03.004 <https://doi.org/10.1016/j.neuroimage.2013.03.004>`_
-
 
 
 
