@@ -431,17 +431,12 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         name='summary', mem_gb=DEFAULT_MEMORY_MIN_GB, run_without_submitting=True)
     summary.inputs.dummy_scans = dummy_scans
 
-    # CIfTI output
-    cifti_spaces = set()
-    for space in output_spaces.keys():
-        if space == 'fsLR':
-            cifti_spaces = set(('fsLR',))
-            break
-        if space in ('fsaverage5', 'fsaverage6'):
-            cifti_spaces.add(space)
-        fsaverage_den = output_spaces.get('fsaverage', {}).get('den')
-        if fsaverage_den:
-            cifti_spaces.add(FSAVERAGE_DENSITY[fsaverage_den])
+    # CIFTI output
+    cifti_spaces = {'fsLR'} if 'fsLR' in output_spaces else \
+        set(output_spaces.keys()).intersection(('fsaverage5', 'fsaverage6'))
+    fsaverage_den = output_spaces.get('fsaverage', {}).get('den')
+    if fsaverage_den and 'fsLR' not in cifti_spaces:
+        cifti_spaces.add(FSAVERAGE_DENSITY[fsaverage_den])
     cifti_output = cifti_output and cifti_spaces
     func_derivatives_wf = init_func_derivatives_wf(
         bids_root=layout.root,
@@ -929,7 +924,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     # SURFACES ##################################################################################
     surface_spaces = [space for space in output_spaces.keys() if space.startswith('fs')]
     if freesurfer and surface_spaces:
-        fslr_density = output_spaces.get('fsLR', {}).get('den')
+        fslr_density = output_spaces.get('fsLR', {}).get('den', '32k')
         LOGGER.log(25, 'Creating BOLD surface-sampling workflow.')
         bold_surf_wf = init_bold_surf_wf(mem_gb=mem_gb['resampled'],
                                          output_spaces=surface_spaces,
