@@ -51,8 +51,8 @@ fmriprep/sub-01/anat/sub-01_space-MNI152NLin6Asym_label-GM_probseg.nii.gz
 fmriprep/sub-01/anat/sub-01_space-MNI152NLin6Asym_label-WM_probseg.nii.gz
 fmriprep/sub-01/func
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_AROMAnoiseICs.csv
-fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold.dtseries.json
-fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_bold.dtseries.nii
+fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_space-fMRIPrep_bold.dtseries.json
+fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_space-fMRIPrep_bold.dtseries.nii
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_desc-confounds_regressors.json
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_desc-confounds_regressors.tsv
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_desc-MELODIC_mixing.tsv
@@ -83,8 +83,8 @@ fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_space-T1w_desc-brain_ma
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_space-T1w_desc-preproc_bold.json
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-01_space-T1w_desc-preproc_bold.nii.gz
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_AROMAnoiseICs.csv
-fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold.dtseries.json
-fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_bold.dtseries.nii
+fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_space-fMRIPrep_bold.dtseries.json
+fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_space-fMRIPrep_bold.dtseries.nii
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_desc-confounds_regressors.json
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_desc-confounds_regressors.tsv
 fmriprep/sub-01/func/sub-01_task-mixedgamblestask_run-02_desc-MELODIC_mixing.tsv

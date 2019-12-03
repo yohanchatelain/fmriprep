@@ -53,7 +53,7 @@ def init_func_derivatives_wf(
         'aroma_noise_ics', 'bold_aparc_std', 'bold_aparc_t1', 'bold_aseg_std',
         'bold_aseg_t1', 'bold_cifti', 'bold_mask_std', 'bold_mask_t1', 'bold_std',
         'bold_std_ref', 'bold_t1', 'bold_t1_ref', 'bold_native', 'bold_native_ref',
-        'bold_mask_native', 'cifti_variant', 'cifti_variant_key',
+        'bold_mask_native', 'cifti_variant', 'cifti_metadata',
         'confounds', 'confounds_metadata', 'melodic_mix', 'nonaggr_denoised_file',
         'source_file', 'surfaces', 'template']),
         name='inputnode')
@@ -233,7 +233,7 @@ def init_func_derivatives_wf(
                 (name_cifti, cifti_bolds, [('out_name', 'suffix')]),
                 (name_cifti, cifti_key, [('out_name', 'suffix')]),
                 (inputnode, cifti_key, [('source_file', 'source_file'),
-                                        ('cifti_variant_key', 'in_file')]),
+                                        ('cifti_metadata', 'in_file')]),
             ])
 
     if use_aroma:

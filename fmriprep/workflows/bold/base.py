@@ -412,7 +412,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_t1', 'bold_t1_ref', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1',
                 'bold_std', 'bold_std_ref', 'bold_mask_std', 'bold_aseg_std', 'bold_aparc_std',
-                'bold_native', 'bold_cifti', 'cifti_variant', 'cifti_variant_key', 'surfaces',
+                'bold_native', 'bold_cifti', 'cifti_variant', 'cifti_metadata', 'surfaces',
                 'confounds', 'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file',
                 'confounds_metadata']),
         name='outputnode')
@@ -464,7 +464,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('nonaggr_denoised_file', 'inputnode.nonaggr_denoised_file'),
             ('bold_cifti', 'inputnode.bold_cifti'),
             ('cifti_variant', 'inputnode.cifti_variant'),
-            ('cifti_variant_key', 'inputnode.cifti_variant_key'),
+            ('cifti_metadata', 'inputnode.cifti_metadata'),
             ('confounds_metadata', 'inputnode.confounds_metadata'),
         ]),
     ])
@@ -975,7 +975,7 @@ data and volume-sampled data, were also generated.
                     ('key', 'volume_target')]),
                 (gen_cifti, outputnode, [('out_file', 'bold_cifti'),
                                          ('variant', 'cifti_variant'),
-                                         ('variant_key', 'cifti_variant_key')]),
+                                         ('out_metadata', 'cifti_metadata')]),
             ])
 
     # REPORTING ############################################################
@@ -1061,7 +1061,7 @@ def _to_join(in_file, join_file):
 def _order_surfs(targets, in_surfs):
     """Reorder list of surface_files into [L,R] sub-lists"""
     surface_files = []
-    targets = targets if 'fsLR' not in targets else ('fslr',)
+    targets = targets if 'fsLR' not in targets else ('fsLR',)
     for target in targets:
         target_files = [f for f in in_surfs if f.endswith("{}.gii".format(target))]
         surface_files.append(target_files)
