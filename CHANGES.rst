@@ -1,3 +1,8 @@
+1.5.3 (TBD)
+===========
+
+* ENH: Upgrade SDCFlows to new API (1.0.0) (#1886) @oesteban
+
 1.5.2 (December 2, 2019)
 ========================
 Bug-fix release in the 1.5.x series.
