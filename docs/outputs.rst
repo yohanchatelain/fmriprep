@@ -5,7 +5,6 @@
 -------------------
 Outputs of fMRIPrep
 -------------------
-
 *FMRIPrep* generates three broad classes of outcomes:
 
   1. **Visual QA (quality assessment) reports**:
@@ -30,7 +29,6 @@ Derivatives specification (see `BIDS Derivatives RC1`_).
 
 Visual Reports
 --------------
-
 *FMRIPrep* outputs summary reports, written to ``<output dir>/fmriprep/sub-<subject_label>.html``.
 These reports provide a quick way to make visual inspection of the results easy.
 Each report is self contained and thus can be easily shared with collaborators (for example via email).
@@ -39,7 +37,6 @@ Each report is self contained and thus can be easily shared with collaborators (
 
 Preprocessed data (fMRIPrep *derivatives*)
 ------------------------------------------
-
 Preprocessed, or derivative, data are written to
 ``<output dir>/fmriprep/sub-<subject_label>/``.
 The `BIDS Derivatives RC1`_ specification describes the naming and metadata conventions we follow.
@@ -117,7 +114,6 @@ are saved:
 
 FreeSurfer Derivatives
 ----------------------
-
 A FreeSurfer subjects directory is created in ``<output dir>/freesurfer``.
 
 ::
@@ -138,10 +134,8 @@ FreeSurfer are copied into this subjects directory, if any functional data are
 sampled to those subject spaces.
 
 
-
 Confounds
 ---------
-
 The :abbr:`BOLD (blood-oxygen level dependent)` signal measured with fMRI is a mixture of fluctuations
 of both neuronal and non-neuronal origin.
 Neuronal signals are measured indirectly as changes in the local concentration of oxygenated hemoglobin.
@@ -194,16 +188,14 @@ These are :abbr:`TSV (tab-separated values)` tables, which look like the example
   665.3969	0.0	488.03	1.085204	16.323903999999995	0.0348966	0.010819676200000001	0.0651895837	-0.09556632150000001	-0.033148835	-0.4768871111	0.20641088559999998	0.2818768463	0.4303863764	0.41323714850000004	-0.2115232212	-0.0037154909000000004	0.10636180070000001	0.0	0.0	0.0	0.0457372	0.0	-0.0	0.0	-1.341359143	0.1636017242
   662.82715	0.0	487.37302	1.01591	15.281561	0.0333937	0.3328022893	-0.2220965269	-0.0912891436	0.2326688125	0.279138129	-0.111878887	0.16901660629999998	0.0550480212	0.1798747037	-0.25383302620000003	0.1646403629	0.3953613889	0.0	0.010164	-0.0103568	0.0424513	0.0	-0.0	0.00019174	-0.1554834655	0.6451987913
 
-
 Each row of the file corresponds to one time point found in the
 corresponding :abbr:`BOLD (blood-oxygen level dependent)` time series
 (stored in ``<output_folder>/fmriprep/sub-<sub_id>/func/sub-<sub_id>_task-<task_id>_run-<run_id>_desc-preproc_bold.nii.gz``).
 
 Confound regressors description
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Basic confouds
-==================
+==============
 
 - ``trans_x``, ``trans_y``, ``trans_z``, ``rot_x``, ``rot_y``, ``rot_z`` - the 6 rigid-body motion
   parameters (3 translations and 3 rotation) estimated relative to a reference image;
@@ -215,9 +207,9 @@ Basic confouds
 - ``global_signal`` -  the average signal within the brain mask.
 
 Parameter expansion of basic confounds
-=====================
-Only accounting for the standard six motion parameters may not be sufficient to remove all variance related to head motion
-from the fMRI signal.
+======================================
+Only accounting for the standard six motion parameters may not be sufficient to remove all variance related to 
+head motion from the fMRI signal.
 Thus, Friston et al. ([Friston1996]_) and Satterthwaite et al. ([Satterthwaite2013]_)
 proposed *24-motion-parameter* expansion, with a goal of removing from fMRI signal as much of the motion-related
 variance as possible.
@@ -234,9 +226,8 @@ Derivatives and quadratic terms are stored under column names with suffixes: ``_
 These were calculated for head motion estimates (``trans_`` and ``rot_``) and compartment signals
 (``white_matter``, ``csf``, and ``global_signal``).
 
-
 Confounds for outlier detection
-======================================
+===============================
 
 - ``framewise_displacement`` - is a quantification of the estimated bulk-head motion calculated using
   formula proposed by Power et al. ([Power2012]_);
@@ -259,8 +250,7 @@ the command line options ``--fd-spike-threshold`` and ``--dvars-spike-threshold`
 columns.
 
 ICA-AROMA confounds
-========================
-
+===================
 
 - ``aroma_motion_XX`` - the motion-related components identified by :abbr:`ICA (independent components analysis)`
   -:abbr:`AROMA (Automatic Removal Of Motion Artifacts)` (if enabled with a flag ``--use-aroma``) .
@@ -271,8 +261,7 @@ ICA-AROMA confounds
 
 
 CompCor confounds
-=====================
-
+=================
 :abbr:`CompCor (Component Based Noise Correction)` is a component-based noise correlation method.
 In the method, principal components are derived from :abbr:`ROI (Region of Interest)` which is unlikely
 to include signal related to neuronal activity, such as :abbr:`CSF (cerebro-spinal fluid)`
@@ -290,7 +279,6 @@ decomposition (``t_comp_cor_XX``) and three anatomical decompositions (``a_comp_
 three different noise ROIs: an eroded white matter mask, an eroded CSF mask, and a combined mask derived
 from the union of these.
 
-
 .. warning::
     Only a subset of these CompCor decompositions should be used for further denoising.
     The original Behzadi aCompCor implementation ([Behzadi2007]_) can be applied using
@@ -302,24 +290,27 @@ from the union of these.
 Each confounds data file will also have a corresponding metadata file (``~desc-confounds_regressors.json``).
 Metadata files contain additional information about columns in the confounds TSV file: ::
 
-  {
-    "a_comp_cor_00": {
-      "CumulativeVarianceExplained": 0.1081970825,
-      "Mask": "combined",
-      "Method": "aCompCor",
-      "Retained": true,
-      "SingularValue": 25.8270209974,
-      "VarianceExplained": 0.1081970825
-    },
-    "dropped_0": {
-      "CumulativeVarianceExplained": 0.5965809597,
-      "Mask": "combined",
-      "Method": "aCompCor",
-      "Retained": false,
-      "SingularValue": 20.7955177198,
-      "VarianceExplained": 0.0701465624
+.. code-block:: JSON
+
+    {
+      "a_comp_cor_00": {
+        "CumulativeVarianceExplained": 0.1081970825,
+        "Mask": "combined",
+        "Method": "aCompCor",
+        "Retained": true,
+        "SingularValue": 25.8270209974,
+        "VarianceExplained": 0.1081970825
+      },
+      "dropped_0": {
+        "CumulativeVarianceExplained": 0.5965809597,
+        "Mask": "combined",
+        "Method": "aCompCor",
+        "Retained": false,
+        "SingularValue": 20.7955177198,
+        "VarianceExplained": 0.0701465624
+      }
     }
-  }
+
 
 For CompCor decompositions, entries include:
 
@@ -337,7 +328,6 @@ For CompCor decompositions, entries include:
 
 Confounds and "carpet"-plot on the visual reports
 -------------------------------------------------
-
 Some of the estimated confounds, as well as a "carpet" visualization of the
 :abbr:`BOLD (blood-oxygen level-dependent)` time-series (see [Power2016]_).
 This plot is included for each run within the corresponding visual report.
@@ -438,4 +428,3 @@ See implementation on :mod:`~fmriprep.workflows.bold.confounds.init_bold_confs_w
      Milham MP, A comprehensive assessment of regional variation in the impact of head micromovements
      on functional connectomics.
      NeuroImage. 2013. doi: `10.1016/j.neuroimage.2013.03.004 <https://doi.org/10.1016/j.neuroimage.2013.03.004>`_
-
