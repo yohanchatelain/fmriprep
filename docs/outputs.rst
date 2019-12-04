@@ -160,13 +160,14 @@ Rather, different strategies have been proposed, which achieve different comprom
 how much of the non-neuronal fluctuations are effectively removed, and how much of neuronal fluctuations
 are damaged in the process.
 The *fMRIPrep* pipeline generates a large array of possible confounds.
+Note, *fMRIPrep* does not perform any denoising itself and it is up to the user to perform this step.
 
-The best known confounding variables in neuroimaging are the six head motion parameters
+The most well established confounding variables in neuroimaging are the six head motion parameters
 (three rotations and three translations) - the common output of the head motion correction
 (also known as *realignment*) of popular fMRI preprocessing software
 such as SPM_ or FSL_.
 One of the biggest advantages of *fMRIPrep* is the automatic calculation of multiple potential confounding variables
-beyond standard head motion parameters.
+beyond the standard head motion parameters.
 
 Confounding variables calculated in *fMRIPrep* are stored separately for each subject,
 session and run in :abbr:`TSV (tab-separated value)` files - one column for each confound variable.
@@ -195,7 +196,7 @@ These are :abbr:`TSV (tab-separated values)` tables, which look like the example
 
 
 Each row of the file corresponds to one time point found in the
-corresponding :abbr:`BOLD (blood-oxygen level dependent)` time-series
+corresponding :abbr:`BOLD (blood-oxygen level dependent)` time series
 (stored in ``<output_folder>/fmriprep/sub-<sub_id>/func/sub-<sub_id>_task-<task_id>_run-<run_id>_desc-preproc_bold.nii.gz``).
 
 Confound regressors description
@@ -215,7 +216,7 @@ Basic confouds
 
 Parameter expansion of basic confounds
 =====================
-Regressing out the standard six motion parameters may not be sufficient to remove all variance related to head motion
+Only accounting for the standard six motion parameters may not be sufficient to remove all variance related to head motion
 from the fMRI signal.
 Thus, Friston et al. ([Friston1996]_) and Satterthwaite et al. ([Satterthwaite2013]_)
 proposed *24-motion-parameter* expansion, with a goal of removing from fMRI signal as much of the motion-related
@@ -246,7 +247,7 @@ Confounds for outlier detection
   outlier/volume).
 
 All these confounds can be used to detect potential outlier time points - frames with high motion or spikes.
-Detected outliers can be further removed from time-series using methods such as: volume *censoring* - entirely
+Detected outliers can be further removed from time series using methods such as: volume *censoring* - entirely
 discarding problematic time points ([Power2012]_), regressing signal from outlier points in denoising procedure,
 or including outlier points in the subsequent first-level analysis when building the design matrix.
 Averaged value of confound (for example, mean ``framewise_displacement``)
@@ -437,5 +438,4 @@ See implementation on :mod:`~fmriprep.workflows.bold.confounds.init_bold_confs_w
      Milham MP, A comprehensive assessment of regional variation in the impact of head micromovements
      on functional connectomics.
      NeuroImage. 2013. doi: `10.1016/j.neuroimage.2013.03.004 <https://doi.org/10.1016/j.neuroimage.2013.03.004>`_
-
 
