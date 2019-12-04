@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
 """
@@ -36,51 +35,51 @@ from .util import init_bold_reference_wf
 
 def init_bold_surf_wf(mem_gb, output_spaces, medial_surface_nan, name='bold_surf_wf'):
     """
-    This workflow samples functional images to FreeSurfer surfaces
+    Sample functional images to FreeSurfer surfaces.
 
     For each vertex, the cortical ribbon is sampled at six points (spaced 20% of thickness apart)
     and averaged.
-
     Outputs are in GIFTI format.
 
-    .. workflow::
-        :graph2use: colored
-        :simple_form: yes
+    Workflow Graph
+        .. workflow::
+            :graph2use: colored
+            :simple_form: yes
 
-        from fmriprep.workflows.bold import init_bold_surf_wf
-        wf = init_bold_surf_wf(mem_gb=0.1,
-                               output_spaces=['T1w', 'fsnative',
-                                             'template', 'fsaverage5'],
-                               medial_surface_nan=False)
+            from fmriprep.workflows.bold import init_bold_surf_wf
+            wf = init_bold_surf_wf(mem_gb=0.1,
+                                   output_spaces=['T1w', 'fsnative',
+                                                 'template', 'fsaverage5'],
+                                   medial_surface_nan=False)
 
-    **Parameters**
+    Parameters
+    ----------
+    output_spaces : list
+        List of output spaces functional images are to be resampled to
+        Target spaces beginning with ``fs`` will be selected for resampling,
+        such as ``fsaverage`` or related template spaces
+        If the list contains ``fsnative``, images will be resampled to the
+        individual subject's native surface
+    medial_surface_nan : bool
+        Replace medial wall values with NaNs on functional GIFTI files
 
-        output_spaces : list
-            List of output spaces functional images are to be resampled to
-            Target spaces beginning with ``fs`` will be selected for resampling,
-            such as ``fsaverage`` or related template spaces
-            If the list contains ``fsnative``, images will be resampled to the
-            individual subject's native surface
-        medial_surface_nan : bool
-            Replace medial wall values with NaNs on functional GIFTI files
+    Inputs
+    ------
+    source_file
+        Motion-corrected BOLD series in T1 space
+    t1w_preproc
+        Bias-corrected structural template image
+    subjects_dir
+        FreeSurfer SUBJECTS_DIR
+    subject_id
+        FreeSurfer subject ID
+    t1w2fsnative_xfm
+        LTA-style affine matrix translating from T1w to FreeSurfer-conformed subject space
 
-    **Inputs**
-
-        source_file
-            Motion-corrected BOLD series in T1 space
-        t1_preproc
-            Bias-corrected structural template image
-        subjects_dir
-            FreeSurfer SUBJECTS_DIR
-        subject_id
-            FreeSurfer subject ID
-        t1_2_fsnative_forward_transform
-            LTA-style affine matrix translating from T1w to FreeSurfer-conformed subject space
-
-    **Outputs**
-
-        surfaces
-            BOLD series, resampled to FreeSurfer surfaces
+    Outputs
+    -------
+    surfaces
+        BOLD series, resampled to FreeSurfer surfaces
 
     """
     # Ensure volumetric spaces do not sneak into this workflow
@@ -94,14 +93,14 @@ The BOLD time-series, were resampled to surfaces on the following
 spaces: {out_spaces}.
 """.format(out_spaces=', '.join(['*%s*' % s for s in spaces]))
     inputnode = pe.Node(
-        niu.IdentityInterface(fields=['source_file', 't1_preproc', 'subject_id', 'subjects_dir',
-                                      't1_2_fsnative_forward_transform']),
+        niu.IdentityInterface(fields=['source_file', 't1w_preproc', 'subject_id', 'subjects_dir',
+                                      't1w2fsnative_xfm']),
         name='inputnode')
 
     outputnode = pe.Node(niu.IdentityInterface(fields=['surfaces']), name='outputnode')
 
     def select_target(subject_id, space):
-        """ Given a source subject ID and a target space, get the target subject ID """
+        """Get the target subject ID, given a source subject ID and a target space."""
         return subject_id if space == 'fsnative' else space
 
     targets = pe.MapNode(niu.Function(function=select_target),
@@ -141,8 +140,8 @@ spaces: {out_spaces}.
         (inputnode, targets, [('subject_id', 'subject_id')]),
         (inputnode, rename_src, [('source_file', 'in_file')]),
         (inputnode, resampling_xfm, [('source_file', 'source_file'),
-                                     ('t1_preproc', 'target_file')]),
-        (inputnode, set_xfm_source, [('t1_2_fsnative_forward_transform', 'in_lta2')]),
+                                     ('t1w_preproc', 'target_file')]),
+        (inputnode, set_xfm_source, [('t1w2fsnative_xfm', 'in_lta2')]),
         (resampling_xfm, set_xfm_source, [('out_lta', 'in_lta1')]),
         (inputnode, sampler, [('subjects_dir', 'subjects_dir'),
                               ('subject_id', 'subject_id')]),
@@ -176,97 +175,100 @@ def init_bold_std_trans_wf(
     use_fieldwarp=False
 ):
     """
-    This workflow samples functional images into standard space with a single
-    resampling of the original BOLD series.
+    Sample fMRI into standard space with a single-step resampling of the original BOLD series.
 
-    .. workflow::
-        :graph2use: colored
-        :simple_form: yes
+    .. important::
+        This workflow provides two outputnodes.
+        One output node (with name ``poutputnode``) will be parameterized in a Nipype sense
+        (see `Nipype iterables
+        <https://miykael.github.io/nipype_tutorial/notebooks/basic_iteration.html>`__), and a
+        second node (``outputnode``) will collapse the parameterized outputs into synchronous
+        lists of the output fields listed below.
 
-        from collections import OrderedDict
-        from fmriprep.workflows.bold import init_bold_std_trans_wf
-        wf = init_bold_std_trans_wf(
-            freesurfer=True,
-            mem_gb=3,
-            omp_nthreads=1,
-            standard_spaces=OrderedDict([('MNI152Lin', {}),
-                                         ('fsaverage', {'density': '10k'})]),
-        )
+    Workflow Graph
+        .. workflow::
+            :graph2use: colored
+            :simple_form: yes
 
-    **Parameters**
+            from collections import OrderedDict
+            from fmriprep.workflows.bold import init_bold_std_trans_wf
+            wf = init_bold_std_trans_wf(
+                freesurfer=True,
+                mem_gb=3,
+                omp_nthreads=1,
+                standard_spaces=OrderedDict([('MNI152Lin', {}),
+                                             ('fsaverage', {'density': '10k'})]),
+            )
 
-        freesurfer : bool
-            Whether to generate FreeSurfer's aseg/aparc segmentations on BOLD space.
-        mem_gb : float
-            Size of BOLD file in GB
-        omp_nthreads : int
-            Maximum number of threads an individual process may use
-        standard_spaces : OrderedDict
-            Ordered dictionary where keys are TemplateFlow ID strings (e.g.,
-            ``MNI152Lin``, ``MNI152NLin6Asym``, ``MNI152NLin2009cAsym``, or ``fsLR``),
-            or paths pointing to custom templates organized in a TemplateFlow-like structure.
-            Values of the dictionary aggregate modifiers (e.g., the value for the key ``MNI152Lin``
-            could be ``{'resolution': 2}`` if one wants the resampling to be done on the 2mm
-            resolution version of the selected template).
-        name : str
-            Name of workflow (default: ``bold_std_trans_wf``)
-        use_compression : bool
-            Save registered BOLD series as ``.nii.gz``
-        use_fieldwarp : bool
-            Include SDC warp in single-shot transform from BOLD to MNI
+    Parameters
+    ----------
+    freesurfer : bool
+        Whether to generate FreeSurfer's aseg/aparc segmentations on BOLD space.
+    mem_gb : float
+        Size of BOLD file in GB
+    omp_nthreads : int
+        Maximum number of threads an individual process may use
+    standard_spaces : OrderedDict
+        Ordered dictionary where keys are TemplateFlow ID strings (e.g.,
+        ``MNI152Lin``, ``MNI152NLin6Asym``, ``MNI152NLin2009cAsym``, or ``fsLR``),
+        or paths pointing to custom templates organized in a TemplateFlow-like structure.
+        Values of the dictionary aggregate modifiers (e.g., the value for the key ``MNI152Lin``
+        could be ``{'resolution': 2}`` if one wants the resampling to be done on the 2mm
+        resolution version of the selected template).
+    name : str
+        Name of workflow (default: ``bold_std_trans_wf``)
+    use_compression : bool
+        Save registered BOLD series as ``.nii.gz``
+    use_fieldwarp : bool
+        Include SDC warp in single-shot transform from BOLD to MNI
 
-    **Inputs**
+    Inputs
+    ------
+    anat2std_xfm
+        List of anatomical-to-standard space transforms generated during
+        spatial normalization.
+    bold_aparc
+        FreeSurfer's ``aparc+aseg.mgz`` atlas projected into the T1w reference
+        (only if ``recon-all`` was run).
+    bold_aseg
+        FreeSurfer's ``aseg.mgz`` atlas projected into the T1w reference
+        (only if ``recon-all`` was run).
+    bold_mask
+        Skull-stripping mask of reference image
+    bold_split
+        Individual 3D volumes, not motion corrected
+    fieldwarp
+        a :abbr:`DFM (displacements field map)` in ITK format
+    hmc_xforms
+        List of affine transforms aligning each volume to ``ref_image`` in ITK format
+    itk_bold_to_t1
+        Affine transform from ``ref_bold_brain`` to T1 space (ITK format)
+    name_source
+        BOLD series NIfTI file
+        Used to recover original information lost during processing
+    templates
+        List of templates that were applied as targets during
+        spatial normalization.
 
-        anat2std_xfm
-            List of anatomical-to-standard space transforms generated during
-            spatial normalization.
-        bold_aparc
-            FreeSurfer's ``aparc+aseg.mgz`` atlas projected into the T1w reference
-            (only if ``recon-all`` was run).
-        bold_aseg
-            FreeSurfer's ``aseg.mgz`` atlas projected into the T1w reference
-            (only if ``recon-all`` was run).
-        bold_mask
-            Skull-stripping mask of reference image
-        bold_split
-            Individual 3D volumes, not motion corrected
-        fieldwarp
-            a :abbr:`DFM (displacements field map)` in ITK format
-        hmc_xforms
-            List of affine transforms aligning each volume to ``ref_image`` in ITK format
-        itk_bold_to_t1
-            Affine transform from ``ref_bold_brain`` to T1 space (ITK format)
-        name_source
-            BOLD series NIfTI file
-            Used to recover original information lost during processing
-        templates
-            List of templates that were applied as targets during
-            spatial normalization.
-
-    **Outputs** - Two outputnodes are available. One output node (with name ``poutputnode``)
-    will be parameterized in a Nipype sense (see `Nipype iterables
-    <https://miykael.github.io/nipype_tutorial/notebooks/basic_iteration.html>`__), and a
-    second node (``outputnode``) will collapse the parameterized outputs into synchronous
-    lists of the following fields:
-
-        bold_std
-            BOLD series, resampled to template space
-        bold_std_ref
-            Reference, contrast-enhanced summary of the BOLD series, resampled to template space
-        bold_mask_std
-            BOLD series mask in template space
-        bold_aseg_std
-            FreeSurfer's ``aseg.mgz`` atlas, in template space at the BOLD resolution
-            (only if ``recon-all`` was run)
-        bold_aparc_std
-            FreeSurfer's ``aparc+aseg.mgz`` atlas, in template space at the BOLD resolution
-            (only if ``recon-all`` was run)
-        templates
-            Template identifiers synchronized correspondingly to previously
-            described outputs.
+    Outputs
+    -------
+    bold_std
+        BOLD series, resampled to template space
+    bold_std_ref
+        Reference, contrast-enhanced summary of the BOLD series, resampled to template space
+    bold_mask_std
+        BOLD series mask in template space
+    bold_aseg_std
+        FreeSurfer's ``aseg.mgz`` atlas, in template space at the BOLD resolution
+        (only if ``recon-all`` was run)
+    bold_aparc_std
+        FreeSurfer's ``aparc+aseg.mgz`` atlas, in template space at the BOLD resolution
+        (only if ``recon-all`` was run)
+    templates
+        Template identifiers synchronized correspondingly to previously
+        described outputs.
 
     """
-
     # Filter ``standard_spaces``
     vol_std_spaces = [k for k in standard_spaces.keys() if not k.startswith('fs')]
 
@@ -425,59 +427,62 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
                                split_file=False,
                                interpolation='LanczosWindowedSinc'):
     """
+    Resample in native (original) space.
+
     This workflow resamples the input fMRI in its native (original)
     space in a "single shot" from the original BOLD series.
 
-    .. workflow::
-        :graph2use: colored
-        :simple_form: yes
+    Workflow Graph
+        .. workflow::
+            :graph2use: colored
+            :simple_form: yes
 
-        from fmriprep.workflows.bold import init_bold_preproc_trans_wf
-        wf = init_bold_preproc_trans_wf(mem_gb=3, omp_nthreads=1)
+            from fmriprep.workflows.bold import init_bold_preproc_trans_wf
+            wf = init_bold_preproc_trans_wf(mem_gb=3, omp_nthreads=1)
 
-    **Parameters**
+    Parameters
+    ----------
+    mem_gb : float
+        Size of BOLD file in GB
+    omp_nthreads : int
+        Maximum number of threads an individual process may use
+    name : str
+        Name of workflow (default: ``bold_std_trans_wf``)
+    use_compression : bool
+        Save registered BOLD series as ``.nii.gz``
+    use_fieldwarp : bool
+        Include SDC warp in single-shot transform from BOLD to MNI
+    split_file : bool
+        Whether the input file should be splitted (it is a 4D file)
+        or it is a list of 3D files (default ``False``, do not split)
+    interpolation : str
+        Interpolation type to be used by ANTs' ``applyTransforms``
+        (default ``'LanczosWindowedSinc'``)
 
-        mem_gb : float
-            Size of BOLD file in GB
-        omp_nthreads : int
-            Maximum number of threads an individual process may use
-        name : str
-            Name of workflow (default: ``bold_std_trans_wf``)
-        use_compression : bool
-            Save registered BOLD series as ``.nii.gz``
-        use_fieldwarp : bool
-            Include SDC warp in single-shot transform from BOLD to MNI
-        split_file : bool
-            Whether the input file should be splitted (it is a 4D file)
-            or it is a list of 3D files (default ``False``, do not split)
-        interpolation : str
-            Interpolation type to be used by ANTs' ``applyTransforms``
-            (default ``'LanczosWindowedSinc'``)
+    Inputs
+    ------
+    bold_file
+        Individual 3D volumes, not motion corrected
+    bold_mask
+        Skull-stripping mask of reference image
+    name_source
+        BOLD series NIfTI file
+        Used to recover original information lost during processing
+    hmc_xforms
+        List of affine transforms aligning each volume to ``ref_image`` in ITK format
+    fieldwarp
+        a :abbr:`DFM (displacements field map)` in ITK format
 
-    **Inputs**
-
-        bold_file
-            Individual 3D volumes, not motion corrected
-        bold_mask
-            Skull-stripping mask of reference image
-        name_source
-            BOLD series NIfTI file
-            Used to recover original information lost during processing
-        hmc_xforms
-            List of affine transforms aligning each volume to ``ref_image`` in ITK format
-        fieldwarp
-            a :abbr:`DFM (displacements field map)` in ITK format
-
-    **Outputs**
-
-        bold
-            BOLD series, resampled in native space, including all preprocessing
-        bold_mask
-            BOLD series mask calculated with the new time-series
-        bold_ref
-            BOLD reference image: an average-like 3D image of the time-series
-        bold_ref_brain
-            Same as ``bold_ref``, but once the brain mask has been applied
+    Outputs
+    -------
+    bold
+        BOLD series, resampled in native space, including all preprocessing
+    bold_mask
+        BOLD series mask calculated with the new time-series
+    bold_ref
+        BOLD reference image: an average-like 3D image of the time-series
+    bold_ref_brain
+        Same as ``bold_ref``, but once the brain mask has been applied
 
     """
     workflow = Workflow(name=name)
@@ -573,37 +578,39 @@ the transforms to correct for head-motion""")
 
 def init_bold_preproc_report_wf(mem_gb, reportlets_dir, name='bold_preproc_report_wf'):
     """
+    Generate a visual report.
+
     This workflow generates and saves a reportlet showing the effect of resampling
     the BOLD signal using the standard deviation maps.
 
-    .. workflow::
-        :graph2use: orig
-        :simple_form: yes
+    Workflow Graph
+        .. workflow::
+            :graph2use: orig
+            :simple_form: yes
 
-        from fmriprep.workflows.bold.resampling import init_bold_preproc_report_wf
-        wf = init_bold_preproc_report_wf(mem_gb=1, reportlets_dir='.')
+            from fmriprep.workflows.bold.resampling import init_bold_preproc_report_wf
+            wf = init_bold_preproc_report_wf(mem_gb=1, reportlets_dir='.')
 
-    **Parameters**
+    Parameters
+    ----------
+    mem_gb : float
+        Size of BOLD file in GB
+    reportlets_dir : str
+        Directory in which to save reportlets
+    name : str, optional
+        Workflow name (default: bold_preproc_report_wf)
 
-        mem_gb : float
-            Size of BOLD file in GB
-        reportlets_dir : str
-            Directory in which to save reportlets
-        name : str, optional
-            Workflow name (default: bold_preproc_report_wf)
-
-    **Inputs**
-
-        in_pre
-            BOLD time-series, before resampling
-        in_post
-            BOLD time-series, after resampling
-        name_source
-            BOLD series NIfTI file
-            Used to recover original information lost during processing
+    Inputs
+    ------
+    in_pre
+        BOLD time-series, before resampling
+    in_post
+        BOLD time-series, after resampling
+    name_source
+        BOLD series NIfTI file
+        Used to recover original information lost during processing
 
     """
-
     from nipype.algorithms.confounds import TSNR
     from niworkflows.interfaces import SimpleBeforeAfter
 
