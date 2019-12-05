@@ -97,14 +97,19 @@ midthickness surface mesh:
 
 Surface output spaces include ``fsnative`` (full density subject-specific mesh),
 ``fsaverage`` and the down-sampled meshes ``fsaverage6`` (41k vertices) and
-``fsaverage5`` (10k vertices, default).
+``fsaverage5`` (10k vertices, default). Additionally, the BOLD can be resampled to
+``fsLR`` surfaces, a hybrid version of the ``fsaverage`` atlas with both hemispheres
+in precise geographic correspondence, with varying mesh densities: 32k (default), 59k, and 164k.
 
 If CIFTI outputs are requested, the BOLD series is also saved as ``dtseries.nii`` CIFTI2 files:
 
 - ``func/sub-<subject_label>_[specifiers]_bold.dtseries.nii``
 
-Sub-cortical time series are volumetric (supported spaces: ``MNI152NLin2009cAsym``), while cortical
-time series are sampled to surface (supported spaces: ``fsaverage5``, ``fsaverage6``)
+Sub-cortical time series are volumetric (supported spaces: ``MNI152NLin6Asym``), while cortical
+time series are sampled to surface (supported spaces: ``fsLR``). By default, CIFTI outputs produced
+match up to `HCP Pipelines`_ low resolution CIFTI output (91282 grayordinates). A higher resolution
+output can be created by increasing the surface density of ``fsLR`` to 59k.
+
 
 Finally, if ICA-AROMA is used, the MELODIC mixing matrix and the components classified as noise
 are saved:

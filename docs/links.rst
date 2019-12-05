@@ -12,6 +12,7 @@
 .. _AFNI: https://afni.nimh.nih.gov/
 .. _GIFTI: https://www.nitrc.org/projects/gifti/
 .. _`Connectome Workbench`: https://www.humanconnectome.org/software/connectome-workbench.html
+.. _`HCP Pipelines`: https://humanconnectome.org/software/hcp-mr-pipelines/
 .. _`Docker wrapper`: https://pypi.python.org/pypi/fmriprep-docker
 .. _`Docker Engine`: https://www.docker.com/products/container-runtime
 .. _`Docker installation`: https://docs.docker.com/install/
