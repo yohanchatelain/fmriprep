@@ -758,30 +758,22 @@ The argument "MNI152NLin6Asym:res-2" has been automatically added to the list of
 (option ``--output-spaces``).""", file=stderr)
 
     if opts.cifti_output:
-        # default to HCP grayordinates
-        FS_CIFTI = set(('fsaverage5', 'fsaverage6'))
-        if 'fsLR' not in output_spaces and not FS_CIFTI.intersection(output_spaces.keys()):
-            output_spaces['fsLR'] = {'den': '32k'}
+        if 'fsLR' not in output_spaces:
+            output_spaces['fsLR'] = {}
+        output_spaces['fsLR'] = {'den': output_spaces.get('fsLR', {}).get('den') or '32k'}
+        # resample to fsLR from highest density fsaverage
+        output_spaces['fsaverage'] = {'den': '164k'}
+        print("""\
+Option ``--cifti-output`` resamples functional images to ``fsaverage`` and ``fsLR`` spaces. \
+These spaces has been automatically added to the list of output spaces \
+(option ``--output-spaces``).""", file=stderr)
+
+        if 'MNI152NLin6Asym' not in output_spaces:
+            output_spaces['MNI152NLin6Asym'] = {'res': '2'}
             print("""\
-By default, option ``--cifti-output`` resamples functional images to \
-``fsLR`` space. This space has been automatically added to the list of output \
-spaces (option ``--output-spaces``).""", file=stderr)
-        if 'fsLR' in output_spaces:
-            den = output_spaces.get('fsLR', {}).get('den') or '32k'
-            output_spaces['fsLR'] = {'den': den}
-            if 'MNI152NLin6Asym' not in output_spaces:
-                output_spaces['MNI152NLin6Asym'] = {'res': '2'}
-                print("""\
 Option ``--cifti-output`` requires functional images to be resampled to \
 ``MNI152NLin6Asym`` space. This space has been automatically added to the list of output \
 spaces (option ``--output-spaces``).""", file=stderr)
-
-        else:
-            if 'MNI152NLin2009cAsym' not in output_spaces:
-                output_spaces['MNI152NLin2009cAsym'] = {'res': 2}
-                print("""Option ``--cifti-output`` requires functional images to be resampled to \
-``MNI152NLin2009cAsym`` space. Such template identifier has been automatically added to the \
-list of output spaces (option "--output-spaces").""", file=stderr)
 
     if opts.template_resampling_grid is not None:
         print("""Option ``--template-resampling-grid`` is deprecated, please specify \
@@ -791,10 +783,6 @@ The configuration value will be applied to ALL output standard spaces.""")
             for key in output_spaces.keys():
                 if key in get_templates():
                     output_spaces[key]['res'] = opts.template_resampling_grid[0]
-
-    if 'fsLR' in output_spaces and 'fsaverage' not in output_spaces:
-        # resample to fsLR from highest density fsaverage
-        output_spaces['fsaverage'] = {'den': '164k'}
 
     FS_SPACES = set(('fsnative', 'fsaverage', 'fsaverage6', 'fsaverage5'))
     if opts.run_reconall and not FS_SPACES.intersection(output_spaces.keys()):

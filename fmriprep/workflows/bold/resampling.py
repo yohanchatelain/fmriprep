@@ -141,13 +141,12 @@ spaces: {out_spaces}.
         name='sampler', mem_gb=mem_gb * 3)
 
     if to_fslr:
-
         filter_fsavg = pe.Node(niu.Function(function=_select_fsaverage_hemi,
                                             output_names=['fsaverage_bold', 'hemi']),
                                name='filter_fsavg', mem_gb=DEFAULT_MEMORY_MIN_GB,
                                run_without_submitting=True)
 
-        rename_fslr = pe.Node(niu.Rename(format_string="%(hemi)s.fslr", keep_ext=True,
+        rename_fslr = pe.Node(niu.Rename(format_string="%(hemi)s.fsLR", keep_ext=True,
                                          parse_string=r'^(?P<hemi>\w+)'),
                               name='rename_fslr', mem_gb=DEFAULT_MEMORY_MIN_GB,
                               run_without_submitting=True)
@@ -160,7 +159,8 @@ spaces: {out_spaces}.
                                                    'fslr_midthick'
                                                 ]),
                                   name='fetch_fslr_tpls', mem_gb=DEFAULT_MEMORY_MIN_GB)
-        fetch_fslr_tpls.inputs.den = fslr_density
+        if fslr_density:
+            fetch_fslr_tpls.inputs.den = fslr_density
 
         resample_fslr = pe.Node(wb.MetricResample(method='ADAP_BARY_AREA', area_metrics=True),
                                 name='resample_fslr')

@@ -432,11 +432,12 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     summary.inputs.dummy_scans = dummy_scans
 
     # CIFTI output
-    cifti_spaces = {'fsLR'} if 'fsLR' in output_spaces else \
-        set(output_spaces.keys()).intersection(('fsaverage5', 'fsaverage6'))
-    fsaverage_den = output_spaces.get('fsaverage', {}).get('den')
-    if fsaverage_den and 'fsLR' not in cifti_spaces:
-        cifti_spaces.add(FSAVERAGE_DENSITY[fsaverage_den])
+    # cifti_spaces = {'fsLR'} if 'fsLR' in output_spaces else \
+    #     set(output_spaces.keys()).intersection(('fsaverage5', 'fsaverage6'))
+    # fsaverage_den = output_spaces.get('fsaverage', {}).get('den')
+    # if fsaverage_den and 'fsLR' not in cifti_spaces:
+    #     cifti_spaces.add(FSAVERAGE_DENSITY[fsaverage_den])
+    cifti_spaces = ('fsLR',) if 'fsLR' in output_spaces else None
     cifti_output = cifti_output and cifti_spaces
     func_derivatives_wf = init_func_derivatives_wf(
         bids_root=layout.root,
@@ -924,7 +925,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     # SURFACES ##################################################################################
     surface_spaces = [space for space in output_spaces.keys() if space.startswith('fs')]
     if freesurfer and surface_spaces:
-        fslr_density = output_spaces.get('fsLR', {}).get('den', '32k')
+        fslr_density = output_spaces.get('fsLR', {}).get('den')
         LOGGER.log(25, 'Creating BOLD surface-sampling workflow.')
         bold_surf_wf = init_bold_surf_wf(mem_gb=mem_gb['resampled'],
                                          output_spaces=surface_spaces,
@@ -961,7 +962,8 @@ data and volume-sampled data, were also generated.
                                    name="gen_cifti")
             gen_cifti.inputs.TR = metadata.get("RepetitionTime")
             gen_cifti.inputs.surface_target = list(cifti_spaces)
-            gen_cifti.inputs.density = fslr_density
+            if fslr_density:
+                gen_cifti.inputs.density = fslr_density
 
             workflow.connect([
                 (bold_std_trans_wf, select_std, [
