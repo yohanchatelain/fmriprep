@@ -171,7 +171,8 @@ spaces: {out_spaces}.
                              run_without_submitting=True)
 
         def _basename(in_file):
-            import os; return os.path.basename(in_file)
+            import os
+            return os.path.basename(in_file)
 
         workflow.connect([
             (sampler, filter_fsavg, [('out_file', 'in_files')]),

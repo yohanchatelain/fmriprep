@@ -209,8 +209,8 @@ def init_func_derivatives_wf(
         name_surfs = pe.MapNode(GiftiNameSource(
             pattern=r'(?P<LR>[lr])h.(?P<space>\w+).gii',
             template='space-{space}{den}_hemi-{LR}.func'),
-            iterfield=['in_file', 'template_kwargs'], name='name_surfs', mem_gb=DEFAULT_MEMORY_MIN_GB,
-            run_without_submitting=True)
+            iterfield=['in_file', 'template_kwargs'], name='name_surfs',
+            mem_gb=DEFAULT_MEMORY_MIN_GB, run_without_submitting=True)
 
         ds_bold_surfs = pe.MapNode(DerivativesDataSink(base_directory=output_dir),
                                    iterfield=['in_file', 'suffix'], name='ds_bold_surfs',
@@ -275,6 +275,7 @@ def init_func_derivatives_wf(
         ])
 
     return workflow
+
 
 def _extract_surf_info(in_file, density):
     import os
