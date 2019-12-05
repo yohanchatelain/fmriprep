@@ -71,6 +71,9 @@ def init_bold_surf_wf(
         first to ``fsaverage`` and then to ``fsLR``.
     medial_surface_nan : bool
         Replace medial wall values with NaNs on functional GIFTI files
+    fslr_density : str, optional
+        Density of fsLR surface (32k or 59k)
+
 
     Inputs
     ------
@@ -108,7 +111,7 @@ spaces: {out_spaces}.
 
     to_fslr = False
     if 'fsLR' in output_spaces:
-        to_fslr = 'fsaverage' in output_spaces
+        to_fslr = 'fsaverage' in output_spaces and fslr_density
         spaces.pop(spaces.index('fsLR'))
 
     outputnode = pe.Node(niu.IdentityInterface(fields=['surfaces']), name='outputnode')
@@ -159,8 +162,7 @@ spaces: {out_spaces}.
                                                    'fslr_midthick'
                                                 ]),
                                   name='fetch_fslr_tpls', mem_gb=DEFAULT_MEMORY_MIN_GB)
-        if fslr_density:
-            fetch_fslr_tpls.inputs.den = fslr_density
+        fetch_fslr_tpls.inputs.den = fslr_density
 
         resample_fslr = pe.Node(wb.MetricResample(method='ADAP_BARY_AREA', area_metrics=True),
                                 name='resample_fslr')
@@ -169,8 +171,7 @@ spaces: {out_spaces}.
                              run_without_submitting=True)
 
         def _basename(in_file):
-            import os
-            return os.path.basename(in_file)
+            import os; return os.path.basename(in_file)
 
         workflow.connect([
             (sampler, filter_fsavg, [('out_file', 'in_files')]),

@@ -45,13 +45,13 @@ from .util import init_bold_reference_wf
 
 
 LOGGER = logging.getLogger('nipype.workflow')
-FSAVERAGE_DENSITY = {
-    '642': 'fsaverage3',
-    '2562': 'fsaverage4',
-    '10k': 'fsaverage5',
-    '41k': 'fsaverage6',
-    '164k': 'fsaverage7',
-}
+# FSAVERAGE_DENSITY = {
+#     '642': 'fsaverage3',
+#     '2562': 'fsaverage4',
+#     '10k': 'fsaverage5',
+#     '41k': 'fsaverage6',
+#     '164k': 'fsaverage7',
+# }
 
 
 def init_func_preproc_wf(
@@ -412,8 +412,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_t1', 'bold_t1_ref', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1',
                 'bold_std', 'bold_std_ref', 'bold_mask_std', 'bold_aseg_std', 'bold_aparc_std',
-                'bold_native', 'bold_cifti', 'cifti_variant', 'cifti_metadata', 'surfaces',
-                'confounds', 'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file',
+                'bold_native', 'bold_cifti', 'cifti_variant', 'cifti_metadata', 'cifti_density',
+                'surfaces', 'confounds', 'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file',
                 'confounds_metadata']),
         name='outputnode')
 
@@ -439,6 +439,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     #     cifti_spaces.add(FSAVERAGE_DENSITY[fsaverage_den])
     cifti_spaces = ('fsLR',) if 'fsLR' in output_spaces else None
     cifti_output = cifti_output and cifti_spaces
+    fslr_density = output_spaces.get('fsLR', {}).get('den')
     func_derivatives_wf = init_func_derivatives_wf(
         bids_root=layout.root,
         cifti_output=cifti_output,
@@ -448,6 +449,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         output_spaces=output_spaces,
         standard_spaces=list(std_spaces.keys()),
         use_aroma=use_aroma,
+        fslr_density=fslr_density,
     )
 
     workflow.connect([
@@ -466,6 +468,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('bold_cifti', 'inputnode.bold_cifti'),
             ('cifti_variant', 'inputnode.cifti_variant'),
             ('cifti_metadata', 'inputnode.cifti_metadata'),
+            ('cifti_density', 'inputnode.cifti_density'),
             ('confounds_metadata', 'inputnode.confounds_metadata'),
         ]),
     ])
@@ -925,7 +928,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     # SURFACES ##################################################################################
     surface_spaces = [space for space in output_spaces.keys() if space.startswith('fs')]
     if freesurfer and surface_spaces:
-        fslr_density = output_spaces.get('fsLR', {}).get('den')
         LOGGER.log(25, 'Creating BOLD surface-sampling workflow.')
         bold_surf_wf = init_bold_surf_wf(mem_gb=mem_gb['resampled'],
                                          output_spaces=surface_spaces,
@@ -963,7 +965,7 @@ data and volume-sampled data, were also generated.
             gen_cifti.inputs.TR = metadata.get("RepetitionTime")
             gen_cifti.inputs.surface_target = list(cifti_spaces)
             if fslr_density:
-                gen_cifti.inputs.density = fslr_density
+                gen_cifti.inputs.surface_density = fslr_density
 
             workflow.connect([
                 (bold_std_trans_wf, select_std, [
@@ -977,7 +979,8 @@ data and volume-sampled data, were also generated.
                     ('key', 'volume_target')]),
                 (gen_cifti, outputnode, [('out_file', 'bold_cifti'),
                                          ('variant', 'cifti_variant'),
-                                         ('out_metadata', 'cifti_metadata')]),
+                                         ('out_metadata', 'cifti_metadata'),
+                                         ('density', 'cifti_density')]),
             ])
 
     # REPORTING ############################################################
