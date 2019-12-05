@@ -249,6 +249,10 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (
         '--fs-license-file', metavar='PATH', type=Path,
         help='Path to FreeSurfer license key file. Get it (for free) by registering'
              ' at https://surfer.nmr.mgh.harvard.edu/registration.html')
+    g_fs.add_argument(
+        '--fs-subjects-dir', metavar='PATH', type=Path,
+        help='Path to existing FreeSurfer subjects directory to reuse. '
+             '(default: OUTPUT_DIR/freesurfer)')
 
     # Surface generation xor
     g_surfs = parser.add_argument_group('Surface preprocessing options')
@@ -673,6 +677,7 @@ def build_workflow(opts, retval):
         fmap_demean=opts.fmap_no_demean,
         force_syn=opts.force_syn,
         freesurfer=opts.run_reconall,
+        fs_subjects_dir=opts.fs_subjects_dir,
         hires=opts.hires,
         ignore=opts.ignore,
         layout=layout,
