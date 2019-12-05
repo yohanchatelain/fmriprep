@@ -2,10 +2,10 @@
 
 .. _outputs:
 
--------------------
-Outputs of fMRIPrep
--------------------
-*FMRIPrep* generates three broad classes of outcomes:
+---------------------
+Outputs of *fMRIPrep*
+---------------------
+*fMRIPrep* generates three broad classes of outcomes:
 
   1. **Visual QA (quality assessment) reports**:
      one :abbr:`HTML (hypertext markup language)` per subject,
@@ -24,19 +24,19 @@ Outputs of fMRIPrep
      between different spaces or the estimated confounds.
 
 
-*FMRIPrep* outputs conform to the :abbr:`BIDS (brain imaging data structure)`
+*fMRIPrep* outputs conform to the :abbr:`BIDS (brain imaging data structure)`
 Derivatives specification (see `BIDS Derivatives RC1`_).
 
 Visual Reports
 --------------
-*FMRIPrep* outputs summary reports, written to ``<output dir>/fmriprep/sub-<subject_label>.html``.
+*fMRIPrep* outputs summary reports, written to ``<output dir>/fmriprep/sub-<subject_label>.html``.
 These reports provide a quick way to make visual inspection of the results easy.
 Each report is self contained and thus can be easily shared with collaborators (for example via email).
 `View a sample report. <_static/sample_report.html>`_
 
 
-Preprocessed data (fMRIPrep *derivatives*)
-------------------------------------------
+Derivatives of *fMRIPrep* (preprocessed data)
+---------------------------------------------
 Preprocessed, or derivative, data are written to
 ``<output dir>/fmriprep/sub-<subject_label>/``.
 The `BIDS Derivatives RC1`_ specification describes the naming and metadata conventions we follow.
@@ -182,11 +182,11 @@ For each :abbr:`BOLD (blood-oxygen level dependent)` run processed with *fMRIPre
 file will be generated.
 These are :abbr:`TSV (tab-separated values)` tables, which look like the example below: ::
 
-  csf	white_matter	global_signal	std_dvars	dvars	framewise_displacement	t_comp_cor_00	t_comp_cor_01	t_comp_cor_02	t_comp_cor_03	t_comp_cor_04	t_comp_cor_05	a_comp_cor_00	a_comp_cor_01	a_comp_cor_02	a_comp_cor_03	a_comp_cor_04	a_comp_cor_05	non_steady_state_outlier00	trans_x	trans_y	trans_z	rot_x	rot_y	rot_z	aroma_motion_02	aroma_motion_04
-  682.75275	0.0	491.64752000000004	n/a	n/a	n/a	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	1.0	0.0	0.0	0.0	-0.00017029	-0.0	0.0	0.0	0.0
-  669.14166	0.0	489.4421	1.168398	17.575331	0.07211929999999998	-0.4506846719	0.1191909139	-0.0945884724	0.1542023065	-0.2302324641	0.0838194238	-0.032426848599999995	0.4284323184	-0.5809158299	0.1382414008	-0.1203486637	0.3783661265	0.0	0.0	0.0207752	0.0463124	-0.000270924	-0.0	0.0	-2.402958171	-0.7574011893
-  665.3969	0.0	488.03	1.085204	16.323903999999995	0.0348966	0.010819676200000001	0.0651895837	-0.09556632150000001	-0.033148835	-0.4768871111	0.20641088559999998	0.2818768463	0.4303863764	0.41323714850000004	-0.2115232212	-0.0037154909000000004	0.10636180070000001	0.0	0.0	0.0	0.0457372	0.0	-0.0	0.0	-1.341359143	0.1636017242
-  662.82715	0.0	487.37302	1.01591	15.281561	0.0333937	0.3328022893	-0.2220965269	-0.0912891436	0.2326688125	0.279138129	-0.111878887	0.16901660629999998	0.0550480212	0.1798747037	-0.25383302620000003	0.1646403629	0.3953613889	0.0	0.010164	-0.0103568	0.0424513	0.0	-0.0	0.00019174	-0.1554834655	0.6451987913
+  csf white_matter  global_signal std_dvars dvars framewise_displacement  t_comp_cor_00 t_comp_cor_01 t_comp_cor_02 t_comp_cor_03 t_comp_cor_04 t_comp_cor_05 a_comp_cor_00 a_comp_cor_01 a_comp_cor_02 a_comp_cor_03 a_comp_cor_04 a_comp_cor_05 non_steady_state_outlier00  trans_x trans_y trans_z rot_x rot_y rot_z aroma_motion_02 aroma_motion_04
+  682.75275 0.0 491.64752000000004  n/a n/a n/a 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 -0.00017029 -0.0  0.0 0.0 0.0
+  669.14166 0.0 489.4421  1.168398  17.575331 0.07211929999999998 -0.4506846719 0.1191909139  -0.0945884724 0.1542023065  -0.2302324641 0.0838194238  -0.032426848599999995 0.4284323184  -0.5809158299 0.1382414008  -0.1203486637 0.3783661265  0.0 0.0 0.0207752 0.0463124 -0.000270924  -0.0  0.0 -2.402958171  -0.7574011893
+  665.3969  0.0 488.03  1.085204  16.323903999999995  0.0348966 0.010819676200000001  0.0651895837  -0.09556632150000001  -0.033148835  -0.4768871111 0.20641088559999998 0.2818768463  0.4303863764  0.41323714850000004 -0.2115232212 -0.0037154909000000004  0.10636180070000001 0.0 0.0 0.0 0.0457372 0.0 -0.0  0.0 -1.341359143  0.1636017242
+  662.82715 0.0 487.37302 1.01591 15.281561 0.0333937 0.3328022893  -0.2220965269 -0.0912891436 0.2326688125  0.279138129 -0.111878887  0.16901660629999998 0.0550480212  0.1798747037  -0.25383302620000003  0.1646403629  0.3953613889  0.0 0.010164  -0.0103568  0.0424513 0.0 -0.0  0.00019174  -0.1554834655 0.6451987913
 
 Each row of the file corresponds to one time point found in the
 corresponding :abbr:`BOLD (blood-oxygen level dependent)` time series
@@ -288,9 +288,9 @@ from the union of these.
     of each component, consult the metadata file (see below).
 
 Each confounds data file will also have a corresponding metadata file (``~desc-confounds_regressors.json``).
-Metadata files contain additional information about columns in the confounds TSV file: ::
+Metadata files contain additional information about columns in the confounds TSV file:
 
-.. code-block:: JSON
+.. code-block:: json
 
     {
       "a_comp_cor_00": {
@@ -350,9 +350,9 @@ to the fraction of variance that they explain across the nuisance ROI.
 This is used by *fMRIPrep* to determine whether each component should be saved for
 use in denoising operations: a component is saved if it contributes to explaining
 the top 50 percent of variance in the nuisance ROI.
-*FMRIPrep* can be configured to save all components instead using the command line
+*fMRIPrep* can be configured to save all components instead using the command line
 option ``--return-all-components``.
-*FMRIPrep* reports include a plot of the cumulative variance explained by each
+*fMRIPrep* reports include a plot of the cumulative variance explained by each
 component, ordered by descending singular value.
 
 .. figure:: _static/sub-01_task-rest_compcor.svg
@@ -401,8 +401,8 @@ See implementation on :mod:`~fmriprep.workflows.bold.confounds.init_bold_confs_w
      Psychometrika. 2013. doi: `10.1007/s11336-013-9344-2 <http://dx.doi.org/10.1007/s11336-013-9344-2>`_
 
   .. [Friston1996] Friston KJ1, Williams S, Howard R, Frackowiak RS, Turner R, Movement‐Related effects in fMRI
-     time‐series.
-     Magnetic Resonance in Medicine. 1996. doi: `10.1002/mrm.191035031 < https://doi.org/10.1002/mrm.1910350312>`_
+     time‐series. Magnetic Resonance in Medicine. 1996.
+     doi: `10.1002/mrm.191035031 <https://doi.org/10.1002/mrm.1910350312>`_
 
   .. [Muschelli2014] Muschelli J, Nebel MB, Caffo BS, Barber AD, Pekar JJ, Mostofsky SH,
      Reduction of motion-related artifacts in resting state fMRI using aCompCor.
