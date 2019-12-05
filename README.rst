@@ -112,7 +112,7 @@ Limitations and reasons not to use *fMRIPrep*
    non-human brains, although appropriate templates can be provided to overcome the
    issue.
 3. The "EPInorm" approach is currently not supported, although we plan to implement
-   this feature (see `#857 <https://github.com/poldracklab/fmriprep/issues/857>`_).
+   this feature (see `#857 <https://github.com/poldracklab/fmriprep/issues/620>`_).
 4. If you really want unlimited flexibility (which is obviously a double-edged sword).
 5. If you want students to suffer through implementing each step for didactic purposes,
    or to learn shell-scripting or Python along the way.
