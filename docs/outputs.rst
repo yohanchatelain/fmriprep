@@ -56,16 +56,14 @@ Spatially-standardized derivatives are denoted with a space label,
 such as ``MNI152NLin2009cAsym``, while derivatives in
 the original ``T1w`` space omit the ``space-`` keyword.
 
-Additionally, the following transforms are saved:
-::
+Additionally, the following transforms are saved::
 
   sub-<subject_label>/
     anat/
       sub-<subject_label>_from-MNI152NLin2009cAsym_to-T1w_mode-image_xfm.h5
       sub-<subject_label>_from-T1w_to-MNI152NLin2009cAsym_mode-image_xfm.h5
 
-If FreeSurfer reconstructions are used, the following surface files are generated:
-::
+If FreeSurfer reconstructions are used, the following surface files are generated::
 
   sub-<subject_label>/
     anat/
@@ -75,8 +73,7 @@ If FreeSurfer reconstructions are used, the following surface files are generate
       sub-<subject_label>_hemi-[LR]_inflated.surf.gii
 
 And the affine translation (and inverse) between the original T1w sampling and FreeSurfer's
-conformed space for surface reconstruction (``fsnative``) is stored in:
-::
+conformed space for surface reconstruction (``fsnative``) is stored in::
 
   sub-<subject_label>/
     anat/
@@ -85,8 +82,7 @@ conformed space for surface reconstruction (``fsnative``) is stored in:
 
 Functional derivatives are stored in the ``func/`` subfolder.
 All derivatives contain ``task-<task_label>`` (mandatory) and ``run-<run_index>`` (optional), and
-these will be indicated with ``[specifiers]``.
-::
+these will be indicated with ``[specifiers]``::
 
   sub-<subject_label>/
     func/
@@ -98,8 +94,7 @@ Volumetric output spaces include ``T1w`` and ``MNI152NLin2009cAsym`` (default).
 
 For each :abbr:`BOLD (blood-oxygen level dependent)` run processed with *fMRIPrep*, an
 accompanying *confounds* file will be generated.
-Confounds_ are saved as a :abbr:`TSV (tab-separated value)` file:
-::
+Confounds_ are saved as a :abbr:`TSV (tab-separated value)` file::
 
   sub-<subject_label>/
     func/
@@ -108,8 +103,7 @@ Confounds_ are saved as a :abbr:`TSV (tab-separated value)` file:
 
 These :abbr:`TSV (tab-separated values)` tables look like the example below,
 where each row of the file corresponds to one time point found in the
-corresponding :abbr:`BOLD (blood-oxygen level dependent)` time series.
-::
+corresponding :abbr:`BOLD (blood-oxygen level dependent)` time series::
 
   csf white_matter  global_signal std_dvars dvars framewise_displacement  t_comp_cor_00 t_comp_cor_01 t_comp_cor_02 t_comp_cor_03 t_comp_cor_04 t_comp_cor_05 a_comp_cor_00 a_comp_cor_01 a_comp_cor_02 a_comp_cor_03 a_comp_cor_04 a_comp_cor_05 non_steady_state_outlier00  trans_x trans_y trans_z rot_x rot_y rot_z aroma_motion_02 aroma_motion_04
   682.75275 0.0 491.64752000000004  n/a n/a n/a 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 -0.00017029 -0.0  0.0 0.0 0.0
@@ -119,8 +113,7 @@ corresponding :abbr:`BOLD (blood-oxygen level dependent)` time series.
 
 If FreeSurfer reconstructions are used, the ``(aparc+)aseg`` segmentations are aligned to the
 subject's T1w space and resampled to the BOLD grid, and the BOLD series are resampled to the
-midthickness surface mesh:
-::
+midthickness surface mesh::
 
   sub-<subject_label>/
     func/
@@ -133,8 +126,7 @@ Surface output spaces include ``fsnative`` (full density subject-specific mesh),
 ``fsaverage5`` (10k vertices, default).
 
 If CIFTI outputs are requested (with the ``--cifti-outputs`` argument),
-the BOLD series are also saved as ``dtseries.nii`` CIFTI2 files:
-::
+the BOLD series are also saved as ``dtseries.nii`` CIFTI2 files::
 
   sub-<subject_label>/
     func/
@@ -146,8 +138,7 @@ Sub-cortical time series are volumetric (supported spaces: ``MNI152NLin2009cAsym
 time series are sampled on the surface (supported spaces: ``fsaverage5``, ``fsaverage6``)
 
 Finally, if ICA-AROMA is used, the MELODIC mixing matrix and the components classified as noise
-are saved:
-::
+are saved::
 
   sub-<subject_label>/
     func/
@@ -158,8 +149,7 @@ are saved:
 
 FreeSurfer Derivatives
 ----------------------
-A FreeSurfer subjects directory is created in ``<output_dir>/freesurfer``.
-::
+A FreeSurfer subjects directory is created in ``<output_dir>/freesurfer``::
 
     <output_dir>/
         fmriprep/
@@ -192,7 +182,7 @@ For a detailed review of the possible sources of noise in the BOLD signal, refer
 Such non-neuronal fluctuations may drive spurious results in fMRI data analysis,
 including standard activation :abbr:`GLM (General Linear Model)` and functional connectivity analyses.
 It is possible to minimize confounding effects of non-neuronal signals by including them as nuisance regressors
-in the :abbr:`GLM (General Linear Model)` design matrix or regressing them out from
+in the GLM design matrix or regressing them out from
 the fMRI data - a procedure known as *denoising*.
 There is currently no consensus on an optimal denoising strategy in the fMRI community.
 Rather, different strategies have been proposed, which achieve different compromises between
@@ -267,7 +257,7 @@ Confounds for outlier detection
   ``1`` value and ``0`` elsewhere (*i.e.*, there is one ``non_steady_state_outlier_XX`` column per
   outlier/volume).
 
-All these confounds can be used to detect potential outlier time points - frames with high motion or spikes.
+All these confounds can be used to detect potential outlier time points - frames with high motion or intensity spikes.
 Detected outliers can be further removed from time series using methods such as: volume *censoring* - entirely
 discarding problematic time points [Power2012]_, regressing signal from outlier points in denoising procedure,
 or including outlier points in the subsequent first-level analysis when building the design matrix.
