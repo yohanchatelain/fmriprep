@@ -292,7 +292,7 @@ Spike regressors are stored in separate ``motion_outlier_XX`` columns.
 Physiological and instrumental (scanner) noise sources are generally present in fMRI
 data, typically taking the form of low-frequency signal drifts.
 To account for these drifts, temporal high-pass filtering is the immediate option.
-Alternatively, low-frequency regressors can be included in regression to account
+Alternatively, low-frequency regressors can be included in the statistical model to account
 for these confounding signals.
 Using the :abbr:`DCT (discrete cosine transform)` basis functions, *fMRIPrep* generates
 these low-frequency predictors:
@@ -394,7 +394,6 @@ For CompCor decompositions, entries include:
     *fMRIPrep* does high-pass filtering before running anatomical or temporal CompCor.
     Therefore, when using CompCor regressors, the corresponding ``cosine_XX`` regressors
     should be included too in the design matrix.
-
 
 .. admonition:: See also
 
