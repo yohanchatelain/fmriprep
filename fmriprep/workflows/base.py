@@ -47,6 +47,7 @@ def init_fmriprep_wf(
     fmap_demean,
     force_syn,
     freesurfer,
+    fs_subjects_dir,
     hires,
     ignore,
     layout,
@@ -101,6 +102,7 @@ def init_fmriprep_wf(
                 fmap_demean=True,
                 force_syn=True,
                 freesurfer=True,
+                fs_subjects_dir=None,
                 hires=True,
                 ignore=[],
                 layout=BIDSLayout('.'),
@@ -221,6 +223,8 @@ def init_fmriprep_wf(
                 spaces=[s for s in output_spaces.keys() if s.startswith('fsaverage')] + [
                     'fsnative'] * ('fsnative' in output_spaces)),
             name='fsdir_run_' + run_uuid.replace('-', '_'), run_without_submitting=True)
+        if fs_subjects_dir is not None:
+            fsdir.inputs.subjects_dir = str(fs_subjects_dir.absolute())
 
     reportlets_dir = os.path.join(work_dir, 'reportlets')
     for subject_id in subject_list:

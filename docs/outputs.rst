@@ -90,7 +90,8 @@ conformed space for surface reconstruction (``fsnative``) is stored in::
 
 FreeSurfer derivatives
 ~~~~~~~~~~~~~~~~~~~~~~
-A FreeSurfer subjects directory is created in ``<output_dir>/freesurfer``::
+A FreeSurfer subjects directory is created in ``<output dir>/freesurfer``, or the
+directory indicated with the ``--fs-subjects-dir`` flag. ::
 
     <output_dir>/
         fmriprep/
