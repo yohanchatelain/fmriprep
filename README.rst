@@ -55,7 +55,8 @@ volume-based statistics, etc.
    *fMRIPrep* performs minimal preprocessing.
    Here we define 'minimal preprocessing'  as motion correction, field
    unwarping, normalization, bias field correction, and brain extraction.
-   See the workflows_ for more details.
+   See the `workflows section of our documentation
+   <https://fmriprep.readthedocs.io/en/latest/workflows.html>`__ for more details.
 
 The *fMRIPrep* pipeline uses a combination of tools from well-known software
 packages, including FSL_, ANTs_, FreeSurfer_ and AFNI_.
@@ -119,14 +120,14 @@ Limitations and reasons not to use *fMRIPrep*
 6. If you are trying to reproduce some *in-house* lab pipeline.
 
 (Reasons 4-6 were kindly provided by S. Nastase in his
-`open review <http://academickarma.org/review/j7d5501n779n>`__
-of our `pre-print <https://www.biorxiv.org/content/early/2018/05/06/306951>`__).
+`open review <https://pubpeer.com/publications/6B3E024EAEBF2C80085FDF644C2085>`__
+of our `pre-print <https://doi.org/10.1101/306951>`__).
 
 
 Acknowledgements
 ----------------
 
-Please acknowledge this work by mentioning explicitly the name of this software
-(*fMRIPrep*) and the version, along with a link to the `GitHub repository
-<https://github.com/poldracklab/fmriprep>`_ or the Zenodo reference.
-For more details, please see :ref:`citation`.
+Please acknowledge this work using the citation boilerplate that *fMRIPrep* includes
+in the visual report generated for every subject processed.
+For an illustration of how the citation boilerplate generally reads, please
+check `our documentation <https://fmriprep.readthedocs.io/en/latest/citing.html>`__.
