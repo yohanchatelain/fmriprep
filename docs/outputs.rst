@@ -216,13 +216,14 @@ Confounding variables calculated in *fMRIPrep* are stored separately for each su
 session and run in :abbr:`TSV (tab-separated value)` files - one column for each confound variable.
 Such tabular files may include over 100 columns of potential confound regressors.
 
-.. warning::
-   Do not include all columns of `confounds_regressors.tsv` table
+.. danger::
+   Do not include all columns of ``~_desc-confounds_regressors.tsv`` table
    into your design matrix or denoising procedure.
-   Filter the table first, to include only the confounds you want to remove from your fMRI signal.
+   Filter the table first, to include only the confounds (or components thereof)
+   you want to remove from your fMRI signal.
    The choice of confounding variables may depend on the analysis you want to perform,
    and may be not straightforward as no gold standard procedure exists.
-   For detailed description of various denoising strategies and their performance,
+   For a detailed description of various denoising strategies and their performance,
    see [Parkes2018]_ and [Ciric2017]_.
 
 Confound regressors description
@@ -272,7 +273,6 @@ frames with sudden and large motion or intensity spikes.
   ``1`` value and ``0`` elsewhere (*i.e.*, there is one ``non_steady_state_outlier_XX`` column per
   outlier/volume).
 
-
 Detected outliers can be further removed from time series using methods such as:
 volume *censoring* - entirely discarding problematic time points [Power2012]_,
 regressing signal from outlier points in denoising procedure, or
@@ -292,7 +292,7 @@ ICA-AROMA can be enabled with the flag ``--use-aroma``.
 
 - ``aroma_motion_XX`` - the motion-related components identified by ICA-AROMA.
 
-.. warning::
+.. danger::
     If you are already using ICA-AROMA cleaned data (``~desc-smoothAROMAnonaggr_bold.nii.gz``),
     do not include ICA-AROMA confounds during your design specification or denoising procedure.
 
