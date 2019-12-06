@@ -419,7 +419,7 @@ jobs:
                 --config $PWD/nipype.cfg -w /tmp/ds005/work_partial \
                 /tmp/data/ds005 /tmp/ds005/derivatives_partial participant \
                 --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
-                --output-spaces MNI152NLin2009cAsym fsaverage5 fsnative MNI152NLin6Asym anat \
+                --output-spaces fsLR MNI152NLin2009cAsym fsaverage5 fsnative MNI152NLin6Asym anat \
                 --aroma-melodic-dimensionality 2 --use-aroma \
                 --nthreads 2 --cifti-output -vv
       - run:
