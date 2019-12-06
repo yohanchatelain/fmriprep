@@ -752,12 +752,12 @@ def _fetch_fslr_templates(hemi, den):
     """Fetch the necessary templates for fsaverage to fsLR transform"""
     import templateflow.api as tf
 
-    fsaverage_sphere = tf.get(
+    fsaverage_sphere = str(tf.get(
         'fsLR', space='fsaverage', suffix='sphere', hemi=hemi, density='164k'
-    )
-    fslr_sphere = tf.get('fsLR', space=None, suffix='sphere', hemi=hemi, density=den)
-    fsaverage_midthick = tf.get(
+    ))
+    fslr_sphere = str(tf.get('fsLR', space=None, suffix='sphere', hemi=hemi, density=den))
+    fsaverage_midthick = str(tf.get(
         'fsLR', space='fsaverage', suffix='midthickness', hemi=hemi, density='164k'
-    )
-    fslr_midthick = tf.get('fsLR', space=None, suffix='midthickness', hemi=hemi, density=den)
+    ))
+    fslr_midthick = str(tf.get('fsLR', space=None, suffix='midthickness', hemi=hemi, density=den))
     return fsaverage_sphere, fslr_sphere, fsaverage_midthick, fslr_midthick
