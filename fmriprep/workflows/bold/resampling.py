@@ -161,7 +161,8 @@ spaces: {out_spaces}.
                                                    'fsaverage_midthick',
                                                    'fslr_midthick'
                                                 ]),
-                                  name='fetch_fslr_tpls', mem_gb=DEFAULT_MEMORY_MIN_GB)
+                                  name='fetch_fslr_tpls', mem_gb=DEFAULT_MEMORY_MIN_GB,
+                                  overwrite=True)
         fetch_fslr_tpls.inputs.den = fslr_density
 
         resample_fslr = pe.Node(wb.MetricResample(method='ADAP_BARY_AREA', area_metrics=True),
