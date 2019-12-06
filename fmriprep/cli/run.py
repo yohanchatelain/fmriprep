@@ -760,20 +760,21 @@ The argument "MNI152NLin6Asym:res-2" has been automatically added to the list of
     if opts.cifti_output:
         if 'fsLR' not in output_spaces:
             output_spaces['fsLR'] = {}
-        output_spaces['fsLR'] = {'den': output_spaces.get('fsLR', {}).get('den') or '32k'}
-        # resample to fsLR from highest density fsaverage
-        output_spaces['fsaverage'] = {'den': '164k'}
-        print("""\
-Option ``--cifti-output`` resamples functional images to ``fsaverage`` and ``fsLR`` spaces. \
-These spaces has been automatically added to the list of output spaces \
-(option ``--output-spaces``).""", file=stderr)
-
         if 'MNI152NLin6Asym' not in output_spaces:
             output_spaces['MNI152NLin6Asym'] = {'res': '2'}
             print("""\
 Option ``--cifti-output`` requires functional images to be resampled to \
 ``MNI152NLin6Asym`` space. This space has been automatically added to the list of output \
 spaces (option ``--output-spaces``).""", file=stderr)
+
+    if 'fsLR' in output_spaces:
+        output_spaces['fsLR'] = {'den': output_spaces.get('fsLR', {}).get('den') or '32k'}
+        # resample to fsLR from highest density fsaverage
+        output_spaces['fsaverage'] = {'den': '164k'}
+        print("""\
+To generate "fsLR" surfaces, functional images are first resampled to ``fsaverage:den-164k``. \
+This space has been automatically added to the list of output spaces \
+(option ``--output-spaces``).""", file=stderr)
 
     if opts.template_resampling_grid is not None:
         print("""Option ``--template-resampling-grid`` is deprecated, please specify \
