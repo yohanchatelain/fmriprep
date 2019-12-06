@@ -459,7 +459,7 @@ See implementation on :mod:`~fmriprep.workflows.bold.confounds.init_bold_confs_w
   .. [Prium2015] Pruim RHR, Mennes M, van Rooij D, Llera A, Buitelaar JK, Beckmann CF.
      ICA-AROMA: A robust ICA-based strategy for removing motion artifacts from fMRI data.
      Neuroimage. 2015 May 15;112:267–77.
-     doi:`10.1016/j.neuroimage.2015.02.064 <10.1016/j.neuroimage.2015.02.064>`_.
+     doi:`10.1016/j.neuroimage.2015.02.064 <https://doi.org/10.1016/j.neuroimage.2015.02.064>`_.
 
   .. [Satterthwaite2013] Satterthwaite TD, Elliott MA, Gerraty RT, Ruparel K, Loughead J, Calkins ME,
      Eickhoff SB, Hakonarson H, Gur RC, Gur RE, Wolf DH,
