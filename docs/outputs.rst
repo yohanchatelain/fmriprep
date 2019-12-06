@@ -29,8 +29,11 @@ Derivatives specification (see `BIDS Derivatives RC1`_).
    .. important::
        In order to remain agnostic to any possible subsequent analysis,
        *fMRIPrep* does not perform any denoising (e.g., spatial smoothing) itself.
-       The only exception to this principle is the ICA-AROMA's *non-aggressive* denoising
-       (see below).
+       There are two exceptions to this principle (described in their corresponding
+       sections below):
+
+         - ICA-AROMA's *non-aggressive* denoised outputs, and
+         - CompCor regressors, which are calculated after temporal high-pass filtering.
 
 Visual Reports
 --------------
@@ -285,16 +288,36 @@ the command line options ``--fd-spike-threshold`` and ``--dvars-spike-threshold`
 (default: FD > 0.5 mm or DVARS > 1.5).
 Spike regressors are stored in separate ``motion_outlier_XX`` columns.
 
-**AROMA confounds**.
-:abbr:`AROMA (Automatic Removal Of Motion Artifacts)` is an :abbr:`ICA (independent components analysis)`
-based procedure to identify confounding time series related to head-motion [Prium2015]_.
-ICA-AROMA can be enabled with the flag ``--use-aroma``.
+**Discrete cosine-basis regressors**.
+Physiological and instrumental (scanner) noise sources are generally present in fMRI
+data, typically taking the form of low-frequency signal drifts.
+To account for these drifts, temporal high-pass filtering is the immediate option.
+Alternatively, low-frequency regressors can be included in regression to account
+for these confounding signals.
+Using the :abbr:`DCT (discrete cosine transform)` basis functions, *fMRIPrep* generates
+these low-frequency predictors:
 
-- ``aroma_motion_XX`` - the motion-related components identified by ICA-AROMA.
+- ``cosine_XX`` - DCT-basis regressors.
 
-.. danger::
-    If you are already using ICA-AROMA cleaned data (``~desc-smoothAROMAnonaggr_bold.nii.gz``),
-    do not include ICA-AROMA confounds during your design specification or denoising procedure.
+One characteristic of the cosine regressors is that they are identical for two different
+datasets with the same :abbr:`TR (repetition time)` and the same *effective* number of
+time points (*effective* length).
+It is relevant to mention *effective* because initial time points identified as *nonsteady
+states* are removed before generating the cosine regressors.
+
+.. caution::
+    If the analysis includes your own high-pass filtering step, the ``cosine_XX``
+    regressors may interfere (meaning, they may re-introduce drifts) if included
+    in the design matrix.
+
+.. admonition:: See also
+
+    - A detailed explanation about temporal high-pass filtering is provided with
+      the `BrainVoyager User Guide
+      <http://www.brainvoyager.com/bvqx/doc/UsersGuide/Preprocessing/TemporalHighPassFiltering.html>`_.
+    - `This comment
+      <https://github.com/poldracklab/fmriprep/issues/1899#issuecomment-561687460>`__
+      on an issue regarding CompCor regressors.
 
 **CompCor confounds**.
 :abbr:`CompCor (Component Based Noise Correction)` is a :abbr:`PCA (principal component analysis)`,
@@ -314,18 +337,6 @@ Four separate CompCor decompositions are performed to compute noise components: 
 decomposition (``t_comp_cor_XX``) and three anatomical decompositions (``a_comp_cor_XX``) across
 three different noise ROIs: an eroded white matter mask, an eroded CSF mask, and a combined mask derived
 from the union of these.
-
-.. warning::
-    Only a subset of these CompCor decompositions should be used for further denoising.
-    The original Behzadi aCompCor implementation [Behzadi2007]_ can be applied using
-    components from the combined masks, while the more recent Muschelli implementation
-    [Muschelli2014]_ can be applied using
-    the :abbr:`WM (white matter)` and :abbr:`CSF (cerebro-spinal fluid)` masks. To determine the provenance
-    of each component, consult the metadata file (see below).
-    Make sure you check on `this didactic discussion on NeuroStars.org
-    <https://neurostars.org/t/fmrirep-outputs-very-high-number-of-acompcors-up-to-1000/5451>`__
-    where Patrick Sadil gets into details about PCA and how that base technique applies
-    to CompCor in general and *fMRIPrep*'s implementation in particular.
 
 Each confounds data file will also have a corresponding metadata file
 (``~desc-confounds_regressors.json``).
@@ -365,6 +376,43 @@ For CompCor decompositions, entries include:
     for use in denoising.
     Entries that are not saved in the data file for denoising are still stored in metadata with the
     ``dropped`` prefix.
+
+.. caution::
+    Only a subset of these CompCor decompositions should be used for further denoising.
+    The original Behzadi aCompCor implementation [Behzadi2007]_ can be applied using
+    components from the combined masks, while the more recent Muschelli implementation
+    [Muschelli2014]_ can be applied using
+    the :abbr:`WM (white matter)` and :abbr:`CSF (cerebro-spinal fluid)` masks.
+    To determine the provenance of each component, consult the metadata file (described above).
+
+.. caution::
+    Similarly, if you are using anatomical or temporal CompCor it may not make sense
+    to use global signal regressors (``csf``, ``white_matter``, or ``global_signal``) -
+    see `#1049 <https://github.com/poldracklab/fmriprep/issues/1049>`_.
+
+.. danger::
+    *fMRIPrep* does high-pass filtering before running anatomical or temporal CompCor.
+    Therefore, when using CompCor regressors, the corresponding ``cosine_XX`` regressors
+    should be included too in the design matrix.
+
+
+.. admonition:: See also
+
+    This didactic `discussion on NeuroStars.org
+    <https://neurostars.org/t/fmrirep-outputs-very-high-number-of-acompcors-up-to-1000/5451>`__
+    where Patrick Sadil gets into details about PCA and how that base technique applies
+    to CompCor in general and *fMRIPrep*'s implementation in particular.
+
+**AROMA confounds**.
+:abbr:`AROMA (Automatic Removal Of Motion Artifacts)` is an :abbr:`ICA (independent components analysis)`
+based procedure to identify confounding time series related to head-motion [Prium2015]_.
+ICA-AROMA can be enabled with the flag ``--use-aroma``.
+
+- ``aroma_motion_XX`` - the motion-related components identified by ICA-AROMA.
+
+.. danger::
+    If you are already using ICA-AROMA cleaned data (``~desc-smoothAROMAnonaggr_bold.nii.gz``),
+    do not include ICA-AROMA confounds during your design specification or denoising procedure.
 
 Confounds and "carpet"-plot on the visual reports
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
