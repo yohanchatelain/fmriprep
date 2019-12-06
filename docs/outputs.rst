@@ -297,7 +297,8 @@ ICA-AROMA can be enabled with the flag ``--use-aroma``.
     do not include ICA-AROMA confounds during your design specification or denoising procedure.
 
 **CompCor confounds**.
-:abbr:`CompCor (Component Based Noise Correction)` is a component-based noise correlation method.
+:abbr:`CompCor (Component Based Noise Correction)` is a :abbr:`PCA (principal component analysis)`,
+hence component-based, noise pattern recognition method.
 In the method, principal components are calculated within an :abbr:`ROI (Region of Interest)`
 that is unlikely to include signal related to neuronal activity, such as :abbr:`CSF (cerebro-spinal fluid)`
 and :abbr:`WM (white matter)` masks.
@@ -321,6 +322,10 @@ from the union of these.
     [Muschelli2014]_ can be applied using
     the :abbr:`WM (white matter)` and :abbr:`CSF (cerebro-spinal fluid)` masks. To determine the provenance
     of each component, consult the metadata file (see below).
+    Make sure you check on `this didactic discussion on NeuroStars.org
+    <https://neurostars.org/t/fmrirep-outputs-very-high-number-of-acompcors-up-to-1000/5451>`__
+    where Patrick Sadil gets into details about PCA and how that base technique applies
+    to CompCor in general and *fMRIPrep*'s implementation in particular.
 
 Each confounds data file will also have a corresponding metadata file
 (``~desc-confounds_regressors.json``).
