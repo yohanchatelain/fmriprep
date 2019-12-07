@@ -142,7 +142,7 @@ def merge_help(wrapper_help, target_help):
     # Make sure we're not clobbering options we don't mean to
     overlap = set(w_flags).intersection(t_flags)
     expected_overlap = set(['h', 'version', 'w', 'template-resampling-grid',
-                            'fs-license-file', 'use-plugin'])
+                            'fs-license-file', 'fs-subjects-dir', 'use-plugin'])
 
     assert overlap == expected_overlap, "Clobbering options: {}".format(
         ', '.join(overlap - expected_overlap))
@@ -242,6 +242,10 @@ def get_parser():
         default=os.getenv('FS_LICENSE', None),
         help='Path to FreeSurfer license key file. Get it (for free) by registering'
              ' at https://surfer.nmr.mgh.harvard.edu/registration.html')
+    g_wrap.add_argument(
+        '--fs-subjects-dir', metavar='PATH', type=os.path.abspath,
+        help='Path to existing FreeSurfer subjects directory to reuse. '
+             '(default: OUTPUT_DIR/freesurfer)')
     g_wrap.add_argument(
         '--use-plugin', metavar='PATH', action='store', default=None,
         type=os.path.abspath, help='nipype plugin configuration file')
@@ -365,6 +369,10 @@ def main():
         command.extend(['-v', ':'.join((opts.output_dir, '/out'))])
         main_args.append('/out')
     main_args.append(opts.analysis_level)
+
+    if opts.fs_subjects_dir:
+        command.extend(['-v', '{}:/opt/subjects'.format(opts.fs_subjects_dir)])
+        unknown_args.extend(['--fs-subjects-dir', '/opt/subjects'])
 
     if opts.work_dir:
         command.extend(['-v', ':'.join((opts.work_dir, '/scratch'))])

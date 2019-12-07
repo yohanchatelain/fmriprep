@@ -202,7 +202,8 @@ All surface preprocessing may be disabled with the ``--fs-no-reconall`` flag.
     Surface processing will be skipped if the outputs already exist.
 
     In order to bypass reconstruction in *fMRIPrep*, place existing reconstructed
-    subjects in ``<output dir>/freesurfer`` prior to the run.
+    subjects in ``<output dir>/freesurfer`` prior to the run, or specify an external
+    subjects directory with the ``--fs-subjects-dir`` flag.
     *fMRIPrep* will perform any missing ``recon-all`` steps, but will not perform
     any steps whose outputs already exist.
 
