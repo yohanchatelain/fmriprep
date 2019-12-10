@@ -384,10 +384,21 @@ For CompCor decompositions, entries include:
     the :abbr:`WM (white matter)` and :abbr:`CSF (cerebro-spinal fluid)` masks.
     To determine the provenance of each component, consult the metadata file (described above).
 
+    There are many valid ways of selecting CompCor components for further denoising.
+    In general, the components with the largest singular values (i.e., those that
+    explain the largest fraction of variance in the data) should be selected.
+    *fMRIPrep* outputs components in descending order of singular value.
+    Common approaches include selecting a fixed number of components (e.g., the
+    first 5 or 6), using a quantitative or qualitative criterion (e.g., elbow, broken
+    stick, or condition number), or using sufficiently many components that a minimum
+    cumulative fraction of variance is explained (e.g., 50%).
+
 .. caution::
     Similarly, if you are using anatomical or temporal CompCor it may not make sense
-    to use global signal regressors (``csf``, ``white_matter``, or ``global_signal``) -
+    to use the ``csf``, or ``white_matter`` global regressors -
     see `#1049 <https://github.com/poldracklab/fmriprep/issues/1049>`_.
+    Conversely, using the overall ``global_signal`` confound in addition to CompCor's
+    regressors can be beneficial (see [Parkes2018]_).
 
 .. danger::
     *fMRIPrep* does high-pass filtering before running anatomical or temporal CompCor.
