@@ -226,9 +226,6 @@ def get_parser():
     g_wrap.add_argument('-w', '--work-dir', action='store', type=os.path.abspath,
                         help='path where intermediate results should be stored')
     g_wrap.add_argument(
-        '--output-grid-reference', required=False, action='store', type=os.path.abspath,
-        help='Deprecated after FMRIPREP 1.0.8. Please use --template-resampling-grid instead.')
-    g_wrap.add_argument(
         '--template-resampling-grid', required=False, action='store', type=str,
         help='Keyword ("native", "1mm", or "2mm") or path to an existing file. '
              'Allows to define a reference grid for the resampling of BOLD images in template '
@@ -395,11 +392,7 @@ def main():
                                         'ro'))])
         unknown_args.extend(['--use-plugin', '/tmp/plugin.yml'])
 
-    template_target = opts.template_resampling_grid or opts.output_grid_reference
-    if template_target is not None:
-        if opts.output_grid_reference is not None:
-            warn('Option --output-grid-reference is deprecated, please use '
-                 '--template-resampling-grid', DeprecationWarning)
+    if opts.template_resampling_grid is not None:
         if template_target not in ['native', '2mm' '1mm']:
             target = '/imports/' + os.path.basename(template_target)
             command.extend(['-v', ':'.join((os.path.abspath(

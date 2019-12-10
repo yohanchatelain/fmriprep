@@ -108,11 +108,6 @@ def get_parser():
                          help='run anatomical workflows only')
     g_perfm.add_argument('--boilerplate', action='store_true',
                          help='generate boilerplate only')
-    g_perfm.add_argument('--ignore-aroma-denoising-errors', action='store_true',
-                         default=False,
-                         help='DEPRECATED (now does nothing, see --error-on-aroma-warnings) '
-                              '- ignores the errors ICA_AROMA returns when there are no '
-                              'components classified as either noise or signal')
     g_perfm.add_argument('--md-only-boilerplate', action='store_true',
                          default=False,
                          help='skip generation of HTML and LaTeX formatted citation with pandoc')
@@ -122,8 +117,6 @@ def get_parser():
                               '(e.g., if all the components are classified as signal or noise)')
     g_perfm.add_argument("-v", "--verbose", dest="verbose_count", action="count", default=0,
                          help="increases log verbosity for each occurence, debug level is -vvv")
-    g_perfm.add_argument('--debug', action='store_true', default=False,
-                         help='DEPRECATED - Does not do what you want.')
 
     g_conf = parser.add_argument_group('Workflow configuration')
     g_conf.add_argument(
@@ -157,26 +150,6 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (
             ', '.join('"%s"' % s for s in templates()), ', '.join(NONSTANDARD_REFERENCES),
             currentv.base_version if is_release else 'latest'))
 
-    g_conf.add_argument(
-        '--output-space', required=False, action='store', type=str, nargs='+',
-        choices=['T1w', 'template', 'fsnative', 'fsaverage', 'fsaverage6', 'fsaverage5'],
-        help='DEPRECATED: please use ``--output-spaces`` instead.'
-    )
-    g_conf.add_argument(
-        '--template', required=False, action='store', type=str,
-        choices=['MNI152NLin2009cAsym'],
-        help='volume template space (default: MNI152NLin2009cAsym). '
-             'DEPRECATED: please use ``--output-spaces`` instead.')
-    g_conf.add_argument(
-        '--template-resampling-grid', required=False, action='store',
-        help='Keyword ("native", "1mm", or "2mm") or path to an existing file. '
-             'Allows to define a reference grid for the resampling of BOLD images in template '
-             'space. Keyword "native" will use the original BOLD grid as reference. '
-             'Keywords "1mm" and "2mm" will use the corresponding isotropic template '
-             'resolutions. If a path is given, the grid of that image will be used. '
-             'It determines the field of view and resolution of the output images, '
-             'but is not used in normalization. '
-             'DEPRECATED: please use ``--output-spaces`` instead.')
     g_conf.add_argument('--bold2t1w-dof', action='store', default=6, choices=[6, 9, 12], type=int,
                         help='Degrees of freedom when registering BOLD to T1w images. '
                              '6 degrees (rotation and translation) are used by default.')
@@ -261,11 +234,9 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (
     g_surfs_xor = g_surfs.add_mutually_exclusive_group()
     g_surfs_xor.add_argument('--cifti-output', action='store_true', default=False,
                              help='output BOLD files as CIFTI dtseries')
-    g_surfs_xor.add_argument('--fs-no-reconall', '--no-freesurfer',
+    g_surfs_xor.add_argument('--fs-no-reconall',
                              action='store_false', dest='run_reconall',
-                             help='disable FreeSurfer surface preprocessing.'
-                             ' Note : `--no-freesurfer` is deprecated and will be removed in 1.2.'
-                             ' Use `--fs-no-reconall` instead.')
+                             help='disable FreeSurfer surface preprocessing.')
 
     g_other = parser.add_argument_group('Other options')
     g_other.add_argument('-w', '--work-dir', action='store', type=Path, default=Path('work'),
@@ -339,10 +310,6 @@ def main():
         import sentry_sdk
         from ..utils.sentry import sentry_setup
         sentry_setup(opts, exec_env)
-
-    if opts.debug:
-        print('WARNING: Option --debug is deprecated and has no effect',
-              file=sys.stderr)
 
     # Validate inputs
     if not opts.skip_bids_validation:
@@ -734,30 +701,6 @@ def parse_spaces(opts):
     # Set the default template to 'MNI152NLin2009cAsym'
     output_spaces = opts.output_spaces or OrderedDict([('MNI152NLin2009cAsym', {})])
 
-    if opts.template:
-        print("""\
-The ``--template`` option has been deprecated in version 1.4.0. Your selected template \
-"%s" will be inserted at the front of the ``--output-spaces`` argument list. Please update \
-your scripts to use ``--output-spaces``.""" % opts.template, file=stderr)
-        deprecated_tpl_arg = [(opts.template, {})]
-        # If output_spaces is not set, just replate the default - append otherwise
-        if opts.output_spaces is not None:
-            deprecated_tpl_arg += list(output_spaces.items())
-        output_spaces = OrderedDict(deprecated_tpl_arg)
-
-    if opts.output_space:
-        print("""\
-The ``--output_space`` option has been deprecated in version 1.4.0. Your selection of spaces \
-"%s" will be inserted at the front of the ``--output-spaces`` argument list. Please update \
-your scripts to use ``--output-spaces``.""" % ', '.join(opts.output_space), file=stderr)
-        missing = set(opts.output_space)
-        if 'template' in missing:
-            missing.remove('template')
-            if not opts.template:
-                missing.add('MNI152NLin2009cAsym')
-        missing = missing - set(output_spaces.keys())
-        output_spaces.update({tpl: {} for tpl in missing})
-
     FS_SPACES = set(['fsnative', 'fsaverage', 'fsaverage6', 'fsaverage5'])
     if opts.run_reconall and not list(FS_SPACES.intersection(output_spaces.keys())):
         print("""\
@@ -786,15 +729,6 @@ list of output spaces (option "--output-space").""", file=stderr)
             print("""Option ``--cifti-output`` requires functional images to be resampled to \
 ``fsaverage`` space. The argument ``fsaverage:den-10k`` (a.k.a ``fsaverage5``) has been \
 automatically added to the list of output spaces (option ``--output-space``).""", file=stderr)
-
-    if opts.template_resampling_grid is not None:
-        print("""Option ``--template-resampling-grid`` is deprecated, please specify \
-resampling grid options as modifiers to templates listed in ``--output-spaces``. \
-The configuration value will be applied to ALL output standard spaces.""")
-        if opts.template_resampling_grid != 'native':
-            for key in output_spaces.keys():
-                if key in get_templates():
-                    output_spaces[key]['res'] = opts.template_resampling_grid[0]
 
     return output_spaces
 
