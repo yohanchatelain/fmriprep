@@ -589,7 +589,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         (inputnode, bold_reg_wf, [
             ('t1w_brain', 'inputnode.t1w_brain'),
             ('t1w_dseg', 'inputnode.t1w_dseg'),
-            # Undefined if --no-freesurfer, but this is safe
+            # Undefined if --fs-no-reconall, but this is safe
             ('subjects_dir', 'inputnode.subjects_dir'),
             ('subject_id', 'inputnode.subject_id'),
             ('fsnative2t1w_xfm', 'inputnode.fsnative2t1w_xfm')]),
