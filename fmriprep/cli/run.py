@@ -697,7 +697,6 @@ def parse_spaces(opts):
     """Ensures the spaces are correctly parsed"""
     from sys import stderr
     from collections import OrderedDict
-    from templateflow.api import templates as get_templates
     # Set the default template to 'MNI152NLin2009cAsym'
     output_spaces = opts.output_spaces or OrderedDict([('MNI152NLin2009cAsym', {})])
 
