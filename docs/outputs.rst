@@ -314,7 +314,7 @@ states* are removed before generating the cosine regressors.
 
     - A detailed explanation about temporal high-pass filtering is provided with
       the `BrainVoyager User Guide
-      <http://www.brainvoyager.com/bvqx/doc/UsersGuide/Preprocessing/TemporalHighPassFiltering.html>`_.
+      <https://www.brainvoyager.com/bvqx/doc/UsersGuide/Preprocessing/TemporalHighPassFiltering.html>`_.
     - `This comment
       <https://github.com/poldracklab/fmriprep/issues/1899#issuecomment-561687460>`__
       on an issue regarding CompCor regressors.
@@ -393,7 +393,7 @@ For CompCor decompositions, entries include:
 .. danger::
     *fMRIPrep* does high-pass filtering before running anatomical or temporal CompCor.
     Therefore, when using CompCor regressors, the corresponding ``cosine_XX`` regressors
-    should be included too in the design matrix.
+    should also be included in the design matrix.
 
 .. admonition:: See also
 
