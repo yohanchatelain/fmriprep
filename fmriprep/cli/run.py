@@ -40,12 +40,17 @@ def check_deps(workflow):
 
 def get_parser():
     """Build parser object"""
-    from smriprep.cli.utils import ParseTemplates, output_space as _output_space
+    from smriprep.cli.utils import (
+        ParseTemplates,
+        output_space as _output_space,
+    )
     from templateflow.api import templates
     from packaging.version import Version
     from ..__about__ import __version__
     from ..config import NONSTANDARD_REFERENCES
     from .version import check_latest, is_flagged
+
+    ParseTemplates.set_nonstandard_spaces(tuple(NONSTANDARD_REFERENCES))
 
     verstr = 'fmriprep v{}'.format(__version__)
     currentv = Version(__version__)
@@ -114,6 +119,9 @@ def get_parser():
                          help='DEPRECATED (now does nothing, see --error-on-aroma-warnings) '
                               '- ignores the errors ICA_AROMA returns when there are no '
                               'components classified as either noise or signal')
+    g_perfm.add_argument('--md-only-boilerplate', action='store_true',
+                         default=False,
+                         help='skip generation of HTML and LaTeX formatted citation with pandoc')
     g_perfm.add_argument('--error-on-aroma-warnings', action='store_true',
                          default=False,
                          help='Raise an error if ICA_AROMA does not produce sensible output '
@@ -247,6 +255,10 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (
         '--fs-license-file', metavar='PATH', type=Path,
         help='Path to FreeSurfer license key file. Get it (for free) by registering'
              ' at https://surfer.nmr.mgh.harvard.edu/registration.html')
+    g_fs.add_argument(
+        '--fs-subjects-dir', metavar='PATH', type=Path,
+        help='Path to existing FreeSurfer subjects directory to reuse. '
+             '(default: OUTPUT_DIR/freesurfer)')
 
     # Surface generation xor
     g_surfs = parser.add_argument_group('Surface preprocessing options')
@@ -450,7 +462,7 @@ license file at several paths, in this order: 1) command line argument ``--fs-li
             for ext in ('bib', 'tex', 'md', 'html')
         }
 
-        if citation_files['md'].exists():
+        if not opts.md_only_boilerplate and citation_files['md'].exists():
             # Generate HTML file resolving citations
             cmd = ['pandoc', '-s', '--bibliography',
                    pkgrf('fmriprep', 'data/boilerplate.bib'),
@@ -487,7 +499,9 @@ license file at several paths, in this order: 1) command line argument ``--fs-li
 
         # Generate reports phase
         failed_reports = generate_reports(
-            subject_list, output_dir, work_dir, run_uuid, packagename='fmriprep')
+            subject_list, output_dir, work_dir, run_uuid,
+            config=pkgrf('fmriprep', 'data/reports-spec.yml'),
+            packagename='fmriprep')
         write_derivative_description(bids_dir, output_dir / 'fmriprep')
 
         if failed_reports and not opts.notrack:
@@ -543,6 +557,13 @@ def build_workflow(opts, retval):
             'The selected output folder is the same as the input BIDS folder. '
             'Please modify the output path (suggestion: %s).',
             bids_dir / 'derivatives' / ('fmriprep-%s' % __version__.split('+')[0]))
+        retval['return_code'] = 1
+        return retval
+
+    if bids_dir in work_dir.parents:
+        build_log.error(
+            'The selected working directory is a subdirectory of the input BIDS folder. '
+            'Please modify the output path.')
         retval['return_code'] = 1
         return retval
 
@@ -631,12 +652,15 @@ def build_workflow(opts, retval):
 
     # Called with reports only
     if opts.reports_only:
+        from pkg_resources import resource_filename as pkgrf
+
         build_log.log(25, 'Running --reports-only on participants %s', ', '.join(subject_list))
         if opts.run_uuid is not None:
             run_uuid = opts.run_uuid
             retval['run_uuid'] = run_uuid
         retval['return_code'] = generate_reports(
             subject_list, output_dir, work_dir, run_uuid,
+            config=pkgrf('fmriprep', 'data/reports-spec.yml'),
             packagename='fmriprep')
         return retval
 
@@ -661,6 +685,7 @@ def build_workflow(opts, retval):
         fmap_demean=opts.fmap_no_demean,
         force_syn=opts.force_syn,
         freesurfer=opts.run_reconall,
+        fs_subjects_dir=opts.fs_subjects_dir,
         hires=opts.hires,
         ignore=opts.ignore,
         layout=layout,

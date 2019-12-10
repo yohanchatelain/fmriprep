@@ -10,10 +10,6 @@ open-source software distribution.
   :target: https://hub.docker.com/r/poldracklab/fmriprep/tags/
   :alt: Docker image available!
 
-.. image:: https://img.shields.io/badge/OpenNeuro-Available!-brightgreen.svg
-  :target: https://openneuro.org
-  :alt: Available in OpenNeuro!
-  
 .. image:: https://codeocean.com/codeocean-assets/badge/open-in-code-ocean.svg
   :target: https://doi.org/10.24433/CO.ed5ddfef-76a3-4996-b298-e3200f69141b
   :alt: Available in CodeOcean!
@@ -28,11 +24,11 @@ open-source software distribution.
 .. image:: https://img.shields.io/pypi/v/fmriprep.svg
   :target: https://pypi.python.org/pypi/fmriprep/
   :alt: Latest Version
-  
+
 .. image:: https://img.shields.io/badge/doi-10.1038%2Fs41592--018--0235--4-blue.svg
   :target: https://doi.org/10.1038/s41592-018-0235-4
   :alt: Published in Nature Methods
-  
+
 .. image:: https://img.shields.io/badge/RRID-SCR__016216-blue.svg
   :target: https://doi.org/10.1038/s41592-018-0235-4
   :alt: RRID:SCR_016216
@@ -59,7 +55,8 @@ volume-based statistics, etc.
    *fMRIPrep* performs minimal preprocessing.
    Here we define 'minimal preprocessing'  as motion correction, field
    unwarping, normalization, bias field correction, and brain extraction.
-   See the workflows_ for more details.
+   See the `workflows section of our documentation
+   <https://fmriprep.readthedocs.io/en/latest/workflows.html>`__ for more details.
 
 The *fMRIPrep* pipeline uses a combination of tools from well-known software
 packages, including FSL_, ANTs_, FreeSurfer_ and AFNI_.
@@ -116,21 +113,21 @@ Limitations and reasons not to use *fMRIPrep*
    non-human brains, although appropriate templates can be provided to overcome the
    issue.
 3. The "EPInorm" approach is currently not supported, although we plan to implement
-   this feature (see `#857 <https://github.com/poldracklab/fmriprep/issues/857>`_).
+   this feature (see `#620 <https://github.com/poldracklab/fmriprep/issues/620>`_).
 4. If you really want unlimited flexibility (which is obviously a double-edged sword).
 5. If you want students to suffer through implementing each step for didactic purposes,
    or to learn shell-scripting or Python along the way.
 6. If you are trying to reproduce some *in-house* lab pipeline.
 
 (Reasons 4-6 were kindly provided by S. Nastase in his
-`open review <http://academickarma.org/review/j7d5501n779n>`__
-of our `pre-print <https://www.biorxiv.org/content/early/2018/05/06/306951>`__).
+`open review <https://pubpeer.com/publications/6B3E024EAEBF2C80085FDF644C2085>`__
+of our `pre-print <https://doi.org/10.1101/306951>`__).
 
 
 Acknowledgements
 ----------------
 
-Please acknowledge this work by mentioning explicitly the name of this software
-(*fMRIPrep*) and the version, along with a link to the `GitHub repository
-<https://github.com/poldracklab/fmriprep>`_ or the Zenodo reference.
-For more details, please see :ref:`citation`.
+Please acknowledge this work using the citation boilerplate that *fMRIPrep* includes
+in the visual report generated for every subject processed.
+For an illustration of how the citation boilerplate generally reads, please
+check `our documentation <https://fmriprep.readthedocs.io/en/latest/citing.html>`__.
