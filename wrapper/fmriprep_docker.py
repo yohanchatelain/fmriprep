@@ -429,7 +429,7 @@ def main():
                 spaces.append(target)
             else:
                 spaces.append(space)
-        unknown_args.extend(['--output-spaces', " ".join(spaces)])
+        unknown_args.extend(['--output-spaces'] + spaces)
 
     if opts.shell:
         command.append('--entrypoint=bash')
