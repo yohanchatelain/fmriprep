@@ -18,7 +18,6 @@ import sys
 import os
 import re
 import subprocess
-from warnings import warn
 
 __version__ = '99.99.99'
 __copyright__ = 'Copyright 2019, Center for Reproducible Neuroscience, Stanford University'
@@ -260,8 +259,8 @@ may be followed by optional, colon-separated parameters. \
 Non-standard spaces (valid keywords: %s) imply specific orientations and sampling \
 grids. \
 Important to note, the ``res-*`` modifier does not define the resolution used for \
-the spatial normalization.""" % (
-        ', '.join('"%s"' % s for s in TF_TEMPLATES), ', '.join(NONSTANDARD_REFERENCES)))
+the spatial normalization.""" % (', '.join('"%s"' % s for s in TF_TEMPLATES),
+                                 ', '.join(NONSTANDARD_REFERENCES)))
 
     g_wrap.add_argument(
         '--fs-license-file', metavar='PATH', type=os.path.abspath,
