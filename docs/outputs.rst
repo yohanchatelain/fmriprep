@@ -306,9 +306,8 @@ It is relevant to mention *effective* because initial time points identified as 
 states* are removed before generating the cosine regressors.
 
 .. caution::
-    If the analysis includes your own high-pass filtering step, the ``cosine_XX``
-    regressors may interfere (meaning, they may re-introduce drifts) if included
-    in the design matrix.
+    If your analysis includes separate high-pass filtering, do not include 
+    ``cosine_XX`` regressors in your design matrix.
 
 .. admonition:: See also
 
@@ -412,6 +411,12 @@ ICA-AROMA can be enabled with the flag ``--use-aroma``.
 .. danger::
     If you are already using ICA-AROMA cleaned data (``~desc-smoothAROMAnonaggr_bold.nii.gz``),
     do not include ICA-AROMA confounds during your design specification or denoising procedure.
+
+.. caution::
+    *Nonsteady-states* (or *dummy scans*) in the beginning of every run
+    are dropped **before** ICA-AROMA is performed.
+    Therefore, any subsequent analysis of ICA-AROMA outputs must drop the same
+    number of *nonsteady-states*.
 
 Confounds and "carpet"-plot on the visual reports
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
