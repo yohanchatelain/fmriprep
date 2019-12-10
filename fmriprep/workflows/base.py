@@ -208,6 +208,9 @@ def init_fmriprep_wf(
             If fieldmaps are present and enabled, this is not run, by default.
         work_dir : str
             Directory in which to store workflow execution state and temporary files
+        bids_filters : dict
+            Provides finer specification of the pipeline input files using pybids entities filters.
+            A dict with the following structure {<suffix>:{<entity>:<filter>,...},...}
 
     """
     fmriprep_wf = Workflow(name='fmriprep_wf')
@@ -455,7 +458,8 @@ def init_single_subject_wf(
             **Experimental**: Enable ANTs SyN-based susceptibility distortion correction (SDC).
             If fieldmaps are present and enabled, this is not run, by default.
         bids_filters : dict
-            For BIDSDataGrabber output_query
+            Provides finer specification of the pipeline input files using pybids entities filters.
+            A dict with the following structure {<suffix>:{<entity>:<filter>,...},...}
 
     Inputs
 
