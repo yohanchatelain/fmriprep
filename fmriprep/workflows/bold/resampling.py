@@ -12,6 +12,7 @@ Resampling workflows
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, freesurfer as fs
 from nipype.interfaces.fsl import Split as FSLSplit
+import nipype.interfaces.workbench as wb
 
 from niworkflows.engine.workflows import LiterateWorkflow as Workflow
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
@@ -33,7 +34,13 @@ from ...interfaces import DerivativesDataSink
 from .util import init_bold_reference_wf
 
 
-def init_bold_surf_wf(mem_gb, output_spaces, medial_surface_nan, name='bold_surf_wf'):
+def init_bold_surf_wf(
+    mem_gb,
+    output_spaces,
+    medial_surface_nan,
+    fslr_density=None,
+    name='bold_surf_wf'
+):
     """
     Sample functional images to FreeSurfer surfaces.
 
@@ -60,8 +67,13 @@ def init_bold_surf_wf(mem_gb, output_spaces, medial_surface_nan, name='bold_surf
         such as ``fsaverage`` or related template spaces
         If the list contains ``fsnative``, images will be resampled to the
         individual subject's native surface
+        If the list contains ``fsLR``, images will be resampled twice;
+        first to ``fsaverage`` and then to ``fsLR``.
     medial_surface_nan : bool
         Replace medial wall values with NaNs on functional GIFTI files
+    fslr_density : str, optional
+        Density of fsLR surface (32k or 59k)
+
 
     Inputs
     ------
@@ -97,6 +109,11 @@ spaces: {out_spaces}.
                                       't1w2fsnative_xfm']),
         name='inputnode')
 
+    to_fslr = False
+    if 'fsLR' in output_spaces:
+        to_fslr = 'fsaverage' in output_spaces and fslr_density
+        spaces.pop(spaces.index('fsLR'))
+
     outputnode = pe.Node(niu.IdentityInterface(fields=['surfaces']), name='outputnode')
 
     def select_target(subject_id, space):
@@ -126,12 +143,64 @@ spaces: {out_spaces}.
         iterables=('hemi', ['lh', 'rh']),
         name='sampler', mem_gb=mem_gb * 3)
 
-    medial_nans = pe.MapNode(MedialNaNs(), iterfield=['in_file', 'target_subject'],
-                             name='medial_nans', mem_gb=DEFAULT_MEMORY_MIN_GB)
+    if to_fslr:
+        filter_fsavg = pe.Node(niu.Function(function=_select_fsaverage_hemi,
+                                            output_names=['fsaverage_bold', 'hemi']),
+                               name='filter_fsavg', mem_gb=DEFAULT_MEMORY_MIN_GB,
+                               run_without_submitting=True)
+
+        rename_fslr = pe.Node(niu.Rename(format_string="%(hemi)s.fsLR", keep_ext=True,
+                                         parse_string=r'^(?P<hemi>\w+)'),
+                              name='rename_fslr', mem_gb=DEFAULT_MEMORY_MIN_GB,
+                              run_without_submitting=True)
+
+        fetch_fslr_tpls = pe.Node(niu.Function(function=_fetch_fslr_templates,
+                                               output_names=[
+                                                   'fsaverage_sphere',
+                                                   'fslr_sphere',
+                                                   'fsaverage_midthick',
+                                                   'fslr_midthick'
+                                                ]),
+                                  name='fetch_fslr_tpls', mem_gb=DEFAULT_MEMORY_MIN_GB,
+                                  overwrite=True)
+        fetch_fslr_tpls.inputs.den = fslr_density
+
+        resample_fslr = pe.Node(wb.MetricResample(method='ADAP_BARY_AREA', area_metrics=True),
+                                name='resample_fslr')
+
+        merge_fslr = pe.Node(niu.Merge(2), name='merge_fslr', mem_gb=DEFAULT_MEMORY_MIN_GB,
+                             run_without_submitting=True)
+
+        def _basename(in_file):
+            import os
+            return os.path.basename(in_file)
+
+        workflow.connect([
+            (sampler, filter_fsavg, [('out_file', 'in_files')]),
+            (filter_fsavg, fetch_fslr_tpls, [('hemi', 'hemi')]),
+            (filter_fsavg, rename_fslr, [('fsaverage_bold', 'in_file')]),
+            (rename_fslr, resample_fslr, [('out_file', 'in_file')]),
+            (rename_fslr, resample_fslr, [(('out_file', _basename), 'out_file')]),
+            (fetch_fslr_tpls, resample_fslr, [('fsaverage_sphere', 'current_sphere'),
+                                              ('fslr_sphere', 'new_sphere'),
+                                              ('fsaverage_midthick', 'current_area'),
+                                              ('fslr_midthick', 'new_area')]),
+            (sampler, merge_fslr, [('out_file', 'in1')]),
+            (resample_fslr, merge_fslr, [('out_file', 'in2')]),
+        ])
 
     merger = pe.JoinNode(niu.Merge(1, ravel_inputs=True), name='merger',
                          joinsource='sampler', joinfield=['in1'], run_without_submitting=True,
                          mem_gb=DEFAULT_MEMORY_MIN_GB)
+
+    if medial_surface_nan:
+        medial_nans = pe.MapNode(MedialNaNs(), iterfield=['in_file'],
+                                 name='medial_nans', mem_gb=DEFAULT_MEMORY_MIN_GB)
+
+        workflow.connect([
+            (inputnode, medial_nans, [('subjects_dir', 'subjects_dir')]),
+            (medial_nans, merger, [('out_file', 'in1')]),
+        ])
 
     update_metadata = pe.MapNode(GiftiSetAnatomicalStructure(), iterfield='in_file',
                                  name='update_metadata', mem_gb=DEFAULT_MEMORY_MIN_GB)
@@ -152,13 +221,13 @@ spaces: {out_spaces}.
         (update_metadata, outputnode, [('out_file', 'surfaces')]),
     ])
 
-    if medial_surface_nan:
-        workflow.connect([
-            (inputnode, medial_nans, [('subjects_dir', 'subjects_dir')]),
-            (sampler, medial_nans, [('out_file', 'in_file')]),
-            (targets, medial_nans, [('out', 'target_subject')]),
-            (medial_nans, merger, [('out_file', 'in1')]),
-        ])
+    if to_fslr and medial_surface_nan:
+        medial_nans.inputs.density = fslr_density
+        workflow.connect(merge_fslr, 'out', medial_nans, 'in_file')
+    elif to_fslr:
+        workflow.connect(merge_fslr, 'out', merger, 'in1')
+    elif medial_surface_nan:
+        workflow.connect(sampler, 'out_file', medial_nans, 'in_file')
     else:
         workflow.connect(sampler, 'out_file', merger, 'in1')
 
@@ -668,3 +737,28 @@ def _tpl_res(in_value):
     if in_value == 'native':
         return 2
     return in_value
+
+
+def _select_fsaverage_hemi(in_files):
+    """Select the fsaverage surface from available surfaces and identify hemisphere"""
+    import os
+    for fl in in_files:
+        if fl.endswith('fsaverage.gii'):
+            hemi = 'R' if os.path.basename(fl).startswith('rh') else 'L'
+            return fl, hemi
+    raise OSError
+
+
+def _fetch_fslr_templates(hemi, den):
+    """Fetch the necessary templates for fsaverage to fsLR transform"""
+    import templateflow.api as tf
+
+    fsaverage_sphere = str(tf.get(
+        'fsLR', space='fsaverage', suffix='sphere', hemi=hemi, density='164k'
+    ))
+    fslr_sphere = str(tf.get('fsLR', space=None, suffix='sphere', hemi=hemi, density=den))
+    fsaverage_midthick = str(tf.get(
+        'fsLR', space='fsaverage', suffix='midthickness', hemi=hemi, density='164k'
+    ))
+    fslr_midthick = str(tf.get('fsLR', space=None, suffix='midthickness', hemi=hemi, density=den))
+    return fsaverage_sphere, fslr_sphere, fsaverage_midthick, fslr_midthick

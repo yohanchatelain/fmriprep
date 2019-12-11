@@ -538,6 +538,15 @@ Surfaces are generated for the "subject native" surface, as well as transformed 
 ``fsaverage`` template space.
 All surface outputs are in GIFTI format.
 
+HCP Grayordinates
+~~~~~~~~~~~~~~~~~
+If CIFTI output is enabled, the motion-corrected functional timeseries (in T1w space) is first
+sampled to the high resolution 164k vertex (per hemisphere) ``fsaverage``. Following that,
+the resampled timeseries is sampled to `HCP Pipelines_`'s ``fsLR`` mesh (with the left and
+right hemisphere aligned) using `Connectome Workbench`_'s ``-metric-resample`` to generate a
+surface timeseries for each hemisphere. These surfaces are then combined with corresponding
+volumetric timeseries to create a CIFTI2 file.
+
 .. _bold_confounds:
 
 Confounds estimation

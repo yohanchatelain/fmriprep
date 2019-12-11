@@ -17,7 +17,7 @@ Derivatives specification (see `BIDS Derivatives RC1`_).
 2. **Derivatives (preprocessed data)** the input fMRI data ready for
    analysis, i.e., after the various preparation procedures
    have been applied.
-   For example, :abbr:`INU (intensity non-uniformity)`-corrected versions 
+   For example, :abbr:`INU (intensity non-uniformity)`-corrected versions
    of the T1-weighted image (per subject), the brain mask,
    or :abbr:`BOLD (blood-oxygen level dependent)`
    images after head-motion correction, slice-timing correction and aligned into
@@ -140,20 +140,26 @@ mid-thickness surface mesh::
 
 Surface output spaces include ``fsnative`` (full density subject-specific mesh),
 ``fsaverage`` and the down-sampled meshes ``fsaverage6`` (41k vertices) and
-``fsaverage5`` (10k vertices, default).
+``fsaverage5`` (10k vertices, default). Additionally, the BOLD can be resampled to
+``fsLR`` surfaces, a hybrid version of the ``fsaverage`` atlas with both hemispheres
+in precise geographic correspondence, with varying mesh densities: 32k (default), 59k, and 164k.
 
 **Grayordinates files**.
 CIFTI is a container format that holds both volumetric (regularly sampled in a grid)
 and surface (sampled on a triangular mesh) samples.
-Sub-cortical time series are volumetric (supported spaces: ``MNI152NLin2009cAsym``), while cortical
-time series are sampled on the surface (supported spaces: ``fsaverage5``, ``fsaverage6``).
-If CIFTI outputs are requested (with the ``--cifti-outputs`` argument),
-the BOLD series are also saved as ``dtseries.nii`` CIFTI2 files::
+Sub-cortical time series are volumetric (supported spaces: ``MNI152NLin6Asym``), while cortical
+time series are sampled to surface (supported spaces: ``fsLR``).
+If CIFTI outputs are requested (with the ``--cifti-outputs`` argument), the BOLD series are also
+saved as ``dtseries.nii`` CIFTI2 files::
 
   sub-<subject_label>/
     func/
       sub-<subject_label>_[specifiers]_bold.dtseries.nii
 
+CIFTI output resolution can be specified as an optional parameter after ``--cifti-output``.
+By default, '91k' outputs are produced and match up to the standard `HCP Pipelines`_ CIFTI
+output (91282 grayordinates @ 2mm). However, '170k' outputs are also possible, and produce
+higher resolution CIFTI output (170494 grayordinates @ 1.6mm).
 
 **Extracted confounding time series**.
 For each :abbr:`BOLD (blood-oxygen level dependent)` run processed with *fMRIPrep*, an
@@ -231,7 +237,7 @@ Confound regressors description
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 **Basic confounds**. The most commonly used confounding time series:
 
-- Estimated head-motion parameters: 
+- Estimated head-motion parameters:
   ``trans_x``, ``trans_y``, ``trans_z``, ``rot_x``, ``rot_y``, ``rot_z`` - the 6 rigid-body motion
   parameters (3 translations and 3 rotation), estimated relative to a reference image;
 

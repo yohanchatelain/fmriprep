@@ -232,8 +232,11 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (
     g_surfs.add_argument('--no-submm-recon', action='store_false', dest='hires',
                          help='disable sub-millimeter (hires) reconstruction')
     g_surfs_xor = g_surfs.add_mutually_exclusive_group()
-    g_surfs_xor.add_argument('--cifti-output', action='store_true', default=False,
-                             help='output BOLD files as CIFTI dtseries')
+    g_surfs_xor.add_argument('--cifti-output', nargs='?', const='91k', default=False,
+                             choices=('91k', '170k'),
+                             help='output preprocessed BOLD as a CIFTI dense timeseries. '
+                             'Optionally, the number of grayordinate can be specified '
+                             '(default is 91k, which equates to 2mm resolution)')
     g_surfs_xor.add_argument('--fs-no-reconall',
                              action='store_false', dest='run_reconall',
                              help='disable FreeSurfer surface preprocessing.')
@@ -700,14 +703,6 @@ def parse_spaces(opts):
     # Set the default template to 'MNI152NLin2009cAsym'
     output_spaces = opts.output_spaces or OrderedDict([('MNI152NLin2009cAsym', {})])
 
-    FS_SPACES = set(['fsnative', 'fsaverage', 'fsaverage6', 'fsaverage5'])
-    if opts.run_reconall and not list(FS_SPACES.intersection(output_spaces.keys())):
-        print("""\
-Although ``--fs-no-reconall`` was not set (i.e., FreeSurfer is to be run), no FreeSurfer \
-output space (valid values are: %s) was selected. Adding default "fsaverage5" to the \
-list of output spaces.""" % ', '.join(FS_SPACES), file=stderr)
-        output_spaces['fsaverage5'] = {}
-
     # Validity of some inputs
     # ERROR check if use_aroma was specified, but the correct template was not
     if opts.use_aroma and 'MNI152NLin6Asym' not in output_spaces:
@@ -717,18 +712,32 @@ Option "--use-aroma" requires functional images to be resampled to MNI152NLin6As
 The argument "MNI152NLin6Asym:res-2" has been automatically added to the list of output spaces \
 (option ``--output-spaces``).""", file=stderr)
 
-    if opts.cifti_output and 'MNI152NLin2009cAsym' not in output_spaces:
-        if 'MNI152NLin2009cAsym' not in output_spaces:
-            output_spaces['MNI152NLin2009cAsym'] = {'res': 2}
-            print("""Option ``--cifti-output`` requires functional images to be resampled to \
-``MNI152NLin2009cAsym`` space. Such template identifier has been automatically added to the \
-list of output spaces (option "--output-space").""", file=stderr)
-        if not [s for s in output_spaces if s in ('fsaverage5', 'fsaverage6')]:
-            output_spaces['fsaverage5'] = {}
-            print("""Option ``--cifti-output`` requires functional images to be resampled to \
-``fsaverage`` space. The argument ``fsaverage:den-10k`` (a.k.a ``fsaverage5``) has been \
-automatically added to the list of output spaces (option ``--output-space``).""", file=stderr)
+    if opts.cifti_output:
+        grayords = {'91k': '32k', '170k': '59k'}  # CIFTI total grayords to surface densities
+        output_spaces['fsLR'] = {'den': grayords[opts.cifti_output]}
+        if 'MNI152NLin6Asym' not in output_spaces:
+            output_spaces['MNI152NLin6Asym'] = {'res': '2'}
+            print("""\
+Option ``--cifti-output`` requires functional images to be resampled to \
+``MNI152NLin6Asym`` space. This space has been automatically added to the list of output \
+spaces (option ``--output-spaces``).""", file=stderr)
 
+    if 'fsLR' in output_spaces:
+        output_spaces['fsLR'] = {'den': output_spaces.get('fsLR', {}).get('den') or '32k'}
+        # resample to fsLR from highest density fsaverage
+        output_spaces['fsaverage'] = {'den': '164k'}
+        print("""\
+To generate "fsLR" surfaces, functional images are first resampled to ``fsaverage:den-164k``. \
+This space has been automatically added to the list of output spaces \
+(option ``--output-spaces``).""", file=stderr)
+
+    FS_SPACES = set(('fsnative', 'fsaverage', 'fsaverage6', 'fsaverage5'))
+    if opts.run_reconall and not FS_SPACES.intersection(output_spaces.keys()):
+        print("""\
+Although ``--fs-no-reconall`` was not set (i.e., FreeSurfer is to be run), no FreeSurfer \
+output space (valid values are: %s) was selected. Adding default "fsaverage5" to the \
+list of output spaces.""" % ', '.join(FS_SPACES), file=stderr)
+        output_spaces['fsaverage5'] = {}
     return output_spaces
 
 
