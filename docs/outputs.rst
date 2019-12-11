@@ -420,12 +420,12 @@ ICA-AROMA can be enabled with the flag ``--use-aroma``.
 - ``aroma_motion_XX`` - the motion-related components identified by ICA-AROMA.
 
 .. danger::
-    If you are already using ICA-AROMA's cleaned-data (``~desc-smoothAROMAnonaggr_bold.nii.gz``),
+    If you are already using AROMA-cleaned data (``~desc-smoothAROMAnonaggr_bold.nii.gz``),
     do not include ICA-AROMA confounds during your design specification or denoising procedure.
 
-    Additionally, as per [Hallquist2013]_, when using ICA-AROMA's cleaned-data most of the
-    confound regressors should be recalculated (this feature is a work-in-progress, follow up on
-    `#1905 <https://github.com/poldracklab/fmriprep/issues/1905>`__).
+    Additionally, as per [Hallquist2013]_ and [Lindquist2019]_, when using AROMA-cleaned data
+    most of the confound regressors should be recalculated (this feature is a work-in-progress,
+    follow up on `#1905 <https://github.com/poldracklab/fmriprep/issues/1905>`__).
     Surprisingly, `our simulations
     <https://github.com/poldracklab/fmriprep-notebooks/blob/9933a628dfb759dc73e61701c144d67898b92de0/05%20-%20Discussion%20AROMA%20confounds%20-%20issue-817%20%5BJ.%20Kent%5D.ipynb>`__
     (with thanks to JD. Kent) suggest that using the confounds as currently calculated by
@@ -520,6 +520,11 @@ See implementation on :mod:`~fmriprep.workflows.bold.confounds.init_bold_confs_w
   .. [Hallquist2013] Hallquist MN, Hwang K, Luna B. The Nuisance of Nuisance Regression.
      NeuroImage. 2013. doi:`10.1016/j.neuroimage.2013.05.116
      <https://doi.org/10.1016/j.neuroimage.2013.05.116>`_
+
+  .. [Lindquist2019] Lindquist, MA, Geuter, S, and Wager, TD, Caffo, BS,
+     Modular preprocessing pipelines can reintroduce artifacts into fMRI data.
+     Human Brain Mapping. 2019. doi: `10.1002/hbm.24528
+     <https://doi.org/10.1002/hbm.24528>`_
 
   .. [Muschelli2014] Muschelli J, Nebel MB, Caffo BS, Barber AD, Pekar JJ, Mostofsky SH,
      Reduction of motion-related artifacts in resting state fMRI using aCompCor. NeuroImage. 2014.
