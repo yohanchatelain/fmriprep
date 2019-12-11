@@ -354,7 +354,7 @@ def init_func_preproc_wf(
             fmaps = fieldmap_wrangler(layout, ref_file, use_syn=use_syn, force_syn=force_syn)
 
         # Short circuits: (True and True and (False or 'TooShort')) == 'TooShort'
-        run_stc = ("SliceTiming" in metadata and
+        run_stc = (bool(metadata.get("SliceTiming")) and
                    'slicetiming' not in ignore and
                    (_get_series_len(ref_file) > 4 or "TooShort"))
 
@@ -594,7 +594,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         (inputnode, bold_reg_wf, [
             ('t1w_brain', 'inputnode.t1w_brain'),
             ('t1w_dseg', 'inputnode.t1w_dseg'),
-            # Undefined if --no-freesurfer, but this is safe
+            # Undefined if --fs-no-reconall, but this is safe
             ('subjects_dir', 'inputnode.subjects_dir'),
             ('subject_id', 'inputnode.subject_id'),
             ('fsnative2t1w_xfm', 'inputnode.fsnative2t1w_xfm')]),
