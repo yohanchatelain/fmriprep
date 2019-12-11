@@ -129,6 +129,7 @@ def init_fmriprep_wf(
                 use_bbr=True,
                 use_syn=True,
                 work_dir='.',
+                bids_filters=None,
             )
 
 
@@ -377,6 +378,7 @@ def init_single_subject_wf(
                 use_aroma=False,
                 use_bbr=True,
                 use_syn=True,
+                bids_filters=None,
             )
 
     Parameters
