@@ -259,8 +259,11 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (
     g_surfs.add_argument('--no-submm-recon', action='store_false', dest='hires',
                          help='disable sub-millimeter (hires) reconstruction')
     g_surfs_xor = g_surfs.add_mutually_exclusive_group()
-    g_surfs_xor.add_argument('--cifti-output', action='store_true', default=False,
-                             help='output BOLD files as CIFTI dtseries')
+    g_surfs_xor.add_argument('--cifti-output', nargs='?', const='91k', default=False,
+                             choices=('91k', '170k'),
+                             help='output preprocessed BOLD as a CIFTI dense timeseries. '
+                             'Optionally, the number of grayordinate can be specified '
+                             '(default is 91k, which equates to 2mm resolution)')
     g_surfs_xor.add_argument('--fs-no-reconall', '--no-freesurfer',
                              action='store_false', dest='run_reconall',
                              help='disable FreeSurfer surface preprocessing.'
@@ -768,8 +771,8 @@ The argument "MNI152NLin6Asym:res-2" has been automatically added to the list of
 (option ``--output-spaces``).""", file=stderr)
 
     if opts.cifti_output:
-        if 'fsLR' not in output_spaces:
-            output_spaces['fsLR'] = {}
+        grayords = {'91k': '32k', '170k': '59k'}  # CIFTI total grayords to surface densities
+        output_spaces['fsLR'] = {'den': grayords[opts.cifti_output]}
         if 'MNI152NLin6Asym' not in output_spaces:
             output_spaces['MNI152NLin6Asym'] = {'res': '2'}
             print("""\

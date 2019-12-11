@@ -17,7 +17,7 @@ Derivatives specification (see `BIDS Derivatives RC1`_).
 2. **Derivatives (preprocessed data)** the input fMRI data ready for
    analysis, i.e., after the various preparation procedures
    have been applied.
-   For example, :abbr:`INU (intensity non-uniformity)`-corrected versions 
+   For example, :abbr:`INU (intensity non-uniformity)`-corrected versions
    of the T1-weighted image (per subject), the brain mask,
    or :abbr:`BOLD (blood-oxygen level dependent)`
    images after head-motion correction, slice-timing correction and aligned into
@@ -149,18 +149,17 @@ CIFTI is a container format that holds both volumetric (regularly sampled in a g
 and surface (sampled on a triangular mesh) samples.
 Sub-cortical time series are volumetric (supported spaces: ``MNI152NLin6Asym``), while cortical
 time series are sampled to surface (supported spaces: ``fsLR``).
-By default, CIFTI outputs produced match up to `HCP Pipelines`_ low resolution CIFTI 
-output (91282 grayordinates).
-A higher resolution output can be created by increasing the surface density of ``fsLR`` to 59k
-adding the ``fsLR:den-59k`` to the list of spaces in the ``--output-spaces``
-command line argument.
-If CIFTI outputs are requested (with the ``--cifti-outputs`` argument),
-the BOLD series are also saved as ``dtseries.nii`` CIFTI2 files::
+If CIFTI outputs are requested (with the ``--cifti-outputs`` argument), the BOLD series are also
+saved as ``dtseries.nii`` CIFTI2 files::
 
   sub-<subject_label>/
     func/
       sub-<subject_label>_[specifiers]_bold.dtseries.nii
 
+CIFTI output resolution can be specified as an optional parameter after ``--cifti-output``.
+By default, '91k' outputs are produced and match up to the standard `HCP Pipelines`_ CIFTI
+output (91282 grayordinates @ 2mm). However, '170k' outputs are also possible, and produce
+higher resolution CIFTI output (170494 grayordinates @ 1.6mm).
 
 **Extracted confounding time series**.
 For each :abbr:`BOLD (blood-oxygen level dependent)` run processed with *fMRIPrep*, an
@@ -238,7 +237,7 @@ Confound regressors description
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 **Basic confounds**. The most commonly used confounding time series:
 
-- Estimated head-motion parameters: 
+- Estimated head-motion parameters:
   ``trans_x``, ``trans_y``, ``trans_z``, ``rot_x``, ``rot_y``, ``rot_z`` - the 6 rigid-body motion
   parameters (3 translations and 3 rotation), estimated relative to a reference image;
 
