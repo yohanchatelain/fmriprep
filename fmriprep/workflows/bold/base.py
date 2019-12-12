@@ -82,6 +82,7 @@ def init_func_preproc_wf(
     use_syn,
     layout=None,
     num_bold=1,
+    bbregister_init_header=False
 ):
     """
     This workflow controls the functional preprocessing stages of FMRIPREP.
@@ -194,6 +195,9 @@ def init_func_preproc_wf(
         num_bold : int
             Total number of BOLD files that have been set for preprocessing
             (default is 1)
+        bbregister_init_header : boolean, optional
+            If ``True``, use header information for initialization instead
+            of running ``mri_coreg`` (default is ``False``).
 
     **Inputs**
 
@@ -489,7 +493,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                                    bold2t1w_dof=bold2t1w_dof,
                                    mem_gb=mem_gb['resampled'],
                                    omp_nthreads=omp_nthreads,
-                                   use_compression=False)
+                                   use_compression=False,
+                                   init_header=bbregister_init_header)
 
     # apply BOLD registration to T1w
     bold_t1_trans_wf = init_bold_t1_trans_wf(name='bold_t1_trans_wf',

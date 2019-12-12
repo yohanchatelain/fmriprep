@@ -43,7 +43,8 @@ LOGGER = logging.getLogger('nipype.workflow')
 
 
 def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
-                     use_compression=True, write_report=True, name='bold_reg_wf'):
+                     use_compression=True, write_report=True, name='bold_reg_wf',
+                     init_header=False):
     """
     Calculates the registration between a reference BOLD image and T1-space
     using a boundary-based registration (BBR) cost function.
@@ -86,6 +87,9 @@ def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
             Include SDC warp in single-shot transform from BOLD to T1
         write_report : bool
             Whether a reportlet should be stored
+        init_header : boolean, optional
+            If ``True``, use header information for initialization ``bbregister``
+            instead of running ``mri_coreg``.
 
     **Inputs**
 
@@ -136,7 +140,7 @@ def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
 
     if freesurfer:
         bbr_wf = init_bbreg_wf(use_bbr=use_bbr, bold2t1w_dof=bold2t1w_dof,
-                               omp_nthreads=omp_nthreads)
+                               omp_nthreads=omp_nthreads, init_header=init_header)
     else:
         bbr_wf = init_fsl_bbr_wf(use_bbr=use_bbr, bold2t1w_dof=bold2t1w_dof)
 
@@ -363,7 +367,7 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, multiecho=False, use
     return workflow
 
 
-def init_bbreg_wf(use_bbr, bold2t1w_dof, omp_nthreads, name='bbreg_wf'):
+def init_bbreg_wf(use_bbr, bold2t1w_dof, omp_nthreads, name='bbreg_wf', init_header=False):
     """
     This workflow uses FreeSurfer's ``bbregister`` to register a BOLD image to
     a T1-weighted structural image.
@@ -398,6 +402,9 @@ def init_bbreg_wf(use_bbr, bold2t1w_dof, omp_nthreads, name='bbreg_wf'):
             Degrees-of-freedom for BOLD-T1w registration
         name : str, optional
             Workflow name (default: bbreg_wf)
+        init_header : boolean, optional
+            If ``True``, use header information for initialization instead
+            of running ``mri_coreg``.
 
 
     Inputs
@@ -447,59 +454,70 @@ Co-registration was configured with {dof} degrees of freedom{reason}.
         niu.IdentityInterface(['itk_bold_to_t1', 'itk_t1_to_bold', 'out_report', 'fallback']),
         name='outputnode')
 
-    mri_coreg = pe.Node(
-        MRICoregRPT(dof=bold2t1w_dof, sep=[4], ftol=0.0001, linmintol=0.01,
-                    generate_report=not use_bbr),
-        name='mri_coreg', n_procs=omp_nthreads, mem_gb=5)
-
-    lta_concat = pe.Node(ConcatenateLTA(out_file='out.lta'), name='lta_concat')
-    # XXX LTA-FSL-ITK may ultimately be able to be replaced with a straightforward
-    # LTA-ITK transform, but right now the translation parameters are off.
-    lta2fsl_fwd = pe.Node(LTAConvert(out_fsl=True), name='lta2fsl_fwd')
-    lta2fsl_inv = pe.Node(LTAConvert(out_fsl=True, invert=True), name='lta2fsl_inv')
-    fsl2itk_fwd = pe.Node(c3.C3dAffineTool(fsl2ras=True, itk_transform=True),
-                          name='fsl2itk_fwd', mem_gb=DEFAULT_MEMORY_MIN_GB)
-    fsl2itk_inv = pe.Node(c3.C3dAffineTool(fsl2ras=True, itk_transform=True),
-                          name='fsl2itk_inv', mem_gb=DEFAULT_MEMORY_MIN_GB)
-
-    workflow.connect([
-        (inputnode, mri_coreg, [('subjects_dir', 'subjects_dir'),
-                                ('subject_id', 'subject_id'),
-                                ('in_file', 'source_file')]),
-        # Output ITK transforms
-        (inputnode, lta_concat, [('t1_2_fsnative_reverse_transform', 'in_lta2')]),
-        (lta_concat, lta2fsl_fwd, [('out_file', 'in_lta')]),
-        (lta_concat, lta2fsl_inv, [('out_file', 'in_lta')]),
-        (inputnode, fsl2itk_fwd, [('t1_brain', 'reference_file'),
-                                  ('in_file', 'source_file')]),
-        (inputnode, fsl2itk_inv, [('in_file', 'reference_file'),
-                                  ('t1_brain', 'source_file')]),
-        (lta2fsl_fwd, fsl2itk_fwd, [('out_fsl', 'transform_file')]),
-        (lta2fsl_inv, fsl2itk_inv, [('out_fsl', 'transform_file')]),
-        (fsl2itk_fwd, outputnode, [('itk_transform', 'itk_bold_to_t1')]),
-        (fsl2itk_inv, outputnode, [('itk_transform', 'itk_t1_to_bold')]),
-    ])
-
-    # Short-circuit workflow building, use initial registration
-    if use_bbr is False:
+    if init_header:
+        bbregister = pe.Node(
+            BBRegisterRPT(dof=bold2t1w_dof, contrast_type='t2', registered_file=True,
+                          init='header', out_lta_file=True, generate_report=True),
+            name='bbregister', mem_gb=12)
         workflow.connect([
-            (mri_coreg, outputnode, [('out_report', 'out_report')]),
-            (mri_coreg, lta_concat, [('out_lta_file', 'in_lta1')])])
-        outputnode.inputs.fallback = True
+            (inputnode, bbregister, [('subjects_dir', 'subjects_dir'),
+                                     ('subject_id', 'subject_id'),
+                                     ('in_file', 'source_file')]),
+        ])
+    else:
+        mri_coreg = pe.Node(
+            MRICoregRPT(dof=bold2t1w_dof, sep=[4], ftol=0.0001, linmintol=0.01,
+                        generate_report=not use_bbr),
+            name='mri_coreg', n_procs=omp_nthreads, mem_gb=5)
 
-        return workflow
+        lta_concat = pe.Node(ConcatenateLTA(out_file='out.lta'), name='lta_concat')
+        # XXX LTA-FSL-ITK may ultimately be able to be replaced with a straightforward
+        # LTA-ITK transform, but right now the translation parameters are off.
+        lta2fsl_fwd = pe.Node(LTAConvert(out_fsl=True), name='lta2fsl_fwd')
+        lta2fsl_inv = pe.Node(LTAConvert(out_fsl=True, invert=True), name='lta2fsl_inv')
+        fsl2itk_fwd = pe.Node(c3.C3dAffineTool(fsl2ras=True, itk_transform=True),
+                              name='fsl2itk_fwd', mem_gb=DEFAULT_MEMORY_MIN_GB)
+        fsl2itk_inv = pe.Node(c3.C3dAffineTool(fsl2ras=True, itk_transform=True),
+                              name='fsl2itk_inv', mem_gb=DEFAULT_MEMORY_MIN_GB)
+    
+        workflow.connect([
+            (inputnode, mri_coreg, [('subjects_dir', 'subjects_dir'),
+                                    ('subject_id', 'subject_id'),
+                                    ('in_file', 'source_file')]),
+            # Output ITK transforms
+            (inputnode, lta_concat, [('t1_2_fsnative_reverse_transform', 'in_lta2')]),
+            (lta_concat, lta2fsl_fwd, [('out_file', 'in_lta')]),
+            (lta_concat, lta2fsl_inv, [('out_file', 'in_lta')]),
+            (inputnode, fsl2itk_fwd, [('t1_brain', 'reference_file'),
+                                      ('in_file', 'source_file')]),
+            (inputnode, fsl2itk_inv, [('in_file', 'reference_file'),
+                                      ('t1_brain', 'source_file')]),
+            (lta2fsl_fwd, fsl2itk_fwd, [('out_fsl', 'transform_file')]),
+            (lta2fsl_inv, fsl2itk_inv, [('out_fsl', 'transform_file')]),
+            (fsl2itk_fwd, outputnode, [('itk_transform', 'itk_bold_to_t1')]),
+            (fsl2itk_inv, outputnode, [('itk_transform', 'itk_t1_to_bold')]),
+        ])
+    
+        bbregister = pe.Node(
+            BBRegisterRPT(dof=bold2t1w_dof, contrast_type='t2', registered_file=True,
+                          out_lta_file=True, generate_report=True),
+            name='bbregister', mem_gb=12)
 
-    bbregister = pe.Node(
-        BBRegisterRPT(dof=bold2t1w_dof, contrast_type='t2', registered_file=True,
-                      out_lta_file=True, generate_report=True),
-        name='bbregister', mem_gb=12)
+        # Short-circuit workflow building, use initial registration
+        if use_bbr is False:
+            workflow.connect([
+                (mri_coreg, outputnode, [('out_report', 'out_report')]),
+                (mri_coreg, lta_concat, [('out_lta_file', 'in_lta1')])])
+            outputnode.inputs.fallback = True
+    
+            return workflow
 
-    workflow.connect([
-        (inputnode, bbregister, [('subjects_dir', 'subjects_dir'),
-                                 ('subject_id', 'subject_id'),
-                                 ('in_file', 'source_file')]),
-        (mri_coreg, bbregister, [('out_lta_file', 'init_reg_file')]),
-    ])
+        workflow.connect([
+            (inputnode, bbregister, [('subjects_dir', 'subjects_dir'),
+                                     ('subject_id', 'subject_id'),
+                                     ('in_file', 'source_file')]),
+            (mri_coreg, bbregister, [('out_lta_file', 'init_reg_file')]),
+        ])
 
     # Short-circuit workflow building, use boundary-based registration
     if use_bbr is True:
@@ -520,24 +538,42 @@ Co-registration was configured with {dof} degrees of freedom{reason}.
     select_transform = pe.Node(niu.Select(), run_without_submitting=True, name='select_transform')
     select_report = pe.Node(niu.Select(), run_without_submitting=True, name='select_report')
 
-    workflow.connect([
-        (bbregister, transforms, [('out_lta_file', 'in1')]),
-        (mri_coreg, transforms, [('out_lta_file', 'in2')]),
-        # Normalize LTA transforms to RAS2RAS (inputs are VOX2VOX) and compare
-        (transforms, lta_ras2ras, [('out', 'in_lta')]),
-        (lta_ras2ras, compare_transforms, [('out_lta', 'lta_list')]),
-        (compare_transforms, outputnode, [('out', 'fallback')]),
-        # Select output transform
-        (transforms, select_transform, [('out', 'inlist')]),
-        (compare_transforms, select_transform, [('out', 'index')]),
-        (select_transform, lta_concat, [('out', 'in_lta1')]),
-        # Select output report
-        (bbregister, reports, [('out_report', 'in1')]),
-        (mri_coreg, reports, [('out_report', 'in2')]),
-        (reports, select_report, [('out', 'inlist')]),
-        (compare_transforms, select_report, [('out', 'index')]),
-        (select_report, outputnode, [('out', 'out_report')]),
-    ])
+    if init_header:
+        workflow.connect([
+            (bbregister, transforms, [('out_lta_file', 'in1')]),
+            # Normalize LTA transforms to RAS2RAS (inputs are VOX2VOX) and compare
+            (transforms, lta_ras2ras, [('out', 'in_lta')]),
+            (lta_ras2ras, compare_transforms, [('out_lta', 'lta_list')]),
+            (compare_transforms, outputnode, [('out', 'fallback')]),
+            # Select output transform
+            (transforms, select_transform, [('out', 'inlist')]),
+            (compare_transforms, select_transform, [('out', 'index')]),
+            (select_transform, lta_concat, [('out', 'in_lta1')]),
+            # Select output report
+            (bbregister, reports, [('out_report', 'in1')]),
+            (reports, select_report, [('out', 'inlist')]),
+            (compare_transforms, select_report, [('out', 'index')]),
+            (select_report, outputnode, [('out', 'out_report')]),
+        ])
+    else:
+        workflow.connect([
+            (bbregister, transforms, [('out_lta_file', 'in1')]),
+            (mri_coreg, transforms, [('out_lta_file', 'in2')]),
+            # Normalize LTA transforms to RAS2RAS (inputs are VOX2VOX) and compare
+            (transforms, lta_ras2ras, [('out', 'in_lta')]),
+            (lta_ras2ras, compare_transforms, [('out_lta', 'lta_list')]),
+            (compare_transforms, outputnode, [('out', 'fallback')]),
+            # Select output transform
+            (transforms, select_transform, [('out', 'inlist')]),
+            (compare_transforms, select_transform, [('out', 'index')]),
+            (select_transform, lta_concat, [('out', 'in_lta1')]),
+            # Select output report
+            (bbregister, reports, [('out_report', 'in1')]),
+            (mri_coreg, reports, [('out_report', 'in2')]),
+            (reports, select_report, [('out', 'inlist')]),
+            (compare_transforms, select_report, [('out', 'index')]),
+            (select_report, outputnode, [('out', 'out_report')]),
+        ])
 
     return workflow
 

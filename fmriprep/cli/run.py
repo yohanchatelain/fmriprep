@@ -241,6 +241,10 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (
         '--fs-license-file', metavar='PATH', type=Path,
         help='Path to FreeSurfer license key file. Get it (for free) by registering'
              ' at https://surfer.nmr.mgh.harvard.edu/registration.html')
+    g_fs.add_argument(
+        '--bbregister-init-header', action='store_true', dest='bbregister_init_header', default=False,
+        help='Use header information to initialize bbregister instead of mri_coreg')
+
 
     # Surface generation xor
     g_surfs = parser.add_argument_group('Surface preprocessing options')
@@ -682,6 +686,7 @@ def build_workflow(opts, retval):
         use_bbr=opts.use_bbr,
         use_syn=opts.use_syn_sdc,
         work_dir=str(work_dir),
+        bbregister_init_header=opts.bbregister_init_header,
     )
     retval['return_code'] = 0
 

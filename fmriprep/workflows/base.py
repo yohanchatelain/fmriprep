@@ -69,6 +69,7 @@ def init_fmriprep_wf(
     use_bbr,
     use_syn,
     work_dir,
+    bbregister_init_header=False,
 ):
     """
     This workflow organizes the execution of FMRIPREP, with a sub-workflow for
@@ -206,6 +207,9 @@ def init_fmriprep_wf(
             If fieldmaps are present and enabled, this is not run, by default.
         work_dir : str
             Directory in which to store workflow execution state and temporary files
+        bbregister_init_header : boolean, optional
+            If ``True``, use header information for initialization instead
+            of running ``mri_coreg`` (default is ``False``).
 
     """
     fmriprep_wf = Workflow(name='fmriprep_wf')
@@ -257,6 +261,7 @@ def init_fmriprep_wf(
             use_aroma=use_aroma,
             use_bbr=use_bbr,
             use_syn=use_syn,
+            bbregister_init_header=bbregister_init_header,
         )
 
         single_subject_wf.config['execution']['crashdump_dir'] = (
@@ -308,6 +313,7 @@ def init_single_subject_wf(
     use_aroma,
     use_bbr,
     use_syn,
+    bbregister_init_header=False,
 ):
     """
     This workflow organizes the preprocessing pipeline for a single subject.
@@ -449,6 +455,9 @@ def init_single_subject_wf(
         use_syn : bool
             **Experimental**: Enable ANTs SyN-based susceptibility distortion correction (SDC).
             If fieldmaps are present and enabled, this is not run, by default.
+        bbregister_init_header : boolean, optional
+            If ``True``, use header information for initialization instead
+            of running ``mri_coreg`` (default is ``False``).
 
 
     Inputs
@@ -615,6 +624,7 @@ It is released under the [CC0]\
             use_aroma=use_aroma,
             use_bbr=use_bbr,
             use_syn=use_syn,
+            bbregister_init_header=bbregister_init_header,
         )
 
         workflow.connect([
