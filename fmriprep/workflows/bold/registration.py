@@ -548,7 +548,6 @@ Co-registration was configured with {dof} degrees of freedom{reason}.
             # Select output transform
             (transforms, select_transform, [('out', 'inlist')]),
             (compare_transforms, select_transform, [('out', 'index')]),
-            (select_transform, lta_concat, [('out', 'in_lta1')]),
             # Select output report
             (bbregister, reports, [('out_report', 'in1')]),
             (reports, select_report, [('out', 'inlist')]),
