@@ -1,7 +1,14 @@
-1.5.3 (TBD)
-===========
+1.5.3 (December 12, 2019)
+=========================
 
+* FIX: Do not run STC if SliceTiming metadata is set but empty (#1854) @oesteban
+* FIX: Link to EPINorm issue in README (#1903) @adelavega
+* FIX: Respect --dummy-scans 0 (#1908) @jdkent
 * ENH: Upgrade SDCFlows to new API (1.0.0) (#1886) @oesteban
+* ENH: Add --fs-subjects-dir flag (#1901) @effigies
+* DOC: Improving accessibility of confounds description (#1877) @kfinc
+* MAINT: Ensure data is packaged in sdist (#1902) @effigies
+* MAINT: Remove deprecated command-line arguments (#1909) @mgxd
 
 1.5.2 (December 2, 2019)
 ========================
