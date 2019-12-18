@@ -528,33 +528,25 @@ Co-registration was configured with {dof} degrees of freedom{reason}.
 
         return workflow
 
-    transforms = pe.Node(niu.Merge(2), run_without_submitting=True, name='transforms')
-    reports = pe.Node(niu.Merge(2), run_without_submitting=True, name='reports')
 
     lta_ras2ras = pe.MapNode(LTAConvert(out_lta=True), iterfield=['in_lta'],
                              name='lta_ras2ras', mem_gb=2)
-    compare_transforms = pe.Node(niu.Function(function=compare_xforms), name='compare_transforms')
-
-    select_transform = pe.Node(niu.Select(), run_without_submitting=True, name='select_transform')
-    select_report = pe.Node(niu.Select(), run_without_submitting=True, name='select_report')
-
     if init_header:
+        transforms = pe.Node(niu.Merge(1), run_without_submitting=True, name='transforms')
+        reports = pe.Node(niu.Merge(1), run_without_submitting=True, name='reports')
         workflow.connect([
             (bbregister, transforms, [('out_lta_file', 'in1')]),
             # Normalize LTA transforms to RAS2RAS (inputs are VOX2VOX) and compare
             (transforms, lta_ras2ras, [('out', 'in_lta')]),
-            (lta_ras2ras, compare_transforms, [('out_lta', 'lta_list')]),
-            (compare_transforms, outputnode, [('out', 'fallback')]),
-            # Select output transform
-            (transforms, select_transform, [('out', 'inlist')]),
-            (compare_transforms, select_transform, [('out', 'index')]),
-            # Select output report
-            (bbregister, reports, [('out_report', 'in1')]),
-            (reports, select_report, [('out', 'inlist')]),
-            (compare_transforms, select_report, [('out', 'index')]),
-            (select_report, outputnode, [('out', 'out_report')]),
+            (lta_ras2ras, outputnode, [('out_lta', 'fallback')]),
+            (bbregister, outputnode, [('out_report', 'out_report')]),
         ])
     else:
+        transforms = pe.Node(niu.Merge(2), run_without_submitting=True, name='transforms')
+        reports = pe.Node(niu.Merge(2), run_without_submitting=True, name='reports')
+        compare_transforms = pe.Node(niu.Function(function=compare_xforms), name='compare_transforms')
+        select_transform = pe.Node(niu.Select(), run_without_submitting=True, name='select_transform')
+        select_report = pe.Node(niu.Select(), run_without_submitting=True, name='select_report')
         workflow.connect([
             (bbregister, transforms, [('out_lta_file', 'in1')]),
             (mri_coreg, transforms, [('out_lta_file', 'in2')]),
