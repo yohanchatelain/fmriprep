@@ -202,7 +202,8 @@ All surface preprocessing may be disabled with the ``--fs-no-reconall`` flag.
     Surface processing will be skipped if the outputs already exist.
 
     In order to bypass reconstruction in *fMRIPrep*, place existing reconstructed
-    subjects in ``<output dir>/freesurfer`` prior to the run.
+    subjects in ``<output dir>/freesurfer`` prior to the run, or specify an external
+    subjects directory with the ``--fs-subjects-dir`` flag.
     *fMRIPrep* will perform any missing ``recon-all`` steps, but will not perform
     any steps whose outputs already exist.
 
@@ -536,6 +537,15 @@ surface, is sampled at 6 intervals and averaged.
 Surfaces are generated for the "subject native" surface, as well as transformed to the
 ``fsaverage`` template space.
 All surface outputs are in GIFTI format.
+
+HCP Grayordinates
+~~~~~~~~~~~~~~~~~
+If CIFTI output is enabled, the motion-corrected functional timeseries (in T1w space) is first
+sampled to the high resolution 164k vertex (per hemisphere) ``fsaverage``. Following that,
+the resampled timeseries is sampled to `HCP Pipelines_`'s ``fsLR`` mesh (with the left and
+right hemisphere aligned) using `Connectome Workbench`_'s ``-metric-resample`` to generate a
+surface timeseries for each hemisphere. These surfaces are then combined with corresponding
+volumetric timeseries to create a CIFTI2 file.
 
 .. _bold_confounds:
 

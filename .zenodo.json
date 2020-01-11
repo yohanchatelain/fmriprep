@@ -21,21 +21,15 @@
       "type": "Researcher"
     },
     {
-      "affiliation": "Department of Psychology, Columbia University",
-      "name": "Jacoby, Nir",
-      "orcid": "0000-0001-7936-9991",
-      "type": "Researcher"
-    },
-    {
-      "affiliation": "Center for Lifespan Changes in Brain and Cognition, University of Oslo",
-      "name": "Sneve, Markus H.",
-      "orcid": "0000-0001-7644-7915",
-      "type": "Researcher"
-    },
-    {
       "affiliation": "Department of Psychology, University of California, Berkeley",
       "name": "Lurie, Daniel J.",
       "orcid": "0000-0001-8012-6399",
+      "type": "Researcher"
+    },
+    {
+      "affiliation": "Department of Psychology, Columbia University",
+      "name": "Jacoby, Nir",
+      "orcid": "0000-0001-7936-9991",
       "type": "Researcher"
     },
     {
@@ -57,15 +51,21 @@
       "type": "Researcher"
     },
     {
-      "affiliation": "Dartmouth College: Hanover, NH, United States",
-      "name": "Ma, Feilong",
-      "orcid": "0000-0002-6838-3971",
+      "affiliation": "Center for Lifespan Changes in Brain and Cognition, University of Oslo",
+      "name": "Sneve, Markus H.",
+      "orcid": "0000-0001-7644-7915",
       "type": "Researcher"
     },
     {
       "affiliation": "Computational Neuroimaging Lab, BioCruces Health Research Institute",
       "name": "Erramuzpe, Asier",
       "orcid": "0000-0002-9402-2184",
+      "type": "Researcher"
+    },
+    {
+      "affiliation": "Centre for Modern Interdisciplinary Technologies, Nicolaus Copernicus University in Toru\u0144",
+      "name": "Finc, Karolina",
+      "orcid": "0000-0002-0157-030X",
       "type": "Researcher"
     },
     {
@@ -78,6 +78,12 @@
       "affiliation": "URPP Dynamics of Healthy Aging, University of Zurich",
       "name": "Liem, Franz",
       "orcid": "0000-0003-0646-4810",
+      "type": "Researcher"
+    },
+    {
+      "affiliation": "Dartmouth College: Hanover, NH, United States",
+      "name": "Ma, Feilong",
+      "orcid": "0000-0002-6838-3971",
       "type": "Researcher"
     },
     {
@@ -120,12 +126,6 @@
       "affiliation": "Perelman School of Medicine, University of Pennsylvania, PA, USA",
       "name": "Cieslak, Matthew",
       "orcid": "0000-0002-1931-4734",
-      "type": "Researcher"
-    },
-    {
-      "affiliation": "Centre for Modern Interdisciplinary Technologies, Nicolaus Copernicus University in Toru\u0144",
-      "name": "Finc, Karolina",
-      "orcid": "0000-0002-0157-030X",
       "type": "Researcher"
     },
     {
