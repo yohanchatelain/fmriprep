@@ -70,7 +70,7 @@ def init_fmriprep_wf(
     use_bbr,
     use_syn,
     work_dir,
-    bbregister_init_header=False,
+    coreg_init_header=False,
 ):
     """
     Build *fMRIPrep*'s pipeline.
@@ -199,9 +199,9 @@ def init_fmriprep_wf(
         List of subject labels
     t2s_coreg : bool
         For multi-echo EPI, use the calculated T2*-map for T2*-driven coregistration
-    bbregister_init_header : boolean, optional
-        If ``True``, use header information for initialization instead
-        of running ``mri_coreg`` (default is ``False``).
+    coreg_init_header : boolean, optional
+        If ``True``, use header information for initialization instead of aligning
+        volumes by their centers (default is ``False``).
     task_id : str or None
         Task ID of BOLD series to preprocess, or ``None`` to preprocess all
     use_aroma : bool
@@ -267,7 +267,7 @@ def init_fmriprep_wf(
             use_aroma=use_aroma,
             use_bbr=use_bbr,
             use_syn=use_syn,
-            bbregister_init_header=bbregister_init_header,
+            coreg_init_header=coreg_init_header,
         )
 
         single_subject_wf.config['execution']['crashdump_dir'] = (
@@ -319,7 +319,7 @@ def init_single_subject_wf(
     use_aroma,
     use_bbr,
     use_syn,
-    bbregister_init_header=False,
+    coreg_init_header=False,
 ):
     """
     This workflow organizes the preprocessing pipeline for a single subject.
@@ -451,9 +451,9 @@ def init_single_subject_wf(
         List of subject labels
     t2s_coreg : bool
         For multi-echo EPI, use the calculated T2*-map for T2*-driven coregistration
-    bbregister_init_header : boolean, optional
-        If ``True``, use header information for initialization instead
-        of running ``mri_coreg`` (default is ``False``).
+    coreg_init_header : boolean, optional
+        If ``True``, use header information for initialization of coregistration instead
+        of aligning volume centers (default is ``False``).
     task_id : str or None
         Task ID of BOLD series to preprocess, or ``None`` to preprocess all
     use_aroma : bool
@@ -629,7 +629,7 @@ It is released under the [CC0]\
             use_aroma=use_aroma,
             use_bbr=use_bbr,
             use_syn=use_syn,
-            bbregister_init_header=bbregister_init_header,
+            coreg_init_header=coreg_init_header,
         )
 
         workflow.connect([

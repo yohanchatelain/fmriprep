@@ -223,8 +223,8 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (
         help='Path to FreeSurfer license key file. Get it (for free) by registering'
              ' at https://surfer.nmr.mgh.harvard.edu/registration.html')
     g_fs.add_argument(
-        '--bbregister-init-header', action='store_true', dest='bbregister_init_header', default=False,
-        help='Use header information to initialize bbregister instead of mri_coreg')
+        '--coreg-init-header', action='store_true', dest='coreg_init_header', default=False,
+        help='Use header information to initialize volume corergistration')
     g_fs.add_argument(
         '--fs-subjects-dir', metavar='PATH', type=Path,
         help='Path to existing FreeSurfer subjects directory to reuse. '
@@ -673,7 +673,7 @@ def build_workflow(opts, retval):
         use_bbr=opts.use_bbr,
         use_syn=opts.use_syn_sdc,
         work_dir=str(work_dir),
-        bbregister_init_header=opts.bbregister_init_header,
+        coreg_init_header=opts.coreg_init_header,
     )
     retval['return_code'] = 0
 
