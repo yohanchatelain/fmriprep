@@ -825,7 +825,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
         if 'MNI152NLin2009cAsym' in std_spaces:
             carpetplot_wf = init_carpetplot_wf(
-                standard_spaces=std_spaces,
+                standard_spaces=volume_std_spaces,
                 mem_gb=mem_gb['resampled'],
                 metadata=metadata,
                 name='carpetplot_wf')
