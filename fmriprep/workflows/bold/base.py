@@ -216,10 +216,18 @@ def init_func_preproc_wf(
         Parcellation of structural image, done with FreeSurfer.
     t1w_tpms
         List of tissue probability maps in T1w space
+    template
+        Name of the template (parametric)
     anat2std_xfm
-        ANTs-compatible affine-and-warp transform file
+        ANTs-compatible affine-and-warp transform file (parametric)
     std2anat_xfm
-        ANTs-compatible affine-and-warp transform file (inverse)
+        ANTs-compatible affine-and-warp transform file (inverse) (parametric)
+    joint_template
+        List of templates to target
+    joint_anat2std_xfm
+        List of transform files, collated with templates
+    joint_std2anat_xfm
+        List of inverse transform files, collated with templates
     subjects_dir
         FreeSurfer SUBJECTS_DIR
     subject_id
