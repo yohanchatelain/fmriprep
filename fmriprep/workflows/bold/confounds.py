@@ -426,9 +426,9 @@ were annotated as motion outliers.
     return workflow
 
 
-def init_carpetplot_wf(standard_spaces, mem_gb, metadata, name="bold_carpet_wf"):
+def init_carpetplot_wf(mem_gb, metadata, name="bold_carpet_wf"):
     """
-    Build a workflow to generate *carpet plots*.
+    Build a workflow to generate *carpet* plots.
 
     Resamples the MNI parcellation (ad-hoc parcellation derived from the
     Harvard-Oxford template and others).
@@ -473,11 +473,6 @@ def init_carpetplot_wf(standard_spaces, mem_gb, metadata, name="bold_carpet_wf")
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['out_carpetplot']), name='outputnode')
 
-    select_std = pe.Node(KeySelect(
-        keys=list(standard_spaces.keys()), fields=['std2anat_xfm']),
-        name='select_std', run_without_submitting=True)
-    select_std.inputs.key = 'MNI152NLin2009cAsym'
-
     # List transforms
     mrg_xfms = pe.Node(niu.Merge(2), name='mrg_xfms')
 
@@ -507,10 +502,9 @@ def init_carpetplot_wf(standard_spaces, mem_gb, metadata, name="bold_carpet_wf")
 
     workflow = Workflow(name=name)
     workflow.connect([
-        (inputnode, select_std, [('std2anat_xfm', 'std2anat_xfm')]),
-        (inputnode, mrg_xfms, [('t1_bold_xform', 'in1')]),
+        (inputnode, mrg_xfms, [('t1_bold_xform', 'in1'),
+                               ('std2anat_xfm', 'in2')]),
         (inputnode, resample_parc, [('bold_mask', 'reference_image')]),
-        (select_std, mrg_xfms, [('std2anat_xfm', 'in2')]),
         (mrg_xfms, resample_parc, [('out', 'transforms')]),
         # Carpetplot
         (inputnode, conf_plot, [
