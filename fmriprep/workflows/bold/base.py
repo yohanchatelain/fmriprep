@@ -825,19 +825,19 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
         if 'MNI152NLin2009cAsym' in std_spaces:
             # Extract out the 'MNI152NLin2009cAsym' transform from normalizations
-            select_std = pe.Node(KeySelect(
-                fields=['std2anat_xfm']), name='select_std', key='MNI152NLin2009cAsym',
-                run_without_submitting=True)
+            carpetplot_select_std = pe.Node(
+                KeySelect(fields=['std2anat_xfm'], key='MNI152NLin2009cAsym'),
+                name='carpetplot_select_std', run_without_submitting=True)
 
             carpetplot_wf = init_carpetplot_wf(
                 mem_gb=mem_gb['resampled'],
                 metadata=metadata,
                 name='carpetplot_wf')
             workflow.connect([
-                (inputnode, select_std, [
+                (inputnode, carpetplot_select_std, [
                     ('joint_std2anat_xfm', 'std2anat_xfm'),
                     ('joint_template', 'keys')]),
-                (select_std, carpetplot_wf, [
+                (carpetplot_select_std, carpetplot_wf, [
                     ('std2anat_xfm', 'inputnode.std2anat_xfm')]),
                 (bold_bold_trans_wf if not multiecho else bold_t2s_wf, carpetplot_wf, [
                     ('outputnode.bold', 'inputnode.bold'),
