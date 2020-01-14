@@ -216,10 +216,18 @@ def init_func_preproc_wf(
         Parcellation of structural image, done with FreeSurfer.
     t1w_tpms
         List of tissue probability maps in T1w space
+    template
+        Name of the template (parametric)
     anat2std_xfm
-        ANTs-compatible affine-and-warp transform file
+        ANTs-compatible affine-and-warp transform file (parametric)
     std2anat_xfm
-        ANTs-compatible affine-and-warp transform file (inverse)
+        ANTs-compatible affine-and-warp transform file (inverse) (parametric)
+    joint_template
+        List of templates to target
+    joint_anat2std_xfm
+        List of transform files, collated with templates
+    joint_std2anat_xfm
+        List of inverse transform files, collated with templates
     subjects_dir
         FreeSurfer SUBJECTS_DIR
     subject_id
@@ -821,14 +829,21 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ])
 
         if 'MNI152NLin2009cAsym' in std_spaces:
+            # Extract out the 'MNI152NLin2009cAsym' transform from normalizations
+            carpetplot_select_std = pe.Node(
+                KeySelect(fields=['std2anat_xfm'], key='MNI152NLin2009cAsym'),
+                name='carpetplot_select_std', run_without_submitting=True)
+
             carpetplot_wf = init_carpetplot_wf(
-                standard_spaces=std_spaces,
                 mem_gb=mem_gb['resampled'],
                 metadata=metadata,
                 name='carpetplot_wf')
             workflow.connect([
-                (inputnode, carpetplot_wf, [
-                    ('joint_std2anat_xfm', 'inputnode.std2anat_xfm')]),
+                (inputnode, carpetplot_select_std, [
+                    ('joint_std2anat_xfm', 'std2anat_xfm'),
+                    ('joint_template', 'keys')]),
+                (carpetplot_select_std, carpetplot_wf, [
+                    ('std2anat_xfm', 'inputnode.std2anat_xfm')]),
                 (bold_bold_trans_wf if not multiecho else bold_t2s_wf, carpetplot_wf, [
                     ('outputnode.bold', 'inputnode.bold'),
                     ('outputnode.bold_mask', 'inputnode.bold_mask')]),

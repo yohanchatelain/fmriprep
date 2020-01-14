@@ -1,3 +1,10 @@
+1.5.5 (January 14, 2019)
+=========================
+Bug-fix release in the 1.5.x series.
+
+* FIX: Correctly select volumetric spaces for carpetplot (#1932) @effigies
+* FIX: Constrain setuptools for Python 2.7 installs of fmriprep-docker (#1933) @effigies
+
 1.5.4 (December 18, 2019)
 =========================
 Bug-fix release in the 1.5.x series.
