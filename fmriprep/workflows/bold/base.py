@@ -58,7 +58,7 @@ LOGGER = logging.getLogger('nipype.workflow')
 def init_func_preproc_wf(
     aroma_melodic_dim,
     bold2t1w_dof,
-    bold2t1_init,
+    bold2t1w_init,
     bold_file,
     cifti_output,
     debug,
