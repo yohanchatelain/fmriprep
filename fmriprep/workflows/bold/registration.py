@@ -557,6 +557,7 @@ Co-registration was configured with {dof} degrees of freedom{reason}.
 
     return workflow
 
+
 def init_fsl_bbr_wf(use_bbr, bold2t1w_dof, bold2t1w_init, name='fsl_bbr_wf'):
     """
     Build a workflow to run FSL's ``flirt``.
