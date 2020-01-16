@@ -172,7 +172,7 @@ class FunctionalSummary(SummaryInterface):
         stc = {True: 'Applied',
                False: 'Not applied',
                'TooShort': 'Skipped (too few volumes)'}[self.inputs.slice_timing]
-        #TODO: Add a note about registration_init below?
+        # #TODO: Add a note about registration_init below?
         reg = {
             'FSL': [
                 'FSL <code>flirt</code> with boundary-based registration'

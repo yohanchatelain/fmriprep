@@ -454,8 +454,10 @@ Co-registration was configured with {dof} degrees of freedom{reason}.
         niu.IdentityInterface(['itk_bold_to_t1', 'itk_t1_to_bold', 'out_report', 'fallback']),
         name='outputnode')
 
-    if bold2t1w_init == 'register': init_header = False
-    elif bold2t1w_init == 'header': init_header = True
+    if bold2t1w_init == 'register':
+        init_header = False
+    elif bold2t1w_init == 'header':
+        init_header = True
     else:
         LOGGER.warning("bold2t1w-init set to '%s'; assuming 'register'" % (bold2t1w_init,))
         init_header = False
@@ -645,10 +647,11 @@ for distortions remaining in the BOLD reference.
     flt_bbr_init = pe.Node(FLIRTRPT(dof=6, generate_report=not use_bbr,
                                     uses_qform=True), name='flt_bbr_init')
 
-    if bold2t1w_init == 'header': flt_bbr_init.inputs.apply_xfm = True
-    elif bold2t1w_init == 'register': pass
-    else: LOGGER.warning("unrecognized bold2t1w-init value '%s'; "
-                         "defaulting to 'register'" % (bold2t1w_init,))
+    if bold2t1w_init == 'header':
+        flt_bbr_init.inputs.apply_xfm = True
+    elif bold2t1w_init != 'register':
+        LOGGER.warning("unrecognized bold2t1w-init value '%s'; "
+                       "defaulting to 'register'" % (bold2t1w_init,))
 
     invt_bbr = pe.Node(fsl.ConvertXFM(invert_xfm=True), name='invt_bbr',
                        mem_gb=DEFAULT_MEMORY_MIN_GB)
