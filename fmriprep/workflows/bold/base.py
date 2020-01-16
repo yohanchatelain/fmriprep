@@ -58,6 +58,7 @@ LOGGER = logging.getLogger('nipype.workflow')
 def init_func_preproc_wf(
     aroma_melodic_dim,
     bold2t1w_dof,
+    bold2t1_init,
     bold_file,
     cifti_output,
     debug,
@@ -83,7 +84,6 @@ def init_func_preproc_wf(
     use_syn,
     layout=None,
     num_bold=1,
-    coreg_init_header=False
 ):
     """
     This workflow controls the functional preprocessing stages of *fMRIPrep*.
@@ -99,6 +99,7 @@ def init_func_preproc_wf(
             wf = init_func_preproc_wf(
                 aroma_melodic_dim=-200,
                 bold2t1w_dof=9,
+                bold2t1w_init='register',
                 bold_file='/completely/made/up/path/sub-01_task-nback_bold.nii.gz',
                 cifti_output=False,
                 debug=False,
@@ -135,6 +136,9 @@ def init_func_preproc_wf(
         (default is -200, ie. no limitation).
     bold2t1w_dof : 6, 9 or 12
         Degrees-of-freedom for BOLD-T1w registration
+    bold2t1_init : str, optional
+        If ``'header'``, use header information for initialization of BOLD and T1 images.
+        If ``'register'``, align volumes by their centers (default is ``'register'``).
     bold_file : str
         BOLD series NIfTI file
     cifti_output : bool
@@ -197,9 +201,6 @@ def init_func_preproc_wf(
     num_bold : int
         Total number of BOLD files that have been set for preprocessing
         (default is 1)
-    coreg_init_header : boolean, optional
-        If ``True``, use header information for initialization instead
-        of aligning volumes by their center during coregistration (default is ``False``).
 
     Inputs
     ------
@@ -432,6 +433,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             slice_timing=run_stc,
             registration=('FSL', 'FreeSurfer')[freesurfer],
             registration_dof=bold2t1w_dof,
+            registration_init=bold2t1w_init,
             pe_direction=metadata.get("PhaseEncodingDirection"),
             tr=metadata.get("RepetitionTime")),
         name='summary', mem_gb=DEFAULT_MEMORY_MIN_GB, run_without_submitting=True)
@@ -504,7 +506,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                                    mem_gb=mem_gb['resampled'],
                                    omp_nthreads=omp_nthreads,
                                    use_compression=False,
-                                   init_header=coreg_init_header)
+                                   bold2t1w_init=bold2t1w_init)
 
     # apply BOLD registration to T1w
     bold_t1_trans_wf = init_bold_t1_trans_wf(name='bold_t1_trans_wf',

@@ -40,9 +40,8 @@ from ...interfaces import DerivativesDataSink
 LOGGER = logging.getLogger('nipype.workflow')
 
 
-def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
-                     use_compression=True, write_report=True, name='bold_reg_wf',
-                     init_header=False):
+def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, bold2t1w_init, mem_gb, omp_nthreads,
+                     use_compression=True, write_report=True, name='bold_reg_wf'):
     """
     Build a workflow to run same-subject, BOLD-to-T1w image-registration.
 
@@ -75,6 +74,9 @@ def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
         If ``None``, test BBR result for distortion before accepting.
     bold2t1w_dof : 6, 9 or 12
         Degrees-of-freedom for BOLD-T1w registration
+    bold2t1_init : str, 'header' or 'register'
+        If ``'header'``, use header information for initialization of BOLD and T1 images.
+        If ``'register'``, align volumes by their centers.
     mem_gb : float
         Size of BOLD file in GB
     omp_nthreads : int
@@ -87,9 +89,6 @@ def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
         Include SDC warp in single-shot transform from BOLD to T1
     write_report : bool
         Whether a reportlet should be stored
-    init_header : boolean, optional
-        If ``True``, use header information for initialization ``bbregister``
-        instead of running ``mri_coreg``.
 
     Inputs
     ------
@@ -139,9 +138,10 @@ def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
 
     if freesurfer:
         bbr_wf = init_bbreg_wf(use_bbr=use_bbr, bold2t1w_dof=bold2t1w_dof,
-                               omp_nthreads=omp_nthreads, init_header=init_header)
+                               bold2t1w_init=bold2t1w_init, omp_nthreads=omp_nthreads)
     else:
-        bbr_wf = init_fsl_bbr_wf(use_bbr=use_bbr, bold2t1w_dof=bold2t1w_dof)
+        bbr_wf = init_fsl_bbr_wf(use_bbr=use_bbr, bold2t1w_dof=bold2t1w_dof,
+                                 bold2t1w_init=bold2t1w_init)
 
     workflow.connect([
         (inputnode, bbr_wf, [
@@ -367,7 +367,7 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, multiecho=False, use
     return workflow
 
 
-def init_bbreg_wf(use_bbr, bold2t1w_dof, omp_nthreads, name='bbreg_wf', init_header=False):
+def init_bbreg_wf(use_bbr, bold2t1w_dof, bold2t1w_init, omp_nthreads, name='bbreg_wf'):
     """
     Build a workflow to run FreeSurfer's ``bbregister``.
 
@@ -402,11 +402,11 @@ def init_bbreg_wf(use_bbr, bold2t1w_dof, omp_nthreads, name='bbreg_wf', init_hea
         If ``None``, test BBR result for distortion before accepting.
     bold2t1w_dof : 6, 9 or 12
         Degrees-of-freedom for BOLD-T1w registration
+    bold2t1_init : str, 'header' or 'register'
+        If ``'header'``, use header information for initialization of BOLD and T1 images.
+        If ``'register'``, align volumes by their centers.
     name : str, optional
         Workflow name (default: bbreg_wf)
-    init_header : boolean, optional
-        If ``True``, use header information for initialization instead
-        of running ``mri_coreg``.
 
     Inputs
     ------
@@ -454,6 +454,12 @@ Co-registration was configured with {dof} degrees of freedom{reason}.
         niu.IdentityInterface(['itk_bold_to_t1', 'itk_t1_to_bold', 'out_report', 'fallback']),
         name='outputnode')
 
+    if bold2t1w_init == 'register': init_header = False
+    elif bold2t1w_init == 'header': init_header = True
+    else:
+        LOGGER.warning("bold2t1w-init set to '%s'; assuming 'register'" % (bold2t1w_init,))
+        init_header = False
+
     mri_coreg = pe.Node(
         MRICoregRPT(dof=bold2t1w_dof, sep=[4], ftol=0.0001, linmintol=0.01,
                     generate_report=not use_bbr, no_cras0=init_header),
@@ -496,13 +502,11 @@ Co-registration was configured with {dof} degrees of freedom{reason}.
 
         return workflow
 
-    if init_header:
-        bbregister = BBRegisterRPT(dof=bold2t1w_dof, contrast_type='t2', registered_file=True,
-                                   out_lta_file=True, generate_report=True, init='header')
-    else:
-        bbregister = BBRegisterRPT(dof=bold2t1w_dof, contrast_type='t2', registered_file=True,
-                                   out_lta_file=True, generate_report=True)
+    bbregister = BBRegisterRPT(dof=bold2t1w_dof, contrast_type='t2', registered_file=True,
+                               out_lta_file=True, generate_report=True)
     bbregister = pe.Node(bbregister, name='bbregister', mem_gb=12)
+    if init_header:
+        bbregister.inputs.init = 'header'
 
     workflow.connect([
         (inputnode, bbregister, [('subjects_dir', 'subjects_dir'),
@@ -551,7 +555,7 @@ Co-registration was configured with {dof} degrees of freedom{reason}.
 
     return workflow
 
-def init_fsl_bbr_wf(use_bbr, bold2t1w_dof, name='fsl_bbr_wf'):
+def init_fsl_bbr_wf(use_bbr, bold2t1w_dof, bold2r1w_init, name='fsl_bbr_wf'):
     """
     Build a workflow to run FSL's ``flirt``.
 
@@ -585,6 +589,9 @@ def init_fsl_bbr_wf(use_bbr, bold2t1w_dof, name='fsl_bbr_wf'):
         If ``None``, test BBR result for distortion before accepting.
     bold2t1w_dof : 6, 9 or 12
         Degrees-of-freedom for BOLD-T1w registration
+    bold2t1_init : str, 'header' or 'register'
+        If ``'header'``, use header information for initialization of BOLD and T1 images.
+        If ``'register'``, align volumes by their centers.
     name : str, optional
         Workflow name (default: fsl_bbr_wf)
 
@@ -637,6 +644,11 @@ for distortions remaining in the BOLD reference.
     wm_mask = pe.Node(niu.Function(function=extract_wm), name='wm_mask')
     flt_bbr_init = pe.Node(FLIRTRPT(dof=6, generate_report=not use_bbr,
                                     uses_qform=True), name='flt_bbr_init')
+
+    if bold2t1w_init == 'header': flt_bbr_init.inputs.apply_xfm = True
+    elif bold2t1w_init == 'register': pass
+    else: LOGGER.warning("unrecognized bold2t1w-init value '%s'; "
+                         "defaulting to 'register'" % (bold2t1w_init,))
 
     invt_bbr = pe.Node(fsl.ConvertXFM(invert_xfm=True), name='invt_bbr',
                        mem_gb=DEFAULT_MEMORY_MIN_GB)

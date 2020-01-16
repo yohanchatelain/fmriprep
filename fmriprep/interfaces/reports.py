@@ -155,6 +155,9 @@ class FunctionalSummaryInputSpec(BaseInterfaceInputSpec):
     fallback = traits.Bool(desc='Boundary-based registration rejected')
     registration_dof = traits.Enum(6, 9, 12, desc='Registration degrees of freedom',
                                    mandatory=True)
+    registration_init = traits.Enum('register', 'header', mandatory=True,
+                                    desc='Whether to initialize registration with the "header"'
+                                         ' or by centering the volumes ("register")')
     confounds_file = File(exists=True, desc='Confounds file')
     tr = traits.Float(desc='Repetition time', mandatory=True)
     dummy_scans = traits.Either(traits.Int(), None, desc='number of dummy scans specified by user')
@@ -169,6 +172,7 @@ class FunctionalSummary(SummaryInterface):
         stc = {True: 'Applied',
                False: 'Not applied',
                'TooShort': 'Skipped (too few volumes)'}[self.inputs.slice_timing]
+        #TODO: Add a note about registration_init below?
         reg = {
             'FSL': [
                 'FSL <code>flirt</code> with boundary-based registration'

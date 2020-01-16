@@ -154,6 +154,10 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (
                         help='Degrees of freedom when registering BOLD to T1w images. '
                              '6 degrees (rotation and translation) are used by default.')
     g_conf.add_argument(
+        '--bold2t1w-init', action='store', dest='bold2t1w_init', default='register',
+        help='Either "register" (the default) to initialize volumes at center or "header"'
+             ' to use the header information when coregistering BOLD to T1w images.')
+    g_conf.add_argument(
         '--force-bbr', action='store_true', dest='use_bbr', default=None,
         help='Always use boundary-based registration (no goodness-of-fit checks)')
     g_conf.add_argument(
@@ -222,9 +226,6 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (
         '--fs-license-file', metavar='PATH', type=Path,
         help='Path to FreeSurfer license key file. Get it (for free) by registering'
              ' at https://surfer.nmr.mgh.harvard.edu/registration.html')
-    g_fs.add_argument(
-        '--coreg-init-header', action='store_true', dest='coreg_init_header', default=False,
-        help='Use header information to initialize volume corergistration')
     g_fs.add_argument(
         '--fs-subjects-dir', metavar='PATH', type=Path,
         help='Path to existing FreeSurfer subjects directory to reuse. '
@@ -641,6 +642,7 @@ def build_workflow(opts, retval):
         anat_only=opts.anat_only,
         aroma_melodic_dim=opts.aroma_melodic_dimensionality,
         bold2t1w_dof=opts.bold2t1w_dof,
+        bold2t1w_init=opts.bold2t1w_init,
         cifti_output=opts.cifti_output,
         debug=opts.sloppy,
         dummy_scans=opts.dummy_scans,
@@ -673,7 +675,6 @@ def build_workflow(opts, retval):
         use_bbr=opts.use_bbr,
         use_syn=opts.use_syn_sdc,
         work_dir=str(work_dir),
-        coreg_init_header=opts.coreg_init_header,
     )
     retval['return_code'] = 0
 

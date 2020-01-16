@@ -70,7 +70,7 @@ def init_fmriprep_wf(
     use_bbr,
     use_syn,
     work_dir,
-    coreg_init_header=False,
+    bold2t1w_init,
 ):
     """
     Build *fMRIPrep*'s pipeline.
@@ -137,6 +137,9 @@ def init_fmriprep_wf(
         Disable functional workflows
     bold2t1w_dof : 6, 9 or 12
         Degrees-of-freedom for BOLD-T1w registration
+    bold2t1w_init : str, optional
+        If ``'header'``, use header information for initialization of BOLD and T1 images.
+        If ``'register'``, align volumes by their centers (default is ``'register'``).
     cifti_output : bool
         Generate bold CIFTI file in output spaces
     debug : bool
@@ -199,9 +202,6 @@ def init_fmriprep_wf(
         List of subject labels
     t2s_coreg : bool
         For multi-echo EPI, use the calculated T2*-map for T2*-driven coregistration
-    coreg_init_header : boolean, optional
-        If ``True``, use header information for initialization instead of aligning
-        volumes by their centers (default is ``False``).
     task_id : str or None
         Task ID of BOLD series to preprocess, or ``None`` to preprocess all
     use_aroma : bool
@@ -236,6 +236,7 @@ def init_fmriprep_wf(
             anat_only=anat_only,
             aroma_melodic_dim=aroma_melodic_dim,
             bold2t1w_dof=bold2t1w_dof,
+            bold2t1w_init=bold2t1w_init,
             cifti_output=cifti_output,
             debug=debug,
             dummy_scans=dummy_scans,
@@ -267,7 +268,6 @@ def init_fmriprep_wf(
             use_aroma=use_aroma,
             use_bbr=use_bbr,
             use_syn=use_syn,
-            coreg_init_header=coreg_init_header,
         )
 
         single_subject_wf.config['execution']['crashdump_dir'] = (
@@ -288,6 +288,7 @@ def init_single_subject_wf(
     anat_only,
     aroma_melodic_dim,
     bold2t1w_dof,
+    bold2t1w_init,
     cifti_output,
     debug,
     dummy_scans,
@@ -319,7 +320,6 @@ def init_single_subject_wf(
     use_aroma,
     use_bbr,
     use_syn,
-    coreg_init_header=False,
 ):
     """
     This workflow organizes the preprocessing pipeline for a single subject.
@@ -387,6 +387,9 @@ def init_single_subject_wf(
         (default is -200, i.e., no limitation).
     bold2t1w_dof : 6, 9 or 12
         Degrees-of-freedom for BOLD-T1w registration
+    bold2t1w_init : str, optional
+        If ``'header'``, use header information for initialization of BOLD and T1 images.
+        If ``'register'``, align volumes by their centers (default is ``'register'``).
     cifti_output : bool
         Generate bold CIFTI file in output spaces
     debug : bool
@@ -451,9 +454,6 @@ def init_single_subject_wf(
         List of subject labels
     t2s_coreg : bool
         For multi-echo EPI, use the calculated T2*-map for T2*-driven coregistration
-    coreg_init_header : boolean, optional
-        If ``True``, use header information for initialization of coregistration instead
-        of aligning volume centers (default is ``False``).
     task_id : str or None
         Task ID of BOLD series to preprocess, or ``None`` to preprocess all
     use_aroma : bool
@@ -604,6 +604,7 @@ It is released under the [CC0]\
         func_preproc_wf = init_func_preproc_wf(
             aroma_melodic_dim=aroma_melodic_dim,
             bold2t1w_dof=bold2t1w_dof,
+            bold2t1w_init=bold2t1w_init,
             bold_file=bold_file,
             cifti_output=cifti_output,
             debug=debug,
@@ -629,7 +630,6 @@ It is released under the [CC0]\
             use_aroma=use_aroma,
             use_bbr=use_bbr,
             use_syn=use_syn,
-            coreg_init_header=coreg_init_header,
         )
 
         workflow.connect([
