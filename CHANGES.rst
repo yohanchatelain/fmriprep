@@ -1,4 +1,4 @@
-1.5.5 (January 14, 2019)
+1.5.5 (January 14, 2020)
 =========================
 Bug-fix release in the 1.5.x series.
 
