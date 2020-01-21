@@ -27,7 +27,7 @@ sections:
       overlaid on the participant's T1w template.
     subtitle: Surface reconstruction
 - name: Functional
-  ordering: session,task,run
+  ordering: session,task,acquisition,ceagent,reconstruction,direction,run,echo
   reportlets:
   - bids: {datatype: func, desc: summary, suffix: bold}
   - bids: {datatype: func, desc: validation, suffix: bold}
