@@ -1,4 +1,11 @@
-1.5.5 (January 14, 2019)
+1.5.6 (January 22, 2020)
+========================
+Bug-fix release in the 1.5.x series.
+
+  * FIX: Include all functional runs in reports, establish consistent ordering (#1937)
+  * FIX: Use SyN-SDC if --use-syn-sdc and --ignore fieldmaps are used (#1942)
+
+1.5.5 (January 14, 2020)
 =========================
 Bug-fix release in the 1.5.x series.
 
