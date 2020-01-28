@@ -1,3 +1,9 @@
+1.5.8 (January 28, 2020)
+========================
+Bug-fix release in the 1.5.x series.
+
+  * FIX: SyN SDC logic failing in ``--force-syn`` cases (#1951)
+
 1.5.7 (January 23, 2020)
 ========================
 Bug-fix release in the 1.5.x series.
