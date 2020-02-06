@@ -514,11 +514,7 @@ def build_workflow(opts, retval):
     if opts.clean_workdir:
         from niworkflows.utils.misc import clean_directory
         build_log.log("Clearing previous fMRIPrep working directory: %s" % work_dir)
-        try:
-            success = clean_directory(work_dir)
-        except Exception:
-            success = False
-        if not success:
+        if not clean_directory(work_dir):
             build_log.warning("Could not clear all contents of working directory: %s" % work_dir)
 
     retval['return_code'] = 1
