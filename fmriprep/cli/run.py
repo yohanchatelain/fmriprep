@@ -244,6 +244,9 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (
     g_other = parser.add_argument_group('Other options')
     g_other.add_argument('-w', '--work-dir', action='store', type=Path, default=Path('work'),
                          help='path where intermediate results should be stored')
+    g_other.add_argument('--clean-workdir', action='store_true', default=False,
+                         help='Clears working directory of contents. Use of this flag is not'
+                              'recommended when running concurrent processes of fMRIPrep.')
     g_other.add_argument(
         '--resource-monitor', action='store_true', default=False,
         help='enable Nipype\'s resource monitoring to keep track of memory and CPU usage')
@@ -507,6 +510,12 @@ def build_workflow(opts, retval):
     bids_dir = opts.bids_dir.resolve()
     output_dir = opts.output_dir.resolve()
     work_dir = opts.work_dir.resolve()
+
+    if opts.clean_workdir:
+        from niworkflows.utils.misc import clean_directory
+        build_log.log("Clearing previous fMRIPrep working directory: %s" % work_dir)
+        if not clean_directory(work_dir):
+            build_log.warning("Could not clear all contents of working directory: %s" % work_dir)
 
     retval['return_code'] = 1
     retval['workflow'] = None
