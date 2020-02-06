@@ -523,7 +523,11 @@ def build_workflow(opts, retval):
         return retval
 
     # warn if older results exist
-    check_pipeline_version(__version__, output_dir / 'fmriprep' / 'dataset_description.json')
+    msg = check_pipeline_version(
+        __version__, output_dir / 'fmriprep' / 'dataset_description.json'
+    )
+    if msg is not None:
+        build_log.warning(msg)
 
     if bids_dir in work_dir.parents:
         build_log.error(
