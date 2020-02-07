@@ -69,21 +69,29 @@ selecting ``fsLR`` surface space without a density label, ``fsLR:den-32k`` will 
 
 Custom standard spaces
 """"""""""""""""""""""
-Although the functionality is not available yet, the interface of the
-``--output-spaces`` permits providing paths to custom templates that
-follow TemplateFlow's naming conventions
-(e.g., ``/path/to/custom/templates/tpl-MyCustom:res-2``).
-Following the example, at least the following files
-must be found under under ``/path/to/custom/templates/tpl-MyCustom``::
+To make your custom templates visible by *fMRIPrep*, and usable via
+the ``--output-spaces`` argument, please store your template under
+*TemplateFlow*'s home directory.
+The default *TemplateFlow*'s home directory is ``$HOME/.cache/templateflow``
+and that can path can be arbitrarily changed by setting
+the ``$TEMPLATEFLOW_HOME`` environment variable.
+A minimal example of the necessary files for a template called
+``MyCustom`` (and therefore callable via, e.g., ``--output-spaces MyCustom``)
+follows::
 
-  tpl-MyCustom/
-      template_description.json
-      tpl-MyCustom_res-1_T1w.nii.gz
-      tpl-MyCustom_res-1_desc-brain_mask.nii.gz
-      tpl-MyCustom_res-2_T1w.nii.gz
-      tpl-MyCustom_res-2_desc-brain_mask.nii.gz
+  $TEMPLATEFLOW_HOME/
+      tpl-MyCustom/
+          template_description.json
+          tpl-MyCustom_res-1_T1w.nii.gz
+          tpl-MyCustom_res-1_desc-brain_mask.nii.gz
+          tpl-MyCustom_res-2_T1w.nii.gz
+          tpl-MyCustom_res-2_desc-brain_mask.nii.gz
 
-Although a more comprehensive coverage of standard files would be advised.
+For further information about how custom templates must be organized and
+corresponding naming, please check `the TemplateFlow tutorials
+<https://www.templateflow.org/python-client/tutorials.html>`__.
+For more general information about *TemplateFlow*, visit
+`TemplateFlow.org <https://www.templateflow.org>`__.
 
 Nonstandard spaces
 """"""""""""""""""
