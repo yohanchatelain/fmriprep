@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-"""
-fMRI preprocessing workflow
-=====
-"""
+"""fMRI preprocessing workflow."""
 
 import os
 import re
@@ -38,24 +34,17 @@ def check_deps(workflow):
 
 
 def get_parser():
-    """Build parser object"""
-    from smriprep.cli.utils import (
-        ParseTemplates,
-        output_space as _output_space,
-    )
-    from templateflow.api import templates
+    """Build parser object."""
     from packaging.version import Version
     from ..__about__ import __version__
-    from ..config import NONSTANDARD_REFERENCES
     from .version import check_latest, is_flagged
+    from niworkflows.utils.spaces import Reference, SpatialReferences, OutputReferencesAction
 
-    ParseTemplates.set_nonstandard_spaces(tuple(NONSTANDARD_REFERENCES))
-
-    verstr = 'fmriprep v{}'.format(__version__)
+    verstr = 'fMRIPrep v{}'.format(__version__)
     currentv = Version(__version__)
     is_release = not any((currentv.is_devrelease, currentv.is_prerelease, currentv.is_postrelease))
 
-    parser = ArgumentParser(description='FMRIPREP: fMRI PREProcessing workflows',
+    parser = ArgumentParser(description='fMRIPrep: fMRI PREProcessing workflows',
                             formatter_class=ArgumentDefaultsHelpFormatter)
 
     # Arguments as specified by BIDS-Apps
@@ -69,7 +58,7 @@ def get_parser():
                              'reports')
     parser.add_argument('analysis_level', choices=['participant'],
                         help='processing stage to be run, only "participant" in the case of '
-                             'FMRIPREP (see BIDS-Apps specification).')
+                             'fMRIPrep (see BIDS-Apps specification).')
 
     # optional arguments
     parser.add_argument('--version', action='version', version=verstr)
@@ -134,21 +123,19 @@ def get_parser():
              'option is not enabled, standard EPI-T1 coregistration is performed '
              'using the middle echo.')
     g_conf.add_argument(
-        '--output-spaces', nargs='+', action=ParseTemplates,
+        '--output-spaces', nargs='+', action=OutputReferencesAction, default=SpatialReferences(),
         help="""\
 Standard and non-standard spaces to resample anatomical and functional images to. \
 Standard spaces may be specified by the form \
-``<TEMPLATE>[:res-<resolution>][:cohort-<label>][...]``, where ``<TEMPLATE>`` is \
-a keyword (valid keywords: %s) or path pointing to a user-supplied template, and \
-may be followed by optional, colon-separated parameters. \
-Non-standard spaces (valid keywords: %s) imply specific orientations and sampling \
-grids. \
+``<SPACE>[:cohort-<label>][:res-<resolution>][...]``, where ``<SPACE>`` is \
+a keyword designating a spatial reference, and may be followed by optional, \
+colon-separated parameters. \
+Non-standard spaces imply specific orientations and sampling grids. \
 Important to note, the ``res-*`` modifier does not define the resolution used for \
 the spatial normalization.
 For further details, please check out \
-https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (
-            ', '.join('"%s"' % s for s in templates()), ', '.join(NONSTANDARD_REFERENCES),
-            currentv.base_version if is_release else 'latest'))
+https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (currentv.base_version
+                                                        if is_release else 'latest'))
 
     g_conf.add_argument('--bold2t1w-dof', action='store', default=6, choices=[6, 9, 12], type=int,
                         help='Degrees of freedom when registering BOLD to T1w images. '
@@ -195,7 +182,7 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (
     #  ANTs options
     g_ants = parser.add_argument_group('Specific options for ANTs registrations')
     g_ants.add_argument(
-        '--skull-strip-template', action='store', default='OASIS30ANTs', type=_output_space,
+        '--skull-strip-template', default='OASIS30ANTs', type=Reference.from_string,
         help='select a template for skull-stripping with antsBrainExtraction')
     g_ants.add_argument('--skull-strip-fixed-seed', action='store_true',
                         help='do not use a random seed for skull-stripping - will ensure '
@@ -233,7 +220,7 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (
                          help='disable sub-millimeter (hires) reconstruction')
     g_surfs_xor = g_surfs.add_mutually_exclusive_group()
     g_surfs_xor.add_argument('--cifti-output', nargs='?', const='91k', default=False,
-                             choices=('91k', '170k'),
+                             choices=('91k', '170k'), type=str,
                              help='output preprocessed BOLD as a CIFTI dense timeseries. '
                              'Optionally, the number of grayordinate can be specified '
                              '(default is 91k, which equates to 2mm resolution)')
@@ -505,6 +492,8 @@ def build_workflow(opts, retval):
       * BIDS dataset path: {bids_dir}.
       * Participant list: {subject_list}.
       * Run identifier: {uuid}.
+
+    {spaces}
     """.format
 
     bids_dir = opts.bids_dir.resolve()
@@ -537,8 +526,6 @@ def build_workflow(opts, retval):
             'Please modify the output path.')
         retval['return_code'] = 1
         return retval
-
-    output_spaces = parse_spaces(opts)
 
     # Set up some instrumental utilities
     run_uuid = '%s_%s' % (strftime('%Y%m%d-%H%M%S'), uuid.uuid4())
@@ -640,7 +627,8 @@ def build_workflow(opts, retval):
         version=__version__,
         bids_dir=bids_dir,
         subject_list=subject_list,
-        uuid=run_uuid)
+        uuid=run_uuid,
+        spaces=opts.output_spaces)
     )
 
     retval['workflow'] = init_fmriprep_wf(
@@ -665,13 +653,13 @@ def build_workflow(opts, retval):
         medial_surface_nan=opts.medial_surface_nan,
         omp_nthreads=omp_nthreads,
         output_dir=str(output_dir),
-        output_spaces=output_spaces,
         run_uuid=run_uuid,
         regressors_all_comps=opts.return_all_components,
         regressors_fd_th=opts.fd_spike_threshold,
         regressors_dvars_th=opts.dvars_spike_threshold,
         skull_strip_fixed_seed=opts.skull_strip_fixed_seed,
-        skull_strip_template=opts.skull_strip_template,
+        skull_strip_template=opts.skull_strip_template[0],
+        spaces=parse_spaces(opts),
         subject_list=subject_list,
         t2s_coreg=opts.t2s_coreg,
         task_id=opts.task_id,
@@ -706,48 +694,38 @@ def build_workflow(opts, retval):
 
 
 def parse_spaces(opts):
-    """Ensures the spaces are correctly parsed"""
-    from sys import stderr
-    from collections import OrderedDict
-    # Set the default template to 'MNI152NLin2009cAsym'
-    output_spaces = opts.output_spaces or OrderedDict([('MNI152NLin2009cAsym', {})])
+    """
+    Ensure user-defined spatial references for outputs are correctly parsed.
 
-    # Validity of some inputs
-    # ERROR check if use_aroma was specified, but the correct template was not
-    if opts.use_aroma and 'MNI152NLin6Asym' not in output_spaces:
-        output_spaces['MNI152NLin6Asym'] = {'res': 2}
-        print("""\
-Option "--use-aroma" requires functional images to be resampled to MNI152NLin6Asym space. \
-The argument "MNI152NLin6Asym:res-2" has been automatically added to the list of output spaces \
-(option ``--output-spaces``).""", file=stderr)
+    Certain options require normalization to a space not explicitly defined by users.
+    These spaces will not be included in the final outputs.
+
+    """
+    spaces = opts.output_spaces
+    spaces.checkpoint()
+
+    if opts.use_aroma:
+        # Make sure there's a normalization to FSL for AROMA to use.
+        spaces.add(('MNI152NLin6Asym', {'res': '2'}))
 
     if opts.cifti_output:
-        grayords = {'91k': '32k', '170k': '59k'}  # CIFTI total grayords to surface densities
-        output_spaces['fsLR'] = {'den': grayords[opts.cifti_output]}
-        if 'MNI152NLin6Asym' not in output_spaces:
-            output_spaces['MNI152NLin6Asym'] = {'res': '2'}
-            print("""\
-Option ``--cifti-output`` requires functional images to be resampled to \
-``MNI152NLin6Asym`` space. This space has been automatically added to the list of output \
-spaces (option ``--output-spaces``).""", file=stderr)
+        # CIFTI grayordinates to corresponding FSL-MNI resolutions.
+        vol_res = '2' if opts.cifti_output == '91k' else '1'
+        spaces.add(('fsaverage', {'den': '164k'}))
+        spaces.add(('MNI152NLin6Asym', {'res': vol_res}))
 
-    if 'fsLR' in output_spaces:
-        output_spaces['fsLR'] = {'den': output_spaces.get('fsLR', {}).get('den') or '32k'}
-        # resample to fsLR from highest density fsaverage
-        output_spaces['fsaverage'] = {'den': '164k'}
-        print("""\
-To generate "fsLR" surfaces, functional images are first resampled to ``fsaverage:den-164k``. \
-This space has been automatically added to the list of output spaces \
-(option ``--output-spaces``).""", file=stderr)
+    # These arguments implicitly signal expected output
+    if not spaces.references:
+        warnings.warn(
+            "fMRIPrep will not generate preprocessed derivatives because "
+            "none of `--output-spaces`, `--use-aroma`, or `--cifti-output` "
+            "were set."
+        )
 
-    FS_SPACES = set(('fsnative', 'fsaverage', 'fsaverage6', 'fsaverage5'))
-    if opts.run_reconall and not FS_SPACES.intersection(output_spaces.keys()):
-        print("""\
-Although ``--fs-no-reconall`` was not set (i.e., FreeSurfer is to be run), no FreeSurfer \
-output space (valid values are: %s) was selected. Adding default "fsaverage5" to the \
-list of output spaces.""" % ', '.join(FS_SPACES), file=stderr)
-        output_spaces['fsaverage5'] = {}
-    return output_spaces
+    # Add the default standard space (required by several sub-workflows)
+    if "MNI152NLin2009cAsym" not in spaces.get_spaces(nonstandard=False, dim=(3,)):
+        spaces.add("MNI152NLin2009cAsym")
+    return spaces
 
 
 if __name__ == '__main__':

@@ -18,9 +18,10 @@ is presented below:
     :graph2use: orig
     :simple_form: yes
 
+    from collections import namedtuple
+    from niworkflows.utils.spaces import Reference, SpatialReferences
     from fmriprep.workflows.base import init_single_subject_wf
-    from collections import namedtuple, OrderedDict
-    BIDSLayout = namedtuple('BIDSLayout', ['root'])
+    BIDSLayout = namedtuple('BIDSLayout', ('root'))
     wf = init_single_subject_wf(
         anat_only=False,
         aroma_melodic_dim=-200,
@@ -43,15 +44,18 @@ is presented below:
         name='single_subject_wf',
         omp_nthreads=1,
         output_dir='.',
-        output_spaces=OrderedDict([
-            ('MNI152Lin', {}), ('fsaverage', {'density': '10k'}),
-            ('T1w', {}), ('fsnative', {})]),
         reportlets_dir='.',
         regressors_all_comps=False,
         regressors_dvars_th=1.5,
         regressors_fd_th=0.5,
         skull_strip_fixed_seed=False,
-        skull_strip_template=('OASIS30ANTs', {}),
+        skull_strip_template=Reference('OASIS30ANTs'),
+        spaces=SpatialReferences(
+            spaces=[('MNI152Lin', {}),
+                    ('fsaverage', {'density': '10k'}),
+                    ('T1w', {}),
+                    ('fsnative', {})],
+            checkpoint=True),
         subject_id='test',
         t2s_coreg=False,
         task_id='',
@@ -68,7 +72,7 @@ T1w/T2w preprocessing
     :graph2use: orig
     :simple_form: yes
 
-    from collections import OrderedDict
+    from niworkflows.utils.spaces import Reference, SpatialReferences
     from fmriprep.workflows.anatomical import init_anat_preproc_wf
     wf = init_anat_preproc_wf(
         bids_root='.',
@@ -78,10 +82,14 @@ T1w/T2w preprocessing
         num_t1w=1,
         omp_nthreads=1,
         output_dir='.',
-        output_spaces=OrderedDict([
-            ('MNI152NLin2009cAsym', {}), ('fsaverage5', {})]),
+        skull_strip_template=Reference('MNI152NLin2009cAsym'),
+        spaces=SpatialReferences([
+            ('MNI152Lin', {}),
+            ('fsaverage', {'density': '10k'}),
+            ('T1w', {}),
+            ('fsnative', {})
+        ]),
         reportlets_dir='.',
-        skull_strip_template=('MNI152NLin2009cAsym', {}),
         skull_strip_fixed_seed=False,
     )
 
@@ -279,7 +287,8 @@ BOLD preprocessing
     :graph2use: orig
     :simple_form: yes
 
-    from collections import namedtuple, OrderedDict
+    from collections import namedtuple
+    from niworkflows.utils.spaces import SpatialReferences
     from fmriprep.workflows.bold.base import init_func_preproc_wf
     BIDSLayout = namedtuple('BIDSLayout', ['root'])
     wf = init_func_preproc_wf(
@@ -288,6 +297,7 @@ BOLD preprocessing
         bold_file='/completely/made/up/path/sub-01_task-nback_bold.nii.gz',
         cifti_output=False,
         debug=False,
+        dummy_scans=None,
         err_on_aroma_warn=False,
         fmap_bspline=True,
         fmap_demean=True,
@@ -298,18 +308,20 @@ BOLD preprocessing
         medial_surface_nan=False,
         omp_nthreads=1,
         output_dir='.',
-        output_spaces=OrderedDict([
-            ('MNI152Lin', {}), ('fsaverage', {'density': '10k'}),
-            ('T1w', {}), ('fsnative', {})]),
-        reportlets_dir='.',
-        t2s_coreg=False,
-        use_aroma=False,
         regressors_all_comps=False,
         regressors_fd_th=0.5,
         regressors_dvars_th=1.5,
+        reportlets_dir='.',
+        t2s_coreg=False,
+        spaces=SpatialReferences(
+            spaces=[('MNI152Lin', {}),
+                    ('fsaverage', {'density': '10k'}),
+                    ('T1w', {}),
+                    ('fsnative', {})],
+            checkpoint=True),
+        use_aroma=False,
         use_bbr=True,
         use_syn=True,
-        dummy_scans=None,
         layout=BIDSLayout('.'),
         num_bold=1,
     )
@@ -488,14 +500,15 @@ Resampling BOLD runs onto standard spaces
     :graph2use: colored
     :simple_form: yes
 
-    from collections import OrderedDict
+    from niworkflows.utils.spaces import SpatialReferences
     from fmriprep.workflows.bold import init_bold_std_trans_wf
     wf = init_bold_std_trans_wf(
         freesurfer=True,
         mem_gb=3,
         omp_nthreads=1,
-        standard_spaces=OrderedDict([('MNI152Lin', {}),
-                                     ('fsaverage', {'density': '10k'})]),
+        spaces=SpatialReferences(
+            spaces=[('MNI152Lin', {}), ('MNIPediatricAsym', {'cohort': '6'})],
+            checkpoint=True),
     )
 
 This sub-workflow concatenates the transforms calculated upstream (see
@@ -524,8 +537,7 @@ EPI sampled to FreeSurfer surfaces
     from fmriprep.workflows.bold import init_bold_surf_wf
     wf = init_bold_surf_wf(
         mem_gb=1,
-        output_spaces=['T1w', 'fsnative',
-                       'template', 'fsaverage5'],
+        surface_spaces=['fsnative', 'fsaverage5'],
         medial_surface_nan=False)
 
 If FreeSurfer processing is enabled, the motion-corrected functional series

@@ -518,12 +518,16 @@ def init_carpetplot_wf(mem_gb, metadata, name="bold_carpet_wf"):
     return workflow
 
 
-def init_ica_aroma_wf(metadata, mem_gb, omp_nthreads,
-                      name='ica_aroma_wf',
-                      susan_fwhm=6.0,
-                      err_on_aroma_warn=False,
-                      aroma_melodic_dim=-200,
-                      use_fieldwarp=True):
+def init_ica_aroma_wf(
+    mem_gb,
+    metadata,
+    omp_nthreads,
+    aroma_melodic_dim=-200,
+    err_on_aroma_warn=False,
+    name='ica_aroma_wf',
+    susan_fwhm=6.0,
+    use_fieldwarp=True,
+):
     """
     Build a workflow that runs `ICA-AROMA`_.
 
@@ -557,18 +561,13 @@ def init_ica_aroma_wf(metadata, mem_gb, omp_nthreads,
             :simple_form: yes
 
             from fmriprep.workflows.bold.confounds import init_ica_aroma_wf
-            wf = init_ica_aroma_wf(metadata={'RepetitionTime': 1.0},
-                                   mem_gb=3,
-                                   omp_nthreads=1)
+            wf = init_ica_aroma_wf(
+                mem_gb=3,
+                metadata={'RepetitionTime': 1.0},
+                omp_nthreads=1)
 
     Parameters
     ----------
-    standard_spaces : str
-        Spatial normalization template used as target when that
-        registration step was previously calculated with
-        :py:func:`~fmriprep.workflows.bold.registration.init_bold_reg_wf`.
-        The template must be one of the MNI templates (fMRIPrep uses
-        ``MNI152NLin2009cAsym`` by default).
     metadata : dict
         BIDS metadata for BOLD file
     mem_gb : float
@@ -643,17 +642,17 @@ in the corresponding confounds file.
             'movpar_file',
             'name_source',
             'skip_vols',
-            'templates',
+            'spatial_reference',
         ]), name='inputnode')
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['aroma_confounds', 'aroma_noise_ics', 'melodic_mix',
                 'nonaggr_denoised_file', 'aroma_metadata']), name='outputnode')
 
-    select_std = pe.Node(KeySelect(
-        fields=['bold_mask_std', 'bold_std']),
-        name='select_std', run_without_submitting=True)
-    select_std.inputs.key = 'MNI152NLin6Asym'
+    # extract out to BOLD base
+    select_std = pe.Node(KeySelect(fields=['bold_mask_std', 'bold_std']),
+                         name='select_std', run_without_submitting=True)
+    select_std.inputs.key = 'MNI152NLin6Asym_res-2'
 
     rm_non_steady_state = pe.Node(niu.Function(function=_remove_volumes,
                                                output_names=['bold_cut']),
@@ -704,7 +703,7 @@ in the corresponding confounds file.
 
     # connect the nodes
     workflow.connect([
-        (inputnode, select_std, [('templates', 'keys'),
+        (inputnode, select_std, [('spatial_reference', 'keys'),
                                  ('bold_std', 'bold_std'),
                                  ('bold_mask_std', 'bold_mask_std')]),
         (inputnode, ica_aroma, [('movpar_file', 'motion_parameters')]),
