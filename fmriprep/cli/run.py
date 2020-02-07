@@ -480,7 +480,7 @@ def build_workflow(opts, retval):
     from bids import BIDSLayout
 
     from nipype import logging as nlogging, config as ncfg
-    from niworkflows.utils.bids import collect_participants
+    from niworkflows.utils.bids import collect_participants, check_pipeline_version
     from niworkflows.reports import generate_reports
     from ..__about__ import __version__
     from ..workflows.base import init_fmriprep_wf
@@ -519,6 +519,13 @@ def build_workflow(opts, retval):
             bids_dir / 'derivatives' / ('fmriprep-%s' % __version__.split('+')[0]))
         retval['return_code'] = 1
         return retval
+
+    # warn if older results exist
+    msg = check_pipeline_version(
+        __version__, output_dir / 'fmriprep' / 'dataset_description.json'
+    )
+    if msg is not None:
+        build_log.warning(msg)
 
     if bids_dir in work_dir.parents:
         build_log.error(
