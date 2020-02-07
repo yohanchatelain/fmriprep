@@ -208,7 +208,7 @@ To do so, follow the next steps.
 
        $ python -c "from templateflow.api import get; get(['MNI152NLin2009cAsym', 'MNI152NLin6Asym', 'OASIS30ANTs', 'MNIPediatricAsym', 'MNIInfant'])"
 
-After pulling down the resources you'll need, you will just need to make sure your
+After getting the resources you'll need, you will just need to make sure your
 runtime environment is able to access the filesystem, at the location of your
 *TemplateFlow home* directory.
 If you are a Singularity user, please check out :ref:`singularity_tf`.

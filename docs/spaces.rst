@@ -21,7 +21,7 @@ nonstandard spaces can be inserted.
 *TemplateFlow* is a software library and a repository of neuroimaging templates
 that allows end-user applications such as *fMRIPrep* to flexibly query and pull
 template and atlas information.
-In other words, *TemplateFlow* affords *fMRIPrep* with access to a wide range
+In other words, *TemplateFlow* enables *fMRIPrep* to access a wide range
 of templates (and also custom templates, see below).
 Therefore, *TemplateFlow* is central to define *fMRIPrep*'s interface regarding
 template and atlas prior-knowledge.
