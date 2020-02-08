@@ -1,3 +1,36 @@
+20.0.0 (TBD)
+============
+The first release candidate of the new major version 20.x.x series.
+*fMRIPrep* is transitioning to a calendar version system
+(`#1912 <https://github.com/poldracklab/fmriprep/issues/1912>`__).
+The `CalVer <https://calver.org/>`__ system reflects *fMRIPrep*'s nature
+as an evolving workflow and does not impose any artificial incentive for
+"big-change" releases.
+It also permits to quickly see how out-of-date someone's version is.
+As of now, the *default* version increment is the minor release number.
+Hence, when the minor release number changes the work directory of *fMRIPrep*
+will presumably break.
+Micro releases only include bug-fixes that can reuse exiting working directories.
+
+The major highlight of this release entails CIFTI generation to match
+:abbr:`HCP (Human Connectome Project)` *grayordinates*.
+In addition, the new *fMRIPrep 20.0.0* has gone through a major overhaul in the
+handling of standard spaces (spatial normalizations, fusion of prior knowledge from
+corresponding atlases) and imaging outputs.
+In particular, the new series almost completely implements the new
+syntax for ``--output-spaces`` to describe the (non)standard spatial references
+that shall be used for generating outputs
+(`#1604 <https://github.com/poldracklab/fmriprep/issues/1604>`__).
+
+This release has been led by Mathias Goncalves (@mgxd) and includes contributions from
+Azeez Adebimpe - very much appreciated.
+
+  * ENH: Warn when existing output version does not match current pipeline version (#1967)
+  * ENH: Add ``--clean-workdir`` argument (#1966)
+  * ENH: Refactor of how spatial normalization targets and ``--output-spaces`` are maintained (#1955)
+  * MAINT: Pin connectome-workbench 1.3.2, add to documented dependencies (#1958)
+  * MAINT: Pin NiBabel, NiWorkflows, sMRIPrep (#1971)
+
 1.5.8 (January 28, 2020)
 ========================
 Bug-fix release in the 1.5.x series.
