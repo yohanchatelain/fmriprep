@@ -1,7 +1,85 @@
-1.5.3 (TBD)
-===========
+20.0.0 (TBD)
+============
+The first release candidate of the new major version 20.x.x series.
+*fMRIPrep* is transitioning to a calendar version system
+(`#1912 <https://github.com/poldracklab/fmriprep/issues/1912>`__).
+The `CalVer <https://calver.org/>`__ system reflects *fMRIPrep*'s nature
+as an evolving workflow and does not impose any artificial incentive for
+"big-change" releases.
+It also permits to quickly see how out-of-date someone's version is.
+As of now, the *default* version increment is the minor release number.
+Hence, when the minor release number changes the work directory of *fMRIPrep*
+will presumably break.
+Micro releases only include bug-fixes that can reuse exiting working directories.
 
+The major highlight of this release entails CIFTI generation to match
+:abbr:`HCP (Human Connectome Project)` *grayordinates*.
+In addition, the new *fMRIPrep 20.0.0* has gone through a major overhaul in the
+handling of standard spaces (spatial normalizations, fusion of prior knowledge from
+corresponding atlases) and imaging outputs.
+In particular, the new series almost completely implements the new
+syntax for ``--output-spaces`` to describe the (non)standard spatial references
+that shall be used for generating outputs
+(`#1604 <https://github.com/poldracklab/fmriprep/issues/1604>`__).
+
+This release has been led by Mathias Goncalves (@mgxd) and includes contributions from
+Azeez Adebimpe - very much appreciated.
+
+  * ENH: Warn when existing output version does not match current pipeline version (#1967)
+  * ENH: Add ``--clean-workdir`` argument (#1966)
+  * ENH: Refactor of how spatial normalization targets and ``--output-spaces`` are maintained (#1955)
+  * MAINT: Pin connectome-workbench 1.3.2, add to documented dependencies (#1958)
+  * MAINT: Pin NiBabel, NiWorkflows, sMRIPrep (#1971)
+
+1.5.8 (January 28, 2020)
+========================
+Bug-fix release in the 1.5.x series.
+
+  * FIX: SyN SDC logic failing in ``--force-syn`` cases (#1951)
+
+1.5.7 (January 23, 2020)
+========================
+Bug-fix release in the 1.5.x series.
+
+This release fixes a bug specifically for T1w images with dimensions ≤256 voxels
+but a field-of-view >256mm.
+
+  * FIX: Calculate FoV with shape and zooms (poldracklab/smriprep#161)
+
+1.5.6 (January 22, 2020)
+========================
+Bug-fix release in the 1.5.x series.
+
+  * FIX: Include all functional runs in reports, establish consistent ordering (#1937)
+  * FIX: Use SyN-SDC if --use-syn-sdc and --ignore fieldmaps are used (#1942)
+
+1.5.5 (January 14, 2020)
+=========================
+Bug-fix release in the 1.5.x series.
+
+* FIX: Correctly select volumetric spaces for carpetplot (#1932) @effigies
+* FIX: Constrain setuptools for Python 2.7 installs of fmriprep-docker (#1933) @effigies
+
+1.5.4 (December 18, 2019)
+=========================
+Bug-fix release in the 1.5.x series.
+
+* FIX: Integrate fix for poldracklab/sdcflows#77 (pin niworkflows-1.0.3, sdcflows-1.0.3) @oesteban
+
+1.5.3 (December 12, 2019)
+=========================
+The last patch release of the 1.5.x series containing features.
+As of 1.5.4, patch releases will only contain bug fixes, maintenance
+tasks and minor documentation revisions.
+
+* FIX: Do not run STC if SliceTiming metadata is set but empty (#1854) @oesteban
+* FIX: Link to EPINorm issue in README (#1903) @adelavega
+* FIX: Respect ``--dummy-scans 0`` (#1908) @jdkent
 * ENH: Upgrade SDCFlows to new API (1.0.0) (#1886) @oesteban
+* ENH: Add ``--fs-subjects-dir`` flag (#1901) @effigies
+* DOC: Improving accessibility of confounds description (#1877) @kfinc
+* MAINT: Ensure data is packaged in sdist (#1902) @effigies
+* MAINT: Remove deprecated command-line arguments (#1909) @mgxd
 
 1.5.2 (December 2, 2019)
 ========================

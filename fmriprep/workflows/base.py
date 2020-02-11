@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
 """
@@ -13,7 +11,6 @@ fMRIprep base processing workflows
 
 import sys
 import os
-from collections import OrderedDict
 from copy import deepcopy
 
 from nipype import __version__ as nipype_ver
@@ -56,13 +53,13 @@ def init_fmriprep_wf(
     medial_surface_nan,
     omp_nthreads,
     output_dir,
-    output_spaces,
     regressors_all_comps,
     regressors_dvars_th,
     regressors_fd_th,
     run_uuid,
     skull_strip_fixed_seed,
     skull_strip_template,
+    spaces,
     subject_list,
     t2s_coreg,
     task_id,
@@ -90,6 +87,8 @@ def init_fmriprep_wf(
             from collections import namedtuple, OrderedDict
             BIDSLayout = namedtuple('BIDSLayout', ['root'])
             from fmriprep.workflows.base import init_fmriprep_wf
+            from niworkflows.utils.spaces import Reference, SpatialReferences
+
             os.environ['FREESURFER_HOME'] = os.getcwd()
             wf = init_fmriprep_wf(
                 anat_only=False,
@@ -113,15 +112,18 @@ def init_fmriprep_wf(
                 medial_surface_nan=False,
                 omp_nthreads=1,
                 output_dir='.',
-                output_spaces=OrderedDict([
-                    ('MNI152Lin', {}), ('fsaverage', {'density': '10k'}),
-                    ('T1w', {}), ('fsnative', {})]),
                 regressors_all_comps=False,
                 regressors_dvars_th=1.5,
                 regressors_fd_th=0.5,
                 run_uuid='X',
                 skull_strip_fixed_seed=False,
-                skull_strip_template=('OASIS30ANTs', {}),
+                skull_strip_template=Reference('OASIS30ANTs'),
+                spaces=SpatialReferences(
+                    spaces=['MNI152Lin',
+                            ('fsaverage', {'density': '10k'}),
+                            'T1w',
+                            'fsnative'],
+                    checkpoint=True),
                 subject_list=['fmripreptest'],
                 t2s_coreg=False,
                 task_id='',
@@ -175,14 +177,6 @@ def init_fmriprep_wf(
         Maximum number of threads an individual process may use
     output_dir : str
         Directory in which to save derivatives
-    output_spaces : OrderedDict
-        Ordered dictionary where keys are TemplateFlow ID strings (e.g., ``MNI152Lin``,
-        ``MNI152NLin6Asym``, ``MNI152NLin2009cAsym``, or ``fsLR``) strings designating
-        nonstandard references (e.g., ``T1w`` or ``anat``, ``sbref``, ``run``, etc.),
-        or paths pointing to custom templates organized in a TemplateFlow-like structure.
-        Values of the dictionary aggregate modifiers (e.g., the value for the key ``MNI152Lin``
-        could be ``{'resolution': 2}`` if one wants the resampling to be done on the 2mm
-        resolution version of the selected template).
     regressors_all_comps
         Return all CompCor component time series instead of the top fraction
     regressors_dvars_th
@@ -197,6 +191,15 @@ def init_fmriprep_wf(
     skull_strip_fixed_seed : bool
         Do not use a random seed for skull-stripping - will ensure
         run-to-run replicability when used with --omp-nthreads 1
+    spaces : :py:class:`~niworkflows.utils.spaces.SpatialReferences`
+        A container for storing, organizing, and parsing spatial normalizations. Composed of
+        :py:class:`~niworkflows.utils.spaces.Reference` objects representing spatial references.
+        Each ``Reference`` contains a space, which is a string of either TemplateFlow template IDs
+        (e.g., ``MNI152Lin``, ``MNI152NLin6Asym``, ``MNIPediatricAsym``), nonstandard references
+        (e.g., ``T1w`` or ``anat``, ``sbref``, ``run``, etc.), or a custom template located in
+        the TemplateFlow root directory. Each ``Reference`` may also contain a spec, which is a
+        dictionary with template specifications (e.g., a specification of ``{'resolution': 2}``
+        would lead to resampling on a 2mm resolution of the space).
     subject_list : list
         List of subject labels
     t2s_coreg : bool
@@ -226,8 +229,7 @@ def init_fmriprep_wf(
             BIDSFreeSurferDir(
                 derivatives=output_dir,
                 freesurfer_home=os.getenv('FREESURFER_HOME'),
-                spaces=[s for s in output_spaces.keys() if s.startswith('fsaverage')] + [
-                    'fsnative'] * ('fsnative' in output_spaces)),
+                spaces=spaces.get_fs_spaces()),
             name='fsdir_run_' + run_uuid.replace('-', '_'), run_without_submitting=True)
         if fs_subjects_dir is not None:
             fsdir.inputs.subjects_dir = str(fs_subjects_dir.absolute())
@@ -256,13 +258,13 @@ def init_fmriprep_wf(
             name="single_subject_" + subject_id + "_wf",
             omp_nthreads=omp_nthreads,
             output_dir=output_dir,
-            output_spaces=output_spaces,
             regressors_all_comps=regressors_all_comps,
             regressors_dvars_th=regressors_dvars_th,
             regressors_fd_th=regressors_fd_th,
             reportlets_dir=reportlets_dir,
             skull_strip_fixed_seed=skull_strip_fixed_seed,
             skull_strip_template=skull_strip_template,
+            spaces=spaces,
             subject_id=subject_id,
             t2s_coreg=t2s_coreg,
             task_id=task_id,
@@ -308,13 +310,13 @@ def init_single_subject_wf(
     name,
     omp_nthreads,
     output_dir,
-    output_spaces,
     reportlets_dir,
     regressors_all_comps,
     regressors_dvars_th,
     regressors_fd_th,
     skull_strip_fixed_seed,
     skull_strip_template,
+    spaces,
     subject_id,
     t2s_coreg,
     task_id,
@@ -338,8 +340,10 @@ def init_single_subject_wf(
             :graph2use: orig
             :simple_form: yes
 
+            from collections import namedtuple
+            from niworkflows.utils.spaces import Reference, SpatialReferences
             from fmriprep.workflows.base import init_single_subject_wf
-            from collections import namedtuple, OrderedDict
+
             BIDSLayout = namedtuple('BIDSLayout', ['root'])
             wf = init_single_subject_wf(
                 anat_only=False,
@@ -363,15 +367,18 @@ def init_single_subject_wf(
                 name='single_subject_wf',
                 omp_nthreads=1,
                 output_dir='.',
-                output_spaces=OrderedDict([
-                    ('MNI152Lin', {}), ('fsaverage', {'density': '10k'}),
-                    ('T1w', {}), ('fsnative', {})]),
                 reportlets_dir='.',
                 regressors_all_comps=False,
                 regressors_dvars_th=1.5,
                 regressors_fd_th=0.5,
                 skull_strip_fixed_seed=False,
-                skull_strip_template=('OASIS30ANTs', {}),
+                skull_strip_template=Reference('OASIS30ANTs'),
+                spaces=SpatialReferences(
+                    spaces=['MNI152Lin',
+                            ('fsaverage', {'density': '10k'}),
+                            'T1w',
+                            'fsnative'],
+                    checkpoint=True),
                 subject_id='test',
                 t2s_coreg=False,
                 task_id='',
@@ -428,14 +435,6 @@ def init_single_subject_wf(
         Maximum number of threads an individual process may use
     output_dir : str
         Directory in which to save derivatives
-    output_spaces : OrderedDict
-        Ordered dictionary where keys are TemplateFlow ID strings (e.g., ``MNI152Lin``,
-        ``MNI152NLin6Asym``, ``MNI152NLin2009cAsym``, or ``fsLR``) strings designating
-        nonstandard references (e.g., ``T1w`` or ``anat``, ``sbref``, ``run``, etc.),
-        or paths pointing to custom templates organized in a TemplateFlow-like structure.
-        Values of the dictionary aggregate modifiers (e.g., the value for the key ``MNI152Lin``
-        could be ``{'resolution': 2}`` if one wants the resampling to be done on the 2mm
-        resolution version of the selected template).
     reportlets_dir : str
         Directory in which to save reportlets
     regressors_all_comps
@@ -454,6 +453,15 @@ def init_single_subject_wf(
         List of subject labels
     t2s_coreg : bool
         For multi-echo EPI, use the calculated T2*-map for T2*-driven coregistration
+    spaces : :py:class:`~niworkflows.utils.spaces.SpatialReferences`
+        A container for storing, organizing, and parsing spatial normalizations. Composed of
+        :py:class:`~niworkflows.utils.spaces.Reference` objects representing spatial references.
+        Each ``Reference`` contains a space, which is a string of either TemplateFlow template IDs
+        (e.g., ``MNI152Lin``, ``MNI152NLin6Asym``, ``MNIPediatricAsym``), nonstandard references
+        (e.g., ``T1w`` or ``anat``, ``sbref``, ``run``, etc.), or a custom template located in
+        the TemplateFlow root directory. Each ``Reference`` may also contain a spec, which is a
+        dictionary with template specifications (e.g., a specification of ``{'resolution': 2}``
+        would lead to resampling on a 2mm resolution of the space).
     task_id : str or None
         Task ID of BOLD series to preprocess, or ``None`` to preprocess all
     use_aroma : bool
@@ -474,7 +482,6 @@ def init_single_subject_wf(
         FreeSurfer's ``$SUBJECTS_DIR``.
 
     """
-    from ..config import NONSTANDARD_REFERENCES
     if name in ('single_subject_wf', 'single_subject_fmripreptest_wf'):
         # for documentation purposes
         subject_data = {
@@ -527,11 +534,6 @@ It is released under the [CC0]\
 
 """.format(nilearn_ver=NILEARN_VERSION)
 
-    # Filter out standard spaces to a separate dict
-    std_spaces = OrderedDict([
-        (key, modifiers) for key, modifiers in output_spaces.items()
-        if key not in NONSTANDARD_REFERENCES])
-
     inputnode = pe.Node(niu.IdentityInterface(fields=['subjects_dir']),
                         name='inputnode')
 
@@ -541,10 +543,9 @@ It is released under the [CC0]\
     bids_info = pe.Node(BIDSInfo(
         bids_dir=layout.root, bids_validate=False), name='bids_info')
 
-    summary = pe.Node(SubjectSummary(
-        std_spaces=list(std_spaces.keys()),
-        nstd_spaces=sorted(set(NONSTANDARD_REFERENCES).intersection(output_spaces.keys()))),
-        name='summary', run_without_submitting=True)
+    summary = pe.Node(SubjectSummary(std_spaces=spaces.get_spaces(nonstandard=False),
+                                     nstd_spaces=spaces.get_spaces(standard=False)),
+                      name='summary', run_without_submitting=True)
 
     about = pe.Node(AboutSummary(version=__version__,
                                  command=' '.join(sys.argv)),
@@ -571,8 +572,8 @@ It is released under the [CC0]\
         num_t1w=len(subject_data['t1w']),
         omp_nthreads=omp_nthreads,
         output_dir=output_dir,
-        output_spaces=std_spaces,
         reportlets_dir=reportlets_dir,
+        spaces=spaces,
         skull_strip_fixed_seed=skull_strip_fixed_seed,
         skull_strip_template=skull_strip_template,
     )
@@ -624,11 +625,11 @@ It is released under the [CC0]\
             num_bold=len(subject_data['bold']),
             omp_nthreads=omp_nthreads,
             output_dir=output_dir,
-            output_spaces=output_spaces,
             reportlets_dir=reportlets_dir,
             regressors_all_comps=regressors_all_comps,
             regressors_fd_th=regressors_fd_th,
             regressors_dvars_th=regressors_dvars_th,
+            spaces=spaces,
             t2s_coreg=t2s_coreg,
             use_aroma=use_aroma,
             use_bbr=use_bbr,
@@ -650,7 +651,7 @@ It is released under the [CC0]\
               ('outputnode.joint_template', 'inputnode.joint_template'),
               ('outputnode.joint_anat2std_xfm', 'inputnode.joint_anat2std_xfm'),
               ('outputnode.joint_std2anat_xfm', 'inputnode.joint_std2anat_xfm'),
-              # Undefined if --no-freesurfer, but this is safe
+              # Undefined if --fs-no-reconall, but this is safe
               ('outputnode.subjects_dir', 'inputnode.subjects_dir'),
               ('outputnode.subject_id', 'inputnode.subject_id'),
               ('outputnode.t1w2fsnative_xfm', 'inputnode.t1w2fsnative_xfm'),

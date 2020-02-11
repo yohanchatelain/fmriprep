@@ -9,6 +9,18 @@
       "type": "Researcher"
     },
     {
+      "affiliation": "University of Texas at Austin",
+      "name": "de la Vega, Alejandro",
+      "orcid": "0000-0001-9062-3778",
+      "type": "Researcher"
+    },
+    {
+      "affiliation": "Centre for Modern Interdisciplinary Technologies, Nicolaus Copernicus University in Toru\u0144",
+      "name": "Finc, Karolina",
+      "orcid": "0000-0002-0157-030X",
+      "type": "Researcher"
+    },
+    {
       "affiliation": "Department of Psychology, Stanford University",
       "name": "Feingold, Franklin",
       "orcid": "0000-0002-6533-2909",
@@ -21,15 +33,9 @@
       "type": "Researcher"
     },
     {
-      "affiliation": "Department of Psychology, Columbia University",
-      "name": "Jacoby, Nir",
-      "orcid": "0000-0001-7936-9991",
-      "type": "Researcher"
-    },
-    {
-      "affiliation": "Center for Lifespan Changes in Brain and Cognition, University of Oslo",
-      "name": "Sneve, Markus H.",
-      "orcid": "0000-0001-7644-7915",
+      "affiliation": "Computational Neuroimaging Lab, BioCruces Health Research Institute",
+      "name": "Erramuzpe, Asier",
+      "orcid": "0000-0002-9402-2184",
       "type": "Researcher"
     },
     {
@@ -45,6 +51,12 @@
       "type": "Researcher"
     },
     {
+      "affiliation": "Department of Psychology, Columbia University",
+      "name": "Jacoby, Nir",
+      "orcid": "0000-0001-7936-9991",
+      "type": "Researcher"
+    },
+    {
       "affiliation": "Child Mind Institute",
       "name": "Heinsfeld, Anibal S.",
       "orcid": "0000-0002-2050-0614",
@@ -57,15 +69,9 @@
       "type": "Researcher"
     },
     {
-      "affiliation": "Dartmouth College: Hanover, NH, United States",
-      "name": "Ma, Feilong",
-      "orcid": "0000-0002-6838-3971",
-      "type": "Researcher"
-    },
-    {
-      "affiliation": "Computational Neuroimaging Lab, BioCruces Health Research Institute",
-      "name": "Erramuzpe, Asier",
-      "orcid": "0000-0002-9402-2184",
+      "affiliation": "Center for Lifespan Changes in Brain and Cognition, University of Oslo",
+      "name": "Sneve, Markus H.",
+      "orcid": "0000-0001-7644-7915",
       "type": "Researcher"
     },
     {
@@ -87,9 +93,9 @@
       "type": "Researcher"
     },
     {
-      "affiliation": "State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University",
-      "name": "Ye, Zhifang",
-      "orcid": "0000-0003-0489-2619",
+      "affiliation": "Perelman School of Medicine, University of Pennsylvania, PA, USA",
+      "name": "Adebimpe, Azeez",
+      "orcid": "0000-0001-9049-0135",
       "type": "Researcher"
     },
     {
@@ -99,15 +105,21 @@
       "type": "Researcher"
     },
     {
-      "affiliation": "Neuroscience Program, University of Iowa",
-      "name": "Rivera-Dompenciel, Adriana",
-      "orcid": "0000-0002-3339-4857",
+      "affiliation": "Department of Psychology, New York University, NY, USA",
+      "name": "Groen, Iris I. A.",
+      "orcid": "0000-0002-5536-6128",
       "type": "Researcher"
     },
     {
-      "affiliation": "Perelman School of Medicine, University of Pennsylvania, PA, USA",
-      "name": "Adebimpe, Azeez",
-      "orcid": "0000-0001-9049-0135",
+      "affiliation": "Dartmouth College: Hanover, NH, United States",
+      "name": "Ma, Feilong",
+      "orcid": "0000-0002-6838-3971",
+      "type": "Researcher"
+    },
+    {
+      "affiliation": "Neuroscience Program, University of Iowa",
+      "name": "Rivera-Dompenciel, Adriana",
+      "orcid": "0000-0002-3339-4857",
       "type": "Researcher"
     },
     {
@@ -120,12 +132,6 @@
       "affiliation": "Perelman School of Medicine, University of Pennsylvania, PA, USA",
       "name": "Cieslak, Matthew",
       "orcid": "0000-0002-1931-4734",
-      "type": "Researcher"
-    },
-    {
-      "affiliation": "Centre for Modern Interdisciplinary Technologies, Nicolaus Copernicus University in Toru\u0144",
-      "name": "Finc, Karolina",
-      "orcid": "0000-0002-0157-030X",
       "type": "Researcher"
     },
     {
@@ -183,6 +189,12 @@
       "type": "Researcher"
     },
     {
+      "affiliation": "State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University",
+      "name": "Ye, Zhifang",
+      "orcid": "0000-0003-0489-2619",
+      "type": "Researcher"
+    },
+    {
       "affiliation": "McGovern Institute for Brain Research, MIT, MA, USA",
       "name": "Ghosh, Satrajit S.",
       "orcid": "0000-0002-5312-6729",
@@ -212,13 +224,13 @@
     },
     {
       "affiliation": "Department of Psychology, Stanford University",
-      "name": "Ciric, Rastko",
-      "orcid": "0000-0001-6347-7939"
+      "name": "Goncalves, Mathias",
+      "orcid": "0000-0002-7252-7771"
     },
     {
       "affiliation": "Department of Psychology, Stanford University",
-      "name": "Goncalves, Mathias",
-      "orcid": "0000-0002-7252-7771"
+      "name": "Ciric, Rastko",
+      "orcid": "0000-0001-6347-7939"
     },
     {
       "affiliation": "Department of Psychology, Stanford University",
