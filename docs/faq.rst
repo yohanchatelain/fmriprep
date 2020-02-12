@@ -133,7 +133,6 @@ Below are some benchmark data that have been computed on a high performance clus
 CPUs and 64 GB of physical memory:
 
 .. figure:: _static/fmriprep_benchmark.svg
-    :scale: 100%
 
 **Compute Time**: time in hours to complete the preprocessing for all subjects. **Physical Memory**: the maximum of RAM usage
 used across all fMRIPrep processes as reported by the HCP job manager. **Virtual Memory**: the maximum of virtual memory used

@@ -453,7 +453,6 @@ Some of the estimated confounds are plotted with a "carpet" visualization of the
 An example of these plots follows:
 
 .. figure:: _static/sub-01_task-mixedgamblestask_run-01_bold_carpetplot.svg
-    :scale: 100%
 
     The figure shows on top several confounds estimated for the BOLD series:
     global signals ('GlobalSignal', 'WM', 'GM'), standardized DVARS ('stdDVARS'),
@@ -474,7 +473,6 @@ option ``--return-all-components``.
 component, ordered by descending singular value.
 
 .. figure:: _static/sub-01_task-rest_compcor.svg
-    :scale: 100%
 
     The figure displays the cumulative variance explained by components for each
     of four CompCor decompositions (left to right: anatomical CSF mask, anatomical
@@ -491,7 +489,6 @@ This can be used to guide selection of a confound model or to assess the extent
 to which tissue-specific regressors correlate with global signal.
 
 .. figure:: _static/sub-01_task-mixedgamblestask_run-01_confounds_correlation.svg
-    :scale: 100%
 
     The left-hand panel shows the matrix of correlations among selected confound
     time series as a heat-map.
