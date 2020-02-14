@@ -537,7 +537,9 @@ It is released under the [CC0]\
     inputnode = pe.Node(niu.IdentityInterface(fields=['subjects_dir']),
                         name='inputnode')
 
-    bidssrc = pe.Node(BIDSDataGrabber(subject_data=subject_data, anat_only=anat_only),
+    bidssrc = pe.Node(BIDSDataGrabber(subject_data=subject_data,
+                                      anat_only=anat_only,
+                                      subject_id=subject_id),
                       name='bidssrc')
 
     bids_info = pe.Node(BIDSInfo(

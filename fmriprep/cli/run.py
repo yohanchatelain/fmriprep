@@ -332,6 +332,7 @@ license file at several paths, in this order: 1) command line argument ``--fs-li
     log_level = int(max(25 - 5 * opts.verbose_count, logging.DEBUG))
     # Set logging
     logger.setLevel(log_level)
+    logger.addHandler(logging.StreamHandler())
     nlogging.getLogger('nipype.workflow').setLevel(log_level)
     nlogging.getLogger('nipype.interface').setLevel(log_level)
     nlogging.getLogger('nipype.utils').setLevel(log_level)
@@ -509,7 +510,7 @@ def build_workflow(opts, retval):
 
     if opts.clean_workdir:
         from niworkflows.utils.misc import clean_directory
-        build_log.log("Clearing previous fMRIPrep working directory: %s" % work_dir)
+        build_log.info("Clearing previous fMRIPrep working directory: %s" % work_dir)
         if not clean_directory(work_dir):
             build_log.warning("Could not clear all contents of working directory: %s" % work_dir)
 
