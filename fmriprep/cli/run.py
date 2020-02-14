@@ -10,6 +10,7 @@ import sys
 import gc
 import uuid
 import warnings
+import json
 from argparse import ArgumentParser
 from argparse import ArgumentDefaultsHelpFormatter
 from multiprocessing import cpu_count
@@ -76,6 +77,11 @@ def get_parser():
     # Re-enable when option is actually implemented
     # g_bids.add_argument('-r', '--run-id', action='store', default='single_run',
     #                     help='select a specific run to be processed')
+    g_bids.add_argument(
+        '--bids-filter-file', action='store', type=Path, metavar='PATH',
+        help='a JSON file describing custom BIDS input filter using pybids '
+             '{<suffix>:{<entity>:<filter>,...},...} '
+             '(https://github.com/bids-standard/pybids/blob/master/bids/layout/config/bids.json)')
     g_bids.add_argument('-t', '--task-id', action='store',
                         help='select a specific task to be processed')
     g_bids.add_argument('--echo-idx', action='store', type=int,
@@ -500,6 +506,7 @@ def build_workflow(opts, retval):
     bids_dir = opts.bids_dir.resolve()
     output_dir = opts.output_dir.resolve()
     work_dir = opts.work_dir.resolve()
+    bids_filters = json.loads(opts.bids_filter_file.read_text()) if opts.bids_filter_file else None
 
     if opts.clean_workdir:
         from niworkflows.utils.misc import clean_directory
@@ -675,6 +682,7 @@ def build_workflow(opts, retval):
         use_bbr=opts.use_bbr,
         use_syn=opts.use_syn_sdc,
         work_dir=str(work_dir),
+        bids_filters=bids_filters,
     )
     retval['return_code'] = 0
 

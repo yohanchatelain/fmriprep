@@ -67,12 +67,14 @@ def init_fmriprep_wf(
     use_bbr,
     use_syn,
     work_dir,
+    bids_filters,
 ):
     """
     Build *fMRIPrep*'s pipeline.
 
     This workflow organizes the execution of FMRIPREP, with a sub-workflow for
     each subject.
+
     If FreeSurfer's ``recon-all`` is to be run, a corresponding folder is created
     and populated with any needed template subjects under the derivatives folder.
 
@@ -129,6 +131,7 @@ def init_fmriprep_wf(
                 use_bbr=True,
                 use_syn=True,
                 work_dir='.',
+                bids_filters=None,
             )
 
 
@@ -213,6 +216,9 @@ def init_fmriprep_wf(
         If fieldmaps are present and enabled, this is not run, by default.
     work_dir : str
         Directory in which to store workflow execution state and temporary files
+    bids_filters : dict
+        Provides finer specification of the pipeline input files using pybids entities filters.
+        A dict with the following structure {<suffix>:{<entity>:<filter>,...},...}
 
     """
     fmriprep_wf = Workflow(name='fmriprep_wf')
@@ -265,6 +271,7 @@ def init_fmriprep_wf(
             use_aroma=use_aroma,
             use_bbr=use_bbr,
             use_syn=use_syn,
+            bids_filters=bids_filters,
         )
 
         single_subject_wf.config['execution']['crashdump_dir'] = (
@@ -316,6 +323,7 @@ def init_single_subject_wf(
     use_aroma,
     use_bbr,
     use_syn,
+    bids_filters,
 ):
     """
     This workflow organizes the preprocessing pipeline for a single subject.
@@ -377,6 +385,7 @@ def init_single_subject_wf(
                 use_aroma=False,
                 use_bbr=True,
                 use_syn=True,
+                bids_filters=None,
             )
 
     Parameters
@@ -463,6 +472,9 @@ def init_single_subject_wf(
     use_syn : bool
         **Experimental**: Enable ANTs SyN-based susceptibility distortion correction (SDC).
         If fieldmaps are present and enabled, this is not run, by default.
+    bids_filters : dict
+        Provides finer specification of the pipeline input files using pybids entities filters.
+        A dict with the following structure {<suffix>:{<entity>:<filter>,...},...}
 
     Inputs
     ------
@@ -477,7 +489,8 @@ def init_single_subject_wf(
             'bold': ['/completely/made/up/path/sub-01_task-nback_bold.nii.gz']
         }
     else:
-        subject_data = collect_data(layout, subject_id, task_id, echo_idx)[0]
+        subject_data = collect_data(layout, subject_id, task_id, echo_idx,
+                                    bids_filters=bids_filters)[0]
 
     # Make sure we always go through these two checks
     if not anat_only and subject_data['bold'] == []:
