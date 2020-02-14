@@ -78,9 +78,9 @@ def get_parser():
     # g_bids.add_argument('-r', '--run-id', action='store', default='single_run',
     #                     help='select a specific run to be processed')
     g_bids.add_argument(
-        '--bids-filters', action='store', type=Path,
-        help='the path to a JSON file describing custom BIDS input filter'
-             ' using pybids {<suffix>:{<entity>:<filter>,...},...} '
+        '--bids-filter-file', action='store', type=Path, metavar='PATH',
+        help='a JSON file describing custom BIDS input filter using pybids '
+             '{<suffix>:{<entity>:<filter>,...},...} '
              '(https://github.com/bids-standard/pybids/blob/master/bids/layout/config/bids.json)')
     g_bids.add_argument('-t', '--task-id', action='store',
                         help='select a specific task to be processed')
@@ -505,8 +505,7 @@ def build_workflow(opts, retval):
     bids_dir = opts.bids_dir.resolve()
     output_dir = opts.output_dir.resolve()
     work_dir = opts.work_dir.resolve()
-    bids_filters = json.loads(opts.bids_filters.read_text()) \
-        if opts.bids_filters else None
+    bids_filters = json.loads(opts.bids_filter_file.read_text()) if opts.bids_filter_file else None
 
     if opts.clean_workdir:
         from niworkflows.utils.misc import clean_directory
