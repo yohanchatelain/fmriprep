@@ -110,7 +110,6 @@ brain extraction workflow:
 An example of brain extraction is shown below:
 
 .. figure:: _static/brainextraction_t1.svg
-    :scale: 100%
 
     Brain extraction
 
@@ -118,7 +117,6 @@ An example of brain extraction is shown below:
 Once the brain mask is computed, FSL ``fast`` is utilized for brain tissue segmentation.
 
 .. figure:: _static/segmentation.svg
-    :scale: 100%
 
     Brain tissue segmentation.
 
@@ -130,7 +128,6 @@ be set to resample the preprocessed data onto the final output spaces.
 
 
 .. figure:: _static/T1MNINormalization.svg
-    :scale: 100%
 
     Animation showing spatial normalization of T1w onto the ``MNI152NLin2009cAsym`` template.
 
@@ -236,7 +233,6 @@ details.
 Reconstructed white and pial surfaces are included in the report.
 
 .. figure:: _static/reconall.svg
-    :scale: 100%
 
     Surface reconstruction (FreeSurfer)
 
@@ -348,7 +344,6 @@ workflow <bold_hmc>` and the :ref:`registration workflow to map
 BOLD series into the T1w image of the same subject <bold_reg>`.
 
 .. figure:: _static/brainextraction.svg
-    :scale: 100%
 
     Calculation of a brain mask from the BOLD series.
 
@@ -413,7 +408,6 @@ Susceptibility Distortion Correction (SDC)
 :mod:`fmriprep.workflows.fieldmap.base.init_sdc_wf`
 
 .. figure:: _static/unwarping.svg
-    :scale: 100%
 
     Applying susceptibility-derived distortion correction, based on
     fieldmap estimation.
@@ -470,7 +464,6 @@ of each run and the reconstructed subject using the gray/white matter boundary
 (FreeSurfer's ``?h.white`` surfaces) is calculated by the ``bbregister`` routine.
 
 .. figure:: _static/EPIT1Normalization.svg
-    :scale: 100%
 
     Animation showing :abbr:`EPI (echo-planar imaging)` to T1w registration (FreeSurfer ``bbregister``)
 
@@ -609,7 +602,6 @@ melodic's estimation of components.
 A visualization of the AROMA component classification is also included in the HTML reports.
 
 .. figure:: _static/aroma.svg
-    :scale: 100%
 
     Maps created with maximum intensity projection (glass brain) with a black
     brain outline.
