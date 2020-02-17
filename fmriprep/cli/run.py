@@ -719,9 +719,6 @@ def parse_spaces(opts):
     """
     spaces = opts.output_spaces
     if not spaces.references and not spaces.is_cached():
-        warnings.warn(
-            "No output spaces have been set - fMRIPrep will add `MNI152NLin2009cAsym` by default."
-        )
         spaces.add('MNI152NLin2009cAsym')
 
     if not spaces.is_cached():  # spaces may be already checkpointed if users want no BOLD outputs
