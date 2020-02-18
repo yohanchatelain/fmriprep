@@ -1,6 +1,5 @@
 20.0.0 (TBD)
 ============
-The first release candidate of the new major version 20.x.x series.
 *fMRIPrep* is transitioning to a calendar version system
 (`#1912 <https://github.com/poldracklab/fmriprep/issues/1912>`__).
 The `CalVer <https://calver.org/>`__ system reflects *fMRIPrep*'s nature
@@ -22,14 +21,18 @@ syntax for ``--output-spaces`` to describe the (non)standard spatial references
 that shall be used for generating outputs
 (`#1604 <https://github.com/poldracklab/fmriprep/issues/1604>`__).
 
-This release has been led by Mathias Goncalves (@mgxd) and includes contributions from
-Azeez Adebimpe - very much appreciated.
+This release includes contributions from Azeez Adebimpe and Basile Pinsard - very much appreciated.
 
   * ENH: Warn when existing output version does not match current pipeline version (#1967)
   * ENH: Add ``--clean-workdir`` argument (#1966)
-  * ENH: Refactor of how spatial normalization targets and ``--output-spaces`` are maintained (#1955)
+  * ENH: Refactor of how spatial normalization targets and ``--output-spaces`` are maintained (#1955) (#1983)
+  * ENH: Add ``--bids-filter-file`` argument for more controlled data querying (#1770)
+  * FIX: Ensure subject ID is used when selecting BIDS data (#1982)
+  * FIX: Display a log message when processing completes successfully (#1977)
+  * DOC: Improve custom template usage description (#1969)
   * MAINT: Pin connectome-workbench 1.3.2, add to documented dependencies (#1958)
   * MAINT: Pin NiBabel, NiWorkflows, sMRIPrep (#1971)
+  * MAINT: CI build error fixes (#1976)
 
 1.5.9 (February 14, 2020)
 =========================
