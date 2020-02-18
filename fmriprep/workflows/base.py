@@ -1,7 +1,7 @@
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
 """
-fMRIprep base processing workflows
+fMRIPrep base processing workflows
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autofunction:: init_fmriprep_wf
@@ -137,58 +137,58 @@ def init_fmriprep_wf(
 
     Parameters
     ----------
-    anat_only : bool
+    anat_only : :obj:`bool`
         Disable functional workflows
     bold2t1w_dof : 6, 9 or 12
         Degrees-of-freedom for BOLD-T1w registration
-    cifti_output : bool
+    cifti_output : :obj:`bool`
         Generate bold CIFTI file in output spaces
-    debug : bool
+    debug : :obj:`bool`
         Enable debugging outputs
-    dummy_scans : int or None
+    dummy_scans : :obj:`int` or None
         Number of volumes to consider as non steady state
-    echo_idx : int or None
+    echo_idx : :obj:`int` or None
         Index of echo to preprocess in multiecho BOLD series,
         or ``None`` to preprocess all
-    err_on_aroma_warn : bool
+    err_on_aroma_warn : :obj:`bool`
         Do not fail on ICA-AROMA errors
-    fmap_bspline : bool
+    fmap_bspline : :obj:`bool`
         **Experimental**: Fit B-Spline field using least-squares
-    fmap_demean : bool
+    fmap_demean : :obj:`bool`
         Demean voxel-shift map during unwarp
-    force_syn : bool
+    force_syn : :obj:`bool`
         **Temporary**: Always run SyN-based SDC
-    freesurfer : bool
+    freesurfer : :obj:`bool`
         Enable FreeSurfer surface reconstruction (may increase runtime)
-    hires : bool
+    hires : :obj:`bool`
         Enable sub-millimeter preprocessing in FreeSurfer
-    ignore : list
+    ignore : :obj:`list`
         Preprocessing steps to skip (may include "slicetiming", "fieldmaps")
-    layout : BIDSLayout object
+    layout : :py:class:`~bids.layout.BIDSLayout`
         BIDS dataset layout
-    longitudinal : bool
+    longitudinal : :obj:`bool`
         Treat multiple sessions as longitudinal (may increase runtime)
         See sub-workflows for specific differences
-    low_mem : bool
+    low_mem : :obj:`bool`
         Write uncompressed .nii files in some cases to reduce memory usage
-    medial_surface_nan : bool
+    medial_surface_nan : :obj:`bool`
         Replace medial wall values with NaNs on functional GIFTI files
-    omp_nthreads : int
+    omp_nthreads : :obj:`int`
         Maximum number of threads an individual process may use
-    output_dir : str
+    output_dir : :obj:`str`
         Directory in which to save derivatives
-    regressors_all_comps
+    regressors_all_comps : :obj:`bool`
         Return all CompCor component time series instead of the top fraction
-    regressors_dvars_th
+    regressors_dvars_th : :obj:`float`
         Criterion for flagging DVARS outliers
-    regressors_fd_th
+    regressors_fd_th : :obj:`float`
         Criterion for flagging framewise displacement outliers
-    run_uuid : str
+    run_uuid : :obj:`str`
         Unique identifier for execution instance
     skull_strip_template : tuple
         Name of target template for brain extraction with ANTs' ``antsBrainExtraction``,
         and corresponding dictionary of output-space modifiers.
-    skull_strip_fixed_seed : bool
+    skull_strip_fixed_seed : :obj:`bool`
         Do not use a random seed for skull-stripping - will ensure
         run-to-run replicability when used with --omp-nthreads 1
     spaces : :py:class:`~niworkflows.utils.spaces.SpatialReferences`
@@ -200,23 +200,23 @@ def init_fmriprep_wf(
         the TemplateFlow root directory. Each ``Reference`` may also contain a spec, which is a
         dictionary with template specifications (e.g., a specification of ``{'resolution': 2}``
         would lead to resampling on a 2mm resolution of the space).
-    subject_list : list
+    subject_list : :obj:`list`
         List of subject labels
-    t2s_coreg : bool
+    t2s_coreg : :obj:`bool`
         For multi-echo EPI, use the calculated T2*-map for T2*-driven coregistration
-    task_id : str or None
+    task_id : :obj:`str` or None
         Task ID of BOLD series to preprocess, or ``None`` to preprocess all
-    use_aroma : bool
+    use_aroma : :obj:`bool`
         Perform ICA-AROMA on MNI-resampled functional series
-    use_bbr : bool or None
+    use_bbr : :obj:`bool` or None
         Enable/disable boundary-based registration refinement.
         If ``None``, test BBR result for distortion before accepting.
-    use_syn : bool
+    use_syn : :obj:`bool`
         **Experimental**: Enable ANTs SyN-based susceptibility distortion correction (SDC).
         If fieldmaps are present and enabled, this is not run, by default.
-    work_dir : str
+    work_dir : :obj:`str`
         Directory in which to store workflow execution state and temporary files
-    bids_filters : dict
+    bids_filters : :obj:`dict`
         Provides finer specification of the pipeline input files using pybids entities filters.
         A dict with the following structure {<suffix>:{<entity>:<filter>,...},...}
 
@@ -390,68 +390,68 @@ def init_single_subject_wf(
 
     Parameters
     ----------
-    anat_only : bool
+    anat_only : :obj:`bool`
         Disable functional workflows
-    aroma_melodic_dim : int
+    aroma_melodic_dim : :obj:`int`
         Maximum number of components identified by MELODIC within ICA-AROMA
         (default is -200, i.e., no limitation).
     bold2t1w_dof : 6, 9 or 12
         Degrees-of-freedom for BOLD-T1w registration
-    cifti_output : bool
+    cifti_output : :obj:`bool`
         Generate bold CIFTI file in output spaces
-    debug : bool
+    debug : :obj:`bool`
         Enable debugging outputs
-    dummy_scans : int or None
+    dummy_scans : :obj:`int` or None
         Number of volumes to consider as non steady state
-    echo_idx : int or None
+    echo_idx : :obj:`int` or None
         Index of echo to preprocess in multiecho BOLD series,
         or ``None`` to preprocess all
-    err_on_aroma_warn : bool
+    err_on_aroma_warn : :obj:`bool`
         Do not fail on ICA-AROMA errors
-    fmap_bspline : bool
+    fmap_bspline : :obj:`bool`
         **Experimental**: Fit B-Spline field using least-squares
-    fmap_demean : bool
+    fmap_demean : :obj:`bool`
         Demean voxel-shift map during unwarp
-    force_syn : bool
+    force_syn : :obj:`bool`
         **Temporary**: Always run SyN-based SDC
-    freesurfer : bool
+    freesurfer : :obj:`bool`
         Enable FreeSurfer surface reconstruction (may increase runtime)
-    hires : bool
+    hires : :obj:`bool`
         Enable sub-millimeter preprocessing in FreeSurfer
-    ignore : list
+    ignore : :obj:`list`
         Preprocessing steps to skip (may include "slicetiming", "fieldmaps")
-    layout : BIDSLayout object
+    layout : :py:class:`~bids.layout.BIDSLayout`
         BIDS dataset layout
-    longitudinal : bool
+    longitudinal : :obj:`bool`
         Treat multiple sessions as longitudinal (may increase runtime)
         See sub-workflows for specific differences
-    low_mem : bool
+    low_mem : :obj:`bool`
         Write uncompressed .nii files in some cases to reduce memory usage
-    medial_surface_nan : bool
+    medial_surface_nan : :obj:`bool`
         Replace medial wall values with NaNs on functional GIFTI files
-    name : str
+    name : :obj:`str`
         Name of workflow
-    omp_nthreads : int
+    omp_nthreads : :obj:`int`
         Maximum number of threads an individual process may use
-    output_dir : str
+    output_dir : :obj:`str`
         Directory in which to save derivatives
-    reportlets_dir : str
+    reportlets_dir : :obj:`str`
         Directory in which to save reportlets
-    regressors_all_comps
+    regressors_all_comps : :obj:`bool`
         Return all CompCor component time series instead of the top fraction
-    regressors_fd_th
-        Criterion for flagging framewise displacement outliers
-    regressors_dvars_th
+    regressors_dvars_th : :obj:`float`
         Criterion for flagging DVARS outliers
-    skull_strip_fixed_seed : bool
+    regressors_fd_th : :obj:`float`
+        Criterion for flagging framewise displacement outliers
+    skull_strip_fixed_seed : :obj:`bool`
         Do not use a random seed for skull-stripping - will ensure
         run-to-run replicability when used with --omp-nthreads 1
     skull_strip_template : tuple
         Name of target template for brain extraction with ANTs' ``antsBrainExtraction``,
         and corresponding dictionary of output-space modifiers.
-    subject_id : str
+    subject_id : :obj:`str`
         List of subject labels
-    t2s_coreg : bool
+    t2s_coreg : :obj:`bool`
         For multi-echo EPI, use the calculated T2*-map for T2*-driven coregistration
     spaces : :py:class:`~niworkflows.utils.spaces.SpatialReferences`
         A container for storing, organizing, and parsing spatial normalizations. Composed of
@@ -462,23 +462,23 @@ def init_single_subject_wf(
         the TemplateFlow root directory. Each ``Reference`` may also contain a spec, which is a
         dictionary with template specifications (e.g., a specification of ``{'resolution': 2}``
         would lead to resampling on a 2mm resolution of the space).
-    task_id : str or None
+    task_id : :obj:`str` or None
         Task ID of BOLD series to preprocess, or ``None`` to preprocess all
-    use_aroma : bool
+    use_aroma : :obj:`bool`
         Perform ICA-AROMA on MNI-resampled functional series
-    use_bbr : bool or None
+    use_bbr : :obj:`bool` or None
         Enable/disable boundary-based registration refinement.
         If ``None``, test BBR result for distortion before accepting.
-    use_syn : bool
+    use_syn : :obj:`bool`
         **Experimental**: Enable ANTs SyN-based susceptibility distortion correction (SDC).
         If fieldmaps are present and enabled, this is not run, by default.
-    bids_filters : dict
+    bids_filters : :obj:`dict`
         Provides finer specification of the pipeline input files using pybids entities filters.
         A dict with the following structure {<suffix>:{<entity>:<filter>,...},...}
 
     Inputs
     ------
-    subjects_dir : str
+    subjects_dir : :obj:`str`
         FreeSurfer's ``$SUBJECTS_DIR``.
 
     """

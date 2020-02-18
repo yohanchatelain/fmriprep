@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
 """
@@ -37,11 +36,11 @@ def init_bold_hmc_wf(mem_gb, omp_nthreads, name='bold_hmc_wf'):
 
     Parameters
     ----------
-    mem_gb : float
+    mem_gb : :obj:`float`
         Size of BOLD file in GB
-    omp_nthreads : int
+    omp_nthreads : :obj:`int`
         Maximum number of threads an individual process may use
-    name : str
+    name : :obj:`str`
         Name of workflow (default: ``bold_hmc_wf``)
 
     Inputs

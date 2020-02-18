@@ -37,9 +37,9 @@ def init_bold_stc_wf(metadata, name='bold_stc_wf'):
 
     Parameters
     ----------
-    metadata : dict
+    metadata : :obj:`dict`
         BIDS metadata for BOLD file
-    name : str
+    name : :obj:`str`
         Name of workflow (default: ``bold_stc_wf``)
 
     Inputs

@@ -21,7 +21,7 @@ from nipype.interfaces import utility as niu
 from niworkflows.engine.workflows import LiterateWorkflow as Workflow
 from niworkflows.interfaces.utility import KeySelect
 from niworkflows.interfaces.utils import DictMerge
-
+from niworkflows.func.util import init_bold_reference_wf
 
 from ...config import DEFAULT_MEMORY_MIN_GB
 from ...utils.meepi import combine_meepi_source
@@ -41,7 +41,6 @@ from .resampling import (
     init_bold_preproc_trans_wf,
 )
 from .outputs import init_func_derivatives_wf
-from .util import init_bold_reference_wf
 
 
 LOGGER = logging.getLogger('nipype.workflow')
@@ -125,47 +124,47 @@ def init_func_preproc_wf(
 
     Parameters
     ----------
-    aroma_melodic_dim : int
+    aroma_melodic_dim : :obj:`int`
         Maximum number of components identified by MELODIC within ICA-AROMA
         (default is -200, ie. no limitation).
     bold2t1w_dof : 6, 9 or 12
         Degrees-of-freedom for BOLD-T1w registration
-    bold_file : str
+    bold_file : :obj:`str`
         BOLD series NIfTI file
-    cifti_output : bool
+    cifti_output : :obj:`bool`
         Generate bold CIFTI file in output spaces
-    debug : bool
+    debug : :obj:`bool`
         Enable debugging outputs
-    dummy_scans : int or None
+    dummy_scans : :obj:`int` or None
         Number of volumes to consider as non steady state
-    err_on_aroma_warn : bool
+    err_on_aroma_warn : :obj:`bool`
         Do not crash on ICA-AROMA errors
-    fmap_bspline : bool
+    fmap_bspline : :obj:`bool`
         **Experimental**: Fit B-Spline field using least-squares
-    fmap_demean : bool
+    fmap_demean : :obj:`bool`
         Demean voxel-shift map during unwarp
-    force_syn : bool
+    force_syn : :obj:`bool`
         **Temporary**: Always run SyN-based SDC
-    freesurfer : bool
+    freesurfer : :obj:`bool`
         Enable FreeSurfer functional registration (bbregister) and resampling
         BOLD series to FreeSurfer surface meshes.
-    ignore : list
+    ignore : :obj:`list`
         Preprocessing steps to skip (may include "slicetiming", "fieldmaps")
-    low_mem : bool
+    low_mem : :obj:`bool`
         Write uncompressed .nii files in some cases to reduce memory usage
-    medial_surface_nan : bool
+    medial_surface_nan : :obj:`bool`
         Replace medial wall values with NaNs on functional GIFTI files
-    omp_nthreads : int
+    omp_nthreads : :obj:`int`
         Maximum number of threads an individual process may use
-    output_dir : str
+    output_dir : :obj:`str`
         Directory in which to save derivatives
-    regressors_all_comps
+    regressors_all_comps : :obj:`bool`
         Return all CompCor component time series instead of the top fraction
-    regressors_dvars_th
+    regressors_dvars_th : :obj:`float`
         Criterion for flagging DVARS outliers
-    regressors_fd_th
+    regressors_fd_th : :obj:`float`
         Criterion for flagging framewise displacement outliers
-    reportlets_dir : str
+    reportlets_dir : :obj:`str`
         Absolute path of a directory in which reportlets will be temporarily stored
     spaces : :py:class:`~niworkflows.utils.spaces.SpatialReferences`
         A container for storing, organizing, and parsing spatial normalizations. Composed of
@@ -176,21 +175,21 @@ def init_func_preproc_wf(
         the TemplateFlow root directory. Each ``Reference`` may also contain a spec, which is a
         dictionary with template specifications (e.g., a specification of ``{'resolution': 2}``
         would lead to resampling on a 2mm resolution of the space).
-    t2s_coreg : bool
+    t2s_coreg : :obj:`bool`
         For multiecho EPI, use the calculated T2*-map for T2*-driven coregistration
-    use_aroma : bool
+    use_aroma : :obj:`bool`
         Perform ICA-AROMA on MNI-resampled functional series
-    use_bbr : bool or None
+    use_bbr : :obj:`bool` or None
         Enable/disable boundary-based registration refinement.
         If ``None``, test BBR result for distortion before accepting.
         When using ``t2s_coreg``, BBR will be enabled by default unless
         explicitly specified otherwise.
-    use_syn : bool
+    use_syn : :obj:`bool`
         **Experimental**: Enable ANTs SyN-based susceptibility distortion correction (SDC).
         If fieldmaps are present and enabled, this is not run, by default.
-    layout : BIDSLayout
+    layout : :py:class:`~bids.layout.BIDSLayout`
         BIDSLayout structure to enable metadata retrieval
-    num_bold : int
+    num_bold : :obj:`int`
         Total number of BOLD files that have been set for preprocessing
         (default is 1)
 
@@ -257,23 +256,25 @@ def init_func_preproc_wf(
     cifti_variant
         combination of target spaces for `bold_cifti`
 
-    See also
+    See Also
     --------
-      * :py:func:`~fmriprep.workflows.bold.util.init_bold_reference_wf`
-      * :py:func:`~fmriprep.workflows.bold.stc.init_bold_stc_wf`
-      * :py:func:`~fmriprep.workflows.bold.hmc.init_bold_hmc_wf`
-      * :py:func:`~fmriprep.workflows.bold.t2s.init_bold_t2s_wf`
-      * :py:func:`~fmriprep.workflows.bold.registration.init_bold_t1_trans_wf`
-      * :py:func:`~fmriprep.workflows.bold.registration.init_bold_reg_wf`
-      * :py:func:`~fmriprep.workflows.bold.confounds.init_bold_confounds_wf`
-      * :py:func:`~fmriprep.workflows.bold.confounds.init_ica_aroma_wf`
-      * :py:func:`~fmriprep.workflows.bold.resampling.init_bold_std_trans_wf`
-      * :py:func:`~fmriprep.workflows.bold.resampling.init_bold_preproc_trans_wf`
-      * :py:func:`~fmriprep.workflows.bold.resampling.init_bold_surf_wf`
-      * :py:func:`~fmriprep.workflows.fieldmap.pepolar.init_pepolar_unwarp_wf`
-      * :py:func:`~fmriprep.workflows.fieldmap.init_fmap_estimator_wf`
-      * :py:func:`~fmriprep.workflows.fieldmap.init_sdc_unwarp_wf`
-      * :py:func:`~fmriprep.workflows.fieldmap.init_nonlinear_sdc_wf`
+
+    * :py:func:`~niworkflows.func.util.init_bold_reference_wf`
+    * :py:func:`~fmriprep.workflows.bold.stc.init_bold_stc_wf`
+    * :py:func:`~fmriprep.workflows.bold.hmc.init_bold_hmc_wf`
+    * :py:func:`~fmriprep.workflows.bold.t2s.init_bold_t2s_wf`
+    * :py:func:`~fmriprep.workflows.bold.registration.init_bold_t1_trans_wf`
+    * :py:func:`~fmriprep.workflows.bold.registration.init_bold_reg_wf`
+    * :py:func:`~fmriprep.workflows.bold.confounds.init_bold_confounds_wf`
+    * :py:func:`~fmriprep.workflows.bold.confounds.init_ica_aroma_wf`
+    * :py:func:`~fmriprep.workflows.bold.resampling.init_bold_std_trans_wf`
+    * :py:func:`~fmriprep.workflows.bold.resampling.init_bold_preproc_trans_wf`
+    * :py:func:`~fmriprep.workflows.bold.resampling.init_bold_surf_wf`
+    * :py:func:`~sdcflows.workflows.fmap.init_fmap_wf`
+    * :py:func:`~sdcflows.workflows.pepolar.init_pepolar_unwarp_wf`
+    * :py:func:`~sdcflows.workflows.phdiff.init_phdiff_wf`
+    * :py:func:`~sdcflows.workflows.syn.init_syn_sdc_wf`
+    * :py:func:`~sdcflows.workflows.unwarp.init_sdc_unwarp_wf`
 
     """
     from sdcflows.workflows.base import init_sdc_estimate_wf, fieldmap_wrangler
@@ -542,7 +543,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
     # MULTI-ECHO EPI DATA #############################################
     if multiecho:
-        from .util import init_skullstrip_bold_wf
+        from niworkflows.func.util import init_skullstrip_bold_wf
         skullstrip_bold_wf = init_skullstrip_bold_wf(name='skullstrip_bold_wf')
 
         inputnode.inputs.bold_file = ref_file  # Replace reference w first echo

@@ -67,24 +67,24 @@ def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
 
     Parameters
     ----------
-    freesurfer : bool
+    freesurfer : :obj:`bool`
         Enable FreeSurfer functional registration (bbregister)
-    use_bbr : bool or None
+    use_bbr : :obj:`bool` or None
         Enable/disable boundary-based registration refinement.
         If ``None``, test BBR result for distortion before accepting.
     bold2t1w_dof : 6, 9 or 12
         Degrees-of-freedom for BOLD-T1w registration
-    mem_gb : float
+    mem_gb : :obj:`float`
         Size of BOLD file in GB
-    omp_nthreads : int
+    omp_nthreads : :obj:`int`
         Maximum number of threads an individual process may use
-    name : str
+    name : :obj:`str`
         Name of workflow (default: ``bold_reg_wf``)
-    use_compression : bool
+    use_compression : :obj:`bool`
         Save registered BOLD series as ``.nii.gz``
-    use_fieldwarp : bool
+    use_fieldwarp : :obj:`bool`
         Include SDC warp in single-shot transform from BOLD to T1
-    write_report : bool
+    write_report : :obj:`bool`
         Whether a reportlet should be stored
 
     Inputs
@@ -191,19 +191,19 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, multiecho=False, use
 
     Parameters
     ----------
-    freesurfer : bool
+    freesurfer : :obj:`bool`
         Enable FreeSurfer functional registration (bbregister)
-    use_fieldwarp : bool
+    use_fieldwarp : :obj:`bool`
         Include SDC warp in single-shot transform from BOLD to T1
-    multiecho : bool
+    multiecho : :obj:`bool`
         If multiecho data was supplied, HMC already performed
-    mem_gb : float
+    mem_gb : :obj:`float`
         Size of BOLD file in GB
-    omp_nthreads : int
+    omp_nthreads : :obj:`int`
         Maximum number of threads an individual process may use
-    use_compression : bool
+    use_compression : :obj:`bool`
         Save registered BOLD series as ``.nii.gz``
-    name : str
+    name : :obj:`str`
         Name of workflow (default: ``bold_reg_wf``)
 
     Inputs
@@ -256,7 +256,7 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, multiecho=False, use
       * :py:func:`~fmriprep.workflows.bold.registration.init_fsl_bbr_wf`
 
     """
-    from .util import init_bold_reference_wf
+    from niworkflows.func.util import init_bold_reference_wf
     workflow = Workflow(name=name)
     inputnode = pe.Node(
         niu.IdentityInterface(
@@ -393,12 +393,12 @@ def init_bbreg_wf(use_bbr, bold2t1w_dof, omp_nthreads, name='bbreg_wf'):
 
     Parameters
     ----------
-    use_bbr : bool or None
+    use_bbr : :obj:`bool` or None
         Enable/disable boundary-based registration refinement.
         If ``None``, test BBR result for distortion before accepting.
     bold2t1w_dof : 6, 9 or 12
         Degrees-of-freedom for BOLD-T1w registration
-    name : str, optional
+    name : :obj:`str`, optional
         Workflow name (default: bbreg_wf)
 
     Inputs
@@ -571,12 +571,12 @@ def init_fsl_bbr_wf(use_bbr, bold2t1w_dof, name='fsl_bbr_wf'):
 
     Parameters
     ----------
-    use_bbr : bool or None
+    use_bbr : :obj:`bool` or None
         Enable/disable boundary-based registration refinement.
         If ``None``, test BBR result for distortion before accepting.
     bold2t1w_dof : 6, 9 or 12
         Degrees-of-freedom for BOLD-T1w registration
-    name : str, optional
+    name : :obj:`str`, optional
         Workflow name (default: fsl_bbr_wf)
 
     Inputs
@@ -753,11 +753,11 @@ def compare_xforms(lta_list, norm_threshold=15):
     Parameters
     ----------
 
-      lta_list : list or tuple of str
+      lta_list : :obj:`list` or :obj:`tuple` of :obj:`str`
           the two given affines in LTA format
-      norm_threshold : float (default: 15)
+      norm_threshold : :obj:`float`
           the upper bound limit to the normalized displacement caused by the
-          second transform relative to the first
+          second transform relative to the first (default: `15`)
 
     """
     from niworkflows.interfaces.surf import load_transform

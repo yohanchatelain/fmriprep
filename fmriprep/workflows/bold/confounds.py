@@ -90,21 +90,21 @@ def init_bold_confs_wf(
 
     Parameters
     ----------
-    mem_gb : float
+    mem_gb : :obj:`float`
         Size of BOLD file in GB - please note that this size
         should be calculated after resamplings that may extend
         the FoV
-    metadata : dict
+    metadata : :obj:`dict`
         BIDS metadata for BOLD file
-    name : str
+    name : :obj:`str`
         Name of workflow (default: ``bold_confs_wf``)
-    regressors_all_comps: bool
+    regressors_all_comps : :obj:`bool`
         Indicates whether CompCor decompositions should return all
         components instead of the minimal number of components necessary
         to explain 50 percent of the variance in the decomposition mask.
-    regressors_dvars_th
+    regressors_dvars_th : :obj:`float`
         Criterion for flagging DVARS outliers
-    regressors_fd_th
+    regressors_fd_th : :obj:`float`
         Criterion for flagging framewise displacement outliers
 
     Inputs
@@ -435,13 +435,13 @@ def init_carpetplot_wf(mem_gb, metadata, name="bold_carpet_wf"):
 
     Parameters
     ----------
-    mem_gb : float
+    mem_gb : :obj:`float`
         Size of BOLD file in GB - please note that this size
         should be calculated after resamplings that may extend
         the FoV
-    metadata : dict
+    metadata : :obj:`dict`
         BIDS metadata for BOLD file
-    name : str
+    name : :obj:`str`
         Name of workflow (default: ``bold_carpet_wf``)
 
     Inputs
@@ -568,22 +568,22 @@ def init_ica_aroma_wf(
 
     Parameters
     ----------
-    metadata : dict
+    metadata : :obj:`dict`
         BIDS metadata for BOLD file
-    mem_gb : float
+    mem_gb : :obj:`float`
         Size of BOLD file in GB
-    omp_nthreads : int
+    omp_nthreads : :obj:`int`
         Maximum number of threads an individual process may use
-    name : str
+    name : :obj:`str`
         Name of workflow (default: ``bold_tpl_trans_wf``)
-    susan_fwhm : float
+    susan_fwhm : :obj:`float`
         Kernel width (FWHM in mm) for the smoothing step with
         FSL ``susan`` (default: 6.0mm)
-    use_fieldwarp : bool
+    use_fieldwarp : :obj:`bool`
         Include SDC warp in single-shot transform from BOLD to MNI
-    err_on_aroma_warn : bool
+    err_on_aroma_warn : :obj:`bool`
         Do not fail on ICA-AROMA errors
-    aroma_melodic_dim: int
+    aroma_melodic_dim : :obj:`int`
         Set the dimensionality of the MELODIC ICA decomposition.
         Negative numbers set a maximum on automatic dimensionality estimation.
         Positive numbers set an exact number of components to extract.
