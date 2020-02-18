@@ -129,7 +129,7 @@ def get_parser():
              'option is not enabled, standard EPI-T1 coregistration is performed '
              'using the middle echo.')
     g_conf.add_argument(
-        '--output-spaces', nargs='+', action=OutputReferencesAction, default=SpatialReferences(),
+        '--output-spaces', nargs='*', action=OutputReferencesAction, default=SpatialReferences(),
         help="""\
 Standard and non-standard spaces to resample anatomical and functional images to. \
 Standard spaces may be specified by the form \
@@ -138,8 +138,8 @@ a keyword designating a spatial reference, and may be followed by optional, \
 colon-separated parameters. \
 Non-standard spaces imply specific orientations and sampling grids. \
 Important to note, the ``res-*`` modifier does not define the resolution used for \
-the spatial normalization.
-For further details, please check out \
+the spatial normalization. To generate no BOLD outputs, use this option without specifying \
+any spatial references. For further details, please check out \
 https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (currentv.base_version
                                                         if is_release else 'latest'))
 
@@ -718,7 +718,11 @@ def parse_spaces(opts):
 
     """
     spaces = opts.output_spaces
-    spaces.checkpoint()
+    if not spaces.references and not spaces.is_cached():
+        spaces.add('MNI152NLin2009cAsym')
+
+    if not spaces.is_cached():  # spaces may be already checkpointed if users want no BOLD outputs
+        spaces.checkpoint()
 
     if opts.use_aroma:
         # Make sure there's a normalization to FSL for AROMA to use.
@@ -730,15 +734,7 @@ def parse_spaces(opts):
         spaces.add(('fsaverage', {'den': '164k'}))
         spaces.add(('MNI152NLin6Asym', {'res': vol_res}))
 
-    # These arguments implicitly signal expected output
-    if not spaces.references:
-        warnings.warn(
-            "fMRIPrep will not generate preprocessed derivatives because "
-            "none of `--output-spaces`, `--use-aroma`, or `--cifti-output` "
-            "were set."
-        )
-
-    # Add the default standard space (required by several sub-workflows)
+    # Add the default standard space if not already present (required by several sub-workflows)
     if "MNI152NLin2009cAsym" not in spaces.get_spaces(nonstandard=False, dim=(3,)):
         spaces.add("MNI152NLin2009cAsym")
     return spaces

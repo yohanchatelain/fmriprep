@@ -164,8 +164,8 @@ def merge_help(wrapper_help, target_help):
 
     # Make sure we're not clobbering options we don't mean to
     overlap = set(w_flags).intersection(t_flags)
-    expected_overlap = set(['h', 'version', 'w', 'output-spaces',
-                            'fs-license-file', 'fs-subjects-dir', 'use-plugin'])
+    expected_overlap = set(['h', 'version', 'w', 'fs-license-file',
+                            'fs-subjects-dir', 'use-plugin'])
 
     assert overlap == expected_overlap, "Clobbering options: {}".format(
         ', '.join(overlap - expected_overlap))
@@ -249,7 +249,7 @@ def get_parser():
     g_wrap.add_argument('-w', '--work-dir', action='store', type=os.path.abspath,
                         help='path where intermediate results should be stored')
     g_wrap.add_argument(
-        '--output-spaces', nargs="+",
+        '--output-spaces', nargs="*",
         help="""\
 Standard and non-standard spaces to resample anatomical and functional images to. \
 Standard spaces may be specified by the form \
