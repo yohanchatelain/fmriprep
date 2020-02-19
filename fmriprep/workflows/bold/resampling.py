@@ -28,11 +28,10 @@ from niworkflows.interfaces.utility import KeySelect
 from niworkflows.interfaces.surf import GiftiSetAnatomicalStructure
 from niworkflows.interfaces.nilearn import Merge
 from niworkflows.utils.spaces import format_reference
+from niworkflows.func.util import init_bold_reference_wf
 
 from ...config import DEFAULT_MEMORY_MIN_GB
 from ...interfaces import DerivativesDataSink
-
-from .util import init_bold_reference_wf
 
 
 def init_bold_surf_wf(
@@ -60,12 +59,12 @@ def init_bold_surf_wf(
 
     Parameters
     ----------
-    surface_spaces : list
+    surface_spaces : :obj:`list`
         List of FreeSurfer surface-spaces (either ``fsaverage{3,4,5,6,}`` or ``fsnative``)
         the functional images are to be resampled to.
         For ``fsnative``, images will be resampled to the individual subject's
         native surface.
-    medial_surface_nan : bool
+    medial_surface_nan : :obj:`bool`
         Replace medial wall values with NaNs on functional GIFTI files
 
     Inputs
@@ -207,11 +206,11 @@ def init_bold_std_trans_wf(
 
     Parameters
     ----------
-    freesurfer : bool
+    freesurfer : :obj:`bool`
         Whether to generate FreeSurfer's aseg/aparc segmentations on BOLD space.
-    mem_gb : float
+    mem_gb : :obj:`float`
         Size of BOLD file in GB
-    omp_nthreads : int
+    omp_nthreads : :obj:`int`
         Maximum number of threads an individual process may use
     spaces : :py:class:`~niworkflows.utils.spaces.SpatialReferences`
         A container for storing, organizing, and parsing spatial normalizations. Composed of
@@ -222,11 +221,11 @@ def init_bold_std_trans_wf(
         the TemplateFlow root directory. Each ``Reference`` may also contain a spec, which is a
         dictionary with template specifications (e.g., a specification of ``{'resolution': 2}``
         would lead to resampling on a 2mm resolution of the space).
-    name : str
+    name : :obj:`str`
         Name of workflow (default: ``bold_std_trans_wf``)
-    use_compression : bool
+    use_compression : :obj:`bool`
         Save registered BOLD series as ``.nii.gz``
-    use_fieldwarp : bool
+    use_fieldwarp : :obj:`bool`
         Include SDC warp in single-shot transform from BOLD to MNI
 
     Inputs
@@ -456,20 +455,20 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
 
     Parameters
     ----------
-    mem_gb : float
+    mem_gb : :obj:`float`
         Size of BOLD file in GB
-    omp_nthreads : int
+    omp_nthreads : :obj:`int`
         Maximum number of threads an individual process may use
-    name : str
+    name : :obj:`str`
         Name of workflow (default: ``bold_std_trans_wf``)
-    use_compression : bool
+    use_compression : :obj:`bool`
         Save registered BOLD series as ``.nii.gz``
-    use_fieldwarp : bool
+    use_fieldwarp : :obj:`bool`
         Include SDC warp in single-shot transform from BOLD to MNI
-    split_file : bool
+    split_file : :obj:`bool`
         Whether the input file should be splitted (it is a 4D file)
         or it is a list of 3D files (default ``False``, do not split)
-    interpolation : str
+    interpolation : :obj:`str`
         Interpolation type to be used by ANTs' ``applyTransforms``
         (default ``'LanczosWindowedSinc'``)
 
@@ -593,11 +592,11 @@ def init_bold_preproc_report_wf(mem_gb, reportlets_dir, name='bold_preproc_repor
 
     Parameters
     ----------
-    mem_gb : float
+    mem_gb : :obj:`float`
         Size of BOLD file in GB
-    reportlets_dir : str
+    reportlets_dir : :obj:`str`
         Directory in which to save reportlets
-    name : str, optional
+    name : :obj:`str`, optional
         Workflow name (default: bold_preproc_report_wf)
 
     Inputs

@@ -30,15 +30,15 @@ def init_func_derivatives_wf(
 
     Parameters
     ----------
-    bids_root : str
+    bids_root : :obj:`str`
         Original BIDS dataset path.
-    cifti_output : bool
+    cifti_output : :obj:`bool`
         Whether the ``--cifti-output`` flag was set.
-    freesurfer : bool
+    freesurfer : :obj:`bool`
         Whether FreeSurfer anatomical processing was run.
-    metadata : dict
+    metadata : :obj:`dict`
         Metadata dictionary associated to the BOLD run.
-    output_dir : str
+    output_dir : :obj:`str`
         Where derivatives should be written out to.
     spaces : :py:class:`~niworkflows.utils.spaces.SpatialReferences`
         A container for storing, organizing, and parsing spatial normalizations. Composed of
@@ -49,11 +49,11 @@ def init_func_derivatives_wf(
         the TemplateFlow root directory. Each ``Reference`` may also contain a spec, which is a
         dictionary with template specifications (e.g., a specification of ``{'resolution': 2}``
         would lead to resampling on a 2mm resolution of the space).
-    use_aroma : bool
+    use_aroma : :obj:`bool`
         Whether ``--use-aroma`` flag was set.
-    fslr_density : str, optional
+    fslr_density : :obj:`str`, optional
         Density of fsLR surface (32k or 59k)
-    name : str
+    name : :obj:`str`
         This workflow's identifier (default: ``func_derivatives_wf``).
 
     """
