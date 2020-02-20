@@ -143,15 +143,14 @@ mid-thickness surface mesh::
 
 Surface output spaces include ``fsnative`` (full density subject-specific mesh),
 ``fsaverage`` and the down-sampled meshes ``fsaverage6`` (41k vertices) and
-``fsaverage5`` (10k vertices, default). Additionally, the BOLD can be resampled to
-``fsLR`` surfaces, a hybrid version of the ``fsaverage`` atlas with both hemispheres
-in precise geographic correspondence, with varying mesh densities: 32k (default), 59k, and 164k.
+``fsaverage5`` (10k vertices, default).
 
 **Grayordinates files**.
-CIFTI is a container format that holds both volumetric (regularly sampled in a grid)
-and surface (sampled on a triangular mesh) samples.
-Sub-cortical time series are volumetric (space: ``MNI152NLin6Asym``), while cortical
-time series are sampled to surface (space: ``fsLR``).
+`CIFTI <https://www.nitrc.org/forum/attachment.php?attachid=333&group_id=454&forum_id=1955>`_ is
+a container format that holds both volumetric (regularly sampled in a grid) and surface
+(sampled on a triangular mesh) samples.
+Sub-cortical time series are sampled on a regular grid derived from one MNI template, while
+cortical time series are sampled on surfaces projected from the [Glasser2016]_ template.
 If CIFTI outputs are requested (with the ``--cifti-outputs`` argument), the BOLD series are also
 saved as ``dtseries.nii`` CIFTI2 files::
 
@@ -520,6 +519,11 @@ See implementation on :mod:`~fmriprep.workflows.bold.confounds.init_bold_confs_w
   .. [Friston1996] Friston KJ1, Williams S, Howard R, Frackowiak RS, Turner R,
      Movement‐Related effects in fMRI time‐series. Magnetic Resonance in Medicine. 1996.
      doi:`10.1002/mrm.191035031 <https://doi.org/10.1002/mrm.1910350312>`_
+
+  .. [Glasser2016] Glasser MF, Coalson TS Robinson EC, Hacker CD, Harwell J, Yacoub E, Ugurbil K,
+     Andersson J, Beckmann CF, Jenkinson M, Smith SM, Van Essen DC.
+     A multi-modal parcellation of human cerebral cortex. Nature. 2016.
+     doi:`10.1038/nature18933 <https://doi.org/10.1038/nature18933>`_
 
   .. [Hallquist2013] Hallquist MN, Hwang K, Luna B. The Nuisance of Nuisance Regression.
      NeuroImage. 2013. doi:`10.1016/j.neuroimage.2013.05.116
