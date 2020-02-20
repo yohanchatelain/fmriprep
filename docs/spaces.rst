@@ -80,8 +80,7 @@ Please mind that the selected resolutions specified must exist within TemplateFl
 
 When specifying surface spaces (e.g., ``fsaverage``), the legacy identifiers from
 FreeSurfer will be supported (e.g., ``fsaverage5``) although the use of the density
-modifier would be preferred (i.e., ``fsaverage:den-10k`` for ``fsaverage5``). When
-selecting ``fsLR`` surface space without a density label, ``fsLR:den-32k`` will be used.
+modifier would be preferred (i.e., ``fsaverage:den-10k`` for ``fsaverage5``).
 
 Custom standard spaces
 """"""""""""""""""""""
