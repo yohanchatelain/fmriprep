@@ -150,8 +150,8 @@ in precise geographic correspondence, with varying mesh densities: 32k (default)
 **Grayordinates files**.
 CIFTI is a container format that holds both volumetric (regularly sampled in a grid)
 and surface (sampled on a triangular mesh) samples.
-Sub-cortical time series are volumetric (supported spaces: ``MNI152NLin6Asym``), while cortical
-time series are sampled to surface (supported spaces: ``fsLR``).
+Sub-cortical time series are volumetric (space: ``MNI152NLin6Asym``), while cortical
+time series are sampled to surface (space: ``fsLR``).
 If CIFTI outputs are requested (with the ``--cifti-outputs`` argument), the BOLD series are also
 saved as ``dtseries.nii`` CIFTI2 files::
 
@@ -261,7 +261,7 @@ expansion [Satterthwaite2013]_, providing time series corresponding to the first
 *quadratic terms*, resulting in the total 24 head motion parameters
 (six base motion parameters + six temporal derivatives of six motion parameters +
 12 quadratic terms of six motion parameters and their six temporal derivatives).
-Additionally, *fMRIPrep* returns temporal derivatives and quadratic terms for the 
+Additionally, *fMRIPrep* returns temporal derivatives and quadratic terms for the
 three global signals (``csf``, ``white_matter`` and ``global_signal``)
 to enable applying the 36-parameter denoising strategy proposed by [Satterthwaite2013]_.
 
@@ -313,7 +313,7 @@ It is relevant to mention *effective* because initial time points identified as 
 states* are removed before generating the cosine regressors.
 
 .. caution::
-    If your analysis includes separate high-pass filtering, do not include 
+    If your analysis includes separate high-pass filtering, do not include
     ``cosine_XX`` regressors in your design matrix.
 
 .. admonition:: See also

@@ -22,7 +22,6 @@ def init_func_derivatives_wf(
     output_dir,
     spaces,
     use_aroma,
-    fslr_density=None,
     name='func_derivatives_wf',
 ):
     """
@@ -51,8 +50,6 @@ def init_func_derivatives_wf(
         would lead to resampling on a 2mm resolution of the space).
     use_aroma : :obj:`bool`
         Whether ``--use-aroma`` flag was set.
-    fslr_density : :obj:`str`, optional
-        Density of fsLR surface (32k or 59k)
     name : :obj:`str`
         This workflow's identifier (default: ``func_derivatives_wf``).
 
