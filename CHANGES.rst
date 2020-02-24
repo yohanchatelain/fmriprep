@@ -1,5 +1,7 @@
-20.0.0 (TBD)
-============
+20.0.0 (February 24, 2020)
+==========================
+The major release of 2020 is here!
+
 *fMRIPrep* is transitioning to a calendar version system
 (`#1912 <https://github.com/poldracklab/fmriprep/issues/1912>`__).
 The `CalVer <https://calver.org/>`__ system reflects *fMRIPrep*'s nature
