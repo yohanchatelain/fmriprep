@@ -39,12 +39,6 @@
       "type": "Researcher"
     },
     {
-      "affiliation": "Department of Psychology, University of California, Berkeley",
-      "name": "Lurie, Daniel J.",
-      "orcid": "0000-0001-8012-6399",
-      "type": "Researcher"
-    },
-    {
       "affiliation": "CENIR, INSERM U1127, CNRS UMR 7225, UPMC Univ Paris 06 UMR S 1127, Institut du Cerveau et de la Moelle \u00e9pini\u00e8re, ICM, F-75013, Paris, France",
       "name": "Valabregue, Romain",
       "orcid": "0000-0002-1814-9570",
@@ -54,6 +48,12 @@
       "affiliation": "Department of Psychology, Columbia University",
       "name": "Jacoby, Nir",
       "orcid": "0000-0001-7936-9991",
+      "type": "Researcher"
+    },
+    {
+      "affiliation": "Department of Psychology, University of California, Berkeley",
+      "name": "Lurie, Daniel J.",
+      "orcid": "0000-0001-8012-6399",
       "type": "Researcher"
     },
     {
@@ -218,14 +218,14 @@
       "orcid": "0000-0003-1358-196X"
     },
     {
-      "affiliation": "Neuroscience Program, University of Iowa",
-      "name": "Kent, James D.",
-      "orcid": "0000-0002-4892-2659"
-    },
-    {
       "affiliation": "Department of Psychology, Stanford University",
       "name": "Goncalves, Mathias",
       "orcid": "0000-0002-7252-7771"
+    },
+    {
+      "affiliation": "Neuroscience Program, University of Iowa",
+      "name": "Kent, James D.",
+      "orcid": "0000-0002-4892-2659"
     },
     {
       "affiliation": "Department of Psychology, Stanford University",
