@@ -15,7 +15,7 @@
 
 BIDS_DIR="$STUDY/data"
 DERIVS_DIR="derivatives/fmriprep-1.5.0"
-LOCAL_FREESURFER_DIR="/mystuff/output/freesurfer-6.0.1"
+LOCAL_FREESURFER_DIR="$STUDY/data/derivatives/freesurfer-6.0.1"
 
 # Prepare some writeable bind-mount points.
 TEMPLATEFLOW_HOST_HOME=$HOME/.cache/templateflow
