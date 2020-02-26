@@ -57,9 +57,18 @@ Please find more information regarding this error from discussions on
 
 Additionally, consider using the ``--low-mem`` flag, which will make some memory optimizations at the cost of disk space in the working directory.
 
+
+I have already run ``recon-all`` on my subjects, can I reuse my outputs?
+------------------------------------------------------------------------
+Yes, as long as the FreeSurfer_ version previously used was ``6.0.0`` or newer.
+If running with FreeSurfer, *fMRIPrep* checks if the output directory contains a ``freesurfer``
+directory and reuses the outputs found.
+Alternatively, you can use the ``--fs-subjects-dir`` flag to specify a different location for the existing FreeSurfer outputs.
+
+
 ERROR: it appears that ``recon-all`` is already running
 -------------------------------------------------------
-When running FreeSurfer_'s ``recon-all``, an error may say *it appears it is already running*.
+When running FreeSurfer's ``recon-all``, an error may say *it appears it is already running*.
 FreeSurfer creates files (called ``IsRunning.{rh,lh,lh+rh}``, under the ``scripts/`` folder)
 to determine whether it is already executing ``recon-all`` on that particular subject
 in another process, compute node, etc.
@@ -125,7 +134,7 @@ If you would like to run *fMRIPrep* in parallel on multiple subjects please use
 How much CPU time and RAM should I allocate for a typical fMRIPrep run?
 -----------------------------------------------------------------------
 The recommended way to run fMRIPrep is to process one subject per container instance. A typical preprocessing run
-without surface processing with freesurfer can be completed in about 2 hours with 4 CPUs or in about 1 hour with 16 CPUs.
+without surface processing with FreeSurfer can be completed in about 2 hours with 4 CPUs or in about 1 hour with 16 CPUs.
 More than 16 CPUs do not translate into faster processing times for a single subject. About 8GB of memory should be
 available for a single subject preprocessing run.
 
