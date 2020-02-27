@@ -342,7 +342,7 @@ intersphinx_mapping = {
     "bids": ("https://bids-standard.github.io/pybids/", None),
     "nibabel": ("https://nipy.org/nibabel/", None),
     "nipype": ("https://nipype.readthedocs.io/en/latest/", None),
-    "niworkflows": ("https://poldracklab.github.io/niworkflows/", None),
+    "niworkflows": ("https://www.nipreps.org/niworkflows/", None),
     "sdcflows": ("https://www.nipreps.org/sdcflows/", None),
     "smriprep": ("https://poldracklab.github.io/smriprep/", None),
     "templateflow": ("https://www.templateflow.org/python-client", None),
