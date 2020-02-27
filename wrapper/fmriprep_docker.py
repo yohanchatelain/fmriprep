@@ -296,6 +296,9 @@ the spatial normalization.""" % (', '.join('"%s"' % s for s in TF_TEMPLATES),
                        help='Set custom environment variable within container')
     g_dev.add_argument('-u', '--user', action='store',
                        help='Run container as a given user/uid')
+    g_dev.add_argument('--network', action='store',
+                       help='Run container with a different network driver '
+                            '("none" to simulate no internet connection)')
 
     return parser
 
@@ -433,6 +436,9 @@ def main():
 
     if opts.shell:
         command.append('--entrypoint=bash')
+
+    if opts.network:
+        command.append('--network=' + opts.network)
 
     command.append(opts.image)
 

@@ -1,3 +1,19 @@
+20.0.1 (February 27, 2020)
+==========================
+Bug-fix release in 20.0.x series.
+
+This release includes fixes for rare images with invalid qform matrices and some minor
+improvements in report readability and inclusion of common templates in the Docker image.
+
+  * FIX: Handle qforms with invalid quaternions (`nipreps/niworkflows#466`_)
+  * FIX: update niworkflows location (#2005)
+  * ENH: Display errors as summary/details elements in reports (`nipreps/niworkflows#464`_)
+  * DOC: Add ``--fs-subjects-dir`` usage to slurm example (#2003)
+  * CI: Test that Docker image can run a common set of output spaces without network access (#1997)
+
+.. _`nipreps/niworkflows#464`: https://github.com/nipreps/niworkflows/pull/464
+.. _`nipreps/niworkflows#466`: https://github.com/nipreps/niworkflows/pull/466
+
 20.0.0 (February 24, 2020)
 ==========================
 The major release of 2020 is here!
