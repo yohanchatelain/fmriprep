@@ -9,22 +9,18 @@ the Center for Reproducible Neuroscience (http://reproducibility.stanford.edu/),
 as well as for open-source software distribution.
 """
 
-from .info import (
+from .__about__ import (  # noqa
     __version__,
-    __author__,
     __copyright__,
     __credits__,
-    __license__,
-    __maintainer__,
-    __email__,
-    __status__,
-    __url__,
     __packagename__,
-    __description__,
-    __longdesc__
 )
 
 import warnings
 
 # cmp is not used by fmriprep, so ignore nipype-generated warnings
 warnings.filterwarnings('ignore', r'cmp not installed')
+warnings.filterwarnings('ignore', r'This has not been fully tested. Please report any failures.')
+warnings.filterwarnings('ignore', r"can't resolve package from __spec__ or __package__")
+warnings.simplefilter('ignore', DeprecationWarning)
+warnings.simplefilter('ignore', ResourceWarning)
