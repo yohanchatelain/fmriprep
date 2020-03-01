@@ -144,6 +144,7 @@ the ``fmriprep`` package:
 - FSL_ (version 5.0.9)
 - ANTs_ (version 2.2.0 - NeuroDocker build)
 - AFNI_ (version Debian-16.2.07)
+- `C3D <https://sourceforge.net/projects/c3d/>`_ (version 1.0.0)
 - FreeSurfer_ (version 6.0.1)
 - `ICA-AROMA <https://github.com/oesteban/ICA-AROMA/archive/v0.4.5.tar.gz>`_ (version 0.4.5)
 - `bids-validator <https://github.com/bids-standard/bids-validator>`_ (version 1.4.0)
