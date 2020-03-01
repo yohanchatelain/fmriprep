@@ -146,7 +146,7 @@ the ``fmriprep`` package:
 - AFNI_ (version Debian-16.2.07)
 - `C3D <https://sourceforge.net/projects/c3d/>`_ (version 1.0.0)
 - FreeSurfer_ (version 6.0.1)
-- `ICA-AROMA <https://github.com/oesteban/ICA-AROMA/archive/v0.4.5.tar.gz>`_ (version 0.4.5)
+- `ICA-AROMA <https://github.com/maartenmennes/ICA-AROMA/archive/e8d7a58.tar.gz>`_ (commit e8d7a58, post v0.4.4-beta)
 - `bids-validator <https://github.com/bids-standard/bids-validator>`_ (version 1.4.0)
 - `connectome-workbench <https://www.humanconnectome.org/software/connectome-workbench>`_ (version Debian-1.3.2)
 
