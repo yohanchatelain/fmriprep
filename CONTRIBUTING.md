@@ -188,7 +188,7 @@ but those accepted fastest will follow a workflow similar to the following:
   
 1. **[Fork][link_fork] the [fMRIPrep repository][link_fMRIPrep] to your profile.**<br />
   This is now your own unique copy of *fMRIPrep*.
-  Changes here won't effect anyone else's work, so it's a safe space to explore edits to the code!
+  Changes here won't affect anyone else's work, so it's a safe space to explore edits to the code!
   
 1. **[Clone][link_clone] your forked fMRIPrep repository to your machine/computer.**<br />
   While you can edit files [directly on github][link_githubedit], sometimes the changes
