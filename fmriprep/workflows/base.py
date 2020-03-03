@@ -491,9 +491,9 @@ def init_single_subject_wf(
     else:
         subject_data = collect_data(layout, subject_id, task_id, echo_idx,
                                     bids_filters=bids_filters)[0]
-        if 'flair' in ignore and subject_data['flair']:
+        if 'flair' in ignore:
             subject_data['flair'] = []
-        if 't2w' in ignore and subject_data['t2w']:
+        if 't2w' in ignore:
             subject_data['t2w'] = []
 
     # Make sure we always go through these two checks
