@@ -6,7 +6,7 @@ Installation
 
 There are two ways to get *fMRIPrep* installed:
 
-* within a `Manually Prepared Environment (Python 3.5+)`_, also known as
+* within a `Manually Prepared Environment (Python 3.7+)`_, also known as
   *bare-metal installation*; or
 * using container technologies (RECOMMENDED), such as :ref:`run_docker`
   or :ref:`run_singularity`.
@@ -55,10 +55,10 @@ You can check your `Docker Engine`_ installation running their ``hello-world`` i
     $ docker run --rm hello-world
 
 If you have a functional installation, then you should obtain the following output. ::
-    
+
     Hello from Docker!
     This message shows that your installation appears to be working correctly.
-    
+
     To generate this message, Docker took the following steps:
      1. The Docker client contacted the Docker daemon.
      1. The Docker daemon pulled the "hello-world" image from the Docker Hub.
@@ -67,19 +67,19 @@ If you have a functional installation, then you should obtain the following outp
         executable that produces the output you are currently reading.
      1. The Docker daemon streamed that output to the Docker client, which sent it
         to your terminal.
-    
+
     To try something more ambitious, you can run an Ubuntu container with:
      $ docker run -it ubuntu bash
-    
+
     Share images, automate workflows, and more with a free Docker ID:
      https://hub.docker.com/
-    
+
     For more examples and ideas, visit:
      https://docs.docker.com/get-started/
 
 After checking your Docker Engine is capable of running Docker images, then go ahead
 and `check out our documentation <docker.html>`_ to run the *fMRIPrep* image.
-The list of Docker images ready to use is found at the `Docker Hub`_, 
+The list of Docker images ready to use is found at the `Docker Hub`_,
 under the ``poldracklab/fmriprep`` identifier.
 
 The ``fmriprep-docker`` wrapper
@@ -106,7 +106,7 @@ Please make sure you `follow our tips and tricks to run fMRIPrep's Singularity i
 <singularity.html>`_.
 
 
-Manually Prepared Environment (Python 3.5+)
+Manually Prepared Environment (Python 3.7+)
 ===========================================
 
 .. warning::
@@ -121,7 +121,7 @@ A relatively interpretable description of how your environment can be set-up
 is found in the `Dockerfile <https://github.com/poldracklab/fmriprep/blob/master/Dockerfile>`_.
 As an additional installation setting, FreeSurfer requires a license file (see :ref:`fs_license`).
 
-On a functional Python 3.5 (or above) environment with ``pip`` installed,
+On a functional Python 3.7 (or above) environment with ``pip`` installed,
 *fMRIPRep* can be installed using the habitual command ::
 
     $ python -m pip install fmriprep
@@ -134,7 +134,7 @@ Check your installation with the ``--version`` argument ::
 External Dependencies
 ---------------------
 
-*fMRIPRep* is written using Python 3.5 (or above), and is based on
+*fMRIPRep* is written using Python 3.7 (or above), and is based on
 nipype_.
 
 *fMRIPRep* requires some other neuroimaging software tools that are
