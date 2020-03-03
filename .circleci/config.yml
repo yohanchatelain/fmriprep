@@ -233,6 +233,19 @@ jobs:
               /src/fmriprep/fmriprep -svx --doctest-modules
 
       - run:
+          name: Test fmriprep-wrapper (Python 2)
+          command: |
+            export PY2=$(pyenv versions | grep '2\.' |
+                         sed -e 's/.* 2\./2./' -e 's/ .*//')
+            pyenv local $PY2
+            echo -n "Python version: "
+            python --version
+            pip install --upgrade pip setuptools
+            pip install --upgrade wrapper/
+            which fmriprep-docker
+            fmriprep-docker -i poldracklab/fmriprep:latest --help
+            fmriprep-docker -i poldracklab/fmriprep:latest --version
+      - run:
           name: Test fmriprep-wrapper (Python 3)
           command: |
             export PY3=$(pyenv versions | grep '3\.' |
