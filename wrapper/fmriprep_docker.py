@@ -20,7 +20,7 @@ import re
 import subprocess
 
 __version__ = '99.99.99'
-__copyright__ = 'Copyright 2019, Center for Reproducible Neuroscience, Stanford University'
+__copyright__ = 'Copyright 2020, Center for Reproducible Neuroscience, Stanford University'
 __credits__ = ['Craig Moodie', 'Ross Blair', 'Oscar Esteban', 'Chris Gorgolewski',
                'Shoshana Berleant', 'Christopher J. Markiewicz', 'Russell A. Poldrack']
 __bugreports__ = 'https://github.com/poldracklab/fmriprep/issues'
