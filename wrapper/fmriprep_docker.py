@@ -427,9 +427,10 @@ def main():
         spaces = []
         for space in opts.output_spaces:
             if space.split(':')[0] not in (TF_TEMPLATES + NONSTANDARD_REFERENCES):
-                target = '/imports/' + os.path.basename(space)
+                tpl = os.path.basename(space)
+                target = '/home/fmriprep/.cache/templateflow/' + tpl
                 command.extend(['-v', ':'.join((os.path.abspath(space), target, 'ro'))])
-                spaces.append(target)
+                spaces.append(tpl[4:])
             else:
                 spaces.append(space)
         unknown_args.extend(['--output-spaces'] + spaces)
