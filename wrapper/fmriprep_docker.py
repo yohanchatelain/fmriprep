@@ -428,6 +428,8 @@ def main():
         for space in opts.output_spaces:
             if space.split(':')[0] not in (TF_TEMPLATES + NONSTANDARD_REFERENCES):
                 tpl = os.path.basename(space)
+                if not tpl.startswith('tpl-'):
+                    raise RuntimeError("Custom template %s requires a `tpl-` prefix" % tpl)
                 target = '/home/fmriprep/.cache/templateflow/' + tpl
                 command.extend(['-v', ':'.join((os.path.abspath(space), target, 'ro'))])
                 spaces.append(tpl[4:])
