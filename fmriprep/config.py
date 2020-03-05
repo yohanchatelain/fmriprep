@@ -102,9 +102,9 @@ from multiprocessing import set_start_method
 warnings.filterwarnings('ignore', 'cmp not installed')
 warnings.filterwarnings('ignore', 'This has not been fully tested. Please report any failures.')
 warnings.filterwarnings('ignore', "can't resolve package from __spec__ or __package__")
-warnings.simplefilter('ignore', DeprecationWarning)
-warnings.simplefilter('ignore', FutureWarning)
-warnings.simplefilter('ignore', ResourceWarning)
+warnings.filterwarnings('ignore', category=DeprecationWarning)
+warnings.filterwarnings('ignore', category=FutureWarning)
+warnings.filterwarnings('ignore', category=ResourceWarning)
 
 
 try:
