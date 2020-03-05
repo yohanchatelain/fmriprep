@@ -99,8 +99,11 @@ def main():
     except Exception as e:
         if not config.execution.notrack:
             from ..utils.sentry import process_crashfile
-            crashfolders = [output_dir / 'fmriprep' / 'sub-{}'.format(s) / 'log' / run_uuid
-                            for s in subject_list]
+            crashfolders = [
+                config.execution.output_dir / 'fmriprep'
+                / 'sub-{}'.format(s) / 'log' / config.execution.run_uuid
+                for s in config.execution.participant_label
+            ]
             for crashfolder in crashfolders:
                 for crashfile in crashfolder.glob('crash*.*'):
                     process_crashfile(crashfile)
@@ -122,9 +125,9 @@ def main():
             from niworkflows.utils.misc import _copy_any
             dseg_tsv = str(api.get('fsaverage', suffix='dseg', extension=['.tsv']))
             _copy_any(dseg_tsv,
-                      str(output_dir / 'fmriprep' / 'desc-aseg_dseg.tsv'))
+                      str(config.execution.output_dir / 'fmriprep' / 'desc-aseg_dseg.tsv'))
             _copy_any(dseg_tsv,
-                      str(output_dir / 'fmriprep' / 'desc-aparcaseg_dseg.tsv'))
+                      str(config.execution.output_dir / 'fmriprep' / 'desc-aparcaseg_dseg.tsv'))
         errno = 0
     finally:
         from niworkflows.reports import generate_reports
@@ -133,8 +136,8 @@ def main():
         from shutil import copyfile
 
         citation_files = {
-            ext: output_dir / 'fmriprep' / 'logs' / ('CITATION.%s' % ext)
-            for ext in ('bib', 'tex', 'md', 'html')
+            ext: config.execution.output_dir.output_dir / 'fmriprep' / 'logs'
+            / ('CITATION.%s' % ext) for ext in ('bib', 'tex', 'md', 'html')
         }
 
         if not config.execution.md_only_boilerplate and citation_files['md'].exists():
@@ -177,10 +180,15 @@ def main():
 
         # Generate reports phase
         failed_reports = generate_reports(
-            subject_list, output_dir, work_dir, run_uuid,
+            config.execution.participant_label,
+            config.execution.output_dir,
+            config.execution.work_dir,
+            config.execution.run_uuid,
             config=pkgrf('fmriprep', 'data/reports-spec.yml'),
             packagename='fmriprep')
-        write_derivative_description(bids_dir, output_dir / 'fmriprep')
+        write_derivative_description(
+            config.execution.bids_dir,
+            config.execution.output_dir / 'fmriprep')
 
         if failed_reports and not config.execution.notrack:
             sentry_sdk.capture_message(

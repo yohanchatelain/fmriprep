@@ -111,6 +111,7 @@ warnings.filterwarnings('ignore', r'cmp not installed')
 warnings.filterwarnings('ignore', r'This has not been fully tested. Please report any failures.')
 warnings.filterwarnings('ignore', r"can't resolve package from __spec__ or __package__")
 warnings.simplefilter('ignore', DeprecationWarning)
+warnings.simplefilter('ignore', FutureWarning)
 warnings.simplefilter('ignore', ResourceWarning)
 warnings.showwarning = redirect_warnings
 
@@ -230,8 +231,9 @@ class nipype(_Config):
             'plugin_args': cls.plugin_args,
         }
         if cls.plugin in ('MultiProc', 'LegacyMultiProc'):
-            out['plugin_args']['nprocs'] = cls.nprocs
-            out['plugin_args']['memory_gb'] = cls.memory_gb
+            out['plugin_args']['nprocs'] = int(cls.nprocs)
+            if cls.memory_gb:
+                out['plugin_args']['memory_gb'] = float(cls.memory_gb)
         return out
 
 
