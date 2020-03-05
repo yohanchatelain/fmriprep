@@ -166,9 +166,9 @@ def init_func_preproc_wf(bold_file):
         bold_tlen, mem_gb = _create_mem_gb(ref_file)
 
     wf_name = _get_wf_name(ref_file)
-    config.loggers.workflow.log(
-        25, ('Creating bold processing workflow for "%s" (%.2f GB / %d TRs). '
-             'Memory resampled/largemem=%.2f/%.2f GB.'),
+    config.loggers.workflow.debug(
+        'Creating bold processing workflow for "%s" (%.2f GB / %d TRs). '
+        'Memory resampled/largemem=%.2f/%.2f GB.',
         ref_file, mem_gb['filesize'], bold_tlen, mem_gb['resampled'], mem_gb['largemem'])
 
     sbref_file = None
@@ -771,8 +771,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     # Freesurfer
     freesurfer_spaces = spaces.get_fs_spaces()
     if freesurfer and freesurfer_spaces:
-        config.loggers.workflow.log(
-            25, 'Creating BOLD surface-sampling workflow.')
+        config.loggers.workflow.debug('Creating BOLD surface-sampling workflow.')
         bold_surf_wf = init_bold_surf_wf(
             mem_gb=mem_gb['resampled'],
             surface_spaces=freesurfer_spaces,

@@ -295,6 +295,11 @@ tasks and sessions), the following preprocessing was performed.
               ('outputnode.fsnative2t1w_xfm', 'inputnode.fsnative2t1w_xfm')]),
         ])
 
+    # Dump a copy of the config file into the log directory
+    log_dir = config.execution.output_dir / 'fmriprep' / 'sub-{}'.format(subject_id) \
+        / 'log' / config.execution.run_uuid
+    log_dir.mkdir(exist_ok=True, parents=True)
+    config.to_filename(log_dir / 'fmriprep.toml')
     return workflow
 
 

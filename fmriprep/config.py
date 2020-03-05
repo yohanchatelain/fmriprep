@@ -123,6 +123,7 @@ finally:
     from time import strftime
     from niworkflows.utils.spaces import SpatialReferences as _SRs, Reference as _Ref
     from nipype import logging as nlogging, __version__ as _nipype_ver
+    from templateflow import __version__ as _tf_ver
     from . import __version__
 
 
@@ -153,6 +154,11 @@ if os.getenv('IS_DOCKER_8395080871'):
 _fs_license = os.getenv('FS_LICENSE')
 if _fs_license is None and os.getenv('FREESURFER_HOME'):
     _fs_license = os.path.join(os.getenv('FREESURFER_HOME'), 'license.txt')
+
+_templateflow_home = Path(os.getenv(
+    'TEMPLATEFLOW_HOME',
+    os.path.join(os.getenv('HOME'), '.cache', 'templateflow'))
+)
 
 
 class _Config:
@@ -279,6 +285,9 @@ class execution(_Config):
     """List of participant identifiers that are to be preprocessed."""
     task_id = None
     """Select a particular task from all available in the dataset."""
+    templateflow_home = _templateflow_home
+    """The root folder of the TemplateFlow client."""
+    templateflow_version = _tf_ver
     version = __version__
     """*fMRIPrep*'s version."""
     work_dir = Path('work').absolute()
@@ -295,6 +304,7 @@ class execution(_Config):
         'layout',
         'log_dir',
         'output_dir',
+        'templateflow_home',
         'work_dir',
     )
 
@@ -303,6 +313,8 @@ class execution(_Config):
 del _fs_license
 del _exec_env
 del _nipype_ver
+del _templateflow_home
+del _tf_ver
 
 
 class workflow(_Config):
