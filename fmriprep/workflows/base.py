@@ -260,6 +260,16 @@ It is released under the [CC0]\
     if anat_only:
         return workflow
 
+    # Append the functional section to the existing anatomical exerpt
+    # That way we do not need to stream down the number of bold datasets
+    anat_preproc_wf.__postdesc__ = (anat_preproc_wf.__postdesc__ or '') + """
+
+Functional data preprocessing
+
+: For each of the {num_bold} BOLD runs found per subject (across all
+tasks and sessions), the following preprocessing was performed.
+""".format(num_bold=len(subject_data['bold']))
+
     for bold_file in subject_data['bold']:
         func_preproc_wf = init_func_preproc_wf(bold_file)
 
