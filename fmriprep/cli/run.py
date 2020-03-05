@@ -136,7 +136,7 @@ def main():
         from shutil import copyfile
 
         citation_files = {
-            ext: config.execution.output_dir.output_dir / 'fmriprep' / 'logs'
+            ext: config.execution.output_dir / 'fmriprep' / 'logs'
             / ('CITATION.%s' % ext) for ext in ('bib', 'tex', 'md', 'html')
         }
 

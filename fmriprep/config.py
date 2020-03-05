@@ -95,8 +95,8 @@ Other responsibilities of the config module:
       :py:class:`~bids.layout.BIDSLayout`
 
 """
-import warnings
 from multiprocessing import set_start_method
+import warnings
 
 # cmp is not used by fmriprep, so ignore nipype-generated warnings
 warnings.filterwarnings('ignore', 'cmp not installed')
