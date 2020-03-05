@@ -98,22 +98,13 @@ Other responsibilities of the config module:
 import warnings
 from multiprocessing import set_start_method
 
-
-def redirect_warnings(message, category, filename, lineno, file=None, line=None):
-    """Redirect other warnings."""
-    import logging
-    logger = logging.getLogger()
-    logger.debug('Captured warning (%s): %s', category, message)
-
-
 # cmp is not used by fmriprep, so ignore nipype-generated warnings
-warnings.filterwarnings('ignore', r'cmp not installed')
-warnings.filterwarnings('ignore', r'This has not been fully tested. Please report any failures.')
-warnings.filterwarnings('ignore', r"can't resolve package from __spec__ or __package__")
+warnings.filterwarnings('ignore', 'cmp not installed')
+warnings.filterwarnings('ignore', 'This has not been fully tested. Please report any failures.')
+warnings.filterwarnings('ignore', "can't resolve package from __spec__ or __package__")
 warnings.simplefilter('ignore', DeprecationWarning)
 warnings.simplefilter('ignore', FutureWarning)
 warnings.simplefilter('ignore', ResourceWarning)
-warnings.showwarning = redirect_warnings
 
 
 try:
@@ -134,6 +125,14 @@ finally:
     from nipype import logging as nlogging, __version__ as _nipype_ver
     from . import __version__
 
+
+def redirect_warnings(message, category, filename, lineno, file=None, line=None):
+    """Redirect other warnings."""
+    logger = logging.getLogger()
+    logger.debug('Captured warning (%s): %s', category, message)
+
+
+warnings.showwarning = redirect_warnings
 
 logging.addLevelName(25, 'IMPORTANT')  # Add a new level between INFO and WARNING
 logging.addLevelName(15, 'VERBOSE')  # Add a new level between INFO and DEBUG
