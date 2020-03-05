@@ -490,7 +490,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         (outputnode, summary, [('confounds', 'confounds_file')]),
     ])
 
-    if not t2s_coreg:
+    if not config.workflow.t2s_coreg:
         workflow.connect([
             (bold_sdc_wf, bold_reg_wf, [
                 ('outputnode.epi_brain', 'inputnode.ref_bold_brain')]),
