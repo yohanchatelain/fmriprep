@@ -1,6 +1,9 @@
 """Test parser."""
+from packaging.version import Version
 import pytest
 from ..parser import _build_parser
+from .. import version as _version
+from ... import config
 
 MIN_ARGS = ['data/', 'out/', 'participant']
 
@@ -66,3 +69,48 @@ def test_memory_arg(tmp_path, argval, gb):
     opts = _build_parser().parse_args(args)
 
     assert opts.memory_gb == gb
+
+
+@pytest.mark.parametrize('current,latest', [
+    ('1.0.0', '1.3.2'),
+    ('1.3.2', '1.3.2')
+])
+def test_get_parser_update(monkeypatch, capsys, current, latest):
+    """Make sure the out-of-date banner is shown."""
+    expectation = Version(current) < Version(latest)
+
+    def _mock_check_latest(*args, **kwargs):
+        return Version(latest)
+
+    monkeypatch.setattr(config.execution, 'version', current)
+    monkeypatch.setattr(_version, 'check_latest', _mock_check_latest)
+
+    _build_parser()
+    captured = capsys.readouterr().err
+
+    msg = """\
+You are using fMRIPrep-%s, and a newer version of fMRIPrep is available: %s.
+Please check out our documentation about how and when to upgrade:
+https://fmriprep.readthedocs.io/en/latest/faq.html#upgrading""" % (current, latest)
+
+    assert (msg in captured) is expectation
+
+
+@pytest.mark.parametrize('flagged', [
+    (True, None),
+    (True, 'random reason'),
+    (False, None),
+])
+def test_get_parser_blacklist(monkeypatch, capsys, flagged):
+    """Make sure the blacklisting banner is shown."""
+    def _mock_is_bl(*args, **kwargs):
+        return flagged
+
+    monkeypatch.setattr(_version, 'is_flagged', _mock_is_bl)
+
+    _build_parser()
+    captured = capsys.readouterr().err
+
+    assert ('FLAGGED' in captured) is flagged[0]
+    if flagged[0]:
+        assert ((flagged[1] or 'reason: unknown') in captured)

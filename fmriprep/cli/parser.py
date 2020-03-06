@@ -2,6 +2,7 @@
 # vi: set ft=python sts=4 ts=4 sw=4 et:
 """Parser."""
 import os
+import sys
 from .. import config
 
 
@@ -281,20 +282,20 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (currentv.base_version
 
     latest = check_latest()
     if latest is not None and currentv < latest:
-        config.loggers.cli.warning("""\
+        print("""\
 You are using fMRIPrep-%s, and a newer version of fMRIPrep is available: %s.
 Please check out our documentation about how and when to upgrade:
 https://fmriprep.readthedocs.io/en/latest/faq.html#upgrading""" % (
-            config.execution.version, latest))
+            currentv, latest), file=sys.stderr)
 
     _blist = is_flagged()
     if _blist[0]:
         _reason = _blist[1] or 'unknown'
-        config.loggers.cli.warning("""\
+        print("""\
 WARNING: Version %s of fMRIPrep (current) has been FLAGGED
 (reason: %s).
 That means some severe flaw was found in it and we strongly
-discourage its usage.""" % (config.execution.version, _reason))
+discourage its usage.""" % (config.execution.version, _reason), file=sys.stderr)
 
     return parser
 
