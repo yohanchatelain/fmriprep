@@ -50,11 +50,10 @@ def init_func_preproc_wf(bold_file):
             :graph2use: orig
             :simple_form: yes
 
-            from collections import namedtuple
-            from niworkflows.utils.spaces import SpatialReferences
-            from fmriprep.workflows.bold import init_func_preproc_wf
-            BIDSLayout = namedtuple('BIDSLayout', ['root'])
-            wf = init_func_preproc_wf()
+            from fmriprep.workflows.tests import mock_config
+            from fmriprep.workflows.bold.base import init_func_preproc_wf
+            mock_config()
+            wf = init_func_preproc_wf('sub-01_task-mixedgamblestask_run-01_bold.nii.gz')
 
     Parameters
     ----------

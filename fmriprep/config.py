@@ -499,7 +499,7 @@ def init_layout():
         execution._layout = BIDSLayout(
             str(execution.bids_dir),
             validate=False,
-            database_path=str(work_dir),
+            # database_path=str(work_dir),
             ignore=("code", "stimuli", "sourcedata", "models",
                     "derivatives", re.compile(r'^\.')))
     execution.layout = execution._layout
@@ -522,10 +522,13 @@ def set_logger_level():
 def init_spaces(checkpoint=True):
     """Get a spatial references."""
     from niworkflows.utils.spaces import Reference, SpatialReferences
-    if getattr(workflow, 'spaces'):
+    if (
+        getattr(workflow, 'spaces')
+        and isinstance(workflow.spaces, SpatialReferences)
+    ):
         return
 
-    spaces = getattr(execution, 'output_spaces')
+    spaces = execution.output_spaces
     if spaces is not None and not isinstance(spaces, _SRs):
         spaces = SpatialReferences(
             [ref for s in execution.output_spaces.split(' ')
@@ -537,7 +540,7 @@ def init_spaces(checkpoint=True):
     if checkpoint:
         spaces.checkpoint()
 
-    internal = getattr(workflow, 'internal_spaces')
+    internal = workflow.internal_spaces
     if internal is not None and internal.strip():
         spaces += [ref for s in internal.split(' ')
                    for ref in Reference.from_string(s)]

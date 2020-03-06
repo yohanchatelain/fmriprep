@@ -17,52 +17,10 @@ is presented below:
     :graph2use: orig
     :simple_form: yes
 
-    from collections import namedtuple
-    from niworkflows.utils.spaces import Reference, SpatialReferences
+    from fmriprep.workflows.tests import mock_config
     from fmriprep.workflows.base import init_single_subject_wf
-    BIDSLayout = namedtuple('BIDSLayout', ('root'))
-    wf = init_single_subject_wf(
-        anat_only=False,
-        aroma_melodic_dim=-200,
-        bold2t1w_dof=9,
-        cifti_output=False,
-        debug=False,
-        dummy_scans=None,
-        echo_idx=None,
-        err_on_aroma_warn=False,
-        fmap_bspline=False,
-        fmap_demean=True,
-        force_syn=True,
-        freesurfer=True,
-        hires=True,
-        ignore=[],
-        layout=BIDSLayout('.'),
-        longitudinal=False,
-        low_mem=False,
-        medial_surface_nan=False,
-        name='single_subject_wf',
-        omp_nthreads=1,
-        output_dir='.',
-        reportlets_dir='.',
-        regressors_all_comps=False,
-        regressors_dvars_th=1.5,
-        regressors_fd_th=0.5,
-        skull_strip_fixed_seed=False,
-        skull_strip_template=Reference('OASIS30ANTs'),
-        spaces=SpatialReferences(
-            spaces=[('MNI152Lin', {}),
-                    ('fsaverage', {'density': '10k'}),
-                    ('T1w', {}),
-                    ('fsnative', {})],
-            checkpoint=True),
-        subject_id='test',
-        t2s_coreg=False,
-        task_id='',
-        use_aroma=False,
-        use_bbr=True,
-        use_syn=True,
-        bids_filters=None,
-    )
+    mock_config()
+    wf = init_single_subject_wf()
 
 Preprocessing of structural MRI
 -------------------------------
@@ -279,44 +237,14 @@ BOLD preprocessing
     :graph2use: orig
     :simple_form: yes
 
+    from fmriprep.workflows.tests import mock_config
+    from fmriprep.workflows.bold.base import init_func_preproc_wf
+    mock_config()
+
     from collections import namedtuple
     from niworkflows.utils.spaces import SpatialReferences
-    from fmriprep.workflows.bold.base import init_func_preproc_wf
     BIDSLayout = namedtuple('BIDSLayout', ['root'])
-    wf = init_func_preproc_wf(
-        aroma_melodic_dim=-200,
-        bold2t1w_dof=9,
-        bold_file='/completely/made/up/path/sub-01_task-nback_bold.nii.gz',
-        cifti_output=False,
-        debug=False,
-        dummy_scans=None,
-        err_on_aroma_warn=False,
-        fmap_bspline=True,
-        fmap_demean=True,
-        force_syn=True,
-        freesurfer=True,
-        ignore=[],
-        low_mem=False,
-        medial_surface_nan=False,
-        omp_nthreads=1,
-        output_dir='.',
-        regressors_all_comps=False,
-        regressors_fd_th=0.5,
-        regressors_dvars_th=1.5,
-        reportlets_dir='.',
-        t2s_coreg=False,
-        spaces=SpatialReferences(
-            spaces=[('MNI152Lin', {}),
-                    ('fsaverage', {'density': '10k'}),
-                    ('T1w', {}),
-                    ('fsnative', {})],
-            checkpoint=True),
-        use_aroma=False,
-        use_bbr=True,
-        use_syn=True,
-        layout=BIDSLayout('.'),
-        num_bold=1,
-    )
+    wf = init_func_preproc_wf('sub-01_task-nback_bold.nii.gz')
 
 Preprocessing of :abbr:`BOLD (blood-oxygen level-dependent)` files is
 split into multiple sub-workflows described below.
@@ -396,7 +324,7 @@ Slice time correction
     wf = init_bold_stc_wf(
         metadata={'RepetitionTime': 2.0,
                   'SliceTiming': [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]},
-        )
+    )
 
 If the ``SliceTiming`` field is available within the input dataset metadata,
 this workflow performs slice time correction prior to other signal resampling

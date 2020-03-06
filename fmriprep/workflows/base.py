@@ -46,13 +46,9 @@ def init_fmriprep_wf():
             :graph2use: orig
             :simple_form: yes
 
-            import os
-            from collections import namedtuple, OrderedDict
-            BIDSLayout = namedtuple('BIDSLayout', ['root'])
+            from fmriprep.workflows.tests import mock_config
             from fmriprep.workflows.base import init_fmriprep_wf
-            from niworkflows.utils.spaces import Reference, SpatialReferences
-
-            os.environ['FREESURFER_HOME'] = os.getcwd()
+            mock_config()
             wf = init_fmriprep_wf()
 
     """
@@ -111,11 +107,9 @@ def init_single_subject_wf(subject_id):
             :graph2use: orig
             :simple_form: yes
 
-            from collections import namedtuple
-            from niworkflows.utils.spaces import Reference, SpatialReferences
+            from fmriprep.workflows.tests import mock_config
             from fmriprep.workflows.base import init_single_subject_wf
-
-            BIDSLayout = namedtuple('BIDSLayout', ['root'])
+            mock_config()
             wf = init_single_subject_wf('test')
 
     Parameters
