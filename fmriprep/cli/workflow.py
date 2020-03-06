@@ -121,8 +121,45 @@ def build_boilerplate(config_file, workflow):
             except FileNotFoundError:
                 pass
 
-        citation_files['md'].write_text(boilerplate)
-        config.loggers.workflow.log(
-            25, 'Works derived from this fMRIPrep execution should '
-            'include the following boilerplate:\n\n%s', boilerplate
-        )
+    citation_files['md'].write_text(boilerplate)
+
+    citation_files = {
+        ext: config.execution.output_dir / 'fmriprep' / 'logs'
+        / ('CITATION.%s' % ext) for ext in ('bib', 'tex', 'md', 'html')
+    }
+
+    if not config.execution.md_only_boilerplate and citation_files['md'].exists():
+        from subprocess import check_call, CalledProcessError, TimeoutExpired
+        from pkg_resources import resource_filename as pkgrf
+        from shutil import copyfile
+        # Generate HTML file resolving citations
+        cmd = ['pandoc', '-s', '--bibliography',
+               pkgrf('fmriprep', 'data/boilerplate.bib'),
+               '--filter', 'pandoc-citeproc',
+               '--metadata', 'pagetitle="fMRIPrep citation boilerplate"',
+               str(citation_files['md']),
+               '-o', str(citation_files['html'])]
+
+        config.loggers.cli.info(
+            'Generating an HTML version of the citation boilerplate...')
+        try:
+            check_call(cmd, timeout=10)
+        except (FileNotFoundError, CalledProcessError, TimeoutExpired):
+            config.loggers.cli.warning(
+                'Could not generate CITATION.html file:\n%s', ' '.join(cmd))
+
+        # Generate LaTex file resolving citations
+        cmd = ['pandoc', '-s', '--bibliography',
+               pkgrf('fmriprep', 'data/boilerplate.bib'),
+               '--natbib', str(citation_files['md']),
+               '-o', str(citation_files['tex'])]
+        config.loggers.cli.info(
+            'Generating a LaTeX version of the citation boilerplate...')
+        try:
+            check_call(cmd, timeout=10)
+        except (FileNotFoundError, CalledProcessError, TimeoutExpired):
+            config.loggers.cli.warning(
+                'Could not generate CITATION.tex file:\n%s', ' '.join(cmd))
+        else:
+            copyfile(pkgrf('fmriprep', 'data/boilerplate.bib'),
+                     citation_files['bib'])

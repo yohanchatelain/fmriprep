@@ -192,11 +192,11 @@ def init_func_preproc_wf(bold_file):
                 "Multiple single-band reference files found for {}; using "
                 "{}".format(refbase, sbbase))
         else:
-            config.loggers.workflow.log(
-                25, "Using single-band reference file {}".format(sbbase))
+            config.loggers.workflow.info("Using single-band reference file %s.",
+                                         sbbase)
     else:
-        config.loggers.workflow.log(
-            25, "No single-band-reference found for {}".format(refbase))
+        config.loggers.workflow.info("No single-band-reference found for %s.",
+                                     refbase)
 
     metadata = layout.get_metadata(ref_file)
 

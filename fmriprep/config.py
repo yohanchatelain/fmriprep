@@ -412,6 +412,9 @@ class workflow(_Config):
 class loggers(_Config):
     """Configure loggers."""
 
+    _fmt = "%(asctime)s,%(msecs)d %(name)-2s " "%(levelname)-2s:\n\t %(message)s"
+    _datefmt = "%y%m%d-%H:%M:%S"
+
     default = logging.getLogger()
     cli = logging.getLogger('cli')
     workflow = nlogging.getLogger('nipype.workflow')
@@ -485,6 +488,11 @@ def init_layout():
 
 def set_logger_level():
     """Set the current log level to all nipype loggers."""
+    _handler = logging.StreamHandler(stream=sys.stdout)
+    _handler.setFormatter(
+        logging.Formatter(fmt=loggers._fmt, datefmt=loggers._datefmt)
+    )
+    loggers.cli.addHandler(_handler)
     loggers.default.setLevel(execution.log_level)
     loggers.cli.setLevel(execution.log_level)
     loggers.interface.setLevel(execution.log_level)
