@@ -51,7 +51,8 @@ def _build_parser():
     is_release = not any((currentv.is_devrelease, currentv.is_prerelease, currentv.is_postrelease))
 
     parser = ArgumentParser(
-        description='fMRIPrep: fMRI PREProcessing workflows v{}'.format(config.environment.version),
+        description='fMRIPrep: fMRI PREProcessing workflows v{}'.format(
+            config.environment.version),
         formatter_class=ArgumentDefaultsHelpFormatter)
     PathExists = partial(_path_exists, parser=parser)
     PositiveInt = partial(_min_one, parser=parser)
