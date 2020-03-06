@@ -34,6 +34,12 @@ def build_workflow(config_file, retval):
     if msg is not None:
         build_log.warning(msg)
 
+    dset_desc_path = config.execution.bids_dir / 'dataset_description.json'
+    if dset_desc_path.exists():
+        from hashlib import sha256
+        desc_content = dset_desc_path.read_bytes()
+        config.execution.bids_description_hash = sha256(desc_content).hexdigest()
+
     # First check that bids_dir looks like a BIDS folder
     config.init_layout()
     subject_list = collect_participants(

@@ -141,14 +141,14 @@ logging.addLevelName(15, 'VERBOSE')  # Add a new level between INFO and DEBUG
 DEFAULT_MEMORY_MIN_GB = 0.01
 
 _exec_env = os.name
+_docker_ver = None
 # special variable set in the container
 if os.getenv('IS_DOCKER_8395080871'):
     _exec_env = 'singularity'
     _cgroup = Path('/proc/1/cgroup')
     if _cgroup.exists() and 'docker' in _cgroup.read_text():
-        _exec_env = 'docker'
-        if os.getenv('DOCKER_VERSION_8395080871'):
-            _exec_env = 'fmriprep-docker'
+        _docker_ver = os.getenv('DOCKER_VERSION_8395080871')
+        _exec_env = 'fmriprep-docker' if _docker_ver else 'docker'
     del _cgroup
 
 _fs_license = os.getenv('FS_LICENSE')
@@ -159,6 +159,32 @@ _templateflow_home = Path(os.getenv(
     'TEMPLATEFLOW_HOME',
     os.path.join(os.getenv('HOME'), '.cache', 'templateflow'))
 )
+
+try:
+    from psutil import virtual_memory
+    _free_mem_at_start = round(virtual_memory().free / 1024**3, 1)
+except Exception:
+    _free_mem_at_start = None
+
+_oc_limit = 'n/a'
+_oc_policy = 'n/a'
+try:
+    # Memory policy may have a large effect on types of errors experienced
+    _proc_oc_path = Path('/proc/sys/vm/overcommit_memory')
+    if _proc_oc_path.exists():
+        _oc_policy = {
+            '0': 'heuristic', '1': 'always', '2': 'never'
+        }.get(_proc_oc_path.read_text().strip(), 'unknown')
+        if _oc_policy != 'never':
+            _proc_oc_kbytes = Path('/proc/sys/vm/overcommit_kbytes')
+            if _proc_oc_kbytes.exists():
+                _oc_limit = _proc_oc_kbytes.read_text().strip()
+            if _oc_limit in ('0', 'n/a') and Path('/proc/sys/vm/overcommit_ratio').exists():
+                _oc_limit = '{}%'.format(
+                    Path('/proc/sys/vm/overcommit_ratio').read_text().strip()
+                )
+except Exception:
+    pass
 
 
 class _Config:
@@ -206,6 +232,8 @@ class nipype(_Config):
 
     crashfile_format = 'txt'
     """The file format for crashfiles, either text or pickle."""
+    free_mem = _free_mem_at_start
+    """Free memory at start."""
     get_linked_libs = False
     """Run NiPype's tool to enlist linked libraries for every interface."""
     memory_gb = None
@@ -214,6 +242,10 @@ class nipype(_Config):
     """Number of processes (compute tasks) that can be run in parallel (multiprocessing only)."""
     omp_nthreads = os.cpu_count()
     """Number of CPUs a single process can access for multithreaded execution."""
+    overcommit_policy = _oc_policy
+    """Linux's kernel virtual memory overcommit policy."""
+    overcommit_limit = _oc_limit
+    """Linux's kernel virtual memory overcommit limits."""
     plugin = 'MultiProc'
     """NiPype's execution plugin."""
     plugin_args = {
@@ -255,6 +287,8 @@ class execution(_Config):
     """Run in sloppy mode (meaning, suboptimal parameters that minimize run-time)."""
     echo_idx = None
     """Select a particular echo for multi-echo EPI datasets."""
+    exec_docker_version = _docker_ver
+    """Version of Docker Engine."""
     exec_env = _exec_env
     """A string representing the execution platform."""
     fs_license_file = _fs_license
@@ -288,6 +322,7 @@ class execution(_Config):
     templateflow_home = _templateflow_home
     """The root folder of the TemplateFlow client."""
     templateflow_version = _tf_ver
+    """The TemplateFlow client version installed."""
     version = __version__
     """*fMRIPrep*'s version."""
     work_dir = Path('work').absolute()
@@ -315,6 +350,9 @@ del _exec_env
 del _nipype_ver
 del _templateflow_home
 del _tf_ver
+del _free_mem_at_start
+del _oc_limit
+del _oc_policy
 
 
 class workflow(_Config):
