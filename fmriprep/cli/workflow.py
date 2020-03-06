@@ -27,13 +27,14 @@ def build_workflow(config_file, retval):
     retval['return_code'] = 1
     retval['workflow'] = None
 
-    # warn if older results exist
+    # warn if older results exist: check for dataset_description.json in output folder
     msg = check_pipeline_version(
         version, output_dir / 'fmriprep' / 'dataset_description.json'
     )
     if msg is not None:
         build_log.warning(msg)
 
+    # Please note this is the input folder's dataset_description.json
     dset_desc_path = config.execution.bids_dir / 'dataset_description.json'
     if dset_desc_path.exists():
         from hashlib import sha256

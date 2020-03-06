@@ -389,8 +389,12 @@ license file at several paths, in this order: 1) command line argument ``--fs-li
 
     # First check that bids_dir looks like a BIDS folder
     config.init_layout()
+    all_subjects = config.execution.layout.get_subjects()
+    if config.execution.participant_label is None:
+        config.execution.participant_label = all_subjects
+
     participant_label = set(config.execution.participant_label)
-    missing_subjects = participant_label - set(config.execution.layout.get_subjects())
+    missing_subjects = participant_label - set(all_subjects)
     if missing_subjects:
         config.loggers.cli.error(
             "One or more participant labels were not found in the BIDS directory: "

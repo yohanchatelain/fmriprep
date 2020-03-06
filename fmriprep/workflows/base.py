@@ -86,6 +86,12 @@ def init_fmriprep_wf():
         else:
             fmriprep_wf.add_nodes([single_subject_wf])
 
+        # Dump a copy of the config file into the log directory
+        log_dir = config.execution.output_dir / 'fmriprep' / 'sub-{}'.format(subject_id) \
+            / 'log' / config.execution.run_uuid
+        log_dir.mkdir(exist_ok=True, parents=True)
+        config.to_filename(log_dir / 'fmriprep.toml')
+
     return fmriprep_wf
 
 
@@ -294,19 +300,11 @@ tasks and sessions), the following preprocessing was performed.
               ('outputnode.t1w2fsnative_xfm', 'inputnode.t1w2fsnative_xfm'),
               ('outputnode.fsnative2t1w_xfm', 'inputnode.fsnative2t1w_xfm')]),
         ])
-
-    # Dump a copy of the config file into the log directory
-    log_dir = config.execution.output_dir / 'fmriprep' / 'sub-{}'.format(subject_id) \
-        / 'log' / config.execution.run_uuid
-    log_dir.mkdir(exist_ok=True, parents=True)
-    config.to_filename(log_dir / 'fmriprep.toml')
     return workflow
 
 
 def _prefix(subid):
-    if subid.startswith('sub-'):
-        return subid
-    return '-'.join(('sub', subid))
+    return '-'.join(('sub', subid.lstrip('sub-')))
 
 
 def _pop(inlist):
