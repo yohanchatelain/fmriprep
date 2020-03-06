@@ -164,8 +164,8 @@ performed using *fMRIPrep* {fmriprep_ver}
 which is based on *Nipype* {nipype_ver}
 (@nipype1; @nipype2; RRID:SCR_002502).
 
-""".format(fmriprep_ver=config.execution.version,
-           nipype_ver=config.nipype.version)
+""".format(fmriprep_ver=config.environment.version,
+           nipype_ver=config.environment.nipype_version)
     workflow.__postdesc__ = """
 
 Many internal operations of *fMRIPrep* use
@@ -207,7 +207,7 @@ It is released under the [CC0]\
                                      nstd_spaces=spaces.get_spaces(standard=False)),
                       name='summary', run_without_submitting=True)
 
-    about = pe.Node(AboutSummary(version=config.execution.version,
+    about = pe.Node(AboutSummary(version=config.environment.version,
                                  command=' '.join(sys.argv)),
                     name='about', run_without_submitting=True)
 

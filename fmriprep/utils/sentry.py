@@ -43,7 +43,7 @@ KNOWN_ERRORS = {
 
 def sentry_setup():
     """Set-up sentry."""
-    release = config.execution.version or "dev"
+    release = config.environment.version or "dev"
     environment = "dev" if (
         os.getenv('FMRIPREP_DEV', '').lower in ('1', 'on', 'yes', 'y', 'true')
         or ('+' in release)

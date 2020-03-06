@@ -24,6 +24,16 @@ Example
 The module also has a :py:func:`to_filename` function to allow writting out
 the settings to hard disk in *ToML* format, which looks like::
 
+    [environment]
+    cpu_count = 8
+    exec_env = "posix"
+    free_mem = 2.2
+    overcommit_policy = "heuristic"
+    overcommit_limit = "50%"
+    nipype_version = "1.5.0"
+    templateflow_version = "0.4.2"
+    version = "20.0.1"
+
     [nipype]
     crashfile_format = "txt"
     get_linked_libs = false
@@ -32,7 +42,6 @@ the settings to hard disk in *ToML* format, which looks like::
     plugin = "MultiProc"
     resource_monitor = false
     stop_on_first_crash = false
-    version = "1.5.0-dev+gdffcb7815"
 
     [execution]
     bids_dir = "/data/openfmri/ds000005"
@@ -49,8 +58,7 @@ the settings to hard disk in *ToML* format, which looks like::
     reports_only = false
     run_uuid = "20200302-174345_9ba9f304-82de-4538-8c3a-570c5f5d8f2f"
     participant_label = [ "01",]
-    version = "20.0.1+13.g3ca42930.dirty"
-    work_dir = "/home/oesteban/tmp/fmriprep-ds005/fprep-work2"
+    work_dir = "work/"
     write_graph = false
 
     [workflow]
@@ -227,13 +235,34 @@ class _Config:
         return out
 
 
+class environment(_Config):
+    """Read-only options."""
+
+    cpu_count = os.cpu_count()
+    """Number of available CPUs."""
+    exec_docker_version = _docker_ver
+    """Version of Docker Engine."""
+    exec_env = _exec_env
+    """A string representing the execution platform."""
+    free_mem = _free_mem_at_start
+    """Free memory at start."""
+    overcommit_policy = _oc_policy
+    """Linux's kernel virtual memory overcommit policy."""
+    overcommit_limit = _oc_limit
+    """Linux's kernel virtual memory overcommit limits."""
+    nipype_version = _nipype_ver
+    """Nipype's current version."""
+    templateflow_version = _tf_ver
+    """The TemplateFlow client version installed."""
+    version = __version__
+    """*fMRIPrep*'s version."""
+
+
 class nipype(_Config):
     """Nipype configuration."""
 
     crashfile_format = 'txt'
     """The file format for crashfiles, either text or pickle."""
-    free_mem = _free_mem_at_start
-    """Free memory at start."""
     get_linked_libs = False
     """Run NiPype's tool to enlist linked libraries for every interface."""
     memory_gb = None
@@ -242,10 +271,6 @@ class nipype(_Config):
     """Number of processes (compute tasks) that can be run in parallel (multiprocessing only)."""
     omp_nthreads = os.cpu_count()
     """Number of CPUs a single process can access for multithreaded execution."""
-    overcommit_policy = _oc_policy
-    """Linux's kernel virtual memory overcommit policy."""
-    overcommit_limit = _oc_limit
-    """Linux's kernel virtual memory overcommit limits."""
     plugin = 'MultiProc'
     """NiPype's execution plugin."""
     plugin_args = {
@@ -257,8 +282,6 @@ class nipype(_Config):
     """Enable resource monitor."""
     stop_on_first_crash = True
     """Whether the workflow should stop or continue after the first error."""
-    version = _nipype_ver
-    """Nipype's current version."""
 
     @classmethod
     def get_plugin(cls):
@@ -279,6 +302,8 @@ class execution(_Config):
 
     bids_dir = None
     """An existing path to the dataset, which must be BIDS-compliant."""
+    bids_description_hash = None
+    """Checksum (SHA256) of the ``dataset_description.json`` of the BIDS dataset."""
     bids_filters = None
     """A dictionary of BIDS selection filters."""
     boilerplate_only = False
@@ -287,10 +312,6 @@ class execution(_Config):
     """Run in sloppy mode (meaning, suboptimal parameters that minimize run-time)."""
     echo_idx = None
     """Select a particular echo for multi-echo EPI datasets."""
-    exec_docker_version = _docker_ver
-    """Version of Docker Engine."""
-    exec_env = _exec_env
-    """A string representing the execution platform."""
     fs_license_file = _fs_license
     """An existing file containing a FreeSurfer license."""
     fs_subjects_dir = None
@@ -321,10 +342,6 @@ class execution(_Config):
     """Select a particular task from all available in the dataset."""
     templateflow_home = _templateflow_home
     """The root folder of the TemplateFlow client."""
-    templateflow_version = _tf_ver
-    """The TemplateFlow client version installed."""
-    version = __version__
-    """*fMRIPrep*'s version."""
     work_dir = Path('work').absolute()
     """Path to a working directory where intermediate results will be available."""
     write_graph = False
@@ -436,8 +453,9 @@ def load(filename):
     filename = Path(filename)
     settings = loads(filename.read_text())
     for sectionname, configs in settings.items():
-        section = getattr(sys.modules[__name__], sectionname)
-        section.load(configs)
+        if sectionname != 'environment':
+            section = getattr(sys.modules[__name__], sectionname)
+            section.load(configs)
     set_logger_level()
     init_spaces()
     init_layout()
@@ -446,9 +464,10 @@ def load(filename):
 def get(flat=False):
     """Get config as a dict."""
     settings = {
-        'nipype': nipype.get(),
+        'environment': environment.get(),
         'execution': execution.get(),
         'workflow': workflow.get(),
+        'nipype': nipype.get(),
     }
     if not flat:
         return settings

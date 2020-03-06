@@ -22,7 +22,7 @@ def build_workflow(config_file, retval):
     build_log = config.loggers.workflow
 
     output_dir = config.execution.output_dir
-    version = config.execution.version
+    version = config.environment.version
 
     retval['return_code'] = 1
     retval['workflow'] = None
@@ -71,7 +71,7 @@ def build_workflow(config_file, retval):
       * Output spaces: {spaces}.
     """.format
     build_log.log(25, INIT_MSG(
-        version=config.execution.version,
+        version=config.environment.version,
         bids_dir=config.execution.bids_dir,
         subject_list=subject_list,
         uuid=config.execution.run_uuid,

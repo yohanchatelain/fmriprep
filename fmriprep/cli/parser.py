@@ -46,12 +46,12 @@ def _build_parser():
         if value and Path(value).exists():
             return loads(Path(value).read_text())
 
-    verstr = 'fMRIPrep v{}'.format(config.execution.version)
-    currentv = Version(config.execution.version)
+    verstr = 'fMRIPrep v{}'.format(config.environment.version)
+    currentv = Version(config.environment.version)
     is_release = not any((currentv.is_devrelease, currentv.is_prerelease, currentv.is_postrelease))
 
     parser = ArgumentParser(
-        description='fMRIPrep: fMRI PREProcessing workflows v{}'.format(config.execution.version),
+        description='fMRIPrep: fMRI PREProcessing workflows v{}'.format(config.environment.version),
         formatter_class=ArgumentDefaultsHelpFormatter)
     PathExists = partial(_path_exists, parser=parser)
     PositiveInt = partial(_min_one, parser=parser)
@@ -295,7 +295,7 @@ https://fmriprep.readthedocs.io/en/latest/faq.html#upgrading""" % (
 WARNING: Version %s of fMRIPrep (current) has been FLAGGED
 (reason: %s).
 That means some severe flaw was found in it and we strongly
-discourage its usage.""" % (config.execution.version, _reason), file=sys.stderr)
+discourage its usage.""" % (config.environment.version, _reason), file=sys.stderr)
 
     return parser
 
@@ -343,7 +343,7 @@ license file at several paths, in this order: 1) command line argument ``--fs-li
     bids_dir = config.execution.bids_dir
     output_dir = config.execution.output_dir
     work_dir = config.execution.work_dir
-    version = config.execution.version
+    version = config.environment.version
 
     if config.execution.fs_subjects_dir is None:
         config.execution.fs_subjects_dir = output_dir / 'freesurfer'
@@ -378,7 +378,7 @@ license file at several paths, in this order: 1) command line argument ``--fs-li
             "Making sure the input data is BIDS compliant (warnings can be ignored in most "
             "cases)."
         )
-        validate_input_dir(config.execution.exec_env, opts.bids_dir, opts.participant_label)
+        validate_input_dir(config.environment.exec_env, opts.bids_dir, opts.participant_label)
 
     # Setup directories
     config.execution.log_dir = output_dir / 'fmriprep' / 'logs'
