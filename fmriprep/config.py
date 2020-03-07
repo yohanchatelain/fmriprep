@@ -10,19 +10,19 @@ Example
 
 .. code-block:: Python
 
-    >>> from fmriprep import config
-    >>> config_file = config.execution.work_dir / '.fmriprep.toml'
-    >>> config.to_filename(config_file)
-    >>> # Call build_workflow(config_file, retval) in a subprocess
-    >>> with Manager() as mgr:
-    >>>     from .workflow import build_workflow
-    >>>     retval = mgr.dict()
-    >>>     p = Process(target=build_workflow, args=(str(config_file), retval))
-    >>>     p.start()
-    >>>     p.join()
-    >>> config.load(config_file)
-    >>> # Access configs from any code section as:
-    >>> value = config.section.setting
+    from fmriprep import config
+    config_file = config.execution.work_dir / '.fmriprep.toml'
+    config.to_filename(config_file)
+    # Call build_workflow(config_file, retval) in a subprocess
+    with Manager() as mgr:
+        from .workflow import build_workflow
+        retval = mgr.dict()
+        p = Process(target=build_workflow, args=(str(config_file), retval))
+        p.start()
+        p.join()
+    config.load(config_file)
+    # Access configs from any code section as:
+    value = config.section.setting
 
 The module also has a :py:func:`to_filename` function to allow writting out
 the settings to hard disk in *ToML* format, which looks like
@@ -313,7 +313,7 @@ class execution(_Config):
     """A dictionary of BIDS selection filters."""
     boilerplate_only = False
     """Only generate a boilerplate."""
-    debug = None
+    debug = False
     """Run in sloppy mode (meaning, suboptimal parameters that minimize run-time)."""
     echo_idx = None
     """Select a particular echo for multi-echo EPI datasets."""

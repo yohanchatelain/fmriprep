@@ -4,6 +4,11 @@
 Developers - API
 ================
 
+Internal configuration system
+-----------------------------
+
+.. automodule:: fmriprep.config
+
 Workflows
 ---------
 

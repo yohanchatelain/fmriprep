@@ -278,7 +278,7 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (currentv.base_version
                               'the FMRIPREP developers. This information helps to '
                               'improve FMRIPREP and provides an indicator of real '
                               'world usage crucial for obtaining funding.')
-    g_other.add_argument('--sloppy', action='store_true', default=False,
+    g_other.add_argument('--sloppy', dest='debug', action='store_true', default=False,
                          help='Use low-quality tools for speed - TESTING ONLY')
 
     latest = check_latest()
