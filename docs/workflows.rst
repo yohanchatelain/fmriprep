@@ -19,8 +19,8 @@ is presented below:
 
     from fmriprep.workflows.tests import mock_config
     from fmriprep.workflows.base import init_single_subject_wf
-    mock_config()
-    wf = init_single_subject_wf()
+    with mock_config():
+        wf = init_single_subject_wf('01')
 
 Preprocessing of structural MRI
 -------------------------------
@@ -54,7 +54,7 @@ single reference template (see `Longitudinal processing`_).
         skull_strip_fixed_seed=False,
     )
 
-See also *sMRIPrep*'s 
+See also *sMRIPrep*'s
 :py:func:`~smriprep.workflows.anatomical.init_anat_preproc_wf`.
 
 .. _t1preproc_steps:
@@ -176,7 +176,7 @@ would be processed by the following command::
         -autorecon1 \
         -noskullstrip
 
-The second phase imports the brainmask calculated in the 
+The second phase imports the brainmask calculated in the
 `Preprocessing of structural MRI`_ sub-workflow.
 The final phase resumes reconstruction, using the T2w image to assist
 in finding the pial surface, if available.
@@ -238,13 +238,12 @@ BOLD preprocessing
     :simple_form: yes
 
     from fmriprep.workflows.tests import mock_config
+    from fmriprep import config
     from fmriprep.workflows.bold.base import init_func_preproc_wf
-    mock_config()
-
-    from collections import namedtuple
-    from niworkflows.utils.spaces import SpatialReferences
-    BIDSLayout = namedtuple('BIDSLayout', ['root'])
-    wf = init_func_preproc_wf('sub-01_task-nback_bold.nii.gz')
+    with mock_config():
+        bold_file = config.execution.bids_dir / 'sub-01' / 'func' \
+            / 'sub-01_task-mixedgamblestask_run-01_bold.nii.gz'
+        wf = init_func_preproc_wf(str(bold_file))
 
 Preprocessing of :abbr:`BOLD (blood-oxygen level-dependent)` files is
 split into multiple sub-workflows described below.
@@ -429,7 +428,7 @@ Resampling BOLD runs onto standard spaces
 This sub-workflow concatenates the transforms calculated upstream (see
 `Head-motion estimation`_, `Susceptibility Distortion Correction (SDC)`_ --if
 fieldmaps are available--, `EPI to T1w registration`_, and an anatomical-to-standard
-transform from `Preprocessing of structural MRI`_) to map the 
+transform from `Preprocessing of structural MRI`_) to map the
 :abbr:`EPI (echo-planar imaging)`
 image to the standard spaces given by the ``--output-spaces`` argument
 (see :ref:`output-spaces`).

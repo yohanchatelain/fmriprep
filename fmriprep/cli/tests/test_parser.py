@@ -82,7 +82,7 @@ def test_get_parser_update(monkeypatch, capsys, current, latest):
     def _mock_check_latest(*args, **kwargs):
         return Version(latest)
 
-    monkeypatch.setattr(config.execution, 'version', current)
+    monkeypatch.setattr(config.environment, 'version', current)
     monkeypatch.setattr(_version, 'check_latest', _mock_check_latest)
 
     _build_parser()

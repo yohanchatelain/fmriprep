@@ -51,9 +51,12 @@ def init_func_preproc_wf(bold_file):
             :simple_form: yes
 
             from fmriprep.workflows.tests import mock_config
+            from fmriprep import config
             from fmriprep.workflows.bold.base import init_func_preproc_wf
-            mock_config()
-            wf = init_func_preproc_wf('sub-01_task-mixedgamblestask_run-01_bold.nii.gz')
+            with mock_config():
+                bold_file = config.execution.bids_dir / 'sub-01' / 'func' \
+                    / 'sub-01_task-mixedgamblestask_run-01_bold.nii.gz'
+                wf = init_func_preproc_wf(str(bold_file))
 
     Parameters
     ----------

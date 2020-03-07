@@ -48,8 +48,8 @@ def init_fmriprep_wf():
 
             from fmriprep.workflows.tests import mock_config
             from fmriprep.workflows.base import init_fmriprep_wf
-            mock_config()
-            wf = init_fmriprep_wf()
+            with mock_config():
+                wf = init_fmriprep_wf()
 
     """
     fmriprep_wf = Workflow(name='fmriprep_wf')
@@ -109,8 +109,8 @@ def init_single_subject_wf(subject_id):
 
             from fmriprep.workflows.tests import mock_config
             from fmriprep.workflows.base import init_single_subject_wf
-            mock_config()
-            wf = init_single_subject_wf('test')
+            with mock_config():
+                wf = init_single_subject_wf('01')
 
     Parameters
     ----------
@@ -222,15 +222,16 @@ It is released under the [CC0]\
         freesurfer=config.workflow.run_reconall,
         hires=config.workflow.hires,
         longitudinal=config.workflow.longitudinal,
+        num_t1w=len(subject_data['t1w']),
         omp_nthreads=config.nipype.omp_nthreads,
         output_dir=str(config.execution.output_dir),
         reportlets_dir=reportlets_dir,
         skull_strip_fixed_seed=config.workflow.skull_strip_fixed_seed,
-        skull_strip_mode='force',
+        # skull_strip_mode='force',
         skull_strip_template=Reference.from_string(
             config.workflow.skull_strip_template)[0],
         spaces=spaces,
-        t1w=subject_data['t1w'],
+        # t1w=subject_data['t1w'],
     )
 
     workflow.connect([
