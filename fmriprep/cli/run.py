@@ -62,6 +62,17 @@ def main():
     # Clean up master process before running workflow, which may create forks
     gc.collect()
 
+    # Configure resource_monitor
+    if config.nipype.resource_monitor:
+        ncfg.update_config({
+            'monitoring': {
+                'enabled': config.nipype.resource_monitor,
+                'sample_frequency': '0.5',
+                'summary_append': True,
+            }
+        })
+        ncfg.enable_resource_monitor()
+
     # Nipype config (logs and execution)
     ncfg.update_config({
         'logging': {
@@ -70,19 +81,11 @@ def main():
         },
         'execution': {
             'crashdump_dir': str(config.execution.log_dir),
-            'crashfile_format': 'txt',
-            'get_linked_libs': False,
+            'crashfile_format': config.nipype.crashfile_format,
+            'get_linked_libs': config.nipype.get_linked_libs,
             'stop_on_first_crash': config.nipype.stop_on_first_crash,
-        },
-        'monitoring': {
-            'enabled': config.nipype.resource_monitor,
-            'sample_frequency': '0.5',
-            'summary_append': True,
         }
     })
-
-    if config.nipype.resource_monitor:
-        ncfg.enable_resource_monitor()
 
     # Sentry tracking
     if sentry_sdk is not None:
@@ -92,10 +95,10 @@ def main():
         sentry_sdk.add_breadcrumb(message='fMRIPrep started', level='info')
         sentry_sdk.capture_message('fMRIPrep started', level='info')
 
-    config.loggers.workflow.log(25, 'fMRIPrep started!')
     config.loggers.workflow.log(15, '\n'.join(
         ['fMRIPrep config:'] + ['\t\t%s' % s for s in config.dumps().splitlines()])
     )
+    config.loggers.workflow.log(25, 'fMRIPrep started!')
     errno = 1  # Default is error exit unless otherwise set
     try:
         fmriprep_wf.run(**config.nipype.get_plugin())
