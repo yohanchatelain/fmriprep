@@ -545,9 +545,12 @@ def init_spaces(checkpoint=True):
     if checkpoint:
         spaces.checkpoint()
 
-    internal = workflow.internal_spaces
-    if internal is not None and internal.strip():
-        for ref in internal.split(' '):
-            spaces.add(ref)
-
+    if workflow.internal_spaces:
+        internal = [
+            Reference.from_string(ref)
+            for ref in workflow.internal_spaces.strip().split(' ')
+        ]
+        spaces += [
+            ref[0] for ref in internal if ref[0].fullname not in spaces
+        ]
     workflow.spaces = spaces
