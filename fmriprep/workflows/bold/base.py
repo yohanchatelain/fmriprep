@@ -222,7 +222,7 @@ def init_func_preproc_wf(bold_file):
         config.loggers.workflow.warning(
             "No multiecho BOLD images found for T2* coregistration. "
             "Using standard EPI-T1 coregistration.")
-        t2s_coreg = False
+        config.workflow.t2s_coreg = False
 
     # By default, force-bbr for t2s_coreg unless user specifies otherwise
     if config.workflow.t2s_coreg and config.workflow.use_bbr is None:
@@ -410,7 +410,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         bold_t2s_wf = init_bold_t2s_wf(echo_times=tes,
                                        mem_gb=mem_gb['resampled'],
                                        omp_nthreads=omp_nthreads,
-                                       t2s_coreg=t2s_coreg,
+                                       t2s_coreg=config.workflow.t2s_coreg,
                                        name='bold_t2smap_wf')
 
         workflow.connect([
