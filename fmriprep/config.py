@@ -547,6 +547,7 @@ def init_spaces(checkpoint=True):
 
     internal = workflow.internal_spaces
     if internal is not None and internal.strip():
-        spaces += [ref for s in internal.split(' ')
-                   for ref in Reference.from_string(s)]
+        for ref in internal.split(' '):
+            spaces.add(ref)
+
     workflow.spaces = spaces

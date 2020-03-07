@@ -226,7 +226,7 @@ def init_func_preproc_wf(bold_file):
 
     # By default, force-bbr for t2s_coreg unless user specifies otherwise
     if config.workflow.t2s_coreg and config.workflow.use_bbr is None:
-        config.workflow.use_bbr.use_bbr = True
+        config.workflow.use_bbr = True
 
     # Build workflow
     workflow = Workflow(name=wf_name)
