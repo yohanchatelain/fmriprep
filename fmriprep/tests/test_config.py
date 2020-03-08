@@ -15,7 +15,7 @@ def test_config_spaces():
         if sectionname != 'environment':
             section = getattr(config, sectionname)
             section.load(configs)
-    config.set_logger_level()
+    config.init_loggers()
     config.init_spaces()
 
     spaces = config.workflow.spaces

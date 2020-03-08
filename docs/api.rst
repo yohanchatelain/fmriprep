@@ -3,11 +3,11 @@
 ================
 Developers - API
 ================
-
 Internal configuration system
 -----------------------------
 
 .. automodule:: fmriprep.config
+   :members: from_dict, load, get, dumps, to_filename, init_layout, init_spaces
 
 Workflows
 ---------

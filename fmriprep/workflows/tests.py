@@ -21,7 +21,7 @@ def mock_config():
         if sectionname != 'environment':
             section = getattr(config, sectionname)
             section.load(configs)
-    config.set_logger_level()
+    config.init_loggers()
     config.init_spaces()
 
     config.execution.work_dir = Path(mkdtemp())

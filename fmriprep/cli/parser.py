@@ -309,7 +309,7 @@ def parse_args(args=None, namespace=None):
     config.execution.log_level = int(max(25 - 5 * opts.verbose_count, logging.DEBUG))
     config.from_dict(vars(opts))
 
-    config.set_logger_level()
+    config.init_loggers()
 
     # Retrieve logging level
     build_log = config.loggers.cli

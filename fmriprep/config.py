@@ -1,31 +1,15 @@
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
 r"""
-*fMRIPrep* settings.
+A Python module to maintain unique, run-wide *fMRIPrep* settings.
 
 This module implements the memory structures to keep a consistent, singleton config.
-
-Example
--------
-
-.. code-block:: Python
-
-    from fmriprep import config
-    config_file = config.execution.work_dir / '.fmriprep.toml'
-    config.to_filename(config_file)
-    # Call build_workflow(config_file, retval) in a subprocess
-    with Manager() as mgr:
-        from .workflow import build_workflow
-        retval = mgr.dict()
-        p = Process(target=build_workflow, args=(str(config_file), retval))
-        p.start()
-        p.join()
-    config.load(config_file)
-    # Access configs from any code section as:
-    value = config.section.setting
-
-The module also has a :py:func:`to_filename` function to allow writting out
-the settings to hard disk in *ToML* format, which looks like
+Settings are passed across processes via filesystem, and a copy of the settings for
+each run and subject is left under
+``<output_dir>/sub-<participant_id>/log/<run_unique_id>/fmriprep.toml``.
+Settings are stored using :abbr:`ToML (Tom's Markup Language)`.
+The module has a :py:func:`~fmriprep.config.to_filename` function to allow writting out
+the settings to hard disk in *ToML* format, which looks like:
 
 .. code-block:: toml
 
@@ -90,14 +74,50 @@ the settings to hard disk in *ToML* format, which looks like
     raise_insufficient = false
 
 This config file is used to pass the settings across processes,
-using the :py:func:`load` function.
+using the :py:func:`~fmriprep.config.load` function.
 
-Other responsibilities of the config module:
+Configuration sections
+----------------------
+.. autoclass:: environment
+   :members:
+.. autoclass:: execution
+   :members:
+.. autoclass:: workflow
+   :members:
+.. autoclass:: nipype
+   :members:
+
+Usage
+-----
+A config file is used to pass settings and collect information as the execution
+graph is built across processes.
+
+.. code-block:: Python
+
+    from fmriprep import config
+    config_file = config.execution.work_dir / '.fmriprep.toml'
+    config.to_filename(config_file)
+    # Call build_workflow(config_file, retval) in a subprocess
+    with Manager() as mgr:
+        from .workflow import build_workflow
+        retval = mgr.dict()
+        p = Process(target=build_workflow, args=(str(config_file), retval))
+        p.start()
+        p.join()
+    config.load(config_file)
+    # Access configs from any code section as:
+    value = config.section.setting
+
+Other responsibilities
+----------------------
+Logging
+.......
+
+The :py:mod:`config` is responsible for other conveniency actions.
 
   * Switching Python's ``multiprocessing`` to *forkserver* mode.
-  * Set up new logger levels (25: IMPORTANT, and 15: VERBOSE).
-  * Set up a warnings filter as soon as possible.
-  * Initialize runtime descriptive settings (e.g., default FreeSurfer license,
+  * Set up a filter for warnings as early as possible.
+  * Initialize/crawl runtime descriptive settings (e.g., default FreeSurfer license,
     execution environment, nipype and *fMRIPrep* versions, etc.).
   * Automated I/O magic operations:
 
@@ -241,7 +261,16 @@ class _Config:
 
 
 class environment(_Config):
-    """Read-only options."""
+    """
+    Read-only options regarding the platform and environment.
+
+    The ``environment`` section is not loaded in from file,
+    only written out when settings are exported.
+    This config section is useful when reporting issues,
+    and these variables are tracked whenever the user does not
+    opt-out using the ``--notrack`` argument.
+
+    """
 
     cpu_count = os.cpu_count()
     """Number of available CPUs."""
@@ -264,7 +293,7 @@ class environment(_Config):
 
 
 class nipype(_Config):
-    """Nipype configuration."""
+    """Nipype settings."""
 
     crashfile_format = 'txt'
     """The file format for crashfiles, either text or pickle."""
@@ -303,10 +332,12 @@ class nipype(_Config):
 
 
 class execution(_Config):
-    """Configure workflow-level settings."""
+    """Configure run-level settings."""
 
     bids_dir = None
-    """An existing path to the dataset, which must be BIDS-compliant."""
+    """An existing path to the dataset, which must be BIDS-compliant.
+    This config mutates to a :py:class:`~bids.layout.BIDSLayout` after calling
+    :py:func:`~fmriprep.config.init_layout`."""
     bids_description_hash = None
     """Checksum (SHA256) of the ``dataset_description.json`` of the BIDS dataset."""
     bids_filters = None
@@ -378,7 +409,7 @@ del _oc_policy
 
 
 class workflow(_Config):
-    """Configure anatomical workflow."""
+    """Configure the particular execution graph of this workflow."""
 
     anat_only = False
     """Execute the anatomical preprocessing only."""
@@ -408,40 +439,60 @@ class workflow(_Config):
     longitudinal = False
     """Run FreeSurfer ``recon-all`` with the ``-logitudinal`` flag."""
     medial_surface_nan = None
-    """Fill medial surface with NaNs (not-a-number) when sampling."""
+    """Fill medial surface with :abbr:`NaNs (not-a-number)` when sampling."""
     regressors_all_comps = None
+    """Return all CompCor components."""
     regressors_dvars_th = None
+    """Threshold for DVARS."""
     regressors_fd_th = None
+    """Threshold for :abbr:`FD (frame-wise displacement)`."""
     run_reconall = True
     """Run FreeSurfer's surface reconstruction."""
     skull_strip_fixed_seed = False
     """Fix a seed for skull-stripping."""
-    skull_strip_template = 'OASIS30ANTs'
+    skull_strip_template = "OASIS30ANTs"
     """Change default brain extraction template."""
     spaces = None
     """Standard and nonstandard spaces."""
     t2s_coreg = None
-    r"""Co-register echos before generating the T2\* reference of ME-EPI."""
+    """Co-register echos before generating the T2\\* reference of \
+    :abbr:`ME-EPI (multi-echo echo-planar imaging)`."""
     use_aroma = None
     """Run ICA-AROMA."""
     use_bbr = None
     """Run boundary-based registration for BOLD-to-T1w registration (default: ``True``)."""
     use_syn = None
-    """Run *fieldmap-less* susceptibility-derived distortions estimation
+    """Run *fieldmap-less* susceptibility-derived distortions estimation \
     in the absence of any alternatives."""
 
 
 class loggers(_Config):
-    """Configure loggers."""
+    """
+    Setup loggers, providing access to them across the *fMRIPrep* run.
+
+        * Add new logger levels (25: IMPORTANT, and 15: VERBOSE).
+        * Add a new sub-logger (``cli``).
+        * Logger configuration.
+
+    See also:
+
+      .. autofunction: init_loggers
+
+    """
 
     _fmt = "%(asctime)s,%(msecs)d %(name)-2s " "%(levelname)-2s:\n\t %(message)s"
     _datefmt = "%y%m%d-%H:%M:%S"
 
     default = logging.getLogger()
+    """The root logger."""
     cli = logging.getLogger('cli')
+    """Command-line interface logging."""
     workflow = nlogging.getLogger('nipype.workflow')
+    """NiPype's workflow logger."""
     interface = nlogging.getLogger('nipype.interface')
+    """NiPype's interface logger."""
     utils = nlogging.getLogger('nipype.utils')
+    """NiPype's utils logger."""
 
 
 def from_dict(settings):
@@ -449,7 +500,7 @@ def from_dict(settings):
     nipype.load(settings)
     execution.load(settings)
     workflow.load(settings)
-    set_logger_level()
+    init_loggers()
 
 
 def load(filename):
@@ -461,7 +512,7 @@ def load(filename):
         if sectionname != 'environment':
             section = getattr(sys.modules[__name__], sectionname)
             section.load(configs)
-    set_logger_level()
+    init_loggers()
     init_spaces()
     init_layout()
 
@@ -495,7 +546,7 @@ def to_filename(filename):
 
 
 def init_layout():
-    """Init a new layout."""
+    """Create a new BIDS Layout on :attr:`~execution.bids_dir`."""
     if execution._layout is None:
         import re
         from bids.layout import BIDSLayout
@@ -510,8 +561,8 @@ def init_layout():
     execution.layout = execution._layout
 
 
-def set_logger_level():
-    """Set the current log level to all nipype loggers."""
+def init_loggers():
+    """Set the current log level to all loggers."""
     _handler = logging.StreamHandler(stream=sys.stdout)
     _handler.setFormatter(
         logging.Formatter(fmt=loggers._fmt, datefmt=loggers._datefmt)
@@ -525,7 +576,7 @@ def set_logger_level():
 
 
 def init_spaces(checkpoint=True):
-    """Get a spatial references."""
+    """Initialize the :attr:`~workflow.spaces` setting."""
     from niworkflows.utils.spaces import Reference, SpatialReferences
     if (
         getattr(workflow, 'spaces')
