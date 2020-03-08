@@ -108,17 +108,17 @@ graph is built across processes.
     # Access configs from any code section as:
     value = config.section.setting
 
+Logging
+-------
+.. autoclass:: loggers
+   :members:
+
 Other responsibilities
 ----------------------
-Logging
-.......
-
 The :py:mod:`config` is responsible for other conveniency actions.
 
   * Switching Python's ``multiprocessing`` to *forkserver* mode.
   * Set up a filter for warnings as early as possible.
-  * Initialize/crawl runtime descriptive settings (e.g., default FreeSurfer license,
-    execution environment, nipype and *fMRIPrep* versions, etc.).
   * Automated I/O magic operations:
 
     * :obj:`Path` \<-\> :obj:`str` \<-\> :obj:`Path`).
@@ -264,6 +264,8 @@ class environment(_Config):
     """
     Read-only options regarding the platform and environment.
 
+    Crawls runtime descriptive settings (e.g., default FreeSurfer license,
+    execution environment, nipype and *fMRIPrep* versions, etc.).
     The ``environment`` section is not loaded in from file,
     only written out when settings are exported.
     This config section is useful when reporting issues,
@@ -335,9 +337,7 @@ class execution(_Config):
     """Configure run-level settings."""
 
     bids_dir = None
-    """An existing path to the dataset, which must be BIDS-compliant.
-    This config mutates to a :py:class:`~bids.layout.BIDSLayout` after calling
-    :py:func:`~fmriprep.config.init_layout`."""
+    """An existing path to the dataset, which must be BIDS-compliant."""
     bids_description_hash = None
     """Checksum (SHA256) of the ``dataset_description.json`` of the BIDS dataset."""
     bids_filters = None
@@ -353,7 +353,8 @@ class execution(_Config):
     fs_subjects_dir = None
     """FreeSurfer's subjects directory."""
     layout = None
-    """The path to the exported index of a py:class:`~bids.layout.BIDSLayout` object."""
+    """A py:class:`~bids.layout.BIDSLayout` object, see
+    :py:func:`~fmriprep.config.init_layout`."""
     log_dir = None
     """The path to a directory that contains execution logs."""
     log_level = 25
@@ -455,18 +456,18 @@ class workflow(_Config):
     spaces = None
     """Standard and nonstandard spaces."""
     t2s_coreg = None
-    """Co-register echos before generating the T2\\* reference of \
+    """Co-register echos before generating the T2\\* reference of
     :abbr:`ME-EPI (multi-echo echo-planar imaging)`."""
     use_aroma = None
-    """Run ICA-AROMA."""
+    """Run ICA-:abbr:`AROMA (automatic removal of motion artifacts)`."""
     use_bbr = None
-    """Run boundary-based registration for BOLD-to-T1w registration (default: ``True``)."""
+    """Run boundary-based registration for BOLD-to-T1w registration."""
     use_syn = None
-    """Run *fieldmap-less* susceptibility-derived distortions estimation \
+    """Run *fieldmap-less* susceptibility-derived distortions estimation
     in the absence of any alternatives."""
 
 
-class loggers(_Config):
+class loggers:
     """
     Setup loggers, providing access to them across the *fMRIPrep* run.
 
@@ -546,7 +547,7 @@ def to_filename(filename):
 
 
 def init_layout():
-    """Create a new BIDS Layout on :attr:`~execution.bids_dir`."""
+    """Create a new BIDS Layout accessible with :attr:`~execution.layout`."""
     if execution._layout is None:
         import re
         from bids.layout import BIDSLayout

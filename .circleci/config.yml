@@ -166,6 +166,7 @@ jobs:
             printf "[execution]\nstop_on_first_crash = true\n" > /tmp/ds005/nipype.cfg
             echo "poll_sleep_duration = 0.01" >> /tmp/ds005/nipype.cfg
             echo "hash_method = content" >> /tmp/ds005/nipype.cfg
+            echo "crashfile_format = txt" >> /tmp/ds005/nipype.cfg
             cp /tmp/ds005/nipype.cfg /tmp/ds054/nipype.cfg
             cp /tmp/ds005/nipype.cfg /tmp/ds210/nipype.cfg
       - persist_to_workspace:
@@ -404,6 +405,8 @@ jobs:
                 --output-spaces MNI152NLin2009cAsym fsaverage5 fsnative MNI152NLin6Asym anat \
                 --use-plugin /home/circleci/src/fmriprep/.circleci/legacy.yml \
                 --nthreads 2 --cifti-output -vv
+      - store_artifacts:
+          path: /tmp/ds005/derivatives
       - run:
           name: Move intermediate results for second run
           command: |
@@ -458,7 +461,7 @@ jobs:
                 -exec sh -c 'rm -f {}; touch {}' \;
 
       - store_artifacts:
-          path: /tmp/ds005
+          path: /tmp/ds005/work
 
   ds054:
     machine:
