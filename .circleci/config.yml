@@ -334,10 +334,10 @@ jobs:
             - data-v7-{{ .Branch }}-{{ .Revision }}
       - restore_cache:
           keys:
-            - ds005-anat-v17-{{ .Branch }}-{{ .Revision }}
-            - ds005-anat-v17-{{ .Branch }}
-            - ds005-anat-v17-master
-            - ds005-anat-v17-
+            - ds005-anat-v18-{{ .Branch }}-{{ .Revision }}
+            - ds005-anat-v18-{{ .Branch }}
+            - ds005-anat-v18-master
+            - ds005-anat-v18-
       - run:
           name: Set-up a Docker registry
           command: |
@@ -380,7 +380,7 @@ jobs:
             rm -rf /tmp/ds005/work/reportlets
             rm -rf /tmp/ds005/derivatives/fmriprep
       - save_cache:
-         key: ds005-anat-v17-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
+         key: ds005-anat-v18-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
          paths:
             - /tmp/ds005/work
 
