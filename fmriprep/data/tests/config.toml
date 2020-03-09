@@ -37,7 +37,6 @@ fmap_bspline = false
 force_syn = false
 hires = true
 ignore = []
-internal_spaces = "fsaverage:den-164k MNI152NLin6Asym:res-2"
 longitudinal = false
 medial_surface_nan = false
 regressors_all_comps = false

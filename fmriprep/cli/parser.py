@@ -403,25 +403,3 @@ license file at several paths, in this order: 1) command line argument ``--fs-li
 
     config.execution.participant_label = sorted(participant_label)
     config.workflow.skull_strip_template = config.workflow.skull_strip_template[0]
-
-    # Ensure user-defined spatial references for outputs are correctly parsed.
-    # Certain options require normalization to a space not explicitly defined by users.
-    # These spaces will not be included in the final outputs.
-    internal_spaces = []
-    if config.workflow.use_aroma:
-        # Make sure there's a normalization to FSL for AROMA to use.
-        internal_spaces.append('MNI152NLin6Asym:res-2')
-
-    cifti_output = config.workflow.cifti_output
-    if cifti_output:
-        # CIFTI grayordinates to corresponding FSL-MNI resolutions.
-        vol_res = '2' if cifti_output == '91k' else '1'
-        internal_spaces += ['fsaverage:den-164k', 'MNI152NLin6Asym:res-%s' % vol_res]
-
-    # These arguments implicitly signal expected output
-    spaces = config.execution.output_spaces
-    # Add the default standard space if not already present (required by several sub-workflows)
-    if "MNI152NLin2009cAsym" not in spaces.get_spaces(nonstandard=False, dim=(3,)):
-        internal_spaces.append("MNI152NLin2009cAsym")
-
-    config.workflow.internal_spaces = ' '.join(internal_spaces) or None

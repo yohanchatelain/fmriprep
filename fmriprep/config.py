@@ -60,7 +60,6 @@ the settings to hard disk in *ToML* format, which looks like:
     force_syn = false
     hires = true
     ignore = []
-    internal_spaces = "MNI152NLin2009cAsym"
     longitudinal = false
     medial_surface_nan = false
     run_reconall = true
@@ -368,7 +367,8 @@ class execution(_Config):
     output_dir = None
     """Folder where derivatives will be stored."""
     output_spaces = None
-    """List of (non)standard spaces designated as spatial references for outputs."""
+    """List of (non)standard spaces designated (with the ``--output-spaces`` flag of
+    the command line) as spatial references for outputs."""
     reports_only = False
     """Only build the reports, based on the reportlets found in a cached working directory."""
     run_uuid = '%s_%s' % (strftime('%Y%m%d-%H%M%S'), uuid4())
@@ -435,8 +435,6 @@ class workflow(_Config):
     """Run FreeSurfer ``recon-all`` with the ``-hires`` flag."""
     ignore = None
     """Ignore particular steps for *fMRIPrep*."""
-    internal_spaces = None
-    """Standard and nonstandard spaces."""
     longitudinal = False
     """Run FreeSurfer ``recon-all`` with the ``-logitudinal`` flag."""
     medial_surface_nan = None
@@ -454,7 +452,8 @@ class workflow(_Config):
     skull_strip_template = "OASIS30ANTs"
     """Change default brain extraction template."""
     spaces = None
-    """Standard and nonstandard spaces."""
+    """Keeps the :py:class:`~niworkflows.utils.spaces.SpatialReferences`
+    instance keeping standard and nonstandard spaces."""
     t2s_coreg = None
     """Co-register echos before generating the T2\\* reference of
     :abbr:`ME-EPI (multi-echo echo-planar imaging)`."""
@@ -513,6 +512,7 @@ def load(filename):
         if sectionname != 'environment':
             section = getattr(sys.modules[__name__], sectionname)
             section.load(configs)
+    init_nipype()
     init_loggers()
     init_spaces()
     init_layout()
@@ -564,6 +564,7 @@ def init_layout():
 
 def init_loggers():
     """Set the current log level to all loggers."""
+    from nipype import config as ncfg
     _handler = logging.StreamHandler(stream=sys.stdout)
     _handler.setFormatter(
         logging.Formatter(fmt=loggers._fmt, datefmt=loggers._datefmt)
@@ -574,35 +575,78 @@ def init_loggers():
     loggers.interface.setLevel(execution.log_level)
     loggers.workflow.setLevel(execution.log_level)
     loggers.utils.setLevel(execution.log_level)
+    ncfg.update_config({
+        'logging': {
+            'log_directory': str(execution.log_dir),
+            'log_to_file': True
+        },
+    })
 
 
 def init_spaces(checkpoint=True):
     """Initialize the :attr:`~workflow.spaces` setting."""
     from niworkflows.utils.spaces import Reference, SpatialReferences
-    if (
-        getattr(workflow, 'spaces')
-        and isinstance(workflow.spaces, SpatialReferences)
-    ):
-        return
-
     spaces = execution.output_spaces
-    if spaces is not None and not isinstance(spaces, _SRs):
+    if not isinstance(spaces, SpatialReferences):
         spaces = SpatialReferences(
             [ref for s in execution.output_spaces.split(' ')
              for ref in Reference.from_string(s)]
         )
-    if spaces is None:
-        spaces = _SRs()
+
+    # Add the default standard space if not already present (required by several sub-workflows)
+    if "MNI152NLin2009cAsym" not in spaces.get_spaces(nonstandard=False, dim=(3,)):
+        spaces.add(
+            Reference("MNI152NLin2009cAsym", {"res": "native"})
+        )
 
     if checkpoint:
         spaces.checkpoint()
 
-    if workflow.internal_spaces:
-        internal = [
-            Reference.from_string(ref)
-            for ref in workflow.internal_spaces.strip().split(' ')
-        ]
-        spaces += [
-            ref[0] for ref in internal if ref[0].fullname not in spaces
-        ]
+    # Ensure user-defined spatial references for outputs are correctly parsed.
+    # Certain options require normalization to a space not explicitly defined by users.
+    # These spaces will not be included in the final outputs.
+    if workflow.use_aroma:
+        # Make sure there's a normalization to FSL for AROMA to use.
+        spaces.add(
+            Reference("MNI152NLin6Asym", {"res": "2"})
+        )
+
+    cifti_output = workflow.cifti_output
+    if cifti_output:
+        # CIFTI grayordinates to corresponding FSL-MNI resolutions.
+        vol_res = '2' if cifti_output == '91k' else '1'
+        spaces.add(
+            Reference("fsaverage", {"den": "164k"})
+        )
+        spaces.add(
+            Reference("MNI152NLin6Asym", {"res": vol_res})
+        )
+
+    # Make the SpatialReferences object available
     workflow.spaces = spaces
+
+
+def init_nipype():
+    """Set NiPype configurations."""
+    from nipype import config as ncfg
+
+    # Configure resource_monitor
+    if nipype.resource_monitor:
+        ncfg.update_config({
+            'monitoring': {
+                'enabled': nipype.resource_monitor,
+                'sample_frequency': '0.5',
+                'summary_append': True,
+            }
+        })
+        ncfg.enable_resource_monitor()
+
+    # Nipype config (logs and execution)
+    ncfg.update_config({
+        'execution': {
+            'crashdump_dir': str(execution.log_dir),
+            'crashfile_format': nipype.crashfile_format,
+            'get_linked_libs': nipype.get_linked_libs,
+            'stop_on_first_crash': nipype.stop_on_first_crash,
+        }
+    })

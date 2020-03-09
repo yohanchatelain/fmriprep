@@ -19,6 +19,18 @@ def test_config_spaces():
     config.init_spaces()
 
     spaces = config.workflow.spaces
+    assert "MNI152NLin6Asym:res-2" not in [
+        str(s) for s in spaces.get_standard(full_spec=True)]
+
+    assert "MNI152NLin6Asym_res-2" not in [
+        format_reference((s.fullname, s.spec))
+        for s in spaces.references if s.standard and s.dim == 3
+    ]
+
+    config.workflow.use_aroma = True
+    config.init_spaces()
+    spaces = config.workflow.spaces
+
     assert "MNI152NLin6Asym:res-2" in [
         str(s) for s in spaces.get_standard(full_spec=True)]
 

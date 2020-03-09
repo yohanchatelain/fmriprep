@@ -9,7 +9,6 @@ def main():
     import os
     import sys
     import gc
-    from nipype import config as ncfg
     from multiprocessing import Process, Manager
     from .parser import parse_args
     from ..utils.bids import write_derivative_description
@@ -61,31 +60,6 @@ def main():
 
     # Clean up master process before running workflow, which may create forks
     gc.collect()
-
-    # Configure resource_monitor
-    if config.nipype.resource_monitor:
-        ncfg.update_config({
-            'monitoring': {
-                'enabled': config.nipype.resource_monitor,
-                'sample_frequency': '0.5',
-                'summary_append': True,
-            }
-        })
-        ncfg.enable_resource_monitor()
-
-    # Nipype config (logs and execution)
-    ncfg.update_config({
-        'logging': {
-            'log_directory': str(config.execution.log_dir),
-            'log_to_file': True
-        },
-        'execution': {
-            'crashdump_dir': str(config.execution.log_dir),
-            'crashfile_format': config.nipype.crashfile_format,
-            'get_linked_libs': config.nipype.get_linked_libs,
-            'stop_on_first_crash': config.nipype.stop_on_first_crash,
-        }
-    })
 
     # Sentry tracking
     if sentry_sdk is not None:
