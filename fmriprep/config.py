@@ -11,66 +11,10 @@ Settings are stored using :abbr:`ToML (Tom's Markup Language)`.
 The module has a :py:func:`~fmriprep.config.to_filename` function to allow writting out
 the settings to hard disk in *ToML* format, which looks like:
 
-.. code-block:: toml
-
-    [environment]
-    cpu_count = 8
-    exec_env = "posix"
-    free_mem = 2.2
-    overcommit_policy = "heuristic"
-    overcommit_limit = "50%"
-    nipype_version = "1.5.0"
-    templateflow_version = "0.4.2"
-    version = "20.0.1"
-
-    [nipype]
-    crashfile_format = "txt"
-    get_linked_libs = false
-    nprocs = 8
-    omp_nthreads = 8
-    plugin = "MultiProc"
-    resource_monitor = false
-    stop_on_first_crash = false
-
-    [execution]
-    bids_dir = "/data/openfmri/ds000005"
-    boilerplate_only = false
-    exec_env = "posix"
-    fs_license_file = "/opt/freesurfer/license.txt"
-    fs_subjects_dir = "/data/openfmri/ds000005/derivatives/freesurfer-6.0.1"
-    log_dir = "/data/openfmri/ds000005/derivatives/fmriprep/logs"
-    log_level = 15
-    low_mem = false
-    md_only_boilerplate = false
-    notrack = true
-    output_dir = "/data/openfmri/ds000005/derivatives"
-    reports_only = false
-    run_uuid = "20200302-174345_9ba9f304-82de-4538-8c3a-570c5f5d8f2f"
-    participant_label = [ "01",]
-    work_dir = "work/"
-    write_graph = false
-
-    [workflow]
-    anat_only = false
-    aroma_err_on_warn = false
-    aroma_melodic_dim = -200
-    bold2t1w_dof = 6
-    cifti_output = false
-    fmap_bspline = false
-    force_syn = false
-    hires = true
-    ignore = []
-    longitudinal = false
-    medial_surface_nan = false
-    run_reconall = true
-    skull_strip_fixed_seed = false
-    skull_strip_template = "OASIS30ANTs"
-    t2s_coreg = false
-    use_aroma = false
-
-    [nipype.plugin_args]
-    maxtasksperchild = 1
-    raise_insufficient = false
+.. literalinclude:: ../fmriprep/data/tests/config.toml
+   :language: toml
+   :name: fmriprep.toml
+   :caption: **Example file representation of fMRIPrep settings**.
 
 This config file is used to pass the settings across processes,
 using the :py:func:`~fmriprep.config.load` function.
@@ -129,6 +73,7 @@ import warnings
 # cmp is not used by fmriprep, so ignore nipype-generated warnings
 warnings.filterwarnings('ignore', 'cmp not installed')
 warnings.filterwarnings('ignore', 'This has not been fully tested. Please report any failures.')
+warnings.filterwarnings('ignore', "sklearn.externals.joblib is deprecated in 0.21")
 warnings.filterwarnings('ignore', "can't resolve package from __spec__ or __package__")
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
