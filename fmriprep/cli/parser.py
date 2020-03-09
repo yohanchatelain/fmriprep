@@ -21,7 +21,7 @@ def _build_parser():
     def _path_exists(path, parser):
         """Ensure a given path exists."""
         if path is None or not Path(path).exists():
-            raise parser.error("Path does not exist: <%s>." % path)
+            raise parser.error(f"Path does not exist: <{path}>.")
         return Path(path).absolute()
 
     def _min_one(value, parser):
@@ -46,7 +46,7 @@ def _build_parser():
         if value and Path(value).exists():
             return loads(Path(value).read_text())
 
-    verstr = 'fMRIPrep v{}'.format(config.environment.version)
+    verstr = f'fMRIPrep v{config.environment.version}'
     currentv = Version(config.environment.version)
     is_release = not any((currentv.is_devrelease, currentv.is_prerelease, currentv.is_postrelease))
 
@@ -360,14 +360,14 @@ license file at several paths, in this order: 1) command line argument ``--fs-li
 
     # Ensure input and output folders are not the same
     if output_dir == bids_dir:
-        config.loggers.cli.error(
+        parser.error(
             'The selected output folder is the same as the input BIDS folder. '
             'Please modify the output path (suggestion: %s).'
             % bids_dir / 'derivatives' / ('fmriprep-%s' % version.split('+')[0])
         )
 
     if bids_dir in work_dir.parents:
-        config.loggers.cli.error(
+        parser.error(
             'The selected working directory is a subdirectory of the input BIDS folder. '
             'Please modify the output path.'
         )
