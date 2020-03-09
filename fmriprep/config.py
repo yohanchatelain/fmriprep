@@ -116,15 +116,11 @@ Other responsibilities
 ----------------------
 The :py:mod:`config` is responsible for other conveniency actions.
 
-  * Switching Python's ``multiprocessing`` to *forkserver* mode.
+  * Switching Python's :obj:`multiprocessing` to *forkserver* mode.
   * Set up a filter for warnings as early as possible.
-  * Automated I/O magic operations:
-
-    * :obj:`Path` \<-\> :obj:`str` \<-\> :obj:`Path`).
-    * :py:class:`~niworkflows.util.spaces.SpatialReferences` \<-\> :obj:`str` \<-\>
-      :py:class:`~niworkflows.util.spaces.SpatialReferences`
-    * :py:class:`~bids.layout.BIDSLayout` \<-\> :obj:`str` \<-\>
-      :py:class:`~bids.layout.BIDSLayout`
+  * Automated I/O magic operations. Some conversions need to happen in the
+    store/load processes (e.g., from/to :obj:`~pathlib.Path` \<-\> :obj:`str`,
+    :py:class:`~bids.layout.BIDSLayout`, etc.)
 
 """
 from multiprocessing import set_start_method
@@ -229,7 +225,7 @@ class _Config:
         raise RuntimeError('Configuration type is not instantiable.')
 
     @classmethod
-    def load(cls, settings):
+    def load(cls, settings, init=True):
         """Store settings from a dictionary."""
         for k, v in settings.items():
             if v is None:
@@ -239,6 +235,12 @@ class _Config:
                 continue
             if hasattr(cls, k):
                 setattr(cls, k, v)
+
+        if init:
+            try:
+                cls.init()
+            except AttributeError:
+                pass
 
     @classmethod
     def get(cls):
@@ -331,6 +333,32 @@ class nipype(_Config):
                 out['plugin_args']['memory_gb'] = float(cls.memory_gb)
         return out
 
+    @classmethod
+    def init(cls):
+        """Set NiPype configurations."""
+        from nipype import config as ncfg
+
+        # Configure resource_monitor
+        if cls.resource_monitor:
+            ncfg.update_config({
+                'monitoring': {
+                    'enabled': cls.resource_monitor,
+                    'sample_frequency': '0.5',
+                    'summary_append': True,
+                }
+            })
+            ncfg.enable_resource_monitor()
+
+        # Nipype config (logs and execution)
+        ncfg.update_config({
+            'execution': {
+                'crashdump_dir': str(execution.log_dir),
+                'crashfile_format': cls.crashfile_format,
+                'get_linked_libs': cls.get_linked_libs,
+                'stop_on_first_crash': cls.stop_on_first_crash,
+            }
+        })
+
 
 class execution(_Config):
     """Configure run-level settings."""
@@ -352,8 +380,7 @@ class execution(_Config):
     fs_subjects_dir = None
     """FreeSurfer's subjects directory."""
     layout = None
-    """A py:class:`~bids.layout.BIDSLayout` object, see
-    :py:func:`~fmriprep.config.init_layout`."""
+    """A :py:class:`~bids.layout.BIDSLayout` object, see :py:func:`init`."""
     log_dir = None
     """The path to a directory that contains execution logs."""
     log_level = 25
@@ -396,6 +423,22 @@ class execution(_Config):
         'templateflow_home',
         'work_dir',
     )
+
+    @classmethod
+    def init(cls):
+        """Create a new BIDS Layout accessible with :attr:`~execution.layout`."""
+        if cls._layout is None:
+            import re
+            from bids.layout import BIDSLayout
+            work_dir = cls.work_dir / 'bids.db'
+            work_dir.mkdir(exist_ok=True, parents=True)
+            cls._layout = BIDSLayout(
+                str(cls.bids_dir),
+                validate=False,
+                # database_path=str(work_dir),
+                ignore=("code", "stimuli", "sourcedata", "models",
+                        "derivatives", re.compile(r'^\.')))
+        cls.layout = cls._layout
 
 
 # These variables are not necessary anymore
@@ -467,18 +510,7 @@ class workflow(_Config):
 
 
 class loggers:
-    """
-    Setup loggers, providing access to them across the *fMRIPrep* run.
-
-        * Add new logger levels (25: IMPORTANT, and 15: VERBOSE).
-        * Add a new sub-logger (``cli``).
-        * Logger configuration.
-
-    See also:
-
-      .. autofunction: init_loggers
-
-    """
+    """Keep loggers easily accessible (see :py:func:`init`)."""
 
     _fmt = "%(asctime)s,%(msecs)d %(name)-2s " "%(levelname)-2s:\n\t %(message)s"
     _datefmt = "%y%m%d-%H:%M:%S"
@@ -494,13 +526,41 @@ class loggers:
     utils = nlogging.getLogger('nipype.utils')
     """NiPype's utils logger."""
 
+    @classmethod
+    def init(cls):
+        """
+        Set the log level, initialize all loggers into :py:class:`loggers`.
+
+            * Add new logger levels (25: IMPORTANT, and 15: VERBOSE).
+            * Add a new sub-logger (``cli``).
+            * Logger configuration.
+
+        """
+        from nipype import config as ncfg
+        _handler = logging.StreamHandler(stream=sys.stdout)
+        _handler.setFormatter(
+            logging.Formatter(fmt=cls._fmt, datefmt=cls._datefmt)
+        )
+        cls.cli.addHandler(_handler)
+        cls.default.setLevel(execution.log_level)
+        cls.cli.setLevel(execution.log_level)
+        cls.interface.setLevel(execution.log_level)
+        cls.workflow.setLevel(execution.log_level)
+        cls.utils.setLevel(execution.log_level)
+        ncfg.update_config({
+            'logging': {
+                'log_directory': str(execution.log_dir),
+                'log_to_file': True
+            },
+        })
+
 
 def from_dict(settings):
     """Read settings from a flat dictionary."""
     nipype.load(settings)
     execution.load(settings)
     workflow.load(settings)
-    init_loggers()
+    loggers.init()
 
 
 def load(filename):
@@ -512,10 +572,7 @@ def load(filename):
         if sectionname != 'environment':
             section = getattr(sys.modules[__name__], sectionname)
             section.load(configs)
-    init_nipype()
-    init_loggers()
     init_spaces()
-    init_layout()
 
 
 def get(flat=False):
@@ -544,43 +601,6 @@ def to_filename(filename):
     """Write settings to file."""
     filename = Path(filename)
     filename.write_text(dumps())
-
-
-def init_layout():
-    """Create a new BIDS Layout accessible with :attr:`~execution.layout`."""
-    if execution._layout is None:
-        import re
-        from bids.layout import BIDSLayout
-        work_dir = execution.work_dir / 'bids.db'
-        work_dir.mkdir(exist_ok=True, parents=True)
-        execution._layout = BIDSLayout(
-            str(execution.bids_dir),
-            validate=False,
-            # database_path=str(work_dir),
-            ignore=("code", "stimuli", "sourcedata", "models",
-                    "derivatives", re.compile(r'^\.')))
-    execution.layout = execution._layout
-
-
-def init_loggers():
-    """Set the current log level to all loggers."""
-    from nipype import config as ncfg
-    _handler = logging.StreamHandler(stream=sys.stdout)
-    _handler.setFormatter(
-        logging.Formatter(fmt=loggers._fmt, datefmt=loggers._datefmt)
-    )
-    loggers.cli.addHandler(_handler)
-    loggers.default.setLevel(execution.log_level)
-    loggers.cli.setLevel(execution.log_level)
-    loggers.interface.setLevel(execution.log_level)
-    loggers.workflow.setLevel(execution.log_level)
-    loggers.utils.setLevel(execution.log_level)
-    ncfg.update_config({
-        'logging': {
-            'log_directory': str(execution.log_dir),
-            'log_to_file': True
-        },
-    })
 
 
 def init_spaces(checkpoint=True):
@@ -624,29 +644,3 @@ def init_spaces(checkpoint=True):
 
     # Make the SpatialReferences object available
     workflow.spaces = spaces
-
-
-def init_nipype():
-    """Set NiPype configurations."""
-    from nipype import config as ncfg
-
-    # Configure resource_monitor
-    if nipype.resource_monitor:
-        ncfg.update_config({
-            'monitoring': {
-                'enabled': nipype.resource_monitor,
-                'sample_frequency': '0.5',
-                'summary_append': True,
-            }
-        })
-        ncfg.enable_resource_monitor()
-
-    # Nipype config (logs and execution)
-    ncfg.update_config({
-        'execution': {
-            'crashdump_dir': str(execution.log_dir),
-            'crashfile_format': nipype.crashfile_format,
-            'get_linked_libs': nipype.get_linked_libs,
-            'stop_on_first_crash': nipype.stop_on_first_crash,
-        }
-    })

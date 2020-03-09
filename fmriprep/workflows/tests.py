@@ -20,13 +20,14 @@ def mock_config():
     for sectionname, configs in settings.items():
         if sectionname != 'environment':
             section = getattr(config, sectionname)
-            section.load(configs)
-    config.init_loggers()
+            section.load(configs, init=False)
+    config.nipype.init()
+    config.loggers.init()
     config.init_spaces()
 
     config.execution.work_dir = Path(mkdtemp())
     config.execution.bids_dir = Path(pkgrf('fmriprep', 'data/tests/ds000005')).absolute()
-    config.init_layout()
+    config.execution.init()
 
     yield
 

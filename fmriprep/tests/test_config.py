@@ -14,8 +14,9 @@ def test_config_spaces():
     for sectionname, configs in settings.items():
         if sectionname != 'environment':
             section = getattr(config, sectionname)
-            section.load(configs)
-    config.init_loggers()
+            section.load(configs, init=False)
+    config.nipype.init()
+    config.loggers.init()
     config.init_spaces()
 
     spaces = config.workflow.spaces

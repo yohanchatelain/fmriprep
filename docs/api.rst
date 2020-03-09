@@ -7,7 +7,7 @@ Internal configuration system
 -----------------------------
 
 .. automodule:: fmriprep.config
-   :members: from_dict, load, get, dumps, to_filename, init_layout, init_spaces
+   :members: from_dict, load, get, dumps, to_filename, init_spaces
 
 Workflows
 ---------

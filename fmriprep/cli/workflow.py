@@ -42,7 +42,6 @@ def build_workflow(config_file, retval):
         config.execution.bids_description_hash = sha256(desc_content).hexdigest()
 
     # First check that bids_dir looks like a BIDS folder
-    config.init_layout()
     subject_list = collect_participants(
         config.execution.layout,
         participant_label=config.execution.participant_label

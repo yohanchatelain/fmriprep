@@ -308,8 +308,7 @@ def parse_args(args=None, namespace=None):
     opts = parser.parse_args(args, namespace)
     config.execution.log_level = int(max(25 - 5 * opts.verbose_count, logging.DEBUG))
     config.from_dict(vars(opts))
-
-    config.init_loggers()
+    config.loggers.init()
 
     # Retrieve logging level
     build_log = config.loggers.cli
@@ -388,8 +387,8 @@ license file at several paths, in this order: 1) command line argument ``--fs-li
     output_dir.mkdir(exist_ok=True, parents=True)
     work_dir.mkdir(exist_ok=True, parents=True)
 
-    # First check that bids_dir looks like a BIDS folder
-    config.init_layout()
+    # Force initialization of the BIDSLayout
+    config.execution.init()
     all_subjects = config.execution.layout.get_subjects()
     if config.execution.participant_label is None:
         config.execution.participant_label = all_subjects
