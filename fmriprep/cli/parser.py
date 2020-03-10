@@ -396,7 +396,7 @@ license file at several paths, in this order: 1) command line argument ``--fs-li
     participant_label = set(config.execution.participant_label)
     missing_subjects = participant_label - set(all_subjects)
     if missing_subjects:
-        config.loggers.cli.error(
+        parser.error(
             "One or more participant labels were not found in the BIDS directory: "
             "%s." % ", ".join(missing_subjects))
 
