@@ -86,7 +86,7 @@ except RuntimeError:
     pass  # context has been already set
 finally:
     # Defer all custom import for after initializing the forkserver and
-    # redirecting warnings
+    # ignoring the most annoying warnings
     import os
     import sys
     import logging

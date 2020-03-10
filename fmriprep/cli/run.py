@@ -21,10 +21,15 @@ def main():
         from ..utils.sentry import sentry_setup
         sentry_setup()
 
+    # CRITICAL Save the config to a file. This is necessary because the execution graph
+    # is built as a separate process to keep the memory footprint low. The most
+    # straightforward way to communicate with the child process is via the filesystem.
     config_file = config.execution.work_dir / '.fmriprep.toml'
     config.to_filename(config_file)
 
-    # Call build_workflow(config_file, retval) in a subprocess
+    # CRITICAL Call build_workflow(config_file, retval) in a subprocess.
+    # Because Python on Linux does not ever free virtual memory (VM), running the
+    # workflow construction jailed within a process preempts excessive VM buildup.
     with Manager() as mgr:
         from .workflow import build_workflow
         retval = mgr.dict()
@@ -35,6 +40,9 @@ def main():
         retcode = p.exitcode or retval.get('return_code', 0)
         fmriprep_wf = retval.get('workflow', None)
 
+    # CRITICAL Load the config from the file. This is necessary because the ``build_workflow``
+    # function executed constrained in a process may change the config (and thus the global
+    # state of fMRIPrep).
     config.load(config_file)
 
     if config.execution.reports_only:
