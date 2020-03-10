@@ -106,12 +106,12 @@ def build_boilerplate(config_file, workflow):
     config.load(config_file)
     logs_path = config.execution.output_dir / 'fmriprep' / 'logs'
     boilerplate = workflow.visit_desc()
+    citation_files = {
+        ext: logs_path / ('CITATION.%s' % ext)
+        for ext in ('bib', 'tex', 'md', 'html')
+    }
 
     if boilerplate:
-        citation_files = {
-            ext: logs_path / ('CITATION.%s' % ext)
-            for ext in ('bib', 'tex', 'md', 'html')
-        }
         # To please git-annex users and also to guarantee consistency
         # among different renderings of the same file, first remove any
         # existing one
@@ -122,11 +122,6 @@ def build_boilerplate(config_file, workflow):
                 pass
 
     citation_files['md'].write_text(boilerplate)
-
-    citation_files = {
-        ext: config.execution.output_dir / 'fmriprep' / 'logs'
-        / ('CITATION.%s' % ext) for ext in ('bib', 'tex', 'md', 'html')
-    }
 
     if not config.execution.md_only_boilerplate and citation_files['md'].exists():
         from subprocess import check_call, CalledProcessError, TimeoutExpired
