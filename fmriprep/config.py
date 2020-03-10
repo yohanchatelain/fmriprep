@@ -551,21 +551,21 @@ def to_filename(filename):
 def init_spaces(checkpoint=True):
     """Initialize the :attr:`~workflow.spaces` setting."""
     from niworkflows.utils.spaces import Reference, SpatialReferences
-    spaces = execution.output_spaces
+    spaces = execution.output_spaces or SpatialReferences()
     if not isinstance(spaces, SpatialReferences):
         spaces = SpatialReferences(
-            [ref for s in execution.output_spaces.split(' ')
+            [ref for s in spaces.split(' ')
              for ref in Reference.from_string(s)]
         )
+
+    if checkpoint and not spaces.is_cached():
+        spaces.checkpoint()
 
     # Add the default standard space if not already present (required by several sub-workflows)
     if "MNI152NLin2009cAsym" not in spaces.get_spaces(nonstandard=False, dim=(3,)):
         spaces.add(
-            Reference("MNI152NLin2009cAsym", {"res": "native"})
+            Reference("MNI152NLin2009cAsym", {})
         )
-
-    if checkpoint:
-        spaces.checkpoint()
 
     # Ensure user-defined spatial references for outputs are correctly parsed.
     # Certain options require normalization to a space not explicitly defined by users.

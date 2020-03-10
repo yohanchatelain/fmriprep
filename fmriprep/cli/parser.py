@@ -142,7 +142,7 @@ def _build_parser():
              'option is not enabled, standard EPI-T1 coregistration is performed '
              'using the middle echo.')
     g_conf.add_argument(
-        '--output-spaces', nargs='+', action=OutputReferencesAction, default=SpatialReferences(),
+        '--output-spaces', nargs='*', action=OutputReferencesAction,
         help="""\
 Standard and non-standard spaces to resample anatomical and functional images to. \
 Standard spaces may be specified by the form \
@@ -151,8 +151,8 @@ a keyword designating a spatial reference, and may be followed by optional, \
 colon-separated parameters. \
 Non-standard spaces imply specific orientations and sampling grids. \
 Important to note, the ``res-*`` modifier does not define the resolution used for \
-the spatial normalization.
-For further details, please check out \
+the spatial normalization. To generate no BOLD outputs, use this option without specifying \
+any spatial references. For further details, please check out \
 https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (currentv.base_version
                                                         if is_release else 'latest'))
 
@@ -304,11 +304,18 @@ discourage its usage.""" % (config.environment.version, _reason), file=sys.stder
 def parse_args(args=None, namespace=None):
     """Parse args and run further checks on the command line."""
     import logging
+    from niworkflows.utils.spaces import Reference, SpatialReferences
     parser = _build_parser()
     opts = parser.parse_args(args, namespace)
     config.execution.log_level = int(max(25 - 5 * opts.verbose_count, logging.DEBUG))
     config.from_dict(vars(opts))
     config.loggers.init()
+
+    # Initialize --output-spaces if not defined
+    if config.execution.output_spaces is None:
+        config.execution.output_spaces = SpatialReferences(
+            [Reference("MNI152NLin2009cAsym", {"res": "native"})]
+        )
 
     # Retrieve logging level
     build_log = config.loggers.cli
