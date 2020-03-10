@@ -16,7 +16,7 @@ def _build_parser():
     )
     from packaging.version import Version
     from .version import check_latest, is_flagged
-    from niworkflows.utils.spaces import Reference, SpatialReferences, OutputReferencesAction
+    from niworkflows.utils.spaces import Reference, OutputReferencesAction
 
     def _path_exists(path, parser):
         """Ensure a given path exists."""
