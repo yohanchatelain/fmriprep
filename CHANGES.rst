@@ -1,3 +1,17 @@
+20.0.2 (March 6, 2020)
+======================
+A bug squashing release in the 20.0.x series.
+
+This release fixes the use of custom templates within the docker wrapper, remedies crashes
+when FreeSurfer HOME was not set, and improves the documentation for local installations.
+
+With thanks to Blaise Frederick for the contribution.
+
+  * DOC: Update standalone installation requirements (#2009)
+  * FIX: Crashes whenever FREESURFER_HOME is not set (#2014)
+  * FIX: Local template mounting (wrapper) (#2020)
+  * MAINT: Pin minor series of nipype, major series of nibabel (#2021)
+
 20.0.1 (February 27, 2020)
 ==========================
 Bug-fix release in 20.0.x series.
