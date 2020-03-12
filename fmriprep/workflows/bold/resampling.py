@@ -739,19 +739,19 @@ surface space.
                    'new_sphere', 'new_area',
                    'current_sphere', 'current_area'])
     resample.inputs.current_sphere = [
-        str(tf.get('fsLR', space='fsaverage', suffix='sphere', hemi=hemi, density='164k'))
+        str(tf.get('fsaverage', hemi=hemi, density='164k', desc='std', suffix='sphere'))
         for hemi in 'LR'
     ]
     resample.inputs.current_area = [
-        str(tf.get('fsLR', space='fsaverage', suffix='midthickness', hemi=hemi, density='164k'))
+        str(tf.get('fsaverage', hemi=hemi, density='164k', desc='vaavg', suffix='midthickness'))
         for hemi in 'LR'
     ]
     resample.inputs.new_sphere = [
-        str(tf.get('fsLR', space=None, suffix='sphere', hemi=hemi, density=fslr_density))
+        str(tf.get('fsLR', space='fsaverage', hemi=hemi, density=fslr_density, suffix='sphere'))
         for hemi in 'LR'
     ]
     resample.inputs.new_area = [
-        str(tf.get('fsLR', space=None, suffix='midthickness', hemi=hemi, density=fslr_density))
+        str(tf.get('fsLR', hemi=hemi, density=fslr_density, desc='vaavg', suffix='midthickness'))
         for hemi in 'LR'
     ]
     resample.inputs.out_file = [
