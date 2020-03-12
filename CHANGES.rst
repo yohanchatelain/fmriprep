@@ -1,3 +1,12 @@
+20.0.3 (March 12, 2020)
+=======================
+A bug-fix release for CIFTI surfaces.
+
+This release remedies a resampling error when generating fsLR surfaces that was producing erroneous CIFTI files.
+**We strongly recommend all users who have generated CIFTI output with previous 20.0.x releases to upgrade and rerun**.
+
+   * FIX: Remedy fsLR surface resampling (#2032)
+
 20.0.2 (March 6, 2020)
 ======================
 A bug squashing release in the 20.0.x series.
