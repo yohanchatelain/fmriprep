@@ -171,8 +171,9 @@ RUN pip install --no-cache-dir "$( grep templateflow fmriprep-setup.cfg | xargs 
                          desc='brain', extension=['.nii', '.nii.gz']); \
                tfapi.get('MNI152NLin2009cAsym', atlas=None, extension=['.nii', '.nii.gz']); \
                tfapi.get('OASIS30ANTs', extension=['.nii', '.nii.gz']); \
-               tfapi.get('fsLR', space='fsaverage', density='164k'); \
-               tfapi.get('fsLR', space=None, density='32k'); \
+               tfapi.get('fsaverage', density='164k', desc='std', suffix='sphere'); \
+               tfapi.get('fsaverage', density='164k', desc='vaavg', suffix='midthickness'); \
+               tfapi.get('fsLR', density='32k'); \
                tfapi.get('MNI152NLin6Asym', resolution=2, atlas='HCP', suffix='dseg')" && \
     rm fmriprep-setup.cfg && \
     find $HOME/.cache/templateflow -type d -exec chmod go=u {} + && \
