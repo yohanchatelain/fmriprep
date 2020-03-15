@@ -17,6 +17,7 @@ from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 
 from niworkflows.engine.workflows import LiterateWorkflow as Workflow
+from niworkflows.interfaces.nibabel import ApplyMask
 from niworkflows.interfaces.utility import KeySelect
 from niworkflows.interfaces.utils import DictMerge
 from niworkflows.func.util import init_bold_reference_wf
@@ -69,8 +70,6 @@ def init_func_preproc_wf(bold_file):
         BOLD series NIfTI file
     t1w_preproc
         Bias-corrected structural template image
-    t1w_brain
-        Skull-stripped ``t1w_preproc``
     t1w_mask
         Mask of the skull-stripped template image
     t1w_dseg
@@ -83,16 +82,10 @@ def init_func_preproc_wf(bold_file):
     t1w_tpms
         List of tissue probability maps in T1w space
     template
-        Name of the template (parametric)
-    anat2std_xfm
-        ANTs-compatible affine-and-warp transform file (parametric)
-    std2anat_xfm
-        ANTs-compatible affine-and-warp transform file (inverse) (parametric)
-    joint_template
         List of templates to target
-    joint_anat2std_xfm
+    anat2std_xfm
         List of transform files, collated with templates
-    joint_std2anat_xfm
+    std2anat_xfm
         List of inverse transform files, collated with templates
     subjects_dir
         FreeSurfer SUBJECTS_DIR
@@ -244,10 +237,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_file', 'subjects_dir', 'subject_id',
-                't1w_preproc', 't1w_brain', 't1w_mask', 't1w_dseg', 't1w_tpms',
+                't1w_preproc', 't1w_mask', 't1w_dseg', 't1w_tpms',
                 't1w_aseg', 't1w_aparc',
                 'anat2std_xfm', 'std2anat_xfm', 'template',
-                'joint_anat2std_xfm', 'joint_std2anat_xfm', 'joint_template',
                 't1w2fsnative_xfm', 'fsnative2t1w_xfm']),
         name='inputnode')
     inputnode.inputs.bold_file = bold_file
@@ -262,6 +254,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 'surfaces', 'confounds', 'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file',
                 'confounds_metadata']),
         name='outputnode')
+
+    # Generate a brain-masked conversion of the t1w
+    t1w_brain = pe.Node(ApplyMask(), name='t1w_brain')
 
     # BOLD buffer: an identity used as a pointer to either the original BOLD
     # or the STC'ed one for further use.
@@ -422,6 +417,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
     # MAIN WORKFLOW STRUCTURE #######################################################
     workflow.connect([
+        (inputnode, t1w_brain, [('t1w_preproc', 'in_file'),
+                                ('t1w_mask', 'in_mask')]),
         # Generate early reference
         (inputnode, bold_reference_wf, [('bold_file', 'inputnode.bold_file')]),
         # BOLD buffer has slice-time corrected if it was run, original otherwise
@@ -434,18 +431,20 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('outputnode.algo_dummy_scans', 'algo_dummy_scans')]),
         # EPI-T1 registration workflow
         (inputnode, bold_reg_wf, [
-            ('t1w_brain', 'inputnode.t1w_brain'),
             ('t1w_dseg', 'inputnode.t1w_dseg'),
             # Undefined if --fs-no-reconall, but this is safe
             ('subjects_dir', 'inputnode.subjects_dir'),
             ('subject_id', 'inputnode.subject_id'),
             ('fsnative2t1w_xfm', 'inputnode.fsnative2t1w_xfm')]),
+        (t1w_brain, bold_reg_wf, [
+            ('out_file', 'inputnode.t1w_brain')]),
         (inputnode, bold_t1_trans_wf, [
             ('bold_file', 'inputnode.name_source'),
-            ('t1w_brain', 'inputnode.t1w_brain'),
             ('t1w_mask', 'inputnode.t1w_mask'),
             ('t1w_aseg', 'inputnode.t1w_aseg'),
             ('t1w_aparc', 'inputnode.t1w_aparc')]),
+        (t1w_brain, bold_t1_trans_wf, [
+            ('out_file', 'inputnode.t1w_brain')]),
         # unused if multiecho, but this is safe
         (bold_hmc_wf, bold_t1_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms')]),
         (bold_reg_wf, bold_t1_trans_wf, [
@@ -456,8 +455,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                                         ('outputnode.bold_aparc_t1', 'bold_aparc_t1')]),
         (bold_reg_wf, summary, [('outputnode.fallback', 'fallback')]),
         # SDC (or pass-through workflow)
-        (inputnode, bold_sdc_wf, [
-            ('t1w_brain', 'inputnode.t1w_brain')]),
+        (t1w_brain, bold_sdc_wf, [
+            ('out_file', 'inputnode.t1w_brain')]),
         (bold_reference_wf, bold_sdc_wf, [
             ('outputnode.ref_image', 'inputnode.epi_file'),
             ('outputnode.ref_image_brain', 'inputnode.epi_brain'),
@@ -565,8 +564,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 name='sdc_select_std', run_without_submitting=True)
             sdc_select_std.inputs.key = 'MNI152NLin2009cAsym'
             workflow.connect([
-                (inputnode, sdc_select_std, [('joint_std2anat_xfm', 'std2anat_xfm'),
-                                             ('joint_template', 'keys')]),
+                (inputnode, sdc_select_std, [('std2anat_xfm', 'std2anat_xfm'),
+                                             ('template', 'keys')]),
                 (sdc_select_std, bold_sdc_wf, [('std2anat_xfm', 'inputnode.std2anat_xfm')]),
             ])
 
@@ -634,8 +633,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         )
         workflow.connect([
             (inputnode, bold_std_trans_wf, [
-                ('joint_template', 'inputnode.templates'),
-                ('joint_anat2std_xfm', 'inputnode.anat2std_xfm'),
+                ('template', 'inputnode.templates'),
+                ('anat2std_xfm', 'inputnode.anat2std_xfm'),
                 ('bold_file', 'inputnode.name_source'),
                 ('t1w_aseg', 'inputnode.bold_aseg'),
                 ('t1w_aparc', 'inputnode.bold_aparc')]),
@@ -675,8 +674,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
         workflow.connect([
             (inputnode, carpetplot_select_std, [
-                ('joint_std2anat_xfm', 'std2anat_xfm'),
-                ('joint_template', 'keys')]),
+                ('std2anat_xfm', 'std2anat_xfm'),
+                ('template', 'keys')]),
             (carpetplot_select_std, carpetplot_wf, [
                 ('std2anat_xfm', 'inputnode.std2anat_xfm')]),
             (bold_bold_trans_wf if not multiecho else bold_t2s_wf, carpetplot_wf, [

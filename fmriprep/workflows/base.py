@@ -222,16 +222,15 @@ It is released under the [CC0]\
         freesurfer=config.workflow.run_reconall,
         hires=config.workflow.hires,
         longitudinal=config.workflow.longitudinal,
-        num_t1w=len(subject_data['t1w']),
         omp_nthreads=config.nipype.omp_nthreads,
         output_dir=str(config.execution.output_dir),
         reportlets_dir=reportlets_dir,
         skull_strip_fixed_seed=config.workflow.skull_strip_fixed_seed,
-        # skull_strip_mode='force',
+        skull_strip_mode='force',
         skull_strip_template=Reference.from_string(
             config.workflow.skull_strip_template)[0],
         spaces=spaces,
-        # t1w=subject_data['t1w'],
+        t1w=subject_data['t1w'],
     )
 
     workflow.connect([
@@ -277,18 +276,14 @@ tasks and sessions), the following preprocessing was performed.
         workflow.connect([
             (anat_preproc_wf, func_preproc_wf,
              [(('outputnode.t1w_preproc', _pop), 'inputnode.t1w_preproc'),
-              ('outputnode.t1w_brain', 'inputnode.t1w_brain'),
               ('outputnode.t1w_mask', 'inputnode.t1w_mask'),
               ('outputnode.t1w_dseg', 'inputnode.t1w_dseg'),
               ('outputnode.t1w_aseg', 'inputnode.t1w_aseg'),
               ('outputnode.t1w_aparc', 'inputnode.t1w_aparc'),
               ('outputnode.t1w_tpms', 'inputnode.t1w_tpms'),
-              ('outputnode.template', 'inputnode.template'),
-              ('outputnode.anat2std_xfm', 'inputnode.anat2std_xfm'),
-              ('outputnode.std2anat_xfm', 'inputnode.std2anat_xfm'),
-              ('outputnode.joint_template', 'inputnode.joint_template'),
-              ('outputnode.joint_anat2std_xfm', 'inputnode.joint_anat2std_xfm'),
-              ('outputnode.joint_std2anat_xfm', 'inputnode.joint_std2anat_xfm'),
+              ('outputnode.joint_template', 'inputnode.template'),
+              ('outputnode.joint_anat2std_xfm', 'inputnode.anat2std_xfm'),
+              ('outputnode.joint_std2anat_xfm', 'inputnode.std2anat_xfm'),
               # Undefined if --fs-no-reconall, but this is safe
               ('outputnode.subjects_dir', 'inputnode.subjects_dir'),
               ('outputnode.subject_id', 'inputnode.subject_id'),
