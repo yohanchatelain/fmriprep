@@ -226,19 +226,20 @@ How do I select only certain files to be input to fMRIPrep?
 
 Using the `--bids-filter-file` flag, you can pass fMRIPrep a JSON file that
 describes a custom BIDS filter using pyBIDS, with the syntax
-{<suffix>:{<entity>:<filter>,...},...}. For example: \
-        ```{
-            "t1w": {
-                "datatype": "anat",
-                "session": "01",
-                "acquisition": null,
-                "suffix": "T1w"
-            },
-            "bold": {
-                "datatype": "func",
-                "session": "01",
-                "suffix": "bold"
-            }
-        }```
+{<suffix>:{<entity>:<filter>,...},...}. For example: ::
+  {
+      "t1w": {
+          "datatype": "anat",
+          "session": "02",
+          "acquisition": null,
+          "suffix": "T1w"
+      },
+      "bold": {
+          "datatype": "func",
+          "session": "02",
+          "suffix": "bold"
+      }
+  }
+  
 For all possible filters, see the pyBIDS
 `config file <https://github.com/bids-standard/pybids/blob/master/bids/layout/config/bids.json>`__.
