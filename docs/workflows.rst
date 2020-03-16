@@ -40,9 +40,9 @@ single reference template (see `Longitudinal processing`_).
         freesurfer=True,
         hires=True,
         longitudinal=False,
-        num_t1w=1,
         omp_nthreads=1,
         output_dir='.',
+        skull_strip_mode='force',
         skull_strip_template=Reference('MNI152NLin2009cAsym'),
         spaces=SpatialReferences([
             ('MNI152Lin', {}),
@@ -52,6 +52,7 @@ single reference template (see `Longitudinal processing`_).
         ]),
         reportlets_dir='.',
         skull_strip_fixed_seed=False,
+        t1w=['sub-01/anat/sub-01_T1w.nii.gz'],
     )
 
 See also *sMRIPrep*'s
