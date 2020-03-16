@@ -227,6 +227,7 @@ How do I select only certain files to be input to fMRIPrep?
 Using the `--bids-filter-file` flag, you can pass fMRIPrep a JSON file that
 describes a custom BIDS filter using pyBIDS, with the syntax
 {<suffix>:{<entity>:<filter>,...},...}. For example: ::
+
   {
       "t1w": {
           "datatype": "anat",
@@ -240,6 +241,6 @@ describes a custom BIDS filter using pyBIDS, with the syntax
           "suffix": "bold"
       }
   }
-  
+
 For all possible filters, see the pyBIDS
 `config file <https://github.com/bids-standard/pybids/blob/master/bids/layout/config/bids.json>`__.
