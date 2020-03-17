@@ -68,7 +68,8 @@ single reference template (see `Longitudinal processing`_).
     Likewise, if you know your images are not skull-stripped and the heuristic incorrectly
     determines that they are, you can force skull stripping with ``--skull-strip-t1w force``.
     The default behavior of detecting pre-extracted brains may be explicitly requested with
-    ``---skull-strip-t1w auto``.
+    ``---skull-strip-t1w auto``, which will use a heuristic to check if each image is
+    already masked.
 
 See also *sMRIPrep*'s
 :py:func:`~smriprep.workflows.anatomical.init_anat_preproc_wf`.
