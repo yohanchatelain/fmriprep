@@ -222,11 +222,11 @@ runtime environment is able to access the filesystem, at the location of your
 If you are a Singularity user, please check out :ref:`singularity_tf`.
 
 How do I select only certain files to be input to fMRIPrep?
----------------------------------------------------------------------
+-----------------------------------------------------------
 
 Using the ``--bids-filter-file`` flag, you can pass fMRIPrep a JSON file that
-describes a custom BIDS filter using pyBIDS, with the syntax
-{<suffix>:{<entity>:<filter>,...},...}. For example: ::
+describes a custom BIDS filter for selecting files with PyBIDS, with the syntax
+``{<query>: {<entity>: <filter>, ...},...}``. For example::
 
   {
       "t1w": {
@@ -242,5 +242,18 @@ describes a custom BIDS filter using pyBIDS, with the syntax
       }
   }
 
-For all possible filters, see the pyBIDS
+fMRIPrep uses the following queries, by default::
+
+  {
+    'fmap': {'datatype': 'fmap'},
+    'bold': {'datatype': 'func', 'suffix': 'bold'},
+    'sbref': {'datatype': 'func', 'suffix': 'sbref'},
+    'flair': {'datatype': 'anat', 'suffix': 'FLAIR'},
+    't2w': {'datatype': 'anat', 'suffix': 'T2w'},
+    't1w': {'datatype': 'anat', 'suffix': 'T1w'},
+    'roi': {'datatype': 'anat', 'suffix': 'roi'},
+  }
+
+Only modifications of these queries will have any effect. You may filter on any entity defined
+in the the PyBIDS
 `config file <https://github.com/bids-standard/pybids/blob/master/bids/layout/config/bids.json>`__.
