@@ -55,6 +55,19 @@ single reference template (see `Longitudinal processing`_).
         t1w=['sub-01/anat/sub-01_T1w.nii.gz'],
     )
 
+.. important::
+
+    Occasionally, openly shared datasets may contain preprocessed anatomical images
+    as if they are unprocessed.
+    Particularly, brain-extracted images will crash the anatomical workflow of *fMRIPrep*.
+    It is possible to make *fMRIPrep* adapt to such a circumstance by setting the
+    command line argument ``---skull-strip-t1w auto``.
+    If you know all your T1w images are brain-extracted (i.e., they only contain the brain
+    and have been zeroed elsewhere), you can skip brain extraction for all the subjects
+    with ``---skull-strip-t1w skip``.
+    The regular functioning (i.e., attempt brain extraction always) can be achieved with
+    ``---skull-strip-t1w force``.
+
 See also *sMRIPrep*'s
 :py:func:`~smriprep.workflows.anatomical.init_anat_preproc_wf`.
 

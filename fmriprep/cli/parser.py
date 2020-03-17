@@ -209,6 +209,11 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (currentv.base_version
     g_ants.add_argument('--skull-strip-fixed-seed', action='store_true',
                         help='do not use a random seed for skull-stripping - will ensure '
                              'run-to-run replicability when used with --omp-nthreads 1')
+    g_ants.add_argument(
+        '--skull-strip-t1w', action='store', choices=('auto', 'skip', 'force'), default='force',
+        help="determiner for T1-weighted skull stripping ('force' ensures skull "
+             "stripping, 'skip' ignores skull stripping, and 'auto' applies brain extraction "
+             "based on the outcome of a heuristic to check whether the brain is already masked).")
 
     # Fieldmap options
     g_fmap = parser.add_argument_group('Specific options for handling fieldmaps')
