@@ -224,7 +224,7 @@ If you are a Singularity user, please check out :ref:`singularity_tf`.
 How do I select only certain files to be input to fMRIPrep?
 ---------------------------------------------------------------------
 
-Using the `--bids-filter-file` flag, you can pass fMRIPrep a JSON file that
+Using the ``--bids-filter-file`` flag, you can pass fMRIPrep a JSON file that
 describes a custom BIDS filter using pyBIDS, with the syntax
 {<suffix>:{<entity>:<filter>,...},...}. For example: ::
 
