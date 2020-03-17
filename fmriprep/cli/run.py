@@ -79,9 +79,11 @@ def get_parser():
     #                     help='select a specific run to be processed')
     g_bids.add_argument(
         '--bids-filter-file', action='store', type=Path, metavar='PATH',
-        help='a JSON file describing custom BIDS input filter using pybids '
-             '{<suffix>:{<entity>:<filter>,...},...} '
-             '(https://github.com/bids-standard/pybids/blob/master/bids/layout/config/bids.json)')
+        help="a JSON file describing custom BIDS input filter using pybids. "
+             "For further details, please check out "
+             "https://fmriprep.readthedocs.io/en/%s/faq.html#"
+             "how-do-I-select-only-certain-files-to-be-input-to-fMRIPrep" % (
+                 currentv.base_version if is_release else 'latest'))
     g_bids.add_argument('-t', '--task-id', action='store',
                         help='select a specific task to be processed')
     g_bids.add_argument('--echo-idx', action='store', type=int,
