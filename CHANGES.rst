@@ -1,3 +1,14 @@
+20.0.4 (March 17, 2020)
+=======================
+A bug-fix release improving documentation for filtering BIDS files and standardizing CIFTI volume orientation.
+
+With thanks to Ursula Tooley for the contribution.
+
+  * DOC: FAQ section for BIDS filter (#2028)
+  * FIX: Ensure BOLD and label orientations are equal (`nipreps/niworkflows#477`_).
+
+.. _`nipreps/niworkflows#477`: https://github.com/nipreps/niworkflows/pull/477
+
 20.0.3 (March 12, 2020)
 =======================
 A bug-fix release for CIFTI surfaces.

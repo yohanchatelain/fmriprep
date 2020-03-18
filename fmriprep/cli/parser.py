@@ -94,9 +94,11 @@ def _build_parser():
     g_bids.add_argument(
         '--bids-filter-file', dest='bids_filters', action='store',
         type=_bids_filter, metavar='PATH',
-        help='a JSON file describing custom BIDS input filter using pybids '
-             '{<suffix>:{<entity>:<filter>,...},...} '
-             '(https://github.com/bids-standard/pybids/blob/master/bids/layout/config/bids.json)')
+        help="a JSON file describing custom BIDS input filters using PyBIDS. "
+             "For further details, please check out "
+             "https://fmriprep.readthedocs.io/en/%s/faq.html#"
+             "how-do-I-select-only-certain-files-to-be-input-to-fMRIPrep" % (
+                 currentv.base_version if is_release else 'latest'))
 
     g_perfm = parser.add_argument_group('Options to handle performance')
     g_perfm.add_argument(
