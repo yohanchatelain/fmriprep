@@ -55,6 +55,22 @@ single reference template (see `Longitudinal processing`_).
         t1w=['sub-01/anat/sub-01_T1w.nii.gz'],
     )
 
+.. important::
+
+    Occasionally, openly shared datasets may contain preprocessed anatomical images
+    as if they are unprocessed.
+    In the case of brain-extracted (skull-stripped) T1w images, attempting to perform
+    brain extraction again will often have poor results and may cause *fMRIPrep* to crash.
+    By default, *fMRIPrep* will attempt to detect these cases using a heuristic to check if the
+    T1w image is already masked.
+    If this heuristic fails, and you know your images are skull-stripped, you can skip brain
+    extraction with ``--skull-strip-t1w skip``.
+    Likewise, if you know your images are not skull-stripped and the heuristic incorrectly
+    determines that they are, you can force skull stripping with ``--skull-strip-t1w force``.
+    The default behavior of detecting pre-extracted brains may be explicitly requested with
+    ``---skull-strip-t1w auto``, which will use a heuristic to check if each image is
+    already masked.
+
 See also *sMRIPrep*'s
 :py:func:`~smriprep.workflows.anatomical.init_anat_preproc_wf`.
 

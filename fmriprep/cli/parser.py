@@ -211,6 +211,11 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (currentv.base_version
     g_ants.add_argument('--skull-strip-fixed-seed', action='store_true',
                         help='do not use a random seed for skull-stripping - will ensure '
                              'run-to-run replicability when used with --omp-nthreads 1')
+    g_ants.add_argument(
+        '--skull-strip-t1w', action='store', choices=('auto', 'skip', 'force'), default='force',
+        help="determiner for T1-weighted skull stripping ('force' ensures skull "
+             "stripping, 'skip' ignores skull stripping, and 'auto' applies brain extraction "
+             "based on the outcome of a heuristic to check whether the brain is already masked).")
 
     # Fieldmap options
     g_fmap = parser.add_argument_group('Specific options for handling fieldmaps')
@@ -348,6 +353,19 @@ license file at several paths, in this order: 1) command line argument ``--fs-li
         build_log.warning(
             'Per-process threads (--omp-nthreads=%d) exceed total '
             'threads (--nthreads/--n_cpus=%d)', config.nipype.omp_nthread, config.nipype.nprocs)
+
+    # Inform the user about the risk of using brain-extracted images
+    if config.workflow.skull_strip_t1w == "auto":
+        build_log.warning("""\
+Option ``--skull-strip-t1w`` was set to 'auto'. A heuristic will be \
+applied to determine whether the input T1w image(s) have already been skull-stripped.
+If that were the case, brain extraction and INU correction will be skipped for those T1w \
+inputs. Please, BEWARE OF THE RISKS TO THE CONSISTENCY of results when using varying \
+processing workflows across participants. To determine whether a participant has been run \
+through the shortcut pipeline (meaning, brain extraction was skipped), please check the \
+citation boilerplate. When reporting results with varying pipelines, please make sure you \
+mention this particular variant of fMRIPrep listing the participants for which it was \
+applied.""")
 
     bids_dir = config.execution.bids_dir
     output_dir = config.execution.output_dir

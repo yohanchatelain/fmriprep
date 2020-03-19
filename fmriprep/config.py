@@ -439,6 +439,9 @@ class workflow(_Config):
     """Fix a seed for skull-stripping."""
     skull_strip_template = "OASIS30ANTs"
     """Change default brain extraction template."""
+    skull_strip_t1w = "force"
+    """Skip brain extraction of the T1w image (default is ``force``, meaning that
+    *fMRIPrep* will run brain extraction of the T1w)."""
     spaces = None
     """Keeps the :py:class:`~niworkflows.utils.spaces.SpatialReferences`
     instance keeping standard and nonstandard spaces."""
