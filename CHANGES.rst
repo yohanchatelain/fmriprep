@@ -1,3 +1,13 @@
+20.0.5 (March 19, 2020)
+=======================
+Bug-fix release in 20.0.x series.
+
+With thanks to James Kent for the fix and Blaise Frederick for the report and testing.
+
+  * FIX: Add CE agent to output figure filename templates (`nipreps/niworkflows#482`_)
+
+.. _`nipreps/niworkflows#482`: https://github.com/nipreps/niworkflows/pull/482
+
 20.0.4 (March 17, 2020)
 =======================
 A bug-fix release improving documentation for filtering BIDS files and standardizing CIFTI volume orientation.
