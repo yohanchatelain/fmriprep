@@ -258,8 +258,8 @@ Only modifications of these queries will have any effect. You may filter on any 
 in the the PyBIDS
 `config file <https://github.com/bids-standard/pybids/blob/master/bids/layout/config/bids.json>`__.
 
-Can fMRIPrep resume execution after encountering an error?
-----------------------------------------------------------
+Can *fMRIPrep* continue to run after encountering an error?
+-----------------------------------------------------------
 
 fMRIPrep uses Nipype_ to organize its workflows, which has a notion of a working directory.
 Each job records its inputs and outputs in the working directory, and if the inputs are
