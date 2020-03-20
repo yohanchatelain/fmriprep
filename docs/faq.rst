@@ -257,3 +257,17 @@ fMRIPrep uses the following queries, by default::
 Only modifications of these queries will have any effect. You may filter on any entity defined
 in the the PyBIDS
 `config file <https://github.com/bids-standard/pybids/blob/master/bids/layout/config/bids.json>`__.
+
+Can *fMRIPrep* continue to run after encountering an error?
+-----------------------------------------------------------
+(Context: `#1756 <https://github.com/poldracklab/fmriprep/issues/1756>`__)
+Yes, although it requires access to previously computed intermediate results.
+*fMRIPrep* is built on top of Nipype_, which uses a temporary folder to store the interim
+results of the workflow.
+*fMRIPrep* provides the ``-w <PATH>`` command line argument to set a customized temporal
+folder (the *working directory*, in the following) for the *Nipype* workflow engine.
+By default, *fMRIPrep* configures the *working directory* to be ``$PWD/work/``.
+Therefore, if your *fMRIPrep* process crashes and you attempt to re-run it reusing
+as much as it could from the previous run, you can either make sure that
+the default ``$PWD/work/`` points to a reasonable, reusable path in your environment or
+configure a better location on your with ``-w <PATH>``.
