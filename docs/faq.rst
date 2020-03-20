@@ -257,3 +257,16 @@ fMRIPrep uses the following queries, by default::
 Only modifications of these queries will have any effect. You may filter on any entity defined
 in the the PyBIDS
 `config file <https://github.com/bids-standard/pybids/blob/master/bids/layout/config/bids.json>`__.
+
+Can fMRIPrep resume execution after encountering an error?
+----------------------------------------------------------
+
+fMRIPrep uses Nipype_ to organize its workflows, which has a notion of a working directory.
+Each job records its inputs and outputs in the working directory, and if the inputs are
+unchanged, the outputs will be reused without rerunning the job.
+
+This means that, as long as your inputs haven't changed and you're using the same version of
+fMRIPrep, you can usually resume from where you left off.
+
+The working directory can be specified with the ``-w`` flag (for example
+``-w $SCRATCH/fmriprep-scratch``).
