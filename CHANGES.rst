@@ -1,3 +1,17 @@
+20.1.0 (TBD)
+============
+The second minor release of 2020, *fMRIPrep* 20.1.0 introduces a configuration file to easily
+distinguish which options were selected for each participant, along with other enhancements.
+
+  * DOC: Add FAQ about reusing work directory (#2045)
+  * ENH: Config module (#2018)
+  * ENH: Add option to ignore T2w / FLAIR images (#2015)
+  * ENH: Ensure subcortical volume in CIFTI is in LAS orientation (`nipreps/niworkflows#484`_)
+  * ENH: Add option to skip brain extraction (#2039)
+  * MAINT: Bump minimum Python to 3.7 (#2017)
+
+.. _`nipreps/niworkflows#484`: https://github.com/nipreps/niworkflows/pull/484
+
 20.0.5 (March 19, 2020)
 =======================
 Bug-fix release in 20.0.x series.
