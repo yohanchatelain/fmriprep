@@ -10,6 +10,7 @@ Registration workflows
 .. autofunction:: init_fsl_bbr_wf
 
 """
+from ... import config
 
 import os
 import os.path as op
@@ -19,11 +20,9 @@ import pkg_resources as pkgr
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, fsl, c3
 
-from ...config import DEFAULT_MEMORY_MIN_GB
 from ...interfaces import DerivativesDataSink
-from ... import config
 
-
+DEFAULT_MEMORY_MIN_GB = config.DEFAULT_MEMORY_MIN_GB
 LOGGER = config.loggers.workflow
 
 
@@ -426,11 +425,12 @@ def init_bbreg_wf(use_bbr, bold2t1w_dof, omp_nthreads, name='bbreg_wf'):
     from niworkflows.engine.workflows import LiterateWorkflow as Workflow
     # See https://github.com/poldracklab/fmriprep/issues/768
     from niworkflows.interfaces.freesurfer import (
-        PatchedConcatenateLTA as ConcatenateLTA,
         PatchedBBRegisterRPT as BBRegisterRPT,
         PatchedMRICoregRPT as MRICoregRPT,
         PatchedLTAConvert as LTAConvert
     )
+    from ...interfaces.nitransforms import ConcatenateXFMs
+
 
     workflow = Workflow(name=name)
     workflow.__desc__ = """\
@@ -456,39 +456,25 @@ Co-registration was configured with {dof} degrees of freedom{reason}.
                     generate_report=not use_bbr),
         name='mri_coreg', n_procs=omp_nthreads, mem_gb=5)
 
-    lta_concat = pe.Node(ConcatenateLTA(out_file='out.lta'), name='lta_concat')
-    # XXX LTA-FSL-ITK may ultimately be able to be replaced with a straightforward
-    # LTA-ITK transform, but right now the translation parameters are off.
-    lta2fsl_fwd = pe.Node(LTAConvert(out_fsl=True), name='lta2fsl_fwd')
-    lta2fsl_inv = pe.Node(LTAConvert(out_fsl=True, invert=True), name='lta2fsl_inv')
-    fsl2itk_fwd = pe.Node(c3.C3dAffineTool(fsl2ras=True, itk_transform=True),
-                          name='fsl2itk_fwd', mem_gb=DEFAULT_MEMORY_MIN_GB)
-    fsl2itk_inv = pe.Node(c3.C3dAffineTool(fsl2ras=True, itk_transform=True),
-                          name='fsl2itk_inv', mem_gb=DEFAULT_MEMORY_MIN_GB)
+    merge_ltas = pe.Node(niu.Merge(2), name='merge_ltas', run_without_submitting=True)
+    concat_xfm = pe.Node(ConcatenateXFMs(inverse=True), name='concat_xfm')
 
     workflow.connect([
         (inputnode, mri_coreg, [('subjects_dir', 'subjects_dir'),
                                 ('subject_id', 'subject_id'),
                                 ('in_file', 'source_file')]),
         # Output ITK transforms
-        (inputnode, lta_concat, [('fsnative2t1w_xfm', 'in_lta2')]),
-        (lta_concat, lta2fsl_fwd, [('out_file', 'in_lta')]),
-        (lta_concat, lta2fsl_inv, [('out_file', 'in_lta')]),
-        (inputnode, fsl2itk_fwd, [('t1w_brain', 'reference_file'),
-                                  ('in_file', 'source_file')]),
-        (inputnode, fsl2itk_inv, [('in_file', 'reference_file'),
-                                  ('t1w_brain', 'source_file')]),
-        (lta2fsl_fwd, fsl2itk_fwd, [('out_fsl', 'transform_file')]),
-        (lta2fsl_inv, fsl2itk_inv, [('out_fsl', 'transform_file')]),
-        (fsl2itk_fwd, outputnode, [('itk_transform', 'itk_bold_to_t1')]),
-        (fsl2itk_inv, outputnode, [('itk_transform', 'itk_t1_to_bold')]),
+        (inputnode, merge_ltas, [('fsnative2t1w_xfm', 'in2')]),
+        (merge_ltas, concat_xfm, [('out', 'in_xfms')]),
+        (concat_xfm, outputnode, [('out_xfm', 'itk_bold_to_t1')]),
+        (concat_xfm, outputnode, [('out_inv', 'itk_t1_to_bold')]),
     ])
 
     # Short-circuit workflow building, use initial registration
     if use_bbr is False:
         workflow.connect([
             (mri_coreg, outputnode, [('out_report', 'out_report')]),
-            (mri_coreg, lta_concat, [('out_lta_file', 'in_lta1')])])
+            (mri_coreg, merge_ltas, [('out_lta_file', 'in1')])])
         outputnode.inputs.fallback = True
 
         return workflow
@@ -509,7 +495,7 @@ Co-registration was configured with {dof} degrees of freedom{reason}.
     if use_bbr is True:
         workflow.connect([
             (bbregister, outputnode, [('out_report', 'out_report')]),
-            (bbregister, lta_concat, [('out_lta_file', 'in_lta1')])])
+            (bbregister, merge_ltas, [('out_lta_file', 'in1')])])
         outputnode.inputs.fallback = False
 
         return workflow
@@ -534,7 +520,7 @@ Co-registration was configured with {dof} degrees of freedom{reason}.
         # Select output transform
         (transforms, select_transform, [('out', 'inlist')]),
         (compare_transforms, select_transform, [('out', 'index')]),
-        (select_transform, lta_concat, [('out', 'in_lta1')]),
+        (select_transform, merge_ltas, [('out', 'in1')]),
         # Select output report
         (bbregister, reports, [('out_report', 'in1')]),
         (mri_coreg, reports, [('out_report', 'in2')]),

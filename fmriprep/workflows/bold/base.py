@@ -8,6 +8,7 @@ Orchestrating the BOLD-preprocessing workflow
 .. autofunction:: init_func_derivatives_wf
 
 """
+from ... import config
 
 import os
 
@@ -16,7 +17,6 @@ from nipype.interfaces.fsl import Split as FSLSplit
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 
-from ... import config
 from ...utils.meepi import combine_meepi_source
 
 from ...interfaces import DerivativesDataSink

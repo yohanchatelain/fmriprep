@@ -9,13 +9,12 @@ Resampling workflows
 .. autofunction:: init_bold_preproc_trans_wf
 
 """
+from ...config import DEFAULT_MEMORY_MIN_GB
+
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, freesurfer as fs
 from nipype.interfaces.fsl import Split as FSLSplit
 import nipype.interfaces.workbench as wb
-
-from ...config import DEFAULT_MEMORY_MIN_GB
-from ...interfaces import DerivativesDataSink
 
 
 def init_bold_surf_wf(
@@ -71,9 +70,10 @@ def init_bold_surf_wf(
 
     """
     from niworkflows.engine.workflows import LiterateWorkflow as Workflow
+    from ...interfaces.nitransforms import ConcatenateXFMs
+
     # See https://github.com/poldracklab/fmriprep/issues/768
     from niworkflows.interfaces.freesurfer import (
-        PatchedConcatenateLTA as ConcatenateLTA,
         PatchedLTAConvert as LTAConvert
     )
     from niworkflows.interfaces.surf import GiftiSetAnatomicalStructure
@@ -105,7 +105,8 @@ The BOLD time-series were resampled onto the following surfaces
                          mem_gb=DEFAULT_MEMORY_MIN_GB)
     resampling_xfm = pe.Node(LTAConvert(in_lta='identity.nofile', out_lta=True),
                              name='resampling_xfm')
-    set_xfm_source = pe.Node(ConcatenateLTA(out_type='RAS2RAS'), name='set_xfm_source')
+    merge_xfm = pe.Node(niu.Merge(2), name="merge_xfm", run_without_submitting=True)
+    concat_xfm = pe.Node(ConcatenateXFMs(out_fmt="fs"), name="concat_xfm")
 
     sampler = pe.MapNode(
         fs.SampleToSurface(
@@ -130,13 +131,16 @@ The BOLD time-series were resampled onto the following surfaces
         (inputnode, rename_src, [('source_file', 'in_file')]),
         (inputnode, resampling_xfm, [('source_file', 'source_file'),
                                      ('t1w_preproc', 'target_file')]),
-        (inputnode, set_xfm_source, [('t1w2fsnative_xfm', 'in_lta2')]),
+        (inputnode, concat_xfm, [('source_file', 'moving'),
+                                 ('t1w_preproc', 'reference')]),
+        (inputnode, merge_xfm, [('t1w2fsnative_xfm', 'in2')]),
         (inputnode, sampler, [('subjects_dir', 'subjects_dir'),
                               ('subject_id', 'subject_id')]),
         (itersource, targets, [('target', 'space')]),
         (itersource, rename_src, [('target', 'subject')]),
-        (resampling_xfm, set_xfm_source, [('out_lta', 'in_lta1')]),
-        (set_xfm_source, sampler, [('out_file', 'reg_file')]),
+        (resampling_xfm, merge_xfm, [('out_lta', 'in1')]),
+        (merge_xfm, concat_xfm, [('out', 'in_xfms')]),
+        (concat_xfm, sampler, [('out_xfm', 'reg_file')]),
         (targets, sampler, [('out', 'target_subject')]),
         (rename_src, sampler, [('out_file', 'source_file')]),
         (update_metadata, outputnode, [('out_file', 'surfaces')]),
@@ -620,6 +624,7 @@ def init_bold_preproc_report_wf(mem_gb, reportlets_dir, name='bold_preproc_repor
     from nipype.algorithms.confounds import TSNR
     from niworkflows.engine.workflows import LiterateWorkflow as Workflow
     from niworkflows.interfaces import SimpleBeforeAfter
+    from ...interfaces import DerivativesDataSink
 
     workflow = Workflow(name=name)
 
