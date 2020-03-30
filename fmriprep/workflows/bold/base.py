@@ -662,31 +662,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                     ('outputnode.bold_aparc_std', 'bold_aparc_std')]),
             ])
 
-        # Xform to 'MNI152NLin2009cAsym' is always computed.
-        carpetplot_select_std = pe.Node(
-            KeySelect(fields=['std2anat_xfm'], key='MNI152NLin2009cAsym'),
-            name='carpetplot_select_std', run_without_submitting=True)
-
-        carpetplot_wf = init_carpetplot_wf(
-            mem_gb=mem_gb['resampled'],
-            metadata=metadata,
-            name='carpetplot_wf')
-
-        workflow.connect([
-            (inputnode, carpetplot_select_std, [
-                ('std2anat_xfm', 'std2anat_xfm'),
-                ('template', 'keys')]),
-            (carpetplot_select_std, carpetplot_wf, [
-                ('std2anat_xfm', 'inputnode.std2anat_xfm')]),
-            (bold_bold_trans_wf if not multiecho else bold_t2s_wf, carpetplot_wf, [
-                ('outputnode.bold', 'inputnode.bold'),
-                ('outputnode.bold_mask', 'inputnode.bold_mask')]),
-            (bold_reg_wf, carpetplot_wf, [
-                ('outputnode.itk_t1_to_bold', 'inputnode.t1_bold_xform')]),
-            (bold_confounds_wf, carpetplot_wf, [
-                ('outputnode.confounds_file', 'inputnode.confounds_file')]),
-        ])
-
         if not multiecho:
             workflow.connect([
                 (bold_split, bold_std_trans_wf, [
@@ -814,6 +789,41 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                     ('outputnode.cifti_metadata', 'cifti_metadata'),
                     ('outputnode.cifti_density', 'cifti_density')]),
             ])
+
+    if spaces.get_spaces(nonstandard=False, dim=(3,)):
+        carpetplot_wf = init_carpetplot_wf(
+                mem_gb=mem_gb['resampled'],
+                metadata=metadata,
+                cifti_output=config.workflow.cifti_output,
+                name='carpetplot_wf')
+
+        if config.workflow.cifti_output:
+            workflow.connect(
+                bold_grayords_wf, 'outputnode.cifti_bold', carpetplot_wf, 'inputnode.cifti_bold'
+            )
+        else:
+            # Xform to 'MNI152NLin2009cAsym' is always computed.
+            carpetplot_select_std = pe.Node(
+                    KeySelect(fields=['std2anat_xfm'], key='MNI152NLin2009cAsym'),
+                    name='carpetplot_select_std', run_without_submitting=True)
+
+            workflow.connect([
+                (inputnode, carpetplot_select_std, [
+                    ('std2anat_xfm', 'std2anat_xfm'),
+                    ('template', 'keys')]),
+                (carpetplot_select_std, carpetplot_wf, [
+                    ('std2anat_xfm', 'inputnode.std2anat_xfm')]),
+                (bold_bold_trans_wf if not multiecho else bold_t2s_wf, carpetplot_wf, [
+                    ('outputnode.bold', 'inputnode.bold'),
+                    ('outputnode.bold_mask', 'inputnode.bold_mask')]),
+                (bold_reg_wf, carpetplot_wf, [
+                    ('outputnode.itk_t1_to_bold', 'inputnode.t1_bold_xform')]),
+            ])
+
+        workflow.connect([
+            (bold_confounds_wf, carpetplot_wf, [
+                        ('outputnode.confounds_file', 'inputnode.confounds_file')])
+        ])
 
     # REPORTING ############################################################
     reportlets_dir = str(config.execution.work_dir / 'reportlets')
