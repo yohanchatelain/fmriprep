@@ -39,6 +39,16 @@ class T2SMapInputSpec(CommandLineInputSpec):
                              mandatory=True,
                              minlen=3,
                              desc='echo times')
+    fittype = traits.Enum('curvefit', 'loglin',
+                          argstr='--fitmode %s',
+                          position=3,
+                          mandatory=False,
+                          desc=('Desired fitting method: '
+                                '"loglin" means that a linear model is fit '
+                                'to the log of the data, default '
+                                '"curvefit" means that a more computationally '
+                                'demanding monoexponential model is fit '
+                                'to the raw data.'))
 
 
 class T2SMapOutputSpec(TraitedSpec):
