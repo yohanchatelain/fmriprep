@@ -44,8 +44,6 @@ class T2SMapInputSpec(CommandLineInputSpec):
 class T2SMapOutputSpec(TraitedSpec):
     t2star_map = File(exists=True, desc='limited T2* map')
     s0_map = File(exists=True, desc='limited s0 map')
-    t2star_adaptive_map = File(exists=True, desc='adaptive T2* map')
-    s0_adaptive_map = File(exists=True, desc='adaptive s0 map')
     optimal_comb = File(exists=True, desc='optimally combined ME-EPI time series')
 
 
@@ -82,8 +80,6 @@ sub-01_run-01_echo-3_bold.nii.gz -e 13.0 27.0 43.0'
 
         outputs['t2star_map'] = os.path.join(out_dir, 't2sv.nii')
         outputs['s0_map'] = os.path.join(out_dir, 's0v.nii')
-        outputs['t2star_adaptive_map'] = os.path.join(out_dir, 't2svG.nii')
-        outputs['s0_adaptive_map'] = os.path.join(out_dir, 's0vG.nii')
         outputs['optimal_comb'] = os.path.join(out_dir, 'ts_OC.nii')
 
         return outputs
