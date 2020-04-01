@@ -1,3 +1,61 @@
+20.1.0 (TBD)
+============
+The second minor release of 2020, *fMRIPrep* 20.1.0 introduces a configuration file to easily
+distinguish which options were selected for each participant, along with other enhancements.
+
+  * DOC: Add FAQ about reusing work directory (#2045)
+  * ENH: Config module (#2018)
+  * ENH: Add option to ignore T2w / FLAIR images (#2015)
+  * ENH: Ensure subcortical volume in CIFTI is in LAS orientation (`nipreps/niworkflows#484`_)
+  * ENH: Add option to skip brain extraction (#2039)
+  * MAINT: Bump minimum Python to 3.7 (#2017)
+
+.. _`nipreps/niworkflows#484`: https://github.com/nipreps/niworkflows/pull/484
+
+20.0.5 (March 19, 2020)
+=======================
+Bug-fix release in 20.0.x series.
+
+With thanks to James Kent for the fix and Blaise Frederick for the report and testing.
+
+  * FIX: Add CE agent to output figure filename templates (`nipreps/niworkflows#482`_)
+
+.. _`nipreps/niworkflows#482`: https://github.com/nipreps/niworkflows/pull/482
+
+20.0.4 (March 17, 2020)
+=======================
+A bug-fix release improving documentation for filtering BIDS files and standardizing CIFTI volume orientation.
+
+With thanks to Ursula Tooley for the contribution.
+
+  * DOC: FAQ section for BIDS filter (#2028)
+  * FIX: Ensure BOLD and label orientations are equal (`nipreps/niworkflows#477`_).
+
+.. _`nipreps/niworkflows#477`: https://github.com/nipreps/niworkflows/pull/477
+
+20.0.3 (March 12, 2020)
+=======================
+A bug-fix release for CIFTI surfaces.
+
+This release remedies a resampling error when generating fsLR surfaces that was producing erroneous CIFTI files.
+**We strongly recommend all users who have generated CIFTI output with previous 20.0.x releases to upgrade and rerun**.
+
+   * FIX: Remedy fsLR surface resampling (#2032)
+
+20.0.2 (March 6, 2020)
+======================
+A bug squashing release in the 20.0.x series.
+
+This release fixes the use of custom templates within the docker wrapper, remedies crashes
+when FreeSurfer HOME was not set, and improves the documentation for local installations.
+
+With thanks to Blaise Frederick for the contribution.
+
+  * DOC: Update standalone installation requirements (#2009)
+  * FIX: Crashes whenever FREESURFER_HOME is not set (#2014)
+  * FIX: Local template mounting (wrapper) (#2020)
+  * MAINT: Pin minor series of nipype, major series of nibabel (#2021)
+
 20.0.1 (February 27, 2020)
 ==========================
 Bug-fix release in 20.0.x series.

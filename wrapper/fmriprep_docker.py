@@ -20,7 +20,7 @@ import re
 import subprocess
 
 __version__ = '99.99.99'
-__copyright__ = 'Copyright 2019, Center for Reproducible Neuroscience, Stanford University'
+__copyright__ = 'Copyright 2020, Center for Reproducible Neuroscience, Stanford University'
 __credits__ = ['Craig Moodie', 'Ross Blair', 'Oscar Esteban', 'Chris Gorgolewski',
                'Shoshana Berleant', 'Christopher J. Markiewicz', 'Russell A. Poldrack']
 __bugreports__ = 'https://github.com/poldracklab/fmriprep/issues'
@@ -427,9 +427,12 @@ def main():
         spaces = []
         for space in opts.output_spaces:
             if space.split(':')[0] not in (TF_TEMPLATES + NONSTANDARD_REFERENCES):
-                target = '/imports/' + os.path.basename(space)
+                tpl = os.path.basename(space)
+                if not tpl.startswith('tpl-'):
+                    raise RuntimeError("Custom template %s requires a `tpl-` prefix" % tpl)
+                target = '/home/fmriprep/.cache/templateflow/' + tpl
                 command.extend(['-v', ':'.join((os.path.abspath(space), target, 'ro'))])
-                spaces.append(target)
+                spaces.append(tpl[4:])
             else:
                 spaces.append(space)
         unknown_args.extend(['--output-spaces'] + spaces)

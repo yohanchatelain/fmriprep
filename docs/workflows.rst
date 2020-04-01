@@ -17,52 +17,10 @@ is presented below:
     :graph2use: orig
     :simple_form: yes
 
-    from collections import namedtuple
-    from niworkflows.utils.spaces import Reference, SpatialReferences
+    from fmriprep.workflows.tests import mock_config
     from fmriprep.workflows.base import init_single_subject_wf
-    BIDSLayout = namedtuple('BIDSLayout', ('root'))
-    wf = init_single_subject_wf(
-        anat_only=False,
-        aroma_melodic_dim=-200,
-        bold2t1w_dof=9,
-        cifti_output=False,
-        debug=False,
-        dummy_scans=None,
-        echo_idx=None,
-        err_on_aroma_warn=False,
-        fmap_bspline=False,
-        fmap_demean=True,
-        force_syn=True,
-        freesurfer=True,
-        hires=True,
-        ignore=[],
-        layout=BIDSLayout('.'),
-        longitudinal=False,
-        low_mem=False,
-        medial_surface_nan=False,
-        name='single_subject_wf',
-        omp_nthreads=1,
-        output_dir='.',
-        reportlets_dir='.',
-        regressors_all_comps=False,
-        regressors_dvars_th=1.5,
-        regressors_fd_th=0.5,
-        skull_strip_fixed_seed=False,
-        skull_strip_template=Reference('OASIS30ANTs'),
-        spaces=SpatialReferences(
-            spaces=[('MNI152Lin', {}),
-                    ('fsaverage', {'density': '10k'}),
-                    ('T1w', {}),
-                    ('fsnative', {})],
-            checkpoint=True),
-        subject_id='test',
-        t2s_coreg=False,
-        task_id='',
-        use_aroma=False,
-        use_bbr=True,
-        use_syn=True,
-        bids_filters=None,
-    )
+    with mock_config():
+        wf = init_single_subject_wf('01')
 
 Preprocessing of structural MRI
 -------------------------------
@@ -82,9 +40,9 @@ single reference template (see `Longitudinal processing`_).
         freesurfer=True,
         hires=True,
         longitudinal=False,
-        num_t1w=1,
         omp_nthreads=1,
         output_dir='.',
+        skull_strip_mode='force',
         skull_strip_template=Reference('MNI152NLin2009cAsym'),
         spaces=SpatialReferences([
             ('MNI152Lin', {}),
@@ -94,9 +52,26 @@ single reference template (see `Longitudinal processing`_).
         ]),
         reportlets_dir='.',
         skull_strip_fixed_seed=False,
+        t1w=['sub-01/anat/sub-01_T1w.nii.gz'],
     )
 
-See also *sMRIPrep*'s 
+.. important::
+
+    Occasionally, openly shared datasets may contain preprocessed anatomical images
+    as if they are unprocessed.
+    In the case of brain-extracted (skull-stripped) T1w images, attempting to perform
+    brain extraction again will often have poor results and may cause *fMRIPrep* to crash.
+    By default, *fMRIPrep* will attempt to detect these cases using a heuristic to check if the
+    T1w image is already masked.
+    If this heuristic fails, and you know your images are skull-stripped, you can skip brain
+    extraction with ``--skull-strip-t1w skip``.
+    Likewise, if you know your images are not skull-stripped and the heuristic incorrectly
+    determines that they are, you can force skull stripping with ``--skull-strip-t1w force``.
+    The default behavior of detecting pre-extracted brains may be explicitly requested with
+    ``---skull-strip-t1w auto``, which will use a heuristic to check if each image is
+    already masked.
+
+See also *sMRIPrep*'s
 :py:func:`~smriprep.workflows.anatomical.init_anat_preproc_wf`.
 
 .. _t1preproc_steps:
@@ -218,7 +193,7 @@ would be processed by the following command::
         -autorecon1 \
         -noskullstrip
 
-The second phase imports the brainmask calculated in the 
+The second phase imports the brainmask calculated in the
 `Preprocessing of structural MRI`_ sub-workflow.
 The final phase resumes reconstruction, using the T2w image to assist
 in finding the pial surface, if available.
@@ -279,44 +254,13 @@ BOLD preprocessing
     :graph2use: orig
     :simple_form: yes
 
-    from collections import namedtuple
-    from niworkflows.utils.spaces import SpatialReferences
+    from fmriprep.workflows.tests import mock_config
+    from fmriprep import config
     from fmriprep.workflows.bold.base import init_func_preproc_wf
-    BIDSLayout = namedtuple('BIDSLayout', ['root'])
-    wf = init_func_preproc_wf(
-        aroma_melodic_dim=-200,
-        bold2t1w_dof=9,
-        bold_file='/completely/made/up/path/sub-01_task-nback_bold.nii.gz',
-        cifti_output=False,
-        debug=False,
-        dummy_scans=None,
-        err_on_aroma_warn=False,
-        fmap_bspline=True,
-        fmap_demean=True,
-        force_syn=True,
-        freesurfer=True,
-        ignore=[],
-        low_mem=False,
-        medial_surface_nan=False,
-        omp_nthreads=1,
-        output_dir='.',
-        regressors_all_comps=False,
-        regressors_fd_th=0.5,
-        regressors_dvars_th=1.5,
-        reportlets_dir='.',
-        t2s_coreg=False,
-        spaces=SpatialReferences(
-            spaces=[('MNI152Lin', {}),
-                    ('fsaverage', {'density': '10k'}),
-                    ('T1w', {}),
-                    ('fsnative', {})],
-            checkpoint=True),
-        use_aroma=False,
-        use_bbr=True,
-        use_syn=True,
-        layout=BIDSLayout('.'),
-        num_bold=1,
-    )
+    with mock_config():
+        bold_file = config.execution.bids_dir / 'sub-01' / 'func' \
+            / 'sub-01_task-mixedgamblestask_run-01_bold.nii.gz'
+        wf = init_func_preproc_wf(str(bold_file))
 
 Preprocessing of :abbr:`BOLD (blood-oxygen level-dependent)` files is
 split into multiple sub-workflows described below.
@@ -396,7 +340,7 @@ Slice time correction
     wf = init_bold_stc_wf(
         metadata={'RepetitionTime': 2.0,
                   'SliceTiming': [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]},
-        )
+    )
 
 If the ``SliceTiming`` field is available within the input dataset metadata,
 this workflow performs slice time correction prior to other signal resampling
@@ -501,7 +445,7 @@ Resampling BOLD runs onto standard spaces
 This sub-workflow concatenates the transforms calculated upstream (see
 `Head-motion estimation`_, `Susceptibility Distortion Correction (SDC)`_ --if
 fieldmaps are available--, `EPI to T1w registration`_, and an anatomical-to-standard
-transform from `Preprocessing of structural MRI`_) to map the 
+transform from `Preprocessing of structural MRI`_) to map the
 :abbr:`EPI (echo-planar imaging)`
 image to the standard spaces given by the ``--output-spaces`` argument
 (see :ref:`output-spaces`).
