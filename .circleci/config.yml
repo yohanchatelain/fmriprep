@@ -154,6 +154,23 @@ jobs:
               echo "FreeSurfer derivatives of ds000005 were cached"
             fi
       - run:
+          name: Get sMRIPrep derivatives for ds000005
+          command: |
+            if [[ ! -d /tmp/ds005/smriprep-0.6 ]]; then
+              mkdir -p /tmp/ds005
+              wget --retry-connrefused --waitretry=5 --read-timeout=20 --timeout=15 -t 0 -q \
+                -O ds005_sub-01_smriprep.zip "https://files.osf.io/v1/resources/fvuh8/providers/osfstorage/5e860c528140b402134249d1"
+              unzip -d /tmp/ds005 ds005_sub-01_smriprep.zip
+            else
+              echo "sMRIPrep derivatives of ds000005 were cached"
+            fi
+      - save_cache:
+         key: data-v7-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
+         paths:
+            - /tmp/data
+            - /tmp/ds005/freesurfer
+            - /tmp/ds005/smriprep-0.6
+      - run:
           name: Store FreeSurfer license file
           command: |
             mkdir -p /tmp/fslicense
@@ -175,11 +192,6 @@ jobs:
             - ds005/nipype.cfg
             - ds054/nipype.cfg
             - ds210/nipype.cfg
-      - save_cache:
-         key: data-v7-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
-         paths:
-            - /tmp/data
-            - /tmp/ds005/freesurfer
 
   test_pytest:
     machine:
@@ -319,6 +331,10 @@ jobs:
               echo "Skipping ds000005 build"
               circleci step halt
             fi
+            if [[ "$( git log --format=oneline -n 1 $CIRCLE_SHA1 | grep -i -E '\[no[ _-]?fasttrack\]' )" != "" ]]; then
+              touch /tmp/ds005/.nofasttrack
+              echo "Anatomical fasttrack reusing sMRIPrep's derivatives will not be used."
+            fi
 
       - attach_workspace:
           at: /tmp
@@ -363,16 +379,18 @@ jobs:
                 sudo setfacl -m group:$(id -gn):rwx /tmp/ds005/derivatives
             sudo setfacl -d -m group:$(id -gn):rwx /tmp/ds005/work && \
                 sudo setfacl -m group:$(id -gn):rwx /tmp/ds005/work
-            fmriprep-docker -i poldracklab/fmriprep:latest \
-                -e FMRIPREP_DEV 1 -u $(id -u) \
-                --network none \
-                --config $PWD/nipype.cfg -w /tmp/ds005/work \
-                /tmp/data/ds005 /tmp/ds005/derivatives participant \
-                --fs-subjects-dir /tmp/ds005/freesurfer \
-                --skull-strip-template OASIS30ANTs:res-1 \
-                --output-spaces MNI152NLin2009cAsym MNI152NLin6Asym \
-                --sloppy --write-graph --mem_mb 4096 \
-                --nthreads 2 --anat-only -vv
+            if [ -f /tmp/ds005/.nofasttrack ]; then
+                fmriprep-docker -i poldracklab/fmriprep:latest \
+                    -e FMRIPREP_DEV 1 -u $(id -u) \
+                    --network none \
+                    --config $PWD/nipype.cfg -w /tmp/ds005/work \
+                    /tmp/data/ds005 /tmp/ds005/derivatives participant \
+                    --fs-subjects-dir /tmp/ds005/freesurfer \
+                    --skull-strip-template OASIS30ANTs:res-1 \
+                    --output-spaces MNI152NLin2009cAsym MNI152NLin6Asym \
+                    --sloppy --write-graph --mem_mb 4096 \
+                    --nthreads 2 --anat-only -vv
+            fi
       - run:
           name: Clean-up after anatomical run
           command: |
@@ -392,12 +410,17 @@ jobs:
                 sudo setfacl -m group:$(id -gn):rwx /tmp/ds005/derivatives
             sudo setfacl -d -m group:$(id -gn):rwx /tmp/ds005/work && \
                 sudo setfacl -m group:$(id -gn):rwx /tmp/ds005/work
+            FASTRACK_ARG="--anat-derivatives /tmp/ds005/smriprep-0.6"
+            if [ -f /tmp/ds005/.nofasttrack ]; then
+                FASTRACK_ARG=""
+            fi
             fmriprep-docker -i poldracklab/fmriprep:latest \
                 -e FMRIPREP_DEV 1 -u $(id -u) \
                 --network none \
                 --config $PWD/nipype.cfg -w /tmp/ds005/work \
                 /tmp/data/ds005 /tmp/ds005/derivatives participant \
                 --fs-subjects-dir /tmp/ds005/freesurfer \
+                ${FASTRACK_ARG} \
                 --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
                 --use-aroma \
                 --skull-strip-template OASIS30ANTs:res-1 \
@@ -424,12 +447,17 @@ jobs:
           no_output_timeout: 2h
           command: |
             rm /tmp/data/ds005/sub-01/func/*_run-01_*
+            FASTRACK_ARG="--anat-derivatives /tmp/ds005/smriprep-0.6"
+            if [ -f /tmp/ds005/.nofasttrack ]; then
+                FASTRACK_ARG=""
+            fi
             fmriprep-docker -i poldracklab/fmriprep:latest \
                 -e FMRIPREP_DEV 1 -u $(id -u) \
                 --network none \
                 --config $PWD/nipype.cfg -w /tmp/ds005/work_partial \
                 /tmp/data/ds005 /tmp/ds005/derivatives_partial participant \
                 --fs-subjects-dir /tmp/ds005/freesurfer \
+                ${FASTRACK_ARG} \
                 --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
                 --output-spaces MNI152NLin2009cAsym fsaverage5 fsnative MNI152NLin6Asym anat \
                 --aroma-melodic-dimensionality 2 --use-aroma \
