@@ -57,14 +57,12 @@ Please find more information regarding this error from discussions on
 
 Additionally, consider using the ``--low-mem`` flag, which will make some memory optimizations at the cost of disk space in the working directory.
 
-
 I have already run ``recon-all`` on my subjects, can I reuse my outputs?
 ------------------------------------------------------------------------
 Yes, as long as the FreeSurfer_ version previously used was ``6.0.0`` or newer.
 If running with FreeSurfer, *fMRIPrep* checks if the output directory contains a ``freesurfer``
 directory and reuses the outputs found.
 Alternatively, you can use the ``--fs-subjects-dir`` flag to specify a different location for the existing FreeSurfer outputs.
-
 
 ERROR: it appears that ``recon-all`` is already running
 -------------------------------------------------------
@@ -114,11 +112,9 @@ The output you get from fMRIPrep will contain something like: ::
 
   Return code: 1
 
-
 As suggested by the ``recon-all`` output message, deleting these files will enable
 FreeSurfer to execute ``recon-all`` again.
 In general, please be cautious of deleting files and mindful why a file may exist.
-
 
 Running subjects in parallel
 ----------------------------
@@ -223,7 +219,6 @@ If you are a Singularity user, please check out :ref:`singularity_tf`.
 
 How do I select only certain files to be input to fMRIPrep?
 -----------------------------------------------------------
-
 Using the ``--bids-filter-file`` flag, you can pass fMRIPrep a JSON file that
 describes a custom BIDS filter for selecting files with PyBIDS, with the syntax
 ``{<query>: {<entity>: <filter>, ...},...}``. For example::
@@ -271,3 +266,56 @@ Therefore, if your *fMRIPrep* process crashes and you attempt to re-run it reusi
 as much as it could from the previous run, you can either make sure that
 the default ``$PWD/work/`` points to a reasonable, reusable path in your environment or
 configure a better location on your with ``-w <PATH>``.
+
+What is the *anatomical fast-track*?
+------------------------------------
+Starting with version 20.1.0, *fMRIPrep* has a command-line argument (``--anat-derivatives <PATH>``)
+to prescribe a path from which the preprocessed information derived from the T1w, T2w (if present) and
+FLAIR (if present) images.
+This feature was envisioned to help process very large multi-session datasets where the anatomical
+images can be averaged (i.e., anatomy is not expected to vary substantially across sessions).
+An example of this kind of processing is `My Connectome <https://openneuro.org/datasets/ds000031/>`__.
+The dataset contains 107 sessions for a single-subject.
+Most of them containing anatomical information which, given the design of the dataset, can be averaged
+across sessions as no substantial changes should happen.
+In other words, the anatomical information of the dataset can be considered as *cross-sectional*.
+Before version 20.1.0, preprocessing this dataset would be hard for two limitations:
+
+  * if the dataset were to be processed in just one enormous job (be it in a commercial Cloud or
+    :abbr:`HPC (high-performance computing)` resources), the amount of data to be processed surely
+    would exceed the time limitations per job (and/or related issues, such as restarting from where
+    it left before); or
+  * if the processing were `split in sessions <https://github.com/poldracklab/fmriprep/issues/1175>`__,
+    then *fMRIPrep* would attempt to re-process the anatomical information for every session.
+
+Because processing this emerging type of datasets (*densely sampled neuroimaging*) was impractical with
+*fMRIPrep*, the option ``--anat-derivatives`` will shortcut the whole anatomical processing.
+
+.. danger::
+    Using the *anatomical fast-track* (the ``--anat-derivatives`` argument) has important side-effects
+    that risk the reproducibility and reliability of *fMRIPrep*.
+    This flag breaks *fMRIPrep*'s internal tracing of provenance, and it trusts whatever input *fMRIPrep*
+    is given (so long it is BIDS-Derivatives compliant and contains all the necessary files).
+
+    When reporting results obtained with ``--anat-derivatives``, please make sure you highlight this
+    particular deviation from *fMRIPrep*, and clearly describe the alternative preprocessing of
+    anatomical data.
+
+Can I use *fMRIPrep* for longitudinal studies?
+----------------------------------------------
+As partially indicated before, *fMRIPrep* assumes no substantial anatomical changes happen
+across sessions.
+When substantial changes are expected, special considerations must be taken.
+Some examples follow:
+
+  * Surgery: use only pre-operation sessions for the anatomical data. This will typically be done
+    by omitting post-operation sessions from the inputs to *fMRIPrep*.
+  * Developing and elderly populations: there is currently no standard way of processing these.
+    However, `as suggested by U. Tooley at NeuroStars.org
+    <https://neurostars.org/t/fmriprep-how-to-reuse-longitudinal-and-pre-run-freesurfer/4585/15>`__,
+    it is theoretically possible to leverage the *anatomical fast-track* along with the
+    ``--bids-filters`` option to process sessions fully independently, or grouped by some study-design
+    criteria.
+    Please check the `link
+    <https://neurostars.org/t/fmriprep-how-to-reuse-longitudinal-and-pre-run-freesurfer/4585/15>`__
+    for further information on this approach.
