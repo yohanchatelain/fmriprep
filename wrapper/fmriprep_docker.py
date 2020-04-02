@@ -272,6 +272,10 @@ the spatial normalization.""" % (', '.join('"%s"' % s for s in TF_TEMPLATES),
         help='Path to existing FreeSurfer subjects directory to reuse. '
              '(default: OUTPUT_DIR/freesurfer)')
     g_wrap.add_argument(
+        '--anat-derivatives', metavar='PATH', type=os.path.abspath,
+        help='Path to existing sMRIPrep/fMRIPrep-anatomical derivatives to fasttrack '
+             'the anatomical workflow.')
+    g_wrap.add_argument(
         '--use-plugin', metavar='PATH', action='store', default=None,
         type=os.path.abspath, help='nipype plugin configuration file')
 
@@ -401,6 +405,10 @@ def main():
     if opts.fs_subjects_dir:
         command.extend(['-v', '{}:/opt/subjects'.format(opts.fs_subjects_dir)])
         unknown_args.extend(['--fs-subjects-dir', '/opt/subjects'])
+
+    if opts.anat_derivatives:
+        command.extend(['-v', '{}:/opt/smriprep/subjects'.format(opts.anat_derivatives)])
+        unknown_args.extend(['--anat-derivatives', '/opt/smriprep/subjects'])
 
     if opts.work_dir:
         command.extend(['-v', ':'.join((opts.work_dir, '/scratch'))])
