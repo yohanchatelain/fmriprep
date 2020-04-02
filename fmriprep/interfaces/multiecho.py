@@ -85,11 +85,7 @@ sub-01_run-01_echo-3_bold.nii.gz -e 13.0 27.0 43.0'
 
     def _list_outputs(self):
         outputs = self._outputs().get()
-        filename = splitext_addext(os.path.basename(self.inputs.in_files[0]))[0]
-        out_dir = os.path.abspath('TED.{}'.format(filename))
-
-        outputs['t2star_map'] = os.path.join(out_dir, 'T2StarMap.nii.gz')
-        outputs['s0_map'] = os.path.join(out_dir, 'S0Map.nii.gz')
-        outputs['optimal_comb'] = os.path.join(out_dir, 'desc-optcom_bold.nii.gz')
-
+        outputs['t2star_map'] = 'T2StarMap.nii.gz'
+        outputs['s0_map'] = 'S0Map.nii.gz'
+        outputs['optimal_comb'] = 'desc-optcom_bold.nii.gz'
         return outputs
