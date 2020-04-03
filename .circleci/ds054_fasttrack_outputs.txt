@@ -5,6 +5,7 @@ fmriprep/logs/CITATION.bib
 fmriprep/logs/CITATION.html
 fmriprep/logs/CITATION.md
 fmriprep/logs/CITATION.tex
+fmriprep/sub-100185
 fmriprep/sub-100185/func
 fmriprep/sub-100185/func/sub-100185_task-machinegame_run-01_boldref.nii.gz
 fmriprep/sub-100185/func/sub-100185_task-machinegame_run-01_desc-brain_mask.json
