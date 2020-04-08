@@ -281,9 +281,9 @@ tasks and sessions), the following preprocessing was performed.
               ('outputnode.t1w_aseg', 'inputnode.t1w_aseg'),
               ('outputnode.t1w_aparc', 'inputnode.t1w_aparc'),
               ('outputnode.t1w_tpms', 'inputnode.t1w_tpms'),
-              ('outputnode.joint_template', 'inputnode.template'),
-              ('outputnode.joint_anat2std_xfm', 'inputnode.anat2std_xfm'),
-              ('outputnode.joint_std2anat_xfm', 'inputnode.std2anat_xfm'),
+              ('outputnode.template', 'inputnode.template'),
+              ('outputnode.anat2std_xfm', 'inputnode.anat2std_xfm'),
+              ('outputnode.std2anat_xfm', 'inputnode.std2anat_xfm'),
               # Undefined if --fs-no-reconall, but this is safe
               ('outputnode.subjects_dir', 'inputnode.subjects_dir'),
               ('outputnode.subject_id', 'inputnode.subject_id'),
