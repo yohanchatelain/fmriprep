@@ -260,13 +260,14 @@ in the the PyBIDS
 
 Can *fMRIPrep* continue to run after encountering an error?
 -----------------------------------------------------------
-
-fMRIPrep uses Nipype_ to organize its workflows, which has a notion of a working directory.
-Each job records its inputs and outputs in the working directory, and if the inputs are
-unchanged, the outputs will be reused without rerunning the job.
-
-This means that, as long as your inputs haven't changed and you're using the same version of
-fMRIPrep, you can usually resume from where you left off.
-
-The working directory can be specified with the ``-w`` flag (for example
-``-w $SCRATCH/fmriprep-scratch``).
+(Context: `#1756 <https://github.com/poldracklab/fmriprep/issues/1756>`__)
+Yes, although it requires access to previously computed intermediate results.
+*fMRIPrep* is built on top of Nipype_, which uses a temporary folder to store the interim
+results of the workflow.
+*fMRIPrep* provides the ``-w <PATH>`` command line argument to set a customized temporal
+folder (the *working directory*, in the following) for the *Nipype* workflow engine.
+By default, *fMRIPrep* configures the *working directory* to be ``$PWD/work/``.
+Therefore, if your *fMRIPrep* process crashes and you attempt to re-run it reusing
+as much as it could from the previous run, you can either make sure that
+the default ``$PWD/work/`` points to a reasonable, reusable path in your environment or
+configure a better location on your with ``-w <PATH>``.
