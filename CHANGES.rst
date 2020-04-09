@@ -8,9 +8,15 @@ distinguish which options were selected for each participant, along with other e
   * ENH: Add option to ignore T2w / FLAIR images (#2015)
   * ENH: Ensure subcortical volume in CIFTI is in LAS orientation (`nipreps/niworkflows#484`_)
   * ENH: Add option to skip brain extraction (#2039)
+  * ENH: Use CIFTI for carpetplot when available (#2055)
+  * FIX: Explicitly add default native resolution to volumetric outputs (`nipreps/niworkflows#494`_)
   * MAINT: Bump minimum Python to 3.7 (#2017)
+  * MAINT: Remove unused console scripts (#2048)
+  * MAINT: Reduce overall size of outputs (`nipreps/niworkflows#492`_)
 
 .. _`nipreps/niworkflows#484`: https://github.com/nipreps/niworkflows/pull/484
+.. _`nipreps/niworkflows#494`: https://github.com/nipreps/niworkflows/pull/494
+.. _`nipreps/niworkflows#492`: https://github.com/nipreps/niworkflows/pull/492
 
 20.0.5 (March 19, 2020)
 =======================
