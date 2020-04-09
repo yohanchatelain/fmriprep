@@ -426,7 +426,7 @@ were annotated as motion outliers.
     return workflow
 
 
-def init_carpetplot_wf(mem_gb, metadata, name="bold_carpet_wf"):
+def init_carpetplot_wf(mem_gb, metadata, cifti_output, name="bold_carpet_wf"):
     """
     Build a workflow to generate *carpet* plots.
 
@@ -458,6 +458,8 @@ def init_carpetplot_wf(mem_gb, metadata, name="bold_carpet_wf"):
         the native BOLD space
     std2anat_xfm
         ANTs-compatible affine-and-warp transform file
+    cifti_bold
+        BOLD image in CIFTI format, to be used in place of volumetric BOLD
 
     Outputs
     -------
@@ -467,7 +469,7 @@ def init_carpetplot_wf(mem_gb, metadata, name="bold_carpet_wf"):
     """
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['bold', 'bold_mask', 'confounds_file',
-                't1_bold_xform', 'std2anat_xfm']),
+                't1_bold_xform', 'std2anat_xfm', 'cifti_bold']),
         name='inputnode')
 
     outputnode = pe.Node(niu.IdentityInterface(
@@ -501,17 +503,24 @@ def init_carpetplot_wf(mem_gb, metadata, name="bold_carpet_wf"):
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 
     workflow = Workflow(name=name)
+    # no need for segmentations if using CIFTI
+    if cifti_output:
+        workflow.connect(inputnode, 'cifti_bold', conf_plot, 'in_func')
+    else:
+        workflow.connect([
+            (inputnode, mrg_xfms, [('t1_bold_xform', 'in1'),
+                                   ('std2anat_xfm', 'in2')]),
+            (inputnode, resample_parc, [('bold_mask', 'reference_image')]),
+            (mrg_xfms, resample_parc, [('out', 'transforms')]),
+            # Carpetplot
+            (inputnode, conf_plot, [
+                ('bold', 'in_func'),
+                ('bold_mask', 'in_mask')]),
+            (resample_parc, conf_plot, [('output_image', 'in_segm')])
+        ])
+
     workflow.connect([
-        (inputnode, mrg_xfms, [('t1_bold_xform', 'in1'),
-                               ('std2anat_xfm', 'in2')]),
-        (inputnode, resample_parc, [('bold_mask', 'reference_image')]),
-        (mrg_xfms, resample_parc, [('out', 'transforms')]),
-        # Carpetplot
-        (inputnode, conf_plot, [
-            ('bold', 'in_func'),
-            ('bold_mask', 'in_mask'),
-            ('confounds_file', 'confounds_file')]),
-        (resample_parc, conf_plot, [('output_image', 'in_segm')]),
+        (inputnode, conf_plot, [('confounds_file', 'confounds_file')]),
         (conf_plot, ds_report_bold_conf, [('out_file', 'in_file')]),
         (conf_plot, outputnode, [('out_file', 'out_carpetplot')]),
     ])
