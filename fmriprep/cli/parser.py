@@ -102,7 +102,7 @@ def _build_parser():
 
     g_perfm = parser.add_argument_group('Options to handle performance')
     g_perfm.add_argument(
-        '--nprocs', '--nthreads', '--n_cpus', '-n-cpus', action='store', type=PositiveInt,
+        '--nprocs', '--nthreads', '--n_cpus', '--n-cpus', action='store', type=PositiveInt,
         help='maximum number of threads across all processes')
     g_perfm.add_argument('--omp-nthreads', action='store', type=PositiveInt,
                          help='maximum number of threads per-process')
