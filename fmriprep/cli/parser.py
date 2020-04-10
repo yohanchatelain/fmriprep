@@ -316,7 +316,6 @@ def parse_args(args=None, namespace=None):
     opts = parser.parse_args(args, namespace)
     config.execution.log_level = int(max(25 - 5 * opts.verbose_count, logging.DEBUG))
     config.from_dict(vars(opts))
-    config.loggers.init()
 
     # Initialize --output-spaces if not defined
     if config.execution.output_spaces is None:
