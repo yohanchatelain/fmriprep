@@ -378,10 +378,10 @@ applied.""")
     # Wipe out existing work_dir
     if opts.clean_workdir and work_dir.exists():
         from niworkflows.utils.misc import clean_directory
-        build_log.info(f"Clearing previous fMRIPrep working directory: {str(work_dir)}")
+        build_log.info(f"Clearing previous fMRIPrep working directory: {work_dir}")
         if not clean_directory(work_dir):
             build_log.warning(
-                f"Could not clear all contents of working directory: {str(work_dir)}"
+                f"Could not clear all contents of working directory: {work_dir}"
             )
 
     # Ensure input and output folders are not the same
