@@ -102,7 +102,7 @@ def _build_parser():
 
     g_perfm = parser.add_argument_group('Options to handle performance')
     g_perfm.add_argument(
-        '--nprocs', '--nthreads', '--n_cpus', '-n-cpus', action='store', type=PositiveInt,
+        '--nprocs', '--nthreads', '--n_cpus', '--n-cpus', action='store', type=PositiveInt,
         help='maximum number of threads across all processes')
     g_perfm.add_argument('--omp-nthreads', action='store', type=PositiveInt,
                          help='maximum number of threads per-process')
@@ -316,7 +316,6 @@ def parse_args(args=None, namespace=None):
     opts = parser.parse_args(args, namespace)
     config.execution.log_level = int(max(25 - 5 * opts.verbose_count, logging.DEBUG))
     config.from_dict(vars(opts))
-    config.loggers.init()
 
     # Initialize --output-spaces if not defined
     if config.execution.output_spaces is None:

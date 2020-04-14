@@ -251,7 +251,7 @@ class nipype(_Config):
     """Estimation in GB of the RAM this workflow can allocate at any given time."""
     nprocs = os.cpu_count()
     """Number of processes (compute tasks) that can be run in parallel (multiprocessing only)."""
-    omp_nthreads = os.cpu_count()
+    omp_nthreads = None
     """Number of CPUs a single process can access for multithreaded execution."""
     plugin = 'MultiProc'
     """NiPype's execution plugin."""
@@ -303,6 +303,9 @@ class nipype(_Config):
                 'stop_on_first_crash': cls.stop_on_first_crash,
             }
         })
+
+        if cls.omp_nthreads is None:
+            cls.omp_nthreads = min(cls.nprocs - 1 if cls.nprocs > 1 else os.cpu_count(), 8)
 
 
 class execution(_Config):
