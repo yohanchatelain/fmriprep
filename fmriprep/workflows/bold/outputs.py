@@ -4,12 +4,6 @@
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 
-from niworkflows.engine.workflows import LiterateWorkflow as Workflow
-from niworkflows.interfaces.cifti import CiftiNameSource
-from niworkflows.interfaces.surf import GiftiNameSource
-from niworkflows.interfaces.utility import KeySelect
-from niworkflows.utils.spaces import format_reference as _fmt_space
-
 from ...config import DEFAULT_MEMORY_MIN_GB
 from ...interfaces import DerivativesDataSink
 
@@ -54,7 +48,10 @@ def init_func_derivatives_wf(
         This workflow's identifier (default: ``func_derivatives_wf``).
 
     """
+    from niworkflows.engine.workflows import LiterateWorkflow as Workflow
+    from niworkflows.interfaces.utility import KeySelect
     from smriprep.workflows.outputs import _bids_relative
+
     nonstd_spaces = set(spaces.get_nonstandard())
     workflow = Workflow(name=name)
 
@@ -183,6 +180,8 @@ def init_func_derivatives_wf(
 
     # Store resamplings in standard spaces when listed in --output-spaces
     if spaces.cached.references:
+        from niworkflows.utils.spaces import format_reference as _fmt_space
+
         itersource = pe.Node(niu.IdentityInterface(fields=['space_definition']),
                              name='itersource')
 
@@ -257,6 +256,8 @@ def init_func_derivatives_wf(
 
     fs_outputs = spaces.cached.get_fs_spaces()
     if freesurfer and fs_outputs:
+        from niworkflows.interfaces.surf import GiftiNameSource
+
         select_fs_surf = pe.Node(KeySelect(
             fields=['surfaces', 'surf_kwargs']), name='select_fs_surf',
             run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
@@ -287,6 +288,8 @@ def init_func_derivatives_wf(
 
     # CIFTI output
     if cifti_output:
+        from niworkflows.interfaces.cifti import CiftiNameSource
+
         name_cifti = pe.MapNode(
             CiftiNameSource(), iterfield=['variant', 'density'], name='name_cifti',
             mem_gb=DEFAULT_MEMORY_MIN_GB, run_without_submitting=True)

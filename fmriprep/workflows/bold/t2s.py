@@ -10,9 +10,6 @@ Generate T2* map from multi-echo BOLD images
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 
-from niworkflows.engine.workflows import LiterateWorkflow as Workflow
-from niworkflows.func.util import init_skullstrip_bold_wf
-
 from ...interfaces import T2SMap
 from ... import config
 
@@ -66,6 +63,9 @@ def init_bold_t2s_wf(echo_times, mem_gb, omp_nthreads,
         the adaptive T2* map
 
     """
+    from niworkflows.engine.workflows import LiterateWorkflow as Workflow
+    from niworkflows.func.util import init_skullstrip_bold_wf
+
     workflow = Workflow(name=name)
     workflow.__desc__ = """\
 A T2* map was estimated from the preprocessed BOLD by fitting to a monoexponential signal

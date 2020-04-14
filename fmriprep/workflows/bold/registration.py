@@ -18,19 +18,6 @@ import pkg_resources as pkgr
 
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, fsl, c3
-from niworkflows.engine.workflows import LiterateWorkflow as Workflow
-# See https://github.com/poldracklab/fmriprep/issues/768
-from niworkflows.interfaces.freesurfer import (
-    PatchedConcatenateLTA as ConcatenateLTA,
-    PatchedBBRegisterRPT as BBRegisterRPT,
-    PatchedMRICoregRPT as MRICoregRPT,
-    PatchedLTAConvert as LTAConvert)
-from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
-from niworkflows.interfaces.images import extract_wm
-from niworkflows.interfaces.itk import MultiApplyTransforms
-from niworkflows.interfaces.registration import FLIRTRPT
-from niworkflows.interfaces.utils import GenerateSamplingReference
-from niworkflows.interfaces.nilearn import Merge
 
 from ...config import DEFAULT_MEMORY_MIN_GB
 from ...interfaces import DerivativesDataSink
@@ -119,6 +106,8 @@ def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
       * :py:func:`~fmriprep.workflows.bold.registration.init_fsl_bbr_wf`
 
     """
+    from niworkflows.engine.workflows import LiterateWorkflow as Workflow
+
     workflow = Workflow(name=name)
     inputnode = pe.Node(
         niu.IdentityInterface(
@@ -256,7 +245,13 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, multiecho=False, use
       * :py:func:`~fmriprep.workflows.bold.registration.init_fsl_bbr_wf`
 
     """
+    from niworkflows.engine.workflows import LiterateWorkflow as Workflow
     from niworkflows.func.util import init_bold_reference_wf
+    from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
+    from niworkflows.interfaces.itk import MultiApplyTransforms
+    from niworkflows.interfaces.nilearn import Merge
+    from niworkflows.interfaces.utils import GenerateSamplingReference
+
     workflow = Workflow(name=name)
     inputnode = pe.Node(
         niu.IdentityInterface(
@@ -428,6 +423,15 @@ def init_bbreg_wf(use_bbr, bold2t1w_dof, omp_nthreads, name='bbreg_wf'):
         Boolean indicating whether BBR was rejected (mri_coreg registration returned)
 
     """
+    from niworkflows.engine.workflows import LiterateWorkflow as Workflow
+    # See https://github.com/poldracklab/fmriprep/issues/768
+    from niworkflows.interfaces.freesurfer import (
+        PatchedConcatenateLTA as ConcatenateLTA,
+        PatchedBBRegisterRPT as BBRegisterRPT,
+        PatchedMRICoregRPT as MRICoregRPT,
+        PatchedLTAConvert as LTAConvert
+    )
+
     workflow = Workflow(name=name)
     workflow.__desc__ = """\
 The BOLD reference was then co-registered to the T1w reference using
@@ -606,6 +610,11 @@ def init_fsl_bbr_wf(use_bbr, bold2t1w_dof, name='fsl_bbr_wf'):
         Boolean indicating whether BBR was rejected (rigid FLIRT registration returned)
 
     """
+    from niworkflows.engine.workflows import LiterateWorkflow as Workflow
+    from niworkflows.interfaces.freesurfer import PatchedLTAConvert as LTAConvert
+    from niworkflows.interfaces.images import extract_wm
+    from niworkflows.interfaces.registration import FLIRTRPT
+
     workflow = Workflow(name=name)
     workflow.__desc__ = """\
 The BOLD reference was then co-registered to the T1w reference using

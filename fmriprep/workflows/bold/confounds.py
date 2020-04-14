@@ -9,33 +9,15 @@ Calculate BOLD confounds
 
 """
 from os import getenv
-from nipype.pipeline import engine as pe
-from nipype.interfaces import utility as niu, fsl
-from nipype.algorithms import confounds as nac
 
+from nipype.algorithms import confounds as nac
+from nipype.interfaces import utility as niu, fsl
+from nipype.pipeline import engine as pe
 from templateflow.api import get as get_template
-from niworkflows.engine.workflows import LiterateWorkflow as Workflow
-from niworkflows.interfaces.confounds import ExpandModel, SpikeRegressors
-from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
-from niworkflows.interfaces.images import SignalExtraction
-from niworkflows.interfaces.masks import ROIsPlot
-from niworkflows.interfaces.utility import KeySelect
-from niworkflows.interfaces.patches import (
-    RobustACompCor as ACompCor,
-    RobustTCompCor as TCompCor,
-)
-from niworkflows.interfaces.plotting import (
-    CompCorVariancePlot, ConfoundsCorrelationPlot
-)
-from niworkflows.interfaces.segmentation import ICA_AROMARPT
-from niworkflows.interfaces.utils import (
-    TPM2ROI, AddTPMs, AddTSVHeader, TSV2JSON, DictMerge
-)
 
 from ...config import DEFAULT_MEMORY_MIN_GB
 from ...interfaces import (
-    GatherConfounds, ICAConfounds,
-    FMRISummary, DerivativesDataSink
+    GatherConfounds, ICAConfounds, FMRISummary, DerivativesDataSink
 )
 
 
@@ -137,6 +119,22 @@ def init_bold_confs_wf(
         Confounds metadata dictionary.
 
     """
+    from niworkflows.engine.workflows import LiterateWorkflow as Workflow
+    from niworkflows.interfaces.confounds import ExpandModel, SpikeRegressors
+    from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
+    from niworkflows.interfaces.images import SignalExtraction
+    from niworkflows.interfaces.masks import ROIsPlot
+    from niworkflows.interfaces.patches import (
+        RobustACompCor as ACompCor,
+        RobustTCompCor as TCompCor,
+    )
+    from niworkflows.interfaces.plotting import (
+        CompCorVariancePlot, ConfoundsCorrelationPlot
+    )
+    from niworkflows.interfaces.utils import (
+        TPM2ROI, AddTPMs, AddTSVHeader, TSV2JSON, DictMerge
+    )
+
     workflow = Workflow(name=name)
     workflow.__desc__ = """\
 Several confounding time-series were calculated based on the
@@ -467,6 +465,9 @@ def init_carpetplot_wf(mem_gb, metadata, cifti_output, name="bold_carpet_wf"):
         Path of the generated SVG file
 
     """
+    from niworkflows.engine.workflows import LiterateWorkflow as Workflow
+    from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
+
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['bold', 'bold_mask', 'confounds_file',
                 't1_bold_xform', 'std2anat_xfm', 'cifti_bold']),
@@ -632,6 +633,11 @@ def init_ica_aroma_wf(
         BOLD series with non-aggressive ICA-AROMA denoising applied
 
     """
+    from niworkflows.engine.workflows import LiterateWorkflow as Workflow
+    from niworkflows.interfaces.segmentation import ICA_AROMARPT
+    from niworkflows.interfaces.utility import KeySelect
+    from niworkflows.interfaces.utils import TSV2JSON
+
     workflow = Workflow(name=name)
     workflow.__postdesc__ = """\
 Automatic removal of motion artifacts using independent component analysis

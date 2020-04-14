@@ -9,8 +9,7 @@ Slice-Timing Correction (STC) of BOLD images
 """
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, afni
-from niworkflows.engine.workflows import LiterateWorkflow as Workflow
-from niworkflows.interfaces.utils import CopyXForm
+
 from ... import config
 
 
@@ -55,6 +54,9 @@ def init_bold_stc_wf(metadata, name='bold_stc_wf'):
         Slice-timing corrected BOLD series NIfTI file
 
     """
+    from niworkflows.engine.workflows import LiterateWorkflow as Workflow
+    from niworkflows.interfaces.utils import CopyXForm
+
     workflow = Workflow(name=name)
     workflow.__desc__ = """\
 BOLD runs were slice-time corrected using `3dTshift` from
