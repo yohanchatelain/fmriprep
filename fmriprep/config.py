@@ -100,7 +100,7 @@ if not any((
 elif os.getenv("FMRIPREP_WARNINGS", "0").lower() in ("1", "on", "true", "y", "yes"):
     # allow disabling warnings on development versions
     # https://github.com/poldracklab/fmriprep/pull/2080#discussion_r409118765
-    from .warnings import logging
+    from ._warnings import logging
 else:
     import logging
 
