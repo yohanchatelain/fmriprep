@@ -20,7 +20,6 @@ from nipype.interfaces.base import (
     traits, TraitedSpec, BaseInterfaceInputSpec, File, Directory, isdefined,
     SimpleInterface
 )
-from niworkflows.viz.plots import fMRIPlot
 
 LOGGER = logging.getLogger('nipype.interface')
 
@@ -312,6 +311,8 @@ class FMRISummary(SimpleInterface):
     output_spec = FMRISummaryOutputSpec
 
     def _run_interface(self, runtime):
+        from niworkflows.viz.plots import fMRIPlot
+
         self._results['out_file'] = fname_presuffix(
             self.inputs.in_func,
             suffix='_fmriplot.svg',

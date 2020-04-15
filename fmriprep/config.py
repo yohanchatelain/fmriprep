@@ -68,16 +68,6 @@ The :py:mod:`config` is responsible for other conveniency actions.
 
 """
 from multiprocessing import set_start_method
-import warnings
-
-# cmp is not used by fmriprep, so ignore nipype-generated warnings
-warnings.filterwarnings('ignore', 'cmp not installed')
-warnings.filterwarnings('ignore', 'This has not been fully tested. Please report any failures.')
-warnings.filterwarnings('ignore', "sklearn.externals.joblib is deprecated in 0.21")
-warnings.filterwarnings('ignore', "can't resolve package from __spec__ or __package__")
-warnings.filterwarnings('ignore', category=DeprecationWarning)
-warnings.filterwarnings('ignore', category=FutureWarning)
-warnings.filterwarnings('ignore', category=ResourceWarning)
 
 
 try:
@@ -89,24 +79,30 @@ finally:
     # ignoring the most annoying warnings
     import os
     import sys
-    import logging
 
     from uuid import uuid4
     from pathlib import Path
     from time import strftime
-    from niworkflows.utils.spaces import SpatialReferences as _SRs, Reference as _Ref
     from nipype import logging as nlogging, __version__ as _nipype_ver
     from templateflow import __version__ as _tf_ver
     from . import __version__
 
-
-def redirect_warnings(message, category, filename, lineno, file=None, line=None):
-    """Redirect other warnings."""
-    logger = logging.getLogger()
-    logger.debug('Captured warning (%s): %s', category, message)
-
-
-warnings.showwarning = redirect_warnings
+if not hasattr(sys, "_is_pytest_session"):
+    sys._is_pytest_session = False  # Trick to avoid sklearn's FutureWarnings
+# Disable all warnings in main and children processes only on production versions
+if not any((
+    "+" in __version__,
+    __version__.endswith(".dirty"),
+    os.getenv("FMRIPREP_DEV", "0").lower() in ("1", "on", "true", "y", "yes")
+)):
+    from ._warnings import logging
+    os.environ["PYTHONWARNINGS"] = "ignore"
+elif os.getenv("FMRIPREP_WARNINGS", "0").lower() in ("1", "on", "true", "y", "yes"):
+    # allow disabling warnings on development versions
+    # https://github.com/poldracklab/fmriprep/pull/2080#discussion_r409118765
+    from ._warnings import logging
+else:
+    import logging
 
 logging.addLevelName(25, 'IMPORTANT')  # Add a new level between INFO and WARNING
 logging.addLevelName(15, 'VERBOSE')  # Add a new level between INFO and DEBUG
@@ -190,6 +186,8 @@ class _Config:
     @classmethod
     def get(cls):
         """Return defined settings."""
+        from niworkflows.utils.spaces import SpatialReferences, Reference
+
         out = {}
         for k, v in cls.__dict__.items():
             if k.startswith('_') or v is None:
@@ -198,9 +196,9 @@ class _Config:
                 continue
             if k in cls._paths:
                 v = str(v)
-            if isinstance(v, _SRs):
-                v = ' '.join([str(s) for s in v.references]) or None
-            if isinstance(v, _Ref):
+            if isinstance(v, SpatialReferences):
+                v = " ".join([str(s) for s in v.references]) or None
+            if isinstance(v, Reference):
                 v = str(v) or None
             out[k] = v
         return out
