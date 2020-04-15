@@ -68,7 +68,6 @@ The :py:mod:`config` is responsible for other conveniency actions.
 
 """
 from multiprocessing import set_start_method
-from ._warnings import logging
 
 
 try:
@@ -96,7 +95,14 @@ if not any((
     __version__.endswith(".dirty"),
     os.getenv("FMRIPREP_DEV", "0").lower() in ("1", "on", "true", "y", "yes")
 )):
+    from ._warnings import logging
     os.environ["PYTHONWARNINGS"] = "ignore"
+elif os.getenv("FMRIPREP_WARNINGS", "0").lower() in ("1", "on", "true", "y", "yes"):
+    # allow disabling warnings on development versions
+    # https://github.com/poldracklab/fmriprep/pull/2080#discussion_r409118765
+    from .warnings import logging
+else:
+    import logging
 
 logging.addLevelName(25, 'IMPORTANT')  # Add a new level between INFO and WARNING
 logging.addLevelName(15, 'VERBOSE')  # Add a new level between INFO and DEBUG

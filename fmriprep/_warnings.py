@@ -23,14 +23,3 @@ def _showwarning(message, category, filename, lineno, file=None, line=None):
 
 warnings.warn = _warn
 warnings.showwarning = _showwarning
-
-# warnings.filterwarnings("ignore", category=FutureWarning)
-# warnings.filterwarnings("ignore", category=DeprecationWarning)
-# warnings.filterwarnings("ignore", category=ResourceWarning)
-# # cmp is not used by mriqc, so ignore nipype-generated warnings
-# warnings.filterwarnings("ignore", "cmp not installed")
-# warnings.filterwarnings(
-#     "ignore", "This has not been fully tested. Please report any failures."
-# )
-# warnings.filterwarnings("ignore", "sklearn.externals.joblib is deprecated in 0.21")
-# warnings.filterwarnings("ignore", "can't resolve package from __spec__ or __package__")
