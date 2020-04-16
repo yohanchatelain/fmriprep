@@ -1,3 +1,19 @@
+1.5.10 (April 16, 2020)
+=======================
+Bug-fix release in the 1.5.x series.
+
+This release fixes a bug for **phase-difference fieldmaps that are not in RAS+ orientation**.
+The bug presented as an error if the orientation was reordered relative to RAS+ (for example,
+AIL+) and the swapped dimensions were not of the same size.
+Otherwise, the bug introduced a poor masking of the phase difference map, and could be quite subtle
+if the original orientation was LAS+.
+Runs of fMRIPrep that used other susceptibility distortion correction (SDC) methods are not
+currently considered problematic.
+
+This bug affects all previous versions of fMRIPrep, as well as versions 20.0.0-20.0.5.
+
+  * FIX: Do not reorient magnitude images (nipreps/sdcflows#98)
+
 1.5.9 (February 14, 2020)
 =========================
 Bug-fix release in the 1.5.x series.
