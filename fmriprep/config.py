@@ -401,6 +401,8 @@ del _oc_policy
 class workflow(_Config):
     """Configure the particular execution graph of this workflow."""
 
+    ants_fixed_seed = None
+    """Fix random seed for antsRegistration, antsAI, antsMotionCorr"""
     anat_only = False
     """Execute the anatomical preprocessing only."""
     aroma_err_on_warn = None
