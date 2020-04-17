@@ -10,9 +10,7 @@ Head-Motion Estimation and Correction (HMC) of BOLD images
 
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, fsl
-from niworkflows.engine.workflows import LiterateWorkflow as Workflow
-from niworkflows.interfaces import NormalizeMotionParams
-from niworkflows.interfaces.itk import MCFLIRT2ITK
+
 from ...config import DEFAULT_MEMORY_MIN_GB
 
 
@@ -60,6 +58,10 @@ def init_bold_hmc_wf(mem_gb, omp_nthreads, name='bold_hmc_wf'):
         Jenkinson framewise displacement as measured by `fsl_motion_outliers`
 
     """
+    from niworkflows.engine.workflows import LiterateWorkflow as Workflow
+    from niworkflows.interfaces import NormalizeMotionParams
+    from niworkflows.interfaces.itk import MCFLIRT2ITK
+
     workflow = Workflow(name=name)
     workflow.__desc__ = """\
 Head-motion parameters with respect to the BOLD reference

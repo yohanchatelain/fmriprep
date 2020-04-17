@@ -17,7 +17,6 @@ from nipype.interfaces.base import (
     File, Directory, InputMultiObject, Str, isdefined,
     SimpleInterface)
 from nipype.interfaces import freesurfer as fs
-from niworkflows.utils.bids import BIDS_NAME
 
 
 SUBJECT_TEMPLATE = """\
@@ -100,6 +99,8 @@ class SubjectSummary(SummaryInterface):
         return super(SubjectSummary, self)._run_interface(runtime)
 
     def _generate_segment(self):
+        from niworkflows.utils.bids import BIDS_NAME
+
         if not isdefined(self.inputs.subjects_dir):
             freesurfer_status = 'Not run'
         else:

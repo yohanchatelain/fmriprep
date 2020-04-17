@@ -16,12 +16,6 @@ from nipype.interfaces.fsl import Split as FSLSplit
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 
-from niworkflows.engine.workflows import LiterateWorkflow as Workflow
-from niworkflows.interfaces.nibabel import ApplyMask
-from niworkflows.interfaces.utility import KeySelect
-from niworkflows.interfaces.utils import DictMerge
-from niworkflows.func.util import init_bold_reference_wf
-
 from ... import config
 from ...utils.meepi import combine_meepi_source
 
@@ -140,6 +134,11 @@ def init_func_preproc_wf(bold_file):
     * :py:func:`~sdcflows.workflows.unwarp.init_sdc_unwarp_wf`
 
     """
+    from niworkflows.engine.workflows import LiterateWorkflow as Workflow
+    from niworkflows.func.util import init_bold_reference_wf
+    from niworkflows.interfaces.nibabel import ApplyMask
+    from niworkflows.interfaces.utility import KeySelect
+    from niworkflows.interfaces.utils import DictMerge
     from sdcflows.workflows.base import init_sdc_estimate_wf, fieldmap_wrangler
 
     ref_file = bold_file
