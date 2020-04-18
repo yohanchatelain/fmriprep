@@ -100,7 +100,7 @@ def _build_parser():
              "how-do-I-select-only-certain-files-to-be-input-to-fMRIPrep" % (
                  currentv.base_version if is_release else 'latest'))
     g_bids.add_argument(
-        "--anat-derivatives", action='store', nargs="?", metavar="PATH", type=PathExists,
+        "--anat-derivatives", action='store', metavar="PATH", type=PathExists,
         help="Reuse the anatomical derivatives from another fMRIPrep run or calculated "
              "with an alternative processing tool (NOT RECOMMENDED)."
     )
