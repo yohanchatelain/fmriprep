@@ -692,7 +692,6 @@ for distortions remaining in the BOLD reference.
             (wm_mask, downsample, [("out", "in_mask")]),
             (downsample, flt_bbr, [('out_file', 'reference'),
                                    ('out_mask', 'wm_seg')]),
-
         ])
     else:
         workflow.connect([
