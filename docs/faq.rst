@@ -267,40 +267,6 @@ as much as it could from the previous run, you can either make sure that
 the default ``$PWD/work/`` points to a reasonable, reusable path in your environment or
 configure a better location on your with ``-w <PATH>``.
 
-What is the *anatomical fast-track*?
-------------------------------------
-Starting with version 20.1.0, *fMRIPrep* has a command-line argument (``--anat-derivatives <PATH>``)
-to prescribe a path from which the preprocessed information derived from the T1w, T2w (if present) and
-FLAIR (if present) images.
-This feature was envisioned to help process very large multi-session datasets where the anatomical
-images can be averaged (i.e., anatomy is not expected to vary substantially across sessions).
-An example of this kind of processing is `My Connectome <https://openneuro.org/datasets/ds000031/>`__.
-The dataset contains 107 sessions for a single-subject.
-Most of them containing anatomical information which, given the design of the dataset, can be averaged
-across sessions as no substantial changes should happen.
-In other words, the anatomical information of the dataset can be considered as *cross-sectional*.
-Before version 20.1.0, preprocessing this dataset would be hard for two limitations:
-
-  * if the dataset were to be processed in just one enormous job (be it in a commercial Cloud or
-    :abbr:`HPC (high-performance computing)` resources), the amount of data to be processed surely
-    would exceed the time limitations per job (and/or related issues, such as restarting from where
-    it left before); or
-  * if the processing were `split in sessions <https://github.com/poldracklab/fmriprep/issues/1175>`__,
-    then *fMRIPrep* would attempt to re-process the anatomical information for every session.
-
-Because processing this emerging type of datasets (*densely sampled neuroimaging*) was impractical with
-*fMRIPrep*, the option ``--anat-derivatives`` will shortcut the whole anatomical processing.
-
-.. danger::
-    Using the *anatomical fast-track* (the ``--anat-derivatives`` argument) has important side-effects
-    that risk the reproducibility and reliability of *fMRIPrep*.
-    This flag breaks *fMRIPrep*'s internal tracing of provenance, and it trusts whatever input *fMRIPrep*
-    is given (so long it is BIDS-Derivatives compliant and contains all the necessary files).
-
-    When reporting results obtained with ``--anat-derivatives``, please make sure you highlight this
-    particular deviation from *fMRIPrep*, and clearly describe the alternative preprocessing of
-    anatomical data.
-
 Can I use *fMRIPrep* for longitudinal studies?
 ----------------------------------------------
 As partially indicated before, *fMRIPrep* assumes no substantial anatomical changes happen
