@@ -26,8 +26,17 @@ DEFAULT_MEMORY_MIN_GB = config.DEFAULT_MEMORY_MIN_GB
 LOGGER = config.loggers.workflow
 
 
-def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
-                     use_compression=True, write_report=True, name='bold_reg_wf'):
+def init_bold_reg_wf(
+        freesurfer,
+        use_bbr,
+        bold2t1w_dof,
+        mem_gb,
+        omp_nthreads,
+        name='bold_reg_wf',
+        sloppy=False,
+        use_compression=True,
+        write_report=True,
+):
     """
     Build a workflow to run same-subject, BOLD-to-T1w image-registration.
 
@@ -99,7 +108,7 @@ def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
     fallback
         Boolean indicating whether BBR was rejected (mri_coreg registration returned)
 
-    See also
+    See Also
     --------
       * :py:func:`~fmriprep.workflows.bold.registration.init_bbreg_wf`
       * :py:func:`~fmriprep.workflows.bold.registration.init_fsl_bbr_wf`
@@ -125,7 +134,7 @@ def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, mem_gb, omp_nthreads,
         bbr_wf = init_bbreg_wf(use_bbr=use_bbr, bold2t1w_dof=bold2t1w_dof,
                                omp_nthreads=omp_nthreads)
     else:
-        bbr_wf = init_fsl_bbr_wf(use_bbr=use_bbr, bold2t1w_dof=bold2t1w_dof)
+        bbr_wf = init_fsl_bbr_wf(use_bbr=use_bbr, bold2t1w_dof=bold2t1w_dof, sloppy=sloppy)
 
     workflow.connect([
         (inputnode, bbr_wf, [
@@ -531,7 +540,7 @@ Co-registration was configured with {dof} degrees of freedom{reason}.
     return workflow
 
 
-def init_fsl_bbr_wf(use_bbr, bold2t1w_dof, name='fsl_bbr_wf'):
+def init_fsl_bbr_wf(use_bbr, bold2t1w_dof, sloppy=False, name='fsl_bbr_wf'):
     """
     Build a workflow to run FSL's ``flirt``.
 
@@ -670,11 +679,26 @@ for distortions remaining in the BOLD reference.
 
     workflow.connect([
         (inputnode, wm_mask, [('t1w_dseg', 'in_seg')]),
-        (inputnode, flt_bbr, [('in_file', 'in_file'),
-                              ('t1w_brain', 'reference')]),
+        (inputnode, flt_bbr, [('in_file', 'in_file')]),
         (flt_bbr_init, flt_bbr, [('out_matrix_file', 'in_matrix_file')]),
-        (wm_mask, flt_bbr, [('out', 'wm_seg')]),
     ])
+
+    if sloppy is True:
+        downsample = pe.Node(niu.Function(
+            function=_conditional_downsampling, output_names=["out_file", "out_mask"]),
+            name='downsample')
+        workflow.connect([
+            (inputnode, downsample, [("t1w_brain", "in_file")]),
+            (wm_mask, downsample, [("out", "in_mask")]),
+            (downsample, flt_bbr, [('out_file', 'reference'),
+                                   ('out_mask', 'wm_seg')]),
+
+        ])
+    else:
+        workflow.connect([
+            (inputnode, flt_bbr, [('t1w_brain', 'reference')]),
+            (wm_mask, flt_bbr, [('out', 'wm_seg')]),
+        ])
 
     # Short-circuit workflow building, use boundary-based registration
     if use_bbr is True:
@@ -763,3 +787,44 @@ def compare_xforms(lta_list, norm_threshold=15):
     norm, _ = _calc_norm_affine([fallback_affine, bbr_affine], use_differences=True)
 
     return norm[1] > norm_threshold
+
+
+def _conditional_downsampling(in_file, in_mask, zoom_th=4.0):
+    """Downsamples the input dataset for sloppy mode."""
+    from pathlib import Path
+    import numpy as np
+    import nibabel as nb
+    import nitransforms as nt
+    from scipy.ndimage.filters import gaussian_filter
+
+    img = nb.load(in_file)
+
+    zooms = np.array(img.header.get_zooms()[:3])
+    if not np.any(zooms < zoom_th):
+        return in_file, in_mask
+
+    out_file = Path('desc-resampled_input.nii.gz').absolute()
+    out_mask = Path('desc-resampled_mask.nii.gz').absolute()
+
+    shape = np.array(img.shape[:3])
+    scaling = zoom_th / zooms
+    newrot = np.diag(scaling).dot(img.affine[:3, :3])
+    newshape = np.ceil(shape / scaling).astype(int)
+    old_center = img.affine.dot(np.hstack((0.5 * (shape - 1), 1.0)))[:3]
+    offset = old_center - newrot.dot((newshape - 1) * 0.5)
+    newaffine = nb.affines.from_matvec(newrot, offset)
+
+    newref = nb.Nifti1Image(np.zeros(newshape, dtype=np.uint8), newaffine)
+    nt.Affine(reference=newref).apply(img).to_filename(out_file)
+
+    mask = nb.load(in_mask)
+    mask.set_data_dtype(float)
+    mdata = gaussian_filter(mask.get_fdata(dtype=float), scaling)
+    floatmask = nb.Nifti1Image(mdata, mask.affine, mask.header)
+    newmask = nt.Affine(reference=newref).apply(floatmask)
+    hdr = newmask.header.copy()
+    hdr.set_data_dtype(np.uint8)
+    newmaskdata = (newmask.get_fdata(dtype=float) > 0.5).astype(np.uint8)
+    nb.Nifti1Image(newmaskdata, newmask.affine, hdr).to_filename(out_mask)
+
+    return str(out_file), str(out_mask)

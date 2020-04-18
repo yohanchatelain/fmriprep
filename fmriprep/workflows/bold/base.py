@@ -320,13 +320,16 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                                    omp_nthreads=omp_nthreads)
 
     # calculate BOLD registration to T1w
-    bold_reg_wf = init_bold_reg_wf(name='bold_reg_wf',
-                                   freesurfer=freesurfer,
-                                   use_bbr=config.workflow.use_bbr,
-                                   bold2t1w_dof=config.workflow.bold2t1w_dof,
-                                   mem_gb=mem_gb['resampled'],
-                                   omp_nthreads=omp_nthreads,
-                                   use_compression=False)
+    bold_reg_wf = init_bold_reg_wf(
+        bold2t1w_dof=config.workflow.bold2t1w_dof,
+        freesurfer=freesurfer,
+        mem_gb=mem_gb['resampled'],
+        name='bold_reg_wf',
+        omp_nthreads=omp_nthreads,
+        sloppy=config.execution.debug,
+        use_bbr=config.workflow.use_bbr,
+        use_compression=False,
+    )
 
     # apply BOLD registration to T1w
     bold_t1_trans_wf = init_bold_t1_trans_wf(name='bold_t1_trans_wf',
