@@ -55,7 +55,7 @@ def init_bold_hmc_wf(mem_gb, omp_nthreads, name='bold_hmc_wf'):
     movpar_file
         MCFLIRT motion parameters, normalized to SPM format (X, Y, Z, Rx, Ry, Rz)
     rms_file
-        Jenkinson framewise displacement as measured by `fsl_motion_outliers`
+        Framewise displacement as measured by ``fsl_motion_outliers`` [Jenkinson2002]_.
 
     """
     from niworkflows.engine.workflows import LiterateWorkflow as Workflow
