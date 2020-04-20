@@ -26,7 +26,6 @@ from niworkflows.interfaces.freesurfer import (
     PatchedMRICoregRPT as MRICoregRPT,
     PatchedLTAConvert as LTAConvert)
 from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
-from niworkflows.interfaces.images import extract_wm
 from niworkflows.interfaces.itk import MultiApplyTransforms
 from niworkflows.interfaces.registration import FLIRTRPT
 from niworkflows.interfaces.utils import GenerateSamplingReference
