@@ -7,5 +7,5 @@ in the *fMRIPrep* distribution.
 
 All trademarks referenced herein are property of their respective holders.
 
-Copyright (c) 2015-2019, the *fMRIPrep* developers and the CRN.
+Copyright (c) 2015-2020, the *fMRIPrep* developers and the CRN.
 All rights reserved.

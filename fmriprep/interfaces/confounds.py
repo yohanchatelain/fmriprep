@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
 """
-Handling confounds
-^^^^^^^^^^^^^^^^^^
+Handling confounds.
+
+    .. testsetup::
 
     >>> import os
     >>> import pandas as pd
@@ -43,7 +43,7 @@ class GatherConfoundsOutputSpec(TraitedSpec):
 
 
 class GatherConfounds(SimpleInterface):
-    """
+    r"""
     Combine various sources of confounds in one TSV file
 
     .. testsetup::
@@ -138,7 +138,7 @@ class ICAConfounds(SimpleInterface):
 def _gather_confounds(signals=None, dvars=None, std_dvars=None, fdisp=None,
                       tcompcor=None, acompcor=None, cos_basis=None,
                       motion=None, aroma=None, newpath=None):
-    """
+    r"""
     Load confounds from the filenames, concatenate together horizontally
     and save new file.
 
@@ -252,7 +252,7 @@ def _get_ica_confounds(ica_out_dir, skip_vols, newpath=None):
     aroma_metadata['IC'] = [
         'aroma_motion_{}'.format(name) for name in aroma_metadata['IC']]
     aroma_metadata.columns = [
-        re.sub('[ |\-|\/]', '_', c) for c in aroma_metadata.columns]
+        re.sub(r'[ |\-|\/]', '_', c) for c in aroma_metadata.columns]
     aroma_metadata.to_csv(aroma_metadata_out, sep='\t', index=False)
 
     # Return dummy list of ones if no noise compnents were found
@@ -282,8 +282,8 @@ def _get_ica_confounds(ica_out_dir, skip_vols, newpath=None):
 
 class FMRISummaryInputSpec(BaseInterfaceInputSpec):
     in_func = File(exists=True, mandatory=True,
-                   desc='input BOLD time-series (4D file)')
-    in_mask = File(exists=True, mandatory=True,
+                   desc='input BOLD time-series (4D file) or dense timeseries CIFTI')
+    in_mask = File(exists=True,
                    desc='3D brain mask')
     in_segm = File(exists=True, desc='resampled segmentation')
     confounds_file = File(exists=True,
@@ -353,7 +353,7 @@ class FMRISummary(SimpleInterface):
 
         fig = fMRIPlot(
             self.inputs.in_func,
-            mask_file=self.inputs.in_mask,
+            mask_file=self.inputs.in_mask if isdefined(self.inputs.in_mask) else None,
             seg_file=(self.inputs.in_segm
                       if isdefined(self.inputs.in_segm) else None),
             tr=self.inputs.tr,

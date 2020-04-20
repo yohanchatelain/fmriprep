@@ -20,7 +20,7 @@ import re
 import subprocess
 
 __version__ = '99.99.99'
-__copyright__ = 'Copyright 2019, Center for Reproducible Neuroscience, Stanford University'
+__copyright__ = 'Copyright 2020, Center for Reproducible Neuroscience, Stanford University'
 __credits__ = ['Craig Moodie', 'Ross Blair', 'Oscar Esteban', 'Chris Gorgolewski',
                'Shoshana Berleant', 'Christopher J. Markiewicz', 'Russell A. Poldrack']
 __bugreports__ = 'https://github.com/poldracklab/fmriprep/issues'
@@ -164,8 +164,8 @@ def merge_help(wrapper_help, target_help):
 
     # Make sure we're not clobbering options we don't mean to
     overlap = set(w_flags).intersection(t_flags)
-    expected_overlap = set(['h', 'version', 'w', 'output-spaces',
-                            'fs-license-file', 'fs-subjects-dir', 'use-plugin'])
+    expected_overlap = set(['h', 'version', 'w', 'fs-license-file',
+                            'fs-subjects-dir', 'use-plugin'])
 
     assert overlap == expected_overlap, "Clobbering options: {}".format(
         ', '.join(overlap - expected_overlap))
@@ -249,7 +249,7 @@ def get_parser():
     g_wrap.add_argument('-w', '--work-dir', action='store', type=os.path.abspath,
                         help='path where intermediate results should be stored')
     g_wrap.add_argument(
-        '--output-spaces', nargs="+",
+        '--output-spaces', nargs="*",
         help="""\
 Standard and non-standard spaces to resample anatomical and functional images to. \
 Standard spaces may be specified by the form \
@@ -296,6 +296,9 @@ the spatial normalization.""" % (', '.join('"%s"' % s for s in TF_TEMPLATES),
                        help='Set custom environment variable within container')
     g_dev.add_argument('-u', '--user', action='store',
                        help='Run container as a given user/uid')
+    g_dev.add_argument('--network', action='store',
+                       help='Run container with a different network driver '
+                            '("none" to simulate no internet connection)')
 
     return parser
 
@@ -424,15 +427,21 @@ def main():
         spaces = []
         for space in opts.output_spaces:
             if space.split(':')[0] not in (TF_TEMPLATES + NONSTANDARD_REFERENCES):
-                target = '/imports/' + os.path.basename(space)
+                tpl = os.path.basename(space)
+                if not tpl.startswith('tpl-'):
+                    raise RuntimeError("Custom template %s requires a `tpl-` prefix" % tpl)
+                target = '/home/fmriprep/.cache/templateflow/' + tpl
                 command.extend(['-v', ':'.join((os.path.abspath(space), target, 'ro'))])
-                spaces.append(target)
+                spaces.append(tpl[4:])
             else:
                 spaces.append(space)
         unknown_args.extend(['--output-spaces'] + spaces)
 
     if opts.shell:
         command.append('--entrypoint=bash')
+
+    if opts.network:
+        command.append('--network=' + opts.network)
 
     command.append(opts.image)
 

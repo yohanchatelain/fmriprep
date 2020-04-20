@@ -16,7 +16,7 @@ installation_ guide for the basic procedure for running).
 
 It will be assumed the developer has a working repository in
 ``$HOME/projects/fmriprep``, and examples are also given for
-`niworkflows <https://github.com/poldracklab/niworkflows>`_ and
+`niworkflows <https://github.com/nipreps/niworkflows>`_ and
 `nipype`_.
 
 Patching working repositories
@@ -149,7 +149,7 @@ development environment, we have an experimental setup with `code-server
 
 1. Build the Docker image
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-We will use the ``Dockerfile_devel`` file to build 
+We will use the ``Dockerfile_devel`` file to build
 our development docker image::
 
     $ cd $HOME/projects/fmriprep

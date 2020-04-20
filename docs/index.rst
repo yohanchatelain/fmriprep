@@ -25,5 +25,5 @@ Contents
    faq
    contributors
    citing
-   api/index.rst
+   api
    changes

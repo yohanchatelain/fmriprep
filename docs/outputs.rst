@@ -143,15 +143,14 @@ mid-thickness surface mesh::
 
 Surface output spaces include ``fsnative`` (full density subject-specific mesh),
 ``fsaverage`` and the down-sampled meshes ``fsaverage6`` (41k vertices) and
-``fsaverage5`` (10k vertices, default). Additionally, the BOLD can be resampled to
-``fsLR`` surfaces, a hybrid version of the ``fsaverage`` atlas with both hemispheres
-in precise geographic correspondence, with varying mesh densities: 32k (default), 59k, and 164k.
+``fsaverage5`` (10k vertices, default).
 
 **Grayordinates files**.
-CIFTI is a container format that holds both volumetric (regularly sampled in a grid)
-and surface (sampled on a triangular mesh) samples.
-Sub-cortical time series are volumetric (supported spaces: ``MNI152NLin6Asym``), while cortical
-time series are sampled to surface (supported spaces: ``fsLR``).
+`CIFTI <https://www.nitrc.org/forum/attachment.php?attachid=333&group_id=454&forum_id=1955>`_ is
+a container format that holds both volumetric (regularly sampled in a grid) and surface
+(sampled on a triangular mesh) samples.
+Sub-cortical time series are sampled on a regular grid derived from one MNI template, while
+cortical time series are sampled on surfaces projected from the [Glasser2016]_ template.
 If CIFTI outputs are requested (with the ``--cifti-outputs`` argument), the BOLD series are also
 saved as ``dtseries.nii`` CIFTI2 files::
 
@@ -261,7 +260,7 @@ expansion [Satterthwaite2013]_, providing time series corresponding to the first
 *quadratic terms*, resulting in the total 24 head motion parameters
 (six base motion parameters + six temporal derivatives of six motion parameters +
 12 quadratic terms of six motion parameters and their six temporal derivatives).
-Additionally, *fMRIPrep* returns temporal derivatives and quadratic terms for the 
+Additionally, *fMRIPrep* returns temporal derivatives and quadratic terms for the
 three global signals (``csf``, ``white_matter`` and ``global_signal``)
 to enable applying the 36-parameter denoising strategy proposed by [Satterthwaite2013]_.
 
@@ -313,7 +312,7 @@ It is relevant to mention *effective* because initial time points identified as 
 states* are removed before generating the cosine regressors.
 
 .. caution::
-    If your analysis includes separate high-pass filtering, do not include 
+    If your analysis includes separate high-pass filtering, do not include
     ``cosine_XX`` regressors in your design matrix.
 
 .. admonition:: See also
@@ -453,7 +452,6 @@ Some of the estimated confounds are plotted with a "carpet" visualization of the
 An example of these plots follows:
 
 .. figure:: _static/sub-01_task-mixedgamblestask_run-01_bold_carpetplot.svg
-    :scale: 100%
 
     The figure shows on top several confounds estimated for the BOLD series:
     global signals ('GlobalSignal', 'WM', 'GM'), standardized DVARS ('stdDVARS'),
@@ -474,7 +472,6 @@ option ``--return-all-components``.
 component, ordered by descending singular value.
 
 .. figure:: _static/sub-01_task-rest_compcor.svg
-    :scale: 100%
 
     The figure displays the cumulative variance explained by components for each
     of four CompCor decompositions (left to right: anatomical CSF mask, anatomical
@@ -491,7 +488,6 @@ This can be used to guide selection of a confound model or to assess the extent
 to which tissue-specific regressors correlate with global signal.
 
 .. figure:: _static/sub-01_task-mixedgamblestask_run-01_confounds_correlation.svg
-    :scale: 100%
 
     The left-hand panel shows the matrix of correlations among selected confound
     time series as a heat-map.
@@ -523,6 +519,11 @@ See implementation on :mod:`~fmriprep.workflows.bold.confounds.init_bold_confs_w
   .. [Friston1996] Friston KJ1, Williams S, Howard R, Frackowiak RS, Turner R,
      Movement‐Related effects in fMRI time‐series. Magnetic Resonance in Medicine. 1996.
      doi:`10.1002/mrm.191035031 <https://doi.org/10.1002/mrm.1910350312>`_
+
+  .. [Glasser2016] Glasser MF, Coalson TS Robinson EC, Hacker CD, Harwell J, Yacoub E, Ugurbil K,
+     Andersson J, Beckmann CF, Jenkinson M, Smith SM, Van Essen DC.
+     A multi-modal parcellation of human cerebral cortex. Nature. 2016.
+     doi:`10.1038/nature18933 <https://doi.org/10.1038/nature18933>`_
 
   .. [Hallquist2013] Hallquist MN, Hwang K, Luna B. The Nuisance of Nuisance Regression.
      NeuroImage. 2013. doi:`10.1016/j.neuroimage.2013.05.116

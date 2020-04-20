@@ -7,14 +7,14 @@ Slice-Timing Correction (STC) of BOLD images
 .. autofunction:: init_bold_stc_wf
 
 """
-from nipype import logging
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, afni
 from niworkflows.engine.workflows import LiterateWorkflow as Workflow
 from niworkflows.interfaces.utils import CopyXForm
+from ... import config
 
 
-LOGGER = logging.getLogger('nipype.workflow')
+LOGGER = config.loggers.workflow
 
 
 def init_bold_stc_wf(metadata, name='bold_stc_wf'):
@@ -37,9 +37,9 @@ def init_bold_stc_wf(metadata, name='bold_stc_wf'):
 
     Parameters
     ----------
-    metadata : dict
+    metadata : :obj:`dict`
         BIDS metadata for BOLD file
-    name : str
+    name : :obj:`str`
         Name of workflow (default: ``bold_stc_wf``)
 
     Inputs

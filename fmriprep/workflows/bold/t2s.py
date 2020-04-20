@@ -7,16 +7,17 @@ Generate T2* map from multi-echo BOLD images
 .. autofunction:: init_bold_t2s_wf
 
 """
-from nipype import logging
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 
 from niworkflows.engine.workflows import LiterateWorkflow as Workflow
+from niworkflows.func.util import init_skullstrip_bold_wf
 
 from ...interfaces import T2SMap
-from .util import init_skullstrip_bold_wf
+from ... import config
 
-LOGGER = logging.getLogger('nipype.workflow')
+
+LOGGER = config.loggers.workflow
 
 
 # pylint: disable=R0914
@@ -39,15 +40,15 @@ def init_bold_t2s_wf(echo_times, mem_gb, omp_nthreads,
 
     Parameters
     ----------
-    echo_times
+    echo_times : :obj:`list`
         list of TEs associated with each echo
-    mem_gb : float
+    mem_gb : :obj:`float`
         Size of BOLD file in GB
-    omp_nthreads : int
+    omp_nthreads : :obj:`int`
         Maximum number of threads an individual process may use
-    t2s_coreg : bool
+    t2s_coreg : :obj:`bool`
         Use the calculated T2*-map for T2*-driven coregistration
-    name : str
+    name : :obj:`str`
         Name of workflow (default: ``bold_t2s_wf``)
 
     Inputs

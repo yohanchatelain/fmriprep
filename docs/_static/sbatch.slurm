@@ -15,6 +15,7 @@
 
 BIDS_DIR="$STUDY/data"
 DERIVS_DIR="derivatives/fmriprep-1.5.0"
+LOCAL_FREESURFER_DIR="$STUDY/data/derivatives/freesurfer-6.0.1"
 
 # Prepare some writeable bind-mount points.
 TEMPLATEFLOW_HOST_HOME=$HOME/.cache/templateflow
@@ -25,27 +26,21 @@ mkdir -p ${FMRIPREP_HOST_CACHE}
 # Prepare derivatives folder
 mkdir -p ${BIDS_DIR}/${DERIVS_DIR}
 
-# This trick will help you reuse freesurfer results across pipelines and fMRIPrep versions
-mkdir -p ${BIDS_DIR}/derivatives/freesurfer-6.0.1
-if [ ! -d ${BIDS_DIR}/${DERIVS_DIR}/freesurfer ]; then
-    ln -s ${BIDS_DIR}/derivatives/freesurfer-6.0.1 ${BIDS_DIR}/${DERIVS_DIR}/freesurfer
-fi
-
 # Make sure FS_LICENSE is defined in the container.
 export SINGULARITYENV_FS_LICENSE=$HOME/.freesurfer.txt
 
 # Designate a templateflow bind-mount point
 export SINGULARITYENV_TEMPLATEFLOW_HOME="/templateflow"
-SINGULARITY_CMD="singularity run --cleanenv -B $BIDS_DIR:/data -B ${TEMPLATEFLOW_HOST_HOME}:${SINGULARITYENV_TEMPLATEFLOW_HOME} -B $L_SCRATCH:/work $STUDY/images/poldracklab_fmriprep_1.5.0.simg"
+SINGULARITY_CMD="singularity run --cleanenv -B $BIDS_DIR:/data -B ${TEMPLATEFLOW_HOST_HOME}:${SINGULARITYENV_TEMPLATEFLOW_HOME} -B $L_SCRATCH:/work -B ${LOCAL_FREESURFER_DIR}:/fsdir $STUDY/images/poldracklab_fmriprep_1.5.0.simg"
 
 # Parse the participants.tsv file and extract one subject ID from the line corresponding to this SLURM task.
 subject=$( sed -n -E "$((${SLURM_ARRAY_TASK_ID} + 1))s/sub-(\S*)\>.*/\1/gp" ${BIDS_DIR}/participants.tsv )
 
 # Remove IsRunning files from FreeSurfer
-find ${BIDS_DIR}/derivatives/freesurfer-6.0.1/sub-$subject/ -name "*IsRunning*" -type f -delete
+find ${LOCAL_FREESURFER_DIR}/sub-$subject/ -name "*IsRunning*" -type f -delete
 
 # Compose the command line
-cmd="${SINGULARITY_CMD} /data /data/${DERIVS_DIR} participant --participant-label $subject -w /work/ -vv --omp-nthreads 8 --nthreads 12 --mem_mb 30000 --output-spaces MNI152NLin2009cAsym:res-2 anat fsnative fsaverage5 --use-aroma"
+cmd="${SINGULARITY_CMD} /data /data/${DERIVS_DIR} participant --participant-label $subject -w /work/ -vv --omp-nthreads 8 --nthreads 12 --mem_mb 30000 --output-spaces MNI152NLin2009cAsym:res-2 anat fsnative fsaverage5 --use-aroma --fs-subjects-dir /fsdir"
 
 # Setup done, run the command
 echo Running task ${SLURM_ARRAY_TASK_ID}
