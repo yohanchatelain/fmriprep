@@ -659,8 +659,8 @@ for distortions remaining in the BOLD reference.
     invt_bbr = pe.Node(fsl.ConvertXFM(invert_xfm=True), name='invt_bbr',
                        mem_gb=DEFAULT_MEMORY_MIN_GB)
 
-    #  BOLD to T1 transform matrix is from fsl, using c3 tools to convert to
-    #  something ANTs will like.
+    # BOLD to T1 transform matrix is from fsl, using c3 tools to convert to
+    # something ANTs will like.
     fsl2itk_fwd = pe.Node(c3.C3dAffineTool(fsl2ras=True, itk_transform=True),
                           name='fsl2itk_fwd', mem_gb=DEFAULT_MEMORY_MIN_GB)
     fsl2itk_inv = pe.Node(c3.C3dAffineTool(fsl2ras=True, itk_transform=True),
