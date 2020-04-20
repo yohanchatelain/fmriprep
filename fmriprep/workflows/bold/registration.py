@@ -625,6 +625,10 @@ def init_fsl_bbr_wf(use_bbr, bold2t1w_dof, bold2t1w_init, name='fsl_bbr_wf'):
         Boolean indicating whether BBR was rejected (rigid FLIRT registration returned)
 
     """
+    from niworkflows.engine.workflows import LiterateWorkflow as Workflow
+    from niworkflows.utils.images import dseg_label as _dseg_label
+    from niworkflows.interfaces.freesurfer import PatchedLTAConvert as LTAConvert
+    from niworkflows.interfaces.registration import FLIRTRPT
     workflow = Workflow(name=name)
     workflow.__desc__ = """\
 The BOLD reference was then co-registered to the T1w reference using
@@ -644,7 +648,8 @@ for distortions remaining in the BOLD reference.
         niu.IdentityInterface(['itk_bold_to_t1', 'itk_t1_to_bold', 'out_report', 'fallback']),
         name='outputnode')
 
-    wm_mask = pe.Node(niu.Function(function=extract_wm), name='wm_mask')
+    wm_mask = pe.Node(niu.Function(function=_dseg_label), name='wm_mask')
+    wm_mask.inputs.label = 2  # BIDS default is WM=2
     flt_bbr_init = pe.Node(FLIRTRPT(dof=6, generate_report=not use_bbr,
                                     uses_qform=True), name='flt_bbr_init')
 
