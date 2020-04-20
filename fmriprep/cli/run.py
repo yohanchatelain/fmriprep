@@ -45,9 +45,6 @@ def main():
     # state of fMRIPrep).
     config.load(config_file)
 
-    if config.workflow.ants_fixed_seed:
-        os.environ['ANTS_RANDOM_SEED'] = config.workflow.ants_fixed_seed
-
     if config.execution.reports_only:
         sys.exit(int(retcode > 0))
 

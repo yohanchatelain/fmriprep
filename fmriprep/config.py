@@ -79,6 +79,7 @@ finally:
     # ignoring the most annoying warnings
     import os
     import sys
+    import random
 
     from uuid import uuid4
     from pathlib import Path
@@ -428,6 +429,8 @@ class workflow(_Config):
     """Ignore particular steps for *fMRIPrep*."""
     longitudinal = False
     """Run FreeSurfer ``recon-all`` with the ``-logitudinal`` flag."""
+    master_seed = None
+    """Master seed to initialize the Pseudorandom Number Generator (PRNG)"""
     medial_surface_nan = None
     """Fill medial surface with :abbr:`NaNs (not-a-number)` when sampling."""
     regressors_all_comps = None
@@ -506,11 +509,38 @@ class loggers:
         })
 
 
+class seeds(_Config):
+    """Initialize the PRNG and track random seed assignments"""
+
+    master = None
+    """Master seed used to generate all other tracked seeds"""
+    ants = None
+    """Seed used for antsRegistration, antsAI, antsMotionCorr"""
+
+    @classmethod
+    def init(cls):
+        cls.master = workflow.master_seed
+        if cls.master is None:
+            cls.master = random.randint(1, 65536)
+        random.seed(cls.master)  # initialize the PRNG
+
+        # functions to set program specific seeds
+        cls.ants = _set_ants_seed()
+
+
+def _set_ants_seed():
+    """Fix random seed for antsRegistration, antsAI, antsMotionCorr"""
+    val = random.randint(1, 65536)
+    os.environ['ANTS_RANDOM_SEED'] = str(val)
+    return val
+
+
 def from_dict(settings):
     """Read settings from a flat dictionary."""
     nipype.load(settings)
     execution.load(settings)
     workflow.load(settings)
+    seeds.init()
     loggers.init()
 
 
@@ -533,6 +563,7 @@ def get(flat=False):
         'execution': execution.get(),
         'workflow': workflow.get(),
         'nipype': nipype.get(),
+        'seeds': seeds.get(),
     }
     if not flat:
         return settings

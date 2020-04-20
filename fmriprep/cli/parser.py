@@ -8,7 +8,6 @@ from .. import config
 
 def _build_parser():
     """Build parser object."""
-    from datetime import datetime
     from functools import partial
     from pathlib import Path
     from argparse import (
@@ -46,8 +45,6 @@ def _build_parser():
         from json import loads
         if value and Path(value).exists():
             return loads(Path(value).read_text())
-
-    _date_to_num = datetime.now().strftime('%Y%M%d')
 
     verstr = f'fMRIPrep v{config.environment.version}'
     currentv = Version(config.environment.version)
@@ -177,6 +174,10 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (currentv.base_version
     g_conf.add_argument(
         '--dummy-scans', required=False, action='store', default=None, type=int,
         help='Number of non steady state volumes.')
+    g_conf.add_argument(
+        '--random-seed', action='store', type=int, default=None,
+        help='Initialize the random seed for the workflow'
+    )
 
     # ICA_AROMA options
     g_aroma = parser.add_argument_group('Specific options for running ICA_AROMA')
@@ -214,9 +215,7 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (currentv.base_version
     g_ants.add_argument('--skull-strip-fixed-seed', action='store_true',
                         help='do not use a random seed for skull-stripping - will ensure '
                              'run-to-run replicability when used with --omp-nthreads 1 and '
-                             '--ants-fixed-seed <int>')
-    g_ants.add_argument('--ants-fixed-seed', action='store', default=_date_to_num,
-                        help='Seed to use for antsRegistration')
+                             'matching --master-random-seed <int>')
     g_ants.add_argument(
         '--skull-strip-t1w', action='store', choices=('auto', 'skip', 'force'), default='force',
         help="determiner for T1-weighted skull stripping ('force' ensures skull "
