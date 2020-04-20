@@ -162,6 +162,10 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (currentv.base_version
                         help='Degrees of freedom when registering BOLD to T1w images. '
                              '6 degrees (rotation and translation) are used by default.')
     g_conf.add_argument(
+        '--bold2t1w-init', action='store', default='register', choices=['register', 'header'],
+        help='Either "register" (the default) to initialize volumes at center or "header"'
+             ' to use the header information when coregistering BOLD to T1w images.')
+    g_conf.add_argument(
         '--force-bbr', action='store_true', dest='use_bbr', default=None,
         help='Always use boundary-based registration (no goodness-of-fit checks)')
     g_conf.add_argument(
