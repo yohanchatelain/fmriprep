@@ -74,7 +74,7 @@ def init_bold_reg_wf(freesurfer, use_bbr, bold2t1w_dof, bold2t1w_init, mem_gb, o
         If ``None``, test BBR result for distortion before accepting.
     bold2t1w_dof : 6, 9 or 12
         Degrees-of-freedom for BOLD-T1w registration
-    bold2t1_init : str, 'header' or 'register'
+    bold2t1w_init : str, 'header' or 'register'
         If ``'header'``, use header information for initialization of BOLD and T1 images.
         If ``'register'``, align volumes by their centers.
     mem_gb : :obj:`float`
@@ -402,7 +402,7 @@ def init_bbreg_wf(use_bbr, bold2t1w_dof, bold2t1w_init, omp_nthreads, name='bbre
         If ``None``, test BBR result for distortion before accepting.
     bold2t1w_dof : 6, 9 or 12
         Degrees-of-freedom for BOLD-T1w registration
-    bold2t1_init : str, 'header' or 'register'
+    bold2t1w_init : str, 'header' or 'register'
         If ``'header'``, use header information for initialization of BOLD and T1 images.
         If ``'register'``, align volumes by their centers.
     name : :obj:`str`, optional
@@ -592,7 +592,7 @@ def init_fsl_bbr_wf(use_bbr, bold2t1w_dof, bold2t1w_init, name='fsl_bbr_wf'):
         If ``None``, test BBR result for distortion before accepting.
     bold2t1w_dof : 6, 9 or 12
         Degrees-of-freedom for BOLD-T1w registration
-    bold2t1_init : str, 'header' or 'register'
+    bold2t1w_init : str, 'header' or 'register'
         If ``'header'``, use header information for initialization of BOLD and T1 images.
         If ``'register'``, align volumes by their centers.
     name : :obj:`str`, optional
@@ -649,7 +649,9 @@ for distortions remaining in the BOLD reference.
                                     uses_qform=True), name='flt_bbr_init')
 
     if bold2t1w_init == 'header':
-        flt_bbr_init.inputs.apply_xfm = True
+        #flt_bbr_init.inputs.apply_xfm = True
+        s = 'header-based registrattion initialization not yet supported for FSL'
+        raise NotImplementedError(s)
     elif bold2t1w_init != 'register':
         LOGGER.warning("unrecognized bold2t1w-init value '%s'; "
                        "defaulting to 'register'" % (bold2t1w_init,))
