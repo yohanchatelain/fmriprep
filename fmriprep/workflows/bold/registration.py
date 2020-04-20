@@ -649,7 +649,7 @@ for distortions remaining in the BOLD reference.
                                     uses_qform=True), name='flt_bbr_init')
 
     if bold2t1w_init == 'header':
-        #flt_bbr_init.inputs.apply_xfm = True
+        # flt_bbr_init.inputs.apply_xfm = True
         s = 'header-based registrattion initialization not yet supported for FSL'
         raise NotImplementedError(s)
     elif bold2t1w_init != 'register':
