@@ -102,7 +102,7 @@ def _build_parser():
 
     g_perfm = parser.add_argument_group('Options to handle performance')
     g_perfm.add_argument(
-        '--nprocs', '--nthreads', '--n_cpus', '-n-cpus', action='store', type=PositiveInt,
+        '--nprocs', '--nthreads', '--n_cpus', '--n-cpus', action='store', type=PositiveInt,
         help='maximum number of threads across all processes')
     g_perfm.add_argument('--omp-nthreads', action='store', type=PositiveInt,
                          help='maximum number of threads per-process')
@@ -320,7 +320,6 @@ def parse_args(args=None, namespace=None):
     opts = parser.parse_args(args, namespace)
     config.execution.log_level = int(max(25 - 5 * opts.verbose_count, logging.DEBUG))
     config.from_dict(vars(opts))
-    config.loggers.init()
 
     # Initialize --output-spaces if not defined
     if config.execution.output_spaces is None:
@@ -355,8 +354,8 @@ license file at several paths, in this order: 1) command line argument ``--fs-li
     # This may need to be revisited if people try to use batch plugins
     if 1 < config.nipype.nprocs < config.nipype.omp_nthreads:
         build_log.warning(
-            'Per-process threads (--omp-nthreads=%d) exceed total '
-            'threads (--nthreads/--n_cpus=%d)', config.nipype.omp_nthread, config.nipype.nprocs)
+            f'Per-process threads (--omp-nthreads={config.nipype.omp_nthreads}) exceed '
+            f'total threads (--nthreads/--n_cpus={config.nipype.nprocs})')
 
     # Inform the user about the risk of using brain-extracted images
     if config.workflow.skull_strip_t1w == "auto":
@@ -382,11 +381,11 @@ applied.""")
     # Wipe out existing work_dir
     if opts.clean_workdir and work_dir.exists():
         from niworkflows.utils.misc import clean_directory
-        build_log.log("Clearing previous fMRIPrep working directory: %s",
-                      work_dir)
+        build_log.info(f"Clearing previous fMRIPrep working directory: {work_dir}")
         if not clean_directory(work_dir):
-            build_log.warning("Could not clear all contents of working directory: %s",
-                              work_dir)
+            build_log.warning(
+                f"Could not clear all contents of working directory: {work_dir}"
+            )
 
     # Ensure input and output folders are not the same
     if output_dir == bids_dir:

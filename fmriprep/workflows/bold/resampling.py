@@ -14,22 +14,6 @@ from nipype.interfaces import utility as niu, freesurfer as fs
 from nipype.interfaces.fsl import Split as FSLSplit
 import nipype.interfaces.workbench as wb
 
-from niworkflows.engine.workflows import LiterateWorkflow as Workflow
-from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
-from niworkflows.interfaces.freesurfer import (
-    MedialNaNs,
-    # See https://github.com/poldracklab/fmriprep/issues/768
-    PatchedConcatenateLTA as ConcatenateLTA,
-    PatchedLTAConvert as LTAConvert
-)
-from niworkflows.interfaces.itk import MultiApplyTransforms
-from niworkflows.interfaces.utils import GenerateSamplingReference
-from niworkflows.interfaces.utility import KeySelect
-from niworkflows.interfaces.surf import GiftiSetAnatomicalStructure
-from niworkflows.interfaces.nilearn import Merge
-from niworkflows.utils.spaces import format_reference
-from niworkflows.func.util import init_bold_reference_wf
-
 from ...config import DEFAULT_MEMORY_MIN_GB
 from ...interfaces import DerivativesDataSink
 
@@ -86,6 +70,14 @@ def init_bold_surf_wf(
         BOLD series, resampled to FreeSurfer surfaces
 
     """
+    from niworkflows.engine.workflows import LiterateWorkflow as Workflow
+    # See https://github.com/poldracklab/fmriprep/issues/768
+    from niworkflows.interfaces.freesurfer import (
+        PatchedConcatenateLTA as ConcatenateLTA,
+        PatchedLTAConvert as LTAConvert
+    )
+    from niworkflows.interfaces.surf import GiftiSetAnatomicalStructure
+
     workflow = Workflow(name=name)
     workflow.__desc__ = """\
 The BOLD time-series were resampled onto the following surfaces
@@ -155,6 +147,7 @@ The BOLD time-series were resampled onto the following surfaces
         workflow.connect(sampler, 'out_file', update_metadata, 'in_file')
         return workflow
 
+    from niworkflows.interfaces.freesurfer import MedialNaNs
     # Refine if medial vertices should be NaNs
     medial_nans = pe.MapNode(MedialNaNs(), iterfield=['in_file'],
                              name='medial_nans', mem_gb=DEFAULT_MEMORY_MIN_GB)
@@ -275,6 +268,15 @@ def init_bold_std_trans_wf(
         described outputs.
 
     """
+    from niworkflows.engine.workflows import LiterateWorkflow as Workflow
+    from niworkflows.func.util import init_bold_reference_wf
+    from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
+    from niworkflows.interfaces.itk import MultiApplyTransforms
+    from niworkflows.interfaces.utility import KeySelect
+    from niworkflows.interfaces.utils import GenerateSamplingReference
+    from niworkflows.interfaces.nilearn import Merge
+    from niworkflows.utils.spaces import format_reference
+
     workflow = Workflow(name=name)
     output_references = spaces.cached.get_spaces(nonstandard=False, dim=(3,))
     std_vol_references = [
@@ -498,6 +500,11 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
         Same as ``bold_ref``, but once the brain mask has been applied
 
     """
+    from niworkflows.engine.workflows import LiterateWorkflow as Workflow
+    from niworkflows.func.util import init_bold_reference_wf
+    from niworkflows.interfaces.itk import MultiApplyTransforms
+    from niworkflows.interfaces.nilearn import Merge
+
     workflow = Workflow(name=name)
     workflow.__desc__ = """\
 The BOLD time-series (including slice-timing correction when applied)
@@ -611,6 +618,7 @@ def init_bold_preproc_report_wf(mem_gb, reportlets_dir, name='bold_preproc_repor
 
     """
     from nipype.algorithms.confounds import TSNR
+    from niworkflows.engine.workflows import LiterateWorkflow as Workflow
     from niworkflows.interfaces import SimpleBeforeAfter
 
     workflow = Workflow(name=name)
@@ -696,7 +704,10 @@ def init_bold_grayords_wf(
 
     """
     import templateflow.api as tf
+    from niworkflows.engine.workflows import LiterateWorkflow as Workflow
     from niworkflows.interfaces.cifti import GenerateCifti
+    from niworkflows.interfaces.utility import KeySelect
+
     workflow = Workflow(name=name)
     workflow.__desc__ = """\
 *Grayordinates* files [@hcppipelines] containing {density} samples were also
