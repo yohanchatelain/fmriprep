@@ -409,6 +409,9 @@ class workflow(_Config):
     (positive = exact, negative = maximum)."""
     bold2t1w_dof = None
     """Degrees of freedom of the BOLD-to-T1w registration steps."""
+    bold2t1w_init = 'register'
+    """Whether to use standard coregistration ('register') or to initialize coregistration from the
+    BOLD image-header ('header')."""
     cifti_output = None
     """Generate HCP Grayordinates, accepts either ``'91k'`` (default) or ``'170k'``."""
     dummy_scans = None
