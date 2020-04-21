@@ -402,8 +402,6 @@ del _oc_policy
 class workflow(_Config):
     """Configure the particular execution graph of this workflow."""
 
-    ants_fixed_seed = None
-    """Fix random seed for antsRegistration, antsAI, antsMotionCorr"""
     anat_only = False
     """Execute the anatomical preprocessing only."""
     aroma_err_on_warn = None
@@ -429,8 +427,8 @@ class workflow(_Config):
     """Ignore particular steps for *fMRIPrep*."""
     longitudinal = False
     """Run FreeSurfer ``recon-all`` with the ``-logitudinal`` flag."""
-    master_seed = None
-    """Master seed to initialize the Pseudorandom Number Generator (PRNG)"""
+    random_seed = None
+    """Master random seed to initialize the Pseudorandom Number Generator (PRNG)"""
     medial_surface_nan = None
     """Fill medial surface with :abbr:`NaNs (not-a-number)` when sampling."""
     regressors_all_comps = None
@@ -519,7 +517,7 @@ class seeds(_Config):
 
     @classmethod
     def init(cls):
-        cls.master = workflow.master_seed
+        cls.master = workflow.random_seed
         if cls.master is None:
             cls.master = random.randint(1, 65536)
         random.seed(cls.master)  # initialize the PRNG

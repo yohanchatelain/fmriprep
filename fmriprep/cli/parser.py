@@ -215,7 +215,7 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (currentv.base_version
     g_ants.add_argument('--skull-strip-fixed-seed', action='store_true',
                         help='do not use a random seed for skull-stripping - will ensure '
                              'run-to-run replicability when used with --omp-nthreads 1 and '
-                             'matching --master-random-seed <int>')
+                             'matching --random-seed <int>')
     g_ants.add_argument(
         '--skull-strip-t1w', action='store', choices=('auto', 'skip', 'force'), default='force',
         help="determiner for T1-weighted skull stripping ('force' ensures skull "
