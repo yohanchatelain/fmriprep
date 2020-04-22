@@ -288,6 +288,10 @@ the spatial normalization.""" % (', '.join('"%s"' % s for s in TF_TEMPLATES),
     g_dev.add_argument('-p', '--patch-nipype', metavar='PATH',
                        type=os.path.abspath,
                        help='working nipype repository')
+    g_dev.add_argument('--patch-smriprep', metavar='PATH', type=os.path.abspath,
+                       help='working smriprep repository')
+    g_dev.add_argument('--patch-sdcflows', metavar='PATH', type=os.path.abspath,
+                       help='working sdcflows repository')
     g_dev.add_argument('--shell', action='store_true',
                        help='open shell in image instead of running FMRIPREP')
     g_dev.add_argument('--config', metavar='PATH', action='store',
@@ -371,7 +375,7 @@ def main():
                'DOCKER_VERSION_8395080871=%s' % docker_version]
 
     # Patch working repositories into installed package directories
-    for pkg in ('fmriprep', 'niworkflows', 'nipype'):
+    for pkg in ('fmriprep', 'niworkflows', 'nipype', 'smriprep', 'sdcflows'):
         repo_path = getattr(opts, 'patch_' + pkg)
         if repo_path is not None:
             command.extend(['-v',
