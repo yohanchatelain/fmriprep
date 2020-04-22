@@ -375,10 +375,9 @@ def main():
     # Patch working repositories into installed package directories
     if opts.patch:
         for pkg, repo_path in opts.patch.items():
-            if repo_path is not None:
-                command.extend(
-                    ['-v', '{}:{}/{}:ro'.format(repo_path, PKG_PATH, pkg)]
-                )
+            command.extend(
+                ['-v', '{}:{}/{}:ro'.format(repo_path, PKG_PATH, pkg)]
+            )
 
     if opts.env:
         for envvar in opts.env:
