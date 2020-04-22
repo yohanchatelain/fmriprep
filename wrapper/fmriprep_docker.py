@@ -218,6 +218,15 @@ def is_in_directory(filepath, directory):
 def get_parser():
     """Defines the command line interface of the wrapper"""
     import argparse
+
+    class ToDict(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            d = {}
+            for kv in values:
+                k, v = kv.split("=")
+                d[k] = os.path.abspath(v)
+            setattr(namespace, self.dest, d)
+
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -279,19 +288,8 @@ the spatial normalization.""" % (', '.join('"%s"' % s for s in TF_TEMPLATES),
     g_dev = parser.add_argument_group(
         'Developer options',
         'Tools for testing and debugging FMRIPREP')
-    g_dev.add_argument('-f', '--patch-fmriprep', metavar='PATH',
-                       type=os.path.abspath,
-                       help='working fmriprep repository')
-    g_dev.add_argument('-n', '--patch-niworkflows', metavar='PATH',
-                       type=os.path.abspath,
-                       help='working niworkflows repository')
-    g_dev.add_argument('-p', '--patch-nipype', metavar='PATH',
-                       type=os.path.abspath,
-                       help='working nipype repository')
-    g_dev.add_argument('--patch-smriprep', metavar='PATH', type=os.path.abspath,
-                       help='working smriprep repository')
-    g_dev.add_argument('--patch-sdcflows', metavar='PATH', type=os.path.abspath,
-                       help='working sdcflows repository')
+    g_dev.add_argument('--patch', nargs="+", metavar="PACKAGE=PATH", action=ToDict,
+                       help='local repository to use within container')
     g_dev.add_argument('--shell', action='store_true',
                        help='open shell in image instead of running FMRIPREP')
     g_dev.add_argument('--config', metavar='PATH', action='store',
@@ -375,11 +373,12 @@ def main():
                'DOCKER_VERSION_8395080871=%s' % docker_version]
 
     # Patch working repositories into installed package directories
-    for pkg in ('fmriprep', 'niworkflows', 'nipype', 'smriprep', 'sdcflows'):
-        repo_path = getattr(opts, 'patch_' + pkg)
-        if repo_path is not None:
-            command.extend(['-v',
-                            '{}:{}/{}:ro'.format(repo_path, PKG_PATH, pkg)])
+    if opts.patch:
+        for pkg, repo_path in opts.patch.items():
+            if repo_path is not None:
+                command.extend(
+                    ['-v', '{}:{}/{}:ro'.format(repo_path, PKG_PATH, pkg)]
+                )
 
     if opts.env:
         for envvar in opts.env:
