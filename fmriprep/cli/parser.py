@@ -174,6 +174,10 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (currentv.base_version
     g_conf.add_argument(
         '--dummy-scans', required=False, action='store', default=None, type=int,
         help='Number of non steady state volumes.')
+    g_conf.add_argument(
+        '--random-seed', action='store', type=int, default=None,
+        help='Initialize the random seed for the workflow'
+    )
 
     # ICA_AROMA options
     g_aroma = parser.add_argument_group('Specific options for running ICA_AROMA')
@@ -210,7 +214,8 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (currentv.base_version
         help='select a template for skull-stripping with antsBrainExtraction')
     g_ants.add_argument('--skull-strip-fixed-seed', action='store_true',
                         help='do not use a random seed for skull-stripping - will ensure '
-                             'run-to-run replicability when used with --omp-nthreads 1')
+                             'run-to-run replicability when used with --omp-nthreads 1 and '
+                             'matching --random-seed <int>')
     g_ants.add_argument(
         '--skull-strip-t1w', action='store', choices=('auto', 'skip', 'force'), default='force',
         help="determiner for T1-weighted skull stripping ('force' ensures skull "
