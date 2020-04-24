@@ -198,9 +198,9 @@ def init_func_preproc_wf(bold_file):
     fmaps = None
     if 'fieldmaps' not in config.workflow.ignore:
         fmaps = fieldmap_wrangler(layout, ref_file,
-                                  use_syn=config.workflow.use_syn,
+                                  use_syn=config.workflow.use_syn_sdc,
                                   force_syn=config.workflow.force_syn)
-    elif config.workflow.use_syn or config.workflow.force_syn:
+    elif config.workflow.use_syn_sdc or config.workflow.force_syn:
         # If fieldmaps are not enabled, activate SyN-SDC in unforced (False) mode
         fmaps = {'syn': False}
 

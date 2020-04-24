@@ -456,7 +456,7 @@ class workflow(_Config):
     """Run ICA-:abbr:`AROMA (automatic removal of motion artifacts)`."""
     use_bbr = None
     """Run boundary-based registration for BOLD-to-T1w registration."""
-    use_syn = None
+    use_syn_sdc = None
     """Run *fieldmap-less* susceptibility-derived distortions estimation
     in the absence of any alternatives."""
 
