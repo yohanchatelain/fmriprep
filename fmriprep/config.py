@@ -68,16 +68,6 @@ The :py:mod:`config` is responsible for other conveniency actions.
 
 """
 from multiprocessing import set_start_method
-import warnings
-
-# cmp is not used by fmriprep, so ignore nipype-generated warnings
-warnings.filterwarnings('ignore', 'cmp not installed')
-warnings.filterwarnings('ignore', 'This has not been fully tested. Please report any failures.')
-warnings.filterwarnings('ignore', "sklearn.externals.joblib is deprecated in 0.21")
-warnings.filterwarnings('ignore', "can't resolve package from __spec__ or __package__")
-warnings.filterwarnings('ignore', category=DeprecationWarning)
-warnings.filterwarnings('ignore', category=FutureWarning)
-warnings.filterwarnings('ignore', category=ResourceWarning)
 
 
 try:
@@ -89,24 +79,31 @@ finally:
     # ignoring the most annoying warnings
     import os
     import sys
-    import logging
+    import random
 
     from uuid import uuid4
     from pathlib import Path
     from time import strftime
-    from niworkflows.utils.spaces import SpatialReferences as _SRs, Reference as _Ref
     from nipype import logging as nlogging, __version__ as _nipype_ver
     from templateflow import __version__ as _tf_ver
     from . import __version__
 
-
-def redirect_warnings(message, category, filename, lineno, file=None, line=None):
-    """Redirect other warnings."""
-    logger = logging.getLogger()
-    logger.debug('Captured warning (%s): %s', category, message)
-
-
-warnings.showwarning = redirect_warnings
+if not hasattr(sys, "_is_pytest_session"):
+    sys._is_pytest_session = False  # Trick to avoid sklearn's FutureWarnings
+# Disable all warnings in main and children processes only on production versions
+if not any((
+    "+" in __version__,
+    __version__.endswith(".dirty"),
+    os.getenv("FMRIPREP_DEV", "0").lower() in ("1", "on", "true", "y", "yes")
+)):
+    from ._warnings import logging
+    os.environ["PYTHONWARNINGS"] = "ignore"
+elif os.getenv("FMRIPREP_WARNINGS", "0").lower() in ("1", "on", "true", "y", "yes"):
+    # allow disabling warnings on development versions
+    # https://github.com/poldracklab/fmriprep/pull/2080#discussion_r409118765
+    from ._warnings import logging
+else:
+    import logging
 
 logging.addLevelName(25, 'IMPORTANT')  # Add a new level between INFO and WARNING
 logging.addLevelName(15, 'VERBOSE')  # Add a new level between INFO and DEBUG
@@ -190,6 +187,8 @@ class _Config:
     @classmethod
     def get(cls):
         """Return defined settings."""
+        from niworkflows.utils.spaces import SpatialReferences, Reference
+
         out = {}
         for k, v in cls.__dict__.items():
             if k.startswith('_') or v is None:
@@ -198,9 +197,9 @@ class _Config:
                 continue
             if k in cls._paths:
                 v = str(v)
-            if isinstance(v, _SRs):
-                v = ' '.join([str(s) for s in v.references]) or None
-            if isinstance(v, _Ref):
+            if isinstance(v, SpatialReferences):
+                v = " ".join([str(s) for s in v.references]) or None
+            if isinstance(v, Reference):
                 v = str(v) or None
             out[k] = v
         return out
@@ -251,7 +250,7 @@ class nipype(_Config):
     """Estimation in GB of the RAM this workflow can allocate at any given time."""
     nprocs = os.cpu_count()
     """Number of processes (compute tasks) that can be run in parallel (multiprocessing only)."""
-    omp_nthreads = os.cpu_count()
+    omp_nthreads = None
     """Number of CPUs a single process can access for multithreaded execution."""
     plugin = 'MultiProc'
     """NiPype's execution plugin."""
@@ -303,6 +302,9 @@ class nipype(_Config):
                 'stop_on_first_crash': cls.stop_on_first_crash,
             }
         })
+
+        if cls.omp_nthreads is None:
+            cls.omp_nthreads = min(cls.nprocs - 1 if cls.nprocs > 1 else os.cpu_count(), 8)
 
 
 class execution(_Config):
@@ -425,6 +427,8 @@ class workflow(_Config):
     """Ignore particular steps for *fMRIPrep*."""
     longitudinal = False
     """Run FreeSurfer ``recon-all`` with the ``-logitudinal`` flag."""
+    random_seed = None
+    """Master random seed to initialize the Pseudorandom Number Generator (PRNG)"""
     medial_surface_nan = None
     """Fill medial surface with :abbr:`NaNs (not-a-number)` when sampling."""
     regressors_all_comps = None
@@ -452,7 +456,7 @@ class workflow(_Config):
     """Run ICA-:abbr:`AROMA (automatic removal of motion artifacts)`."""
     use_bbr = None
     """Run boundary-based registration for BOLD-to-T1w registration."""
-    use_syn = None
+    use_syn_sdc = None
     """Run *fieldmap-less* susceptibility-derived distortions estimation
     in the absence of any alternatives."""
 
@@ -503,11 +507,38 @@ class loggers:
         })
 
 
+class seeds(_Config):
+    """Initialize the PRNG and track random seed assignments"""
+
+    master = None
+    """Master seed used to generate all other tracked seeds"""
+    ants = None
+    """Seed used for antsRegistration, antsAI, antsMotionCorr"""
+
+    @classmethod
+    def init(cls):
+        cls.master = workflow.random_seed
+        if cls.master is None:
+            cls.master = random.randint(1, 65536)
+        random.seed(cls.master)  # initialize the PRNG
+
+        # functions to set program specific seeds
+        cls.ants = _set_ants_seed()
+
+
+def _set_ants_seed():
+    """Fix random seed for antsRegistration, antsAI, antsMotionCorr"""
+    val = random.randint(1, 65536)
+    os.environ['ANTS_RANDOM_SEED'] = str(val)
+    return val
+
+
 def from_dict(settings):
     """Read settings from a flat dictionary."""
     nipype.load(settings)
     execution.load(settings)
     workflow.load(settings)
+    seeds.init()
     loggers.init()
 
 
@@ -530,6 +561,7 @@ def get(flat=False):
         'execution': execution.get(),
         'workflow': workflow.get(),
         'nipype': nipype.get(),
+        'seeds': seeds.get(),
     }
     if not flat:
         return settings

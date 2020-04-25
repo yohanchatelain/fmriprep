@@ -15,16 +15,6 @@ from copy import deepcopy
 
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
-from niworkflows.interfaces.nilearn import NILEARN_VERSION
-
-from niworkflows.engine.workflows import LiterateWorkflow as Workflow
-from niworkflows.interfaces.bids import (
-    BIDSInfo, BIDSDataGrabber, BIDSFreeSurferDir
-)
-from niworkflows.utils.bids import collect_data
-from niworkflows.utils.spaces import Reference
-from niworkflows.utils.misc import fix_multi_T1w_source_name
-from smriprep.workflows.anatomical import init_anat_preproc_wf
 
 from .. import config
 from ..interfaces import SubjectSummary, AboutSummary, DerivativesDataSink
@@ -52,6 +42,9 @@ def init_fmriprep_wf():
                 wf = init_fmriprep_wf()
 
     """
+    from niworkflows.engine.workflows import LiterateWorkflow as Workflow
+    from niworkflows.interfaces.bids import BIDSFreeSurferDir
+
     fmriprep_wf = Workflow(name='fmriprep_wf')
     fmriprep_wf.base_dir = config.execution.work_dir
 
@@ -123,6 +116,14 @@ def init_single_subject_wf(subject_id):
         FreeSurfer's ``$SUBJECTS_DIR``.
 
     """
+    from niworkflows.engine.workflows import LiterateWorkflow as Workflow
+    from niworkflows.interfaces.bids import BIDSInfo, BIDSDataGrabber
+    from niworkflows.interfaces.nilearn import NILEARN_VERSION
+    from niworkflows.utils.bids import collect_data
+    from niworkflows.utils.misc import fix_multi_T1w_source_name
+    from niworkflows.utils.spaces import Reference
+    from smriprep.workflows.anatomical import init_anat_preproc_wf
+
     name = "single_subject_%s_wf" % subject_id
     subject_data = collect_data(
         config.execution.layout,
@@ -275,15 +276,15 @@ tasks and sessions), the following preprocessing was performed.
 
         workflow.connect([
             (anat_preproc_wf, func_preproc_wf,
-             [(('outputnode.t1w_preproc', _pop), 'inputnode.t1w_preproc'),
+             [('outputnode.t1w_preproc', 'inputnode.t1w_preproc'),
               ('outputnode.t1w_mask', 'inputnode.t1w_mask'),
               ('outputnode.t1w_dseg', 'inputnode.t1w_dseg'),
               ('outputnode.t1w_aseg', 'inputnode.t1w_aseg'),
               ('outputnode.t1w_aparc', 'inputnode.t1w_aparc'),
               ('outputnode.t1w_tpms', 'inputnode.t1w_tpms'),
-              ('outputnode.joint_template', 'inputnode.template'),
-              ('outputnode.joint_anat2std_xfm', 'inputnode.anat2std_xfm'),
-              ('outputnode.joint_std2anat_xfm', 'inputnode.std2anat_xfm'),
+              ('outputnode.template', 'inputnode.template'),
+              ('outputnode.anat2std_xfm', 'inputnode.anat2std_xfm'),
+              ('outputnode.std2anat_xfm', 'inputnode.std2anat_xfm'),
               # Undefined if --fs-no-reconall, but this is safe
               ('outputnode.subjects_dir', 'inputnode.subjects_dir'),
               ('outputnode.subject_id', 'inputnode.subject_id'),

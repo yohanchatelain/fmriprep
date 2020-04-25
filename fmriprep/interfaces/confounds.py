@@ -20,7 +20,6 @@ from nipype.interfaces.base import (
     traits, TraitedSpec, BaseInterfaceInputSpec, File, Directory, isdefined,
     SimpleInterface
 )
-from niworkflows.viz.plots import fMRIPlot
 
 LOGGER = logging.getLogger('nipype.interface')
 
@@ -225,6 +224,7 @@ def _get_ica_confounds(ica_out_dir, skip_vols, newpath=None):
     melodic_mix = os.path.join(ica_out_dir, 'melodic.ica/melodic_mix')
     motion_ics = os.path.join(ica_out_dir, 'classified_motion_ICs.txt')
     aroma_metadata = os.path.join(ica_out_dir, 'classification_overview.txt')
+    aroma_icstats = os.path.join(ica_out_dir, 'melodic.ica/melodic_ICstats')
 
     # Change names of motion_ics and melodic_mix for output
     melodic_mix_out = os.path.join(newpath, 'MELODICmix.tsv')
@@ -253,9 +253,17 @@ def _get_ica_confounds(ica_out_dir, skip_vols, newpath=None):
         'aroma_motion_{}'.format(name) for name in aroma_metadata['IC']]
     aroma_metadata.columns = [
         re.sub(r'[ |\-|\/]', '_', c) for c in aroma_metadata.columns]
+
+    # Add variance statistics to metadata
+    aroma_icstats = pd.read_csv(
+        aroma_icstats, header=None, sep='  ')[[0, 1]] / 100
+    aroma_icstats.columns = [
+        'model_variance_explained', 'total_variance_explained']
+    aroma_metadata = pd.concat([aroma_metadata, aroma_icstats], axis=1)
+
     aroma_metadata.to_csv(aroma_metadata_out, sep='\t', index=False)
 
-    # Return dummy list of ones if no noise compnents were found
+    # Return dummy list of ones if no noise components were found
     if motion_ic_indices.size == 0:
         LOGGER.warning('No noise components were classified')
         return None, motion_ics_out, melodic_mix_out, aroma_metadata_out
@@ -282,8 +290,8 @@ def _get_ica_confounds(ica_out_dir, skip_vols, newpath=None):
 
 class FMRISummaryInputSpec(BaseInterfaceInputSpec):
     in_func = File(exists=True, mandatory=True,
-                   desc='input BOLD time-series (4D file)')
-    in_mask = File(exists=True, mandatory=True,
+                   desc='input BOLD time-series (4D file) or dense timeseries CIFTI')
+    in_mask = File(exists=True,
                    desc='3D brain mask')
     in_segm = File(exists=True, desc='resampled segmentation')
     confounds_file = File(exists=True,
@@ -312,6 +320,8 @@ class FMRISummary(SimpleInterface):
     output_spec = FMRISummaryOutputSpec
 
     def _run_interface(self, runtime):
+        from niworkflows.viz.plots import fMRIPlot
+
         self._results['out_file'] = fname_presuffix(
             self.inputs.in_func,
             suffix='_fmriplot.svg',
@@ -353,7 +363,7 @@ class FMRISummary(SimpleInterface):
 
         fig = fMRIPlot(
             self.inputs.in_func,
-            mask_file=self.inputs.in_mask,
+            mask_file=self.inputs.in_mask if isdefined(self.inputs.in_mask) else None,
             seg_file=(self.inputs.in_segm
                       if isdefined(self.inputs.in_segm) else None),
             tr=self.inputs.tr,

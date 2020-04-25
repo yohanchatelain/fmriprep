@@ -8,9 +8,52 @@ distinguish which options were selected for each participant, along with other e
   * ENH: Add option to ignore T2w / FLAIR images (#2015)
   * ENH: Ensure subcortical volume in CIFTI is in LAS orientation (`nipreps/niworkflows#484`_)
   * ENH: Add option to skip brain extraction (#2039)
+  * ENH: Use CIFTI for carpetplot when available (#2055)
+  * FIX: Explicitly add default native resolution to volumetric outputs (`nipreps/niworkflows#494`_)
   * MAINT: Bump minimum Python to 3.7 (#2017)
+  * MAINT: Remove unused console scripts (#2048)
+  * MAINT: Reduce overall size of outputs (`nipreps/niworkflows#492`_)
 
 .. _`nipreps/niworkflows#484`: https://github.com/nipreps/niworkflows/pull/484
+.. _`nipreps/niworkflows#494`: https://github.com/nipreps/niworkflows/pull/494
+.. _`nipreps/niworkflows#492`: https://github.com/nipreps/niworkflows/pull/492
+
+20.0.6 (April 16, 2020)
+=======================
+Bug-fix release in the 20.0.x series.
+
+This release fixes a bug for **phase-difference fieldmaps that are not in RAS+ orientation**.
+The bug presented as an error if the orientation was reordered relative to RAS+ (for example,
+AIL+) and the swapped dimensions were not of the same size.
+Otherwise, the bug introduced a poor masking of the phase difference map, and could be quite subtle
+if the original orientation was LAS+.
+Runs of fMRIPrep that used other susceptibility distortion correction (SDC) methods are not
+currently considered problematic.
+
+This bug affects all earlier versions of fMRIPrep, except for 1.5.10 and any future releases in
+the 1.5.x series.
+
+  * FIX: Do not reorient magnitude images (`nipreps/sdcflows#98`_)
+
+.. _`nipreps/sdcflows#98`: https://github.com/nipreps/sdcflows/pull/98
+
+1.5.10 (April 16, 2020)
+=======================
+Bug-fix release in the 1.5.x series.
+
+This release fixes a bug for **phase-difference fieldmaps that are not in RAS+ orientation**.
+The bug presented as an error if the orientation was reordered relative to RAS+ (for example,
+AIL+) and the swapped dimensions were not of the same size.
+Otherwise, the bug introduced a poor masking of the phase difference map, and could be quite subtle
+if the original orientation was LAS+.
+Runs of fMRIPrep that used other susceptibility distortion correction (SDC) methods are not
+currently considered problematic.
+
+This bug affects all previous versions of fMRIPrep, as well as versions 20.0.0-20.0.5.
+
+  * FIX: Do not reorient magnitude images (`nipreps/sdcflows#98`_)
+
+.. _`nipreps/sdcflows#98`: https://github.com/nipreps/sdcflows/pull/98
 
 20.0.5 (March 19, 2020)
 =======================

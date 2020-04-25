@@ -102,7 +102,7 @@ def _build_parser():
 
     g_perfm = parser.add_argument_group('Options to handle performance')
     g_perfm.add_argument(
-        '--nprocs', '--nthreads', '--n_cpus', '-n-cpus', action='store', type=PositiveInt,
+        '--nprocs', '--nthreads', '--n_cpus', '--n-cpus', action='store', type=PositiveInt,
         help='maximum number of threads across all processes')
     g_perfm.add_argument('--omp-nthreads', action='store', type=PositiveInt,
                          help='maximum number of threads per-process')
@@ -174,6 +174,10 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (currentv.base_version
     g_conf.add_argument(
         '--dummy-scans', required=False, action='store', default=None, type=int,
         help='Number of non steady state volumes.')
+    g_conf.add_argument(
+        '--random-seed', action='store', type=int, default=None,
+        help='Initialize the random seed for the workflow'
+    )
 
     # ICA_AROMA options
     g_aroma = parser.add_argument_group('Specific options for running ICA_AROMA')
@@ -210,7 +214,8 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (currentv.base_version
         help='select a template for skull-stripping with antsBrainExtraction')
     g_ants.add_argument('--skull-strip-fixed-seed', action='store_true',
                         help='do not use a random seed for skull-stripping - will ensure '
-                             'run-to-run replicability when used with --omp-nthreads 1')
+                             'run-to-run replicability when used with --omp-nthreads 1 and '
+                             'matching --random-seed <int>')
     g_ants.add_argument(
         '--skull-strip-t1w', action='store', choices=('auto', 'skip', 'force'), default='force',
         help="determiner for T1-weighted skull stripping ('force' ensures skull "
@@ -316,7 +321,6 @@ def parse_args(args=None, namespace=None):
     opts = parser.parse_args(args, namespace)
     config.execution.log_level = int(max(25 - 5 * opts.verbose_count, logging.DEBUG))
     config.from_dict(vars(opts))
-    config.loggers.init()
 
     # Initialize --output-spaces if not defined
     if config.execution.output_spaces is None:
@@ -351,8 +355,8 @@ license file at several paths, in this order: 1) command line argument ``--fs-li
     # This may need to be revisited if people try to use batch plugins
     if 1 < config.nipype.nprocs < config.nipype.omp_nthreads:
         build_log.warning(
-            'Per-process threads (--omp-nthreads=%d) exceed total '
-            'threads (--nthreads/--n_cpus=%d)', config.nipype.omp_nthread, config.nipype.nprocs)
+            f'Per-process threads (--omp-nthreads={config.nipype.omp_nthreads}) exceed '
+            f'total threads (--nthreads/--n_cpus={config.nipype.nprocs})')
 
     # Inform the user about the risk of using brain-extracted images
     if config.workflow.skull_strip_t1w == "auto":
@@ -378,11 +382,11 @@ applied.""")
     # Wipe out existing work_dir
     if opts.clean_workdir and work_dir.exists():
         from niworkflows.utils.misc import clean_directory
-        build_log.log("Clearing previous fMRIPrep working directory: %s",
-                      work_dir)
+        build_log.info(f"Clearing previous fMRIPrep working directory: {work_dir}")
         if not clean_directory(work_dir):
-            build_log.warning("Could not clear all contents of working directory: %s",
-                              work_dir)
+            build_log.warning(
+                f"Could not clear all contents of working directory: {work_dir}"
+            )
 
     # Ensure input and output folders are not the same
     if output_dir == bids_dir:
