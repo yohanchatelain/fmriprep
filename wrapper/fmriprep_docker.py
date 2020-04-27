@@ -164,7 +164,7 @@ def merge_help(wrapper_help, target_help):
 
     # Make sure we're not clobbering options we don't mean to
     overlap = set(w_flags).intersection(t_flags)
-    expected_overlap = set([
+    expected_overlap = {
         'anat-derivatives',
         'fs-license-file',
         'fs-subjects-dir',
@@ -172,7 +172,7 @@ def merge_help(wrapper_help, target_help):
         'use-plugin',
         'version',
         'w',
-    ])
+    }
 
     assert overlap == expected_overlap, "Clobbering options: {}".format(
         ', '.join(overlap - expected_overlap))

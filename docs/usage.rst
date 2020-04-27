@@ -105,7 +105,7 @@ Reusing precomputed derivatives
 -------------------------------
 Reusing a previous, partial execution of *fMRIPrep*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*fMRIPrep* will pick up where it left off a previous execution, so long the work directory
+*fMRIPrep* will pick up where it left off a previous execution, so long as the work directory
 points to the same location, and this directory has not been changed/manipulated.
 
 Using a previous run of *FreeSurfer*
