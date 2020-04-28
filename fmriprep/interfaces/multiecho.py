@@ -53,7 +53,7 @@ class T2SMapInputSpec(CommandLineInputSpec):
 
 class T2SMapOutputSpec(TraitedSpec):
     t2star_map = File(exists=True, desc='limited T2* map')
-    s0_map = File(exists=True, desc='limited s0 map')
+    s0_map = File(exists=True, desc='limited S0 map')
     optimal_comb = File(exists=True, desc='optimally combined ME-EPI time series')
 
 
@@ -85,7 +85,7 @@ sub-01_run-01_echo-3_bold.nii.gz -e 13.0 27.0 43.0'
 
     def _list_outputs(self):
         outputs = self._outputs().get()
-        outputs['t2star_map'] = 'T2StarMap.nii.gz'
-        outputs['s0_map'] = 'S0Map.nii.gz'
+        outputs['t2star_map'] = 'T2starmap.nii.gz'
+        outputs['s0_map'] = 'S0map.nii.gz'
         outputs['optimal_comb'] = 'desc-optcom_bold.nii.gz'
         return outputs
