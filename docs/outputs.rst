@@ -275,6 +275,8 @@ frames with sudden and large motion or intensity spikes.
 
 - ``framewise_displacement`` - is a quantification of the estimated bulk-head motion calculated using
   formula proposed by [Power2012]_;
+- ``rmsd`` - is a quantification of the estimated relative (frame-to-frame) bulk head motion
+  calculated using the :abbr:`RMS (root mean square)` approach of [Jenkinson2002]_;
 - ``dvars`` - the derivative of RMS variance over voxels (or :abbr:`DVARS (derivative of
   RMS variance over voxels)`) [Power2012]_;
 - ``std_dvars`` - standardized :abbr:`DVARS (derivative of RMS variance over voxels)`;
@@ -528,6 +530,10 @@ See implementation on :mod:`~fmriprep.workflows.bold.confounds.init_bold_confs_w
   .. [Hallquist2013] Hallquist MN, Hwang K, Luna B. The Nuisance of Nuisance Regression.
      NeuroImage. 2013. doi:`10.1016/j.neuroimage.2013.05.116
      <https://doi.org/10.1016/j.neuroimage.2013.05.116>`_
+
+  .. [Jenkinson2002] Jenkinson M, Bannister P, Brady M, Smith S. Improved optimization for the
+     robust and accurate linear registration and motion correction of brain images. Neuroimage.
+     2002. doi:`10.1016/s1053-8119(02)91132-8 <https://doi.org/10.1016/s1053-8119(02)91132-8>`__.
 
   .. [Lindquist2019] Lindquist, MA, Geuter, S, and Wager, TD, Caffo, BS,
      Modular preprocessing pipelines can reintroduce artifacts into fMRI data.
