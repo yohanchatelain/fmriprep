@@ -99,6 +99,11 @@ def _build_parser():
              "https://fmriprep.readthedocs.io/en/%s/faq.html#"
              "how-do-I-select-only-certain-files-to-be-input-to-fMRIPrep" % (
                  currentv.base_version if is_release else 'latest'))
+    g_bids.add_argument(
+        "--anat-derivatives", action='store', metavar="PATH", type=PathExists,
+        help="Reuse the anatomical derivatives from another fMRIPrep run or calculated "
+             "with an alternative processing tool (NOT RECOMMENDED)."
+    )
 
     g_perfm = parser.add_argument_group('Options to handle performance')
     g_perfm.add_argument(

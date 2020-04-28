@@ -164,8 +164,15 @@ def merge_help(wrapper_help, target_help):
 
     # Make sure we're not clobbering options we don't mean to
     overlap = set(w_flags).intersection(t_flags)
-    expected_overlap = set(['h', 'version', 'w', 'fs-license-file',
-                            'fs-subjects-dir', 'use-plugin'])
+    expected_overlap = {
+        'anat-derivatives',
+        'fs-license-file',
+        'fs-subjects-dir',
+        'h',
+        'use-plugin',
+        'version',
+        'w',
+    }
 
     assert overlap == expected_overlap, "Clobbering options: {}".format(
         ', '.join(overlap - expected_overlap))
@@ -280,6 +287,10 @@ the spatial normalization.""" % (', '.join('"%s"' % s for s in TF_TEMPLATES),
         '--fs-subjects-dir', metavar='PATH', type=os.path.abspath,
         help='Path to existing FreeSurfer subjects directory to reuse. '
              '(default: OUTPUT_DIR/freesurfer)')
+    g_wrap.add_argument(
+        '--anat-derivatives', metavar='PATH', type=os.path.abspath,
+        help='Path to existing sMRIPrep/fMRIPrep-anatomical derivatives to fasttrack '
+             'the anatomical workflow.')
     g_wrap.add_argument(
         '--use-plugin', metavar='PATH', action='store', default=None,
         type=os.path.abspath, help='nipype plugin configuration file')
@@ -403,6 +414,10 @@ def main():
     if opts.fs_subjects_dir:
         command.extend(['-v', '{}:/opt/subjects'.format(opts.fs_subjects_dir)])
         unknown_args.extend(['--fs-subjects-dir', '/opt/subjects'])
+
+    if opts.anat_derivatives:
+        command.extend(['-v', '{}:/opt/smriprep/subjects'.format(opts.anat_derivatives)])
+        unknown_args.extend(['--anat-derivatives', '/opt/smriprep/subjects'])
 
     if opts.work_dir:
         command.extend(['-v', ':'.join((opts.work_dir, '/scratch'))])
