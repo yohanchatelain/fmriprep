@@ -99,7 +99,7 @@ def init_bold_confs_wf(
     movpar_file
         SPM-formatted motion parameters file
     rmsd_file
-        Jenkinson framewise displacement file
+        Framewise displacement as measured by ``fsl_motion_outliers``.
     skip_vols
         number of non steady state volumes
     t1w_mask
