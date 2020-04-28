@@ -308,7 +308,8 @@ the spatial normalization.""" % (', '.join('"%s"' % s for s in TF_TEMPLATES),
     g_dev.add_argument('-e', '--env', action='append', nargs=2, metavar=('ENV_VAR', 'value'),
                        help='Set custom environment variable within container')
     g_dev.add_argument('-u', '--user', action='store',
-                       help='Run container as a given user/uid')
+                       help='Run container as a given user/uid. Additionally, group/gid can be'
+                            'assigned, (i.e., --user <UID>:<GID>)')
     g_dev.add_argument('--network', action='store',
                        help='Run container with a different network driver '
                             '("none" to simulate no internet connection)')
@@ -407,6 +408,9 @@ def main():
         command.extend(['-v', ':'.join((opts.bids_dir, '/data', 'ro'))])
         main_args.append('/data')
     if opts.output_dir:
+        if not os.path.exists(opts.output_dir):
+            # create it before docker does
+            os.makedirs(opts.output_dir)
         command.extend(['-v', ':'.join((opts.output_dir, '/out'))])
         main_args.append('/out')
     main_args.append(opts.analysis_level)
