@@ -471,6 +471,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('outputnode.itk_t1_to_bold', 'inputnode.t1_bold_xform')]),
         (bold_reference_wf, bold_confounds_wf, [
             ('outputnode.skip_vols', 'inputnode.skip_vols')]),
+        (bold_bold_trans_wf, bold_confounds_wf, [
+            ('outputnode.bold_mask', 'inputnode.bold_mask'),
+        ]),
         (bold_confounds_wf, outputnode, [
             ('outputnode.confounds_file', 'confounds'),
         ]),
