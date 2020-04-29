@@ -209,17 +209,6 @@ def init_func_preproc_wf(bold_file):
                'slicetiming' not in config.workflow.ignore and
                (_get_series_len(ref_file) > 4 or "TooShort"))
 
-    # Check if MEEPI for T2* coregistration target
-    if config.workflow.t2s_coreg and not multiecho:
-        config.loggers.workflow.warning(
-            "No multiecho BOLD images found for T2* coregistration. "
-            "Using standard EPI-T1 coregistration.")
-        config.workflow.t2s_coreg = False
-
-    # By default, force-bbr for t2s_coreg unless user specifies otherwise
-    if config.workflow.t2s_coreg and config.workflow.use_bbr is None:
-        config.workflow.use_bbr = True
-
     # Build workflow
     workflow = Workflow(name=wf_name)
     workflow.__postdesc__ = """\
@@ -407,7 +396,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         bold_t2s_wf = init_bold_t2s_wf(echo_times=tes,
                                        mem_gb=mem_gb['resampled'],
                                        omp_nthreads=omp_nthreads,
-                                       t2s_coreg=config.workflow.t2s_coreg,
                                        name='bold_t2smap_wf')
 
         workflow.connect([
@@ -495,23 +483,13 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         (outputnode, summary, [('confounds', 'confounds_file')]),
     ])
 
-    if not config.workflow.t2s_coreg:
-        workflow.connect([
-            (bold_sdc_wf, bold_reg_wf, [
-                ('outputnode.epi_brain', 'inputnode.ref_bold_brain')]),
-            (bold_sdc_wf, bold_t1_trans_wf, [
-                ('outputnode.epi_brain', 'inputnode.ref_bold_brain'),
-                ('outputnode.epi_mask', 'inputnode.ref_bold_mask')]),
-        ])
-    else:
-        workflow.connect([
-            # For t2s_coreg, replace EPI-to-T1w registration inputs
-            (bold_t2s_wf, bold_reg_wf, [
-                ('outputnode.bold_ref_brain', 'inputnode.ref_bold_brain')]),
-            (bold_t2s_wf, bold_t1_trans_wf, [
-                ('outputnode.bold_ref_brain', 'inputnode.ref_bold_brain'),
-                ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
-        ])
+    workflow.connect([
+        (bold_sdc_wf, bold_reg_wf, [
+            ('outputnode.epi_brain', 'inputnode.ref_bold_brain')]),
+        (bold_sdc_wf, bold_t1_trans_wf, [
+            ('outputnode.epi_brain', 'inputnode.ref_bold_brain'),
+            ('outputnode.epi_mask', 'inputnode.ref_bold_mask')]),
+    ])
 
     # for standard EPI data, pass along correct file
     if not multiecho:
