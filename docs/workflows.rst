@@ -3,7 +3,6 @@
 ===========================
 Processing pipeline details
 ===========================
-
 *fMRIPrep* adapts its pipeline depending on what data and metadata are
 available and are used as the input.
 For example, slice timing correction will be
@@ -18,83 +17,67 @@ is presented below:
     :graph2use: orig
     :simple_form: yes
 
+    from fmriprep.workflows.tests import mock_config
     from fmriprep.workflows.base import init_single_subject_wf
-    from collections import namedtuple, OrderedDict
-    BIDSLayout = namedtuple('BIDSLayout', ['root'])
-    wf = init_single_subject_wf(
-        anat_only=False,
-        aroma_melodic_dim=-200,
-        bold2t1w_dof=9,
-        cifti_output=False,
-        debug=False,
-        dummy_scans=None,
-        echo_idx=None,
-        err_on_aroma_warn=False,
-        fmap_bspline=False,
-        fmap_demean=True,
-        force_syn=True,
-        freesurfer=True,
-        hires=True,
-        ignore=[],
-        layout=BIDSLayout('.'),
-        longitudinal=False,
-        low_mem=False,
-        medial_surface_nan=False,
-        name='single_subject_wf',
-        omp_nthreads=1,
-        output_dir='.',
-        output_spaces=OrderedDict([
-            ('MNI152Lin', {}), ('fsaverage', {'density': '10k'}),
-            ('T1w', {}), ('fsnative', {})]),
-        reportlets_dir='.',
-        regressors_all_comps=False,
-        regressors_dvars_th=1.5,
-        regressors_fd_th=0.5,
-        skull_strip_fixed_seed=False,
-        skull_strip_template=('OASIS30ANTs', {}),
-        subject_id='test',
-        t2s_coreg=False,
-        task_id='',
-        use_aroma=False,
-        use_bbr=True,
-        use_syn=True,
-    )
+    with mock_config():
+        wf = init_single_subject_wf('01')
 
-T1w/T2w preprocessing
----------------------
-:mod:`fmriprep.workflows.anatomical.init_anat_preproc_wf`
-
-.. workflow::
-    :graph2use: orig
-    :simple_form: yes
-
-    from collections import OrderedDict
-    from fmriprep.workflows.anatomical import init_anat_preproc_wf
-    wf = init_anat_preproc_wf(
-        bids_root='.',
-        freesurfer=True,
-        hires=True,
-        longitudinal=False,
-        num_t1w=1,
-        omp_nthreads=1,
-        output_dir='.',
-        output_spaces=OrderedDict([
-            ('MNI152NLin2009cAsym', {}), ('fsaverage5', {})]),
-        reportlets_dir='.',
-        skull_strip_template=('MNI152NLin2009cAsym', {}),
-        skull_strip_fixed_seed=False,
-    )
-
+Preprocessing of structural MRI
+-------------------------------
 The anatomical sub-workflow begins by constructing an average image by
 conforming all found T1w images to RAS orientation and
 a common voxel size, and, in the case of multiple images, averages them into a
 single reference template (see `Longitudinal processing`_).
 
+.. workflow::
+    :graph2use: orig
+    :simple_form: yes
+
+    from niworkflows.utils.spaces import Reference, SpatialReferences
+    from smriprep.workflows.anatomical import init_anat_preproc_wf
+    wf = init_anat_preproc_wf(
+        bids_root='.',
+        freesurfer=True,
+        hires=True,
+        longitudinal=False,
+        omp_nthreads=1,
+        output_dir='.',
+        skull_strip_mode='force',
+        skull_strip_template=Reference('MNI152NLin2009cAsym'),
+        spaces=SpatialReferences([
+            ('MNI152Lin', {}),
+            ('fsaverage', {'density': '10k'}),
+            ('T1w', {}),
+            ('fsnative', {})
+        ]),
+        reportlets_dir='.',
+        skull_strip_fixed_seed=False,
+        t1w=['sub-01/anat/sub-01_T1w.nii.gz'],
+    )
+
+.. important::
+
+    Occasionally, openly shared datasets may contain preprocessed anatomical images
+    as if they are unprocessed.
+    In the case of brain-extracted (skull-stripped) T1w images, attempting to perform
+    brain extraction again will often have poor results and may cause *fMRIPrep* to crash.
+    By default, *fMRIPrep* will attempt to detect these cases using a heuristic to check if the
+    T1w image is already masked.
+    If this heuristic fails, and you know your images are skull-stripped, you can skip brain
+    extraction with ``--skull-strip-t1w skip``.
+    Likewise, if you know your images are not skull-stripped and the heuristic incorrectly
+    determines that they are, you can force skull stripping with ``--skull-strip-t1w force``.
+    The default behavior of detecting pre-extracted brains may be explicitly requested with
+    ``---skull-strip-t1w auto``, which will use a heuristic to check if each image is
+    already masked.
+
+See also *sMRIPrep*'s
+:py:func:`~smriprep.workflows.anatomical.init_anat_preproc_wf`.
+
 .. _t1preproc_steps:
 
 Brain extraction, brain tissue segmentation and spatial normalization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Then, the T1w reference is skull-stripped using a Nipype implementation of
 the ``antsBrainExtraction.sh`` tool (ANTs), which is an atlas-based
 brain extraction workflow:
@@ -110,7 +93,6 @@ brain extraction workflow:
 An example of brain extraction is shown below:
 
 .. figure:: _static/brainextraction_t1.svg
-    :scale: 100%
 
     Brain extraction
 
@@ -118,7 +100,6 @@ An example of brain extraction is shown below:
 Once the brain mask is computed, FSL ``fast`` is utilized for brain tissue segmentation.
 
 .. figure:: _static/segmentation.svg
-    :scale: 100%
 
     Brain tissue segmentation.
 
@@ -130,13 +111,11 @@ be set to resample the preprocessed data onto the final output spaces.
 
 
 .. figure:: _static/T1MNINormalization.svg
-    :scale: 100%
 
     Animation showing spatial normalization of T1w onto the ``MNI152NLin2009cAsym`` template.
 
 Cost function masking during spatial normalization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 When processing images from patients with focal brain lesions (e.g., stroke, tumor
 resection), it is possible to provide a lesion mask to be used during spatial
 normalization to standard space [Brett2001]_.
@@ -154,8 +133,7 @@ include a ``.bidsignore`` file in the root of your dataset directory. This will 
 that your dataset is not valid BIDS, which prevents *fMRIPrep* from running.
 Your ``.bidsignore`` file should include the following line::
 
-*lesion_roi.nii.gz
-
+  *lesion_roi.nii.gz
 
 Longitudinal processing
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -178,21 +156,10 @@ flag, which forces the estimation of an unbiased template.
     Reconstructed surfaces and functional datasets will be registered to the
     ``T1w`` space, and not to the input images.
 
-
 .. _workflows_surface:
 
 Surface preprocessing
 ~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.anatomical.init_surface_recon_wf`
-
-.. workflow::
-    :graph2use: orig
-    :simple_form: yes
-
-    from fmriprep.workflows.anatomical import init_surface_recon_wf
-    wf = init_surface_recon_wf(omp_nthreads=1,
-                               hires=True)
-
 *fMRIPrep* uses FreeSurfer_ to reconstruct surfaces from T1w/T2w
 structural images.
 If enabled, several steps in the *fMRIPrep* pipeline are added or replaced.
@@ -202,7 +169,8 @@ All surface preprocessing may be disabled with the ``--fs-no-reconall`` flag.
     Surface processing will be skipped if the outputs already exist.
 
     In order to bypass reconstruction in *fMRIPrep*, place existing reconstructed
-    subjects in ``<output dir>/freesurfer`` prior to the run.
+    subjects in ``<output dir>/freesurfer`` prior to the run, or specify an external
+    subjects directory with the ``--fs-subjects-dir`` flag.
     *fMRIPrep* will perform any missing ``recon-all`` steps, but will not perform
     any steps whose outputs already exist.
 
@@ -225,17 +193,16 @@ would be processed by the following command::
         -autorecon1 \
         -noskullstrip
 
-The second phase imports the brainmask calculated in the `T1w/T2w preprocessing`_
-sub-workflow.
+The second phase imports the brainmask calculated in the
+`Preprocessing of structural MRI`_ sub-workflow.
 The final phase resumes reconstruction, using the T2w image to assist
 in finding the pial surface, if available.
-See :py:meth:`~fmriprep.workflows.anatomical.init_autorecon_resume_wf` for
+See :py:func:`~smriprep.workflows.surfaces.init_autorecon_resume_wf` for
 details.
 
 Reconstructed white and pial surfaces are included in the report.
 
 .. figure:: _static/reconall.svg
-    :scale: 100%
 
     Surface reconstruction (FreeSurfer)
 
@@ -257,9 +224,19 @@ packages, including FreeSurfer and the `Connectome Workbench`_.
     Any measures sampled to the surface take into account any difference in
     these images.
 
+.. workflow::
+    :graph2use: orig
+    :simple_form: yes
+
+    from smriprep.workflows.surfaces import init_surface_recon_wf
+    wf = init_surface_recon_wf(omp_nthreads=1,
+                               hires=True)
+
+See also *sMRIPrep*'s
+:py:func:`~smriprep.workflows.surfaces.init_surface_recon_wf`
+
 Refinement of the brain mask
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Typically, the original brain mask calculated with ``antsBrainExtraction.sh``
 will contain some innaccuracies including small amounts of MR signal from
 outside the brain.
@@ -267,51 +244,23 @@ Based on the tissue segmentation of FreeSurfer (located in ``mri/aseg.mgz``)
 and only when the :ref:`Surface Processing <workflows_surface>` step has been
 executed, *fMRIPrep* replaces the brain mask with a refined one that derives
 from the ``aseg.mgz`` file as described in
-:mod:`fmriprep.interfaces.freesurfer.grow_mask`.
-
+:py:func:`~fmriprep.interfaces.freesurfer.grow_mask`.
 
 BOLD preprocessing
 ------------------
-:mod:`fmriprep.workflows.bold.base.init_func_preproc_wf`
+:py:func:`~fmriprep.workflows.bold.base.init_func_preproc_wf`
 
 .. workflow::
     :graph2use: orig
     :simple_form: yes
 
-    from collections import namedtuple, OrderedDict
+    from fmriprep.workflows.tests import mock_config
+    from fmriprep import config
     from fmriprep.workflows.bold.base import init_func_preproc_wf
-    BIDSLayout = namedtuple('BIDSLayout', ['root'])
-    wf = init_func_preproc_wf(
-        aroma_melodic_dim=-200,
-        bold2t1w_dof=9,
-        bold_file='/completely/made/up/path/sub-01_task-nback_bold.nii.gz',
-        cifti_output=False,
-        debug=False,
-        err_on_aroma_warn=False,
-        fmap_bspline=True,
-        fmap_demean=True,
-        force_syn=True,
-        freesurfer=True,
-        ignore=[],
-        low_mem=False,
-        medial_surface_nan=False,
-        omp_nthreads=1,
-        output_dir='.',
-        output_spaces=OrderedDict([
-            ('MNI152Lin', {}), ('fsaverage', {'density': '10k'}),
-            ('T1w', {}), ('fsnative', {})]),
-        reportlets_dir='.',
-        t2s_coreg=False,
-        use_aroma=False,
-        regressors_all_comps=False,
-        regressors_fd_th=0.5,
-        regressors_dvars_th=1.5,
-        use_bbr=True,
-        use_syn=True,
-        dummy_scans=None,
-        layout=BIDSLayout('.'),
-        num_bold=1,
-    )
+    with mock_config():
+        bold_file = config.execution.bids_dir / 'sub-01' / 'func' \
+            / 'sub-01_task-mixedgamblestask_run-01_bold.nii.gz'
+        wf = init_func_preproc_wf(str(bold_file))
 
 Preprocessing of :abbr:`BOLD (blood-oxygen level-dependent)` files is
 split into multiple sub-workflows described below.
@@ -320,13 +269,13 @@ split into multiple sub-workflows described below.
 
 BOLD reference image estimation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.bold.util.init_bold_reference_wf`
+:py:func:`~niworkflows.func.util.init_bold_reference_wf`
 
 .. workflow::
     :graph2use: orig
     :simple_form: yes
 
-    from fmriprep.workflows.bold import init_bold_reference_wf
+    from niworkflows.func.util import init_bold_reference_wf
     wf = init_bold_reference_wf(omp_nthreads=1)
 
 This workflow estimates a reference image for a
@@ -340,14 +289,13 @@ superior tissue contrast.
 Otherwise, a median of motion corrected subset of volumes is used.
 
 The reference image is then used to calculate a brain mask for the
-:abbr:`BOLD (blood-oxygen level-dependent)` signal using the
-:mod:`fmriprep.workflows.bold.util.init_enhance_and_skullstrip_bold_wf`.
+:abbr:`BOLD (blood-oxygen level-dependent)` signal using *NiWorkflows*'
+:py:func:`~niworkflows.func.util.init_enhance_and_skullstrip_bold_wf`.
 Further, the reference is fed to the :ref:`head-motion estimation
 workflow <bold_hmc>` and the :ref:`registration workflow to map
 BOLD series into the T1w image of the same subject <bold_reg>`.
 
 .. figure:: _static/brainextraction.svg
-    :scale: 100%
 
     Calculation of a brain mask from the BOLD series.
 
@@ -355,7 +303,7 @@ BOLD series into the T1w image of the same subject <bold_reg>`.
 
 Head-motion estimation
 ~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.bold.hmc.init_bold_hmc_wf`
+:py:func:`~fmriprep.workflows.bold.hmc.init_bold_hmc_wf`
 
 .. workflow::
     :graph2use: colored
@@ -382,7 +330,7 @@ as recommended in [Power2017]_.
 
 Slice time correction
 ~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.bold.stc.init_bold_stc_wf`
+:py:func:`~fmriprep.workflows.bold.stc.init_bold_stc_wf`
 
 .. workflow::
     :graph2use: colored
@@ -392,7 +340,7 @@ Slice time correction
     wf = init_bold_stc_wf(
         metadata={'RepetitionTime': 2.0,
                   'SliceTiming': [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]},
-        )
+    )
 
 If the ``SliceTiming`` field is available within the input dataset metadata,
 this workflow performs slice time correction prior to other signal resampling
@@ -406,27 +354,24 @@ If a :abbr:`BOLD (blood-oxygen level-dependent)` series has fewer than
 5 usable (steady-state) volumes, slice time correction will be disabled
 for that run.
 
-
 Susceptibility Distortion Correction (SDC)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.fieldmap.base.init_sdc_wf`
-
-.. figure:: _static/unwarping.svg
-    :scale: 100%
-
-    Applying susceptibility-derived distortion correction, based on
-    fieldmap estimation.
-
 One of the major problems that affects :abbr:`EPI (echo planar imaging)` data
 is the spatial distortion caused by the inhomogeneity of the field inside
 the scanner.
 Please refer to :ref:`sdc` for details on the
 available workflows.
 
+.. figure:: _static/unwarping.svg
+
+    Applying susceptibility-derived distortion correction, based on
+    fieldmap estimation.
+
+See also *SDCFlows*' :py:func:`~sdcflows.workflows.base.init_sdc_estimate_wf`
 
 Pre-processed BOLD in native space
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.bold.resampling.init_bold_preproc_trans_wf`
+:py:func:`~fmriprep.workflows.bold.resampling.init_bold_preproc_trans_wf`
 
 .. workflow::
     :graph2use: orig
@@ -450,7 +395,7 @@ Interpolation uses a Lanczos kernel.
 
 EPI to T1w registration
 ~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.bold.registration.init_bold_reg_wf`
+:py:func:`~fmriprep.workflows.bold.registration.init_bold_reg_wf`
 
 .. workflow::
     :graph2use: orig
@@ -469,7 +414,6 @@ of each run and the reconstructed subject using the gray/white matter boundary
 (FreeSurfer's ``?h.white`` surfaces) is calculated by the ``bbregister`` routine.
 
 .. figure:: _static/EPIT1Normalization.svg
-    :scale: 100%
 
     Animation showing :abbr:`EPI (echo-planar imaging)` to T1w registration (FreeSurfer ``bbregister``)
 
@@ -481,26 +425,28 @@ Excessive deviation will result in rejecting the BBR refinement and accepting th
 
 Resampling BOLD runs onto standard spaces
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.bold.resampling.init_bold_std_trans_wf`
+:py:func:`~fmriprep.workflows.bold.resampling.init_bold_std_trans_wf`
 
 .. workflow::
     :graph2use: colored
     :simple_form: yes
 
-    from collections import OrderedDict
+    from niworkflows.utils.spaces import SpatialReferences
     from fmriprep.workflows.bold import init_bold_std_trans_wf
     wf = init_bold_std_trans_wf(
         freesurfer=True,
         mem_gb=3,
         omp_nthreads=1,
-        standard_spaces=OrderedDict([('MNI152Lin', {}),
-                                     ('fsaverage', {'density': '10k'})]),
+        spaces=SpatialReferences(
+            spaces=[('MNI152Lin', {}), ('MNIPediatricAsym', {'cohort': '6'})],
+            checkpoint=True),
     )
 
 This sub-workflow concatenates the transforms calculated upstream (see
 `Head-motion estimation`_, `Susceptibility Distortion Correction (SDC)`_ --if
 fieldmaps are available--, `EPI to T1w registration`_, and an anatomical-to-standard
-transform from `T1w/T2w preprocessing`_) to map the :abbr:`EPI (echo-planar imaging)`
+transform from `Preprocessing of structural MRI`_) to map the
+:abbr:`EPI (echo-planar imaging)`
 image to the standard spaces given by the ``--output-spaces`` argument
 (see :ref:`output-spaces`).
 It also maps the T1w-based mask to each of those standard spaces.
@@ -511,10 +457,9 @@ step, so as little information is lost as possible.
 The output space grid can be specified using modifiers to the ``--output-spaces``
 argument.
 
-
 EPI sampled to FreeSurfer surfaces
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.bold.resampling.init_bold_surf_wf`
+:py:func:`~fmriprep.workflows.bold.resampling.init_bold_surf_wf`
 
 .. workflow::
     :graph2use: colored
@@ -523,8 +468,7 @@ EPI sampled to FreeSurfer surfaces
     from fmriprep.workflows.bold import init_bold_surf_wf
     wf = init_bold_surf_wf(
         mem_gb=1,
-        output_spaces=['T1w', 'fsnative',
-                       'template', 'fsaverage5'],
+        surface_spaces=['fsnative', 'fsaverage5'],
         medial_surface_nan=False)
 
 If FreeSurfer processing is enabled, the motion-corrected functional series
@@ -537,11 +481,20 @@ Surfaces are generated for the "subject native" surface, as well as transformed 
 ``fsaverage`` template space.
 All surface outputs are in GIFTI format.
 
+HCP Grayordinates
+~~~~~~~~~~~~~~~~~
+If CIFTI output is enabled, the motion-corrected functional timeseries (in T1w space) is first
+sampled to the high resolution 164k vertex (per hemisphere) ``fsaverage``. Following that,
+the resampled timeseries is sampled to `HCP Pipelines_`'s ``fsLR`` mesh (with the left and
+right hemisphere aligned) using `Connectome Workbench`_'s ``-metric-resample`` to generate a
+surface timeseries for each hemisphere. These surfaces are then combined with corresponding
+volumetric timeseries to create a CIFTI2 file.
+
 .. _bold_confounds:
 
 Confounds estimation
 ~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.bold.confounds.init_bold_confs_wf`
+:py:func:`~fmriprep.workflows.bold.confounds.init_bold_confs_wf`
 
 .. workflow::
     :graph2use: colored
@@ -568,10 +521,9 @@ and, if the ``--use-aroma`` flag is enabled, the noise components identified by 
 (those to be removed by the "aggressive" denoising strategy).
 Particular details about ICA-AROMA are given below.
 
-
 ICA-AROMA
 ~~~~~~~~~
-:mod:`fmriprep.workflows.bold.confounds.init_ica_aroma_wf`
+:py:func:`~fmriprep.workflows.bold.confounds.init_ica_aroma_wf`
 
 ICA-AROMA denoising is performed in ``MNI152NLin6Asym`` space, which is automatically
 added to the list of ``--output-spaces`` if it was not already requested by the user.
@@ -583,7 +535,7 @@ By default, dimensionality is limited to a maximum of 200 components.
 To override this upper limit one may specify the number of components to be extracted
 with ``--aroma-melodic-dimensionality``.
 Further details on the implementation are given within the workflow generation
-function (:mod:`fmriprep.workflows.bold.confounds.init_ica_aroma_wf`).
+function (:py:func:`~fmriprep.workflows.bold.confounds.init_ica_aroma_wf`).
 
 *Note*: *non*-aggressive AROMA denoising is a fundamentally different procedure
 from its "aggressive" counterpart and cannot be performed only by using a set of noise
@@ -591,24 +543,23 @@ regressors (a separate GLM with both noise and signal regressors needs to be use
 Therefore instead of regressors, *fMRIPrep* produces *non*-aggressive denoised 4D NIFTI
 files in the MNI space:
 
-``*bold_space-MNI152NLin6Asym_desc-smoothAROMAnonaggr_brainmask.nii.gz``
+``*space-MNI152NLin6Asym_desc-smoothAROMAnonaggr_bold.nii.gz``
 
 Additionally, the MELODIC mix and noise component indices will
 be generated, so non-aggressive denoising can be manually performed in the T1w space with ``fsl_regfilt``, *e.g.*::
 
-    fsl_regfilt -i sub-<subject_label>_task-<task_id>_bold_space-T1w_preproc.nii.gz \
-        -f $(cat sub-<subject_label>_task-<task_id>_bold_AROMAnoiseICs.csv) \
-        -d sub-<subject_label>_task-<task_id>_bold_MELODICmix.tsv \
-        -o sub-<subject_label>_task-<task_id>_bold_space-<space>_AromaNonAggressiveDenoised.nii.gz
+    fsl_regfilt -i sub-<subject_label>_task-<task_id>_space-T1w_desc-preproc_bold.nii.gz \
+        -f $(cat sub-<subject_label>_task-<task_id>_AROMAnoiseICs.csv) \
+        -d sub-<subject_label>_task-<task_id>_desc-MELODIC_mixing.tsv \
+        -o sub-<subject_label>_task-<task_id>_space-T1w_desc-AROMAnonaggr_bold.nii.gz
 
 *Note*: The non-steady state volumes are removed for the determination of components in melodic.
-Therefore ``*MELODICmix.tsv`` may have zero padded rows to account for the volumes not used in
+Therefore ``*MELODIC_mixing.tsv`` may have zero padded rows to account for the volumes not used in
 melodic's estimation of components.
 
 A visualization of the AROMA component classification is also included in the HTML reports.
 
 .. figure:: _static/aroma.svg
-    :scale: 100%
 
     Maps created with maximum intensity projection (glass brain) with a black
     brain outline.
@@ -616,12 +567,11 @@ A visualization of the AROMA component classification is also included in the HT
     frequency spectrum (bottom in Hertz).
     Components classified as signal in green; noise in red.
 
-
 .. _bold_t2s:
 
 T2* Driven Coregistration
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-:mod:`fmriprep.workflows.bold.t2s.init_bold_t2s_wf`
+:py:func:`~fmriprep.workflows.bold.t2s.init_bold_t2s_wf`
 
 If multi-echo :abbr:`BOLD (blood-oxygen level-dependent)` data is supplied,
 this workflow uses the `tedana`_ `T2* workflow`_ to generate an adaptive T2* map
@@ -631,6 +581,3 @@ preprocessing steps.
 Optionally, if the ``--t2s-coreg`` flag is supplied, the T2* map is then used
 in place of the :ref:`BOLD reference image <bold_ref>` to
 :ref:`register the BOLD series to the T1w image <bold_reg>` of the same subject.
-
-.. _tedana: https://github.com/me-ica/tedana
-.. _`T2* workflow`: https://tedana.readthedocs.io/en/latest/generated/tedana.workflows.t2smap_workflow.html#tedana.workflows.t2smap_workflow  # noqa

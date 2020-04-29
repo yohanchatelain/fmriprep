@@ -18,10 +18,9 @@ import sys
 import os
 import re
 import subprocess
-from warnings import warn
 
 __version__ = '99.99.99'
-__copyright__ = 'Copyright 2019, Center for Reproducible Neuroscience, Stanford University'
+__copyright__ = 'Copyright 2020, Center for Reproducible Neuroscience, Stanford University'
 __credits__ = ['Craig Moodie', 'Ross Blair', 'Oscar Esteban', 'Chris Gorgolewski',
                'Shoshana Berleant', 'Christopher J. Markiewicz', 'Russell A. Poldrack']
 __bugreports__ = 'https://github.com/poldracklab/fmriprep/issues'
@@ -31,6 +30,30 @@ MISSING = """
 Image '{}' is missing
 Would you like to download? [Y/n] """
 PKG_PATH = '/usr/local/miniconda/lib/python3.7/site-packages'
+TF_TEMPLATES = (
+    'MNI152Lin',
+    'MNI152NLin2009cAsym',
+    'MNI152NLin6Asym',
+    'MNI152NLin6Sym',
+    'MNIInfant',
+    'MNIPediatricAsym',
+    'NKI',
+    'OASIS30ANTs',
+    'PNC',
+    'UNCInfant',
+    'fsLR',
+    'fsaverage',
+    'fsaverage5',
+    'fsaverage6',
+)
+NONSTANDARD_REFERENCES = (
+    'anat',
+    'T1w',
+    'run',
+    'func',
+    'sbref',
+    'fsnative'
+)
 
 # Monkey-patch Py2 subprocess
 if not hasattr(subprocess, 'DEVNULL'):
@@ -141,8 +164,15 @@ def merge_help(wrapper_help, target_help):
 
     # Make sure we're not clobbering options we don't mean to
     overlap = set(w_flags).intersection(t_flags)
-    expected_overlap = set(['h', 'version', 'w', 'template-resampling-grid',
-                            'fs-license-file', 'use-plugin'])
+    expected_overlap = {
+        'anat-derivatives',
+        'fs-license-file',
+        'fs-subjects-dir',
+        'h',
+        'use-plugin',
+        'version',
+        'w',
+    }
 
     assert overlap == expected_overlap, "Clobbering options: {}".format(
         ', '.join(overlap - expected_overlap))
@@ -187,9 +217,23 @@ def merge_help(wrapper_help, target_help):
     return '\n\n'.join(sections)
 
 
+def is_in_directory(filepath, directory):
+    return os.path.realpath(filepath).startswith(
+        os.path.realpath(directory) + os.sep)
+
+
 def get_parser():
     """Defines the command line interface of the wrapper"""
     import argparse
+
+    class ToDict(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            d = {}
+            for kv in values:
+                k, v = kv.split("=")
+                d[k] = os.path.abspath(v)
+            setattr(namespace, self.dest, d)
+
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -221,22 +265,32 @@ def get_parser():
     g_wrap.add_argument('-w', '--work-dir', action='store', type=os.path.abspath,
                         help='path where intermediate results should be stored')
     g_wrap.add_argument(
-        '--output-grid-reference', required=False, action='store', type=os.path.abspath,
-        help='Deprecated after FMRIPREP 1.0.8. Please use --template-resampling-grid instead.')
-    g_wrap.add_argument(
-        '--template-resampling-grid', required=False, action='store', type=str,
-        help='Keyword ("native", "1mm", or "2mm") or path to an existing file. '
-             'Allows to define a reference grid for the resampling of BOLD images in template '
-             'space. Keyword "native" will use the original BOLD grid as reference. '
-             'Keywords "1mm" and "2mm" will use the corresponding isotropic template '
-             'resolutions. If a path is given, the grid of that image will be used. '
-             'It determines the field of view and resolution of the output images, '
-             'but is not used in normalization.')
+        '--output-spaces', nargs="*",
+        help="""\
+Standard and non-standard spaces to resample anatomical and functional images to. \
+Standard spaces may be specified by the form \
+``<TEMPLATE>[:res-<resolution>][:cohort-<label>][...]``, where ``<TEMPLATE>`` is \
+a keyword (valid keywords: %s) or path pointing to a user-supplied template, and \
+may be followed by optional, colon-separated parameters. \
+Non-standard spaces (valid keywords: %s) imply specific orientations and sampling \
+grids. \
+Important to note, the ``res-*`` modifier does not define the resolution used for \
+the spatial normalization.""" % (', '.join('"%s"' % s for s in TF_TEMPLATES),
+                                 ', '.join(NONSTANDARD_REFERENCES)))
+
     g_wrap.add_argument(
         '--fs-license-file', metavar='PATH', type=os.path.abspath,
         default=os.getenv('FS_LICENSE', None),
         help='Path to FreeSurfer license key file. Get it (for free) by registering'
              ' at https://surfer.nmr.mgh.harvard.edu/registration.html')
+    g_wrap.add_argument(
+        '--fs-subjects-dir', metavar='PATH', type=os.path.abspath,
+        help='Path to existing FreeSurfer subjects directory to reuse. '
+             '(default: OUTPUT_DIR/freesurfer)')
+    g_wrap.add_argument(
+        '--anat-derivatives', metavar='PATH', type=os.path.abspath,
+        help='Path to existing sMRIPrep/fMRIPrep-anatomical derivatives to fasttrack '
+             'the anatomical workflow.')
     g_wrap.add_argument(
         '--use-plugin', metavar='PATH', action='store', default=None,
         type=os.path.abspath, help='nipype plugin configuration file')
@@ -245,15 +299,8 @@ def get_parser():
     g_dev = parser.add_argument_group(
         'Developer options',
         'Tools for testing and debugging FMRIPREP')
-    g_dev.add_argument('-f', '--patch-fmriprep', metavar='PATH',
-                       type=os.path.abspath,
-                       help='working fmriprep repository')
-    g_dev.add_argument('-n', '--patch-niworkflows', metavar='PATH',
-                       type=os.path.abspath,
-                       help='working niworkflows repository')
-    g_dev.add_argument('-p', '--patch-nipype', metavar='PATH',
-                       type=os.path.abspath,
-                       help='working nipype repository')
+    g_dev.add_argument('--patch', nargs="+", metavar="PACKAGE=PATH", action=ToDict,
+                       help='local repository to use within container')
     g_dev.add_argument('--shell', action='store_true',
                        help='open shell in image instead of running FMRIPREP')
     g_dev.add_argument('--config', metavar='PATH', action='store',
@@ -261,7 +308,11 @@ def get_parser():
     g_dev.add_argument('-e', '--env', action='append', nargs=2, metavar=('ENV_VAR', 'value'),
                        help='Set custom environment variable within container')
     g_dev.add_argument('-u', '--user', action='store',
-                       help='Run container as a given user/uid')
+                       help='Run container as a given user/uid. Additionally, group/gid can be'
+                            'assigned, (i.e., --user <UID>:<GID>)')
+    g_dev.add_argument('--network', action='store',
+                       help='Run container with a different network driver '
+                            '("none" to simulate no internet connection)')
 
     return parser
 
@@ -334,11 +385,11 @@ def main():
                'DOCKER_VERSION_8395080871=%s' % docker_version]
 
     # Patch working repositories into installed package directories
-    for pkg in ('fmriprep', 'niworkflows', 'nipype'):
-        repo_path = getattr(opts, 'patch_' + pkg)
-        if repo_path is not None:
-            command.extend(['-v',
-                            '{}:{}/{}:ro'.format(repo_path, PKG_PATH, pkg)])
+    if opts.patch:
+        for pkg, repo_path in opts.patch.items():
+            command.extend(
+                ['-v', '{}:{}/{}:ro'.format(repo_path, PKG_PATH, pkg)]
+            )
 
     if opts.env:
         for envvar in opts.env:
@@ -357,13 +408,32 @@ def main():
         command.extend(['-v', ':'.join((opts.bids_dir, '/data', 'ro'))])
         main_args.append('/data')
     if opts.output_dir:
+        if not os.path.exists(opts.output_dir):
+            # create it before docker does
+            os.makedirs(opts.output_dir)
         command.extend(['-v', ':'.join((opts.output_dir, '/out'))])
         main_args.append('/out')
     main_args.append(opts.analysis_level)
 
+    if opts.fs_subjects_dir:
+        command.extend(['-v', '{}:/opt/subjects'.format(opts.fs_subjects_dir)])
+        unknown_args.extend(['--fs-subjects-dir', '/opt/subjects'])
+
+    if opts.anat_derivatives:
+        command.extend(['-v', '{}:/opt/smriprep/subjects'.format(opts.anat_derivatives)])
+        unknown_args.extend(['--anat-derivatives', '/opt/smriprep/subjects'])
+
     if opts.work_dir:
         command.extend(['-v', ':'.join((opts.work_dir, '/scratch'))])
         unknown_args.extend(['-w', '/scratch'])
+
+    # Check that work_dir is not a child of bids_dir
+    if opts.work_dir and opts.bids_dir:
+        if is_in_directory(opts.work_dir, opts.bids_dir):
+            print(
+                'The selected working directory is a subdirectory of the input BIDS folder. '
+                'Please modify the output path.')
+            return 1
 
     if opts.config:
         command.extend(['-v', ':'.join((
@@ -374,19 +444,25 @@ def main():
                                         'ro'))])
         unknown_args.extend(['--use-plugin', '/tmp/plugin.yml'])
 
-    template_target = opts.template_resampling_grid or opts.output_grid_reference
-    if template_target is not None:
-        if opts.output_grid_reference is not None:
-            warn('Option --output-grid-reference is deprecated, please use '
-                 '--template-resampling-grid', DeprecationWarning)
-        if template_target not in ['native', '2mm' '1mm']:
-            target = '/imports/' + os.path.basename(template_target)
-            command.extend(['-v', ':'.join((os.path.abspath(
-                template_target), target, 'ro'))])
-        unknown_args.extend(['--template-resampling-grid', template_target])
+    if opts.output_spaces:
+        spaces = []
+        for space in opts.output_spaces:
+            if space.split(':')[0] not in (TF_TEMPLATES + NONSTANDARD_REFERENCES):
+                tpl = os.path.basename(space)
+                if not tpl.startswith('tpl-'):
+                    raise RuntimeError("Custom template %s requires a `tpl-` prefix" % tpl)
+                target = '/home/fmriprep/.cache/templateflow/' + tpl
+                command.extend(['-v', ':'.join((os.path.abspath(space), target, 'ro'))])
+                spaces.append(tpl[4:])
+            else:
+                spaces.append(space)
+        unknown_args.extend(['--output-spaces'] + spaces)
 
     if opts.shell:
         command.append('--entrypoint=bash')
+
+    if opts.network:
+        command.append('--network=' + opts.network)
 
     command.append(opts.image)
 

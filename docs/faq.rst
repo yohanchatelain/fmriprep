@@ -6,7 +6,6 @@ FAQ, Tips, and Tricks
 
 Should I run quality control of my images before running *fMRIPrep*?
 --------------------------------------------------------------------
-
 Yes. You should do so before any processing/analysis takes place.
 
 Oftentimes (more often than we would like), images have fatal artifacts and problems.
@@ -27,7 +26,6 @@ some kind of preprocessing (see next question).
 
 What if I find some images have undergone some pre-processing already (e.g., my T1w image is already skull-stripped)?
 ---------------------------------------------------------------------------------------------------------------------
-
 These images imply an unknown level of preprocessing (e.g. was it already bias-field corrected?),
 which makes it difficult to decide on best-practices for further processing.
 Hence, supporting such images was considered very low priority for *fMRIPrep*.
@@ -40,7 +38,6 @@ reverting to the original, defaced, T1w images to ensure more uniform preprocess
 
 My *fMRIPrep* run is hanging...
 -------------------------------
-
 When running on Linux platforms (or containerized environments, because they are built around
 Ubuntu), there is a Python bug that affects *fMRIPrep* that drives the Linux kernel to kill
 processes as a response to running out of memory.
@@ -60,10 +57,16 @@ Please find more information regarding this error from discussions on
 
 Additionally, consider using the ``--low-mem`` flag, which will make some memory optimizations at the cost of disk space in the working directory.
 
+I have already run ``recon-all`` on my subjects, can I reuse my outputs?
+------------------------------------------------------------------------
+Yes, as long as the FreeSurfer_ version previously used was ``6.0.0`` or newer.
+If running with FreeSurfer, *fMRIPrep* checks if the output directory contains a ``freesurfer``
+directory and reuses the outputs found.
+Alternatively, you can use the ``--fs-subjects-dir`` flag to specify a different location for the existing FreeSurfer outputs.
+
 ERROR: it appears that ``recon-all`` is already running
 -------------------------------------------------------
-
-When running FreeSurfer_'s ``recon-all``, an error may say *it appears it is already running*.
+When running FreeSurfer's ``recon-all``, an error may say *it appears it is already running*.
 FreeSurfer creates files (called ``IsRunning.{rh,lh,lh+rh}``, under the ``scripts/`` folder)
 to determine whether it is already executing ``recon-all`` on that particular subject
 in another process, compute node, etc.
@@ -109,15 +112,12 @@ The output you get from fMRIPrep will contain something like: ::
 
   Return code: 1
 
-
 As suggested by the ``recon-all`` output message, deleting these files will enable
 FreeSurfer to execute ``recon-all`` again.
 In general, please be cautious of deleting files and mindful why a file may exist.
 
-
 Running subjects in parallel
 ----------------------------
-
 When running several subjects in parallel, and depending on your settings, fMRIPrep may
 fall into race conditions.
 A symptomatic output looks like: ::
@@ -130,7 +130,7 @@ If you would like to run *fMRIPrep* in parallel on multiple subjects please use
 How much CPU time and RAM should I allocate for a typical fMRIPrep run?
 -----------------------------------------------------------------------
 The recommended way to run fMRIPrep is to process one subject per container instance. A typical preprocessing run
-without surface processing with freesurfer can be completed in about 2 hours with 4 CPUs or in about 1 hour with 16 CPUs.
+without surface processing with FreeSurfer can be completed in about 2 hours with 4 CPUs or in about 1 hour with 16 CPUs.
 More than 16 CPUs do not translate into faster processing times for a single subject. About 8GB of memory should be
 available for a single subject preprocessing run.
 
@@ -138,7 +138,6 @@ Below are some benchmark data that have been computed on a high performance clus
 CPUs and 64 GB of physical memory:
 
 .. figure:: _static/fmriprep_benchmark.svg
-    :scale: 100%
 
 **Compute Time**: time in hours to complete the preprocessing for all subjects. **Physical Memory**: the maximum of RAM usage
 used across all fMRIPrep processes as reported by the HCP job manager. **Virtual Memory**: the maximum of virtual memory used
@@ -155,7 +154,6 @@ number of CPUs divided by the number of subjects is most efficient.
 
 A new version of *fMRIPrep* has been published, when should I upgrade?
 ----------------------------------------------------------------------
-
 We follow a philosophy of releasing very often, although the pace is slowing down
 with the maturation of the software.
 It is very likely that your version gets outdated over the extent of your study.
@@ -169,3 +167,121 @@ using the latest version of the tool.
 In any case, if you can find your release listed as *flagged* in `this file
 of our repo <https://github.com/poldracklab/fmriprep/blob/master/.versions.json>`__,
 then please update as soon as possible.
+
+I'm running *fMRIPrep* via Singularity containers - how can I troubleshoot problems?
+------------------------------------------------------------------------------------
+We have extended `this documentation <singularity.html>`__ to cover some of the most
+frequent issues other Singularity users have been faced with.
+Generally, users have found it hard to `get TemplateFlow and Singularity to work
+together <singularity.html#singularity-tf>`__.
+
+What is *TemplateFlow* for?
+---------------------------
+*TemplateFlow* enables *fMRIPrep* to generate preprocessed outputs spatially normalized to
+a number of different neuroimaging templates (e.g. MNI).
+For further details, please check `its documentation section <spaces.html#templateflow>`__.
+
+.. _tf_no_internet:
+
+How do you use TemplateFlow in the absence of access to the Internet?
+---------------------------------------------------------------------
+This is a fairly common situation in :abbr:`HPCs (high-performance computing)`
+systems, where the so-called login nodes have access to the Internet but
+compute nodes are isolated, or in PC/laptop enviroments if you are travelling.
+*TemplateFlow* will require Internet access the first time it receives a
+query for a template resource that has not been previously accessed.
+If you know what are the templates you are planning to use, you could
+prefetch them using the Python client.
+To do so, follow the next steps.
+
+  1. By default, a mirror of *TemplateFlow* to store the resources will be
+     created in ``$HOME/.cache/templateflow``.
+     You can modify such a configuration with the ``TEMPLATEFLOW_HOME``
+     environment variable, e.g.::
+
+       $ export TEMPLATEFLOW_HOME=$HOME/.templateflow
+
+  2. Install the client within your favorite Python 3 environment (this can
+     be done in your login-node, or in a host with Internet access,
+     without need for Docker/Singularity)::
+
+       $ python -m pip install -U templateflow
+
+  3. Use the ``get()`` utility of the client to pull down all the templates you'll
+     want to use. For example::
+
+       $ python -c "from templateflow.api import get; get(['MNI152NLin2009cAsym', 'MNI152NLin6Asym', 'OASIS30ANTs', 'MNIPediatricAsym', 'MNIInfant'])"
+
+After getting the resources you'll need, you will just need to make sure your
+runtime environment is able to access the filesystem, at the location of your
+*TemplateFlow home* directory.
+If you are a Singularity user, please check out :ref:`singularity_tf`.
+
+How do I select only certain files to be input to fMRIPrep?
+-----------------------------------------------------------
+Using the ``--bids-filter-file`` flag, you can pass fMRIPrep a JSON file that
+describes a custom BIDS filter for selecting files with PyBIDS, with the syntax
+``{<query>: {<entity>: <filter>, ...},...}``. For example::
+
+  {
+      "t1w": {
+          "datatype": "anat",
+          "session": "02",
+          "acquisition": null,
+          "suffix": "T1w"
+      },
+      "bold": {
+          "datatype": "func",
+          "session": "02",
+          "suffix": "bold"
+      }
+  }
+
+fMRIPrep uses the following queries, by default::
+
+  {
+    'fmap': {'datatype': 'fmap'},
+    'bold': {'datatype': 'func', 'suffix': 'bold'},
+    'sbref': {'datatype': 'func', 'suffix': 'sbref'},
+    'flair': {'datatype': 'anat', 'suffix': 'FLAIR'},
+    't2w': {'datatype': 'anat', 'suffix': 'T2w'},
+    't1w': {'datatype': 'anat', 'suffix': 'T1w'},
+    'roi': {'datatype': 'anat', 'suffix': 'roi'},
+  }
+
+Only modifications of these queries will have any effect. You may filter on any entity defined
+in the the PyBIDS
+`config file <https://github.com/bids-standard/pybids/blob/master/bids/layout/config/bids.json>`__.
+
+Can *fMRIPrep* continue to run after encountering an error?
+-----------------------------------------------------------
+(Context: `#1756 <https://github.com/poldracklab/fmriprep/issues/1756>`__)
+Yes, although it requires access to previously computed intermediate results.
+*fMRIPrep* is built on top of Nipype_, which uses a temporary folder to store the interim
+results of the workflow.
+*fMRIPrep* provides the ``-w <PATH>`` command line argument to set a customized temporal
+folder (the *working directory*, in the following) for the *Nipype* workflow engine.
+By default, *fMRIPrep* configures the *working directory* to be ``$PWD/work/``.
+Therefore, if your *fMRIPrep* process crashes and you attempt to re-run it reusing
+as much as it could from the previous run, you can either make sure that
+the default ``$PWD/work/`` points to a reasonable, reusable path in your environment or
+configure a better location on your with ``-w <PATH>``.
+
+Can I use *fMRIPrep* for longitudinal studies?
+----------------------------------------------
+As partially indicated before, *fMRIPrep* assumes no substantial anatomical changes happen
+across sessions.
+When substantial changes are expected, special considerations must be taken.
+Some examples follow:
+
+  * Surgery: use only pre-operation sessions for the anatomical data. This will typically be done
+    by omitting post-operation sessions from the inputs to *fMRIPrep*.
+  * Developing and elderly populations: there is currently no standard way of processing these.
+    However, `as suggested by U. Tooley at NeuroStars.org
+    <https://neurostars.org/t/fmriprep-how-to-reuse-longitudinal-and-pre-run-freesurfer/4585/15>`__,
+    it is theoretically possible to leverage the *anatomical fast-track* along with the
+    ``--bids-filters`` option to process sessions fully independently, or grouped by some study-design
+    criteria.
+    Please check the `link
+    <https://neurostars.org/t/fmriprep-how-to-reuse-longitudinal-and-pre-run-freesurfer/4585/15>`__
+    for further information on this approach.

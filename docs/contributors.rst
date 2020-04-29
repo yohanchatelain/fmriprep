@@ -16,7 +16,7 @@ installation_ guide for the basic procedure for running).
 
 It will be assumed the developer has a working repository in
 ``$HOME/projects/fmriprep``, and examples are also given for
-`niworkflows <https://github.com/poldracklab/niworkflows>`_ and
+`niworkflows <https://github.com/nipreps/niworkflows>`_ and
 `nipype`_.
 
 Patching working repositories
@@ -24,7 +24,8 @@ Patching working repositories
 In order to test new code without rebuilding the Docker image, it is
 possible to mount working repositories as source directories within the
 container.
-The `fmriprep-docker`_ script simplifies this for the most common repositories::
+The `Docker wrapper`_ script simplifies this
+for the most common repositories::
 
     -f PATH, --patch-fmriprep PATH
                           working fmriprep repository (default: None)
@@ -131,8 +132,8 @@ version string from the current repository state.
 
 To work in this image, replace ``poldracklab/fmriprep:latest`` with
 ``fmriprep`` in any of the above commands.
-This image may be accessed by the `fmriprep-docker`_ wrapper via the
-``-i`` flag, e.g., ::
+This image may be accessed by the `Docker wrapper`_
+via the ``-i`` flag, e.g., ::
 
     $ fmriprep-docker -i fmriprep --shell
 
@@ -148,7 +149,7 @@ development environment, we have an experimental setup with `code-server
 
 1. Build the Docker image
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-We will use the ``Dockerfile_devel`` file to build 
+We will use the ``Dockerfile_devel`` file to build
 our development docker image::
 
     $ cd $HOME/projects/fmriprep

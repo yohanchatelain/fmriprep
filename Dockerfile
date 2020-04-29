@@ -1,5 +1,5 @@
 # Use Ubuntu 16.04 LTS
-FROM ubuntu:xenial-20161213
+FROM ubuntu:xenial-20200114
 
 # Pre-cache neurodebian key
 COPY docker/files/neurodebian.gpg /usr/local/etc/neurodebian.gpg
@@ -11,7 +11,6 @@ RUN apt-get update && \
                     bzip2 \
                     ca-certificates \
                     xvfb \
-                    cython3 \
                     build-essential \
                     autoconf \
                     libtool \
@@ -76,6 +75,7 @@ RUN apt-get update && \
                     fsl-mni152-templates=5.0.7-2 \
                     afni=16.2.07~dfsg.1-5~nd16.04+1 \
                     convert3d \
+                    connectome-workbench=1.3.2-2~nd16.04+1 \
                     git-annex-standalone && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -105,15 +105,15 @@ RUN apt-get install -y nodejs
 RUN npm install -g svgo
 
 # Installing bids-validator
-RUN npm install -g bids-validator@1.2.3
+RUN npm install -g bids-validator@1.4.0
 
 # Installing and setting up ICA_AROMA
 RUN mkdir -p /opt/ICA-AROMA && \
-  curl -sSL "https://github.com/maartenmennes/ICA-AROMA/archive/v0.4.4-beta.tar.gz" \
+  curl -sSL "https://github.com/oesteban/ICA-AROMA/archive/v0.4.5.tar.gz" \
   | tar -xzC /opt/ICA-AROMA --strip-components 1 && \
   chmod +x /opt/ICA-AROMA/ICA_AROMA.py
 ENV PATH="/opt/ICA-AROMA:$PATH" \
-    AROMA_VERSION="0.4.4-beta"
+    AROMA_VERSION="0.4.5"
 
 # Installing and setting up miniconda
 RUN curl -sSLO https://repo.continuum.io/miniconda/Miniconda3-4.5.11-Linux-x86_64.sh && \
@@ -170,7 +170,11 @@ RUN pip install --no-cache-dir "$( grep templateflow fmriprep-setup.cfg | xargs 
                tfapi.get('MNI152NLin6Asym', atlas=None, resolution=[1, 2], \
                          desc='brain', extension=['.nii', '.nii.gz']); \
                tfapi.get('MNI152NLin2009cAsym', atlas=None, extension=['.nii', '.nii.gz']); \
-               tfapi.get('OASIS30ANTs', extension=['.nii', '.nii.gz']);" && \
+               tfapi.get('OASIS30ANTs', extension=['.nii', '.nii.gz']); \
+               tfapi.get('fsaverage', density='164k', desc='std', suffix='sphere'); \
+               tfapi.get('fsaverage', density='164k', desc='vaavg', suffix='midthickness'); \
+               tfapi.get('fsLR', density='32k'); \
+               tfapi.get('MNI152NLin6Asym', resolution=2, atlas='HCP', suffix='dseg')" && \
     rm fmriprep-setup.cfg && \
     find $HOME/.cache/templateflow -type d -exec chmod go=u {} + && \
     find $HOME/.cache/templateflow -type f -exec chmod go=u {} +

@@ -17,7 +17,6 @@ from nipype.interfaces.base import (
     File, Directory, InputMultiObject, Str, isdefined,
     SimpleInterface)
 from nipype.interfaces import freesurfer as fs
-from niworkflows.utils.bids import BIDS_NAME
 
 
 SUBJECT_TEMPLATE = """\
@@ -32,16 +31,22 @@ SUBJECT_TEMPLATE = """\
 \t</ul>
 """
 
-FUNCTIONAL_TEMPLATE = """\t\t<h3 class="elem-title">Summary</h3>
+FUNCTIONAL_TEMPLATE = """\
+\t\t<details open>
+\t\t<summary>Summary</summary>
 \t\t<ul class="elem-desc">
 \t\t\t<li>Repetition time (TR): {tr:.03g}s</li>
 \t\t\t<li>Phase-encoding (PE) direction: {pedir}</li>
 \t\t\t<li>Slice timing correction: {stc}</li>
 \t\t\t<li>Susceptibility distortion correction: {sdc}</li>
 \t\t\t<li>Registration: {registration}</li>
-\t\t\t<li>Confounds collected: {confounds}</li>
 \t\t\t<li>Non-steady-state volumes: {dummy_scan_desc}</li>
 \t\t</ul>
+\t\t</details>
+\t\t<details>
+\t\t\t<summary>Confounds collected</summary><br />
+\t\t\t<p>{confounds}.</p>
+\t\t</details>
 """
 
 ABOUT_TEMPLATE = """\t<ul>
@@ -100,6 +105,8 @@ class SubjectSummary(SummaryInterface):
         return super(SubjectSummary, self)._run_interface(runtime)
 
     def _generate_segment(self):
+        from niworkflows.utils.bids import BIDS_NAME
+
         if not isdefined(self.inputs.subjects_dir):
             freesurfer_status = 'Not run'
         else:
