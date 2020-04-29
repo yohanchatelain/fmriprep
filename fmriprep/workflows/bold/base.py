@@ -453,10 +453,13 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('outputnode.bold_mask', 'inputnode.epi_mask')]),
         (bold_sdc_wf, bold_t1_trans_wf, [
             ('outputnode.out_warp', 'inputnode.fieldwarp'),
-            ('outputnode.epi_mask', 'inputnode.ref_bold_mask')]),
+            ('outputnode.epi_mask', 'inputnode.ref_bold_mask'),
+            ('outputnode.epi_brain', 'inputnode.ref_bold_brain')]),
         (bold_sdc_wf, bold_bold_trans_wf, [
             ('outputnode.out_warp', 'inputnode.fieldwarp'),
             ('outputnode.epi_mask', 'inputnode.bold_mask')]),
+        (bold_sdc_wf, bold_reg_wf, [
+            ('outputnode.epi_brain', 'inputnode.ref_bold_brain')]),
         (bold_sdc_wf, summary, [('outputnode.method', 'distortion_correction')]),
         # Connect bold_confounds_wf
         (inputnode, bold_confounds_wf, [('t1w_tpms', 'inputnode.t1w_tpms'),
@@ -481,14 +484,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('outputnode.xforms', 'inputnode.hmc_xforms')]),
         # Summary
         (outputnode, summary, [('confounds', 'confounds_file')]),
-    ])
-
-    workflow.connect([
-        (bold_sdc_wf, bold_reg_wf, [
-            ('outputnode.epi_brain', 'inputnode.ref_bold_brain')]),
-        (bold_sdc_wf, bold_t1_trans_wf, [
-            ('outputnode.epi_brain', 'inputnode.ref_bold_brain'),
-            ('outputnode.epi_mask', 'inputnode.ref_bold_mask')]),
     ])
 
     # for standard EPI data, pass along correct file
