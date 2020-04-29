@@ -453,7 +453,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('outputnode.bold_mask', 'inputnode.epi_mask')]),
         (bold_sdc_wf, bold_t1_trans_wf, [
             ('outputnode.out_warp', 'inputnode.fieldwarp'),
-            ('outputnode.bold_mask', 'inputnode.ref_bold_mask')]),
+            ('outputnode.epi_mask', 'inputnode.ref_bold_mask')]),
         (bold_sdc_wf, bold_bold_trans_wf, [
             ('outputnode.out_warp', 'inputnode.fieldwarp'),
             ('outputnode.epi_mask', 'inputnode.bold_mask')]),
