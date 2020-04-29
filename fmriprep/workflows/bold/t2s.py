@@ -54,10 +54,6 @@ def init_bold_t2s_wf(echo_times, mem_gb, omp_nthreads,
     -------
     bold
         the optimally combined time series for all supplied echos
-    bold_mask
-        the binarized, skull-stripped adaptive T2* map
-    bold_ref_brain
-        the adaptive T2* map
 
     """
     from niworkflows.engine.workflows import LiterateWorkflow as Workflow
@@ -75,8 +71,7 @@ The optimally combined time series was carried forward as the *preprocessed BOLD
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['bold_file']), name='inputnode')
 
-    outputnode = pe.Node(niu.IdentityInterface(fields=['bold', 'bold_ref_brain']),
-                         name='outputnode')
+    outputnode = pe.Node(niu.IdentityInterface(fields=['bold']), name='outputnode')
 
     LOGGER.log(25, 'Generating T2* map and optimally combined ME-EPI time series.')
 
@@ -84,9 +79,7 @@ The optimally combined time series was carried forward as the *preprocessed BOLD
 
     workflow.connect([
         (inputnode, t2smap_node, [('bold_file', 'in_files')]),
-        (t2smap_node, outputnode, [
-            ('optimal_comb', 'bold'),
-            ('t2star_map', 'bold_ref_brain')]),
+        (t2smap_node, outputnode, [('optimal_comb', 'bold')]),
     ])
 
     return workflow
