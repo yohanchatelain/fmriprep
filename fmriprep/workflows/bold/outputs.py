@@ -256,7 +256,7 @@ def init_func_derivatives_wf(
 
     fs_outputs = spaces.cached.get_fs_spaces()
     if freesurfer and fs_outputs:
-        from niworkflows.interfaces.surf import GiftiNameSource
+        from niworkflows.interfaces.surf import Path2BIDS
 
         select_fs_surf = pe.Node(KeySelect(
             fields=['surfaces', 'surf_kwargs']), name='select_fs_surf',
@@ -264,16 +264,14 @@ def init_func_derivatives_wf(
         select_fs_surf.iterables = [('key', fs_outputs)]
         select_fs_surf.inputs.surf_kwargs = [{'space': s} for s in fs_outputs]
 
-        name_surfs = pe.MapNode(GiftiNameSource(
-            pattern=r'(?P<LR>[lr])h.\w+',
-            template='space-{space}_hemi-{LR}.func'),
-            iterfield=['in_file'], name='name_surfs',
-            mem_gb=DEFAULT_MEMORY_MIN_GB, run_without_submitting=True)
+        name_surfs = pe.MapNode(Path2BIDS(pattern=r'(?P<hemi>[lr])h.\w+'),
+                                iterfield='in_file', name='name_surfs',
+                                run_without_submitting=True)
 
-        ds_bold_surfs = pe.MapNode(DerivativesDataSink(base_directory=output_dir),
-                                   iterfield=['in_file', 'suffix'], name='ds_bold_surfs',
-                                   run_without_submitting=True,
-                                   mem_gb=DEFAULT_MEMORY_MIN_GB)
+        ds_bold_surfs = pe.MapNode(DerivativesDataSink(
+            base_directory=output_dir, extension="func.gii"),
+            iterfield=['in_file', 'suffix'], name='ds_bold_surfs',
+            run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
 
         workflow.connect([
             (inputnode, select_fs_surf, [
@@ -282,34 +280,23 @@ def init_func_derivatives_wf(
             (select_fs_surf, name_surfs, [('surfaces', 'in_file'),
                                           ('surf_kwargs', 'template_kwargs')]),
             (inputnode, ds_bold_surfs, [('source_file', 'source_file')]),
-            (select_fs_surf, ds_bold_surfs, [('surfaces', 'in_file')]),
-            (name_surfs, ds_bold_surfs, [('out_name', 'suffix')]),
+            (select_fs_surf, ds_bold_surfs, [('surfaces', 'in_file'),
+                                             ('key', 'space')]),
+            (name_surfs, ds_bold_surfs, [('hemi', 'hemi')]),
         ])
 
     # CIFTI output
     if cifti_output:
-        from niworkflows.interfaces.cifti import CiftiNameSource
-
-        name_cifti = pe.MapNode(
-            CiftiNameSource(), iterfield=['variant', 'density'], name='name_cifti',
-            mem_gb=DEFAULT_MEMORY_MIN_GB, run_without_submitting=True)
-        cifti_bolds = pe.MapNode(
+        ds_bold_cifti = pe.MapNode(
             DerivativesDataSink(base_directory=output_dir, compress=False),
-            iterfield=['in_file', 'suffix'], name='cifti_bolds',
+            iterfield=['in_file', 'suffix'], name='ds_bold_cifti',
             run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
-        cifti_key = pe.MapNode(DerivativesDataSink(
-            base_directory=output_dir), iterfield=['in_file', 'suffix'],
-            name='cifti_key', run_without_submitting=True,
-            mem_gb=DEFAULT_MEMORY_MIN_GB)
         workflow.connect([
-            (inputnode, name_cifti, [('cifti_variant', 'variant'),
-                                     ('cifti_density', 'density')]),
-            (inputnode, cifti_bolds, [('bold_cifti', 'in_file'),
-                                      ('source_file', 'source_file'),
-                                      ('cifti_density', 'density')]),
-            (name_cifti, cifti_key, [('out_name', 'suffix')]),
-            (inputnode, cifti_key, [('source_file', 'source_file'),
-                                    ('cifti_metadata', 'in_file')]),
+            (inputnode, ds_bold_cifti, [('bold_cifti', 'in_file'),
+                                        ('source_file', 'source_file'),
+                                        ('cifti_variant', 'space'),
+                                        ('cifti_density', 'density'),
+                                        (('cifti_metadata', _read_json), 'meta_dict')])
         ])
 
     return workflow
@@ -382,3 +369,9 @@ def init_bold_preproc_report_wf(mem_gb, reportlets_dir, name='bold_preproc_repor
     ])
 
     return workflow
+
+
+def _read_json(in_file):
+    from pathlib import Path
+    from json import loads
+    return loads(Path(in_file).read_text())
