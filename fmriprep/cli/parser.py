@@ -99,6 +99,11 @@ def _build_parser():
              "https://fmriprep.readthedocs.io/en/%s/faq.html#"
              "how-do-I-select-only-certain-files-to-be-input-to-fMRIPrep" % (
                  currentv.base_version if is_release else 'latest'))
+    g_bids.add_argument(
+        "--anat-derivatives", action='store', metavar="PATH", type=PathExists,
+        help="Reuse the anatomical derivatives from another fMRIPrep run or calculated "
+             "with an alternative processing tool (NOT RECOMMENDED)."
+    )
 
     g_perfm = parser.add_argument_group('Options to handle performance')
     g_perfm.add_argument(
@@ -178,6 +183,10 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (currentv.base_version
     g_conf.add_argument(
         '--dummy-scans', required=False, action='store', default=None, type=int,
         help='Number of non steady state volumes.')
+    g_conf.add_argument(
+        '--random-seed', action='store', type=int, default=None,
+        help='Initialize the random seed for the workflow'
+    )
 
     # ICA_AROMA options
     g_aroma = parser.add_argument_group('Specific options for running ICA_AROMA')
@@ -214,7 +223,8 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html""" % (currentv.base_version
         help='select a template for skull-stripping with antsBrainExtraction')
     g_ants.add_argument('--skull-strip-fixed-seed', action='store_true',
                         help='do not use a random seed for skull-stripping - will ensure '
-                             'run-to-run replicability when used with --omp-nthreads 1')
+                             'run-to-run replicability when used with --omp-nthreads 1 and '
+                             'matching --random-seed <int>')
     g_ants.add_argument(
         '--skull-strip-t1w', action='store', choices=('auto', 'skip', 'force'), default='force',
         help="determiner for T1-weighted skull stripping ('force' ensures skull "

@@ -98,6 +98,8 @@ def init_bold_confs_wf(
         BOLD series mask
     movpar_file
         SPM-formatted motion parameters file
+    rmsd_file
+        Framewise displacement as measured by ``fsl_motion_outliers``.
     skip_vols
         number of non steady state volumes
     t1w_mask
@@ -140,6 +142,9 @@ def init_bold_confs_wf(
 Several confounding time-series were calculated based on the
 *preprocessed BOLD*: framewise displacement (FD), DVARS and
 three region-wise global signals.
+FD was computed using two formulations following Power (absolute sum of
+relative motions, @power_fd_dvars) and Jenkinson (relative root mean square
+displacement between affines, @mcflirt).
 FD and DVARS are calculated for each functional run, both using their
 implementations in *Nipype* [following the definitions by @power_fd_dvars].
 The three global signals are extracted within the CSF, the WM, and
@@ -173,8 +178,8 @@ Frames that exceeded a threshold of {fd} mm FD or {dv} standardised DVARS
 were annotated as motion outliers.
 """.format(fd=regressors_fd_th, dv=regressors_dvars_th)
     inputnode = pe.Node(niu.IdentityInterface(
-        fields=['bold', 'bold_mask', 'movpar_file', 'skip_vols',
-                't1w_mask', 't1w_tpms', 't1_bold_xform']),
+        fields=['bold', 'bold_mask', 'movpar_file', 'rmsd_file',
+                'skip_vols', 't1w_mask', 't1w_tpms', 't1_bold_xform']),
         name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['confounds_file', 'confounds_metadata']),
@@ -258,6 +263,9 @@ were annotated as motion outliers.
     add_motion_headers = pe.Node(
         AddTSVHeader(columns=["trans_x", "trans_y", "trans_z", "rot_x", "rot_y", "rot_z"]),
         name="add_motion_headers", mem_gb=0.01, run_without_submitting=True)
+    add_rmsd_header = pe.Node(
+        AddTSVHeader(columns=["rmsd"]),
+        name="add_rmsd_header", mem_gb=0.01, run_without_submitting=True)
     concat = pe.Node(GatherConfounds(), name="concat", mem_gb=0.01, run_without_submitting=True)
 
     # CompCor metadata
@@ -382,6 +390,7 @@ were annotated as motion outliers.
 
         # Collate computed confounds together
         (inputnode, add_motion_headers, [('movpar_file', 'in_file')]),
+        (inputnode, add_rmsd_header, [('rmsd_file', 'in_file')]),
         (dvars, add_dvars_header, [('out_nstd', 'in_file')]),
         (dvars, add_std_dvars_header, [('out_std', 'in_file')]),
         (signals, concat, [('out_file', 'signals')]),
@@ -390,6 +399,7 @@ were annotated as motion outliers.
                             ('pre_filter_file', 'cos_basis')]),
         (acompcor, concat, [('components_file', 'acompcor')]),
         (add_motion_headers, concat, [('out_file', 'motion')]),
+        (add_rmsd_header, concat, [('out_file', 'rmsd')]),
         (add_dvars_header, concat, [('out_file', 'dvars')]),
         (add_std_dvars_header, concat, [('out_file', 'std_dvars')]),
 

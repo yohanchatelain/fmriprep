@@ -8,6 +8,7 @@ Orchestrating the BOLD-preprocessing workflow
 .. autofunction:: init_func_derivatives_wf
 
 """
+from ... import config
 
 import os
 
@@ -16,7 +17,6 @@ from nipype.interfaces.fsl import Split as FSLSplit
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 
-from ... import config
 from ...utils.meepi import combine_meepi_source
 
 from ...interfaces import DerivativesDataSink
@@ -198,9 +198,9 @@ def init_func_preproc_wf(bold_file):
     fmaps = None
     if 'fieldmaps' not in config.workflow.ignore:
         fmaps = fieldmap_wrangler(layout, ref_file,
-                                  use_syn=config.workflow.use_syn,
+                                  use_syn=config.workflow.use_syn_sdc,
                                   force_syn=config.workflow.force_syn)
-    elif config.workflow.use_syn or config.workflow.force_syn:
+    elif config.workflow.use_syn_sdc or config.workflow.force_syn:
         # If fieldmaps are not enabled, activate SyN-SDC in unforced (False) mode
         fmaps = {'syn': False}
 
@@ -321,14 +321,17 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                                    omp_nthreads=omp_nthreads)
 
     # calculate BOLD registration to T1w
-    bold_reg_wf = init_bold_reg_wf(name='bold_reg_wf',
-                                   freesurfer=freesurfer,
-                                   use_bbr=config.workflow.use_bbr,
-                                   bold2t1w_dof=config.workflow.bold2t1w_dof,
-                                   bold2t1w_init=config.workflow.bold2t1w_init,
-                                   mem_gb=mem_gb['resampled'],
-                                   omp_nthreads=omp_nthreads,
-                                   use_compression=False)
+    bold_reg_wf = init_bold_reg_wf(
+        bold2t1w_dof=config.workflow.bold2t1w_dof,
+        bold2t1w_init=config.workflow.bold2t1w_init,
+        freesurfer=freesurfer,
+        mem_gb=mem_gb['resampled'],
+        name='bold_reg_wf',
+        omp_nthreads=omp_nthreads,
+        sloppy=config.execution.debug,
+        use_bbr=config.workflow.use_bbr,
+        use_compression=False,
+    )
 
     # apply BOLD registration to T1w
     bold_t1_trans_wf = init_bold_t1_trans_wf(name='bold_t1_trans_wf',
@@ -472,7 +475,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         (inputnode, bold_confounds_wf, [('t1w_tpms', 'inputnode.t1w_tpms'),
                                         ('t1w_mask', 'inputnode.t1w_mask')]),
         (bold_hmc_wf, bold_confounds_wf, [
-            ('outputnode.movpar_file', 'inputnode.movpar_file')]),
+            ('outputnode.movpar_file', 'inputnode.movpar_file'),
+            ('outputnode.rmsd_file', 'inputnode.rmsd_file')]),
         (bold_reg_wf, bold_confounds_wf, [
             ('outputnode.itk_t1_to_bold', 'inputnode.t1_bold_xform')]),
         (bold_reference_wf, bold_confounds_wf, [

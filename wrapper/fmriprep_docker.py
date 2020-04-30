@@ -164,8 +164,15 @@ def merge_help(wrapper_help, target_help):
 
     # Make sure we're not clobbering options we don't mean to
     overlap = set(w_flags).intersection(t_flags)
-    expected_overlap = set(['h', 'version', 'w', 'fs-license-file',
-                            'fs-subjects-dir', 'use-plugin'])
+    expected_overlap = {
+        'anat-derivatives',
+        'fs-license-file',
+        'fs-subjects-dir',
+        'h',
+        'use-plugin',
+        'version',
+        'w',
+    }
 
     assert overlap == expected_overlap, "Clobbering options: {}".format(
         ', '.join(overlap - expected_overlap))
@@ -218,6 +225,15 @@ def is_in_directory(filepath, directory):
 def get_parser():
     """Defines the command line interface of the wrapper"""
     import argparse
+
+    class ToDict(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            d = {}
+            for kv in values:
+                k, v = kv.split("=")
+                d[k] = os.path.abspath(v)
+            setattr(namespace, self.dest, d)
+
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -272,6 +288,10 @@ the spatial normalization.""" % (', '.join('"%s"' % s for s in TF_TEMPLATES),
         help='Path to existing FreeSurfer subjects directory to reuse. '
              '(default: OUTPUT_DIR/freesurfer)')
     g_wrap.add_argument(
+        '--anat-derivatives', metavar='PATH', type=os.path.abspath,
+        help='Path to existing sMRIPrep/fMRIPrep-anatomical derivatives to fasttrack '
+             'the anatomical workflow.')
+    g_wrap.add_argument(
         '--use-plugin', metavar='PATH', action='store', default=None,
         type=os.path.abspath, help='nipype plugin configuration file')
 
@@ -279,15 +299,8 @@ the spatial normalization.""" % (', '.join('"%s"' % s for s in TF_TEMPLATES),
     g_dev = parser.add_argument_group(
         'Developer options',
         'Tools for testing and debugging FMRIPREP')
-    g_dev.add_argument('-f', '--patch-fmriprep', metavar='PATH',
-                       type=os.path.abspath,
-                       help='working fmriprep repository')
-    g_dev.add_argument('-n', '--patch-niworkflows', metavar='PATH',
-                       type=os.path.abspath,
-                       help='working niworkflows repository')
-    g_dev.add_argument('-p', '--patch-nipype', metavar='PATH',
-                       type=os.path.abspath,
-                       help='working nipype repository')
+    g_dev.add_argument('--patch', nargs="+", metavar="PACKAGE=PATH", action=ToDict,
+                       help='local repository to use within container')
     g_dev.add_argument('--shell', action='store_true',
                        help='open shell in image instead of running FMRIPREP')
     g_dev.add_argument('--config', metavar='PATH', action='store',
@@ -295,7 +308,8 @@ the spatial normalization.""" % (', '.join('"%s"' % s for s in TF_TEMPLATES),
     g_dev.add_argument('-e', '--env', action='append', nargs=2, metavar=('ENV_VAR', 'value'),
                        help='Set custom environment variable within container')
     g_dev.add_argument('-u', '--user', action='store',
-                       help='Run container as a given user/uid')
+                       help='Run container as a given user/uid. Additionally, group/gid can be'
+                            'assigned, (i.e., --user <UID>:<GID>)')
     g_dev.add_argument('--network', action='store',
                        help='Run container with a different network driver '
                             '("none" to simulate no internet connection)')
@@ -371,11 +385,11 @@ def main():
                'DOCKER_VERSION_8395080871=%s' % docker_version]
 
     # Patch working repositories into installed package directories
-    for pkg in ('fmriprep', 'niworkflows', 'nipype'):
-        repo_path = getattr(opts, 'patch_' + pkg)
-        if repo_path is not None:
-            command.extend(['-v',
-                            '{}:{}/{}:ro'.format(repo_path, PKG_PATH, pkg)])
+    if opts.patch:
+        for pkg, repo_path in opts.patch.items():
+            command.extend(
+                ['-v', '{}:{}/{}:ro'.format(repo_path, PKG_PATH, pkg)]
+            )
 
     if opts.env:
         for envvar in opts.env:
@@ -394,6 +408,9 @@ def main():
         command.extend(['-v', ':'.join((opts.bids_dir, '/data', 'ro'))])
         main_args.append('/data')
     if opts.output_dir:
+        if not os.path.exists(opts.output_dir):
+            # create it before docker does
+            os.makedirs(opts.output_dir)
         command.extend(['-v', ':'.join((opts.output_dir, '/out'))])
         main_args.append('/out')
     main_args.append(opts.analysis_level)
@@ -401,6 +418,10 @@ def main():
     if opts.fs_subjects_dir:
         command.extend(['-v', '{}:/opt/subjects'.format(opts.fs_subjects_dir)])
         unknown_args.extend(['--fs-subjects-dir', '/opt/subjects'])
+
+    if opts.anat_derivatives:
+        command.extend(['-v', '{}:/opt/smriprep/subjects'.format(opts.anat_derivatives)])
+        unknown_args.extend(['--anat-derivatives', '/opt/smriprep/subjects'])
 
     if opts.work_dir:
         command.extend(['-v', ':'.join((opts.work_dir, '/scratch'))])
