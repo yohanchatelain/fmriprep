@@ -638,7 +638,7 @@ def init_bold_preproc_report_wf(mem_gb, reportlets_dir, name='bold_preproc_repor
                        mem_gb=0.1)
     ds_report_bold = pe.Node(
         DerivativesDataSink(base_directory=reportlets_dir, desc='preproc',
-                            keep_dtype=True), name='ds_report_bold',
+                            datatype="figures"), name='ds_report_bold',
         mem_gb=DEFAULT_MEMORY_MIN_GB,
         run_without_submitting=True
     )

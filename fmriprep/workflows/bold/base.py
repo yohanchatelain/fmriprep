@@ -151,6 +151,7 @@ def init_func_preproc_wf(bold_file):
     omp_nthreads = config.nipype.omp_nthreads
     freesurfer = config.workflow.run_reconall
     spaces = config.workflow.spaces
+    output_dir = str(config.execution.output_dir)
 
     if multiecho:
         tes = [layout.get_metadata(echo)['EchoTime'] for echo in bold_file]
@@ -265,7 +266,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         cifti_output=config.workflow.cifti_output,
         freesurfer=freesurfer,
         metadata=metadata,
-        output_dir=str(config.execution.output_dir),
+        output_dir=output_dir,
         spaces=spaces,
         use_aroma=config.workflow.use_aroma,
     )
@@ -805,15 +806,14 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         ])
 
     # REPORTING ############################################################
-    reportlets_dir = str(config.execution.work_dir / 'reportlets')
     ds_report_summary = pe.Node(
-        DerivativesDataSink(desc='summary', keep_dtype=True),
+        DerivativesDataSink(desc='summary', datatype="figures"),
         name='ds_report_summary', run_without_submitting=True,
         mem_gb=config.DEFAULT_MEMORY_MIN_GB)
 
     ds_report_validation = pe.Node(
-        DerivativesDataSink(base_directory=reportlets_dir,
-                            desc='validation', keep_dtype=True),
+        DerivativesDataSink(base_directory=output_dir,
+                            desc='validation', datatype="figures"),
         name='ds_report_validation', run_without_submitting=True,
         mem_gb=config.DEFAULT_MEMORY_MIN_GB)
 
@@ -826,7 +826,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     # Fill-in datasinks of reportlets seen so far
     for node in workflow.list_node_names():
         if node.split('.')[-1].startswith('ds_report'):
-            workflow.get_node(node).inputs.base_directory = reportlets_dir
+            workflow.get_node(node).inputs.base_directory = output_dir
             workflow.get_node(node).inputs.source_file = ref_file
 
     return workflow

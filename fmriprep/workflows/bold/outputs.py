@@ -162,7 +162,7 @@ def init_func_derivatives_wf(
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_aroma_std = pe.Node(
             DerivativesDataSink(base_directory=output_dir, space='MNI152NLin6Asym',
-                                desc='smoothAROMAnonaggr', keep_dtype=True),
+                                desc='smoothAROMAnonaggr'),
             name='ds_aroma_std', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
 
@@ -305,8 +305,8 @@ def init_func_derivatives_wf(
             (inputnode, name_cifti, [('cifti_variant', 'variant'),
                                      ('cifti_density', 'density')]),
             (inputnode, cifti_bolds, [('bold_cifti', 'in_file'),
-                                      ('source_file', 'source_file')]),
-            (name_cifti, cifti_bolds, [('out_name', 'suffix')]),
+                                      ('source_file', 'source_file'),
+                                      ('cifti_density', 'density')]),
             (name_cifti, cifti_key, [('out_name', 'suffix')]),
             (inputnode, cifti_key, [('source_file', 'source_file'),
                                     ('cifti_metadata', 'in_file')]),

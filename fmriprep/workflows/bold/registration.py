@@ -151,7 +151,7 @@ def init_bold_reg_wf(
 
     if write_report:
         ds_report_reg = pe.Node(
-            DerivativesDataSink(keep_dtype=True),
+            DerivativesDataSink(datatype="figures"),
             name='ds_report_reg', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
 
