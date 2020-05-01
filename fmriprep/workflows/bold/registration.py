@@ -670,13 +670,11 @@ for distortions remaining in the BOLD reference.
     flt_bbr_init = pe.Node(FLIRTRPT(dof=6, generate_report=not use_bbr,
                                     uses_qform=True), name='flt_bbr_init')
 
-    if bold2t1w_init == 'header':
-        # flt_bbr_init.inputs.apply_xfm = True
-        s = 'header-based registrattion initialization not yet supported for FSL'
-        raise NotImplementedError(s)
-    elif bold2t1w_init != 'register':
-        LOGGER.warning("unrecognized bold2t1w-init value '%s'; "
-                       "defaulting to 'register'" % (bold2t1w_init,))
+    if bold2t1w_init not in ("register", "header"):
+        raise ValueError(f"Unknown BOLD-T1w initialization option: {bold2t1w_init}")
+
+    if bold2t1w_init == "header":
+        raise NotImplementedError("Header-based registration initialization not supported for FSL")
 
     invt_bbr = pe.Node(fsl.ConvertXFM(invert_xfm=True), name='invt_bbr',
                        mem_gb=DEFAULT_MEMORY_MIN_GB)
