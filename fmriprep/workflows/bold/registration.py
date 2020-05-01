@@ -469,26 +469,22 @@ Co-registration was configured with {dof} degrees of freedom{reason}.
         niu.IdentityInterface(['itk_bold_to_t1', 'itk_t1_to_bold', 'out_report', 'fallback']),
         name='outputnode')
 
-    if bold2t1w_init == 'register':
-        init_header = False
-    elif bold2t1w_init == 'header':
-        init_header = True
-    else:
-        LOGGER.warning("bold2t1w-init set to '%s'; assuming 'register'" % (bold2t1w_init,))
-        init_header = False
+    if bold2t1w_init not in ("register", "header"):
+        raise ValueError(f"Unknown BOLD-T1w initialization option: {bold2t1w_init}")
 
-    mri_coreg = pe.Node(
-        MRICoregRPT(dof=bold2t1w_dof, sep=[4], ftol=0.0001, linmintol=0.01,
-                    generate_report=not use_bbr, no_cras0=init_header),
-        name='mri_coreg', n_procs=omp_nthreads, mem_gb=5)
+    # For now make BBR unconditional - in the future, we can fall back to identity,
+    # but adding the flexibility without testing seems a bit dangerous
+    if bold2t1w_init == "header":
+        if use_bbr is False:
+            raise ValueError("Cannot disable BBR and use header registration")
+        if use_bbr is None:
+            LOGGER.warning("Initializing BBR with header; affine fallback disabled")
+            use_bbr = True
 
     merge_ltas = pe.Node(niu.Merge(2), name='merge_ltas', run_without_submitting=True)
     concat_xfm = pe.Node(ConcatenateXFMs(inverse=True), name='concat_xfm')
 
     workflow.connect([
-        (inputnode, mri_coreg, [('subjects_dir', 'subjects_dir'),
-                                ('subject_id', 'subject_id'),
-                                ('in_file', 'source_file')]),
         # Output ITK transforms
         (inputnode, merge_ltas, [('fsnative2t1w_xfm', 'in2')]),
         (merge_ltas, concat_xfm, [('out', 'in_xfms')]),
@@ -496,27 +492,45 @@ Co-registration was configured with {dof} degrees of freedom{reason}.
         (concat_xfm, outputnode, [('out_inv', 'itk_t1_to_bold')]),
     ])
 
-    # Short-circuit workflow building, use initial registration
-    if use_bbr is False:
+    # Define both nodes, but only connect conditionally
+    mri_coreg = pe.Node(
+        MRICoregRPT(dof=bold2t1w_dof, sep=[4], ftol=0.0001, linmintol=0.01,
+                    generate_report=not use_bbr),
+        name='mri_coreg', n_procs=omp_nthreads, mem_gb=5)
+
+    bbregister = pe.Node(
+        BBRegisterRPT(dof=bold2t1w_dof, contrast_type='t2', registered_file=True,
+                      out_lta_file=True, generate_report=True),
+        name='bbregister', mem_gb=12)
+
+    # Use mri_coreg
+    if bold2t1w_init == "register":
         workflow.connect([
-            (mri_coreg, outputnode, [('out_report', 'out_report')]),
-            (mri_coreg, merge_ltas, [('out_lta_file', 'in1')])])
-        outputnode.inputs.fallback = True
+            (inputnode, mri_coreg, [('subjects_dir', 'subjects_dir'),
+                                    ('subject_id', 'subject_id'),
+                                    ('in_file', 'source_file')]),
+        ])
 
-        return workflow
+        # Short-circuit workflow building, use initial registration
+        if use_bbr is False:
+            workflow.connect([
+                (mri_coreg, outputnode, [('out_report', 'out_report')]),
+                (mri_coreg, merge_ltas, [('out_lta_file', 'in1')])])
+            outputnode.inputs.fallback = True
 
-    bbregister = BBRegisterRPT(dof=bold2t1w_dof, contrast_type='t2', registered_file=True,
-                               out_lta_file=True, generate_report=True)
-    bbregister = pe.Node(bbregister, name='bbregister', mem_gb=12)
-    if init_header:
-        bbregister.inputs.init = 'header'
+            return workflow
 
+    # Use bbregister
     workflow.connect([
         (inputnode, bbregister, [('subjects_dir', 'subjects_dir'),
                                  ('subject_id', 'subject_id'),
                                  ('in_file', 'source_file')]),
-        (mri_coreg, bbregister, [('out_lta_file', 'init_reg_file')]),
     ])
+
+    if bold2t1w_init == "header":
+        bbregister.inputs.init = "header"
+    else:
+        workflow.connect([(mri_coreg, bbregister, [('out_lta_file', 'init_reg_file')])])
 
     # Short-circuit workflow building, use boundary-based registration
     if use_bbr is True:
@@ -526,6 +540,8 @@ Co-registration was configured with {dof} degrees of freedom{reason}.
         outputnode.inputs.fallback = False
 
         return workflow
+
+    # Only reach this point if bold2t1w_init is "register" and use_bbr is None
 
     transforms = pe.Node(niu.Merge(2), run_without_submitting=True, name='transforms')
     reports = pe.Node(niu.Merge(2), run_without_submitting=True, name='reports')
