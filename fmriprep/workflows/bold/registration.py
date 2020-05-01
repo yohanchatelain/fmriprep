@@ -59,7 +59,8 @@ def init_bold_reg_wf(
                                   mem_gb=3,
                                   omp_nthreads=1,
                                   use_bbr=True,
-                                  bold2t1w_dof=9)
+                                  bold2t1w_dof=9,
+                                  bold2t1w_init='register')
 
     Parameters
     ----------
@@ -396,7 +397,8 @@ def init_bbreg_wf(use_bbr, bold2t1w_dof, bold2t1w_init, omp_nthreads, name='bbre
             :simple_form: yes
 
             from fmriprep.workflows.bold.registration import init_bbreg_wf
-            wf = init_bbreg_wf(use_bbr=True, bold2t1w_dof=9, omp_nthreads=1)
+            wf = init_bbreg_wf(use_bbr=True, bold2t1w_dof=9,
+                               bold2t1w_init='register', omp_nthreads=1)
 
 
     Parameters
@@ -581,7 +583,7 @@ def init_fsl_bbr_wf(use_bbr, bold2t1w_dof, bold2t1w_init, sloppy=False, name='fs
             :simple_form: yes
 
             from fmriprep.workflows.bold.registration import init_fsl_bbr_wf
-            wf = init_fsl_bbr_wf(use_bbr=True, bold2t1w_dof=9)
+            wf = init_fsl_bbr_wf(use_bbr=True, bold2t1w_dof=9, bold2t1w_init='register')
 
 
     Parameters
