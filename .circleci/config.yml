@@ -779,7 +779,7 @@ jobs:
                 --config $PWD/nipype.cfg -w /tmp/${DATASET}/work \
                 /tmp/data/${DATASET} /tmp/${DATASET}/derivatives participant \
                 ${FASTRACK_ARG} \
-                --fs-no-reconall --t2s-coreg --use-syn-sdc \
+                --fs-no-reconall --use-syn-sdc \
                 --dummy-scans 1 --sloppy --write-graph \
                 --output-spaces MNI152NLin2009cAsym \
                 --mem_mb 4096 --nthreads 2 -vv

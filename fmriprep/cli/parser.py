@@ -143,12 +143,6 @@ def _build_parser():
         '--longitudinal', action='store_true',
         help='treat dataset as longitudinal - may increase runtime')
     g_conf.add_argument(
-        '--t2s-coreg', action='store_true',
-        help='If provided with multi-echo BOLD dataset, create T2*-map and perform '
-             'T2*-driven coregistration. When multi-echo data is provided and this '
-             'option is not enabled, standard EPI-T1 coregistration is performed '
-             'using the middle echo.')
-    g_conf.add_argument(
         '--output-spaces', nargs='*', action=OutputReferencesAction,
         help="""\
 Standard and non-standard spaces to resample anatomical and functional images to. \
