@@ -277,8 +277,7 @@ def init_func_derivatives_wf(
             (inputnode, select_fs_surf, [
                 ('surf_files', 'surfaces'),
                 ('surf_refs', 'keys')]),
-            (select_fs_surf, name_surfs, [('surfaces', 'in_file'),
-                                          ('surf_kwargs', 'template_kwargs')]),
+            (select_fs_surf, name_surfs, [('surfaces', 'in_file')]),
             (inputnode, ds_bold_surfs, [('source_file', 'source_file')]),
             (select_fs_surf, ds_bold_surfs, [('surfaces', 'in_file'),
                                              ('key', 'space')]),
@@ -287,14 +286,14 @@ def init_func_derivatives_wf(
 
     # CIFTI output
     if cifti_output:
-        ds_bold_cifti = pe.MapNode(
-            DerivativesDataSink(base_directory=output_dir, compress=False),
-            iterfield=['in_file', 'suffix'], name='ds_bold_cifti',
-            run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
+        ds_bold_cifti = pe.Node(DerivativesDataSink(
+            base_directory=output_dir, suffix='bold', compress=False),
+            name='ds_bold_cifti', run_without_submitting=True,
+            mem_gb=DEFAULT_MEMORY_MIN_GB)
         workflow.connect([
-            (inputnode, ds_bold_cifti, [('bold_cifti', 'in_file'),
+            (inputnode, ds_bold_cifti, [(('bold_cifti', _unlist), 'in_file'),
                                         ('source_file', 'source_file'),
-                                        ('cifti_variant', 'space'),
+                                        (('cifti_metadata', _get_surface), 'space'),
                                         ('cifti_density', 'density'),
                                         (('cifti_metadata', _read_json), 'meta_dict')])
         ])
@@ -369,6 +368,18 @@ def init_bold_preproc_report_wf(mem_gb, reportlets_dir, name='bold_preproc_repor
     ])
 
     return workflow
+
+
+def _unlist(in_file):
+    while isinstance(in_file, (list, tuple)) and len(in_file) == 1:
+        in_file = in_file[0]
+    return in_file
+
+
+def _get_surface(in_file):
+    from pathlib import Path
+    from json import loads
+    return loads(Path(in_file).read_text())["surface"]
 
 
 def _read_json(in_file):
