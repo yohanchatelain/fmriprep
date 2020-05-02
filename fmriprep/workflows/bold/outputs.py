@@ -270,7 +270,7 @@ def init_func_derivatives_wf(
 
         ds_bold_surfs = pe.MapNode(DerivativesDataSink(
             base_directory=output_dir, extension="func.gii"),
-            iterfield=['in_file', 'suffix'], name='ds_bold_surfs',
+            iterfield=['in_file', 'hemi'], name='ds_bold_surfs',
             run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
 
         workflow.connect([
