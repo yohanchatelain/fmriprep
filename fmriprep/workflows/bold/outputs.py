@@ -81,7 +81,7 @@ def init_func_derivatives_wf(
     if nonstd_spaces.intersection(('func', 'run', 'bold', 'boldref', 'sbref')):
         ds_bold_native = pe.Node(
             DerivativesDataSink(base_directory=output_dir, desc='preproc',
-                                keep_dtype=True, compress=True, SkullStripped=False,
+                                compress=True, SkullStripped=False,
                                 RepetitionTime=metadata.get('RepetitionTime'),
                                 TaskName=metadata.get('TaskName')),
             name='ds_bold_native', run_without_submitting=True,
@@ -110,7 +110,7 @@ def init_func_derivatives_wf(
     if nonstd_spaces.intersection(('T1w', 'anat')):
         ds_bold_t1 = pe.Node(
             DerivativesDataSink(base_directory=output_dir, space='T1w', desc='preproc',
-                                keep_dtype=True, compress=True, SkullStripped=False,
+                                compress=True, SkullStripped=False,
                                 RepetitionTime=metadata.get('RepetitionTime'),
                                 TaskName=metadata.get('TaskName')),
             name='ds_bold_t1', run_without_submitting=True,
@@ -180,15 +180,13 @@ def init_func_derivatives_wf(
 
     # Store resamplings in standard spaces when listed in --output-spaces
     if spaces.cached.references:
-        from niworkflows.utils.spaces import format_reference as _fmt_space
+        from niworkflows.interfaces.space import SpaceDataSource
 
-        itersource = pe.Node(niu.IdentityInterface(fields=['space_definition']),
-                             name='itersource')
-
-        itersource.iterables = (
-            'space_definition',
-            [(s.fullname, s.spec) for s in spaces.cached.get_standard(dim=(3,))]
-        )
+        spacesource = pe.Node(SpaceDataSource(),
+                              name='spacesource', run_without_submitting=True)
+        spacesource.iterables = ('in_tuple', [
+            (s.fullname, s.spec) for s in spaces.cached.get_standard(dim=(3,))
+        ])
 
         select_std = pe.Node(KeySelect(
             fields=['template', 'bold_std', 'bold_std_ref', 'bold_mask_std']),
@@ -196,7 +194,7 @@ def init_func_derivatives_wf(
 
         ds_bold_std = pe.Node(
             DerivativesDataSink(base_directory=output_dir, desc='preproc',
-                                keep_dtype=True, compress=True, SkullStripped=False,
+                                compress=True, SkullStripped=False,
                                 RepetitionTime=metadata.get('RepetitionTime'),
                                 TaskName=metadata.get('TaskName')),
             name='ds_bold_std', run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
@@ -217,13 +215,22 @@ def init_func_derivatives_wf(
                                      ('bold_mask_std', 'bold_mask_std'),
                                      ('template', 'template'),
                                      ('spatial_reference', 'keys')]),
-            (itersource, select_std, [(('space_definition', _fmt_space), 'key')]),
-            (select_std, ds_bold_std, [('bold_std', 'in_file'),
-                                       ('key', 'space')]),
-            (select_std, ds_bold_std_ref, [('bold_std_ref', 'in_file'),
-                                           ('key', 'space')]),
-            (select_std, ds_bold_mask_std, [('bold_mask_std', 'in_file'),
-                                            ('key', 'space')]),
+            (spacesource, select_std, [('uid', 'key')]),
+            (select_std, ds_bold_std, [('bold_std', 'in_file')]),
+            (spacesource, ds_bold_std, [('space', 'space'),
+                                        ('cohort', 'cohort'),
+                                        ('resolution', 'resolution'),
+                                        ('density', 'density')]),
+            (select_std, ds_bold_std_ref, [('bold_std_ref', 'in_file')]),
+            (spacesource, ds_bold_std_ref, [('space', 'space'),
+                                            ('cohort', 'cohort'),
+                                            ('resolution', 'resolution'),
+                                            ('density', 'density')]),
+            (select_std, ds_bold_mask_std, [('bold_mask_std', 'in_file')]),
+            (spacesource, ds_bold_mask_std, [('space', 'space'),
+                                             ('cohort', 'cohort'),
+                                             ('resolution', 'resolution'),
+                                             ('density', 'density')]),
             (raw_sources, ds_bold_mask_std, [('out', 'RawSources')]),
         ])
 
@@ -240,16 +247,21 @@ def init_func_derivatives_wf(
                 name='ds_bold_aparc_std', run_without_submitting=True,
                 mem_gb=DEFAULT_MEMORY_MIN_GB)
             workflow.connect([
-                (itersource, select_fs_std, [
-                    (('space_definition', _fmt_space), 'key')]),
+                (spacesource, select_fs_std, [('uid', 'key')]),
                 (inputnode, select_fs_std, [('bold_aseg_std', 'bold_aseg_std'),
                                             ('bold_aparc_std', 'bold_aparc_std'),
                                             ('template', 'template'),
                                             ('spatial_reference', 'keys')]),
-                (select_fs_std, ds_bold_aseg_std, [('bold_aseg_std', 'in_file'),
-                                                   ('key', 'space')]),
-                (select_fs_std, ds_bold_aparc_std, [('bold_aparc_std', 'in_file'),
-                                                    ('key', 'space')]),
+                (select_fs_std, ds_bold_aseg_std, [('bold_aseg_std', 'in_file')]),
+                (spacesource, ds_bold_aseg_std, [('space', 'space'),
+                                                 ('cohort', 'cohort'),
+                                                 ('resolution', 'resolution'),
+                                                 ('density', 'density')]),
+                (select_fs_std, ds_bold_aparc_std, [('bold_aparc_std', 'in_file')]),
+                (spacesource, ds_bold_aparc_std, [('space', 'space'),
+                                                  ('cohort', 'cohort'),
+                                                  ('resolution', 'resolution'),
+                                                  ('density', 'density')]),
                 (inputnode, ds_bold_aseg_std, [('source_file', 'source_file')]),
                 (inputnode, ds_bold_aparc_std, [('source_file', 'source_file')])
             ])

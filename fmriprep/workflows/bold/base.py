@@ -771,10 +771,10 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
     if spaces.get_spaces(nonstandard=False, dim=(3,)):
         carpetplot_wf = init_carpetplot_wf(
-                mem_gb=mem_gb['resampled'],
-                metadata=metadata,
-                cifti_output=config.workflow.cifti_output,
-                name='carpetplot_wf')
+            mem_gb=mem_gb['resampled'],
+            metadata=metadata,
+            cifti_output=config.workflow.cifti_output,
+            name='carpetplot_wf')
 
         if config.workflow.cifti_output:
             workflow.connect(
@@ -783,8 +783,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         else:
             # Xform to 'MNI152NLin2009cAsym' is always computed.
             carpetplot_select_std = pe.Node(
-                    KeySelect(fields=['std2anat_xfm'], key='MNI152NLin2009cAsym'),
-                    name='carpetplot_select_std', run_without_submitting=True)
+                KeySelect(fields=['std2anat_xfm'], key='MNI152NLin2009cAsym'),
+                name='carpetplot_select_std', run_without_submitting=True)
 
             workflow.connect([
                 (inputnode, carpetplot_select_std, [
