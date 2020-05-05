@@ -1,3 +1,12 @@
+20.0.7 (May 5, 2020)
+====================
+Bug-fix release in the 20.0.x series.
+
+This release includes a new, portable version of the templateflow python client. This includes an
+automatic check to fetch the latest templateflow templates every time.
+
+  * MAINT: Bump templateflow to auto-update template skeleton
+
 20.0.6 (April 16, 2020)
 =======================
 Bug-fix release in the 20.0.x series.
