@@ -39,10 +39,10 @@ class T2SMapInputSpec(CommandLineInputSpec):
                              minlen=3,
                              desc='echo times')
     fittype = traits.Enum('curvefit', 'loglin',
-                          argstr='--fitmode %s',
+                          argstr='--fittype %s',
                           position=3,
                           mandatory=False,
-                          default='curvefit',
+                          usedefault=True,
                           desc=('Desired fitting method: '
                                 '"loglin" means that a linear model is fit '
                                 'to the log of the data. '
@@ -72,7 +72,7 @@ class T2SMap(CommandLine):
     >>> t2smap.inputs.echo_times = [0.013, 0.027, 0.043]
     >>> t2smap.cmdline  # doctest: +ELLIPSIS
     't2smap -d sub-01_run-01_echo-1_bold.nii.gz sub-01_run-01_echo-2_bold.nii.gz \
-sub-01_run-01_echo-3_bold.nii.gz -e 13.0 27.0 43.0 --fitmode curvefit'
+sub-01_run-01_echo-3_bold.nii.gz -e 13.0 27.0 43.0 --fittype curvefit'
     """
     _cmd = 't2smap'
     input_spec = T2SMapInputSpec
@@ -84,8 +84,8 @@ sub-01_run-01_echo-3_bold.nii.gz -e 13.0 27.0 43.0 --fitmode curvefit'
         return super(T2SMap, self)._format_arg(name, trait_spec, value)
 
     def _list_outputs(self):
-        out_dir = os.getcwd()
         outputs = self._outputs().get()
+        out_dir = os.getcwd()
         outputs['t2star_map'] = os.path.join(out_dir, 'T2starmap.nii.gz')
         outputs['s0_map'] = os.path.join(out_dir, 'S0map.nii.gz')
         outputs['optimal_comb'] = os.path.join(out_dir, 'desc-optcom_bold.nii.gz')
