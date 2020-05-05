@@ -15,9 +15,6 @@ Change directory to provide relative paths for doctests
 >>> os.chdir(datadir)
 
 """
-import os
-from nibabel.filename_parser import splitext_addext
-
 from nipype import logging
 from nipype.interfaces.base import (
     traits, TraitedSpec, File,
