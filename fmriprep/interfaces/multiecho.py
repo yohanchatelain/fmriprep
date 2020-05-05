@@ -15,6 +15,8 @@ Change directory to provide relative paths for doctests
 >>> os.chdir(datadir)
 
 """
+import os.path
+
 from nipype import logging
 from nipype.interfaces.base import (
     traits, TraitedSpec, File,
@@ -40,9 +42,10 @@ class T2SMapInputSpec(CommandLineInputSpec):
                           argstr='--fitmode %s',
                           position=3,
                           mandatory=False,
+                          default='curvefit',
                           desc=('Desired fitting method: '
                                 '"loglin" means that a linear model is fit '
-                                'to the log of the data, default '
+                                'to the log of the data. '
                                 '"curvefit" means that a more computationally '
                                 'demanding monoexponential model is fit '
                                 'to the raw data.'))
@@ -69,7 +72,7 @@ class T2SMap(CommandLine):
     >>> t2smap.inputs.echo_times = [0.013, 0.027, 0.043]
     >>> t2smap.cmdline  # doctest: +ELLIPSIS
     't2smap -d sub-01_run-01_echo-1_bold.nii.gz sub-01_run-01_echo-2_bold.nii.gz \
-sub-01_run-01_echo-3_bold.nii.gz -e 13.0 27.0 43.0'
+sub-01_run-01_echo-3_bold.nii.gz -e 13.0 27.0 43.0 --fitmode curvefit'
     """
     _cmd = 't2smap'
     input_spec = T2SMapInputSpec
@@ -81,8 +84,9 @@ sub-01_run-01_echo-3_bold.nii.gz -e 13.0 27.0 43.0'
         return super(T2SMap, self)._format_arg(name, trait_spec, value)
 
     def _list_outputs(self):
+        out_dir = os.path.getcwd()
         outputs = self._outputs().get()
-        outputs['t2star_map'] = 'T2starmap.nii.gz'
-        outputs['s0_map'] = 'S0map.nii.gz'
-        outputs['optimal_comb'] = 'desc-optcom_bold.nii.gz'
+        outputs['t2star_map'] = os.path.join(out_dir, 'T2starmap.nii.gz')
+        outputs['s0_map'] = os.path.join(out_dir, 'S0map.nii.gz')
+        outputs['optimal_comb'] = os.path.join(out_dir, 'desc-optcom_bold.nii.gz')
         return outputs
