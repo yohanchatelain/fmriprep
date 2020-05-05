@@ -1,7 +1,6 @@
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
 """Parser."""
-import os
 import sys
 from .. import config
 
@@ -142,12 +141,6 @@ def _build_parser():
     g_conf.add_argument(
         '--longitudinal', action='store_true',
         help='treat dataset as longitudinal - may increase runtime')
-    g_conf.add_argument(
-        '--t2s-coreg', action='store_true',
-        help='If provided with multi-echo BOLD dataset, create T2*-map and perform '
-             'T2*-driven coregistration. When multi-echo data is provided and this '
-             'option is not enabled, standard EPI-T1 coregistration is performed '
-             'using the middle echo.')
     g_conf.add_argument(
         '--output-spaces', nargs='*', action=OutputReferencesAction,
         help="""\
@@ -322,6 +315,8 @@ def parse_args(args=None, namespace=None):
     """Parse args and run further checks on the command line."""
     import logging
     from niworkflows.utils.spaces import Reference, SpatialReferences
+    from niworkflows.utils.misc import check_valid_fs_license
+
     parser = _build_parser()
     opts = parser.parse_args(args, namespace)
     config.execution.log_level = int(max(25 - 5 * opts.verbose_count, logging.DEBUG))
@@ -336,13 +331,12 @@ def parse_args(args=None, namespace=None):
     # Retrieve logging level
     build_log = config.loggers.cli
 
-    if config.execution.fs_license_file is None:
+    if not check_valid_fs_license(lic=config.execution.fs_license_file):
         raise RuntimeError("""\
 ERROR: a valid license file is required for FreeSurfer to run. fMRIPrep looked for an existing \
 license file at several paths, in this order: 1) command line argument ``--fs-license-file``; \
 2) ``$FS_LICENSE`` environment variable; and 3) the ``$FREESURFER_HOME/license.txt`` path. Get it \
 (for free) by registering at https://surfer.nmr.mgh.harvard.edu/registration.html""")
-    os.environ['FS_LICENSE'] = str(config.execution.fs_license_file)
 
     # Load base plugin_settings from file if --use-plugin
     if opts.use_plugin is not None:
