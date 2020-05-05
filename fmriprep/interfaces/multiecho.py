@@ -84,7 +84,7 @@ sub-01_run-01_echo-3_bold.nii.gz -e 13.0 27.0 43.0 --fitmode curvefit'
         return super(T2SMap, self)._format_arg(name, trait_spec, value)
 
     def _list_outputs(self):
-        out_dir = os.path.getcwd()
+        out_dir = os.getcwd()
         outputs = self._outputs().get()
         outputs['t2star_map'] = os.path.join(out_dir, 'T2starmap.nii.gz')
         outputs['s0_map'] = os.path.join(out_dir, 'S0map.nii.gz')
