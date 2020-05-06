@@ -83,8 +83,9 @@ def build_workflow(config_file, retval):
     if missing:
         build_log.critical(
             "Cannot run fMRIPrep. Missing dependencies:%s",
-            '\n\t* %s'.join(["{} (Interface: {})".format(cmd, iface)
-                             for iface, cmd in missing])
+            "\n\t* ".join(
+                [""] + [f"{cmd} (Interface: {iface})" for iface, cmd in missing]
+            ),
         )
         retval['return_code'] = 127  # 127 == command not found.
         return retval
