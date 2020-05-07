@@ -301,7 +301,7 @@ were annotated as motion outliers.
                         name='rois_plot', mem_gb=mem_gb)
 
     ds_report_bold_rois = pe.Node(
-        DerivativesDataSink(desc='rois', keep_dtype=True),
+        DerivativesDataSink(desc='rois', datatype="figures"),
         name='ds_report_bold_rois', run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 
@@ -313,7 +313,7 @@ were annotated as motion outliers.
                             metadata_sources=['tCompCor', 'aCompCor']),
         name='compcor_plot')
     ds_report_compcor = pe.Node(
-        DerivativesDataSink(desc='compcorvar', keep_dtype=True),
+        DerivativesDataSink(desc='compcorvar', datatype="figures"),
         name='ds_report_compcor', run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 
@@ -322,7 +322,7 @@ were annotated as motion outliers.
         ConfoundsCorrelationPlot(reference_column='global_signal', max_dim=70),
         name='conf_corr_plot')
     ds_report_conf_corr = pe.Node(
-        DerivativesDataSink(desc='confoundcorr', keep_dtype=True),
+        DerivativesDataSink(desc='confoundcorr', datatype="figures"),
         name='ds_report_conf_corr', run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 
@@ -509,7 +509,7 @@ def init_carpetplot_wf(mem_gb, metadata, cifti_output, name="bold_carpet_wf"):
             ('framewise_displacement', 'mm', 'FD')]),
         name='conf_plot', mem_gb=mem_gb)
     ds_report_bold_conf = pe.Node(
-        DerivativesDataSink(desc='carpetplot', keep_dtype=True),
+        DerivativesDataSink(desc='carpetplot', datatype="figures", extension="svg"),
         name='ds_report_bold_conf', run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 
@@ -719,7 +719,7 @@ in the corresponding confounds file.
         name='ica_aroma_metadata_fmt')
 
     ds_report_ica_aroma = pe.Node(
-        DerivativesDataSink(desc='aroma', keep_dtype=True),
+        DerivativesDataSink(desc='aroma', datatype="figures"),
         name='ds_report_ica_aroma', run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 

@@ -50,7 +50,6 @@ single reference template (see `Longitudinal processing`_).
             ('T1w', {}),
             ('fsnative', {})
         ]),
-        reportlets_dir='.',
         skull_strip_fixed_seed=False,
         t1w=['sub-01/anat/sub-01_T1w.nii.gz'],
     )

@@ -1,11 +1,6 @@
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
-"""
-Interfaces to generate reportlets
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-"""
+"""Interfaces to generate reportlets."""
 
 import os
 import time
@@ -105,7 +100,14 @@ class SubjectSummary(SummaryInterface):
         return super(SubjectSummary, self)._run_interface(runtime)
 
     def _generate_segment(self):
-        from niworkflows.utils.bids import BIDS_NAME
+        BIDS_NAME = re.compile(
+            r'^(.*\/)?'
+            '(?P<subject_id>sub-[a-zA-Z0-9]+)'
+            '(_(?P<session_id>ses-[a-zA-Z0-9]+))?'
+            '(_(?P<task_id>task-[a-zA-Z0-9]+))?'
+            '(_(?P<acq_id>acq-[a-zA-Z0-9]+))?'
+            '(_(?P<rec_id>rec-[a-zA-Z0-9]+))?'
+            '(_(?P<run_id>run-[a-zA-Z0-9]+))?')
 
         if not isdefined(self.inputs.subjects_dir):
             freesurfer_status = 'Not run'
