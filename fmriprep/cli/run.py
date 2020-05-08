@@ -6,7 +6,8 @@ from .. import config
 
 def main():
     """Entry point."""
-    import os
+    from os import EX_SOFTWARE
+    from pathlib import Path
     import sys
     import gc
     from multiprocessing import Process, Manager
@@ -53,7 +54,7 @@ def main():
     if fmriprep_wf and config.execution.write_graph:
         fmriprep_wf.write_graph(graph2use="colored", format="svg", simple_form=True)
 
-    retcode = retcode or (fmriprep_wf is None) * os.EX_SOFTWARE
+    retcode = retcode or (fmriprep_wf is None) * EX_SOFTWARE
     if retcode != 0:
         sys.exit(retcode)
 
@@ -119,8 +120,9 @@ def main():
         # Bother users with the boilerplate only iff the workflow went okay.
         boiler_file = config.execution.output_dir / "fmriprep" / "logs" / "CITATION.md"
         if boiler_file.exists():
-            if str(config.execution.output_dir) == "/out
-                boiler_file = Path("<output_dir>") / boiler_file.relative_to(config.execution.output_dir)
+            if config.environment.exec_env in ("singularity", "docker", "fmriprep-docker"):
+                boiler_file = Path("<OUTPUT_PATH>") / boiler_file.relative_to(
+                    config.execution.output_dir)
             config.loggers.workflow.log(
                 25,
                 "Works derived from this fMRIPrep execution should include the "
