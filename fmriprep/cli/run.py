@@ -117,13 +117,14 @@ def main():
             sentry_sdk.capture_message(success_message, level="info")
 
         # Bother users with the boilerplate only iff the workflow went okay.
-        _boiler_file = config.execution.output_dir / "fmriprep" / "logs" / "CITATION.md"
-        if _boiler_file.exists():
-            _boiler_file = _boiler_file.relative_to(config.execution.output_dir)
+        boiler_file = config.execution.output_dir / "fmriprep" / "logs" / "CITATION.md"
+        if boiler_file.exists():
+            if str(config.execution.output_dir) == "/out
+                boiler_file = Path("<output_dir>") / boiler_file.relative_to(config.execution.output_dir)
             config.loggers.workflow.log(
                 25,
                 "Works derived from this fMRIPrep execution should include the "
-                f"boilerplate text found in <output_dir>/{_boiler_file}.",
+                f"boilerplate text found in {boiler_file}.",
             )
 
         if config.workflow.run_reconall:
