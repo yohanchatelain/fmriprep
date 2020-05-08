@@ -40,10 +40,19 @@ def _build_parser():
         value = str(value)
         return value.lstrip('sub-')
 
+    def _filter_pybids_none_any(dct):
+        import bids
+        for k,v in dct.items():
+            if v is None:
+                dct[k] = bids.layout.Query.NONE
+            elif v == '__any__':
+                dct[k] = bids.layout.Query.ANY
+        return dct
+
     def _bids_filter(value):
         from json import loads
         if value and Path(value).exists():
-            return loads(Path(value).read_text())
+            return loads(Path(value).read_text(), object_hook=_filter_pybids_none_any)
 
     verstr = f'fMRIPrep v{config.environment.version}'
     currentv = Version(config.environment.version)
