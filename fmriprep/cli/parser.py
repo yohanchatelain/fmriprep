@@ -38,8 +38,7 @@ def _build_parser():
         return int(digits) * scale[units[0]]
 
     def _drop_sub(value):
-        value = str(value)
-        return value.lstrip('sub-')
+        return value[4:] if value.startswith('sub-') else value
 
     def _bids_filter(value):
         from json import loads
