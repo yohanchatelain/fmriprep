@@ -455,9 +455,6 @@ class workflow(_Config):
     spaces = None
     """Keeps the :py:class:`~niworkflows.utils.spaces.SpatialReferences`
     instance keeping standard and nonstandard spaces."""
-    t2s_coreg = None
-    """Co-register echos before generating the T2\\* reference of
-    :abbr:`ME-EPI (multi-echo echo-planar imaging)`."""
     use_aroma = None
     """Run ICA-:abbr:`AROMA (automatic removal of motion artifacts)`."""
     use_bbr = None
