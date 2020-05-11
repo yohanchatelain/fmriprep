@@ -253,7 +253,7 @@ Only modifications of these queries will have any effect. You may filter on any 
 in the PyBIDS
 `config file <https://github.com/bids-standard/pybids/blob/master/bids/layout/config/bids.json>`__.
 To select images that do not have the entity set, use json value: ``null``.
-To select images that have any non-empty value for an entity use string: ``'__any__'``
+To select images that have any non-empty value for an entity use string: ``'*'``
 
 Can *fMRIPrep* continue to run after encountering an error?
 -----------------------------------------------------------
