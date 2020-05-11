@@ -45,7 +45,7 @@ def _build_parser():
         for k, v in dct.items():
             if v is None:
                 dct[k] = bids.layout.Query.NONE
-            elif v == '__any__':
+            elif v == '*':
                 dct[k] = bids.layout.Query.ANY
         return dct
 
