@@ -42,10 +42,8 @@ def _build_parser():
 
     def _filter_pybids_none_any(dct):
         import bids
-        for k, v in dct.items():
-            if v == '__any__':
-                dct[k] = bids.layout.Query.ANY
-        return dct
+        return {k: bids.layout.Query.ANY if v == "*" else v
+                for k, v in dct.items()}
 
     def _bids_filter(value):
         from json import loads
