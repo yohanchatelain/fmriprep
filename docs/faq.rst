@@ -125,7 +125,7 @@ A symptomatic output looks like: ::
   FileNotFoundError: [Errno 2] No such file or directory: '/scratch/03201/jbwexler/openneuro_fmriprep/data/ds000003_work/ds000003-download/derivatives/fmriprep-1.4.0/fmriprep/logs/CITATION.md'
 
 If you would like to run *fMRIPrep* in parallel on multiple subjects please use
-`this method <https://neurostars.org/t/fmriprep-workaround-for-running-subjects-in-parallel/4449>`__.
+`this method <https://neurostars.org/t/updated-fmriprep-workaround-for-running-subjects-in-parallel/6677>`__.
 
 How much CPU time and RAM should I allocate for a typical fMRIPrep run?
 -----------------------------------------------------------------------
