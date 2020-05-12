@@ -11,7 +11,7 @@ from nipype.interfaces.base import (
     traits, TraitedSpec, BaseInterfaceInputSpec,
     File, Directory, InputMultiObject, Str, isdefined,
     SimpleInterface)
-from nipype.interfaces import freesurfer as fs
+from smriprep.interfaces.freesurfer import ReconAll
 
 
 SUBJECT_TEMPLATE = """\
@@ -112,10 +112,10 @@ class SubjectSummary(SummaryInterface):
         if not isdefined(self.inputs.subjects_dir):
             freesurfer_status = 'Not run'
         else:
-            recon = fs.ReconAll(subjects_dir=self.inputs.subjects_dir,
-                                subject_id=self.inputs.subject_id,
-                                T1_files=self.inputs.t1w,
-                                flags='-noskullstrip')
+            recon = ReconAll(subjects_dir=self.inputs.subjects_dir,
+                             subject_id='sub-' + self.inputs.subject_id,
+                             T1_files=self.inputs.t1w,
+                             flags='-noskullstrip')
             if recon.cmdline.startswith('echo'):
                 freesurfer_status = 'Pre-existing directory'
             else:
