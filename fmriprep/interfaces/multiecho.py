@@ -15,7 +15,7 @@ Change directory to provide relative paths for doctests
 >>> os.chdir(datadir)
 
 """
-import os.path
+import os
 
 from nipype import logging
 from nipype.interfaces.base import (
@@ -41,7 +41,6 @@ class T2SMapInputSpec(CommandLineInputSpec):
     fittype = traits.Enum('curvefit', 'loglin',
                           argstr='--fittype %s',
                           position=3,
-                          mandatory=False,
                           usedefault=True,
                           desc=('Desired fitting method: '
                                 '"loglin" means that a linear model is fit '
