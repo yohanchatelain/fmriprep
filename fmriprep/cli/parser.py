@@ -570,10 +570,10 @@ license file at several paths, in this order: 1) command line argument ``--fs-li
 
     # Load base plugin_settings from file if --use-plugin
     if opts.use_plugin is not None:
-        from yaml import load as loadyml
+        import yaml
 
         with open(opts.use_plugin) as f:
-            plugin_settings = loadyml(f)
+            plugin_settings = yaml.load(f, Loader=yaml.FullLoader)
         _plugin = plugin_settings.get("plugin")
         if _plugin:
             config.nipype.plugin = _plugin
