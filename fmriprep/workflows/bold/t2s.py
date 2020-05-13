@@ -61,7 +61,8 @@ def init_bold_t2s_wf(echo_times, mem_gb, omp_nthreads,
     workflow = Workflow(name=name)
     workflow.__desc__ = """\
 A T2* map was estimated from the preprocessed BOLD by fitting to a monoexponential signal
-decay model with log-linear regression.
+decay model with nonlinear regression, using T2*/S0 estimates from a log-linear
+regression fit as initial values.
 For each voxel, the maximal number of echoes with reliable signal in that voxel were
 used to fit the model.
 The calculated T2* map was then used to optimally combine preprocessed BOLD across

@@ -568,8 +568,8 @@ A visualization of the AROMA component classification is also included in the HT
 
 .. _bold_t2s:
 
-T2* Driven Coregistration
-~~~~~~~~~~~~~~~~~~~~~~~~~
+T2*-driven echo combination
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 :py:func:`~fmriprep.workflows.bold.t2s.init_bold_t2s_wf`
 
 If multi-echo :abbr:`BOLD (blood-oxygen level-dependent)` data is supplied,
