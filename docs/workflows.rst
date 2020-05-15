@@ -406,7 +406,8 @@ EPI to T1w registration
         mem_gb=1,
         omp_nthreads=1,
         use_bbr=True,
-        bold2t1w_dof=9)
+        bold2t1w_dof=9,
+        bold2t1w_init='register')
 
 The alignment between the reference :abbr:`EPI (echo-planar imaging)` image
 of each run and the reconstructed subject using the gray/white matter boundary

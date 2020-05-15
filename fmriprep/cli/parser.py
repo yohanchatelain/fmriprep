@@ -37,8 +37,7 @@ def _build_parser():
         return int(digits) * scale[units[0]]
 
     def _drop_sub(value):
-        value = str(value)
-        return value.lstrip("sub-")
+        return value[4:] if value.startswith("sub-") else value
 
     def _filter_pybids_none_any(dct):
         import bids
@@ -248,6 +247,14 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html"""
         % (currentv.base_version if is_release else "latest"),
     )
 
+    g_conf.add_argument(
+        "--bold2t1w-init",
+        action="store",
+        default="register",
+        choices=["register", "header"],
+        help='Either "register" (the default) to initialize volumes at center or "header"'
+        " to use the header information when coregistering BOLD to T1w images.",
+    )
     g_conf.add_argument(
         "--bold2t1w-dof",
         action="store",

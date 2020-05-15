@@ -304,7 +304,7 @@ tasks and sessions), the following preprocessing was performed.
 
 
 def _prefix(subid):
-    return '-'.join(('sub', subid.lstrip('sub-')))
+    return subid if subid.startswith('sub-') else f'sub-{subid}'
 
 
 def _pop(inlist):

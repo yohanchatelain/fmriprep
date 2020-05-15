@@ -256,6 +256,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             slice_timing=run_stc,
             registration=('FSL', 'FreeSurfer')[freesurfer],
             registration_dof=config.workflow.bold2t1w_dof,
+            registration_init=config.workflow.bold2t1w_init,
             pe_direction=metadata.get("PhaseEncodingDirection"),
             tr=metadata.get("RepetitionTime")),
         name='summary', mem_gb=config.DEFAULT_MEMORY_MIN_GB, run_without_submitting=True)
@@ -312,6 +313,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     # calculate BOLD registration to T1w
     bold_reg_wf = init_bold_reg_wf(
         bold2t1w_dof=config.workflow.bold2t1w_dof,
+        bold2t1w_init=config.workflow.bold2t1w_init,
         freesurfer=freesurfer,
         mem_gb=mem_gb['resampled'],
         name='bold_reg_wf',
