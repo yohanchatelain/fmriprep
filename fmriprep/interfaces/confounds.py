@@ -18,10 +18,39 @@ from nipype import logging
 from nipype.utils.filemanip import fname_presuffix
 from nipype.interfaces.base import (
     traits, TraitedSpec, BaseInterfaceInputSpec, File, Directory, isdefined,
-    SimpleInterface
+    SimpleInterface, InputMultiObject, OutputMultiObject
 )
 
 LOGGER = logging.getLogger('nipype.interface')
+
+
+class _aCompCorMasksInputSpec(BaseInterfaceInputSpec):
+    in_vfs = InputMultiObject(File(exists=True), desc="Input volume fractions.")
+    is_aseg = traits.Bool(False, usedefault=True,
+                          desc="Whether the input volume fractions come from FS' aseg.")
+    bold_zooms = traits.Tuple(traits.Float, traits.Float, traits.Float, mandatory=True,
+                              desc="BOLD series zooms")
+
+
+class _aCompCorMasksOutputSpec(TraitedSpec):
+    out_masks = OutputMultiObject(File(exists=True),
+                                  desc="CSF, WM and combined masks, respectively")
+
+
+class aCompCorMasks(SimpleInterface):
+    """Generate masks in T1w space for aCompCor."""
+
+    input_spec = _aCompCorMasksInputSpec
+    output_spec = _aCompCorMasksOutputSpec
+
+    def _run_interface(self, runtime):
+        from ..utils.confounds import acompcor_masks
+        self._results["out_masks"] = acompcor_masks(
+            self.inputs.in_vfs,
+            self.inputs.is_aseg,
+            self.inputs.bold_zooms,
+        )
+        return runtime
 
 
 class GatherConfoundsInputSpec(BaseInterfaceInputSpec):
