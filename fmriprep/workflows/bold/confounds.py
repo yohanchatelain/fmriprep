@@ -27,6 +27,7 @@ def init_bold_confs_wf(
     regressors_all_comps,
     regressors_dvars_th,
     regressors_fd_th,
+    freesurfer=False,
     name="bold_confs_wf",
 ):
     """
@@ -126,6 +127,7 @@ def init_bold_confs_wf(
     from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
     from niworkflows.interfaces.images import SignalExtraction
     from niworkflows.interfaces.masks import ROIsPlot
+    from niworkflows.interfaces.nibabel import ApplyMask, Binarize
     from niworkflows.interfaces.patches import (
         RobustACompCor as ACompCor,
         RobustTCompCor as TCompCor,
@@ -134,11 +136,17 @@ def init_bold_confs_wf(
         CompCorVariancePlot, ConfoundsCorrelationPlot
     )
     from niworkflows.interfaces.utils import (
-        TPM2ROI, AddTPMs, AddTSVHeader, TSV2JSON, DictMerge
+        AddTSVHeader, TSV2JSON, DictMerge
+    )
+    from ...interfaces.confounds import aCompCorMasks
+
+    gm_desc = (
+        'a probabilistic segmentation from the *aseg* segmentation' if freesurfer
+        else 'the corresponding partial volume map'
     )
 
     workflow = Workflow(name=name)
-    workflow.__desc__ = """\
+    workflow.__desc__ = f"""\
 Several confounding time-series were calculated based on the
 *preprocessed BOLD*: framewise displacement (FD), DVARS and
 three region-wise global signals.
@@ -155,15 +163,19 @@ Principal components are estimated after high-pass filtering the
 *preprocessed BOLD* time-series (using a discrete cosine filter with
 128s cut-off) for the two *CompCor* variants: temporal (tCompCor)
 and anatomical (aCompCor).
-tCompCor components are then calculated from the top 5% variable
-voxels within a mask covering the subcortical regions.
-This subcortical mask is obtained by heavily eroding the brain mask,
-which ensures it does not include cortical GM regions.
-For aCompCor, components are calculated within the intersection of
-the aforementioned mask and the union of CSF and WM masks calculated
-in T1w space, after their projection to the native space of each
-functional run (using the inverse BOLD-to-T1w transformation). Components
-are also calculated separately within the WM and CSF masks.
+tCompCor components are then calculated from the top 2% variable
+voxels within the brain mask.
+For aCompCor, three probabilistic masks (CSF, WM and combined CSF+WM)
+are generated in anatomical space.
+The implementation differs from that of Behzadi et al. in that instead
+of eroding the masks by 2 pixels on BOLD space, a liberal mask of the
+GM is obtained by thresholding {gm_desc} at 0.05.
+Then this mask is substracted from the WM and the combined CSF+WM masks
+to ensure components are not extracted from voxels containing a minimal
+fraction of GM.
+Finally, these masks are resampled into BOLD space and binarized by
+thresholding at 0.99 (as in the original implementation).
+Components are also calculated separately within the WM and CSF masks.
 For each CompCor decomposition, the *k* components with the largest singular
 values are retained, such that the retained components' time series are
 sufficient to explain 50 percent of variance across the nuisance mask (CSF,
@@ -174,9 +186,9 @@ placed within the corresponding confounds file.
 The confound time series derived from head motion estimates and global
 signals were expanded with the inclusion of temporal derivatives and
 quadratic terms for each [@confounds_satterthwaite_2013].
-Frames that exceeded a threshold of {fd} mm FD or {dv} standardised DVARS
-were annotated as motion outliers.
-""".format(fd=regressors_fd_th, dv=regressors_dvars_th)
+Frames that exceeded a threshold of {regressors_fd_th} mm FD or
+{regressors_dvars_th} standardised DVARS were annotated as motion outliers.
+"""
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['bold', 'bold_mask', 'movpar_file', 'rmsd_file',
                 'skip_vols', 't1w_mask', 't1w_tpms', 't1_bold_xform']),
@@ -184,33 +196,6 @@ were annotated as motion outliers.
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['confounds_file', 'confounds_metadata']),
         name='outputnode')
-
-    # Get masks ready in T1w space
-    acc_tpm = pe.Node(AddTPMs(indices=[1, 2]),  # BIDS convention (WM=1, CSF=2)
-                      name='acc_tpm')  # acc stands for aCompCor
-    csf_roi = pe.Node(TPM2ROI(erode_mm=0, mask_erode_mm=30), name='csf_roi')
-    wm_roi = pe.Node(TPM2ROI(
-        erode_prop=0.6, mask_erode_prop=0.6**3),  # 0.6 = radius; 0.6^3 = volume
-        name='wm_roi')
-    acc_roi = pe.Node(TPM2ROI(
-        erode_prop=0.6, mask_erode_prop=0.6**3),  # 0.6 = radius; 0.6^3 = volume
-        name='acc_roi')
-
-    # Map ROIs in T1w space into BOLD space
-    csf_tfm = pe.Node(ApplyTransforms(interpolation='NearestNeighbor', float=True),
-                      name='csf_tfm', mem_gb=0.1)
-    wm_tfm = pe.Node(ApplyTransforms(interpolation='NearestNeighbor', float=True),
-                     name='wm_tfm', mem_gb=0.1)
-    acc_tfm = pe.Node(ApplyTransforms(interpolation='NearestNeighbor', float=True),
-                      name='acc_tfm', mem_gb=0.1)
-    tcc_tfm = pe.Node(ApplyTransforms(interpolation='NearestNeighbor', float=True),
-                      name='tcc_tfm', mem_gb=0.1)
-
-    # Ensure ROIs don't go off-limits (reduced FoV)
-    csf_msk = pe.Node(niu.Function(function=_maskroi), name='csf_msk')
-    wm_msk = pe.Node(niu.Function(function=_maskroi), name='wm_msk')
-    acc_msk = pe.Node(niu.Function(function=_maskroi), name='acc_msk')
-    tcc_msk = pe.Node(niu.Function(function=_maskroi), name='tcc_msk')
 
     # DVARS
     dvars = pe.Node(nac.ComputeDVARS(save_nstd=True, save_std=True, remove_zerovariance=True),
@@ -220,20 +205,28 @@ were annotated as motion outliers.
     fdisp = pe.Node(nac.FramewiseDisplacement(parameter_source="SPM"),
                     name="fdisp", mem_gb=mem_gb)
 
-    # a/t-CompCor
-    mrg_lbl_cc = pe.Node(niu.Merge(3), name='merge_rois_cc', run_without_submitting=True)
+    # Generate aCompCor probseg maps
+    acc_masks = pe.Node(aCompCorMasks(is_aseg=freesurfer), name="acc_masks")
 
-    tcompcor = pe.Node(
-        TCompCor(components_file='tcompcor.tsv', header_prefix='t_comp_cor_', pre_filter='cosine',
-                 save_pre_filter=True, save_metadata=True, percentile_threshold=.05,
-                 failure_mode='NaN'),
-        name="tcompcor", mem_gb=mem_gb)
-
+    # Resample probseg maps in BOLD space via T1w-to-BOLD transform
+    acc_msk_tfm = pe.MapNode(ApplyTransforms(
+        interpolation='Gaussian', float=False), iterfield=["input_image"],
+        name='acc_msk_tfm', mem_gb=0.1)
+    acc_msk_brain = pe.MapNode(ApplyMask(), name="acc_msk_brain",
+                               iterfield=["in_file"])
+    acc_msk_bin = pe.MapNode(Binarize(thresh_low=0.99), name='acc_msk_bin',
+                             iterfield=["in_file"])
     acompcor = pe.Node(
         ACompCor(components_file='acompcor.tsv', header_prefix='a_comp_cor_', pre_filter='cosine',
                  save_pre_filter=True, save_metadata=True, mask_names=['combined', 'CSF', 'WM'],
                  merge_method='none', failure_mode='NaN'),
         name="acompcor", mem_gb=mem_gb)
+
+    tcompcor = pe.Node(
+        TCompCor(components_file='tcompcor.tsv', header_prefix='t_comp_cor_', pre_filter='cosine',
+                 save_pre_filter=True, save_metadata=True, percentile_threshold=.02,
+                 failure_mode='NaN'),
+        name="tcompcor", mem_gb=mem_gb)
 
     # Set number of components
     if regressors_all_comps:
@@ -249,8 +242,11 @@ were annotated as motion outliers.
         acompcor.inputs.repetition_time = metadata['RepetitionTime']
 
     # Global and segment regressors
+    gs_select = pe.Node(niu.Select(index=[0, 1]), name="gs_select",
+                        run_without_submitting=True)
     signals_class_labels = ["csf", "white_matter", "global_signal"]
-    mrg_lbl = pe.Node(niu.Merge(3), name='merge_rois', run_without_submitting=True)
+    mrg_lbl = pe.Node(niu.Merge(2, ravel_inputs=True), name='merge_rois',
+                      run_without_submitting=True)
     signals = pe.Node(SignalExtraction(class_labels=signals_class_labels),
                       name="signals", mem_gb=mem_gb)
 
@@ -297,7 +293,8 @@ were annotated as motion outliers.
         name='spike_regressors')
 
     # Generate reportlet (ROIs)
-    mrg_compcor = pe.Node(niu.Merge(2), name='merge_compcor', run_without_submitting=True)
+    mrg_compcor = pe.Node(niu.Merge(2, ravel_inputs=True),
+                          name='mrg_compcor', run_without_submitting=True)
     rois_plot = pe.Node(ROIsPlot(colors=['b', 'magenta'], generate_report=True),
                         name='rois_plot', mem_gb=mem_gb)
 
@@ -327,66 +324,37 @@ were annotated as motion outliers.
         name='ds_report_conf_corr', run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 
-    def _pick_csf(files):
-        return files[2]  # after smriprep#189, this is BIDS-compliant.
-
-    def _pick_wm(files):
-        return files[1]  # after smriprep#189, this is BIDS-compliant.
+    def _last(inlist):
+        return inlist[-1]
 
     workflow.connect([
-        # Massage ROIs (in T1w space)
-        (inputnode, acc_tpm, [('t1w_tpms', 'in_files')]),
-        (inputnode, csf_roi, [(('t1w_tpms', _pick_csf), 'in_tpm'),
-                              ('t1w_mask', 'in_mask')]),
-        (inputnode, wm_roi, [(('t1w_tpms', _pick_wm), 'in_tpm'),
-                             ('t1w_mask', 'in_mask')]),
-        (inputnode, acc_roi, [('t1w_mask', 'in_mask')]),
-        (acc_tpm, acc_roi, [('out_file', 'in_tpm')]),
-        # Map ROIs to BOLD
-        (inputnode, csf_tfm, [('bold_mask', 'reference_image'),
-                              ('t1_bold_xform', 'transforms')]),
-        (csf_roi, csf_tfm, [('roi_file', 'input_image')]),
-        (inputnode, wm_tfm, [('bold_mask', 'reference_image'),
-                             ('t1_bold_xform', 'transforms')]),
-        (wm_roi, wm_tfm, [('roi_file', 'input_image')]),
-        (inputnode, acc_tfm, [('bold_mask', 'reference_image'),
-                              ('t1_bold_xform', 'transforms')]),
-        (acc_roi, acc_tfm, [('roi_file', 'input_image')]),
-        (inputnode, tcc_tfm, [('bold_mask', 'reference_image'),
-                              ('t1_bold_xform', 'transforms')]),
-        (csf_roi, tcc_tfm, [('eroded_mask', 'input_image')]),
-        # Mask ROIs with bold_mask
-        (inputnode, csf_msk, [('bold_mask', 'in_mask')]),
-        (inputnode, wm_msk, [('bold_mask', 'in_mask')]),
-        (inputnode, acc_msk, [('bold_mask', 'in_mask')]),
-        (inputnode, tcc_msk, [('bold_mask', 'in_mask')]),
         # connect inputnode to each non-anatomical confound node
         (inputnode, dvars, [('bold', 'in_file'),
                             ('bold_mask', 'in_mask')]),
         (inputnode, fdisp, [('movpar_file', 'in_file')]),
 
-        # tCompCor
-        (inputnode, tcompcor, [('bold', 'realigned_file')]),
-        (inputnode, tcompcor, [('skip_vols', 'ignore_initial_volumes')]),
-        (tcc_tfm, tcc_msk, [('output_image', 'roi_file')]),
-        (tcc_msk, tcompcor, [('out', 'mask_files')]),
-
         # aCompCor
-        (inputnode, acompcor, [('bold', 'realigned_file')]),
-        (inputnode, acompcor, [('skip_vols', 'ignore_initial_volumes')]),
-        (acc_tfm, acc_msk, [('output_image', 'roi_file')]),
-        (acc_msk, mrg_lbl_cc, [('out', 'in1')]),
-        (csf_msk, mrg_lbl_cc, [('out', 'in2')]),
-        (wm_msk, mrg_lbl_cc, [('out', 'in3')]),
-        (mrg_lbl_cc, acompcor, [('out', 'mask_files')]),
+        (inputnode, acompcor, [("bold", "realigned_file")]),
+        (inputnode, acompcor, [("skip_vols", "ignore_initial_volumes")]),
+        (inputnode, acc_masks, [("t1w_tpms", "in_vfs"),
+                                (("bold", _get_zooms), "bold_zooms")]),
+        (inputnode, acc_msk_tfm, [("t1_bold_xform", "transforms"),
+                                  ("bold_mask", "reference_image")]),
+        (inputnode, acc_msk_brain, [("bold_mask", "in_mask")]),
+        (acc_masks, acc_msk_tfm, [("out_masks", "input_image")]),
+        (acc_msk_tfm, acc_msk_brain, [("output_image", "in_file")]),
+        (acc_msk_brain, acc_msk_bin, [("out_file", "in_file")]),
+        (acc_msk_bin, acompcor, [("out_file", "mask_files")]),
 
+        # tCompCor
+        (inputnode, tcompcor, [("bold", "realigned_file"),
+                               ("skip_vols", "ignore_initial_volumes"),
+                               ("bold_mask", "mask_files")]),
         # Global signals extraction (constrained by anatomy)
         (inputnode, signals, [('bold', 'in_file')]),
-        (csf_tfm, csf_msk, [('output_image', 'roi_file')]),
-        (csf_msk, mrg_lbl, [('out', 'in1')]),
-        (wm_tfm, wm_msk, [('output_image', 'roi_file')]),
-        (wm_msk, mrg_lbl, [('out', 'in2')]),
-        (inputnode, mrg_lbl, [('bold_mask', 'in3')]),
+        (acc_msk_bin, gs_select, [('out_file', 'inlist')]),
+        (gs_select, mrg_lbl, [('out', 'in1')]),
+        (inputnode, mrg_lbl, [('bold_mask', 'in2')]),
         (mrg_lbl, signals, [('out', 'label_files')]),
 
         # Collate computed confounds together
@@ -421,7 +389,7 @@ were annotated as motion outliers.
         (inputnode, rois_plot, [('bold', 'in_file'),
                                 ('bold_mask', 'in_mask')]),
         (tcompcor, mrg_compcor, [('high_variance_masks', 'in1')]),
-        (acc_msk, mrg_compcor, [('out', 'in2')]),
+        (acc_msk_bin, mrg_compcor, [(('out_file', _last), 'in2')]),
         (mrg_compcor, rois_plot, [('out', 'in_rois')]),
         (rois_plot, ds_report_bold_rois, [('out_report', 'in_file')]),
         (tcompcor, mrg_cc_metadata, [('metadata_file', 'in1')]),
@@ -797,7 +765,6 @@ def _remove_volumes(bold_file, skip_vols):
     bold_img = nb.load(bold_file)
     bold_img.__class__(bold_img.dataobj[..., skip_vols:],
                        bold_img.affine, bold_img.header).to_filename(out)
-
     return out
 
 
@@ -818,21 +785,9 @@ def _add_volumes(bold_file, bold_cut_file, skip_vols):
 
     out = fname_presuffix(bold_cut_file, suffix='_addnonsteady')
     bold_img.__class__(bold_data, bold_img.affine, bold_img.header).to_filename(out)
-
     return out
 
 
-def _maskroi(in_mask, roi_file):
-    import numpy as np
+def _get_zooms(in_file):
     import nibabel as nb
-    from nipype.utils.filemanip import fname_presuffix
-
-    roi = nb.load(roi_file)
-    roidata = roi.get_data().astype(np.uint8)
-    msk = nb.load(in_mask).get_data().astype(bool)
-    roidata[~msk] = 0
-    roi.set_data_dtype(np.uint8)
-
-    out = fname_presuffix(roi_file, suffix='_boldmsk')
-    roi.__class__(roidata, roi.affine, roi.header).to_filename(out)
-    return out
+    return tuple(nb.load(in_file).header.get_zooms()[:3])

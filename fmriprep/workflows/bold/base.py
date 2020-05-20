@@ -347,6 +347,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     bold_confounds_wf = init_bold_confs_wf(
         mem_gb=mem_gb['largemem'],
         metadata=metadata,
+        freesurfer=freesurfer,
         regressors_all_comps=config.workflow.regressors_all_comps,
         regressors_fd_th=config.workflow.regressors_fd_th,
         regressors_dvars_th=config.workflow.regressors_dvars_th,
