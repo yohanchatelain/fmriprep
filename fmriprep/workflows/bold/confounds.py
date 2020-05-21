@@ -186,7 +186,8 @@ were annotated as motion outliers.
         name='outputnode')
 
     # Get masks ready in T1w space
-    acc_tpm = pe.Node(AddTPMs(indices=[0, 2]), name='tpms_add_csf_wm')  # acc stands for aCompCor
+    acc_tpm = pe.Node(AddTPMs(indices=[1, 2]),  # BIDS convention (WM=1, CSF=2)
+                      name='acc_tpm')  # acc stands for aCompCor
     csf_roi = pe.Node(TPM2ROI(erode_mm=0, mask_erode_mm=30), name='csf_roi')
     wm_roi = pe.Node(TPM2ROI(
         erode_prop=0.6, mask_erode_prop=0.6**3),  # 0.6 = radius; 0.6^3 = volume
@@ -327,10 +328,10 @@ were annotated as motion outliers.
         mem_gb=DEFAULT_MEMORY_MIN_GB)
 
     def _pick_csf(files):
-        return files[0]
+        return files[2]  # after smriprep#189, this is BIDS-compliant.
 
     def _pick_wm(files):
-        return files[-1]
+        return files[1]  # after smriprep#189, this is BIDS-compliant.
 
     workflow.connect([
         # Massage ROIs (in T1w space)
