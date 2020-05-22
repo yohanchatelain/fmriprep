@@ -207,11 +207,13 @@ It is released under the [CC0]\
                     name='about', run_without_submitting=True)
 
     ds_report_summary = pe.Node(
-        DerivativesDataSink(base_directory=output_dir, desc='summary', datatype="figures"),
+        DerivativesDataSink(base_directory=output_dir, desc='summary', datatype="figures",
+                            dismiss_entities=("echo",)),
         name='ds_report_summary', run_without_submitting=True)
 
     ds_report_about = pe.Node(
-        DerivativesDataSink(base_directory=output_dir, desc='about', datatype="figures"),
+        DerivativesDataSink(base_directory=output_dir, desc='about', datatype="figures",
+                            dismiss_entities=("echo",)),
         name='ds_report_about', run_without_submitting=True)
 
     anat_derivatives = config.execution.anat_derivatives
