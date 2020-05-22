@@ -70,7 +70,7 @@ def init_bold_surf_wf(
 
     """
     from niworkflows.engine.workflows import LiterateWorkflow as Workflow
-    from ...interfaces.nitransforms import ConcatenateXFMs
+    from niworkflows.interfaces.nitransforms import ConcatenateXFMs
 
     # See https://github.com/poldracklab/fmriprep/issues/768
     from niworkflows.interfaces.freesurfer import (
