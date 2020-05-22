@@ -448,7 +448,7 @@ def init_bbreg_wf(use_bbr, bold2t1w_dof, bold2t1w_init, omp_nthreads, name='bbre
         PatchedMRICoregRPT as MRICoregRPT,
         PatchedLTAConvert as LTAConvert
     )
-    from ...interfaces.nitransforms import ConcatenateXFMs
+    from niworkflows.interfaces.nitransforms import ConcatenateXFMs
 
     workflow = Workflow(name=name)
     workflow.__desc__ = """\
