@@ -1,15 +1,32 @@
-20.1.0 (TBD)
-============
-The second minor release of 2020, *fMRIPrep* 20.1.0 introduces a configuration file to easily
-distinguish which options were selected for each participant, along with other enhancements.
+20.1.0 (May 25, 2020)
+=====================
+The second minor release of 2020 is finally here! *fMRIPrep* 20.1.0 introduces a magnitude of new features
+and improvements. Some key additions in this release include:
 
+- A dedicated configuration module to centralize *fMRIPrep*'s many options. Every invocation will now produce a config file
+with the specific options used, located at ``<output-directory>/fmriprep/<subject>/<run-uuid>/fmriprep.toml``.
+- A command-line option (``--anat-derivatives``) to allow skipping anatomical processing by reusing existing anatomical derivatives.
+This can significantly speed up longitudinal study preprocessing.
+- A change in output CIFTI2 subcortical volume orientation to be compatible with HCP Pipeline tools and data.
+
+A full list of changes can be found below.
+
+* DOC: Update parallel subject neurostars link in faq (#2104)
 * DOC: Add FAQ about reusing work directory (#2045)
+* ENH: Finish the upstreaming of NiTransforms interfaces to NiWorkflows (#2132)
+* ENH: Enable filtering for ANY or NONE in ``--bids-filter-file`` (#2123) @bpinsard
+* ENH: Use new ``DerivativesDataSink`` from NiWorkflows 1.2.0 (#2114) @oesteban
 * ENH: Config module (#2018)
 * ENH: Add option to ignore T2w / FLAIR images (#2015)
 * ENH: Ensure subcortical volume in CIFTI is in LAS orientation (`nipreps/niworkflows#484`_)
 * ENH: Add option to skip brain extraction (#2039)
 * ENH: Use CIFTI for carpetplot when available (#2055)
+* FIX: Correct summary report when using previously run recon-all (#2124)
+* FIX: Ensure correct WM and CSF masks are picked in confounds workflow (#2128)
 * FIX: Explicitly add default native resolution to volumetric outputs (`nipreps/niworkflows#494`_)
+* MAINT/STY: Stop printing full boilerplate, black fmriprep/cli (#2119)
+* MAINT: Ensure yaml loader is specified (#2125)
+* MAINT: PIN tedana version (#2117)
 * MAINT: Bump minimum Python to 3.7 (#2017)
 * MAINT: Remove unused console scripts (#2048)
 * MAINT: Reduce overall size of outputs (`nipreps/niworkflows#492`_)
@@ -17,6 +34,9 @@ distinguish which options were selected for each participant, along with other e
 .. _`nipreps/niworkflows#484`: https://github.com/nipreps/niworkflows/pull/484
 .. _`nipreps/niworkflows#494`: https://github.com/nipreps/niworkflows/pull/494
 .. _`nipreps/niworkflows#492`: https://github.com/nipreps/niworkflows/pull/492
+
+As with all minor version increments, working directories from previous versions should not be reused. Thank you for using *fMRIPrep*, if you
+encounter any issues with this release, please let us know by posting an issue on our github page!
 
 20.0.7 (May 5, 2020)
 ====================
