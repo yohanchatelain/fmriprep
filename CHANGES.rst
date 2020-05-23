@@ -125,8 +125,10 @@ A full list of changes can be found below.
       30. Max Planck UCL Centre for Computational Psychiatry and Ageing Research, University College London
       31. State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University
 
+20.0.x series (February 2020)
+=============================
 20.0.7 (May 5, 2020)
-====================
+--------------------
 Bug-fix release in the 20.0.x series.
 
 This release includes a new, portable version of the templateflow python client. This includes an
@@ -135,7 +137,7 @@ automatic check to fetch the latest templateflow templates every time.
 * MAINT: Bump templateflow to auto-update template skeleton
 
 20.0.6 (April 16, 2020)
-=======================
+-----------------------
 Bug-fix release in the 20.0.x series.
 
 This release fixes a bug for **phase-difference fieldmaps that are not in RAS+ orientation**.
@@ -153,26 +155,8 @@ the 1.5.x series.
 
 .. _`nipreps/sdcflows#98`: https://github.com/nipreps/sdcflows/pull/98
 
-1.5.10 (April 16, 2020)
-=======================
-Bug-fix release in the 1.5.x series.
-
-This release fixes a bug for **phase-difference fieldmaps that are not in RAS+ orientation**.
-The bug presented as an error if the orientation was reordered relative to RAS+ (for example,
-AIL+) and the swapped dimensions were not of the same size.
-Otherwise, the bug introduced a poor masking of the phase difference map, and could be quite subtle
-if the original orientation was LAS+.
-Runs of fMRIPrep that used other susceptibility distortion correction (SDC) methods are not
-currently considered problematic.
-
-This bug affects all previous versions of fMRIPrep, as well as versions 20.0.0-20.0.5.
-
-  * FIX: Do not reorient magnitude images (`nipreps/sdcflows#98`_)
-
-.. _`nipreps/sdcflows#98`: https://github.com/nipreps/sdcflows/pull/98
-
 20.0.5 (March 19, 2020)
-=======================
+-----------------------
 Bug-fix release in 20.0.x series.
 
 With thanks to James Kent for the fix and Blaise Frederick for the report and testing.
@@ -182,7 +166,7 @@ With thanks to James Kent for the fix and Blaise Frederick for the report and te
 .. _`nipreps/niworkflows#482`: https://github.com/nipreps/niworkflows/pull/482
 
 20.0.4 (March 17, 2020)
-=======================
+-----------------------
 A bug-fix release improving documentation for filtering BIDS files and standardizing CIFTI volume orientation.
 
 With thanks to Ursula Tooley for the contribution.
@@ -193,7 +177,7 @@ With thanks to Ursula Tooley for the contribution.
 .. _`nipreps/niworkflows#477`: https://github.com/nipreps/niworkflows/pull/477
 
 20.0.3 (March 12, 2020)
-=======================
+-----------------------
 A bug-fix release for CIFTI surfaces.
 
 This release remedies a resampling error when generating fsLR surfaces that was producing erroneous CIFTI files.
@@ -202,7 +186,7 @@ This release remedies a resampling error when generating fsLR surfaces that was 
    * FIX: Remedy fsLR surface resampling (#2032)
 
 20.0.2 (March 6, 2020)
-======================
+----------------------
 A bug squashing release in the 20.0.x series.
 
 This release fixes the use of custom templates within the docker wrapper, remedies crashes
@@ -216,7 +200,7 @@ With thanks to Blaise Frederick for the contribution.
   * MAINT: Pin minor series of nipype, major series of nibabel (#2021)
 
 20.0.1 (February 27, 2020)
-==========================
+--------------------------
 Bug-fix release in 20.0.x series.
 
 This release includes fixes for rare images with invalid qform matrices and some minor
@@ -232,7 +216,7 @@ improvements in report readability and inclusion of common templates in the Dock
 .. _`nipreps/niworkflows#466`: https://github.com/nipreps/niworkflows/pull/466
 
 20.0.0 (February 24, 2020)
-==========================
+--------------------------
 The major release of 2020 is here!
 
 *fMRIPrep* is transitioning to a calendar version system
@@ -312,8 +296,28 @@ This release includes contributions from Azeez Adebimpe and Basile Pinsard - ver
       26. Department of Neuroscience, University of Pennsylvania, PA, USA
       27. State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University
 
+1.5.x series (September 2019)
+=============================
+1.5.10 (April 16, 2020)
+-----------------------
+Bug-fix release in the 1.5.x series.
+
+This release fixes a bug for **phase-difference fieldmaps that are not in RAS+ orientation**.
+The bug presented as an error if the orientation was reordered relative to RAS+ (for example,
+AIL+) and the swapped dimensions were not of the same size.
+Otherwise, the bug introduced a poor masking of the phase difference map, and could be quite subtle
+if the original orientation was LAS+.
+Runs of fMRIPrep that used other susceptibility distortion correction (SDC) methods are not
+currently considered problematic.
+
+This bug affects all previous versions of fMRIPrep, as well as versions 20.0.0-20.0.5.
+
+  * FIX: Do not reorient magnitude images (`nipreps/sdcflows#98`_)
+
+.. _`nipreps/sdcflows#98`: https://github.com/nipreps/sdcflows/pull/98
+
 1.5.9 (February 14, 2020)
-=========================
+-------------------------
 Bug-fix release in the 1.5.x series.
 
 This release fixes a bug for some phase maps generated by Philips. A full fix with better handling
@@ -324,13 +328,13 @@ unaffected by the bug.
   * FIX: Center phase maps around central mode, avoiding FoV-related outliers (poldracklab/sdcflows#89)
 
 1.5.8 (January 28, 2020)
-========================
+------------------------
 Bug-fix release in the 1.5.x series.
 
   * FIX: SyN SDC logic failing in ``--force-syn`` cases (#1951)
 
 1.5.7 (January 23, 2020)
-========================
+------------------------
 Bug-fix release in the 1.5.x series.
 
 This release fixes a bug specifically for T1w images with dimensions ≤256 voxels
@@ -339,27 +343,27 @@ but a field-of-view >256mm.
   * FIX: Calculate FoV with shape and zooms (poldracklab/smriprep#161)
 
 1.5.6 (January 22, 2020)
-========================
+------------------------
 Bug-fix release in the 1.5.x series.
 
   * FIX: Include all functional runs in reports, establish consistent ordering (#1937)
   * FIX: Use SyN-SDC if --use-syn-sdc and --ignore fieldmaps are used (#1942)
 
 1.5.5 (January 14, 2020)
-=========================
+-------------------------
 Bug-fix release in the 1.5.x series.
 
 * FIX: Correctly select volumetric spaces for carpetplot (#1932) @effigies
 * FIX: Constrain setuptools for Python 2.7 installs of fmriprep-docker (#1933) @effigies
 
 1.5.4 (December 18, 2019)
-=========================
+-------------------------
 Bug-fix release in the 1.5.x series.
 
 * FIX: Integrate fix for poldracklab/sdcflows#77 (pin niworkflows-1.0.3, sdcflows-1.0.3) @oesteban
 
 1.5.3 (December 12, 2019)
-=========================
+-------------------------
 The last patch release of the 1.5.x series containing features.
 As of 1.5.4, patch releases will only contain bug fixes, maintenance
 tasks and minor documentation revisions.
@@ -374,13 +378,13 @@ tasks and minor documentation revisions.
 * MAINT: Remove deprecated command-line arguments (#1909) @mgxd
 
 1.5.2 (December 2, 2019)
-========================
+------------------------
 Bug-fix release in the 1.5.x series.
 
 * FIX: Ensure data type of masked image matches T1.mgz (poldracklab/niworkflows#430) @effigies
 
 1.5.1 (November 26, 2019)
-=========================
+-------------------------
 After an arduous walk through release-candidates, release 1.5.1 includes a new release of
 Nipype which addresses the problems related to *results* files many users have been experiencing.
 
@@ -413,7 +417,7 @@ With thanks to Marc Bue, Alejandro De La Vega, Tailor Salo, Asier Erramuzpe and 
 * MAINT: Container images - cleanup ``$HOME`` in docker build (#1768) @oesteban
 
 1.5.0 (September 9, 2019)
-=========================
+-------------------------
 Two hallmark changes conducive to a new minor release line have been included in
 version 1.5.0: the upgrade of *PyBIDS* to the 0.9 series and the split of *SDCflows*
 off from *fMRIPrep* codebase.
@@ -447,8 +451,10 @@ With thanks to Ursula Tooley, Sebastian Urchs and Gabriel A. Devenyi for contrib
 * MAINT: Remove old ``extensions`` entity selector for PyBIDS queries (#1707) @oesteban
 * MAINT: Use PyBIDS 0.9.x via niworkflows/smriprep PRs (#1695) @effigies
 
+1.4.x series (May 2019)
+=======================
 1.4.1 (July 9, 2019)
-====================
+--------------------
 As of 1.4.1, the new infant and pediatric templates added to TemplateFlow are available to
 brain extraction and spatial normalization.
 Containers do not set the ``TEMPLATEFLOW_HOME`` environment variable anymore, allowing
@@ -466,7 +472,7 @@ handling of FreeSurfer outputs have been included.
 * DOC: Add WHT to Zenodo (#1683) @wiheto
 
 1.4.0 (May 15, 2019)
-====================
+--------------------
 The new 1.4 series include several new features, several maintenance patches,
 and numerous bugfixes.
 The largest change to *fMRIPrep*'s interface is the new ``--output-spaces``
