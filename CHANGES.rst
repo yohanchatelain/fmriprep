@@ -1,42 +1,65 @@
 20.1.0 (May 25, 2020)
 =====================
-The second minor release of 2020 is finally here! *fMRIPrep* 20.1.0 introduces a magnitude of new features
-and improvements. Some key additions in this release include:
+The second minor release series of 2020 is finally here!
 
-- A dedicated configuration module to centralize *fMRIPrep*'s many options. Every invocation will now produce a config file
-with the specific options used, located at ``<output-directory>/fmriprep/<subject>/<run-uuid>/fmriprep.toml``.
-- A command-line option (``--anat-derivatives``) to allow skipping anatomical processing by reusing existing anatomical derivatives.
-This can significantly speed up longitudinal study preprocessing.
+*fMRIPrep* 20.1.0 introduces a magnitude of new features and improvements.
+Originally nominated to become the first LTS (long-term support) version of *fMRIPrep*, this release has been supercharged with many new features and bug-fixes.
+To ensure long-term stability, we have postponed the LTS nomination to 20.2 to allow us unlocking the 20.1 earlier, and a more extensive stress testing of the series before jumping into a longer support commitment.
+Some key additions in this release include:
+
+- A centralized `configuration module
+  <https://fmriprep.readthedocs.io/en/latest/api.html#module-fmriprep.config>`__
+  keeping track of *fMRIPrep*'s many options and run-time and environmental
+  circumstances and settings.
+  The new config module, which has been also propagated to other *NiPreps*
+  (`dMRIPrep <https://nipreps.com/dmriprep>`__,
+  `MRIQC <https://mriqc.readthedocs.io/>`__),
+  comes to robustify the run-to-run replicability of *fMRIPrep* (e.g., tracking random seeds),
+  make the option handling more modular but consistent (e.g., setting the ground for a
+  command-line interface built off of the config module), 
+  and ease troubleshooting and telemetry.
+- The *anatomical preprocessing fast-track*: a new command-line option 
+  ``--anat-derivatives <PATH>`` checks that all necessary anatomical derivatives
+  required by *fMRIPrep* are present under ``<PATH>``, and skips the anatomical
+  processing in full if *fMRIPrep*'s expectations are met.
+  Because now functional processing of many sessions and runs can be efficiently
+  split into more digestible computational units (i.e., cluster job) while guaranteeing the
+  exact same anatomical results are being used, this can significantly speed up 
+  longitudinal study preprocessing, and it is a fundamental optimization to process
+  databases of densely scanned individuals such as `My Connectome
+  <https://openneuro.org/datasets/ds000031>`__.
 - A change in output CIFTI2 subcortical volume orientation to be compatible with HCP Pipeline tools and data.
 
-A full list of changes can be found below.
+As with all minor version increments, working directories from previous versions should not be reused.
 
-* DOC: Update parallel subject neurostars link in faq (#2104)
-* DOC: Add FAQ about reusing work directory (#2045)
-* ENH: Finish the upstreaming of NiTransforms interfaces to NiWorkflows (#2132)
-* ENH: Enable filtering for ANY or NONE in ``--bids-filter-file`` (#2123) @bpinsard
-* ENH: Use new ``DerivativesDataSink`` from NiWorkflows 1.2.0 (#2114) @oesteban
+Thank you for using *fMRIPrep*! If you encounter any issues with this release, please let us know by posting an issue on our GitHub page!
+
+A full list of changes can be found below.
+With thanks to Basile Pinsard for contributions.
+
+* FIX: Correct summary report when using previously run ``recon-all`` (#2124)
+* FIX: Ensure correct WM and CSF masks are picked in confounds workflow (#2128)
+* FIX: Explicitly add default ``native`` resolution to volumetric outputs (`nipreps/niworkflows#494`_)
+* ENH: Finish the upstreaming of *NiTransforms* interfaces to *NiWorkflows* (#2132)
+* ENH: Enable filtering for ``ANY`` or ``NONE`` in ``--bids-filter-file`` (#2123) @bpinsard
+* ENH: Use new ``DerivativesDataSink`` from *NiWorkflows* 1.2.0 (#2114) @oesteban
 * ENH: Config module (#2018)
 * ENH: Add option to ignore T2w / FLAIR images (#2015)
 * ENH: Ensure subcortical volume in CIFTI is in LAS orientation (`nipreps/niworkflows#484`_)
 * ENH: Add option to skip brain extraction (#2039)
 * ENH: Use CIFTI for carpetplot when available (#2055)
-* FIX: Correct summary report when using previously run recon-all (#2124)
-* FIX: Ensure correct WM and CSF masks are picked in confounds workflow (#2128)
-* FIX: Explicitly add default native resolution to volumetric outputs (`nipreps/niworkflows#494`_)
-* MAINT/STY: Stop printing full boilerplate, black fmriprep/cli (#2119)
-* MAINT: Ensure yaml loader is specified (#2125)
-* MAINT: PIN tedana version (#2117)
+* MAINT: Stop printing full boilerplate, ``black fmriprep/cli`` (#2119)
+* MAINT: Ensure YAML loader is specified (#2125)
+* MAINT: PIN *tedana* version (#2117)
 * MAINT: Bump minimum Python to 3.7 (#2017)
 * MAINT: Remove unused console scripts (#2048)
-* MAINT: Reduce overall size of outputs (`nipreps/niworkflows#492`_)
+* MAINT: Reduce the overall size of outputs (`nipreps/niworkflows#492`_)
+* DOC: Update parallel subject neurostars link in faq (#2104)
+* DOC: Add FAQ about reusing work directory (#2045)
 
 .. _`nipreps/niworkflows#484`: https://github.com/nipreps/niworkflows/pull/484
 .. _`nipreps/niworkflows#494`: https://github.com/nipreps/niworkflows/pull/494
 .. _`nipreps/niworkflows#492`: https://github.com/nipreps/niworkflows/pull/492
-
-As with all minor version increments, working directories from previous versions should not be reused. Thank you for using *fMRIPrep*, if you
-encounter any issues with this release, please let us know by posting an issue on our github page!
 
 20.0.7 (May 5, 2020)
 ====================
