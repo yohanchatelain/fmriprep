@@ -30,12 +30,31 @@ Some key additions in this release include:
   <https://openneuro.org/datasets/ds000031>`__.
 - A change in output CIFTI2 subcortical volume orientation to be compatible with HCP Pipeline tools and data.
 
-As with all minor version increments, working directories from previous versions should not be reused.
+.. admonition:: Thanks
 
-Thank you for using *fMRIPrep*! If you encounter any issues with this release, please let us know by posting an issue on our GitHub page!
+    With thanks to Basile Pinsard, Joe B. Wexler, Noah Benson, and Marc Bue for contributions.
+
+.. admonition:: New Paper!
+
+    This release comes after our latest protocol paper "*Analysis of task-based
+    functional MRI data preprocessed with fMRIPrep*" has been accepted.
+    The protocol describes how to use *fMRIPrep* on high-performance
+    clusters to preprocess fMRI data for task-based analyses.
+    Please check out `the latest version on Nature Protocols
+    <https://doi.org/10.1038/s41596-020-0327-3>`__ or `the preprint
+    <https://doi.org/10.1101/694364>`__.
+
+.. caution::
+
+    As with all minor version increments, working directories
+    from previous versions **should not be reused**.
+
+Thank you for using *fMRIPrep*!
+If you encounter any issues with this release, please let us know
+by posting an issue on our GitHub page!
 
 A full list of changes can be found below.
-With thanks to Basile Pinsard, Joe B. Wexler, Noah Benson, and Marc Bue for contributions.
+
 
 * FIX: Dismiss ``echo`` entity on several derivatives and figures outputs (#2133)
 * FIX: Correct summary report when using previously run ``recon-all`` (#2124)
