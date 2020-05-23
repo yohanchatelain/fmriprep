@@ -809,13 +809,13 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
     # REPORTING ############################################################
     ds_report_summary = pe.Node(
-        DerivativesDataSink(desc='summary', datatype="figures"),
+        DerivativesDataSink(desc='summary', datatype="figures", dismiss_entities=("echo",)),
         name='ds_report_summary', run_without_submitting=True,
         mem_gb=config.DEFAULT_MEMORY_MIN_GB)
 
     ds_report_validation = pe.Node(
-        DerivativesDataSink(base_directory=output_dir,
-                            desc='validation', datatype="figures"),
+        DerivativesDataSink(base_directory=output_dir, desc='validation', datatype="figures",
+                            dismiss_entities=("echo",)),
         name='ds_report_validation', run_without_submitting=True,
         mem_gb=config.DEFAULT_MEMORY_MIN_GB)
 

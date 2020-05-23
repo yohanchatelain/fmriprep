@@ -68,7 +68,8 @@ def init_func_derivatives_wf(
     raw_sources.inputs.bids_root = bids_root
 
     ds_confounds = pe.Node(DerivativesDataSink(
-        base_directory=output_dir, desc='confounds', suffix='regressors'),
+        base_directory=output_dir, desc='confounds', suffix='regressors',
+        dismiss_entities=("echo",)),
         name="ds_confounds", run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
     workflow.connect([
@@ -80,19 +81,20 @@ def init_func_derivatives_wf(
 
     if nonstd_spaces.intersection(('func', 'run', 'bold', 'boldref', 'sbref')):
         ds_bold_native = pe.Node(
-            DerivativesDataSink(base_directory=output_dir, desc='preproc',
-                                compress=True, SkullStripped=False,
-                                RepetitionTime=metadata.get('RepetitionTime'),
-                                TaskName=metadata.get('TaskName')),
+            DerivativesDataSink(
+                base_directory=output_dir, desc='preproc', compress=True, SkullStripped=False,
+                RepetitionTime=metadata.get('RepetitionTime'), TaskName=metadata.get('TaskName'),
+                dismiss_entities=("echo",)),
             name='ds_bold_native', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_native_ref = pe.Node(
-            DerivativesDataSink(base_directory=output_dir, suffix='boldref', compress=True),
+            DerivativesDataSink(base_directory=output_dir, suffix='boldref', compress=True,
+                                dismiss_entities=("echo",)),
             name='ds_bold_native_ref', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_mask_native = pe.Node(
-            DerivativesDataSink(base_directory=output_dir, desc='brain',
-                                suffix='mask', compress=True),
+            DerivativesDataSink(base_directory=output_dir, desc='brain', suffix='mask',
+                                compress=True, dismiss_entities=("echo",)),
             name='ds_bold_mask_native', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
 
@@ -109,21 +111,21 @@ def init_func_derivatives_wf(
     # Resample to T1w space
     if nonstd_spaces.intersection(('T1w', 'anat')):
         ds_bold_t1 = pe.Node(
-            DerivativesDataSink(base_directory=output_dir, space='T1w', desc='preproc',
-                                compress=True, SkullStripped=False,
-                                RepetitionTime=metadata.get('RepetitionTime'),
-                                TaskName=metadata.get('TaskName')),
+            DerivativesDataSink(
+                base_directory=output_dir, space='T1w', desc='preproc', compress=True,
+                SkullStripped=False, RepetitionTime=metadata.get('RepetitionTime'),
+                TaskName=metadata.get('TaskName'), dismiss_entities=("echo",)),
             name='ds_bold_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_t1_ref = pe.Node(
-            DerivativesDataSink(base_directory=output_dir, space='T1w',
-                                suffix='boldref', compress=True),
+            DerivativesDataSink(base_directory=output_dir, space='T1w', suffix='boldref',
+                                compress=True, dismiss_entities=("echo",)),
             name='ds_bold_t1_ref', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
 
         ds_bold_mask_t1 = pe.Node(
             DerivativesDataSink(base_directory=output_dir, space='T1w', desc='brain',
-                                suffix='mask', compress=True),
+                                suffix='mask', compress=True, dismiss_entities=("echo",)),
             name='ds_bold_mask_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         workflow.connect([
@@ -138,11 +140,13 @@ def init_func_derivatives_wf(
         if freesurfer:
             ds_bold_aseg_t1 = pe.Node(DerivativesDataSink(
                 base_directory=output_dir, space='T1w', desc='aseg', suffix='dseg',
-                compress=True), name='ds_bold_aseg_t1', run_without_submitting=True,
+                compress=True, dismiss_entities=("echo",)),
+                name='ds_bold_aseg_t1', run_without_submitting=True,
                 mem_gb=DEFAULT_MEMORY_MIN_GB)
             ds_bold_aparc_t1 = pe.Node(DerivativesDataSink(
                 base_directory=output_dir, space='T1w', desc='aparcaseg', suffix='dseg',
-                compress=True), name='ds_bold_aparc_t1', run_without_submitting=True,
+                compress=True, dismiss_entities=("echo",)),
+                name='ds_bold_aparc_t1', run_without_submitting=True,
                 mem_gb=DEFAULT_MEMORY_MIN_GB)
             workflow.connect([
                 (inputnode, ds_bold_aseg_t1, [('source_file', 'source_file'),
@@ -153,16 +157,18 @@ def init_func_derivatives_wf(
 
     if use_aroma:
         ds_aroma_noise_ics = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix='AROMAnoiseICs'),
+            base_directory=output_dir, suffix='AROMAnoiseICs', dismiss_entities=("echo",)),
             name="ds_aroma_noise_ics", run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_melodic_mix = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, desc='MELODIC', suffix='mixing'),
+            base_directory=output_dir, desc='MELODIC', suffix='mixing',
+            dismiss_entities=("echo",)),
             name="ds_melodic_mix", run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_aroma_std = pe.Node(
-            DerivativesDataSink(base_directory=output_dir, space='MNI152NLin6Asym',
-                                desc='smoothAROMAnonaggr', compress=True),
+            DerivativesDataSink(
+                base_directory=output_dir, space='MNI152NLin6Asym', desc='smoothAROMAnonaggr',
+                compress=True),
             name='ds_aroma_std', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
 
@@ -193,17 +199,18 @@ def init_func_derivatives_wf(
             name='select_std', run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
 
         ds_bold_std = pe.Node(
-            DerivativesDataSink(base_directory=output_dir, desc='preproc',
-                                compress=True, SkullStripped=False,
-                                RepetitionTime=metadata.get('RepetitionTime'),
-                                TaskName=metadata.get('TaskName')),
+            DerivativesDataSink(
+                base_directory=output_dir, desc='preproc', compress=True, SkullStripped=False,
+                RepetitionTime=metadata.get('RepetitionTime'), TaskName=metadata.get('TaskName'),
+                dismiss_entities=("echo",)),
             name='ds_bold_std', run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_std_ref = pe.Node(
-            DerivativesDataSink(base_directory=output_dir, suffix='boldref', compress=True),
+            DerivativesDataSink(base_directory=output_dir, suffix='boldref', compress=True,
+                                dismiss_entities=("echo",)),
             name='ds_bold_std_ref', run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_mask_std = pe.Node(
             DerivativesDataSink(base_directory=output_dir, desc='brain', suffix='mask',
-                                compress=True),
+                                compress=True, dismiss_entities=("echo",)),
             name='ds_bold_mask_std', run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
 
         workflow.connect([
@@ -239,11 +246,13 @@ def init_func_derivatives_wf(
                 fields=['bold_aseg_std', 'bold_aparc_std', 'template']),
                 name='select_fs_std', run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
             ds_bold_aseg_std = pe.Node(DerivativesDataSink(
-                base_directory=output_dir, desc='aseg', suffix='dseg', compress=True),
+                base_directory=output_dir, desc='aseg', suffix='dseg', compress=True,
+                dismiss_entities=("echo",)),
                 name='ds_bold_aseg_std', run_without_submitting=True,
                 mem_gb=DEFAULT_MEMORY_MIN_GB)
             ds_bold_aparc_std = pe.Node(DerivativesDataSink(
-                base_directory=output_dir, desc='aparcaseg', suffix='dseg', compress=True),
+                base_directory=output_dir, desc='aparcaseg', suffix='dseg', compress=True,
+                dismiss_entities=("echo",)),
                 name='ds_bold_aparc_std', run_without_submitting=True,
                 mem_gb=DEFAULT_MEMORY_MIN_GB)
             workflow.connect([
@@ -281,7 +290,7 @@ def init_func_derivatives_wf(
                                 run_without_submitting=True)
 
         ds_bold_surfs = pe.MapNode(DerivativesDataSink(
-            base_directory=output_dir, extension="func.gii"),
+            base_directory=output_dir, extension="func.gii", dismiss_entities=("echo",)),
             iterfield=['in_file', 'hemi'], name='ds_bold_surfs',
             run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
 
@@ -299,7 +308,7 @@ def init_func_derivatives_wf(
     # CIFTI output
     if cifti_output:
         ds_bold_cifti = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix='bold', compress=False),
+            base_directory=output_dir, suffix='bold', compress=False, dismiss_entities=("echo",)),
             name='ds_bold_cifti', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         workflow.connect([
@@ -365,8 +374,8 @@ def init_bold_preproc_report_wf(mem_gb, reportlets_dir, name='bold_preproc_repor
                        mem_gb=0.1)
     ds_report_bold = pe.Node(
         DerivativesDataSink(base_directory=reportlets_dir, desc='preproc',
-                            datatype="figures"), name='ds_report_bold',
-        mem_gb=DEFAULT_MEMORY_MIN_GB,
+                            datatype="figures", dismiss_entities=("echo",)),
+        name='ds_report_bold', mem_gb=DEFAULT_MEMORY_MIN_GB,
         run_without_submitting=True
     )
 
