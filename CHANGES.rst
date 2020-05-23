@@ -16,15 +16,15 @@ Some key additions in this release include:
   `MRIQC <https://mriqc.readthedocs.io/>`__),
   comes to robustify the run-to-run replicability of *fMRIPrep* (e.g., tracking random seeds),
   make the option handling more modular but consistent (e.g., setting the ground for a
-  command-line interface built off of the config module), 
+  command-line interface built off of the config module),
   and ease troubleshooting and telemetry.
-- The *anatomical preprocessing fast-track*: a new command-line option 
+- The *anatomical preprocessing fast-track*: a new command-line option
   ``--anat-derivatives <PATH>`` checks that all necessary anatomical derivatives
   required by *fMRIPrep* are present under ``<PATH>``, and skips the anatomical
   processing in full if *fMRIPrep*'s expectations are met.
   Because now functional processing of many sessions and runs can be efficiently
   split into more digestible computational units (i.e., cluster job) while guaranteeing the
-  exact same anatomical results are being used, this can significantly speed up 
+  exact same anatomical results are being used, this can significantly speed up
   longitudinal study preprocessing, and it is a fundamental optimization to process
   databases of densely scanned individuals such as `My Connectome
   <https://openneuro.org/datasets/ds000031>`__.
@@ -35,32 +35,74 @@ As with all minor version increments, working directories from previous versions
 Thank you for using *fMRIPrep*! If you encounter any issues with this release, please let us know by posting an issue on our GitHub page!
 
 A full list of changes can be found below.
-With thanks to Basile Pinsard for contributions.
+With thanks to Basille Pinsard, Joe B. Wexler, Noah Benson, and Marc Bue for contributions.
 
 * FIX: Dismiss ``echo`` entity on several derivatives and figures outputs (#2133)
 * FIX: Correct summary report when using previously run ``recon-all`` (#2124)
 * FIX: Ensure correct WM and CSF masks are picked in confounds workflow (#2128)
 * FIX: Explicitly add default ``native`` resolution to volumetric outputs (`nipreps/niworkflows#494`_)
 * ENH: Finish the upstreaming of *NiTransforms* interfaces to *NiWorkflows* (#2132)
-* ENH: Enable filtering for ``ANY`` or ``NONE`` in ``--bids-filter-file`` (#2123) @bpinsard
-* ENH: Use new ``DerivativesDataSink`` from *NiWorkflows* 1.2.0 (#2114) @oesteban
+* ENH: Enable filtering for ``ANY`` or ``NONE`` in ``--bids-filter-file`` (#2123)
+* ENH: Use new ``DerivativesDataSink`` from *NiWorkflows* 1.2.0 (#2114)
 * ENH: Config module (#2018)
 * ENH: Add option to ignore T2w / FLAIR images (#2015)
 * ENH: Ensure subcortical volume in CIFTI is in LAS orientation (`nipreps/niworkflows#484`_)
 * ENH: Add option to skip brain extraction (#2039)
-* ENH: Use CIFTI for carpetplot when available (#2055)
+* ENH: Use CIFTI sampling for carpetplot when available (#2055)
 * MAINT: Stop printing full boilerplate, ``black fmriprep/cli`` (#2119)
 * MAINT: Ensure YAML loader is specified (#2125)
 * MAINT: PIN *tedana* version (#2117)
 * MAINT: Bump minimum Python to 3.7 (#2017)
 * MAINT: Remove unused console scripts (#2048)
 * MAINT: Reduce the overall size of outputs (`nipreps/niworkflows#492`_)
-* DOC: Update parallel subject neurostars link in faq (#2104)
+* DOC: Update parallel subject neurostars link in FAQ (#2104)
 * DOC: Add FAQ about reusing work directory (#2045)
 
 .. _`nipreps/niworkflows#484`: https://github.com/nipreps/niworkflows/pull/484
 .. _`nipreps/niworkflows#494`: https://github.com/nipreps/niworkflows/pull/494
 .. _`nipreps/niworkflows#492`: https://github.com/nipreps/niworkflows/pull/492
+
+.. admonition:: Author list for papers based on *fMRIPrep* v20.1.x series
+
+    As described in the `Contributor Guidelines
+    <https://github.com/poldracklab/fmriprep/blob/e3d3bc51dbf03215e3e4d2746d8aaacdd9afb84d/CONTRIBUTING.md#publications>`__, anyone
+    listed as developer or contributor may write and submit manuscripts regarding
+    *fMRIPrep*.
+    To do so, please move the author(s) name(s) to the front of the following list.
+
+    Markiewicz, Christopher J. (1); Goncalves, Mathias (1); DuPre, Elizabeth (2); Kent, James D. (3); Ciric, Rastko (1); Salo, Taylor (4); de la Vega, Alejandro (5); Finc, Karolina (6); Feingold, Franklin (1); Tooley, Ursula A. (7); Urchs, Sebastian (2); Blair, Ross W. (1); Erramuzpe, Asier (8); Jacoby, Nir (9); Lurie, Daniel J. (10); Heinsfeld, Anibal S. (11); Valabregue, Romain (12); Frederick, Blaise B. (13, 14); Sneve, Markus H. (15); Liem, Franz (16); Adebimpe, Azeez (17); Velasco, Pablo (18); Groen, Iris I. A. (19); Ma, Feilong (20); Rivera-Dompenciel, Adriana (3); Amlien, Inge K. (15); Cieslak, Matthew (17); Devenyi, Grabriel A. (21); Ghosh, Satrajit S. (22, 23); Gomez, Daniel E. P. (24); Halchenko, Yaroslav O. (20); Isik, Ayse Ilkay (25); Moodie, Craig A. (1); Naveau, Mikaël (26); Satterthwaite, Theodore D. (17); Sitek, Kevin R. (27); Stojić, Hrvoje (28); Thompson, William H (1); Wright, Jessey (1); Ye, Zhifang (29); Gorgolewski, Krzysztof J. (1); Poldrack, Russell A. (1); Esteban, Oscar (1)
+
+    Affiliations:
+
+      1. Department of Psychology, Stanford University
+      2. Montreal Neurological Institute, McGill University
+      3. Neuroscience Program, University of Iowa
+      4. Department of Psychology, Florida International University
+      5. University of Texas at Austin
+      6. Centre for Modern Interdisciplinary Technologies, Nicolaus Copernicus University in Toruń
+      7. Department of Neuroscience, University of Pennsylvania, PA, USA
+      8. Computational Neuroimaging Lab, BioCruces Health Research Institute
+      9. Department of Psychology, Columbia University
+      10. Department of Psychology, University of California, Berkeley
+      11. Child Mind Institute
+      12. CENIR, INSERM U1127, CNRS UMR 7225, UPMC Univ Paris 06 UMR S 1127, Institut du Cerveau et de la Moelle épinière, ICM, F-75013, Paris, France
+      13. McLean Hospital Brain Imaging Center, MA, USA
+      14. Consolidated Department of Psychiatry, Harvard Medical School, MA, USA
+      15. Center for Lifespan Changes in Brain and Cognition, University of Oslo
+      16. URPP Dynamics of Healthy Aging, University of Zurich
+      17. Perelman School of Medicine, University of Pennsylvania, PA, USA
+      18. Center for Brain Imaging, New York University
+      19. Department of Psychology, New York University, NY, USA
+      20. Dartmouth College: Hanover, NH, United States
+      21. Department of Psychiatry, McGill University
+      22. McGovern Institute for Brain Research, MIT, MA, USA
+      23. Department of Otolaryngology, Harvard Medical School, MA, USA
+      24. Donders Institute for Brain, Cognition and Behaviour, Radboud University Nijmegen
+      25. Max Planck Institute for Empirical Aesthetics
+      26. Cyceron, UMS 3408 (CNRS - UCBN), France
+      27. Speech & Hearing Bioscience & Technology Program, Harvard University
+      28. Max Planck UCL Centre for Computational Psychiatry and Ageing Research, University College London
+      29. State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University
 
 20.0.7 (May 5, 2020)
 ====================
