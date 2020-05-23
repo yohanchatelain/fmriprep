@@ -12,7 +12,7 @@ Some key additions in this release include:
   keeping track of *fMRIPrep*'s many options and run-time and environmental
   circumstances and settings.
   The new config module, which has been also propagated to other *NiPreps*
-  (`dMRIPrep <https://nipreps.com/dmriprep>`__,
+  (`dMRIPrep <https://nipreps.org/dmriprep>`__,
   `MRIQC <https://mriqc.readthedocs.io/>`__),
   comes to robustify the run-to-run replicability of *fMRIPrep* (e.g., tracking random seeds),
   make the option handling more modular but consistent (e.g., setting the ground for a
