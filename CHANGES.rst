@@ -37,6 +37,7 @@ Thank you for using *fMRIPrep*! If you encounter any issues with this release, p
 A full list of changes can be found below.
 With thanks to Basile Pinsard for contributions.
 
+* FIX: Dismiss ``echo`` entity on several derivatives and figures outputs (#2133)
 * FIX: Correct summary report when using previously run ``recon-all`` (#2124)
 * FIX: Ensure correct WM and CSF masks are picked in confounds workflow (#2128)
 * FIX: Explicitly add default ``native`` resolution to volumetric outputs (`nipreps/niworkflows#494`_)
