@@ -41,7 +41,9 @@ if __name__ == '__main__':
 
     print('Authors (%d):' % len(author_matches))
     print('; '.join([
-        '%s (%s)' % (i['name'], idx) for i, idx in zip(author_matches, aff_indexes)]))
+        '%s \\ :sup:`%s`\\ ' % (i['name'], idx)
+        for i, idx in zip(author_matches, aff_indexes)
+    ]))
 
     print('\n\nAffiliations:\n%s' % '\n'.join(['{0: >2}. {1}'.format(i + 1, a)
                                                for i, a in enumerate(affiliations)]))

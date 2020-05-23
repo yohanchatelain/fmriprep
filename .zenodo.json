@@ -33,6 +33,12 @@
       "type": "Researcher"
     },
     {
+      "affiliation": "Department of Psychology, New York University",
+      "name": "Benson, Noah C.",
+      "orcid": "0000-0002-2365-8265",
+      "type": "Researcher"
+    },
+    {
       "affiliation": "Montreal Neurological Institute, McGill University",
       "name": "Urchs, Sebastian",
       "orcid": "0000-0001-5504-8579",
@@ -54,6 +60,12 @@
       "affiliation": "Department of Psychology, University of California, Berkeley",
       "name": "Lurie, Daniel J.",
       "orcid": "0000-0001-8012-6399",
+      "type": "Researcher"
+    },
+    {
+      "affiliation": "SIMEXP Lab, CRIUGM, University of Montr\u00e9al, Montr\u00e9al, Canada",
+      "name": "Basile Pinsard",
+      "orcid": "0000-0002-4391-3075",
       "type": "Researcher"
     },
     {
@@ -184,7 +196,7 @@
     },
     {
       "affiliation": "Department of Psychology, Stanford University",
-      "name": "Thompson, William H",
+      "name": "Thompson, William H.",
       "orcid": "0000-0002-0533-6035",
       "type": "Researcher"
     },
