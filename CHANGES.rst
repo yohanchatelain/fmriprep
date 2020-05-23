@@ -35,7 +35,7 @@ As with all minor version increments, working directories from previous versions
 Thank you for using *fMRIPrep*! If you encounter any issues with this release, please let us know by posting an issue on our GitHub page!
 
 A full list of changes can be found below.
-With thanks to Basille Pinsard, Joe B. Wexler, Noah Benson, and Marc Bue for contributions.
+With thanks to Basile Pinsard, Joe B. Wexler, Noah Benson, and Marc Bue for contributions.
 
 * FIX: Dismiss ``echo`` entity on several derivatives and figures outputs (#2133)
 * FIX: Correct summary report when using previously run ``recon-all`` (#2124)
@@ -70,7 +70,7 @@ With thanks to Basille Pinsard, Joe B. Wexler, Noah Benson, and Marc Bue for con
     *fMRIPrep*.
     To do so, please move the author(s) name(s) to the front of the following list.
 
-    Markiewicz, Christopher J. (1); Goncalves, Mathias (1); DuPre, Elizabeth (2); Kent, James D. (3); Ciric, Rastko (1); Salo, Taylor (4); de la Vega, Alejandro (5); Finc, Karolina (6); Feingold, Franklin (1); Tooley, Ursula A. (7); Urchs, Sebastian (2); Blair, Ross W. (1); Erramuzpe, Asier (8); Jacoby, Nir (9); Lurie, Daniel J. (10); Heinsfeld, Anibal S. (11); Valabregue, Romain (12); Frederick, Blaise B. (13, 14); Sneve, Markus H. (15); Liem, Franz (16); Adebimpe, Azeez (17); Velasco, Pablo (18); Groen, Iris I. A. (19); Ma, Feilong (20); Rivera-Dompenciel, Adriana (3); Amlien, Inge K. (15); Cieslak, Matthew (17); Devenyi, Grabriel A. (21); Ghosh, Satrajit S. (22, 23); Gomez, Daniel E. P. (24); Halchenko, Yaroslav O. (20); Isik, Ayse Ilkay (25); Moodie, Craig A. (1); Naveau, Mikaël (26); Satterthwaite, Theodore D. (17); Sitek, Kevin R. (27); Stojić, Hrvoje (28); Thompson, William H (1); Wright, Jessey (1); Ye, Zhifang (29); Gorgolewski, Krzysztof J. (1); Poldrack, Russell A. (1); Esteban, Oscar (1)
+    Markiewicz, Christopher J.\ :sup:`1`\ ; Goncalves, Mathias\ :sup:`1`\ ; DuPre, Elizabeth\ :sup:`2`\ ; Kent, James D.\ :sup:`3`\ ; Ciric, Rastko\ :sup:`1`\ ; Salo, Taylor\ :sup:`4`\ ; de la Vega, Alejandro\ :sup:`5`\ ; Finc, Karolina\ :sup:`6`\ ; Feingold, Franklin\ :sup:`1`\ ; Tooley, Ursula A.\ :sup:`7`\ ; Benson, Noah C.\ :sup:`8`\ ; Urchs, Sebastian\ :sup:`2`\ ; Blair, Ross W.\ :sup:`1`\ ; Erramuzpe, Asier\ :sup:`9`\ ; Jacoby, Nir\ :sup:`10`\ ; Lurie, Daniel J.\ :sup:`11`\ ; Basile Pinsard\ :sup:`12`\ ; Heinsfeld, Anibal S.\ :sup:`13`\ ; Valabregue, Romain\ :sup:`14`\ ; Frederick, Blaise B.\ :sup:`15, 16`\ ; Sneve, Markus H.\ :sup:`17`\ ; Liem, Franz\ :sup:`18`\ ; Adebimpe, Azeez\ :sup:`19`\ ; Velasco, Pablo\ :sup:`20`\ ; Groen, Iris I. A.\ :sup:`21`\ ; Ma, Feilong\ :sup:`22`\ ; Rivera-Dompenciel, Adriana\ :sup:`3`\ ; Amlien, Inge K.\ :sup:`17`\ ; Cieslak, Matthew\ :sup:`19`\ ; Devenyi, Grabriel A.\ :sup:`23`\ ; Ghosh, Satrajit S.\ :sup:`24, 25`\ ; Gomez, Daniel E. P.\ :sup:`26`\ ; Halchenko, Yaroslav O.\ :sup:`22`\ ; Isik, Ayse Ilkay\ :sup:`27`\ ; Moodie, Craig A.\ :sup:`1`\ ; Naveau, Mikaël\ :sup:`28`\ ; Satterthwaite, Theodore D.\ :sup:`19`\ ; Sitek, Kevin R.\ :sup:`29`\ ; Stojić, Hrvoje\ :sup:`30`\ ; Thompson, William H.\ :sup:`1`\ ; Wright, Jessey\ :sup:`1`\ ; Ye, Zhifang\ :sup:`31`\ ; Gorgolewski, Krzysztof J.\ :sup:`1`\ ; Poldrack, Russell A.\ :sup:`1`\ ; Esteban, Oscar\ :sup:`1`\ .
 
     Affiliations:
 
@@ -81,28 +81,30 @@ With thanks to Basille Pinsard, Joe B. Wexler, Noah Benson, and Marc Bue for con
       5. University of Texas at Austin
       6. Centre for Modern Interdisciplinary Technologies, Nicolaus Copernicus University in Toruń
       7. Department of Neuroscience, University of Pennsylvania, PA, USA
-      8. Computational Neuroimaging Lab, BioCruces Health Research Institute
-      9. Department of Psychology, Columbia University
-      10. Department of Psychology, University of California, Berkeley
-      11. Child Mind Institute
-      12. CENIR, INSERM U1127, CNRS UMR 7225, UPMC Univ Paris 06 UMR S 1127, Institut du Cerveau et de la Moelle épinière, ICM, F-75013, Paris, France
-      13. McLean Hospital Brain Imaging Center, MA, USA
-      14. Consolidated Department of Psychiatry, Harvard Medical School, MA, USA
-      15. Center for Lifespan Changes in Brain and Cognition, University of Oslo
-      16. URPP Dynamics of Healthy Aging, University of Zurich
-      17. Perelman School of Medicine, University of Pennsylvania, PA, USA
-      18. Center for Brain Imaging, New York University
-      19. Department of Psychology, New York University, NY, USA
-      20. Dartmouth College: Hanover, NH, United States
-      21. Department of Psychiatry, McGill University
-      22. McGovern Institute for Brain Research, MIT, MA, USA
-      23. Department of Otolaryngology, Harvard Medical School, MA, USA
-      24. Donders Institute for Brain, Cognition and Behaviour, Radboud University Nijmegen
-      25. Max Planck Institute for Empirical Aesthetics
-      26. Cyceron, UMS 3408 (CNRS - UCBN), France
-      27. Speech & Hearing Bioscience & Technology Program, Harvard University
-      28. Max Planck UCL Centre for Computational Psychiatry and Ageing Research, University College London
-      29. State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University
+      8. Department of Psychology, New York University
+      9. Computational Neuroimaging Lab, BioCruces Health Research Institute
+      10. Department of Psychology, Columbia University
+      11. Department of Psychology, University of California, Berkeley
+      12. SIMEXP Lab, CRIUGM, University of Montréal, Montréal, Canada
+      13. Child Mind Institute
+      14. CENIR, INSERM U1127, CNRS UMR 7225, UPMC Univ Paris 06 UMR S 1127, Institut du Cerveau et de la Moelle épinière, ICM, F-75013, Paris, France
+      15. McLean Hospital Brain Imaging Center, MA, USA
+      16. Consolidated Department of Psychiatry, Harvard Medical School, MA, USA
+      17. Center for Lifespan Changes in Brain and Cognition, University of Oslo
+      18. URPP Dynamics of Healthy Aging, University of Zurich
+      19. Perelman School of Medicine, University of Pennsylvania, PA, USA
+      20. Center for Brain Imaging, New York University
+      21. Department of Psychology, New York University, NY, USA
+      22. Dartmouth College: Hanover, NH, United States
+      23. Department of Psychiatry, McGill University
+      24. McGovern Institute for Brain Research, MIT, MA, USA
+      25. Department of Otolaryngology, Harvard Medical School, MA, USA
+      26. Donders Institute for Brain, Cognition and Behaviour, Radboud University Nijmegen
+      27. Max Planck Institute for Empirical Aesthetics
+      28. Cyceron, UMS 3408 (CNRS - UCBN), France
+      29. Speech & Hearing Bioscience & Technology Program, Harvard University
+      30. Max Planck UCL Centre for Computational Psychiatry and Ageing Research, University College London
+      31. State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University
 
 20.0.7 (May 5, 2020)
 ====================
@@ -259,7 +261,7 @@ This release includes contributions from Azeez Adebimpe and Basile Pinsard - ver
     *fMRIPrep*.
     To do so, please move the author(s) name(s) to the front of the following list.
 
-    Markiewicz, Christopher J. (1); DuPre, Elizabeth (2); Goncalves, Mathias (1); Kent, James D. (3); Ciric, Rastko (1); Salo, Taylor (4); de la Vega, Alejandro (5); Finc, Karolina (6); Feingold, Franklin (1); Urchs, Sebastian (2); Blair, Ross W. (1); Erramuzpe, Asier (7); Valabregue, Romain (8); Jacoby, Nir (9); Lurie, Daniel J. (10); Heinsfeld, Anibal S. (11); Halchenko, Yaroslav O. (12); Sneve, Markus H. (13); Devenyi, Grabriel A. (14); Liem, Franz (15); Gomez, Daniel E. P. (16); Adebimpe, Azeez (17); Velasco, Pablo (18); Groen, Iris I. A. (19); Ma, Feilong (12); Rivera-Dompenciel, Adriana (3); Amlien, Inge K. (13); Cieslak, Matthew (17); Ghosh, Satrajit S. (20, 21); Isik, Ayse Ilkay (22); Moodie, Craig A. (1); Naveau, Mikaël (23); Satterthwaite, Theodore D. (17); Sitek, Kevin R. (24); Stojić, Hrvoje (25); Thompson, William H (1); Tooley, Ursula A. (26); Wright, Jessey (1); Ye, Zhifang (27); Gorgolewski, Krzysztof J. (1); Poldrack, Russell A. (1); Esteban, Oscar (1)
+    Markiewicz, Christopher J.\ :sup:`1`\ ; DuPre, Elizabeth\ :sup:`2`\ ; Goncalves, Mathias\ :sup:`1`\ ; Kent, James D.\ :sup:`3`\ ; Ciric, Rastko\ :sup:`1`\ ; Salo, Taylor\ :sup:`4`\ ; de la Vega, Alejandro\ :sup:`5`\ ; Finc, Karolina\ :sup:`6`\ ; Feingold, Franklin\ :sup:`1`\ ; Urchs, Sebastian\ :sup:`2`\ ; Blair, Ross W.\ :sup:`1`\ ; Erramuzpe, Asier\ :sup:`7`\ ; Valabregue, Romain\ :sup:`8`\ ; Jacoby, Nir\ :sup:`9`\ ; Lurie, Daniel J.\ :sup:`10`\ ; Heinsfeld, Anibal S.\ :sup:`11`\ ; Halchenko, Yaroslav O.\ :sup:`12`\ ; Sneve, Markus H.\ :sup:`13`\ ; Devenyi, Grabriel A.\ :sup:`14`\ ; Liem, Franz\ :sup:`15`\ ; Gomez, Daniel E. P.\ :sup:`16`\ ; Adebimpe, Azeez\ :sup:`17`\ ; Velasco, Pablo\ :sup:`18`\ ; Groen, Iris I. A.\ :sup:`19`\ ; Ma, Feilong\ :sup:`12`\ ; Rivera-Dompenciel, Adriana\ :sup:`3`\ ; Amlien, Inge K.\ :sup:`13`\ ; Cieslak, Matthew\ :sup:`17`\ ; Ghosh, Satrajit S.\ :sup:`20, 21`\ ; Isik, Ayse Ilkay\ :sup:`22`\ ; Moodie, Craig A.\ :sup:`1`\ ; Naveau, Mikaël\ :sup:`23`\ ; Satterthwaite, Theodore D.\ :sup:`17`\ ; Sitek, Kevin R.\ :sup:`24`\ ; Stojić, Hrvoje\ :sup:`25`\ ; Thompson, William H\ :sup:`1`\ ; Tooley, Ursula A.\ :sup:`26`\ ; Wright, Jessey\ :sup:`1`\ ; Ye, Zhifang\ :sup:`27`\ ; Gorgolewski, Krzysztof J.\ :sup:`1`\ ; Poldrack, Russell A.\ :sup:`1`\ ; Esteban, Oscar\ :sup:`1`\ .
 
     Affiliations:
 
