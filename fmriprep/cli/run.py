@@ -26,7 +26,15 @@ def main():
     # CRITICAL Save the config to a file. This is necessary because the execution graph
     # is built as a separate process to keep the memory footprint low. The most
     # straightforward way to communicate with the child process is via the filesystem.
-    config_file = config.execution.work_dir / ".fmriprep.toml"
+    config_file = config.execution.work_dir / ".".join(
+        (
+            ".fmriprep",
+            config.execution.participant_label[0]
+            if config.execution.participant_label
+            else "",
+            "toml",
+        )
+    )
     config.to_filename(config_file)
 
     # CRITICAL Call build_workflow(config_file, retval) in a subprocess.
@@ -120,9 +128,14 @@ def main():
         # Bother users with the boilerplate only iff the workflow went okay.
         boiler_file = config.execution.output_dir / "fmriprep" / "logs" / "CITATION.md"
         if boiler_file.exists():
-            if config.environment.exec_env in ("singularity", "docker", "fmriprep-docker"):
+            if config.environment.exec_env in (
+                "singularity",
+                "docker",
+                "fmriprep-docker",
+            ):
                 boiler_file = Path("<OUTPUT_PATH>") / boiler_file.relative_to(
-                    config.execution.output_dir)
+                    config.execution.output_dir
+                )
             config.loggers.workflow.log(
                 25,
                 "Works derived from this fMRIPrep execution should include the "
