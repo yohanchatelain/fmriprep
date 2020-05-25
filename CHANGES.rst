@@ -55,7 +55,7 @@ by posting an issue on our GitHub page!
 
 A full list of changes can be found below.
 
-
+* FIX: Temporary config file in work directory gets clobbered in parallel jobs (#2138)
 * FIX: Dismiss ``echo`` entity on several derivatives and figures outputs (#2133)
 * FIX: Correct summary report when using previously run ``recon-all`` (#2124)
 * FIX: Ensure correct WM and CSF masks are picked in confounds workflow (#2128)
