@@ -26,15 +26,7 @@ def main():
     # CRITICAL Save the config to a file. This is necessary because the execution graph
     # is built as a separate process to keep the memory footprint low. The most
     # straightforward way to communicate with the child process is via the filesystem.
-    config_file = config.execution.work_dir / ".".join(
-        (
-            ".fmriprep",
-            config.execution.participant_label[0]
-            if config.execution.participant_label
-            else "",
-            "toml",
-        )
-    )
+    config_file = config.execution.work_dir / f"config-{config.execution.run_uuid}.toml"
     config.to_filename(config_file)
 
     # CRITICAL Call build_workflow(config_file, retval) in a subprocess.
