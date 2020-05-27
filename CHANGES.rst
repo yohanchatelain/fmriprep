@@ -1,25 +1,137 @@
-20.1.0 (TBD)
-============
-The second minor release of 2020, *fMRIPrep* 20.1.0 introduces a configuration file to easily
-distinguish which options were selected for each participant, along with other enhancements.
+20.1.0 (May 27, 2020)
+=====================
+The second minor release series of 2020 is finally here!
 
-* DOC: Add FAQ about reusing work directory (#2045)
+*fMRIPrep* 20.1.0 introduces a magnitude of new features and improvements.
+Originally nominated to become the first LTS (long-term support) version of *fMRIPrep*, this release has been supercharged with many new features and bug-fixes.
+To ensure long-term stability, we have postponed the LTS nomination to 20.2 to allow us unlocking the 20.1 earlier, and a more extensive stress testing of the series before jumping into a longer support commitment.
+Some key additions in this release include:
+
+- A centralized `configuration module
+  <https://fmriprep.readthedocs.io/en/latest/api.html#module-fmriprep.config>`__
+  keeping track of *fMRIPrep*'s many options and run-time and environmental
+  circumstances and settings.
+  The new config module, which has been also propagated to other *NiPreps*
+  (`dMRIPrep <https://nipreps.org/dmriprep>`__,
+  `MRIQC <https://mriqc.readthedocs.io/>`__),
+  comes to robustify the run-to-run replicability of *fMRIPrep* (e.g., tracking random seeds),
+  make the option handling more modular but consistent (e.g., setting the ground for a
+  command-line interface built off of the config module),
+  and ease troubleshooting and telemetry.
+- The *anatomical preprocessing fast-track*: a new experimental command-line option
+  ``--anat-derivatives <PATH>`` checks that all necessary anatomical derivatives
+  required by *fMRIPrep* are present under ``<PATH>``, and skips the anatomical
+  processing in full if *fMRIPrep*'s expectations are met.
+  Because now functional processing of many sessions and runs can be efficiently
+  split into more digestible computational units (i.e., cluster job) while guaranteeing the
+  exact same anatomical results are being used, this can significantly speed up
+  longitudinal study preprocessing, and it is a fundamental optimization to process
+  databases of densely scanned individuals such as `My Connectome
+  <https://openneuro.org/datasets/ds000031>`__.
+  This option is not recommended for single-session processing.
+- A change in output CIFTI2 subcortical volume orientation to be compatible with HCP Pipeline tools and data.
+
+.. admonition:: Thanks
+
+    With thanks to Basile Pinsard, Joe B. Wexler, Noah Benson, and Marc Bue for contributions.
+
+.. admonition:: New Paper!
+
+    This release comes after our latest protocol paper "*Analysis of task-based
+    functional MRI data preprocessed with fMRIPrep*" has been accepted.
+    The protocol describes how to use *fMRIPrep* on high-performance
+    clusters to preprocess fMRI data for task-based analyses.
+    Please check out `the latest version on Nature Protocols
+    <https://doi.org/10.1038/s41596-020-0327-3>`__ or `the preprint
+    <https://doi.org/10.1101/694364>`__.
+
+.. caution::
+
+    As with all minor version increments, working directories
+    from previous versions **should not be reused**.
+
+Thank you for using *fMRIPrep*!
+If you encounter any issues with this release, please let us know
+by posting an issue on our GitHub page!
+
+A full list of changes can be found below.
+
+* FIX: ``MultiLabel`` interpolations should not use ``float=True`` (#2147)
+* FIX: Generate proper LTA transform prior BOLD sampling on surfaces (#2146)
+* FIX: Temporary config file in work directory gets clobbered in parallel jobs (#2138)
+* FIX: Dismiss ``echo`` entity on several derivatives and figures outputs (#2133)
+* FIX: Correct summary report when using previously run ``recon-all`` (#2124)
+* FIX: Ensure correct WM and CSF masks are picked in confounds workflow (#2128)
+* FIX: Explicitly add default ``native`` resolution to volumetric outputs (`nipreps/niworkflows#494`_)
+* ENH: Finish the upstreaming of *NiTransforms* interfaces to *NiWorkflows* (#2132)
+* ENH: Enable filtering for ``ANY`` or ``NONE`` in ``--bids-filter-file`` (#2123)
+* ENH: Use new ``DerivativesDataSink`` from *NiWorkflows* 1.2.0 (#2114)
 * ENH: Config module (#2018)
 * ENH: Add option to ignore T2w / FLAIR images (#2015)
 * ENH: Ensure subcortical volume in CIFTI is in LAS orientation (`nipreps/niworkflows#484`_)
 * ENH: Add option to skip brain extraction (#2039)
-* ENH: Use CIFTI for carpetplot when available (#2055)
-* FIX: Explicitly add default native resolution to volumetric outputs (`nipreps/niworkflows#494`_)
+* ENH: Use CIFTI sampling for carpetplot when available (#2055)
+* MAINT: Stop printing full boilerplate, ``black fmriprep/cli`` (#2119)
+* MAINT: Ensure YAML loader is specified (#2125)
+* MAINT: PIN *tedana* version (#2117)
 * MAINT: Bump minimum Python to 3.7 (#2017)
 * MAINT: Remove unused console scripts (#2048)
-* MAINT: Reduce overall size of outputs (`nipreps/niworkflows#492`_)
+* MAINT: Reduce the overall size of outputs (`nipreps/niworkflows#492`_)
+* DOC: Update parallel subject neurostars link in FAQ (#2104)
+* DOC: Add FAQ about reusing work directory (#2045)
 
 .. _`nipreps/niworkflows#484`: https://github.com/nipreps/niworkflows/pull/484
 .. _`nipreps/niworkflows#494`: https://github.com/nipreps/niworkflows/pull/494
 .. _`nipreps/niworkflows#492`: https://github.com/nipreps/niworkflows/pull/492
 
+.. admonition:: Author list for papers based on *fMRIPrep* v20.1.x series
+
+    As described in the `Contributor Guidelines
+    <https://github.com/poldracklab/fmriprep/blob/e3d3bc51dbf03215e3e4d2746d8aaacdd9afb84d/CONTRIBUTING.md#publications>`__, anyone
+    listed as developer or contributor may write and submit manuscripts regarding
+    *fMRIPrep*.
+    To do so, please move the author(s) name(s) to the front of the following list.
+
+    Markiewicz, Christopher J. \ :sup:`1`\ ; Goncalves, Mathias \ :sup:`1`\ ; DuPre, Elizabeth \ :sup:`2`\ ; Kent, James D. \ :sup:`3`\ ; Ciric, Rastko \ :sup:`1`\ ; Salo, Taylor \ :sup:`4`\ ; de la Vega, Alejandro \ :sup:`5`\ ; Finc, Karolina \ :sup:`6`\ ; Feingold, Franklin \ :sup:`1`\ ; Tooley, Ursula A. \ :sup:`7`\ ; Benson, Noah C. \ :sup:`8`\ ; Urchs, Sebastian \ :sup:`2`\ ; Blair, Ross W. \ :sup:`1`\ ; Erramuzpe, Asier \ :sup:`9`\ ; Jacoby, Nir \ :sup:`10`\ ; Lurie, Daniel J. \ :sup:`11`\ ; Basile Pinsard \ :sup:`12`\ ; Heinsfeld, Anibal S. \ :sup:`13`\ ; Valabregue, Romain \ :sup:`14`\ ; Frederick, Blaise B. \ :sup:`15, 16`\ ; Sneve, Markus H. \ :sup:`17`\ ; Liem, Franz \ :sup:`18`\ ; Adebimpe, Azeez \ :sup:`19`\ ; Velasco, Pablo \ :sup:`20`\ ; Wexler, Joseph B. \ :sup:`1`\ ; Groen, Iris I. A. \ :sup:`21`\ ; Ma, Feilong \ :sup:`22`\ ; Rivera-Dompenciel, Adriana \ :sup:`3`\ ; Amlien, Inge K. \ :sup:`17`\ ; Cieslak, Matthew \ :sup:`19`\ ; Devenyi, Grabriel A. \ :sup:`23`\ ; Ghosh, Satrajit S. \ :sup:`24, 25`\ ; Gomez, Daniel E. P. \ :sup:`26`\ ; Halchenko, Yaroslav O. \ :sup:`22`\ ; Isik, Ayse Ilkay \ :sup:`27`\ ; Moodie, Craig A. \ :sup:`1`\ ; Naveau, Mikaël \ :sup:`28`\ ; Satterthwaite, Theodore D. \ :sup:`19`\ ; Sitek, Kevin R. \ :sup:`29`\ ; Stojić, Hrvoje \ :sup:`30`\ ; Thompson, William H. \ :sup:`1`\ ; Wright, Jessey \ :sup:`1`\ ; Ye, Zhifang \ :sup:`31`\ ; Gorgolewski, Krzysztof J. \ :sup:`1`\ ; Poldrack, Russell A. \ :sup:`1`\ ; Esteban, Oscar \ :sup:`1`\ .
+
+    Affiliations:
+
+      1. Department of Psychology, Stanford University
+      2. Montreal Neurological Institute, McGill University
+      3. Neuroscience Program, University of Iowa
+      4. Department of Psychology, Florida International University
+      5. University of Texas at Austin
+      6. Centre for Modern Interdisciplinary Technologies, Nicolaus Copernicus University in Toruń
+      7. Department of Neuroscience, University of Pennsylvania, PA, USA
+      8. Department of Psychology, New York University
+      9. Computational Neuroimaging Lab, BioCruces Health Research Institute
+      10. Department of Psychology, Columbia University
+      11. Department of Psychology, University of California, Berkeley
+      12. SIMEXP Lab, CRIUGM, University of Montréal, Montréal, Canada
+      13. Child Mind Institute
+      14. CENIR, INSERM U1127, CNRS UMR 7225, UPMC Univ Paris 06 UMR S 1127, Institut du Cerveau et de la Moelle épinière, ICM, F-75013, Paris, France
+      15. McLean Hospital Brain Imaging Center, MA, USA
+      16. Consolidated Department of Psychiatry, Harvard Medical School, MA, USA
+      17. Center for Lifespan Changes in Brain and Cognition, University of Oslo
+      18. URPP Dynamics of Healthy Aging, University of Zurich
+      19. Perelman School of Medicine, University of Pennsylvania, PA, USA
+      20. Center for Brain Imaging, New York University
+      21. Department of Psychology, New York University, NY, USA
+      22. Dartmouth College: Hanover, NH, United States
+      23. Department of Psychiatry, McGill University
+      24. McGovern Institute for Brain Research, MIT, MA, USA
+      25. Department of Otolaryngology, Harvard Medical School, MA, USA
+      26. Donders Institute for Brain, Cognition and Behaviour, Radboud University Nijmegen
+      27. Max Planck Institute for Empirical Aesthetics
+      28. Cyceron, UMS 3408 (CNRS - UCBN), France
+      29. Speech & Hearing Bioscience & Technology Program, Harvard University
+      30. Max Planck UCL Centre for Computational Psychiatry and Ageing Research, University College London
+      31. State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University
+
+20.0.x series (February 2020)
+=============================
 20.0.7 (May 5, 2020)
-====================
+--------------------
 Bug-fix release in the 20.0.x series.
 
 This release includes a new, portable version of the templateflow python client. This includes an
@@ -28,7 +140,7 @@ automatic check to fetch the latest templateflow templates every time.
 * MAINT: Bump templateflow to auto-update template skeleton
 
 20.0.6 (April 16, 2020)
-=======================
+-----------------------
 Bug-fix release in the 20.0.x series.
 
 This release fixes a bug for **phase-difference fieldmaps that are not in RAS+ orientation**.
@@ -46,26 +158,8 @@ the 1.5.x series.
 
 .. _`nipreps/sdcflows#98`: https://github.com/nipreps/sdcflows/pull/98
 
-1.5.10 (April 16, 2020)
-=======================
-Bug-fix release in the 1.5.x series.
-
-This release fixes a bug for **phase-difference fieldmaps that are not in RAS+ orientation**.
-The bug presented as an error if the orientation was reordered relative to RAS+ (for example,
-AIL+) and the swapped dimensions were not of the same size.
-Otherwise, the bug introduced a poor masking of the phase difference map, and could be quite subtle
-if the original orientation was LAS+.
-Runs of fMRIPrep that used other susceptibility distortion correction (SDC) methods are not
-currently considered problematic.
-
-This bug affects all previous versions of fMRIPrep, as well as versions 20.0.0-20.0.5.
-
-  * FIX: Do not reorient magnitude images (`nipreps/sdcflows#98`_)
-
-.. _`nipreps/sdcflows#98`: https://github.com/nipreps/sdcflows/pull/98
-
 20.0.5 (March 19, 2020)
-=======================
+-----------------------
 Bug-fix release in 20.0.x series.
 
 With thanks to James Kent for the fix and Blaise Frederick for the report and testing.
@@ -75,7 +169,7 @@ With thanks to James Kent for the fix and Blaise Frederick for the report and te
 .. _`nipreps/niworkflows#482`: https://github.com/nipreps/niworkflows/pull/482
 
 20.0.4 (March 17, 2020)
-=======================
+-----------------------
 A bug-fix release improving documentation for filtering BIDS files and standardizing CIFTI volume orientation.
 
 With thanks to Ursula Tooley for the contribution.
@@ -86,7 +180,7 @@ With thanks to Ursula Tooley for the contribution.
 .. _`nipreps/niworkflows#477`: https://github.com/nipreps/niworkflows/pull/477
 
 20.0.3 (March 12, 2020)
-=======================
+-----------------------
 A bug-fix release for CIFTI surfaces.
 
 This release remedies a resampling error when generating fsLR surfaces that was producing erroneous CIFTI files.
@@ -95,7 +189,7 @@ This release remedies a resampling error when generating fsLR surfaces that was 
    * FIX: Remedy fsLR surface resampling (#2032)
 
 20.0.2 (March 6, 2020)
-======================
+----------------------
 A bug squashing release in the 20.0.x series.
 
 This release fixes the use of custom templates within the docker wrapper, remedies crashes
@@ -109,7 +203,7 @@ With thanks to Blaise Frederick for the contribution.
   * MAINT: Pin minor series of nipype, major series of nibabel (#2021)
 
 20.0.1 (February 27, 2020)
-==========================
+--------------------------
 Bug-fix release in 20.0.x series.
 
 This release includes fixes for rare images with invalid qform matrices and some minor
@@ -125,7 +219,7 @@ improvements in report readability and inclusion of common templates in the Dock
 .. _`nipreps/niworkflows#466`: https://github.com/nipreps/niworkflows/pull/466
 
 20.0.0 (February 24, 2020)
-==========================
+--------------------------
 The major release of 2020 is here!
 
 *fMRIPrep* is transitioning to a calendar version system
@@ -173,7 +267,7 @@ This release includes contributions from Azeez Adebimpe and Basile Pinsard - ver
     *fMRIPrep*.
     To do so, please move the author(s) name(s) to the front of the following list.
 
-    Markiewicz, Christopher J. (1); DuPre, Elizabeth (2); Goncalves, Mathias (1); Kent, James D. (3); Ciric, Rastko (1); Salo, Taylor (4); de la Vega, Alejandro (5); Finc, Karolina (6); Feingold, Franklin (1); Urchs, Sebastian (2); Blair, Ross W. (1); Erramuzpe, Asier (7); Valabregue, Romain (8); Jacoby, Nir (9); Lurie, Daniel J. (10); Heinsfeld, Anibal S. (11); Halchenko, Yaroslav O. (12); Sneve, Markus H. (13); Devenyi, Grabriel A. (14); Liem, Franz (15); Gomez, Daniel E. P. (16); Adebimpe, Azeez (17); Velasco, Pablo (18); Groen, Iris I. A. (19); Ma, Feilong (12); Rivera-Dompenciel, Adriana (3); Amlien, Inge K. (13); Cieslak, Matthew (17); Ghosh, Satrajit S. (20, 21); Isik, Ayse Ilkay (22); Moodie, Craig A. (1); Naveau, Mikaël (23); Satterthwaite, Theodore D. (17); Sitek, Kevin R. (24); Stojić, Hrvoje (25); Thompson, William H (1); Tooley, Ursula A. (26); Wright, Jessey (1); Ye, Zhifang (27); Gorgolewski, Krzysztof J. (1); Poldrack, Russell A. (1); Esteban, Oscar (1)
+    Markiewicz, Christopher J.\ :sup:`1`\ ; DuPre, Elizabeth\ :sup:`2`\ ; Goncalves, Mathias\ :sup:`1`\ ; Kent, James D.\ :sup:`3`\ ; Ciric, Rastko\ :sup:`1`\ ; Salo, Taylor\ :sup:`4`\ ; de la Vega, Alejandro\ :sup:`5`\ ; Finc, Karolina\ :sup:`6`\ ; Feingold, Franklin\ :sup:`1`\ ; Urchs, Sebastian\ :sup:`2`\ ; Blair, Ross W.\ :sup:`1`\ ; Erramuzpe, Asier\ :sup:`7`\ ; Valabregue, Romain\ :sup:`8`\ ; Jacoby, Nir\ :sup:`9`\ ; Lurie, Daniel J.\ :sup:`10`\ ; Heinsfeld, Anibal S.\ :sup:`11`\ ; Halchenko, Yaroslav O.\ :sup:`12`\ ; Sneve, Markus H.\ :sup:`13`\ ; Devenyi, Grabriel A.\ :sup:`14`\ ; Liem, Franz\ :sup:`15`\ ; Gomez, Daniel E. P.\ :sup:`16`\ ; Adebimpe, Azeez\ :sup:`17`\ ; Velasco, Pablo\ :sup:`18`\ ; Groen, Iris I. A.\ :sup:`19`\ ; Ma, Feilong\ :sup:`12`\ ; Rivera-Dompenciel, Adriana\ :sup:`3`\ ; Amlien, Inge K.\ :sup:`13`\ ; Cieslak, Matthew\ :sup:`17`\ ; Ghosh, Satrajit S.\ :sup:`20, 21`\ ; Isik, Ayse Ilkay\ :sup:`22`\ ; Moodie, Craig A.\ :sup:`1`\ ; Naveau, Mikaël\ :sup:`23`\ ; Satterthwaite, Theodore D.\ :sup:`17`\ ; Sitek, Kevin R.\ :sup:`24`\ ; Stojić, Hrvoje\ :sup:`25`\ ; Thompson, William H\ :sup:`1`\ ; Tooley, Ursula A.\ :sup:`26`\ ; Wright, Jessey\ :sup:`1`\ ; Ye, Zhifang\ :sup:`27`\ ; Gorgolewski, Krzysztof J.\ :sup:`1`\ ; Poldrack, Russell A.\ :sup:`1`\ ; Esteban, Oscar\ :sup:`1`\ .
 
     Affiliations:
 
@@ -205,8 +299,28 @@ This release includes contributions from Azeez Adebimpe and Basile Pinsard - ver
       26. Department of Neuroscience, University of Pennsylvania, PA, USA
       27. State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University
 
+1.5.x series (September 2019)
+=============================
+1.5.10 (April 16, 2020)
+-----------------------
+Bug-fix release in the 1.5.x series.
+
+This release fixes a bug for **phase-difference fieldmaps that are not in RAS+ orientation**.
+The bug presented as an error if the orientation was reordered relative to RAS+ (for example,
+AIL+) and the swapped dimensions were not of the same size.
+Otherwise, the bug introduced a poor masking of the phase difference map, and could be quite subtle
+if the original orientation was LAS+.
+Runs of fMRIPrep that used other susceptibility distortion correction (SDC) methods are not
+currently considered problematic.
+
+This bug affects all previous versions of fMRIPrep, as well as versions 20.0.0-20.0.5.
+
+  * FIX: Do not reorient magnitude images (`nipreps/sdcflows#98`_)
+
+.. _`nipreps/sdcflows#98`: https://github.com/nipreps/sdcflows/pull/98
+
 1.5.9 (February 14, 2020)
-=========================
+-------------------------
 Bug-fix release in the 1.5.x series.
 
 This release fixes a bug for some phase maps generated by Philips. A full fix with better handling
@@ -217,13 +331,13 @@ unaffected by the bug.
   * FIX: Center phase maps around central mode, avoiding FoV-related outliers (poldracklab/sdcflows#89)
 
 1.5.8 (January 28, 2020)
-========================
+------------------------
 Bug-fix release in the 1.5.x series.
 
   * FIX: SyN SDC logic failing in ``--force-syn`` cases (#1951)
 
 1.5.7 (January 23, 2020)
-========================
+------------------------
 Bug-fix release in the 1.5.x series.
 
 This release fixes a bug specifically for T1w images with dimensions ≤256 voxels
@@ -232,27 +346,27 @@ but a field-of-view >256mm.
   * FIX: Calculate FoV with shape and zooms (poldracklab/smriprep#161)
 
 1.5.6 (January 22, 2020)
-========================
+------------------------
 Bug-fix release in the 1.5.x series.
 
   * FIX: Include all functional runs in reports, establish consistent ordering (#1937)
   * FIX: Use SyN-SDC if --use-syn-sdc and --ignore fieldmaps are used (#1942)
 
 1.5.5 (January 14, 2020)
-=========================
+-------------------------
 Bug-fix release in the 1.5.x series.
 
 * FIX: Correctly select volumetric spaces for carpetplot (#1932) @effigies
 * FIX: Constrain setuptools for Python 2.7 installs of fmriprep-docker (#1933) @effigies
 
 1.5.4 (December 18, 2019)
-=========================
+-------------------------
 Bug-fix release in the 1.5.x series.
 
 * FIX: Integrate fix for poldracklab/sdcflows#77 (pin niworkflows-1.0.3, sdcflows-1.0.3) @oesteban
 
 1.5.3 (December 12, 2019)
-=========================
+-------------------------
 The last patch release of the 1.5.x series containing features.
 As of 1.5.4, patch releases will only contain bug fixes, maintenance
 tasks and minor documentation revisions.
@@ -267,13 +381,13 @@ tasks and minor documentation revisions.
 * MAINT: Remove deprecated command-line arguments (#1909) @mgxd
 
 1.5.2 (December 2, 2019)
-========================
+------------------------
 Bug-fix release in the 1.5.x series.
 
 * FIX: Ensure data type of masked image matches T1.mgz (poldracklab/niworkflows#430) @effigies
 
 1.5.1 (November 26, 2019)
-=========================
+-------------------------
 After an arduous walk through release-candidates, release 1.5.1 includes a new release of
 Nipype which addresses the problems related to *results* files many users have been experiencing.
 
@@ -306,7 +420,7 @@ With thanks to Marc Bue, Alejandro De La Vega, Tailor Salo, Asier Erramuzpe and 
 * MAINT: Container images - cleanup ``$HOME`` in docker build (#1768) @oesteban
 
 1.5.0 (September 9, 2019)
-=========================
+-------------------------
 Two hallmark changes conducive to a new minor release line have been included in
 version 1.5.0: the upgrade of *PyBIDS* to the 0.9 series and the split of *SDCflows*
 off from *fMRIPrep* codebase.
@@ -340,8 +454,10 @@ With thanks to Ursula Tooley, Sebastian Urchs and Gabriel A. Devenyi for contrib
 * MAINT: Remove old ``extensions`` entity selector for PyBIDS queries (#1707) @oesteban
 * MAINT: Use PyBIDS 0.9.x via niworkflows/smriprep PRs (#1695) @effigies
 
+1.4.x series (May 2019)
+=======================
 1.4.1 (July 9, 2019)
-====================
+--------------------
 As of 1.4.1, the new infant and pediatric templates added to TemplateFlow are available to
 brain extraction and spatial normalization.
 Containers do not set the ``TEMPLATEFLOW_HOME`` environment variable anymore, allowing
@@ -359,7 +475,7 @@ handling of FreeSurfer outputs have been included.
 * DOC: Add WHT to Zenodo (#1683) @wiheto
 
 1.4.0 (May 15, 2019)
-====================
+--------------------
 The new 1.4 series include several new features, several maintenance patches,
 and numerous bugfixes.
 The largest change to *fMRIPrep*'s interface is the new ``--output-spaces``
