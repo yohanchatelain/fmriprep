@@ -736,7 +736,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             name='bold_surf_wf')
         workflow.connect([
             (inputnode, bold_surf_wf, [
-                ('t1w_preproc', 'inputnode.t1w_preproc'),
                 ('subjects_dir', 'inputnode.subjects_dir'),
                 ('subject_id', 'inputnode.subject_id'),
                 ('t1w2fsnative_xfm', 'inputnode.t1w2fsnative_xfm')]),
