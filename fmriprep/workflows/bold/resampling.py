@@ -89,7 +89,6 @@ The BOLD time-series were resampled onto the following surfaces
 
     get_fsnative = pe.Node(FreeSurferSource(), name='get_fsnative',
                            run_without_submitting=True)
-    tonii = pe.Node(fs.MRIConvert(out_type='niigz'), name='tonii')
 
     def select_target(subject_id, space):
         """Get the target subject ID, given a source subject ID and a target space."""
@@ -129,8 +128,7 @@ The BOLD time-series were resampled onto the following surfaces
         (inputnode, rename_src, [('source_file', 'in_file')]),
         (inputnode, itk2lta, [('source_file', 'src_file'),
                               ('t1w2fsnative_xfm', 'in_file')]),
-        (get_fsnative, tonii, [('T1', 'in_file')]),
-        (tonii, itk2lta, [('out_file', 'dst_file')]),
+        (get_fsnative, itk2lta, [('T1', 'dst_file')]),
         (inputnode, sampler, [('subjects_dir', 'subjects_dir'),
                               ('subject_id', 'subject_id')]),
         (itersource, targets, [('target', 'space')]),
