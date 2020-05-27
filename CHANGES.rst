@@ -18,7 +18,7 @@ Some key additions in this release include:
   make the option handling more modular but consistent (e.g., setting the ground for a
   command-line interface built off of the config module),
   and ease troubleshooting and telemetry.
-- The *anatomical preprocessing fast-track*: a new command-line option
+- The *anatomical preprocessing fast-track*: a new experimental command-line option
   ``--anat-derivatives <PATH>`` checks that all necessary anatomical derivatives
   required by *fMRIPrep* are present under ``<PATH>``, and skips the anatomical
   processing in full if *fMRIPrep*'s expectations are met.
@@ -28,6 +28,7 @@ Some key additions in this release include:
   longitudinal study preprocessing, and it is a fundamental optimization to process
   databases of densely scanned individuals such as `My Connectome
   <https://openneuro.org/datasets/ds000031>`__.
+  This option is not recommended for single-session processing.
 - A change in output CIFTI2 subcortical volume orientation to be compatible with HCP Pipeline tools and data.
 
 .. admonition:: Thanks
