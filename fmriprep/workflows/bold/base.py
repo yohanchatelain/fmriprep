@@ -576,10 +576,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             FixHeaderApplyTransforms as ApplyTransforms
         )
 
-        boldmask_to_t1w = pe.Node(
-            ApplyTransforms(interpolation='MultiLabel', float=True),
-            name='boldmask_to_t1w', mem_gb=0.1
-        )
+        boldmask_to_t1w = pe.Node(ApplyTransforms(interpolation='MultiLabel'),
+                                  name='boldmask_to_t1w', mem_gb=0.1)
         workflow.connect([
             (bold_reg_wf, boldmask_to_t1w, [
                 ('outputnode.itk_bold_to_t1', 'transforms')]),
