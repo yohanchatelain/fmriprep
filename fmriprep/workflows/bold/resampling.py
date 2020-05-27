@@ -775,6 +775,9 @@ def _itk2lta(in_file, src_file, dst_file):
     import nitransforms as nt
     from pathlib import Path
     out_file = Path("out.lta").absolute()
-    nt.linear.load(in_file, fmt="itk", reference=src_file).to_filename(
-        out_file, moving=dst_file, fmt="fs")
+    nt.linear.load(
+        in_file,
+        fmt="fs" if in_file.endswith(".lta") else "itk",
+        reference=src_file).to_filename(
+            out_file, moving=dst_file, fmt="fs")
     return str(out_file)
