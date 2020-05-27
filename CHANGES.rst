@@ -1,4 +1,4 @@
-20.1.0 (May 25, 2020)
+20.1.0 (May 27, 2020)
 =====================
 The second minor release series of 2020 is finally here!
 
@@ -56,6 +56,8 @@ by posting an issue on our GitHub page!
 
 A full list of changes can be found below.
 
+* FIX: ``MultiLabel`` interpolations should not use ``float=True`` (#2147)
+* FIX: Generate proper LTA transform prior BOLD sampling on surfaces (#2146)
 * FIX: Temporary config file in work directory gets clobbered in parallel jobs (#2138)
 * FIX: Dismiss ``echo`` entity on several derivatives and figures outputs (#2133)
 * FIX: Correct summary report when using previously run ``recon-all`` (#2124)
