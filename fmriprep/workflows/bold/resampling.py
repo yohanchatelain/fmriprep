@@ -328,11 +328,8 @@ preprocessed BOLD runs*: {tpl}.
     gen_ref = pe.Node(GenerateSamplingReference(), name='gen_ref',
                       mem_gb=0.3)  # 256x256x256 * 64 / 8 ~ 150MB)
 
-    mask_std_tfm = pe.Node(
-        ApplyTransforms(interpolation='MultiLabel', float=True),
-        name='mask_std_tfm',
-        mem_gb=1
-    )
+    mask_std_tfm = pe.Node(ApplyTransforms(interpolation='MultiLabel'),
+                           name='mask_std_tfm', mem_gb=1)
 
     # Write corrected file in the designated output dir
     mask_merge_tfms = pe.Node(niu.Merge(2), name='mask_merge_tfms', run_without_submitting=True,
@@ -405,12 +402,10 @@ preprocessed BOLD runs*: {tpl}.
 
     if freesurfer:
         # Sample the parcellation files to functional space
-        aseg_std_tfm = pe.Node(
-            ApplyTransforms(interpolation='MultiLabel', float=True),
-            name='aseg_std_tfm', mem_gb=1)
-        aparc_std_tfm = pe.Node(
-            ApplyTransforms(interpolation='MultiLabel', float=True),
-            name='aparc_std_tfm', mem_gb=1)
+        aseg_std_tfm = pe.Node(ApplyTransforms(interpolation='MultiLabel'),
+                               name='aseg_std_tfm', mem_gb=1)
+        aparc_std_tfm = pe.Node(ApplyTransforms(interpolation='MultiLabel'),
+                                name='aparc_std_tfm', mem_gb=1)
 
         workflow.connect([
             (inputnode, aseg_std_tfm, [('bold_aseg', 'input_image')]),

@@ -286,10 +286,8 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, multiecho=False, use
     gen_ref = pe.Node(GenerateSamplingReference(), name='gen_ref',
                       mem_gb=0.3)  # 256x256x256 * 64 / 8 ~ 150MB
 
-    mask_t1w_tfm = pe.Node(
-        ApplyTransforms(interpolation='MultiLabel', float=True),
-        name='mask_t1w_tfm', mem_gb=0.1
-    )
+    mask_t1w_tfm = pe.Node(ApplyTransforms(interpolation='MultiLabel'),
+                           name='mask_t1w_tfm', mem_gb=0.1)
 
     workflow.connect([
         (inputnode, gen_ref, [('ref_bold_brain', 'moving_image'),
@@ -304,10 +302,10 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, multiecho=False, use
     if freesurfer:
         # Resample aseg and aparc in T1w space (no transforms needed)
         aseg_t1w_tfm = pe.Node(
-            ApplyTransforms(interpolation='MultiLabel', transforms='identity', float=True),
+            ApplyTransforms(interpolation='MultiLabel', transforms='identity'),
             name='aseg_t1w_tfm', mem_gb=0.1)
         aparc_t1w_tfm = pe.Node(
-            ApplyTransforms(interpolation='MultiLabel', transforms='identity', float=True),
+            ApplyTransforms(interpolation='MultiLabel', transforms='identity'),
             name='aparc_t1w_tfm', mem_gb=0.1)
 
         workflow.connect([

@@ -492,11 +492,11 @@ def init_carpetplot_wf(mem_gb, metadata, cifti_output, name="bold_carpet_wf"):
 
     # Warp segmentation into EPI space
     resample_parc = pe.Node(ApplyTransforms(
-        float=True,
+        dimension=3,
         input_image=str(get_template(
             'MNI152NLin2009cAsym', resolution=1, desc='carpet',
             suffix='dseg', extension=['.nii', '.nii.gz'])),
-        dimension=3, default_value=0, interpolation='MultiLabel'),
+        interpolation='MultiLabel'),
         name='resample_parc')
 
     # Carpetplot and confounds plot
