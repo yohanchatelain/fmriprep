@@ -3,8 +3,11 @@
 The second minor release series of 2020 is finally here!
 
 *fMRIPrep* 20.1.0 introduces a magnitude of new features and improvements.
-Originally nominated to become the first LTS (long-term support) version of *fMRIPrep*, this release has been supercharged with many new features and bug-fixes.
-To ensure long-term stability, we have postponed the LTS nomination to 20.2 to allow us unlocking the 20.1 earlier, and a more extensive stress testing of the series before jumping into a longer support commitment.
+Originally nominated to become the first LTS (long-term support) version of *fMRIPrep*,
+this release has been supercharged with many new features and bug-fixes.
+To ensure long-term stability, we have postponed the LTS nomination to 20.2
+to allow us unlocking the 20.1 earlier, and a more extensive stress testing of
+the series before jumping into a longer support commitment.
 Some key additions in this release include:
 
 - A centralized `configuration module
@@ -18,8 +21,10 @@ Some key additions in this release include:
   make the option handling more modular but consistent (e.g., setting the ground for a
   command-line interface built off of the config module),
   and ease troubleshooting and telemetry.
-- The *anatomical preprocessing fast-track*: a new experimental command-line option
-  ``--anat-derivatives <PATH>`` checks that all necessary anatomical derivatives
+- The `anatomical preprocessing fast-track
+  <https://fmriprep.readthedocs.io/en/latest/usage.html#the-anatomical-fast-track>`__:
+  a new experimental command-line option (``--anat-derivatives <PATH>``) checks that
+  all necessary anatomical derivatives
   required by *fMRIPrep* are present under ``<PATH>``, and skips the anatomical
   processing in full if *fMRIPrep*'s expectations are met.
   Because now functional processing of many sessions and runs can be efficiently
