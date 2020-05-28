@@ -226,6 +226,12 @@ It is released under the [CC0]\
             std_spaces,
             config.workflow.run_reconall,
         )
+        if anat_derivatives is None:
+            config.loggers.workflow.warning(f"""\
+Attempted to access pre-existing anatomical derivatives at \
+<{config.execution.anat_derivatives}>, however not all expectations of fMRIPrep \
+were met (for participant <{subject_id}>, spaces <{', '.join(std_spaces)}>, \
+reconall <{config.workflow.run_reconall}>).""")
 
     # Preprocessing of T1w (includes registration to MNI)
     anat_preproc_wf = init_anat_preproc_wf(

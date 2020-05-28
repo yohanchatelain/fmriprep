@@ -64,23 +64,21 @@ def build_workflow(config_file, retval):
         return retval
 
     # Build main workflow
-    INIT_MSG = """
-    Running fMRIPREP version {version}:
-      * BIDS dataset path: {bids_dir}.
+    init_msg = f"""
+    Running fMRIPREP version {config.environment.version}:
+      * BIDS dataset path: {config.execution.bids_dir}.
       * Participant list: {subject_list}.
-      * Run identifier: {uuid}.
-      * Output spaces: {spaces}.
-    """.format
-    build_log.log(
-        25,
-        INIT_MSG(
-            version=config.environment.version,
-            bids_dir=config.execution.bids_dir,
-            subject_list=subject_list,
-            uuid=config.execution.run_uuid,
-            spaces=config.execution.output_spaces,
-        ),
-    )
+      * Run identifier: {config.execution.run_uuid}.
+      * Output spaces: {config.execution.output_spaces}."""
+
+    if config.execution.anat_derivatives:
+        init_msg += f"""
+      * Anatomical derivatives: {config.execution.anat_derivatives}."""
+
+    if config.execution.fs_subjects_dir:
+        init_msg += f"""
+      * Pre-run FreeSurfer's SUBJECTS_DIR: {config.execution.fs_subjects_dir}."""
+    build_log.log(25, init_msg)
 
     retval["workflow"] = init_fmriprep_wf()
 
