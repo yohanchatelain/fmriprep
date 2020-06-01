@@ -150,6 +150,7 @@ def _build_parser():
         "--nthreads",
         "--n_cpus",
         "--n-cpus",
+        dest='nprocs',
         action="store",
         type=PositiveInt,
         help="maximum number of threads across all processes",
@@ -585,8 +586,8 @@ license file at several paths, in this order: 1) command line argument ``--fs-li
         if _plugin:
             config.nipype.plugin = _plugin
             config.nipype.plugin_args = plugin_settings.get("plugin_args", {})
-            config.nipype.nprocs = config.nipype.plugin_args.get(
-                "nprocs", config.nipype.nprocs
+            config.nipype.nprocs = opts.nprocs or config.nipype.plugin_args.get(
+                "n_procs", config.nipype.nprocs
             )
 
     # Resource management options
