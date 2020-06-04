@@ -67,8 +67,13 @@ The :py:mod:`config` is responsible for other conveniency actions.
     :py:class:`~bids.layout.BIDSLayout`, etc.)
 
 """
+import os
 from multiprocessing import set_start_method
 
+# Disable NiPype etelemetry always
+_disable_et = bool(os.getenv("NO_ET") is not None or os.getenv("NIPYPE_NO_ET") is not None)
+os.environ["NIPYPE_NO_ET"] = "1"
+os.environ["NO_ET"] = "1"
 
 try:
     set_start_method('forkserver')
@@ -77,7 +82,6 @@ except RuntimeError:
 finally:
     # Defer all custom import for after initializing the forkserver and
     # ignoring the most annoying warnings
-    import os
     import sys
     import random
 
@@ -110,6 +114,16 @@ logging.addLevelName(15, 'VERBOSE')  # Add a new level between INFO and DEBUG
 
 DEFAULT_MEMORY_MIN_GB = 0.01
 
+# Ping NiPype eTelemetry once if env var was not set
+# workers on the pool will have the env variable set from the master process
+if not _disable_et:
+    # Just get so analytics track one hit
+    from contextlib import suppress
+    from requests import get as _get_url, ConnectionError, ReadTimeout
+    with suppress((ConnectionError, ReadTimeout)):
+        _get_url("https://rig.mit.edu/et/projects/nipy/nipype", timeout=0.05)
+
+# Execution environment
 _exec_env = os.name
 _docker_ver = None
 # special variable set in the container
@@ -303,6 +317,7 @@ class nipype(_Config):
                 'crashfile_format': cls.crashfile_format,
                 'get_linked_libs': cls.get_linked_libs,
                 'stop_on_first_crash': cls.stop_on_first_crash,
+                'check_version': False,  # disable future telemetry
             }
         })
 
