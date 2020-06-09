@@ -17,6 +17,9 @@ from nipype.interfaces.fsl import Split as FSLSplit
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 
+from niworkflows.utils.connections import pop_file, listify
+
+
 from ...utils.meepi import combine_meepi_source
 
 from ...interfaces import DerivativesDataSink
@@ -141,59 +144,66 @@ def init_func_preproc_wf(bold_file):
     from niworkflows.interfaces.utils import DictMerge
     from sdcflows.workflows.base import init_sdc_estimate_wf, fieldmap_wrangler
 
-    ref_file = bold_file
     mem_gb = {'filesize': 1, 'resampled': 1, 'largemem': 1}
     bold_tlen = 10
-    multiecho = isinstance(bold_file, list)
 
     # Have some options handy
-    layout = config.execution.layout
     omp_nthreads = config.nipype.omp_nthreads
     freesurfer = config.workflow.run_reconall
     spaces = config.workflow.spaces
     output_dir = str(config.execution.output_dir)
 
+    # Extract BIDS entities and metadata from BOLD file(s)
+    entities = extract_entities(bold_file)
+    layout = config.execution.layout
+
+    # Take first file as reference
+    ref_file = pop_file(bold_file)
+    metadata = layout.get_metadata(ref_file)
+
+    echo_idxs = listify(entities.get("echo", []))
+    multiecho = len(echo_idxs) > 2
+    if len(echo_idxs) == 1:
+        config.loggers.warning(
+            f"Running a single echo <{ref_file}> from a seemingly multi-echo dataset."
+        )
+        bold_file = ref_file  # Just in case - drop the list
+
+    if len(echo_idxs) == 2:
+        raise RuntimeError(
+            "Multi-echo processing requires at least three different echos (found two)."
+        )
+
     if multiecho:
-        tes = [layout.get_metadata(echo)['EchoTime'] for echo in bold_file]
-        ref_file = dict(zip(tes, bold_file))[min(tes)]
+        # Drop echo entity for future queries, have a boolean shorthand
+        entities.pop("echo", None)
+        # reorder echoes from shortest to largest
+        tes, bold_file = zip(*sorted([
+            (layout.get_metadata(bf)["EchoTime"], bf) for bf in bold_file
+        ]))
+        ref_file = bold_file[0]  # Reset reference to be the shortest TE
 
     if os.path.isfile(ref_file):
         bold_tlen, mem_gb = _create_mem_gb(ref_file)
 
     wf_name = _get_wf_name(ref_file)
     config.loggers.workflow.debug(
-        'Creating bold processing workflow for "%s" (%.2f GB / %d TRs). '
+        'Creating bold processing workflow for <%s> (%.2f GB / %d TRs). '
         'Memory resampled/largemem=%.2f/%.2f GB.',
         ref_file, mem_gb['filesize'], bold_tlen, mem_gb['resampled'], mem_gb['largemem'])
 
-    sbref_file = None
     # Find associated sbref, if possible
-    entities = layout.parse_file_entities(ref_file)
     entities['suffix'] = 'sbref'
     entities['extension'] = ['nii', 'nii.gz']  # Overwrite extensions
-    files = layout.get(return_type='file', **entities)
-    refbase = os.path.basename(ref_file)
-    if 'sbref' in config.workflow.ignore:
-        config.loggers.workflow.info("Single-band reference files ignored.")
-    elif files and multiecho:
-        config.loggers.workflow.warning(
-            "Single-band reference found, but not supported in "
-            "multi-echo workflows at this time. Ignoring.")
-    elif files:
-        sbref_file = files[0]
-        sbbase = os.path.basename(sbref_file)
-        if len(files) > 1:
-            config.loggers.workflow.warning(
-                "Multiple single-band reference files found for {}; using "
-                "{}".format(refbase, sbbase))
-        else:
-            config.loggers.workflow.info("Using single-band reference file %s.",
-                                         sbbase)
-    else:
-        config.loggers.workflow.info("No single-band-reference found for %s.",
-                                     refbase)
+    sbref_files = layout.get(return_type='file', **entities)
 
-    metadata = layout.get_metadata(ref_file)
+    sbref_msg = f"No single-band-reference found for {os.path.basename(ref_file)}."
+    if sbref_files and 'sbref' in config.workflow.ignore:
+        sbref_msg = "Single-band reference file(s) found and ignored."
+    elif sbref_files:
+        sbref_msg = "Using single-band reference file(s) {}.".format(
+            ','.join([os.path.basename(sbf) for sbf in sbref_files]))
+    config.loggers.workflow.info(sbref_msg)
 
     # Find fieldmaps. Options: (phase1|phase2|phasediff|epi|fieldmap|syn)
     fmaps = None
@@ -234,9 +244,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 't1w2fsnative_xfm', 'fsnative2t1w_xfm']),
         name='inputnode')
     inputnode.inputs.bold_file = bold_file
-    if sbref_file is not None:
-        from niworkflows.interfaces.images import ValidateImage
-        val_sbref = pe.Node(ValidateImage(in_file=sbref_file), name='val_sbref')
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['bold_t1', 'bold_t1_ref', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1',
@@ -296,12 +303,13 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     ])
 
     # Generate a tentative boldref
-    bold_reference_wf = init_bold_reference_wf(omp_nthreads=omp_nthreads)
+    bold_reference_wf = init_bold_reference_wf(
+        omp_nthreads=omp_nthreads,
+        bold_file=bold_file,
+        sbref_files=sbref_files,
+        multiecho=multiecho,
+    )
     bold_reference_wf.inputs.inputnode.dummy_scans = config.workflow.dummy_scans
-    if sbref_file is not None:
-        workflow.connect([
-            (val_sbref, bold_reference_wf, [('out_file', 'inputnode.sbref_file')]),
-        ])
 
     # Top-level BOLD splitter
     bold_split = pe.Node(FSLSplit(dimension='t'), name='bold_split',
@@ -414,8 +422,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     workflow.connect([
         (inputnode, t1w_brain, [('t1w_preproc', 'in_file'),
                                 ('t1w_mask', 'in_mask')]),
-        # Generate early reference
-        (inputnode, bold_reference_wf, [('bold_file', 'inputnode.bold_file')]),
         # BOLD buffer has slice-time corrected if it was run, original otherwise
         (boldbuffer, bold_split, [('bold_file', 'in_file')]),
         # HMC
@@ -889,3 +895,40 @@ def _to_join(in_file, join_file):
         return in_file
     res = JoinTSVColumns(in_file=in_file, join_file=join_file).run()
     return res.outputs.out_file
+
+
+def extract_entities(file_list):
+    """
+    Return a dictionary of common entities given a list of files.
+
+    Examples
+    --------
+    >>> extract_entities('sub-01/anat/sub-01_T1w.nii.gz')
+    {'subject': '01', 'suffix': 'T1w', 'datatype': 'anat', 'extension': 'nii.gz'}
+    >>> extract_entities(['sub-01/anat/sub-01_T1w.nii.gz'] * 2)
+    {'subject': '01', 'suffix': 'T1w', 'datatype': 'anat', 'extension': 'nii.gz'}
+    >>> extract_entities(['sub-01/anat/sub-01_run-1_T1w.nii.gz',
+    ...                   'sub-01/anat/sub-01_run-2_T1w.nii.gz'])
+    {'subject': '01', 'run': [1, 2], 'suffix': 'T1w', 'datatype': 'anat',
+     'extension': 'nii.gz'}
+
+    """
+    from collections import defaultdict
+    from bids.layout import parse_file_entities
+
+    entities = defaultdict(list)
+    for e, v in [
+        ev_pair
+        for f in listify(file_list)
+        for ev_pair in parse_file_entities(f).items()
+    ]:
+        entities[e].append(v)
+
+    def _unique(inlist):
+        inlist = sorted(set(inlist))
+        if len(inlist) == 1:
+            return inlist[0]
+        return inlist
+    return {
+        k: _unique(v) for k, v in entities.items()
+    }
