@@ -141,8 +141,8 @@ def init_bold_confs_wf(
     from ...interfaces.confounds import aCompCorMasks
 
     gm_desc = (
-        'a probabilistic segmentation from the *aseg* segmentation' if freesurfer
-        else 'the corresponding partial volume map'
+        "dilating a GM mask extracted from the FreeSurfer's *aseg* segmentation" if freesurfer
+        else "thresholding the corresponding partial volume map at 0.05"
     )
 
     workflow = Workflow(name=name)
@@ -168,11 +168,10 @@ voxels within the brain mask.
 For aCompCor, three probabilistic masks (CSF, WM and combined CSF+WM)
 are generated in anatomical space.
 The implementation differs from that of Behzadi et al. in that instead
-of eroding the masks by 2 pixels on BOLD space, a liberal mask of the
-GM is obtained by thresholding {gm_desc} at 0.05.
-Then this mask is substracted from the WM and the combined CSF+WM masks
-to ensure components are not extracted from voxels containing a minimal
-fraction of GM.
+of eroding the masks by 2 pixels on BOLD space, the aCompCor masks are
+subtracted a mask of pixels that likely contain a volume fraction of GM.
+This mask is obtained by {gm_desc}, and it ensures components are not extracted
+from voxels containing a minimal fraction of GM.
 Finally, these masks are resampled into BOLD space and binarized by
 thresholding at 0.99 (as in the original implementation).
 Components are also calculated separately within the WM and CSF masks.
