@@ -148,7 +148,7 @@ def init_single_subject_wf(subject_id):
                 subject_id, task_id if task_id else '<all>')
         )
 
-    if not subject_data['t1w']:
+    if not anat_precomp and not subject_data['t1w']:
         raise Exception("No T1w images found for participant {}. "
                         "All workflows require T1w images.".format(subject_id))
 
