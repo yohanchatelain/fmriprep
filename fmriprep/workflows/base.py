@@ -138,6 +138,7 @@ def init_single_subject_wf(subject_id):
         subject_data['t2w'] = []
 
     anat_only = config.workflow.anat_only
+    anat_precomp = config.execution.anat_derivatives is not None
     # Make sure we always go through these two checks
     if not anat_only and not subject_data['bold']:
         task_id = config.execution.task_id
