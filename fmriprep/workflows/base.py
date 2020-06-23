@@ -148,10 +148,6 @@ def init_single_subject_wf(subject_id):
                 subject_id, task_id if task_id else '<all>')
         )
 
-    if not anat_derivatives and not subject_data['t1w']:
-        raise Exception("No T1w images found for participant {}. "
-                        "All workflows require T1w images.".format(subject_id))
-
     workflow = Workflow(name=name)
     workflow.__desc__ = """
 Results included in this manuscript come from preprocessing
@@ -232,6 +228,10 @@ Attempted to access pre-existing anatomical derivatives at \
 <{config.execution.anat_derivatives}>, however not all expectations of fMRIPrep \
 were met (for participant <{subject_id}>, spaces <{', '.join(std_spaces)}>, \
 reconall <{config.workflow.run_reconall}>).""")
+
+    if not anat_derivatives and not subject_data['t1w']:
+        raise Exception("No T1w images found for participant {}. "
+                        "All workflows require T1w images.".format(subject_id))
 
     # Preprocessing of T1w (includes registration to MNI)
     anat_preproc_wf = init_anat_preproc_wf(
