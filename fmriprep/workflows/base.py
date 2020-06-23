@@ -138,7 +138,7 @@ def init_single_subject_wf(subject_id):
         subject_data['t2w'] = []
 
     anat_only = config.workflow.anat_only
-    anat_precomp = config.execution.anat_derivatives is not None
+    anat_derivatives = config.execution.anat_derivatives
     # Make sure we always go through these two checks
     if not anat_only and not subject_data['bold']:
         task_id = config.execution.task_id
@@ -148,7 +148,7 @@ def init_single_subject_wf(subject_id):
                 subject_id, task_id if task_id else '<all>')
         )
 
-    if not anat_precomp and not subject_data['t1w']:
+    if not anat_derivatives and not subject_data['t1w']:
         raise Exception("No T1w images found for participant {}. "
                         "All workflows require T1w images.".format(subject_id))
 
@@ -217,7 +217,6 @@ It is released under the [CC0]\
                             dismiss_entities=("echo",)),
         name='ds_report_about', run_without_submitting=True)
 
-    anat_derivatives = config.execution.anat_derivatives
     if anat_derivatives:
         from smriprep.utils.bids import collect_derivatives
         std_spaces = spaces.get_spaces(nonstandard=False, dim=(3,))
