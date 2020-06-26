@@ -338,6 +338,8 @@ class execution(_Config):
     """A dictionary of BIDS selection filters."""
     boilerplate_only = False
     """Only generate a boilerplate."""
+    database_path = None
+    """Path to directory containing SQLite database indicies for BIDS dataset"""
     debug = False
     """Run in sloppy mode (meaning, suboptimal parameters that minimize run-time)."""
     echo_idx = None
@@ -383,6 +385,7 @@ class execution(_Config):
     _paths = (
         'anat_derivatives',
         'bids_dir',
+        'database_path',
         'fs_license_file',
         'fs_subjects_dir',
         'layout',
@@ -401,12 +404,14 @@ class execution(_Config):
         if cls._layout is None:
             import re
             from bids.layout import BIDSLayout
-            work_dir = cls.work_dir / 'bids.db'
-            work_dir.mkdir(exist_ok=True, parents=True)
+            _db_path = cls.database_path or (cls.work_dir / cls.run_uuid / 'bids.db')
+            _db_path.mkdir(exist_ok=True, parents=True)
+            _reset_db = bool(cls.database_path is not None)
             cls._layout = BIDSLayout(
                 str(cls.bids_dir),
                 validate=False,
-                # database_path=str(work_dir),
+                database_path=_db_path,
+                reset_database=_reset_db,
                 ignore=("code", "stimuli", "sourcedata", "models",
                         "derivatives", re.compile(r'^\.')))
         cls.layout = cls._layout

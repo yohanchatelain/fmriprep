@@ -155,6 +155,12 @@ def _build_parser():
         help="Reuse the anatomical derivatives from another fMRIPrep run or calculated "
         "with an alternative processing tool (NOT RECOMMENDED).",
     )
+    g_bids.add_argument(
+        "--database-path",
+        metavar="PATH",
+        type=PathExists,
+        help="Path to SQLite database indicies for BIDS dataset"
+    )
 
     g_perfm = parser.add_argument_group("Options to handle performance")
     g_perfm.add_argument(
