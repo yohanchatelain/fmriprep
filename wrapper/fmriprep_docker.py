@@ -166,6 +166,7 @@ def merge_help(wrapper_help, target_help):
     overlap = set(w_flags).intersection(t_flags)
     expected_overlap = {
         'anat-derivatives',
+        'database-path',
         'fs-license-file',
         'fs-subjects-dir',
         'h',
@@ -306,6 +307,9 @@ the spatial normalization.""" % (', '.join('"%s"' % s for s in TF_TEMPLATES),
     g_wrap.add_argument(
         '--use-plugin', metavar='PATH', action='store', default=None,
         type=os.path.abspath, help='nipype plugin configuration file')
+    g_wrap.add_argument(
+        '--database-path', metavar='PATH', type=os.path.abspath,
+        help="Path to SQLite database indicies for BIDS dataset")
 
     # Developer patch/shell options
     g_dev = parser.add_argument_group(
@@ -460,6 +464,10 @@ def main():
         command.extend(['-v', ':'.join((opts.use_plugin, '/tmp/plugin.yml',
                                         'ro'))])
         unknown_args.extend(['--use-plugin', '/tmp/plugin.yml'])
+
+    if opts.database_path:
+        command.extend(['-v', ':'.join((opts.database_path, '/tmp/bids.db'))])
+        unknown_args.extend(['--database-path', '/tmp/bids.db'])
 
     if opts.output_spaces:
         spaces = []
