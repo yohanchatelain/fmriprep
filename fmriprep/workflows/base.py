@@ -139,6 +139,7 @@ def init_single_subject_wf(subject_id):
 
     anat_only = config.workflow.anat_only
     anat_derivatives = config.execution.anat_derivatives
+    spaces = config.workflow.spaces
     # Make sure we always go through these two checks
     if not anat_only and not subject_data['bold']:
         task_id = config.execution.task_id
@@ -147,6 +148,26 @@ def init_single_subject_wf(subject_id):
             "All workflows require BOLD images.".format(
                 subject_id, task_id if task_id else '<all>')
         )
+
+    if anat_derivatives:
+        from smriprep.utils.bids import collect_derivatives
+        std_spaces = spaces.get_spaces(nonstandard=False, dim=(3,))
+        anat_derivatives = collect_derivatives(
+            anat_derivatives.absolute(),
+            subject_id,
+            std_spaces,
+            config.workflow.run_reconall,
+        )
+        if anat_derivatives is None:
+            config.loggers.workflow.warning(f"""\
+Attempted to access pre-existing anatomical derivatives at \
+<{config.execution.anat_derivatives}>, however not all expectations of fMRIPrep \
+were met (for participant <{subject_id}>, spaces <{', '.join(std_spaces)}>, \
+reconall <{config.workflow.run_reconall}>).""")
+
+    if not anat_derivatives and not subject_data['t1w']:
+        raise Exception("No T1w images found for participant {}. "
+                        "All workflows require T1w images.".format(subject_id))
 
     workflow = Workflow(name=name)
     workflow.__desc__ = """
@@ -181,7 +202,6 @@ It is released under the [CC0]\
 
 """.format(nilearn_ver=NILEARN_VERSION)
 
-    spaces = config.workflow.spaces
     output_dir = str(config.execution.output_dir)
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['subjects_dir']),
@@ -189,6 +209,7 @@ It is released under the [CC0]\
 
     bidssrc = pe.Node(BIDSDataGrabber(subject_data=subject_data,
                                       anat_only=anat_only,
+                                      anat_derivatives=anat_derivatives,
                                       subject_id=subject_id),
                       name='bidssrc')
 
@@ -212,26 +233,6 @@ It is released under the [CC0]\
         DerivativesDataSink(base_directory=output_dir, desc='about', datatype="figures",
                             dismiss_entities=("echo",)),
         name='ds_report_about', run_without_submitting=True)
-
-    if anat_derivatives:
-        from smriprep.utils.bids import collect_derivatives
-        std_spaces = spaces.get_spaces(nonstandard=False, dim=(3,))
-        anat_derivatives = collect_derivatives(
-            anat_derivatives.absolute(),
-            subject_id,
-            std_spaces,
-            config.workflow.run_reconall,
-        )
-        if anat_derivatives is None:
-            config.loggers.workflow.warning(f"""\
-Attempted to access pre-existing anatomical derivatives at \
-<{config.execution.anat_derivatives}>, however not all expectations of fMRIPrep \
-were met (for participant <{subject_id}>, spaces <{', '.join(std_spaces)}>, \
-reconall <{config.workflow.run_reconall}>).""")
-
-    if not anat_derivatives and not subject_data['t1w']:
-        raise Exception("No T1w images found for participant {}. "
-                        "All workflows require T1w images.".format(subject_id))
 
     # Preprocessing of T1w (includes registration to MNI)
     anat_preproc_wf = init_anat_preproc_wf(
