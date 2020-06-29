@@ -254,22 +254,33 @@ It is released under the [CC0]\
 
     workflow.connect([
         (inputnode, anat_preproc_wf, [('subjects_dir', 'inputnode.subjects_dir')]),
-        (bidssrc, bids_info, [(('t1w', fix_multi_T1w_source_name), 'in_file')]),
         (inputnode, summary, [('subjects_dir', 'subjects_dir')]),
-        (bidssrc, summary, [('t1w', 't1w'),
-                            ('t2w', 't2w'),
-                            ('bold', 'bold')]),
+        (bidssrc, summary, [('bold', 'bold')]),
         (bids_info, summary, [('subject', 'subject_id')]),
         (bids_info, anat_preproc_wf, [(('subject', _prefix), 'inputnode.subject_id')]),
         (bidssrc, anat_preproc_wf, [('t1w', 'inputnode.t1w'),
                                     ('t2w', 'inputnode.t2w'),
                                     ('roi', 'inputnode.roi'),
                                     ('flair', 'inputnode.flair')]),
-        (bidssrc, ds_report_summary, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
         (summary, ds_report_summary, [('out_report', 'in_file')]),
-        (bidssrc, ds_report_about, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
         (about, ds_report_about, [('out_report', 'in_file')]),
     ])
+
+    if not anat_derivatives:
+        workflow.connect([
+            (bidssrc, bids_info, [(('t1w', fix_multi_T1w_source_name), 'in_file')]),
+            (bidssrc, summary, [('t1w', 't1w'),
+                                ('t2w', 't2w')]),
+            (bidssrc, ds_report_summary, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
+            (bidssrc, ds_report_about, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
+        ])
+    else:
+        workflow.connect([
+            (anat_preproc_wf, bids_info, [('outputnode.t1w_preproc', 'in_file')]),
+            (anat_preproc_wf, summary, [('outputnode.t1w_preproc', 't1w')]),
+            (anat_preproc_wf, ds_report_summary, [('outputnode.t1w_preproc', 'source_file')]),
+            (anat_preproc_wf, ds_report_about, [('outputnode.t1w_preproc', 'source_file')]),
+        ])
 
     # Overwrite ``out_path_base`` of smriprep's DataSinks
     for node in workflow.list_node_names():
