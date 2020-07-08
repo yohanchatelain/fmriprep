@@ -159,7 +159,8 @@ def _build_parser():
         "--database-path",
         metavar="PATH",
         type=PathExists,
-        help="Path to SQLite database indicies for BIDS dataset"
+        help="Path to an existing PyBIDS database folder, for faster indexing "
+             "(especially useful for large datasets)."
     )
 
     g_perfm = parser.add_argument_group("Options to handle performance")

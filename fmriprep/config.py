@@ -339,7 +339,7 @@ class execution(_Config):
     boilerplate_only = False
     """Only generate a boilerplate."""
     database_path = None
-    """Path to directory containing SQLite database indicies for BIDS dataset"""
+    """Path to the directory containing SQLite database indices for the input BIDS dataset."""
     debug = False
     """Run in sloppy mode (meaning, suboptimal parameters that minimize run-time)."""
     echo_idx = None
