@@ -406,14 +406,14 @@ class execution(_Config):
             from bids.layout import BIDSLayout
             _db_path = cls.database_path or (cls.work_dir / cls.run_uuid / 'bids.db')
             _db_path.mkdir(exist_ok=True, parents=True)
-            _reset_db = bool(cls.database_path is not None)
             cls._layout = BIDSLayout(
                 str(cls.bids_dir),
                 validate=False,
                 database_path=_db_path,
-                reset_database=_reset_db,
+                reset_database=cls.database_path is None,
                 ignore=("code", "stimuli", "sourcedata", "models",
                         "derivatives", re.compile(r'^\.')))
+            cls.database_path = _db_path
         cls.layout = cls._layout
         if cls.bids_filters:
             from bids.layout import Query
