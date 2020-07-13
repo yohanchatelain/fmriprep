@@ -156,7 +156,7 @@ def _build_parser():
         "with an alternative processing tool (NOT RECOMMENDED).",
     )
     g_bids.add_argument(
-        "--database-path",
+        "--bids-database-dir",
         metavar="PATH",
         type=PathExists,
         help="Path to an existing PyBIDS database folder, for faster indexing "
