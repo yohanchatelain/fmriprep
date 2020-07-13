@@ -243,7 +243,7 @@ Based on the tissue segmentation of FreeSurfer (located in ``mri/aseg.mgz``)
 and only when the :ref:`Surface Processing <workflows_surface>` step has been
 executed, *fMRIPrep* replaces the brain mask with a refined one that derives
 from the ``aseg.mgz`` file as described in
-:py:func:`~fmriprep.interfaces.freesurfer.grow_mask`.
+:py:class:`~niworkflows.interfaces.freesurfer.RefineBrainMask`.
 
 BOLD preprocessing
 ------------------
