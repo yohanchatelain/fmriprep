@@ -166,6 +166,7 @@ def merge_help(wrapper_help, target_help):
     overlap = set(w_flags).intersection(t_flags)
     expected_overlap = {
         'anat-derivatives',
+        'bids-database-dir',
         'fs-license-file',
         'fs-subjects-dir',
         'h',
@@ -306,6 +307,10 @@ the spatial normalization.""" % (', '.join('"%s"' % s for s in TF_TEMPLATES),
     g_wrap.add_argument(
         '--use-plugin', metavar='PATH', action='store', default=None,
         type=os.path.abspath, help='nipype plugin configuration file')
+    g_wrap.add_argument(
+        '--bids-database-dir', metavar='PATH', type=os.path.abspath,
+        help="Path to an existing PyBIDS database folder, for faster indexing "
+             "(especially useful for large datasets).")
 
     # Developer patch/shell options
     g_dev = parser.add_argument_group(
@@ -460,6 +465,10 @@ def main():
         command.extend(['-v', ':'.join((opts.use_plugin, '/tmp/plugin.yml',
                                         'ro'))])
         unknown_args.extend(['--use-plugin', '/tmp/plugin.yml'])
+
+    if opts.bids_database_dir:
+        command.extend(['-v', ':'.join((opts.bids_database_dir, '/tmp/bids_db'))])
+        unknown_args.extend(['--bids-database-dir', '/tmp/bids_db'])
 
     if opts.output_spaces:
         spaces = []

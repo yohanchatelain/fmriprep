@@ -332,6 +332,8 @@ class execution(_Config):
     """A path where anatomical derivatives are found to fast-track *sMRIPrep*."""
     bids_dir = None
     """An existing path to the dataset, which must be BIDS-compliant."""
+    bids_database_dir = None
+    """Path to the directory containing SQLite database indices for the input BIDS dataset."""
     bids_description_hash = None
     """Checksum (SHA256) of the ``dataset_description.json`` of the BIDS dataset."""
     bids_filters = None
@@ -383,6 +385,7 @@ class execution(_Config):
     _paths = (
         'anat_derivatives',
         'bids_dir',
+        'bids_database_dir',
         'fs_license_file',
         'fs_subjects_dir',
         'layout',
@@ -401,14 +404,16 @@ class execution(_Config):
         if cls._layout is None:
             import re
             from bids.layout import BIDSLayout
-            work_dir = cls.work_dir / 'bids.db'
-            work_dir.mkdir(exist_ok=True, parents=True)
+            _db_path = cls.bids_database_dir or (cls.work_dir / cls.run_uuid / 'bids_db')
+            _db_path.mkdir(exist_ok=True, parents=True)
             cls._layout = BIDSLayout(
                 str(cls.bids_dir),
                 validate=False,
-                # database_path=str(work_dir),
+                database_path=_db_path,
+                reset_database=cls.bids_database_dir is None,
                 ignore=("code", "stimuli", "sourcedata", "models",
                         "derivatives", re.compile(r'^\.')))
+            cls.bids_database_dir = _db_path
         cls.layout = cls._layout
         if cls.bids_filters:
             from bids.layout import Query
