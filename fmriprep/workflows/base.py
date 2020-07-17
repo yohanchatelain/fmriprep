@@ -138,6 +138,8 @@ def init_single_subject_wf(subject_id):
         subject_data['t2w'] = []
 
     anat_only = config.workflow.anat_only
+    anat_derivatives = config.execution.anat_derivatives
+    spaces = config.workflow.spaces
     # Make sure we always go through these two checks
     if not anat_only and not subject_data['bold']:
         task_id = config.execution.task_id
@@ -147,7 +149,23 @@ def init_single_subject_wf(subject_id):
                 subject_id, task_id if task_id else '<all>')
         )
 
-    if not subject_data['t1w']:
+    if anat_derivatives:
+        from smriprep.utils.bids import collect_derivatives
+        std_spaces = spaces.get_spaces(nonstandard=False, dim=(3,))
+        anat_derivatives = collect_derivatives(
+            anat_derivatives.absolute(),
+            subject_id,
+            std_spaces,
+            config.workflow.run_reconall,
+        )
+        if anat_derivatives is None:
+            config.loggers.workflow.warning(f"""\
+Attempted to access pre-existing anatomical derivatives at \
+<{config.execution.anat_derivatives}>, however not all expectations of fMRIPrep \
+were met (for participant <{subject_id}>, spaces <{', '.join(std_spaces)}>, \
+reconall <{config.workflow.run_reconall}>).""")
+
+    if not anat_derivatives and not subject_data['t1w']:
         raise Exception("No T1w images found for participant {}. "
                         "All workflows require T1w images.".format(subject_id))
 
@@ -184,7 +202,6 @@ It is released under the [CC0]\
 
 """.format(nilearn_ver=NILEARN_VERSION)
 
-    spaces = config.workflow.spaces
     output_dir = str(config.execution.output_dir)
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['subjects_dir']),
@@ -192,6 +209,7 @@ It is released under the [CC0]\
 
     bidssrc = pe.Node(BIDSDataGrabber(subject_data=subject_data,
                                       anat_only=anat_only,
+                                      anat_derivatives=anat_derivatives,
                                       subject_id=subject_id),
                       name='bidssrc')
 
@@ -216,23 +234,6 @@ It is released under the [CC0]\
                             dismiss_entities=("echo",)),
         name='ds_report_about', run_without_submitting=True)
 
-    anat_derivatives = config.execution.anat_derivatives
-    if anat_derivatives:
-        from smriprep.utils.bids import collect_derivatives
-        std_spaces = spaces.get_spaces(nonstandard=False, dim=(3,))
-        anat_derivatives = collect_derivatives(
-            anat_derivatives.absolute(),
-            subject_id,
-            std_spaces,
-            config.workflow.run_reconall,
-        )
-        if anat_derivatives is None:
-            config.loggers.workflow.warning(f"""\
-Attempted to access pre-existing anatomical derivatives at \
-<{config.execution.anat_derivatives}>, however not all expectations of fMRIPrep \
-were met (for participant <{subject_id}>, spaces <{', '.join(std_spaces)}>, \
-reconall <{config.workflow.run_reconall}>).""")
-
     # Preprocessing of T1w (includes registration to MNI)
     anat_preproc_wf = init_anat_preproc_wf(
         bids_root=str(config.execution.bids_dir),
@@ -253,22 +254,33 @@ reconall <{config.workflow.run_reconall}>).""")
 
     workflow.connect([
         (inputnode, anat_preproc_wf, [('subjects_dir', 'inputnode.subjects_dir')]),
-        (bidssrc, bids_info, [(('t1w', fix_multi_T1w_source_name), 'in_file')]),
         (inputnode, summary, [('subjects_dir', 'subjects_dir')]),
-        (bidssrc, summary, [('t1w', 't1w'),
-                            ('t2w', 't2w'),
-                            ('bold', 'bold')]),
+        (bidssrc, summary, [('bold', 'bold')]),
         (bids_info, summary, [('subject', 'subject_id')]),
         (bids_info, anat_preproc_wf, [(('subject', _prefix), 'inputnode.subject_id')]),
         (bidssrc, anat_preproc_wf, [('t1w', 'inputnode.t1w'),
                                     ('t2w', 'inputnode.t2w'),
                                     ('roi', 'inputnode.roi'),
                                     ('flair', 'inputnode.flair')]),
-        (bidssrc, ds_report_summary, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
         (summary, ds_report_summary, [('out_report', 'in_file')]),
-        (bidssrc, ds_report_about, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
         (about, ds_report_about, [('out_report', 'in_file')]),
     ])
+
+    if not anat_derivatives:
+        workflow.connect([
+            (bidssrc, bids_info, [(('t1w', fix_multi_T1w_source_name), 'in_file')]),
+            (bidssrc, summary, [('t1w', 't1w'),
+                                ('t2w', 't2w')]),
+            (bidssrc, ds_report_summary, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
+            (bidssrc, ds_report_about, [(('t1w', fix_multi_T1w_source_name), 'source_file')]),
+        ])
+    else:
+        workflow.connect([
+            (bidssrc, bids_info, [(('bold', fix_multi_T1w_source_name), 'in_file')]),
+            (anat_preproc_wf, summary, [('outputnode.t1w_preproc', 't1w')]),
+            (anat_preproc_wf, ds_report_summary, [('outputnode.t1w_preproc', 'source_file')]),
+            (anat_preproc_wf, ds_report_about, [('outputnode.t1w_preproc', 'source_file')]),
+        ])
 
     # Overwrite ``out_path_base`` of smriprep's DataSinks
     for node in workflow.list_node_names():
