@@ -15,7 +15,7 @@ def write_bidsignore(deriv_dir):
         # Unspecified functional outputs
         "*_boldref.nii.gz", "*_bold.func.gii",
         "*_mixing.tsv", "*_AROMAnoiseICs.csv", "*_regressors.tsv",
-        ]
+    ]
     ignore_file = Path(deriv_dir) / ".bidsignore"
 
     ignore_file.write_text("\n".join(bids_ignore) + "\n")
@@ -63,7 +63,7 @@ def write_derivative_description(bids_dir, deriv_dir):
         desc['SourceDatasets'] = [{
             'URL': 'https://doi.org/{}'.format(orig_desc['DatasetDOI']),
             'DOI': orig_desc['DatasetDOI']
-            }]
+        }]
     if 'License' in orig_desc:
         desc['License'] = orig_desc['License']
 
