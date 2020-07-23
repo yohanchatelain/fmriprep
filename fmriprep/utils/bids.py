@@ -8,14 +8,14 @@ from pathlib import Path
 
 
 def write_bidsignore(deriv_dir):
-    bids_ignore = [
+    bids_ignore = (
         "*.html", "logs/", "figures/",  # Reports
         "*_xfm.*",  # Unspecified transform files
         "*.surf.gii",  # Unspecified structural outputs
         # Unspecified functional outputs
         "*_boldref.nii.gz", "*_bold.func.gii",
         "*_mixing.tsv", "*_AROMAnoiseICs.csv", "*_regressors.tsv",
-    ]
+    )
     ignore_file = Path(deriv_dir) / ".bidsignore"
 
     ignore_file.write_text("\n".join(bids_ignore) + "\n")
@@ -50,7 +50,7 @@ def write_derivative_description(bids_dir, deriv_dir):
     if 'FMRIPREP_SINGULARITY_URL' in os.environ:
         desc['GeneratedBy'][0]['Container'] = {
             "Type": "singularity",
-            "URI": os.environ['FMRIPREP_SINGULARITY_URL']
+            "URI": os.getenv('FMRIPREP_SINGULARITY_URL')
         }
 
     # Keys deriving from source dataset
@@ -61,7 +61,7 @@ def write_derivative_description(bids_dir, deriv_dir):
 
     if 'DatasetDOI' in orig_desc:
         desc['SourceDatasets'] = [{
-            'URL': 'https://doi.org/{}'.format(orig_desc['DatasetDOI']),
+            'URL': f'https://doi.org/{orig_desc["DatasetDOI"]}',
             'DOI': orig_desc['DatasetDOI']
         }]
     if 'License' in orig_desc:
