@@ -7,6 +7,20 @@ import json
 from pathlib import Path
 
 
+def write_bidsignore(deriv_dir):
+    bids_ignore = [
+        "*.html", "logs/", "figures/",  # Reports
+        "*_xfm.*",  # Unspecified transform files
+        "*.surf.gii",  # Unspecified structural outputs
+        # Unspecified functional outputs
+        "*_boldref.nii.gz", "*_bold.func.gii",
+        "*_mixing.tsv", "*_AROMAnoiseICs.csv", "*_regressors.tsv",
+        ]
+    ignore_file = Path(deriv_dir) / ".bidsignore"
+
+    ignore_file.write_text("\n".join(bids_ignore) + "\n")
+
+
 def write_derivative_description(bids_dir, deriv_dir):
     from ..__about__ import __version__, __url__, DOWNLOAD_URL
 
