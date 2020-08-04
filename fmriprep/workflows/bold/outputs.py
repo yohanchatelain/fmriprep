@@ -61,7 +61,8 @@ def init_func_derivatives_wf(
         'bold_std_ref', 'bold_t1', 'bold_t1_ref', 'bold_native', 'bold_native_ref',
         'bold_mask_native', 'cifti_variant', 'cifti_metadata', 'cifti_density',
         'confounds', 'confounds_metadata', 'melodic_mix', 'nonaggr_denoised_file',
-        'source_file', 'surf_files', 'surf_refs', 'template', 'spatial_reference']),
+        'source_file', 'surf_files', 'surf_refs', 'template', 'spatial_reference',
+        'bold2anat_xfm', 'anat2bold_xfm']),
         name='inputnode')
 
     raw_sources = pe.Node(niu.Function(function=_bids_relative), name='raw_sources')
@@ -123,6 +124,17 @@ def init_func_derivatives_wf(
             name='ds_bold_t1_ref', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
 
+        ds_ref_t1w_warp = pe.Node(
+            DerivativesDataSink(base_directory=output_dir, to='T1w', from='native',
+                                mode='image', suffix='xfm'),
+            name='ds_ref_t1w_warp', run_without_submitting=True
+        )
+        ds_ref_t1w_inv_warp = pe.Node(
+            DerivativesDataSink(base_directory=output_dir, to='native', from='T1w',
+                                mode='image', suffix='xfm'),
+            name='ds_t1w_tpl_inv_warp', run_without_submitting=True
+        )
+
         ds_bold_mask_t1 = pe.Node(
             DerivativesDataSink(base_directory=output_dir, space='T1w', desc='brain',
                                 suffix='mask', compress=True, dismiss_entities=("echo",)),
@@ -136,6 +148,12 @@ def init_func_derivatives_wf(
             (inputnode, ds_bold_mask_t1, [('source_file', 'source_file'),
                                           ('bold_mask_t1', 'in_file')]),
             (raw_sources, ds_bold_mask_t1, [('out', 'RawSources')]),
+            (inputnode, ds_ref_t1w_warp, [
+                ('bold2anat_xfm', 'in_file'),
+                (('template', _drop_cohort), 'to')]),
+            (inputnode, ds_ref_t1w_inv_warp, [
+                ('anat2bold_xfm', 'in_file'),
+                (('template', _drop_cohort), 'from')]),
         ])
         if freesurfer:
             ds_bold_aseg_t1 = pe.Node(DerivativesDataSink(

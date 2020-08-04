@@ -246,7 +246,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     inputnode.inputs.bold_file = bold_file
 
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['bold_t1', 'bold_t1_ref', 'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1',
+        fields=['bold_t1', 'bold_t1_ref', 'bold2anat_xfm', 'anat2bold_xfm',
+                'bold_mask_t1', 'bold_aseg_t1', 'bold_aparc_t1',
                 'bold_std', 'bold_std_ref', 'bold_mask_std', 'bold_aseg_std', 'bold_aparc_std',
                 'bold_native', 'bold_cifti', 'cifti_variant', 'cifti_metadata', 'cifti_density',
                 'surfaces', 'confounds', 'aroma_noise_ics', 'melodic_mix', 'nonaggr_denoised_file',
@@ -286,6 +287,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         (outputnode, func_derivatives_wf, [
             ('bold_t1', 'inputnode.bold_t1'),
             ('bold_t1_ref', 'inputnode.bold_t1_ref'),
+            ('bold2anat_xfm', 'inputnode.bold2anat_xfm'),
+            ('anat2bold_xfm', 'inputnode.anat2bold_xfm'),
             ('bold_aseg_t1', 'inputnode.bold_aseg_t1'),
             ('bold_aparc_t1', 'inputnode.bold_aparc_t1'),
             ('bold_mask_t1', 'inputnode.bold_mask_t1'),
@@ -449,6 +452,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('out_file', 'inputnode.t1w_brain')]),
         # unused if multiecho, but this is safe
         (bold_hmc_wf, bold_t1_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms')]),
+        (bold_reg_wf, outputnode, [
+            ('outputnode.itk_bold_to_t1', 'bold2anat_xfm'),
+            ('outputnode.itk_t1_to_bold', 'anat2bold_xfm')]),
         (bold_reg_wf, bold_t1_trans_wf, [
             ('outputnode.itk_bold_to_t1', 'inputnode.itk_bold_to_t1')]),
         (bold_t1_trans_wf, outputnode, [('outputnode.bold_t1', 'bold_t1'),
