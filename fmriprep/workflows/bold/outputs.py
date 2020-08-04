@@ -73,11 +73,29 @@ def init_func_derivatives_wf(
         dismiss_entities=("echo",)),
         name="ds_confounds", run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
+
+    ds_ref_t1w_warp = pe.Node(
+        DerivativesDataSink(base_directory=output_dir, to='T1w',
+                            mode='image', suffix='xfm',
+                            dismiss_entities=('echo',),
+                            **{'from': 'native'}),
+        name='ds_ref_t1w_warp', run_without_submitting=True)
+    ds_ref_t1w_inv_warp = pe.Node(
+        DerivativesDataSink(base_directory=output_dir, to='native',
+                            mode='image', suffix='xfm',
+                            dismiss_entities=('echo',),
+                            **{'from': 'T1w'}),
+        name='ds_t1w_tpl_inv_warp', run_without_submitting=True)
+
     workflow.connect([
         (inputnode, raw_sources, [('source_file', 'in_files')]),
         (inputnode, ds_confounds, [('source_file', 'source_file'),
                                    ('confounds', 'in_file'),
                                    ('confounds_metadata', 'meta_dict')]),
+        (inputnode, ds_ref_t1w_warp, [('source_file', 'source_file'),
+                                      ('bold2anat_xfm', 'in_file')]),
+        (inputnode, ds_ref_t1w_inv_warp, [('source_file', 'source_file'),
+                                          ('anat2bold_xfm', 'in_file')]),
     ])
 
     if nonstd_spaces.intersection(('func', 'run', 'bold', 'boldref', 'sbref')):
@@ -123,21 +141,6 @@ def init_func_derivatives_wf(
                                 compress=True, dismiss_entities=("echo",)),
             name='ds_bold_t1_ref', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
-
-        ds_ref_t1w_warp = pe.Node(
-            DerivativesDataSink(base_directory=output_dir, to='T1w',
-                                mode='image', suffix='xfm',
-                                dismiss_entities=('echo',),
-                                **{'from': 'native'}),
-            name='ds_ref_t1w_warp', run_without_submitting=True)
-        ds_ref_t1w_inv_warp = pe.Node(
-            DerivativesDataSink(base_directory=output_dir, to='native',
-                                mode='image', suffix='xfm',
-                                dismiss_entities=('echo',),
-                                **{'from': 'T1w'}),
-            name='ds_t1w_tpl_inv_warp', run_without_submitting=True
-        )
-
         ds_bold_mask_t1 = pe.Node(
             DerivativesDataSink(base_directory=output_dir, space='T1w', desc='brain',
                                 suffix='mask', compress=True, dismiss_entities=("echo",)),
@@ -151,10 +154,6 @@ def init_func_derivatives_wf(
             (inputnode, ds_bold_mask_t1, [('source_file', 'source_file'),
                                           ('bold_mask_t1', 'in_file')]),
             (raw_sources, ds_bold_mask_t1, [('out', 'RawSources')]),
-            (inputnode, ds_ref_t1w_warp, [('source_file', 'source_file'),
-                                          ('bold2anat_xfm', 'in_file')]),
-            (inputnode, ds_ref_t1w_inv_warp, [('source_file', 'source_file'),
-                                              ('anat2bold_xfm', 'in_file')]),
         ])
         if freesurfer:
             ds_bold_aseg_t1 = pe.Node(DerivativesDataSink(
