@@ -151,8 +151,10 @@ def init_func_derivatives_wf(
             (inputnode, ds_bold_mask_t1, [('source_file', 'source_file'),
                                           ('bold_mask_t1', 'in_file')]),
             (raw_sources, ds_bold_mask_t1, [('out', 'RawSources')]),
-            (inputnode, ds_ref_t1w_warp, [('bold2anat_xfm', 'in_file')]),
-            (inputnode, ds_ref_t1w_inv_warp, [('anat2bold_xfm', 'in_file')]),
+            (inputnode, ds_ref_t1w_warp, [('source_file', 'source_file'),
+                                          ('bold2anat_xfm', 'in_file')]),
+            (inputnode, ds_ref_t1w_inv_warp, [('source_file', 'source_file'),
+                                              ('anat2bold_xfm', 'in_file')]),
         ])
         if freesurfer:
             ds_bold_aseg_t1 = pe.Node(DerivativesDataSink(
