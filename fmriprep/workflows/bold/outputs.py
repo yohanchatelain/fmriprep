@@ -125,13 +125,16 @@ def init_func_derivatives_wf(
             mem_gb=DEFAULT_MEMORY_MIN_GB)
 
         ds_ref_t1w_warp = pe.Node(
-            DerivativesDataSink(base_directory=output_dir, to='T1w', from='native',
-                                mode='image', suffix='xfm'),
-            name='ds_ref_t1w_warp', run_without_submitting=True
-        )
+            DerivativesDataSink(base_directory=output_dir, to='T1w',
+                                mode='image', suffix='xfm',
+                                dismiss_entities=('echo',),
+                                **{'from': 'native'}),
+            name='ds_ref_t1w_warp', run_without_submitting=True)
         ds_ref_t1w_inv_warp = pe.Node(
-            DerivativesDataSink(base_directory=output_dir, to='native', from='T1w',
-                                mode='image', suffix='xfm'),
+            DerivativesDataSink(base_directory=output_dir, to='native',
+                                mode='image', suffix='xfm',
+                                dismiss_entities=('echo',),
+                                **{'from': 'T1w'}),
             name='ds_t1w_tpl_inv_warp', run_without_submitting=True
         )
 
