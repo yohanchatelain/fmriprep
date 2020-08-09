@@ -9,6 +9,8 @@ fmriprep/sub-02
 fmriprep/sub-02/func
 fmriprep/sub-02/func/sub-02_task-cuedSGT_run-1_desc-confounds_regressors.json
 fmriprep/sub-02/func/sub-02_task-cuedSGT_run-1_desc-confounds_regressors.tsv
+fmriprep/sub-02/func/sub-02_task-cuedSGT_run-1_from-scanner_to-T1w_mode-image_xfm.txt
+fmriprep/sub-02/func/sub-02_task-cuedSGT_run-1_from-T1w_to-scanner_mode-image_xfm.txt
 fmriprep/sub-02/func/sub-02_task-cuedSGT_run-1_space-MNI152NLin2009cAsym_boldref.nii.gz
 fmriprep/sub-02/func/sub-02_task-cuedSGT_run-1_space-MNI152NLin2009cAsym_desc-brain_mask.json
 fmriprep/sub-02/func/sub-02_task-cuedSGT_run-1_space-MNI152NLin2009cAsym_desc-brain_mask.nii.gz

@@ -126,6 +126,13 @@ these will be indicated with ``[specifiers]``::
       sub-<subject_label>_[specifiers]_space-<space_label>_desc-brain_mask.nii.gz
       sub-<subject_label>_[specifiers]_space-<space_label>_desc-preproc_bold.nii.gz
 
+Additionally, the following transforms are saved::
+
+  sub-<subject_label>/
+    func/
+      sub-<subject_label>_[specifiers]_from-scanner_to-T1w_mode-image_xfm.txt
+      sub-<subject_label>_[specifiers]_from-T1w_to-scanner_mode-image_xfm.txt
+
 **Regularly gridded outputs (images)**.
 Volumetric output spaces labels (``<space_label>`` above, and in the following) include
 ``T1w`` and ``MNI152NLin2009cAsym`` (default).
