@@ -175,8 +175,8 @@ def init_bold_reg_wf(
     return workflow
 
 
-def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, multiecho=False, use_fieldwarp=False,
-                          use_compression=True, name='bold_t1_trans_wf'):
+def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, use_compression=True,
+                          name='bold_t1_trans_wf'):
     """
     Co-register the reference BOLD image to T1w-space.
 
@@ -196,10 +196,6 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, multiecho=False, use
     ----------
     freesurfer : :obj:`bool`
         Enable FreeSurfer functional registration (bbregister)
-    use_fieldwarp : :obj:`bool`
-        Include SDC warp in single-shot transform from BOLD to T1
-    multiecho : :obj:`bool`
-        If multiecho data was supplied, HMC already performed
     mem_gb : :obj:`float`
         Size of BOLD file in GB
     omp_nthreads : :obj:`int`
@@ -332,17 +328,13 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, multiecho=False, use
                            run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
 
     workflow.connect([
-        # merge transforms
-        (inputnode, merge_xforms, [
-            ('hmc_xforms', 'in3'),
-            ('fieldwarp', 'in2'),
-            ('itk_bold_to_t1', 'in1')]),
-        (merge_xforms, bold_to_t1w_transform, [('out', 'transforms')]),
-        (inputnode, bold_to_t1w_transform, [('bold_split', 'input_image')]),
-    ])
-
-    workflow.connect([
         (inputnode, merge, [('name_source', 'header_source')]),
+        (inputnode, merge_xforms, [
+            ('hmc_xforms', 'in3'),  # May be 'identity' if HMC already applied
+            ('fieldwarp', 'in2'),   # May be 'identity' if SDC already applied
+            ('itk_bold_to_t1', 'in1')]),
+        (inputnode, bold_to_t1w_transform, [('bold_split', 'input_image')]),
+        (merge_xforms, bold_to_t1w_transform, [('out', 'transforms')]),
         (gen_ref, bold_to_t1w_transform, [('out_file', 'reference_image')]),
         (bold_to_t1w_transform, merge, [('out_files', 'in_files')]),
         (merge, gen_final_ref, [('out_file', 'inputnode.bold_file')]),
