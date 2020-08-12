@@ -334,22 +334,17 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, multiecho=False, use
     if use_fieldwarp:
         workflow.connect([
             (inputnode, merge_xforms, [
-                ('hmc_xforms', 'in%d' % nforms),
-                ('itk_bold_to_t1', 'in1')]),
-            (merge_xforms, bold_to_t1w_transform, [('out', 'transforms')]),
-            (inputnode, bold_to_t1w_transform, [('bold_split', 'input_image')]),
+                ('fieldwarp', 'in2')])
         ])
 
-    else:
-        from nipype.interfaces.fsl import Split as FSLSplit
-        bold_split = pe.Node(FSLSplit(dimension='t'), name='bold_split',
-                             mem_gb=DEFAULT_MEMORY_MIN_GB)
-
-        workflow.connect([
-            (inputnode, bold_split, [('bold_split', 'in_file')]),
-            (bold_split, bold_to_t1w_transform, [('out_files', 'input_image')]),
-            (inputnode, bold_to_t1w_transform, [('itk_bold_to_t1', 'transforms')]),
-        ])
+    workflow.connect([
+        # merge transforms
+        (inputnode, merge_xforms, [
+            ('hmc_xforms', 'in%d' % nforms),
+            ('itk_bold_to_t1', 'in1')]),
+        (merge_xforms, bold_to_t1w_transform, [('out', 'transforms')]),
+        (inputnode, bold_to_t1w_transform, [('bold_split', 'input_image')]),
+    ])
 
     workflow.connect([
         (inputnode, merge, [('name_source', 'header_source')]),

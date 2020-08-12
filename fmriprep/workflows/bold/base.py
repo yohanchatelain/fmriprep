@@ -450,11 +450,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('t1w_aparc', 'inputnode.t1w_aparc')]),
         (t1w_brain, bold_t1_trans_wf, [
             ('out_file', 'inputnode.t1w_brain')]),
-        # unused if multiecho, but this is safe
-        (bold_hmc_wf, bold_t1_trans_wf, [('outputnode.xforms', 'inputnode.hmc_xforms')]),
-        (bold_reg_wf, outputnode, [
-            ('outputnode.itk_bold_to_t1', 'bold2anat_xfm'),
-            ('outputnode.itk_t1_to_bold', 'anat2bold_xfm')]),
         (bold_reg_wf, bold_t1_trans_wf, [
             ('outputnode.itk_bold_to_t1', 'inputnode.itk_bold_to_t1')]),
         (bold_t1_trans_wf, outputnode, [('outputnode.bold_t1', 'bold_t1'),
@@ -470,7 +465,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('outputnode.ref_image_brain', 'inputnode.epi_brain'),
             ('outputnode.bold_mask', 'inputnode.epi_mask')]),
         (bold_sdc_wf, bold_t1_trans_wf, [
-            ('outputnode.out_warp', 'inputnode.fieldwarp'),
             ('outputnode.epi_mask', 'inputnode.ref_bold_mask'),
             ('outputnode.epi_brain', 'inputnode.ref_bold_brain')]),
         (bold_sdc_wf, bold_bold_trans_wf, [
@@ -516,6 +510,10 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('outputnode.bold', 'inputnode.bold')]),
             (bold_split, bold_t1_trans_wf, [
                 ('out_files', 'inputnode.bold_split')]),
+            (bold_hmc_wf, bold_t1_trans_wf, [
+                ('outputnode.xforms', 'inputnode.hmc_xforms')]),
+            (bold_sdc_wf, bold_t1_trans_wf, [
+                ('outputnode.out_warp', 'inputnode.fieldwarp')])
         ])
     else:  # for meepi, use optimal combination
         split_opt_comb = bold_split.clone(name='split_opt_comb')
@@ -532,6 +530,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (split_opt_comb, bold_t1_trans_wf, [
                 ('out_files', 'inputnode.bold_split')]),
         ])
+
+        bold_t1_trans_wf.inputs.inputnode.fieldwarp = 'identity'
+        bold_t1_trans_wf.inputs.inputnode.hmc_xforms = 'identity'
 
     if fmaps:
         from sdcflows.workflows.outputs import init_sdc_unwarp_report_wf
