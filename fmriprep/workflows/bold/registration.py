@@ -328,13 +328,13 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, multiecho=False, use
     gen_final_ref = init_bold_reference_wf(omp_nthreads, pre_mask=True)
 
     # Merge transforms placing the head motion correction last
-    merge_xforms = pe.Node(niu.Merge(nforms), name='merge_xforms',
+    merge_xforms = pe.Node(niu.Merge(3), name='merge_xforms',
                            run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
 
     workflow.connect([
         # merge transforms
         (inputnode, merge_xforms, [
-            ('hmc_xforms' , 'in3'),
+            ('hmc_xforms', 'in3'),
             ('fieldwarp', 'in2'),
             ('itk_bold_to_t1', 'in1')]),
         (merge_xforms, bold_to_t1w_transform, [('out', 'transforms')]),
