@@ -398,9 +398,11 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                                        debug=config.execution.debug)
 
     # MULTI-ECHO EPI DATA #############################################
-    if multiecho:
+    if multiecho:  # instantiate relevant interfaces, imports
         from niworkflows.func.util import init_skullstrip_bold_wf
         skullstrip_bold_wf = init_skullstrip_bold_wf(name='skullstrip_bold_wf')
+
+        split_opt_comb = bold_split.clone(name='split_opt_comb')
 
         inputnode.inputs.bold_file = ref_file  # Replace reference w first echo
 
@@ -414,13 +416,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                                        mem_gb=mem_gb['resampled'],
                                        omp_nthreads=omp_nthreads,
                                        name='bold_t2smap_wf')
-
-        workflow.connect([
-            (skullstrip_bold_wf, join_echos, [
-                ('outputnode.skull_stripped_file', 'bold_files')]),
-            (join_echos, bold_t2s_wf, [
-                ('bold_files', 'inputnode.bold_file')]),
-        ])
 
     # MAIN WORKFLOW STRUCTURE #######################################################
     workflow.connect([
@@ -516,13 +511,16 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('outputnode.out_warp', 'inputnode.fieldwarp')])
         ])
     else:  # for meepi, use optimal combination
-        split_opt_comb = bold_split.clone(name='split_opt_comb')
         workflow.connect([
             # update name source for optimal combination
             (inputnode, func_derivatives_wf, [
                 (('bold_file', combine_meepi_source), 'inputnode.source_file')]),
             (bold_bold_trans_wf, skullstrip_bold_wf, [
                 ('outputnode.bold', 'inputnode.in_file')]),
+            (skullstrip_bold_wf, join_echos, [
+                ('outputnode.skull_stripped_file', 'bold_files')]),
+            (join_echos, bold_t2s_wf, [
+                ('bold_files', 'inputnode.bold_file')]),
             (bold_t2s_wf, bold_confounds_wf, [
                 ('outputnode.bold', 'inputnode.bold')]),
             (bold_t2s_wf, split_opt_comb, [
