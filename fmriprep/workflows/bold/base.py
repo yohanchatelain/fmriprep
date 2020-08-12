@@ -670,7 +670,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                     ('out_files', 'inputnode.bold_split')])
             ])
         else:
-            workflow.connect([,
+            workflow.connect([
                 (split_opt_comb, bold_std_trans_wf, [
                     ('out_files', 'inputnode.bold_split')])
             ])
