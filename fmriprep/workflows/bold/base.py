@@ -517,7 +517,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (bold_split, bold_t1_trans_wf, [
                 ('out_files', 'inputnode.bold_split')]),
         ])
-    else:  # for meepi, create and use optimal combination
+    else:  # for meepi, use optimal combination
+        split_opt_comb = bold_split.clone(name='split_opt_comb')
         workflow.connect([
             # update name source for optimal combination
             (inputnode, func_derivatives_wf, [
@@ -526,8 +527,10 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('outputnode.bold', 'inputnode.in_file')]),
             (bold_t2s_wf, bold_confounds_wf, [
                 ('outputnode.bold', 'inputnode.bold')]),
-            (bold_t2s_wf, bold_t1_trans_wf, [
-                ('outputnode.bold', 'inputnode.bold_split')]),
+            (bold_t2s_wf, split_opt_comb, [
+                ('outputnode.bold', 'in_file')]),
+            (split_opt_comb, bold_t1_trans_wf, [
+                ('out_files', 'inputnode.bold_split')]),
         ])
 
     if fmaps:
@@ -667,13 +670,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                     ('out_files', 'inputnode.bold_split')])
             ])
         else:
-            split_opt_comb = bold_split.clone(name='split_opt_comb')
-            workflow.connect([
-                (bold_t2s_wf, split_opt_comb, [
-                    ('outputnode.bold', 'in_file')]),
+            workflow.connect([,
                 (split_opt_comb, bold_std_trans_wf, [
-                    ('out_files', 'inputnode.bold_split')
-                ])
+                    ('out_files', 'inputnode.bold_split')])
             ])
 
         # func_derivatives_wf internally parametrizes over snapshotted spaces.
