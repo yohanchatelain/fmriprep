@@ -443,6 +443,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('t1w_aparc', 'inputnode.t1w_aparc')]),
         (t1w_brain, bold_t1_trans_wf, [
             ('out_file', 'inputnode.t1w_brain')]),
+        (bold_reg_wf, outputnode, [
+            ('outputnode.itk_bold_to_t1', 'bold2anat_xfm'),
+            ('outputnode.itk_t1_to_bold', 'anat2bold_xfm')]),
         (bold_reg_wf, bold_t1_trans_wf, [
             ('outputnode.itk_bold_to_t1', 'inputnode.itk_bold_to_t1')]),
         (bold_t1_trans_wf, outputnode, [('outputnode.bold_t1', 'bold_t1'),
