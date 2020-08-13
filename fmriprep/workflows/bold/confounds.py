@@ -548,7 +548,6 @@ def init_ica_aroma_wf(
     err_on_aroma_warn=False,
     name='ica_aroma_wf',
     susan_fwhm=6.0,
-    use_fieldwarp=True,
 ):
     """
     Build a workflow that runs `ICA-AROMA`_.
@@ -601,8 +600,6 @@ def init_ica_aroma_wf(
     susan_fwhm : :obj:`float`
         Kernel width (FWHM in mm) for the smoothing step with
         FSL ``susan`` (default: 6.0mm)
-    use_fieldwarp : :obj:`bool`
-        Include SDC warp in single-shot transform from BOLD to MNI
     err_on_aroma_warn : :obj:`bool`
         Do not fail on ICA-AROMA errors
     aroma_melodic_dim : :obj:`int`
@@ -628,8 +625,6 @@ def init_ica_aroma_wf(
         BOLD series mask in template space
     hmc_xforms
         List of affine transforms aligning each volume to ``ref_image`` in ITK format
-    fieldwarp
-        a :abbr:`DFM (displacements field map)` in ITK format
     movpar_file
         SPM-formatted motion parameters file
 

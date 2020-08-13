@@ -695,7 +695,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 mem_gb=mem_gb['resampled'],
                 metadata=metadata,
                 omp_nthreads=omp_nthreads,
-                use_fieldwarp=bool(fmaps),
                 err_on_aroma_warn=config.workflow.aroma_err_on_warn,
                 aroma_melodic_dim=config.workflow.aroma_melodic_dim,
                 name='ica_aroma_wf')
