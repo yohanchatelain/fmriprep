@@ -164,7 +164,6 @@ def init_bold_std_trans_wf(
     spaces,
     name='bold_std_trans_wf',
     use_compression=True,
-    use_fieldwarp=False,
 ):
     """
     Sample fMRI into standard space with a single-step resampling of the original BOLD series.
@@ -215,8 +214,6 @@ def init_bold_std_trans_wf(
         Name of workflow (default: ``bold_std_trans_wf``)
     use_compression : :obj:`bool`
         Save registered BOLD series as ``.nii.gz``
-    use_fieldwarp : :obj:`bool`
-        Include SDC warp in single-shot transform from BOLD to MNI
 
     Inputs
     ------
@@ -335,13 +332,8 @@ preprocessed BOLD runs*: {tpl}.
     mask_merge_tfms = pe.Node(niu.Merge(2), name='mask_merge_tfms', run_without_submitting=True,
                               mem_gb=DEFAULT_MEMORY_MIN_GB)
 
-    nxforms = 3 + use_fieldwarp
-    merge_xforms = pe.Node(niu.Merge(nxforms), name='merge_xforms',
+    merge_xforms = pe.Node(niu.Merge(4), name='merge_xforms',
                            run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
-    workflow.connect([(inputnode, merge_xforms, [('hmc_xforms', 'in%d' % nxforms)])])
-
-    if use_fieldwarp:
-        workflow.connect([(inputnode, merge_xforms, [('fieldwarp', 'in3')])])
 
     bold_to_std_transform = pe.Node(
         MultiApplyTransforms(interpolation="LanczosWindowedSinc", float=True, copy_dtype=True),
@@ -361,8 +353,9 @@ preprocessed BOLD runs*: {tpl}.
                                  ('templates', 'keys')]),
         (inputnode, mask_std_tfm, [('bold_mask', 'input_image')]),
         (inputnode, gen_ref, [(('bold_split', _first), 'moving_image')]),
-        (inputnode, merge_xforms, [
-            (('itk_bold_to_t1', _aslist), 'in2')]),
+        (inputnode, merge_xforms, [('hmc_xforms', 'in4'),
+                                   ('fieldwarp', 'in3'),
+                                   (('itk_bold_to_t1', _aslist), 'in2')]),
         (inputnode, merge, [('name_source', 'header_source')]),
         (inputnode, mask_merge_tfms, [(('itk_bold_to_t1', _aslist), 'in2')]),
         (inputnode, bold_to_std_transform, [('bold_split', 'input_image')]),

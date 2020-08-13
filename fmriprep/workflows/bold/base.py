@@ -529,6 +529,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('out_files', 'inputnode.bold_split')]),
         ])
 
+        # Already applied in bold_bold_trans_wf, which inputs to bold_t2s_wf
         bold_t1_trans_wf.inputs.inputnode.fieldwarp = 'identity'
         bold_t1_trans_wf.inputs.inputnode.hmc_xforms = 'identity'
 
@@ -630,7 +631,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             spaces=spaces,
             name='bold_std_trans_wf',
             use_compression=not config.execution.low_mem,
-            use_fieldwarp=bool(fmaps),
         )
         workflow.connect([
             (inputnode, bold_std_trans_wf, [
@@ -639,14 +639,10 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('bold_file', 'inputnode.name_source'),
                 ('t1w_aseg', 'inputnode.bold_aseg'),
                 ('t1w_aparc', 'inputnode.bold_aparc')]),
-            (bold_hmc_wf, bold_std_trans_wf, [
-                ('outputnode.xforms', 'inputnode.hmc_xforms')]),
             (bold_reg_wf, bold_std_trans_wf, [
                 ('outputnode.itk_bold_to_t1', 'inputnode.itk_bold_to_t1')]),
             (bold_bold_trans_wf, bold_std_trans_wf, [
                 ('outputnode.bold_mask', 'inputnode.bold_mask')]),
-            (bold_sdc_wf, bold_std_trans_wf, [
-                ('outputnode.out_warp', 'inputnode.fieldwarp')]),
             (bold_std_trans_wf, outputnode, [('outputnode.bold_std', 'bold_std'),
                                              ('outputnode.bold_std_ref', 'bold_std_ref'),
                                              ('outputnode.bold_mask_std', 'bold_mask_std')]),
@@ -667,12 +663,20 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             workflow.connect([
                 (bold_split, bold_std_trans_wf, [
                     ('out_files', 'inputnode.bold_split')])
+                (bold_sdc_wf, bold_std_trans_wf, [
+                    ('outputnode.out_warp', 'inputnode.fieldwarp')]),
+                (bold_hmc_wf, bold_std_trans_wf, [
+                    ('outputnode.xforms', 'inputnode.hmc_xforms')]),
             ])
         else:
             workflow.connect([
                 (split_opt_comb, bold_std_trans_wf, [
                     ('out_files', 'inputnode.bold_split')])
             ])
+
+            # Already applied in bold_bold_trans_wf, which inputs to bold_t2s_wf
+            bold_std_trans_wf.inputs.inputnode.fieldwarp = 'identity'
+            bold_std_trans_wf.inputs.inputnode.hmc_xforms = 'identity'
 
         # func_derivatives_wf internally parametrizes over snapshotted spaces.
         workflow.connect([
