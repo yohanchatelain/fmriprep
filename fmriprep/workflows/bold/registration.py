@@ -175,8 +175,8 @@ def init_bold_reg_wf(
     return workflow
 
 
-def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, multiecho=False, use_fieldwarp=False,
-                          use_compression=True, name='bold_t1_trans_wf'):
+def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, use_compression=True,
+                          name='bold_t1_trans_wf'):
     """
     Co-register the reference BOLD image to T1w-space.
 
@@ -196,10 +196,6 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, multiecho=False, use
     ----------
     freesurfer : :obj:`bool`
         Enable FreeSurfer functional registration (bbregister)
-    use_fieldwarp : :obj:`bool`
-        Include SDC warp in single-shot transform from BOLD to T1
-    multiecho : :obj:`bool`
-        If multiecho data was supplied, HMC already performed
     mem_gb : :obj:`float`
         Size of BOLD file in GB
     omp_nthreads : :obj:`int`
@@ -327,38 +323,18 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, multiecho=False, use
     # Generate a reference on the target T1w space
     gen_final_ref = init_bold_reference_wf(omp_nthreads, pre_mask=True)
 
-    if not multiecho:
-        # Merge transforms placing the head motion correction last
-        nforms = 2 + int(use_fieldwarp)
-        merge_xforms = pe.Node(niu.Merge(nforms), name='merge_xforms',
-                               run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
-        if use_fieldwarp:
-            workflow.connect([
-                (inputnode, merge_xforms, [('fieldwarp', 'in2')])
-            ])
-
-        workflow.connect([
-            # merge transforms
-            (inputnode, merge_xforms, [
-                ('hmc_xforms', 'in%d' % nforms),
-                ('itk_bold_to_t1', 'in1')]),
-            (merge_xforms, bold_to_t1w_transform, [('out', 'transforms')]),
-            (inputnode, bold_to_t1w_transform, [('bold_split', 'input_image')]),
-        ])
-
-    else:
-        from nipype.interfaces.fsl import Split as FSLSplit
-        bold_split = pe.Node(FSLSplit(dimension='t'), name='bold_split',
-                             mem_gb=DEFAULT_MEMORY_MIN_GB)
-
-        workflow.connect([
-            (inputnode, bold_split, [('bold_split', 'in_file')]),
-            (bold_split, bold_to_t1w_transform, [('out_files', 'input_image')]),
-            (inputnode, bold_to_t1w_transform, [('itk_bold_to_t1', 'transforms')]),
-        ])
+    # Merge transforms placing the head motion correction last
+    merge_xforms = pe.Node(niu.Merge(3), name='merge_xforms',
+                           run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
 
     workflow.connect([
         (inputnode, merge, [('name_source', 'header_source')]),
+        (inputnode, merge_xforms, [
+            ('hmc_xforms', 'in3'),  # May be 'identity' if HMC already applied
+            ('fieldwarp', 'in2'),   # May be 'identity' if SDC already applied
+            ('itk_bold_to_t1', 'in1')]),
+        (inputnode, bold_to_t1w_transform, [('bold_split', 'input_image')]),
+        (merge_xforms, bold_to_t1w_transform, [('out', 'transforms')]),
         (gen_ref, bold_to_t1w_transform, [('out_file', 'reference_image')]),
         (bold_to_t1w_transform, merge, [('out_files', 'in_files')]),
         (merge, gen_final_ref, [('out_file', 'inputnode.bold_file')]),

@@ -13,7 +13,6 @@ from ...config import DEFAULT_MEMORY_MIN_GB
 
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, freesurfer as fs
-from nipype.interfaces.fsl import Split as FSLSplit
 import nipype.interfaces.workbench as wb
 
 
@@ -164,7 +163,6 @@ def init_bold_std_trans_wf(
     spaces,
     name='bold_std_trans_wf',
     use_compression=True,
-    use_fieldwarp=False,
 ):
     """
     Sample fMRI into standard space with a single-step resampling of the original BOLD series.
@@ -215,8 +213,6 @@ def init_bold_std_trans_wf(
         Name of workflow (default: ``bold_std_trans_wf``)
     use_compression : :obj:`bool`
         Save registered BOLD series as ``.nii.gz``
-    use_fieldwarp : :obj:`bool`
-        Include SDC warp in single-shot transform from BOLD to MNI
 
     Inputs
     ------
@@ -335,13 +331,8 @@ preprocessed BOLD runs*: {tpl}.
     mask_merge_tfms = pe.Node(niu.Merge(2), name='mask_merge_tfms', run_without_submitting=True,
                               mem_gb=DEFAULT_MEMORY_MIN_GB)
 
-    nxforms = 3 + use_fieldwarp
-    merge_xforms = pe.Node(niu.Merge(nxforms), name='merge_xforms',
+    merge_xforms = pe.Node(niu.Merge(4), name='merge_xforms',
                            run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
-    workflow.connect([(inputnode, merge_xforms, [('hmc_xforms', 'in%d' % nxforms)])])
-
-    if use_fieldwarp:
-        workflow.connect([(inputnode, merge_xforms, [('fieldwarp', 'in3')])])
 
     bold_to_std_transform = pe.Node(
         MultiApplyTransforms(interpolation="LanczosWindowedSinc", float=True, copy_dtype=True),
@@ -361,8 +352,9 @@ preprocessed BOLD runs*: {tpl}.
                                  ('templates', 'keys')]),
         (inputnode, mask_std_tfm, [('bold_mask', 'input_image')]),
         (inputnode, gen_ref, [(('bold_split', _first), 'moving_image')]),
-        (inputnode, merge_xforms, [
-            (('itk_bold_to_t1', _aslist), 'in2')]),
+        (inputnode, merge_xforms, [('hmc_xforms', 'in4'),
+                                   ('fieldwarp', 'in3'),
+                                   (('itk_bold_to_t1', _aslist), 'in2')]),
         (inputnode, merge, [('name_source', 'header_source')]),
         (inputnode, mask_merge_tfms, [(('itk_bold_to_t1', _aslist), 'in2')]),
         (inputnode, bold_to_std_transform, [('bold_split', 'input_image')]),
@@ -431,7 +423,6 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
                                name='bold_preproc_trans_wf',
                                use_compression=True,
                                use_fieldwarp=False,
-                               split_file=False,
                                interpolation='LanczosWindowedSinc'):
     """
     Resample in native (original) space.
@@ -459,9 +450,6 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
         Save registered BOLD series as ``.nii.gz``
     use_fieldwarp : :obj:`bool`
         Include SDC warp in single-shot transform from BOLD to MNI
-    split_file : :obj:`bool`
-        Whether the input file should be splitted (it is a 4D file)
-        or it is a list of 3D files (default ``False``, do not split)
     interpolation : :obj:`str`
         Interpolation type to be used by ANTs' ``applyTransforms``
         (default ``'LanczosWindowedSinc'``)
@@ -518,19 +506,26 @@ the transforms to correct for head-motion""")
         niu.IdentityInterface(fields=['bold', 'bold_mask', 'bold_ref', 'bold_ref_brain']),
         name='outputnode')
 
+    merge_xforms = pe.Node(niu.Merge(2), name='merge_xforms',
+                           run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
+
     bold_transform = pe.Node(
         MultiApplyTransforms(interpolation=interpolation, float=True, copy_dtype=True),
         name='bold_transform', mem_gb=mem_gb * 3 * omp_nthreads, n_procs=omp_nthreads)
 
-    merge = pe.Node(Merge(compress=use_compression), name='merge',
-                    mem_gb=mem_gb * 3)
+    merge = pe.Node(Merge(compress=use_compression), name='merge', mem_gb=mem_gb * 3)
 
     # Generate a new BOLD reference
     bold_reference_wf = init_bold_reference_wf(omp_nthreads=omp_nthreads)
     bold_reference_wf.__desc__ = None  # Unset description to avoid second appearance
 
     workflow.connect([
+        (inputnode, merge_xforms, [('fieldwarp', 'in1'),
+                                   ('hmc_xforms', 'in2')]),
+        (inputnode, bold_transform, [('bold_file', 'input_image'),
+                                     (('bold_file', _first), 'reference_image')]),
         (inputnode, merge, [('name_source', 'header_source')]),
+        (merge_xforms, bold_transform, [('out', 'transforms')]),
         (bold_transform, merge, [('out_files', 'in_files')]),
         (merge, bold_reference_wf, [('out_file', 'inputnode.bold_file')]),
         (merge, outputnode, [('out_file', 'bold')]),
@@ -540,37 +535,6 @@ the transforms to correct for head-motion""")
             ('outputnode.bold_mask', 'bold_mask')]),
     ])
 
-    # Input file is not splitted
-    if split_file:
-        bold_split = pe.Node(FSLSplit(dimension='t'), name='bold_split',
-                             mem_gb=mem_gb * 3)
-        workflow.connect([
-            (inputnode, bold_split, [('bold_file', 'in_file')]),
-            (bold_split, bold_transform, [
-                ('out_files', 'input_image'),
-                (('out_files', _first), 'reference_image'),
-            ])
-        ])
-    else:
-        workflow.connect([
-            (inputnode, bold_transform, [('bold_file', 'input_image'),
-                                         (('bold_file', _first), 'reference_image')]),
-        ])
-
-    if use_fieldwarp:
-        merge_xforms = pe.Node(niu.Merge(2), name='merge_xforms',
-                               run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
-        workflow.connect([
-            (inputnode, merge_xforms, [('fieldwarp', 'in1'),
-                                       ('hmc_xforms', 'in2')]),
-            (merge_xforms, bold_transform, [('out', 'transforms')]),
-        ])
-    else:
-        def _aslist(val):
-            return [val]
-        workflow.connect([
-            (inputnode, bold_transform, [(('hmc_xforms', _aslist), 'transforms')]),
-        ])
     return workflow
 
 
