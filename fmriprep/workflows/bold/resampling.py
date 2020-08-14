@@ -423,6 +423,7 @@ preprocessed BOLD runs*: {tpl}.
 def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
                                name='bold_preproc_trans_wf',
                                use_compression=True,
+                               use_fieldwarp=False,
                                interpolation='LanczosWindowedSinc'):
     """
     Resample in native (original) space.
@@ -448,6 +449,8 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
         Name of workflow (default: ``bold_std_trans_wf``)
     use_compression : :obj:`bool`
         Save registered BOLD series as ``.nii.gz``
+    use_fieldwarp : :obj:`bool`
+        Include SDC warp in single-shot transform from BOLD to MNI
     interpolation : :obj:`str`
         Interpolation type to be used by ANTs' ``applyTransforms``
         (default ``'LanczosWindowedSinc'``)
