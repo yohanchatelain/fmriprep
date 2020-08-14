@@ -663,7 +663,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         if not multiecho:
             workflow.connect([
                 (bold_split, bold_std_trans_wf, [
-                    ('out_files', 'inputnode.bold_split')])
+                    ('out_files', 'inputnode.bold_split')]),
                 (bold_sdc_wf, bold_std_trans_wf, [
                     ('outputnode.out_warp', 'inputnode.fieldwarp')]),
                 (bold_hmc_wf, bold_std_trans_wf, [
