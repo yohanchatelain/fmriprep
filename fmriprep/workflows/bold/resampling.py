@@ -13,7 +13,6 @@ from ...config import DEFAULT_MEMORY_MIN_GB
 
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, freesurfer as fs
-from nipype.interfaces.fsl import Split as FSLSplit
 import nipype.interfaces.workbench as wb
 
 
