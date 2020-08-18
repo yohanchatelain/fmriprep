@@ -77,6 +77,8 @@ _disable_et = bool(
 os.environ["NIPYPE_NO_ET"] = "1"
 os.environ["NO_ET"] = "1"
 
+CONFIG_FILENAME = "fmriprep.toml"
+
 try:
     set_start_method("forkserver")
 except RuntimeError:
@@ -86,11 +88,11 @@ finally:
     # ignoring the most annoying warnings
     import sys
     import random
-
     from uuid import uuid4
-    from pathlib import Path
     from time import strftime
-    from nipype import logging as nlogging, __version__ as _nipype_ver
+
+    from pathlib import Path
+    from nipype import __version__ as _nipype_ver
     from templateflow import __version__ as _tf_ver
     from . import __version__
 
@@ -195,15 +197,15 @@ class _Config:
         raise RuntimeError("Configuration type is not instantiable.")
 
     @classmethod
-    def load(cls, settings, init=True):
+    def load(cls, settings, init=True, ignore=None):
         """Store settings from a dictionary."""
+        ignore = ignore or {}
         for k, v in settings.items():
-            if v is None:
+            if k in ignore or v is None:
                 continue
             if k in cls._paths:
                 setattr(cls, k, Path(v).absolute())
-                continue
-            if hasattr(cls, k):
+            elif hasattr(cls, k):
                 setattr(cls, k, v)
 
         if init:
@@ -384,7 +386,7 @@ class execution(_Config):
     the command line) as spatial references for outputs."""
     reports_only = False
     """Only build the reports, based on the reportlets found in a cached working directory."""
-    run_uuid = "%s_%s" % (strftime("%Y%m%d-%H%M%S"), uuid4())
+    run_uuid = f"{strftime('%Y%m%d-%H%M%S')}_{uuid4()}"
     """Unique identifier of this particular run."""
     participant_label = None
     """List of participant identifiers that are to be preprocessed."""
@@ -497,8 +499,6 @@ class workflow(_Config):
     """Ignore particular steps for *fMRIPrep*."""
     longitudinal = False
     """Run FreeSurfer ``recon-all`` with the ``-logitudinal`` flag."""
-    random_seed = None
-    """Master random seed to initialize the Pseudorandom Number Generator (PRNG)"""
     medial_surface_nan = None
     """Fill medial surface with :abbr:`NaNs (not-a-number)` when sampling."""
     regressors_all_comps = None
@@ -538,11 +538,11 @@ class loggers:
     """The root logger."""
     cli = logging.getLogger("cli")
     """Command-line interface logging."""
-    workflow = nlogging.getLogger("nipype.workflow")
+    workflow = logging.getLogger("nipype.workflow")
     """NiPype's workflow logger."""
-    interface = nlogging.getLogger("nipype.interface")
+    interface = logging.getLogger("nipype.interface")
     """NiPype's interface logger."""
-    utils = nlogging.getLogger("nipype.utils")
+    utils = logging.getLogger("nipype.utils")
     """NiPype's utils logger."""
 
     @classmethod
@@ -573,18 +573,19 @@ class loggers:
 class seeds(_Config):
     """Initialize the PRNG and track random seed assignments"""
 
+    _random_seed = None
     master = None
-    """Master seed used to generate all other tracked seeds"""
+    """Master random seed to initialize the Pseudorandom Number Generator (PRNG)"""
     ants = None
     """Seed used for antsRegistration, antsAI, antsMotionCorr"""
 
     @classmethod
     def init(cls):
-        cls.master = workflow.random_seed
+        if cls._random_seed is not None:
+            cls.master = cls._random_seed
         if cls.master is None:
             cls.master = random.randint(1, 65536)
         random.seed(cls.master)  # initialize the PRNG
-
         # functions to set program specific seeds
         cls.ants = _set_ants_seed()
 
@@ -601,20 +602,22 @@ def from_dict(settings):
     nipype.load(settings)
     execution.load(settings)
     workflow.load(settings)
-    seeds.init()
+    seeds.load(settings)
     loggers.init()
 
 
-def load(filename):
+def load(filename, skip=None):
     """Load settings from file."""
     from toml import loads
 
+    skip = skip or {}
     filename = Path(filename)
     settings = loads(filename.read_text())
     for sectionname, configs in settings.items():
         if sectionname != "environment":
             section = getattr(sys.modules[__name__], sectionname)
-            section.load(configs)
+            ignore = skip.get(sectionname)
+            section.load(configs, ignore=ignore)
     init_spaces()
 
 
@@ -683,3 +686,41 @@ def init_spaces(checkpoint=True):
 
     # Make the SpatialReferences object available
     workflow.spaces = spaces
+
+
+def load_previous_config(output_dir, work_dir, participant=None, new_uuid=True):
+    """
+    Search for existing config file, and carry over previous options.
+    If a participant label is specified, the output directory is searched for
+    the most recent config file. If no config is found, the working directory is searched.
+
+    Returns
+    -------
+    success : bool
+        Existing config found and loaded
+
+    """
+    conf = None
+    if participant:
+        # output directory
+        logdir = Path(output_dir) / "fmriprep" / f"sub-{participant[0]}" / "log"
+        for f in logdir.glob(f"**/{CONFIG_FILENAME}"):
+            conf = conf or f
+            if f.stat().st_mtime > conf.stat().st_mtime:
+                conf = f
+
+    if conf is None:
+        # work directory
+        conf = Path(work_dir) / f".{CONFIG_FILENAME}"
+        if not conf.exists():
+            conf = None
+
+    # load existing config
+    if conf is not None:
+        # settings to avoid reusing
+        skip = {} if new_uuid else {"execution": ("run_uuid",)}
+        load(conf, skip=skip)
+        loggers.cli.warning(f"Loaded previous configuration file {conf}")
+        return True
+
+    return False
