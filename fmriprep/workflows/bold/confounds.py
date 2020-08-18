@@ -217,7 +217,7 @@ Frames that exceeded a threshold of {regressors_fd_th} mm FD or
                              iterfield=["in_file"])
     acompcor = pe.Node(
         ACompCor(components_file='acompcor.tsv', header_prefix='a_comp_cor_', pre_filter='cosine',
-                 save_pre_filter=True, save_metadata=True, mask_names=['combined', 'CSF', 'WM'],
+                 save_pre_filter=True, save_metadata=True, mask_names=['CSF', 'WM', 'combined'],
                  merge_method='none', failure_mode='NaN'),
         name="acompcor", mem_gb=mem_gb)
 
@@ -244,8 +244,8 @@ Frames that exceeded a threshold of {regressors_fd_th} mm FD or
     gs_select = pe.Node(niu.Select(index=[0, 1]), name="gs_select",
                         run_without_submitting=True)
     signals_class_labels = ["csf", "white_matter", "global_signal"]
-    mrg_lbl = pe.Node(niu.Merge(2, ravel_inputs=True), name='merge_rois',
-                      run_without_submitting=True)
+    merge_rois = pe.Node(niu.Merge(2, ravel_inputs=True), name='merge_rois',
+                         run_without_submitting=True)
     signals = pe.Node(SignalExtraction(class_labels=signals_class_labels),
                       name="signals", mem_gb=mem_gb)
 
@@ -333,8 +333,8 @@ Frames that exceeded a threshold of {regressors_fd_th} mm FD or
         (inputnode, fdisp, [('movpar_file', 'in_file')]),
 
         # aCompCor
-        (inputnode, acompcor, [("bold", "realigned_file")]),
-        (inputnode, acompcor, [("skip_vols", "ignore_initial_volumes")]),
+        (inputnode, acompcor, [("bold", "realigned_file"),
+                               ("skip_vols", "ignore_initial_volumes")]),
         (inputnode, acc_masks, [("t1w_tpms", "in_vfs"),
                                 (("bold", _get_zooms), "bold_zooms")]),
         (inputnode, acc_msk_tfm, [("t1_bold_xform", "transforms"),
@@ -352,9 +352,9 @@ Frames that exceeded a threshold of {regressors_fd_th} mm FD or
         # Global signals extraction (constrained by anatomy)
         (inputnode, signals, [('bold', 'in_file')]),
         (acc_msk_bin, gs_select, [('out_file', 'inlist')]),
-        (gs_select, mrg_lbl, [('out', 'in1')]),
-        (inputnode, mrg_lbl, [('bold_mask', 'in2')]),
-        (mrg_lbl, signals, [('out', 'label_files')]),
+        (gs_select, merge_rois, [('out', 'in1')]),
+        (inputnode, merge_rois, [('bold_mask', 'in2')]),
+        (merge_rois, signals, [('out', 'label_files')]),
 
         # Collate computed confounds together
         (inputnode, add_motion_headers, [('movpar_file', 'in_file')]),

@@ -20,8 +20,6 @@ def mask2vf(in_file, zooms=None, out_file=None):
 
     zooms = np.array(zooms, dtype=float)
     sigma = 0.5 * (zooms / imgzooms)
-    if len(sigma) > 1:
-        sigma = tuple(sigma)
 
     data = gaussian_filter(img.get_fdata(dtype=np.float32), sigma=sigma)
 
