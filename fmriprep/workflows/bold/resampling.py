@@ -472,16 +472,9 @@ def init_bold_preproc_trans_wf(mem_gb, omp_nthreads,
     -------
     bold
         BOLD series, resampled in native space, including all preprocessing
-    bold_mask
-        BOLD series mask calculated with the new time-series
-    bold_ref
-        BOLD reference image: an average-like 3D image of the time-series
-    bold_ref_brain
-        Same as ``bold_ref``, but once the brain mask has been applied
 
     """
     from niworkflows.engine.workflows import LiterateWorkflow as Workflow
-    from niworkflows.func.util import init_bold_reference_wf
     from niworkflows.interfaces.itk import MultiApplyTransforms
     from niworkflows.interfaces.nilearn import Merge
 
@@ -515,10 +508,6 @@ the transforms to correct for head-motion""")
 
     merge = pe.Node(Merge(compress=use_compression), name='merge', mem_gb=mem_gb * 3)
 
-    # Generate a new BOLD reference
-    bold_reference_wf = init_bold_reference_wf(omp_nthreads=omp_nthreads)
-    bold_reference_wf.__desc__ = None  # Unset description to avoid second appearance
-
     workflow.connect([
         (inputnode, merge_xforms, [('fieldwarp', 'in1'),
                                    ('hmc_xforms', 'in2')]),
@@ -527,12 +516,7 @@ the transforms to correct for head-motion""")
         (inputnode, merge, [('name_source', 'header_source')]),
         (merge_xforms, bold_transform, [('out', 'transforms')]),
         (bold_transform, merge, [('out_files', 'in_files')]),
-        (merge, bold_reference_wf, [('out_file', 'inputnode.bold_file')]),
         (merge, outputnode, [('out_file', 'bold')]),
-        (bold_reference_wf, outputnode, [
-            ('outputnode.ref_image', 'bold_ref'),
-            ('outputnode.ref_image_brain', 'bold_ref_brain'),
-            ('outputnode.bold_mask', 'bold_mask')]),
     ])
 
     return workflow
