@@ -169,6 +169,7 @@ def merge_help(wrapper_help, target_help):
         'bids-database-dir',
         'fs-license-file',
         'fs-subjects-dir',
+        'config-file',
         'h',
         'use-plugin',
         'version',
@@ -300,6 +301,10 @@ the spatial normalization.""" % (', '.join('"%s"' % s for s in TF_TEMPLATES),
         '--fs-subjects-dir', metavar='PATH', type=os.path.abspath,
         help='Path to existing FreeSurfer subjects directory to reuse. '
              '(default: OUTPUT_DIR/freesurfer)')
+    g_wrap.add_argument(
+        '--config-file', metavar='PATH', type=os.path.abspath,
+        help="Use pre-generated configuration file. Values in file will be overridden "
+             "by command-line arguments.")
     g_wrap.add_argument(
         '--anat-derivatives', metavar='PATH', type=os.path.abspath,
         help='Path to existing sMRIPrep/fMRIPrep-anatomical derivatives to fasttrack '
@@ -440,6 +445,10 @@ def main():
     if opts.fs_subjects_dir:
         command.extend(['-v', '{}:/opt/subjects'.format(opts.fs_subjects_dir)])
         unknown_args.extend(['--fs-subjects-dir', '/opt/subjects'])
+
+    if opts.config_file:
+        command.extend(['-v', '{}:/tmp/config.toml'.format(opts.config_file)])
+        unknown_args.extend(['--config-file', '/tmp/config.toml'])
 
     if opts.anat_derivatives:
         command.extend(['-v', '{}:/opt/smriprep/subjects'.format(opts.anat_derivatives)])
