@@ -566,7 +566,7 @@ class loggers:
         cls.workflow.setLevel(execution.log_level)
         cls.utils.setLevel(execution.log_level)
         ncfg.update_config(
-            {"logging": {"log_directory": str(execution.log_dir), "log_to_file": True},}
+            {"logging": {"log_directory": str(execution.log_dir), "log_to_file": True}}
         )
 
 
@@ -686,41 +686,3 @@ def init_spaces(checkpoint=True):
 
     # Make the SpatialReferences object available
     workflow.spaces = spaces
-
-
-def load_previous_config(output_dir, work_dir, participant=None, new_uuid=True):
-    """
-    Search for existing config file, and carry over previous options.
-    If a participant label is specified, the output directory is searched for
-    the most recent config file. If no config is found, the working directory is searched.
-
-    Returns
-    -------
-    success : bool
-        Existing config found and loaded
-
-    """
-    conf = None
-    if participant:
-        # output directory
-        logdir = Path(output_dir) / "fmriprep" / f"sub-{participant[0]}" / "log"
-        for f in logdir.glob(f"**/{CONFIG_FILENAME}"):
-            conf = conf or f
-            if f.stat().st_mtime > conf.stat().st_mtime:
-                conf = f
-
-    if conf is None:
-        # work directory
-        conf = Path(work_dir) / f".{CONFIG_FILENAME}"
-        if not conf.exists():
-            conf = None
-
-    # load existing config
-    if conf is not None:
-        # settings to avoid reusing
-        skip = {} if new_uuid else {"execution": ("run_uuid",)}
-        load(conf, skip=skip)
-        loggers.cli.warning(f"Loaded previous configuration file {conf}")
-        return True
-
-    return False

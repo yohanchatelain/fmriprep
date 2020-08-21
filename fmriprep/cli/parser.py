@@ -506,6 +506,12 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html"""
         "aggregation, not reportlet generation for specific nodes.",
     )
     g_other.add_argument(
+        "--config-file",
+        action="store",
+        metavar="FILE",
+        help="Use pre-generated configuration file. Values in file will be overridden "
+             "by command-line arguments.")
+    g_other.add_argument(
         "--write-graph",
         action="store_true",
         default=False,
@@ -564,22 +570,16 @@ discourage its usage."""
 
 def parse_args(args=None, namespace=None):
     """Parse args and run further checks on the command line."""
-    import os
     import logging
     from niworkflows.utils.spaces import Reference, SpatialReferences
 
     parser = _build_parser()
     opts = parser.parse_args(args, namespace)
 
-    new_config = os.getenv('FMRIPREP_NO_REUSE_CONFIG')
-    if not new_config:
-        # attempt to reuse previous config
-        config.load_previous_config(
-            opts.output_dir,
-            opts.work_dir,
-            participant=opts.participant_label,
-            new_uuid=not opts.reports_only,
-        )
+    if opts.config_file:
+        skip = {} if opts.reports_only else {"execution": ("run_uuid",)}
+        config.load(opts.config_file, skip=skip)
+        config.loggers.cli.info(f"Loaded previous configuration file {opts.config_file}")
 
     config.execution.log_level = int(max(25 - 5 * opts.verbose_count, logging.DEBUG))
     config.from_dict(vars(opts))
