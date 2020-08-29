@@ -15,3 +15,13 @@ __all__ = [
     '__packagename__',
     '__version__',
 ]
+
+# Silence PyBIDS warning for extension entity behavior
+# Can be removed once minimum PyBIDS dependency hits 0.14
+try:
+    import bids
+    bids.config.set_option('extension_initial_dot', True)
+except (ImportError, ValueError):
+    pass
+else:
+    del bids
