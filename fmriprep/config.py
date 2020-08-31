@@ -187,6 +187,11 @@ except Exception:
     pass
 
 
+# Debug modes are names that influence the exposure of internal details to
+# the user, either through additional derivatives or increased verbosity
+DEBUG_MODES = ("compcor",)
+
+
 class _Config:
     """An abstract class forbidding instantiation."""
 
@@ -359,8 +364,10 @@ class execution(_Config):
     """A dictionary of BIDS selection filters."""
     boilerplate_only = False
     """Only generate a boilerplate."""
-    debug = False
+    sloppy = False
     """Run in sloppy mode (meaning, suboptimal parameters that minimize run-time)."""
+    debug = []
+    """Debug mode(s)."""
     echo_idx = None
     """Select a particular echo for multi-echo EPI datasets."""
     fs_license_file = _fs_license
@@ -455,6 +462,9 @@ class execution(_Config):
                     else v
                     for k, v in filters.items()
                 }
+
+        if "all" in cls.debug:
+            cls.debug = list(DEBUG_MODES)
 
 
 # These variables are not necessary anymore
