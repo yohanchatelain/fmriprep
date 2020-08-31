@@ -177,8 +177,8 @@ Confounds_ are saved as a :abbr:`TSV (tab-separated value)` file::
 
   sub-<subject_label>/
     func/
-      sub-<subject_label>_[specifiers]_desc-confounds_regressors.tsv
-      sub-<subject_label>_[specifiers]_desc-confounds_regressors.json
+      sub-<subject_label>_[specifiers]_desc-confounds_timeseries.tsv
+      sub-<subject_label>_[specifiers]_desc-confounds_timeseries.json
 
 These :abbr:`TSV (tab-separated values)` tables look like the example below,
 where each row of the file corresponds to one time point found in the
@@ -233,7 +233,7 @@ session and run in :abbr:`TSV (tab-separated value)` files - one column for each
 Such tabular files may include over 100 columns of potential confound regressors.
 
 .. danger::
-   Do not include all columns of ``~_desc-confounds_regressors.tsv`` table
+   Do not include all columns of ``~_desc-confounds_timeseries.tsv`` table
    into your design matrix or denoising procedure.
    Filter the table first, to include only the confounds (or components thereof)
    you want to remove from your fMRI signal.
@@ -386,7 +386,7 @@ For CompCor decompositions, entries include:
   - ``VarianceExplained``: the fraction of variance explained by the component across the decomposition ROI mask.
   - ``CumulativeVarianceExplained``: the total fraction of variance explained by this particular component
     and all preceding components.
-  - ``Retained``: Indicates whether the component was saved in ``desc-confounds_regressors.tsv``
+  - ``Retained``: Indicates whether the component was saved in ``desc-confounds_timeseries.tsv``
     for use in denoising.
     Entries that are not saved in the data file for denoising are still stored in metadata with the
     ``dropped`` prefix.

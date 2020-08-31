@@ -14,7 +14,7 @@ def write_bidsignore(deriv_dir):
         "*.surf.gii",  # Unspecified structural outputs
         # Unspecified functional outputs
         "*_boldref.nii.gz", "*_bold.func.gii",
-        "*_mixing.tsv", "*_AROMAnoiseICs.csv", "*_regressors.tsv",
+        "*_mixing.tsv", "*_AROMAnoiseICs.csv", "*_timeseries.tsv",
     )
     ignore_file = Path(deriv_dir) / ".bidsignore"
 

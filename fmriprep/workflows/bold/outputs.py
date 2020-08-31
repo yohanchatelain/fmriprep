@@ -69,7 +69,7 @@ def init_func_derivatives_wf(
     raw_sources.inputs.bids_root = bids_root
 
     ds_confounds = pe.Node(DerivativesDataSink(
-        base_directory=output_dir, desc='confounds', suffix='regressors',
+        base_directory=output_dir, desc='confounds', suffix='timeseries',
         dismiss_entities=("echo",)),
         name="ds_confounds", run_without_submitting=True,
         mem_gb=DEFAULT_MEMORY_MIN_GB)
