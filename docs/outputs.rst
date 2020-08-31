@@ -146,7 +146,7 @@ mid-thickness surface mesh::
     func/
       sub-<subject_label>_[specifiers]_space-T1w_desc-aparcaseg_dseg.nii.gz
       sub-<subject_label>_[specifiers]_space-T1w_desc-aseg_dseg.nii.gz
-      sub-<subject_label>_[specifiers]_space-<space_label>_hemi-[LR].func.gii
+      sub-<subject_label>_[specifiers]_space-<space_label>_hemi-[LR]_bold.func.gii
 
 Surface output spaces include ``fsnative`` (full density subject-specific mesh),
 ``fsaverage`` and the down-sampled meshes ``fsaverage6`` (41k vertices) and
