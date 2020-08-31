@@ -318,6 +318,7 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html"""
     )
     g_conf.add_argument(
         "--random-seed",
+        dest="_random_seed",
         action="store",
         type=int,
         default=None,
@@ -505,12 +506,11 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html"""
         "aggregation, not reportlet generation for specific nodes.",
     )
     g_other.add_argument(
-        "--run-uuid",
+        "--config-file",
         action="store",
-        default=None,
-        help="Specify UUID of previous run, to include error logs in report. "
-        "No effect without --reports-only.",
-    )
+        metavar="FILE",
+        help="Use pre-generated configuration file. Values in file will be overridden "
+             "by command-line arguments.")
     g_other.add_argument(
         "--write-graph",
         action="store_true",
@@ -575,6 +575,12 @@ def parse_args(args=None, namespace=None):
 
     parser = _build_parser()
     opts = parser.parse_args(args, namespace)
+
+    if opts.config_file:
+        skip = {} if opts.reports_only else {"execution": ("run_uuid",)}
+        config.load(opts.config_file, skip=skip)
+        config.loggers.cli.info(f"Loaded previous configuration file {opts.config_file}")
+
     config.execution.log_level = int(max(25 - 5 * opts.verbose_count, logging.DEBUG))
     config.from_dict(vars(opts))
 

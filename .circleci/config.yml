@@ -653,10 +653,10 @@ jobs:
       - run:
           name: Generate report with one artificial error
           command: |
+            set -x
             sudo mv /tmp/${DATASET}/derivatives/fmriprep/sub-100185.html \
                     /tmp/${DATASET}/derivatives/fmriprep/sub-100185_noerror.html
-            UUID="$(date '+%Y%m%d-%H%M%S_')$(uuidgen)"
-            mkdir -p /tmp/${DATASET}/derivatives/fmriprep/sub-100185/log/$UUID/
+            UUID=$(grep uuid /tmp/${DATASET}/work/*/config.toml | cut -d\" -f 2)
             cp /tmp/src/fmriprep/fmriprep/data/tests/crash_files/*.txt \
                 /tmp/${DATASET}/derivatives/fmriprep/sub-100185/log/$UUID/
             set +e
@@ -666,7 +666,7 @@ jobs:
                 /tmp/data/${DATASET} /tmp/${DATASET}/derivatives participant \
                 --fs-no-reconall --sloppy --write-graph \
                 --output-spaces MNI152NLin2009cAsym:res-2 anat func \
-                --reports-only --run-uuid $UUID
+                --reports-only --config-file /tmp/${DATASET}/work/${UUID}/config.toml -vv
             RET=$?
             set -e
             [[ "$RET" -eq "1" ]]
