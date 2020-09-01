@@ -303,6 +303,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('cifti_metadata', 'inputnode.cifti_metadata'),
             ('cifti_density', 'inputnode.cifti_density'),
             ('confounds_metadata', 'inputnode.confounds_metadata'),
+            ('acompcor_masks', 'inputnode.acompcor_masks'),
+            ('tcompcor_mask', 'inputnode.tcompcor_mask'),
         ]),
     ])
 
@@ -496,9 +498,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('outputnode.bold_mask', 'inputnode.bold_mask')]),
         (bold_confounds_wf, outputnode, [
             ('outputnode.confounds_file', 'confounds'),
-        ]),
-        (bold_confounds_wf, outputnode, [
             ('outputnode.confounds_metadata', 'confounds_metadata'),
+            ('outputnode.acompcor_masks', 'acompcor_masks'),
+            ('outputnode.tcompcor_mask', 'tcompcor_mask'),
         ]),
         # Connect bold_bold_trans_wf
         (bold_split, bold_bold_trans_wf, [
