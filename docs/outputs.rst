@@ -6,7 +6,8 @@
 Outputs of *fMRIPrep*
 ---------------------
 *fMRIPrep* outputs conform to the :abbr:`BIDS (brain imaging data structure)`
-Derivatives specification (see `BIDS Derivatives RC1`_).
+Derivatives specification (see `BIDS Derivatives`_, along with the
+upcoming `BEP 011`_ and `BEP 012`_).
 *fMRIPrep* generates three broad classes of outcomes:
 
 1. **Visual QA (quality assessment) reports**:
@@ -46,7 +47,7 @@ Derivatives of *fMRIPrep* (preprocessed data)
 ---------------------------------------------
 Preprocessed, or derivative, data are written to
 ``<output dir>/fmriprep/sub-<subject_label>/``.
-The `BIDS Derivatives RC1`_ specification describes the naming and metadata conventions we follow.
+The `BIDS Derivatives`_ specification describes the naming and metadata conventions we follow.
 
 Anatomical derivatives
 ~~~~~~~~~~~~~~~~~~~~~~
