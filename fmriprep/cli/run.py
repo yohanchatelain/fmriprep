@@ -12,7 +12,7 @@ def main():
     import gc
     from multiprocessing import Process, Manager
     from .parser import parse_args
-    from ..utils.bids import write_derivative_description
+    from ..utils.bids import write_derivative_description, write_bidsignore
 
     parse_args()
 
@@ -166,6 +166,7 @@ def main():
         write_derivative_description(
             config.execution.bids_dir, config.execution.output_dir / "fmriprep"
         )
+        write_bidsignore(config.execution.output_dir / "fmriprep")
 
         if failed_reports and not config.execution.notrack:
             sentry_sdk.capture_message(

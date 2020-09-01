@@ -7,20 +7,34 @@ import json
 from pathlib import Path
 
 
+def write_bidsignore(deriv_dir):
+    bids_ignore = (
+        "*.html", "logs/", "figures/",  # Reports
+        "*_xfm.*",  # Unspecified transform files
+        "*.surf.gii",  # Unspecified structural outputs
+        # Unspecified functional outputs
+        "*_boldref.nii.gz", "*_bold.func.gii",
+        "*_mixing.tsv", "*_AROMAnoiseICs.csv", "*_timeseries.tsv",
+    )
+    ignore_file = Path(deriv_dir) / ".bidsignore"
+
+    ignore_file.write_text("\n".join(bids_ignore) + "\n")
+
+
 def write_derivative_description(bids_dir, deriv_dir):
-    from ..__about__ import __version__, __url__, DOWNLOAD_URL
+    from ..__about__ import __version__, DOWNLOAD_URL
 
     bids_dir = Path(bids_dir)
     deriv_dir = Path(deriv_dir)
     desc = {
         'Name': 'fMRIPrep - fMRI PREProcessing workflow',
-        'BIDSVersion': '1.1.1',
-        'PipelineDescription': {
+        'BIDSVersion': '1.4.0',
+        'DatasetType': 'derivative',
+        'GeneratedBy': [{
             'Name': 'fMRIPrep',
             'Version': __version__,
             'CodeURL': DOWNLOAD_URL,
-        },
-        'CodeURL': __url__,
+        }],
         'HowToAcknowledge':
             'Please cite our paper (https://doi.org/10.1038/s41592-018-0235-4), '
             'and include the generated citation boilerplate within the Methods '
@@ -29,30 +43,31 @@ def write_derivative_description(bids_dir, deriv_dir):
 
     # Keys that can only be set by environment
     if 'FMRIPREP_DOCKER_TAG' in os.environ:
-        desc['DockerHubContainerTag'] = os.environ['FMRIPREP_DOCKER_TAG']
+        desc['GeneratedBy'][0]['Container'] = {
+            "Type": "docker",
+            "Tag": f"poldracklab/fmriprep:{os.environ['FMRIPREP_DOCKER_TAG']}"
+        }
     if 'FMRIPREP_SINGULARITY_URL' in os.environ:
-        singularity_url = os.environ['FMRIPREP_SINGULARITY_URL']
-        desc['SingularityContainerURL'] = singularity_url
-
-        singularity_md5 = _get_shub_version(singularity_url)
-        if singularity_md5 and singularity_md5 is not NotImplemented:
-            desc['SingularityContainerMD5'] = _get_shub_version(singularity_url)
+        desc['GeneratedBy'][0]['Container'] = {
+            "Type": "singularity",
+            "URI": os.getenv('FMRIPREP_SINGULARITY_URL')
+        }
 
     # Keys deriving from source dataset
     orig_desc = {}
     fname = bids_dir / 'dataset_description.json'
     if fname.exists():
-        with fname.open() as fobj:
-            orig_desc = json.load(fobj)
+        orig_desc = json.loads(fname.read_text())
 
     if 'DatasetDOI' in orig_desc:
-        desc['SourceDatasetsURLs'] = ['https://doi.org/{}'.format(
-            orig_desc['DatasetDOI'])]
+        desc['SourceDatasets'] = [{
+            'URL': f'https://doi.org/{orig_desc["DatasetDOI"]}',
+            'DOI': orig_desc['DatasetDOI']
+        }]
     if 'License' in orig_desc:
         desc['License'] = orig_desc['License']
 
-    with (deriv_dir / 'dataset_description.json').open('w') as fobj:
-        json.dump(desc, fobj, indent=4)
+    Path.write_text(deriv_dir / 'dataset_description.json', json.dumps(desc, indent=4))
 
 
 def validate_input_dir(exec_env, bids_dir, participant_label):
@@ -140,7 +155,3 @@ def validate_input_dir(exec_env, bids_dir, participant_label):
             subprocess.check_call(['bids-validator', bids_dir, '-c', temp.name])
         except FileNotFoundError:
             print("bids-validator does not appear to be installed", file=sys.stderr)
-
-
-def _get_shub_version(singularity_url):
-    return NotImplemented

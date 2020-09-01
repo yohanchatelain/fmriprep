@@ -1,7 +1,8 @@
 .. _Nipype: http://nipype.readthedocs.io/en/latest/
 .. _BIDS: http://bids.neuroimaging.io
-.. _`BIDS Derivatives`: https://docs.google.com/document/d/17ebopupQxuRwp7U7TFvS6BH03ALJOgGHufxK8ToAvyI
-.. _`BIDS Derivatives RC1`: https://docs.google.com/document/d/17ebopupQxuRwp7U7TFvS6BH03ALJOgGHufxK8ToAvyI
+.. _`BIDS Derivatives`: https://bids-specification.readthedocs.io/en/stable/05-derivatives/01-introduction.html
+.. _`BEP 011`: https://bids-specification.readthedocs.io/en/bep011/05-derivatives/04-structural-derivatives.html
+.. _`BEP 012`: https://bids-specification.readthedocs.io/en/bep012/05-derivatives/05-functional-derivatives.html
 .. _Installation: installation.html
 .. _workflows: workflows.html
 .. _FSL: https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/
