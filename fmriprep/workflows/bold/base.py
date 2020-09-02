@@ -194,7 +194,7 @@ def init_func_preproc_wf(bold_file):
 
     # Find associated sbref, if possible
     entities['suffix'] = 'sbref'
-    entities['extension'] = ['nii', 'nii.gz']  # Overwrite extensions
+    entities['extension'] = ['.nii', '.nii.gz']  # Overwrite extensions
     sbref_files = layout.get(return_type='file', **entities)
 
     sbref_msg = f"No single-band-reference found for {os.path.basename(ref_file)}."
@@ -931,13 +931,13 @@ def extract_entities(file_list):
     Examples
     --------
     >>> extract_entities('sub-01/anat/sub-01_T1w.nii.gz')
-    {'subject': '01', 'suffix': 'T1w', 'datatype': 'anat', 'extension': 'nii.gz'}
+    {'subject': '01', 'suffix': 'T1w', 'datatype': 'anat', 'extension': '.nii.gz'}
     >>> extract_entities(['sub-01/anat/sub-01_T1w.nii.gz'] * 2)
-    {'subject': '01', 'suffix': 'T1w', 'datatype': 'anat', 'extension': 'nii.gz'}
+    {'subject': '01', 'suffix': 'T1w', 'datatype': 'anat', 'extension': '.nii.gz'}
     >>> extract_entities(['sub-01/anat/sub-01_run-1_T1w.nii.gz',
     ...                   'sub-01/anat/sub-01_run-2_T1w.nii.gz'])
     {'subject': '01', 'run': [1, 2], 'suffix': 'T1w', 'datatype': 'anat',
-     'extension': 'nii.gz'}
+     'extension': '.nii.gz'}
 
     """
     from collections import defaultdict
