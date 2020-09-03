@@ -330,7 +330,7 @@ Frames that exceeded a threshold of {regressors_fd_th} mm FD or
         import pandas as pd
         return [
             col for col in pd.read_table(table, nrows=2).columns
-            if not col.startswith(("a_comp_cor_", "t_comp_cor_"))
+            if not col.startswith(("a_comp_cor_", "t_comp_cor_", "std_dvars"))
         ]
 
     workflow.connect([
