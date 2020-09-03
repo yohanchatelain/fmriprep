@@ -249,8 +249,10 @@ were annotated as motion outliers.
         acompcor.inputs.repetition_time = metadata['RepetitionTime']
 
     # Global and segment regressors
-    signals_class_labels = ["csf", "white_matter", "global_signal"]
-    mrg_lbl = pe.Node(niu.Merge(3), name='merge_rois', run_without_submitting=True)
+    signals_class_labels = [
+        "csf", "white_matter", "global_signal", "csf_wm", "tcompcor",
+    ]
+    mrg_lbl = pe.Node(niu.Merge(5), name='merge_rois', run_without_submitting=True)
     signals = pe.Node(SignalExtraction(class_labels=signals_class_labels),
                       name="signals", mem_gb=mem_gb)
 
@@ -320,7 +322,7 @@ were annotated as motion outliers.
 
     # Generate reportlet (Confound correlation)
     conf_corr_plot = pe.Node(
-        ConfoundsCorrelationPlot(reference_column='global_signal', max_dim=70),
+        ConfoundsCorrelationPlot(reference_column='global_signal', max_dim=20),
         name='conf_corr_plot')
     ds_report_conf_corr = pe.Node(
         DerivativesDataSink(desc='confoundcorr', datatype="figures", dismiss_entities=("echo",)),
@@ -332,6 +334,13 @@ were annotated as motion outliers.
 
     def _pick_wm(files):
         return files[1]  # after smriprep#189, this is BIDS-compliant.
+
+    def _select_cols(table):
+        import pandas as pd
+        return [
+            col for col in pd.read_table(table, nrows=2).columns
+            if not col.startswith(("a_comp_cor_", "t_comp_cor_"))
+        ]
 
     workflow.connect([
         # Massage ROIs (in T1w space)
@@ -387,6 +396,8 @@ were annotated as motion outliers.
         (wm_tfm, wm_msk, [('output_image', 'roi_file')]),
         (wm_msk, mrg_lbl, [('out', 'in2')]),
         (inputnode, mrg_lbl, [('bold_mask', 'in3')]),
+        (acc_msk, mrg_lbl, [('out', 'in4')]),
+        (tcc_msk, mrg_lbl, [('out', 'in5')]),
         (mrg_lbl, signals, [('out', 'label_files')]),
 
         # Collate computed confounds together
@@ -428,7 +439,8 @@ were annotated as motion outliers.
         (acompcor, mrg_cc_metadata, [('metadata_file', 'in2')]),
         (mrg_cc_metadata, compcor_plot, [('out', 'metadata_files')]),
         (compcor_plot, ds_report_compcor, [('out_file', 'in_file')]),
-        (concat, conf_corr_plot, [('confounds_file', 'confounds_file')]),
+        (concat, conf_corr_plot, [('confounds_file', 'confounds_file'),
+                                  (('confounds_file', _select_cols), 'columns')]),
         (conf_corr_plot, ds_report_conf_corr, [('out_file', 'in_file')]),
     ])
 
