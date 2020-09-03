@@ -397,7 +397,7 @@ were annotated as motion outliers.
         (wm_msk, mrg_lbl, [('out', 'in2')]),
         (inputnode, mrg_lbl, [('bold_mask', 'in3')]),
         (acc_msk, mrg_lbl, [('out', 'in4')]),
-        (tcc_msk, mrg_lbl, [('out', 'in5')]),
+        (tcompcor, mrg_lbl, [('high_variance_masks', 'in5')]),
         (mrg_lbl, signals, [('out', 'label_files')]),
 
         # Collate computed confounds together
