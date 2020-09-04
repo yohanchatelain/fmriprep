@@ -342,11 +342,12 @@ def init_func_derivatives_wf(
     if "compcor" in config.execution.debug:
         ds_acompcor_masks = pe.Node(
             DerivativesDataSink(
-                base_directory=output_dir, desc=[f"CompCor{_}" for _ in "CWA"], suffix="mask"),
+                base_directory=output_dir, desc=[f"CompCor{_}" for _ in "CWA"],
+                suffix="mask", compress=True),
             name="ds_acompcor_masks", run_without_submitting=True)
         ds_tcompcor_mask = pe.Node(
             DerivativesDataSink(
-                base_directory=output_dir, desc="CompCorT", suffix="mask"),
+                base_directory=output_dir, desc="CompCorT", suffix="mask", compress=True),
             name="ds_tcompcor_mask", run_without_submitting=True)
         workflow.connect([
             (inputnode, ds_acompcor_masks, [("acompcor_masks", "in_file"),
