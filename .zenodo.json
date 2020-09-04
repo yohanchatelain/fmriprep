@@ -2,29 +2,16 @@
   "title": "fMRIPrep: a robust preprocessing pipeline for functional MRI",
   "description": "<p>fMRIPrep is a robust and easy-to-use pipeline for preprocessing of diverse fMRI data. The transparent workflow dispenses of manual intervention, thereby ensuring the reproducibility of the results.</p>",
   "contributors": [
-      
     {
-        "affiliation": "Department of Radiology, Weill Cornell Medicine",
-        "name": "Jamison, Keith W.",
-        "orcid": "0000-0001-7139-6661",
-        "type": "Researcher"
-    },
-    {
-      "affiliation": "Department of Psychology, Florida International University",
-      "name": "Salo, Taylor",
-      "orcid": "0000-0001-9813-3167",
+      "affiliation": "Centre for Modern Interdisciplinary Technologies, Nicolaus Copernicus University in Toru\u0144",
+      "name": "Finc, Karolina",
+      "orcid": "0000-0002-0157-030X",
       "type": "Researcher"
     },
     {
       "affiliation": "University of Texas at Austin",
       "name": "de la Vega, Alejandro",
       "orcid": "0000-0001-9062-3778",
-      "type": "Researcher"
-    },
-    {
-      "affiliation": "Centre for Modern Interdisciplinary Technologies, Nicolaus Copernicus University in Toru\u0144",
-      "name": "Finc, Karolina",
-      "orcid": "0000-0002-0157-030X",
       "type": "Researcher"
     },
     {
@@ -64,12 +51,6 @@
       "type": "Researcher"
     },
     {
-      "affiliation": "SIMEXP Lab, CRIUGM, University of Montr\u00e9al, Montr\u00e9al, Canada",
-      "name": "Basile Pinsard",
-      "orcid": "0000-0002-4391-3075",
-      "type": "Researcher"
-    },
-    {
       "affiliation": "Child Mind Institute",
       "name": "Heinsfeld, Anibal S.",
       "orcid": "0000-0002-2050-0614",
@@ -79,6 +60,12 @@
       "affiliation": "Department of Psychology, Columbia University",
       "name": "Jacoby, Nir",
       "orcid": "0000-0001-7936-9991",
+      "type": "Researcher"
+    },
+    {
+      "affiliation": "Department of Radiology, Weill Cornell Medicine",
+      "name": "Jamison, Keith W.",
+      "orcid": "0000-0001-7139-6661",
       "type": "Researcher"
     },
     {
@@ -136,15 +123,15 @@
       "type": "Researcher"
     },
     {
-      "affiliation": "Neuroscience Program, University of Iowa",
-      "name": "Rivera-Dompenciel, Adriana",
-      "orcid": "0000-0002-3339-4857",
-      "type": "Researcher"
-    },
-    {
       "affiliation": "Center for Lifespan Changes in Brain and Cognition, University of Oslo",
       "name": "Amlien, Inge K.",
       "orcid": "0000-0002-8508-9088",
+      "type": "Researcher"
+    },
+    {
+      "affiliation": "SIMEXP Lab, CRIUGM, University of Montr\u00e9al, Montr\u00e9al, Canada",
+      "name": "Bellec, Pierre",
+      "orcid": "0000-0002-9111-0699",
       "type": "Researcher"
     },
     {
@@ -187,6 +174,12 @@
       "affiliation": "Cyceron, UMS 3408 (CNRS - UCBN), France",
       "name": "Naveau, Mika\u00ebl",
       "orcid": "0000-0001-6948-9068",
+      "type": "Researcher"
+    },
+    {
+      "affiliation": "Neuroscience Program, University of Iowa",
+      "name": "Rivera-Dompenciel, Adriana",
+      "orcid": "0000-0002-3339-4857",
       "type": "Researcher"
     },
     {
@@ -234,7 +227,7 @@
   ],
   "creators": [
     {
-      "affiliation": "Department of Psychology, Stanford University",
+      "affiliation": "Department of Radiology, CHUV, Universit\u00e9 de Lausanne",
       "name": "Esteban, Oscar",
       "orcid": "0000-0001-8435-6191"
     },
@@ -259,9 +252,19 @@
       "orcid": "0000-0002-4892-2659"
     },
     {
+      "affiliation": "Department of Psychology, Florida International University",
+      "name": "Salo, Taylor",
+      "orcid": "0000-0001-9813-3167"
+    },
+    {
       "affiliation": "Department of Psychology, Stanford University",
       "name": "Ciric, Rastko",
       "orcid": "0000-0001-6347-7939"
+    },
+    {
+      "affiliation": "SIMEXP Lab, CRIUGM, University of Montr\u00e9al, Montr\u00e9al, Canada",
+      "name": "Pinsard, Basile",
+      "orcid": "0000-0002-4391-3075"
     },
     {
       "affiliation": "Department of Psychology, Stanford University",
