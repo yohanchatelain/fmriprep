@@ -1,3 +1,11 @@
+20.1.2 (September 04, 2020)
+===========================
+Bug-fix release in the 20.1.x series.
+
+  * FIX: Revise confounds in confounds-correlation plots (#2252)
+  * FIX: Coerce license path to pathlike (#2180)
+  * DOC: Update new sMRIPrep location (#2211)
+
 20.1.1 (June 04, 2020)
 ======================
 Bug-fix release in the 20.1.x series.
