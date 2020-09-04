@@ -4,8 +4,9 @@
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 
-from ...config import DEFAULT_MEMORY_MIN_GB
-from ...interfaces import DerivativesDataSink
+from fmriprep import config
+from fmriprep.config import DEFAULT_MEMORY_MIN_GB
+from fmriprep.interfaces import DerivativesDataSink
 
 
 def init_func_derivatives_wf(
@@ -62,7 +63,7 @@ def init_func_derivatives_wf(
         'bold_mask_native', 'cifti_variant', 'cifti_metadata', 'cifti_density',
         'confounds', 'confounds_metadata', 'melodic_mix', 'nonaggr_denoised_file',
         'source_file', 'surf_files', 'surf_refs', 'template', 'spatial_reference',
-        'bold2anat_xfm', 'anat2bold_xfm']),
+        'bold2anat_xfm', 'anat2bold_xfm', 'acompcor_masks', 'tcompcor_mask']),
         name='inputnode')
 
     raw_sources = pe.Node(niu.Function(function=_bids_relative), name='raw_sources')
@@ -336,6 +337,23 @@ def init_func_derivatives_wf(
                                         (('cifti_metadata', _get_surface), 'space'),
                                         ('cifti_density', 'density'),
                                         (('cifti_metadata', _read_json), 'meta_dict')])
+        ])
+
+    if "compcor" in config.execution.debug:
+        ds_acompcor_masks = pe.Node(
+            DerivativesDataSink(
+                base_directory=output_dir, desc=[f"CompCor{_}" for _ in "CWA"],
+                suffix="mask", compress=True),
+            name="ds_acompcor_masks", run_without_submitting=True)
+        ds_tcompcor_mask = pe.Node(
+            DerivativesDataSink(
+                base_directory=output_dir, desc="CompCorT", suffix="mask", compress=True),
+            name="ds_tcompcor_mask", run_without_submitting=True)
+        workflow.connect([
+            (inputnode, ds_acompcor_masks, [("acompcor_masks", "in_file"),
+                                            ("source_file", "source_file")]),
+            (inputnode, ds_tcompcor_mask, [("tcompcor_mask", "in_file"),
+                                           ("source_file", "source_file")]),
         ])
 
     return workflow

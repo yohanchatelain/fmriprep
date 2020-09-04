@@ -193,7 +193,7 @@ Frames that exceeded a threshold of {regressors_fd_th} mm FD or
                 'skip_vols', 't1w_mask', 't1w_tpms', 't1_bold_xform']),
         name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['confounds_file', 'confounds_metadata']),
+        fields=['confounds_file', 'confounds_metadata', 'acompcor_masks', 'tcompcor_mask']),
         name='outputnode')
 
     # DVARS
@@ -392,6 +392,8 @@ Frames that exceeded a threshold of {regressors_fd_th} mm FD or
         # Set outputs
         (spike_regress, outputnode, [('confounds_file', 'confounds_file')]),
         (mrg_conf_metadata2, outputnode, [('out_dict', 'confounds_metadata')]),
+        (tcompcor, outputnode, [("high_variance_masks", "tcompcor_mask")]),
+        (acc_msk_bin, outputnode, [("out_file", "acompcor_masks")]),
         (inputnode, rois_plot, [('bold', 'in_file'),
                                 ('bold_mask', 'in_mask')]),
         (tcompcor, mrg_compcor, [('high_variance_masks', 'in1')]),
