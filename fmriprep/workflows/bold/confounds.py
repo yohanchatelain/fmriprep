@@ -241,10 +241,10 @@ Frames that exceeded a threshold of {regressors_fd_th} mm FD or
         acompcor.inputs.repetition_time = metadata['RepetitionTime']
 
     # Global and segment regressors
-    gs_select = pe.Node(niu.Select(index=[0, 1]), name="gs_select",
-                        run_without_submitting=True)
-    signals_class_labels = ["csf", "white_matter", "global_signal"]
-    merge_rois = pe.Node(niu.Merge(2, ravel_inputs=True), name='merge_rois',
+    signals_class_labels = [
+        "global_signal", "csf", "white_matter", "csf_wm", "tcompcor",
+    ]
+    merge_rois = pe.Node(niu.Merge(3, ravel_inputs=True), name='merge_rois',
                          run_without_submitting=True)
     signals = pe.Node(SignalExtraction(class_labels=signals_class_labels),
                       name="signals", mem_gb=mem_gb)
@@ -316,7 +316,7 @@ Frames that exceeded a threshold of {regressors_fd_th} mm FD or
 
     # Generate reportlet (Confound correlation)
     conf_corr_plot = pe.Node(
-        ConfoundsCorrelationPlot(reference_column='global_signal', max_dim=70),
+        ConfoundsCorrelationPlot(reference_column='global_signal', max_dim=20),
         name='conf_corr_plot')
     ds_report_conf_corr = pe.Node(
         DerivativesDataSink(desc='confoundcorr', datatype="figures", dismiss_entities=("echo",)),
@@ -325,6 +325,13 @@ Frames that exceeded a threshold of {regressors_fd_th} mm FD or
 
     def _last(inlist):
         return inlist[-1]
+
+    def _select_cols(table):
+        import pandas as pd
+        return [
+            col for col in pd.read_table(table, nrows=2).columns
+            if not col.startswith(("a_comp_cor_", "t_comp_cor_", "std_dvars"))
+        ]
 
     workflow.connect([
         # connect inputnode to each non-anatomical confound node
@@ -351,9 +358,9 @@ Frames that exceeded a threshold of {regressors_fd_th} mm FD or
                                ("bold_mask", "mask_files")]),
         # Global signals extraction (constrained by anatomy)
         (inputnode, signals, [('bold', 'in_file')]),
-        (acc_msk_bin, gs_select, [('out_file', 'inlist')]),
-        (gs_select, merge_rois, [('out', 'in1')]),
-        (inputnode, merge_rois, [('bold_mask', 'in2')]),
+        (inputnode, merge_rois, [('bold_mask', 'in1')]),
+        (acc_msk_bin, merge_rois, [('out_file', 'in2')]),
+        (tcompcor, merge_rois, [('high_variance_masks', 'in3')]),
         (merge_rois, signals, [('out', 'label_files')]),
 
         # Collate computed confounds together
@@ -395,7 +402,8 @@ Frames that exceeded a threshold of {regressors_fd_th} mm FD or
         (acompcor, mrg_cc_metadata, [('metadata_file', 'in2')]),
         (mrg_cc_metadata, compcor_plot, [('out', 'metadata_files')]),
         (compcor_plot, ds_report_compcor, [('out_file', 'in_file')]),
-        (concat, conf_corr_plot, [('confounds_file', 'confounds_file')]),
+        (concat, conf_corr_plot, [('confounds_file', 'confounds_file'),
+                                  (('confounds_file', _select_cols), 'columns')]),
         (conf_corr_plot, ds_report_conf_corr, [('out_file', 'in_file')]),
     ])
 
