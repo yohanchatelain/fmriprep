@@ -40,7 +40,7 @@ if __name__ == '__main__':
           "files: %s." % ', '.join(unmatched), file=sys.stderr)
 
     print('Authors (%d):' % len(author_matches))
-    print('; '.join([
+    print("%s." % '; '.join([
         '%s \\ :sup:`%s`\\ ' % (i['name'], idx)
         for i, idx in zip(author_matches, aff_indexes)
     ]))
