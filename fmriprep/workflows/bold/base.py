@@ -335,7 +335,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         mem_gb=mem_gb['resampled'],
         name='bold_reg_wf',
         omp_nthreads=omp_nthreads,
-        sloppy=config.execution.debug,
+        sloppy=config.execution.sloppy,
         use_bbr=config.workflow.use_bbr,
         use_compression=False,
     )
@@ -406,7 +406,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     # SDC (SUSCEPTIBILITY DISTORTION CORRECTION) or bypass ##########################
     bold_sdc_wf = init_sdc_estimate_wf(fmaps, metadata,
                                        omp_nthreads=omp_nthreads,
-                                       debug=config.execution.debug)
+                                       debug=config.execution.sloppy)
 
     # MULTI-ECHO EPI DATA #############################################
     if multiecho:  # instantiate relevant interfaces, imports
