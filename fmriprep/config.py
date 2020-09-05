@@ -445,7 +445,6 @@ class execution(_Config):
                     "stimuli",
                     "sourcedata",
                     "models",
-                    "derivatives",
                     re.compile(r"^\."),
                 ),
             )
