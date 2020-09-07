@@ -209,6 +209,10 @@ If T1w voxel sizes are less than 1mm in all dimensions (rounding to nearest
 .1mm), `submillimeter reconstruction`_ is used, unless disabled with
 ``--no-submm-recon``.
 
+If T2w or FLAIR images are available, and you do not want them included in
+FreeSurfer reconstruction, use ``--ignore t2w`` or ``--ignore flair``,
+respectively.
+
 ``lh.midthickness`` and ``rh.midthickness`` surfaces are created in the subject
 ``surf/`` directory, corresponding to the surface half-way between the gray/white
 boundary and the pial surface.
