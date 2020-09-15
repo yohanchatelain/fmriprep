@@ -165,12 +165,13 @@ RUN python -c "from matplotlib import font_manager" && \
 COPY setup.cfg fmriprep-setup.cfg
 RUN pip install --no-cache-dir "$( grep templateflow fmriprep-setup.cfg | xargs )" && \
     python -c "from templateflow import api as tfapi; \
-               tfapi.get('MNI152NLin6Asym', atlas=None, resolution=[1, 2], \
-                         desc=None, extension=['.nii', '.nii.gz']); \
-               tfapi.get('MNI152NLin6Asym', atlas=None, resolution=[1, 2], \
-                         desc='brain', extension=['.nii', '.nii.gz']); \
-               tfapi.get('MNI152NLin2009cAsym', atlas=None, extension=['.nii', '.nii.gz']); \
-               tfapi.get('OASIS30ANTs', extension=['.nii', '.nii.gz']); \
+               tfapi.get('MNI152NLin6Asym', resolution=(1, 2), suffix='T1w', desc=None); \
+               tfapi.get('MNI152NLin6Asym', resolution=(1, 2), desc='brain', suffix='mask'); \
+               tfapi.get('MNI152NLin2009cAsym', resolution=(1, 2), suffix='T1w', desc=None); \
+               tfapi.get('MNI152NLin2009cAsym', resolution=(1, 2), desc='brain', suffix='mask'); \
+               tfapi.get('MNI152NLin2009cAsym', resolution=1, desc='carpet', suffix='dseg'); \
+               tfapi.get('MNI152NLin2009cAsym', resolution=2, desc='fMRIPrep', suffix='boldref'); \
+               tfapi.get('OASIS30ANTs'); \
                tfapi.get('fsaverage', density='164k', desc='std', suffix='sphere'); \
                tfapi.get('fsaverage', density='164k', desc='vaavg', suffix='midthickness'); \
                tfapi.get('fsLR', density='32k'); \
