@@ -103,13 +103,21 @@ A full list of changes can be found below.
       32. State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University
       33. Department of Radiology, CHUV, Université de Lausanne
 
+20.1.3 (September 15, 2020)
+===========================
+Bug-fix release in the 20.1.x series.
+
+* FIX: Dependency conflict between *NiWorkflows* and *TemplateFlow* (#2269)
+* FIX: More targetted *TemplateFlow* queries to work with all later releases (#2268)
+* MAINT: Update dependency pinnings including ``niworkflows~=1.2.9`` and three minimal bug-fixes.
+
 20.1.2 (September 04, 2020)
 ===========================
 Bug-fix release in the 20.1.x series.
 
-  * FIX: Revise confounds in confounds-correlation plots (#2252)
-  * FIX: Coerce license path to pathlike (#2180)
-  * DOC: Update new sMRIPrep location (#2211)
+* FIX: Revise confounds in confounds-correlation plots (#2252)
+* FIX: Coerce license path to pathlike (#2180)
+* DOC: Update new sMRIPrep location (#2211)
 
 20.1.1 (June 04, 2020)
 ======================
