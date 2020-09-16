@@ -1,5 +1,5 @@
 # Use Ubuntu 16.04 LTS
-FROM ubuntu:xenial-20200114
+FROM ubuntu:xenial-20200706
 
 # Pre-cache neurodebian key
 COPY docker/files/neurodebian.gpg /usr/local/etc/neurodebian.gpg
@@ -16,7 +16,7 @@ RUN apt-get update && \
                     libtool \
                     pkg-config \
                     git && \
-    curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
+    curl -sSL https://deb.nodesource.com/setup_10.x | bash - && \
     apt-get install -y --no-install-recommends \
                     nodejs && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
@@ -47,6 +47,7 @@ RUN curl -sSL https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/6.0.1/frees
     --exclude='freesurfer/subjects/V1_average' \
     --exclude='freesurfer/trctrain'
 
+# Simulate SetUpFreeSurfer.sh
 ENV FSL_DIR="/usr/share/fsl/5.0" \
     OS="Linux" \
     FS_OVERRIDE=0 \
@@ -64,11 +65,10 @@ ENV PERL5LIB="$MINC_LIB_DIR/perl5/5.8.5" \
     MNI_PERL5LIB="$MINC_LIB_DIR/perl5/5.8.5" \
     PATH="$FREESURFER_HOME/bin:$FSFAST_HOME/bin:$FREESURFER_HOME/tktools:$MINC_BIN_DIR:$PATH"
 
-# Installing Neurodebian packages (FSL, AFNI, git)
+# Installing Neurodebian packages (FSL, AFNI, git-annex)
 RUN curl -sSL "http://neuro.debian.net/lists/$( lsb_release -c | cut -f2 ).us-ca.full" >> /etc/apt/sources.list.d/neurodebian.sources.list && \
     apt-key add /usr/local/etc/neurodebian.gpg && \
     (apt-key adv --refresh-keys --keyserver hkp://ha.pool.sks-keyservers.net 0xA5D32F012649A5A9 || true)
-
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
                     fsl-core=5.0.9-5~nd16.04+1 \
@@ -79,37 +79,34 @@ RUN apt-get update && \
                     git-annex-standalone && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+# Setting FSL and AFNI envvars
 ENV FSLDIR="/usr/share/fsl/5.0" \
     FSLOUTPUTTYPE="NIFTI_GZ" \
     FSLMULTIFILEQUIT="TRUE" \
     POSSUMDIR="/usr/share/fsl/5.0" \
-    LD_LIBRARY_PATH="/usr/lib/fsl/5.0:$LD_LIBRARY_PATH" \
     FSLTCLSH="/usr/bin/tclsh" \
     FSLWISH="/usr/bin/wish" \
     AFNI_MODELPATH="/usr/lib/afni/models" \
     AFNI_IMSAVE_WARNINGS="NO" \
     AFNI_TTATLAS_DATASET="/usr/share/afni/atlases" \
-    AFNI_PLUGINPATH="/usr/lib/afni/plugins"
-ENV PATH="/usr/lib/fsl/5.0:/usr/lib/afni/bin:$PATH"
+    AFNI_PLUGINPATH="/usr/lib/afni/plugins" \
+    PATH="/usr/lib/fsl/5.0:/usr/lib/afni/bin:$PATH" \
+    LD_LIBRARY_PATH="/usr/lib/fsl/5.0:$LD_LIBRARY_PATH"
 
 # Installing ANTs 2.3.4 (NeuroDocker build)
-ENV ANTSPATH=/usr/lib/ants
-RUN mkdir -p $ANTSPATH && \
-    curl -sSL "https://dl.dropbox.com/s/gwf51ykkk5bifyj/ants-Linux-centos6_x86_64-v2.3.4.tar.gz" \
+ENV ANTSPATH="/usr/lib/ants" \
+    PATH="/usr/lib/ants:$PATH"
+WORKDIR $ANTSPATH
+RUN curl -sSL "https://dl.dropbox.com/s/gwf51ykkk5bifyj/ants-Linux-centos6_x86_64-v2.3.4.tar.gz" \
     | tar -xzC $ANTSPATH --strip-components 1
-ENV PATH=$ANTSPATH:$PATH
 
-# Installing SVGO
-RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
-RUN apt-get install -y nodejs
-RUN npm install -g svgo
-
-# Installing bids-validator
-RUN npm install -g bids-validator@1.4.0
+# Installing SVGO and bids-validator
+RUN npm install -g svgo bids-validator@1.4.0 \
+  && rm -rf ~/.npm ~/.empty
 
 # Installing and setting up ICA_AROMA
-RUN mkdir -p /opt/ICA-AROMA && \
-  curl -sSL "https://github.com/oesteban/ICA-AROMA/archive/v0.4.5.tar.gz" \
+WORKDIR /opt/ICA-AROMA
+RUN curl -sSL "https://github.com/oesteban/ICA-AROMA/archive/v0.4.5.tar.gz" \
   | tar -xzC /opt/ICA-AROMA --strip-components 1 && \
   chmod +x /opt/ICA-AROMA/ICA_AROMA.py
 ENV PATH="/opt/ICA-AROMA:$PATH" \
@@ -122,7 +119,7 @@ RUN curl -sSLO https://repo.continuum.io/miniconda/Miniconda3-4.5.11-Linux-x86_6
 
 # Set CPATH for packages relying on compiled libs (e.g. indexed_gzip)
 ENV PATH="/usr/local/miniconda/bin:$PATH" \
-    CPATH="/usr/local/miniconda/include/:$CPATH" \
+    CPATH="/usr/local/miniconda/include:$CPATH" \
     LANG="C.UTF-8" \
     LC_ALL="C.UTF-8" \
     PYTHONNOUSERSITE=1
@@ -142,10 +139,8 @@ RUN conda install -y python=3.7.1 \
                      graphviz=2.40.1 \
                      traits=4.6.0 \
                      zlib; sync && \
-    chmod -R a+rX /usr/local/miniconda; sync && \
-    chmod +x /usr/local/miniconda/bin/*; sync && \
-    conda build purge-all; sync && \
-    conda clean -tipsy && sync
+    conda clean -y --all && sync && \
+    rm -rf ~/.conda ~/.cache/pip/*; sync
 
 # Unless otherwise specified each process should only use one thread - nipype
 # will handle parallelization
@@ -163,21 +158,11 @@ RUN python -c "from matplotlib import font_manager" && \
 
 # Precaching atlases
 COPY setup.cfg fmriprep-setup.cfg
+COPY scripts/fetch_templates.py fetch_templates.py
+
 RUN pip install --no-cache-dir "$( grep templateflow fmriprep-setup.cfg | xargs )" && \
-    python -c "from templateflow import api as tfapi; \
-               tfapi.get('MNI152NLin6Asym', resolution=(1, 2), suffix='T1w', desc=None); \
-               tfapi.get('MNI152NLin6Asym', resolution=(1, 2), desc='brain', suffix='mask'); \
-               tfapi.get('MNI152NLin2009cAsym', resolution=(1, 2), suffix='T1w', desc=None); \
-               tfapi.get('MNI152NLin2009cAsym', resolution=(1, 2), desc='brain', suffix='mask'); \
-               tfapi.get('MNI152NLin2009cAsym', resolution=1, desc='carpet', suffix='dseg'); \
-               tfapi.get('MNI152NLin2009cAsym', resolution=1, label='brain', suffix='probseg'); \
-               tfapi.get('MNI152NLin2009cAsym', resolution=2, desc='fMRIPrep', suffix='boldref'); \
-               tfapi.get('OASIS30ANTs'); \
-               tfapi.get('fsaverage', density='164k', desc='std', suffix='sphere'); \
-               tfapi.get('fsaverage', density='164k', desc='vaavg', suffix='midthickness'); \
-               tfapi.get('fsLR', density='32k'); \
-               tfapi.get('MNI152NLin6Asym', resolution=2, atlas='HCP', suffix='dseg')" && \
-    rm fmriprep-setup.cfg && \
+    python fetch_templates.py && \
+    rm fmriprep-setup.cfg fetch_templates.py && \
     find $HOME/.cache/templateflow -type d -exec chmod go=u {} + && \
     find $HOME/.cache/templateflow -type f -exec chmod go=u {} +
 
@@ -189,10 +174,6 @@ RUN echo "${VERSION}" > /src/fmriprep/fmriprep/VERSION && \
     echo "include fmriprep/VERSION" >> /src/fmriprep/MANIFEST.in && \
     pip install --no-cache-dir "/src/fmriprep[all]"
 
-RUN install -m 0755 \
-    /src/fmriprep/scripts/generate_reference_mask.py \
-    /usr/local/bin/generate_reference_mask
-
 RUN find $HOME -type d -exec chmod go=u {} + && \
     find $HOME -type f -exec chmod go=u {} + && \
     rm -rf $HOME/.npm $HOME/.conda $HOME/.empty
@@ -200,7 +181,7 @@ RUN find $HOME -type d -exec chmod go=u {} + && \
 ENV IS_DOCKER_8395080871=1
 
 RUN ldconfig
-WORKDIR /tmp/
+WORKDIR /tmp
 ENTRYPOINT ["/usr/local/miniconda/bin/fmriprep"]
 
 ARG BUILD_DATE
