@@ -29,12 +29,14 @@ by posting an issue on our GitHub page!
 
 A full list of changes can be found below.
 
-* FIX: Revise the reproducibility of CompCor masks (#2130)
+* FIX: Get missing ``probseg`` file from MNI152NLin2009cAsym (#2271)
+* FIX: Restore ``--ignore t2w/flair`` options (#2260)
+* FIX: Revise the reproducibility of *CompCor* masks (#2130)
 * FIX: Simplify transform aggregation in resampling, pass identity transforms for multi-echo cases (#2239)
 * FIX: Skip the T1w check if ``--anat-derivatives`` is provided. (#2201)
 * FIX: Storing ``--bids-filters`` within config file (#2177)
 * FIX: Revise multi-echo reference generation, permitting using SBRefs too (#1803)
-* FIX: FreeSurfer license manipulation & canary
+* FIX: *FreeSurfer* license manipulation & canary
 * ENH: Output CompCor masks if ``--debug compcor`` is passed (#2248)
 * ENH: Conform to BIDS Derivatives as of BIDS 1.4.0 (#2223)
 * ENH: Reuse config (#2240)
@@ -42,13 +44,16 @@ A full list of changes can be found below.
 * ENH: Leverage BIDSLayout's ``database_path`` (#2203)
 * ENH: Add ``--no-tty`` option to ``fmriprep-docker.py`` (#2204)
 * ENH: Report number of echoes in BOLD summary. (#2184)
-* ENH: Ensure NiPype telemetry is just pinged once (#2168)
+* ENH: Ensure *NiPype* telemetry is just pinged once (#2168)
+* DOC: Add FAQ entry for using pre-indexed layouts (#2256)
 * DOC: Update reference in "Refinement of Brain Mask" description (#2215)
 * DOC: List *TemplateFlow* templates that need to be prefetched (#2196)
 * DOC: Update references to https://github.com/nipreps (#2191)
-* DOC: Pin NiPype with new Sphinx extension syntax (#2092)
+* DOC: Pin *NiPype* with new Sphinx extension syntax (#2092)
+* MAINT: Track #2269 and #2269, bug-fixes on the 20.1.x series
+* MAINT: Remove derivatives from layout index ignores (#2258)
 * MAINT: Track #2252 from 20.1.x series (#2253)
-* MAINT: Silence PyBIDS warning by setting extension mode (#2250)
+* MAINT: Silence *PyBIDS* warning by setting extension mode (#2250)
 * MAINT: Drop CircleCI docs build (#2247)
 * MAINT: Pin latest *NiPreps* (#2244)
 * MAINT: Update ``setup.cfg`` (flake8 and pytest) (#2183)
