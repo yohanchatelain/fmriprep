@@ -29,6 +29,7 @@ by posting an issue on our GitHub page!
 
 A full list of changes can be found below.
 
+* FIX: Pin *NiWorkflows* 1.3.1 and *sMRIPrep* 0.7.0rc2, including bugfix for INU-correction failures (nipreps/niworkflows#567)
 * FIX: Get missing ``probseg`` file from MNI152NLin2009cAsym (#2271)
 * FIX: Restore ``--ignore t2w/flair`` options (#2260)
 * FIX: Revise the reproducibility of *CompCor* masks (#2130)
@@ -50,6 +51,7 @@ A full list of changes can be found below.
 * DOC: List *TemplateFlow* templates that need to be prefetched (#2196)
 * DOC: Update references to https://github.com/nipreps (#2191)
 * DOC: Pin *NiPype* with new Sphinx extension syntax (#2092)
+* MAINT: Upgrade ANTs to 2.3.3 in ``Dockerfile`` (9512086)
 * MAINT: Track #2269 and #2269, bug-fixes on the 20.1.x series
 * MAINT: Remove derivatives from layout index ignores (#2258)
 * MAINT: Track #2252 from 20.1.x series (#2253)
