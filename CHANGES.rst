@@ -1,5 +1,5 @@
-20.2.0 (TBD)
-============
+20.2.0 (September 28, 2020)
+===========================
 With this third minor release series of 2020,
 the first *fMRIPrep LTS* (*long-term support*) is finally here!
 
