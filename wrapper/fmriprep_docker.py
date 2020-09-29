@@ -10,7 +10,7 @@ running ::
   docker info
 
 Please report any feedback to our GitHub repository
-(https://github.com/poldracklab/fmriprep) and do not
+(https://github.com/nipreps/fmriprep) and do not
 forget to credit all the authors of software that fMRIPrep
 uses (https://fmriprep.readthedocs.io/en/latest/citing.html).
 """
@@ -23,7 +23,7 @@ __version__ = '99.99.99'
 __copyright__ = 'Copyright 2020, Center for Reproducible Neuroscience, Stanford University'
 __credits__ = ['Craig Moodie', 'Ross Blair', 'Oscar Esteban', 'Chris Gorgolewski',
                'Shoshana Berleant', 'Christopher J. Markiewicz', 'Russell A. Poldrack']
-__bugreports__ = 'https://github.com/poldracklab/fmriprep/issues'
+__bugreports__ = 'https://github.com/nipreps/fmriprep/issues'
 
 
 MISSING = """
@@ -268,7 +268,7 @@ def get_parser():
 
     # Allow alternative images (semi-developer)
     parser.add_argument('-i', '--image', metavar='IMG', type=str,
-                        default='poldracklab/fmriprep:{}'.format(__version__),
+                        default='nipreps/fmriprep:{}'.format(__version__),
                         help='image name')
 
     # Options for mapping files and directories into container

@@ -416,7 +416,7 @@ def init_bbreg_wf(use_bbr, bold2t1w_dof, bold2t1w_init, omp_nthreads, name='bbre
 
     """
     from niworkflows.engine.workflows import LiterateWorkflow as Workflow
-    # See https://github.com/poldracklab/fmriprep/issues/768
+    # See https://github.com/nipreps/fmriprep/issues/768
     from niworkflows.interfaces.freesurfer import (
         PatchedBBRegisterRPT as BBRegisterRPT,
         PatchedMRICoregRPT as MRICoregRPT,
@@ -781,7 +781,7 @@ def compare_xforms(lta_list, norm_threshold=15):
     This is open to revisiting in either direction.
 
     See discussion in
-    `GitHub issue #681`_ <https://github.com/poldracklab/fmriprep/issues/681>`_
+    `GitHub issue #681`_ <https://github.com/nipreps/fmriprep/issues/681>`_
     and the `underlying implementation
     <https://github.com/nipy/nipype/blob/56b7c81eedeeae884ba47c80096a5f66bd9f8116/nipype/algorithms/rapidart.py#L108-L159>`_.
 

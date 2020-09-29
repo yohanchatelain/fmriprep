@@ -229,7 +229,7 @@ A full list of changes can be found below.
 .. admonition:: Author list for papers based on *fMRIPrep* v20.1.x series
 
     As described in the `Contributor Guidelines
-    <https://github.com/poldracklab/fmriprep/blob/e3d3bc51dbf03215e3e4d2746d8aaacdd9afb84d/CONTRIBUTING.md#publications>`__, anyone
+    <https://github.com/nipreps/fmriprep/blob/e3d3bc51dbf03215e3e4d2746d8aaacdd9afb84d/CONTRIBUTING.md#publications>`__, anyone
     listed as developer or contributor may write and submit manuscripts regarding
     *fMRIPrep*.
     To do so, please move the author(s) name(s) to the front of the following list.
@@ -365,7 +365,7 @@ improvements in report readability and inclusion of common templates in the Dock
 The major release of 2020 is here!
 
 *fMRIPrep* is transitioning to a calendar version system
-(`#1912 <https://github.com/poldracklab/fmriprep/issues/1912>`__).
+(`#1912 <https://github.com/nipreps/fmriprep/issues/1912>`__).
 The `CalVer <https://calver.org/>`__ system reflects *fMRIPrep*'s nature
 as an evolving workflow and does not impose any artificial incentive for
 "big-change" releases.
@@ -383,7 +383,7 @@ corresponding atlases) and imaging outputs.
 In particular, the new series almost completely implements the new
 syntax for ``--output-spaces`` to describe the (non)standard spatial references
 that shall be used for generating outputs
-(`#1604 <https://github.com/poldracklab/fmriprep/issues/1604>`__).
+(`#1604 <https://github.com/nipreps/fmriprep/issues/1604>`__).
 
 This release includes contributions from Azeez Adebimpe and Basile Pinsard - very much appreciated.
 
@@ -404,7 +404,7 @@ This release includes contributions from Azeez Adebimpe and Basile Pinsard - ver
 .. admonition:: Author list for papers based on *fMRIPrep* v20.0.0
 
     As described in the `Contributor Guidelines
-    <https://github.com/poldracklab/fmriprep/blob/d65cfdd80443c5ca779680b1087d14f189e8ceb5/CONTRIBUTING.md#publications>`__, anyone
+    <https://github.com/nipreps/fmriprep/blob/d65cfdd80443c5ca779680b1087d14f189e8ceb5/CONTRIBUTING.md#publications>`__, anyone
     listed as developer or contributor may write and submit manuscripts regarding
     *fMRIPrep*.
     To do so, please move the author(s) name(s) to the front of the following list.
@@ -470,7 +470,7 @@ of all phase maps will be available in an upcoming minor release (20.0 or 20.1),
 users who are processing with 1.5.x to resolve this issue in a way that does not affect phase maps
 unaffected by the bug.
 
-  * FIX: Center phase maps around central mode, avoiding FoV-related outliers (poldracklab/sdcflows#89)
+  * FIX: Center phase maps around central mode, avoiding FoV-related outliers (nipreps/sdcflows#89)
 
 1.5.8 (January 28, 2020)
 ------------------------
@@ -505,7 +505,7 @@ Bug-fix release in the 1.5.x series.
 -------------------------
 Bug-fix release in the 1.5.x series.
 
-* FIX: Integrate fix for poldracklab/sdcflows#77 (pin niworkflows-1.0.3, sdcflows-1.0.3) @oesteban
+* FIX: Integrate fix for nipreps/sdcflows#77 (pin niworkflows-1.0.3, sdcflows-1.0.3) @oesteban
 
 1.5.3 (December 12, 2019)
 -------------------------
@@ -526,7 +526,7 @@ tasks and minor documentation revisions.
 ------------------------
 Bug-fix release in the 1.5.x series.
 
-* FIX: Ensure data type of masked image matches T1.mgz (poldracklab/niworkflows#430) @effigies
+* FIX: Ensure data type of masked image matches T1.mgz (nipreps/niworkflows#430) @effigies
 
 1.5.1 (November 26, 2019)
 -------------------------
@@ -568,7 +568,7 @@ version 1.5.0: the upgrade of *PyBIDS* to the 0.9 series and the split of *SDCfl
 off from *fMRIPrep* codebase.
 *PyBIDS* 0.9.x has a better handling of the indexed dataset that will permit some
 optimizations to *fMRIPrep*'s memory fingerprint.
-*SDCflows* now are found at `poldracklab/sdcflows <https://github.com/poldracklab/sdcflows>`__,
+*SDCflows* now are found at `nipreps/sdcflows <https://github.com/nipreps/sdcflows>`__,
 and have been split to allow a more granular and thorough testing in collaboration
 with M. Cieslak, A. Adebimpe, and T. Satterthwaite.
 Some other bugfixes, improvements to the documentation and minor features are also
@@ -732,7 +732,7 @@ With thanks to @franklin-feingold for contributions.
 Hotfix release intended for Docker users, smoothing the experience of TemplateFlow
 when using the ``-u UID`` flag is necessary.
 
-* FIX: Orientation problem with niworkflows<0.7.2 (poldracklab/niworkflows#312) @effigies
+* FIX: Orientation problem with niworkflows<0.7.2 (nipreps/niworkflows#312) @effigies
 * ENH: TemplateFlow + ``docker run -u ...`` (#1525) @oesteban
 * ENH: Include repetition time in functional summary (#1508) @wiheto
 * FIX: Do not crash if all aroma components are classified as noise (#1467) @jdkent
@@ -745,7 +745,7 @@ that didn't fix the problem (#1510) @effigies.
 1.3.0.post1 (February 8, 2019)
 ------------------------------
 Hotfix release intended for Singularity users. For further detail, please see
-`#1500 <https://github.com/poldracklab/fmriprep/issues/1500>`__.
+`#1500 <https://github.com/nipreps/fmriprep/issues/1500>`__.
 
 1.3.0 (February 7, 2019)
 ------------------------
@@ -760,7 +760,7 @@ fMRIPrep's anatomical workflow), pybids>=0.7 for querying dataset, and
 * RF: Use anatomical workflows from sMRIPrep (#1482) @oesteban
 * MAINT: Update sentry-sdk (#1490) @chrisfilo
 * ENH: Remaining TemplateFlow integrations (#1494) @oesteban
-* MAINT: Update to keep up with poldracklab/niworkflows#299 (#1496) @oesteban
+* MAINT: Update to keep up with nipreps/niworkflows#299 (#1496) @oesteban
 * FIX: Updating bids-validator to 1.1.3 (#1498) @chrisfilo
 
 1.2.x series (January 2019)
@@ -770,7 +770,7 @@ fMRIPrep's anatomical workflow), pybids>=0.7 for querying dataset, and
 Hotfix release of version 1.2.6, pinning niworkflows to a release version (instead
 of the development branch, since #1459) and including to bugfixes.
 
-* PIN: NiWorkflows 0.5.2.post7 (`1bf4a21 <https://github.com/poldracklab/fmriprep/commit/1bf4a21cce62c4330510a9a8ae50db876fbc23b0>`__).
+* PIN: NiWorkflows 0.5.2.post7 (`1bf4a21 <https://github.com/nipreps/fmriprep/commit/1bf4a21cce62c4330510a9a8ae50db876fbc23b0>`__).
 * FIX: Bad ``fsnative`` replacement in CIfTI workflow (#1476) @oesteban
 * FIX: Avoid warning when generating boilerplate (#1464) @oesteban
 
@@ -883,7 +883,7 @@ With many thanks to Ali Cohen, James Kent, Inge Amlien, Sebastian Urchs, and Zhi
 * TST: Add heavily-nonuniform boldrefs for regression tests (#1329) @oesteban
 * TST: Fix expectations for CIFTI outputs & ds005 (#1344) @oesteban
 * MAINT: Ignore project settings files from popular python/code editors (#1336) @jdkent
-* CI: Deploy poldracklab/fmriprep:unstable tracking master (#1307) @effigies
+* CI: Deploy nipreps/fmriprep:unstable tracking master (#1307) @effigies
 
 1.1.x series (October 2018)
 ===========================
@@ -942,7 +942,7 @@ Taylor Salo for contributions.
 1.1.4 (August 06, 2018)
 -----------------------
 A hotfix release for `#1235
-<https://github.com/poldracklab/fmriprep/issues/1235>`_. Additionally,
+<https://github.com/nipreps/fmriprep/issues/1235>`_. Additionally,
 notebooks have been synced with the latest version of that repository.
 
 * FIX: Verify first word of ``_cmd`` in dependency check (#1236)
@@ -1121,7 +1121,7 @@ With thanks to @emdupre for contributions.
 * PIN: Update required niworkflows version to 0.2.3
 * FIX: Refine ``antsBrainExtraction`` if ``recon-all`` is run (#912)
   With thanks to Arno Klein for his [helpful comments
-  here](https://github.com/poldracklab/fmriprep/issues/431#issuecomment-299583391)
+  here](https://github.com/nipreps/fmriprep/issues/431#issuecomment-299583391)
 * FIX: Use thinner contours in reportlets (#910)
 * FIX: Robuster EPI mask (#911)
 * FIX: Set workflow return value before potential error (#887)

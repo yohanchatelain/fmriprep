@@ -1,4 +1,4 @@
-FROM poldracklab/fmriprep:unstable
+FROM nipreps/fmriprep:unstable
 
 # net-tools needed for code-server
 # wget necessary for data downloads

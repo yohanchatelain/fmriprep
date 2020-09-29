@@ -42,14 +42,14 @@ jobs:
                 echo "Pulling from local registry"
                 docker tag localhost:5000/ubuntu ubuntu:xenial-20200114
                 docker pull localhost:5000/fmriprep
-                docker tag localhost:5000/fmriprep poldracklab/fmriprep:latest
-                docker tag localhost:5000/fmriprep poldracklab/fmriprep
+                docker tag localhost:5000/fmriprep nipreps/fmriprep:latest
+                docker tag localhost:5000/fmriprep nipreps/fmriprep
             else
                 echo "Pulling from Docker Hub"
                 docker pull ubuntu:xenial-20200114
                 docker tag ubuntu:xenial-20200114 localhost:5000/ubuntu
                 docker push localhost:5000/ubuntu
-                docker pull poldracklab/fmriprep:latest
+                docker pull nipreps/fmriprep:latest
             fi
       - run:
           name: Build Docker image
@@ -72,8 +72,8 @@ jobs:
             # Build docker image
             e=1 && for i in {1..5}; do
               docker build --rm \
-                --cache-from=poldracklab/fmriprep \
-                -t poldracklab/fmriprep:latest \
+                --cache-from=nipreps/fmriprep \
+                -t nipreps/fmriprep:latest \
                 --build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
                 --build-arg VCS_REF=`git rev-parse --short HEAD` \
                 --build-arg VERSION="${CIRCLE_TAG:-$THISVERSION}" . \
@@ -83,7 +83,7 @@ jobs:
           name: Docker push to local registry
           no_output_timeout: 40m
           command: |
-            docker tag poldracklab/fmriprep:latest localhost:5000/fmriprep
+            docker tag nipreps/fmriprep:latest localhost:5000/fmriprep
             docker push localhost:5000/fmriprep
       - run:
           name: Docker registry garbage collection
@@ -258,14 +258,14 @@ jobs:
           name: Pull images from local registry
           command: |
             docker pull localhost:5000/fmriprep
-            docker tag localhost:5000/fmriprep poldracklab/fmriprep:latest
+            docker tag localhost:5000/fmriprep nipreps/fmriprep:latest
       - run:
           name: Run fMRIPrep tests
           no_output_timeout: 2h
           command: |
             docker run -ti --rm=false \
               -e TEST_READONLY_FILESYSTEM=1 -v $HOME:/home/readonly:ro \
-              --entrypoint="pytest" poldracklab/fmriprep:latest \
+              --entrypoint="pytest" nipreps/fmriprep:latest \
               /src/fmriprep/fmriprep -svx --doctest-modules
 
       - run:
@@ -279,8 +279,8 @@ jobs:
             pip install --upgrade "pip<21" "setuptools<45"
             pip install --upgrade wrapper/
             which fmriprep-docker
-            fmriprep-docker -i poldracklab/fmriprep:latest --help
-            fmriprep-docker -i poldracklab/fmriprep:latest --version
+            fmriprep-docker -i nipreps/fmriprep:latest --help
+            fmriprep-docker -i nipreps/fmriprep:latest --version
       - run:
           name: Test fmriprep-wrapper (Python 3)
           command: |
@@ -292,8 +292,8 @@ jobs:
             pip install --upgrade pip setuptools
             pip install --upgrade wrapper/
             which fmriprep-docker
-            fmriprep-docker -i poldracklab/fmriprep:latest --help
-            fmriprep-docker -i poldracklab/fmriprep:latest --version
+            fmriprep-docker -i nipreps/fmriprep:latest --help
+            fmriprep-docker -i nipreps/fmriprep:latest --version
       - store_artifacts:
           path: /tmp/data/reports
 
@@ -351,7 +351,7 @@ jobs:
           name: Pull images from local registry
           command: |
             docker pull localhost:5000/fmriprep
-            docker tag localhost:5000/fmriprep poldracklab/fmriprep:latest
+            docker tag localhost:5000/fmriprep nipreps/fmriprep:latest
       - run:
           name: Setting up test
           command: |
@@ -373,7 +373,7 @@ jobs:
             sudo setfacl -d -m group:$(id -gn):rwx /tmp/${DATASET}/work && \
                 sudo setfacl -m group:$(id -gn):rwx /tmp/${DATASET}/work
             if [ -f /tmp/.nofasttrack ]; then
-                fmriprep-docker -i poldracklab/fmriprep:latest \
+                fmriprep-docker -i nipreps/fmriprep:latest \
                     -e FMRIPREP_DEV 1 -u $(id -u) \
                     --network none \
                     --config $PWD/nipype.cfg -w /tmp/${DATASET}/work \
@@ -407,7 +407,7 @@ jobs:
             if [ -f /tmp/.nofasttrack ]; then
                 FASTRACK_ARG=""
             fi
-            fmriprep-docker -i poldracklab/fmriprep:latest \
+            fmriprep-docker -i nipreps/fmriprep:latest \
                 -e FMRIPREP_DEV 1 -u $(id -u) \
                 --network none \
                 --config $PWD/nipype.cfg -w /tmp/${DATASET}/work \
@@ -448,7 +448,7 @@ jobs:
             if [ -f /tmp/.nofasttrack ]; then
                 FASTRACK_ARG=""
             fi
-            fmriprep-docker -i poldracklab/fmriprep:latest \
+            fmriprep-docker -i nipreps/fmriprep:latest \
                 -e FMRIPREP_DEV 1 -u $(id -u) \
                 --network none \
                 --config $PWD/nipype.cfg -w /tmp/${DATASET}/work_partial \
@@ -552,7 +552,7 @@ jobs:
           name: Pull images from local registry
           command: |
             docker pull localhost:5000/fmriprep
-            docker tag localhost:5000/fmriprep poldracklab/fmriprep:latest
+            docker tag localhost:5000/fmriprep nipreps/fmriprep:latest
       - run:
           name: Run anatomical workflow on ds054
           no_output_timeout: 2h
@@ -563,7 +563,7 @@ jobs:
             sudo setfacl -d -m group:$(id -gn):rwx /tmp/${DATASET}/work && \
                 sudo setfacl -m group:$(id -gn):rwx /tmp/${DATASET}/work
             if [ -f /tmp/.nofasttrack ]; then
-                fmriprep-docker -i poldracklab/fmriprep:latest \
+                fmriprep-docker -i nipreps/fmriprep:latest \
                     -e FMRIPREP_DEV 1 \
                     --config $PWD/nipype.cfg -w /tmp/${DATASET}/work \
                     /tmp/data/${DATASET} /tmp/${DATASET}/derivatives participant \
@@ -594,7 +594,7 @@ jobs:
             if [ -f /tmp/.nofasttrack ]; then
                 FASTRACK_ARG=""
             fi
-            fmriprep-docker -i poldracklab/fmriprep:latest \
+            fmriprep-docker -i nipreps/fmriprep:latest \
                 -e FMRIPREP_DEV 1 \
                 --config $PWD/nipype.cfg -w /tmp/${DATASET}/work \
                 /tmp/data/${DATASET} /tmp/${DATASET}/derivatives participant \
@@ -623,7 +623,7 @@ jobs:
             cp /tmp/src/fmriprep/fmriprep/data/tests/crash_files/*.txt \
                 /tmp/${DATASET}/derivatives/fmriprep/sub-100185/log/$UUID/
             set +e
-            fmriprep-docker -i poldracklab/fmriprep:latest \
+            fmriprep-docker -i nipreps/fmriprep:latest \
                 -e FMRIPREP_DEV 1 \
                 --config $PWD/nipype.cfg -w /tmp/${DATASET}/work \
                 /tmp/data/${DATASET} /tmp/${DATASET}/derivatives participant \
@@ -708,7 +708,7 @@ jobs:
           name: Pull images from local registry
           command: |
             docker pull localhost:5000/fmriprep
-            docker tag localhost:5000/fmriprep poldracklab/fmriprep:latest
+            docker tag localhost:5000/fmriprep nipreps/fmriprep:latest
       - run:
           name: Run anatomical workflow on ds000210
           no_output_timeout: 2h
@@ -719,7 +719,7 @@ jobs:
             sudo setfacl -d -m group:$(id -gn):rwx /tmp/${DATASET}/work && \
                 sudo setfacl -m group:$(id -gn):rwx /tmp/${DATASET}/work
             if [ -f /tmp/.nofasttrack ]; then
-                fmriprep-docker -i poldracklab/fmriprep:latest \
+                fmriprep-docker -i nipreps/fmriprep:latest \
                     -e FMRIPREP_DEV 1 \
                     --config $PWD/nipype.cfg -w /tmp/${DATASET}/work \
                     /tmp/data/${DATASET} /tmp/${DATASET}/derivatives participant \
@@ -746,7 +746,7 @@ jobs:
             if [ -f /tmp/.nofasttrack ]; then
                 FASTRACK_ARG=""
             fi
-            fmriprep-docker -i poldracklab/fmriprep:latest \
+            fmriprep-docker -i nipreps/fmriprep:latest \
                 -e FMRIPREP_DEV 1 \
                 --config $PWD/nipype.cfg -w /tmp/${DATASET}/work \
                 /tmp/data/${DATASET} /tmp/${DATASET}/derivatives participant \
@@ -791,7 +791,7 @@ jobs:
       - run:
           name: Check whether image should be deployed to Docker Hub
           command: |
-            if [[ "$CIRCLE_PROJECT_USERNAME" != "poldracklab" ]]; then
+            if [[ "$CIRCLE_PROJECT_USERNAME" != "nipreps" ]]; then
               echo "Nothing to deploy for $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME."
               circleci step halt
             fi
@@ -821,15 +821,15 @@ jobs:
           name: Pull images from local registry
           command: |
             docker pull localhost:5000/fmriprep
-            docker tag localhost:5000/fmriprep poldracklab/fmriprep:latest
+            docker tag localhost:5000/fmriprep nipreps/fmriprep:latest
       - run:
           name: Deploy to Docker Hub
           no_output_timeout: 40m
           command: |
             if [[ -n "$DOCKER_PASS" ]]; then
               docker login -u $DOCKER_USER -p $DOCKER_PASS
-              docker tag poldracklab/fmriprep poldracklab/fmriprep:${CIRCLE_BRANCH#docker/}
-              docker push poldracklab/fmriprep:${CIRCLE_BRANCH#docker/}
+              docker tag nipreps/fmriprep nipreps/fmriprep:${CIRCLE_BRANCH#docker/}
+              docker push nipreps/fmriprep:${CIRCLE_BRANCH#docker/}
             fi
 
   deploy_docker:
@@ -863,19 +863,19 @@ jobs:
           name: Pull images from local registry
           command: |
             docker pull localhost:5000/fmriprep
-            docker tag localhost:5000/fmriprep poldracklab/fmriprep:latest
+            docker tag localhost:5000/fmriprep nipreps/fmriprep:latest
       - run:
           name: Deploy to Docker Hub
           no_output_timeout: 40m
           command: |
             if [[ -n "$DOCKER_PASS" ]]; then
               docker login -u $DOCKER_USER -p $DOCKER_PASS
-              docker tag poldracklab/fmriprep poldracklab/fmriprep:unstable
-              docker push poldracklab/fmriprep:unstable
+              docker tag nipreps/fmriprep nipreps/fmriprep:unstable
+              docker push nipreps/fmriprep:unstable
               if [[ -n "$CIRCLE_TAG" ]]; then
-                docker push poldracklab/fmriprep:latest
-                docker tag poldracklab/fmriprep poldracklab/fmriprep:$CIRCLE_TAG
-                docker push poldracklab/fmriprep:$CIRCLE_TAG
+                docker push nipreps/fmriprep:latest
+                docker tag nipreps/fmriprep nipreps/fmriprep:$CIRCLE_TAG
+                docker push nipreps/fmriprep:$CIRCLE_TAG
               fi
             fi
 

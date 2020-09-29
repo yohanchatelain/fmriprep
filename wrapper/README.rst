@@ -16,6 +16,6 @@ running ::
   docker info
 
 Please report any feedback to our `GitHub repository
-<https://github.com/poldracklab/fmriprep>`_ and do not
+<https://github.com/nipreps/fmriprep>`_ and do not
 forget to `credit <https://fmriprep.readthedocs.io/en/latest/citing.html>`_ all
 the authors of software that fMRIPrep uses.
