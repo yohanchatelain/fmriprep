@@ -31,7 +31,7 @@ needed, e.g.::
 
     $ fmriprep-docker /path/to/data/dir /path/to/output/dir participant
     RUNNING: docker run --rm -it -v /path/to/data/dir:/data:ro \
-        -v /path/to_output/dir:/out nipreps/fmriprep:1.0.0 \
+        -v /path/to_output/dir:/out nipreps/fmriprep:20.2.0 \
         /data /out participant
     ...
 
