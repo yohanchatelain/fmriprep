@@ -62,7 +62,7 @@ jobs:
             else
                 echo "Pulling from Docker Hub"
                 docker pull ubuntu:xenial-20200706
-                docker tag ubuntu:xenial-xenial-20200706 localhost:5000/ubuntu
+                docker tag ubuntu:xenial-20200706 localhost:5000/ubuntu
                 docker push localhost:5000/ubuntu
                 docker pull nipreps/fmriprep:latest
             fi
