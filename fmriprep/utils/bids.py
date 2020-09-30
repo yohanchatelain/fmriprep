@@ -45,7 +45,7 @@ def write_derivative_description(bids_dir, deriv_dir):
     if 'FMRIPREP_DOCKER_TAG' in os.environ:
         desc['GeneratedBy'][0]['Container'] = {
             "Type": "docker",
-            "Tag": f"poldracklab/fmriprep:{os.environ['FMRIPREP_DOCKER_TAG']}"
+            "Tag": f"nipreps/fmriprep:{os.environ['FMRIPREP_DOCKER_TAG']}"
         }
     if 'FMRIPREP_SINGULARITY_URL' in os.environ:
         desc['GeneratedBy'][0]['Container'] = {

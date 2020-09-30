@@ -6,16 +6,16 @@ This pipeline is developed by the `Poldrack lab at Stanford University
 Neuroscience (CRN) <http://reproducibility.stanford.edu/>`_, as well as for
 open-source software distribution.
 
-.. image:: https://img.shields.io/badge/docker-poldracklab/fmriprep-brightgreen.svg?logo=docker&style=flat
-  :target: https://hub.docker.com/r/poldracklab/fmriprep/tags/
+.. image:: https://img.shields.io/badge/docker-nipreps/fmriprep-brightgreen.svg?logo=docker&style=flat
+  :target: https://hub.docker.com/r/nipreps/fmriprep/tags/
   :alt: Docker image available!
 
 .. image:: https://codeocean.com/codeocean-assets/badge/open-in-code-ocean.svg
   :target: https://doi.org/10.24433/CO.ed5ddfef-76a3-4996-b298-e3200f69141b
   :alt: Available in CodeOcean!
 
-.. image:: https://circleci.com/gh/poldracklab/fmriprep/tree/master.svg?style=shield
-  :target: https://circleci.com/gh/poldracklab/fmriprep/tree/master
+.. image:: https://circleci.com/gh/nipreps/fmriprep/tree/master.svg?style=shield
+  :target: https://circleci.com/gh/nipreps/fmriprep/tree/master
 
 .. image:: https://readthedocs.org/projects/fmriprep/badge/?version=latest
   :target: http://fmriprep.readthedocs.io/en/latest/?badge=latest
@@ -113,7 +113,7 @@ Limitations and reasons not to use *fMRIPrep*
    non-human brains, although appropriate templates can be provided to overcome the
    issue.
 3. The "EPInorm" approach is currently not supported, although we plan to implement
-   this feature (see `#620 <https://github.com/poldracklab/fmriprep/issues/620>`_).
+   this feature (see `#620 <https://github.com/nipreps/fmriprep/issues/620>`_).
 4. If you really want unlimited flexibility (which is obviously a double-edged sword).
 5. If you want students to suffer through implementing each step for didactic purposes,
    or to learn shell-scripting or Python along the way.
