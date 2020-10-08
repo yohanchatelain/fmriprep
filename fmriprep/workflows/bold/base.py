@@ -164,7 +164,7 @@ def init_func_preproc_wf(bold_file):
     echo_idxs = listify(entities.get("echo", []))
     multiecho = len(echo_idxs) > 2
     if len(echo_idxs) == 1:
-        config.loggers.warning(
+        config.loggers.workflow.warning(
             f"Running a single echo <{ref_file}> from a seemingly multi-echo dataset."
         )
         bold_file = ref_file  # Just in case - drop the list
