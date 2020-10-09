@@ -194,10 +194,12 @@ class FunctionalSummary(SummaryInterface):
                 '(boundary-based registration, BBR) - %d dof' % dof,
                 'FreeSurfer <code>mri_coreg</code> - %d dof' % dof],
         }[self.inputs.registration][self.inputs.fallback]
-        if self.inputs.pe_direction is None:
-            pedir = 'MISSING - Assuming Anterior-Posterior'
-        else:
-            pedir = {'i': 'Left-Right', 'j': 'Anterior-Posterior'}[self.inputs.pe_direction[0]]
+        pedir = {
+            'i-': 'Left-Right',
+            'i': 'Right-Left',
+            'j-': 'Anterior-Posterior',
+            'j': 'Posterior-Anterior'
+        }.get(self.inputs.pe_direction, 'MISSING - Assuming Anterior-Posterior')
 
         if isdefined(self.inputs.confounds_file):
             with open(self.inputs.confounds_file) as cfh:
