@@ -478,6 +478,16 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html"""
 
     g_other = parser.add_argument_group("Other options")
     g_other.add_argument(
+        "--output-layout",
+        action="store",
+        default="legacy",
+        choices=("yoda", "legacy"),
+        help="Organization of outputs. legacy (default) creates derivative "
+        "datasets as subdirectories of outputs. yoda places fMRIPrep derivatives "
+        "directly in the output directory, and defaults to placing FreeSurfer "
+        "derivatives in <output-dir>/sourcedata/freesurfer."
+    )
+    g_other.add_argument(
         "-w",
         "--work-dir",
         action="store",
@@ -642,9 +652,18 @@ applied."""
     output_dir = config.execution.output_dir
     work_dir = config.execution.work_dir
     version = config.environment.version
+    output_layout = config.execution.output_layout
 
     if config.execution.fs_subjects_dir is None:
-        config.execution.fs_subjects_dir = output_dir / "freesurfer"
+        if output_layout == "yoda":
+            config.execution.fs_subjects_dir = output_dir / "sourcedata" / "freesurfer"
+        elif output_layout == "legacy":
+            config.execution.fs_subjects_dir = output_dir / "freesurfer"
+    if config.execution.fmriprep_dir is None:
+        if output_layout == "yoda":
+            config.execution.fmriprep_dir = output_dir
+        elif output_layout == "legacy":
+            config.execution.fmriprep_dir = output_dir / "fmriprep"
 
     # Wipe out existing work_dir
     if opts.clean_workdir and work_dir.exists():
@@ -685,10 +704,9 @@ applied."""
         )
 
     # Setup directories
-    config.execution.log_dir = output_dir / "fmriprep" / "logs"
+    config.execution.log_dir = config.execution.fmriprep_dir / "logs"
     # Check and create output and working directories
     config.execution.log_dir.mkdir(exist_ok=True, parents=True)
-    output_dir.mkdir(exist_ok=True, parents=True)
     work_dir.mkdir(exist_ok=True, parents=True)
 
     # Force initialization of the BIDSLayout
