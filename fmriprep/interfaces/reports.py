@@ -33,6 +33,7 @@ FUNCTIONAL_TEMPLATE = """\
 \t\t<details open>
 \t\t<summary>Summary</summary>
 \t\t<ul class="elem-desc">
+\t\t\t<li>Original orientation: {ornt}</li>
 \t\t\t<li>Repetition time (TR): {tr:.03g}s</li>
 \t\t\t<li>Phase-encoding (PE) direction: {pedir}</li>
 \t\t\t<li>{multiecho}</li>
@@ -235,7 +236,7 @@ class FunctionalSummary(SummaryInterface):
         return FUNCTIONAL_TEMPLATE.format(
             pedir=pedir, stc=stc, sdc=self.inputs.distortion_correction, registration=reg,
             confounds=re.sub(r'[\t ]+', ', ', conflist), tr=self.inputs.tr,
-            dummy_scan_desc=dummy_scan_msg, multiecho=multiecho)
+            dummy_scan_desc=dummy_scan_msg, multiecho=multiecho, ornt=self.inputs.orientation)
 
 
 class AboutSummaryInputSpec(BaseInterfaceInputSpec):
