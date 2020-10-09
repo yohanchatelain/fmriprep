@@ -173,6 +173,7 @@ class FunctionalSummaryInputSpec(BaseInterfaceInputSpec):
     dummy_scans = traits.Either(traits.Int(), None, desc='number of dummy scans specified by user')
     algo_dummy_scans = traits.Int(desc='number of dummy scans determined by algorithm')
     echo_idx = traits.List([], usedefault=True, desc="BIDS echo identifiers")
+    orientation = traits.Str(mandatory=True, desc='Orientation of the voxel axes')
 
 
 class FunctionalSummary(SummaryInterface):
@@ -194,12 +195,25 @@ class FunctionalSummary(SummaryInterface):
                 '(boundary-based registration, BBR) - %d dof' % dof,
                 'FreeSurfer <code>mri_coreg</code> - %d dof' % dof],
         }[self.inputs.registration][self.inputs.fallback]
-        pedir = {
-            'i-': 'Left-Right',
-            'i': 'Right-Left',
-            'j-': 'Anterior-Posterior',
-            'j': 'Posterior-Anterior'
-        }.get(self.inputs.pe_direction, 'MISSING - Assuming Anterior-Posterior')
+
+        # Verify PhaseEncodingDirection
+        PEdirs = {
+            'RAS': {
+                'i': 'Left-Right',
+                'i-': 'Right-Left',
+                'j-': 'Anterior-Posterior',
+                'j': 'Posterior-Anterior',
+            },
+            'LAS': {
+                'i-': 'Left-Right',
+                'i': 'Right-Left',
+                'j-': 'Anterior-Posterior',
+                'j': 'Posterior-Anterior',
+            },
+        }
+        pedir = PEdirs.get(self.inputs.orientation, {}).get(
+            self.inputs.pe_direction, "MISSING - Assuming Anterior-Posterior"
+        )
 
         if isdefined(self.inputs.confounds_file):
             with open(self.inputs.confounds_file) as cfh:
