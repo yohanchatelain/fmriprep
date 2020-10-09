@@ -5,6 +5,7 @@
 import os
 import time
 import re
+import logging
 
 from collections import Counter
 from nipype.interfaces.base import (
@@ -13,6 +14,8 @@ from nipype.interfaces.base import (
     SimpleInterface)
 from smriprep.interfaces.freesurfer import ReconAll
 
+
+LOGGER = logging.getLogger('nipype.interface')
 
 SUBJECT_TEMPLATE = """\
 \t<ul class="elem-desc">
@@ -158,7 +161,7 @@ class FunctionalSummaryInputSpec(BaseInterfaceInputSpec):
                                desc='Slice timing correction used')
     distortion_correction = traits.Str(desc='Susceptibility distortion correction method',
                                        mandatory=True)
-    pe_direction = traits.Enum(None, 'i', 'i-', 'j', 'j-', mandatory=True,
+    pe_direction = traits.Enum(None, 'i', 'i-', 'j', 'j-', 'k', 'k-', mandatory=True,
                                desc='Phase-encoding direction detected')
     registration = traits.Enum('FSL', 'FreeSurfer', mandatory=True,
                                desc='Functional/anatomical registration method')
@@ -196,24 +199,7 @@ class FunctionalSummary(SummaryInterface):
                 'FreeSurfer <code>mri_coreg</code> - %d dof' % dof],
         }[self.inputs.registration][self.inputs.fallback]
 
-        # Verify PhaseEncodingDirection
-        PEdirs = {
-            'RAS': {
-                'i': 'Left-Right',
-                'i-': 'Right-Left',
-                'j-': 'Anterior-Posterior',
-                'j': 'Posterior-Anterior',
-            },
-            'LAS': {
-                'i-': 'Left-Right',
-                'i': 'Right-Left',
-                'j-': 'Anterior-Posterior',
-                'j': 'Posterior-Anterior',
-            },
-        }
-        pedir = PEdirs.get(self.inputs.orientation, {}).get(
-            self.inputs.pe_direction, "MISSING - Assuming Anterior-Posterior"
-        )
+        pedir = get_world_pedir(self.inputs.pe_direction, self.inputs.orientation)
 
         if isdefined(self.inputs.confounds_file):
             with open(self.inputs.confounds_file) as cfh:
@@ -265,3 +251,26 @@ class AboutSummary(SummaryInterface):
         return ABOUT_TEMPLATE.format(version=self.inputs.version,
                                      command=self.inputs.command,
                                      date=time.strftime("%Y-%m-%d %H:%M:%S %z"))
+
+
+def get_world_pedir(ornt, pe_direction):
+    """Return world direction of phase encoding"""
+    axes = (
+        ("Right", "Left"),
+        ("Anterior", "Posterior"),
+        ("Superior", "Inferior")
+    )
+    ax_idcs = {"i": 0, "j": 1, "k": 2}
+
+    axcode = ornt[ax_idcs[pe_direction[0]]]
+    inv = pe_direction[1:] == "-"
+
+    for ax in axes:
+        for flip in (ax, ax[::-1]):
+            if flip[not inv].startswith(axcode):
+                return "-".join(flip)
+    LOGGER.warning(
+        "Cannot determine world direction of phase encoding. "
+        f"Orientation: {ornt}; PE dir: {pe_direction}"
+    )
+    return "Could not be determined - assuming Anterior-Posterior"
