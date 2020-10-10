@@ -200,7 +200,7 @@ class FunctionalSummary(SummaryInterface):
                 'FreeSurfer <code>mri_coreg</code> - %d dof' % dof],
         }[self.inputs.registration][self.inputs.fallback]
 
-        pedir = get_world_pedir(self.inputs.pe_direction, self.inputs.orientation)
+        pedir = get_world_pedir(self.inputs.orientation, self.inputs.pe_direction)
 
         if isdefined(self.inputs.confounds_file):
             with open(self.inputs.confounds_file) as cfh:
