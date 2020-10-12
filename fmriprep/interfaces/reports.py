@@ -5,6 +5,7 @@
 import os
 import time
 import re
+import logging
 
 from collections import Counter
 from nipype.interfaces.base import (
@@ -13,6 +14,8 @@ from nipype.interfaces.base import (
     SimpleInterface)
 from smriprep.interfaces.freesurfer import ReconAll
 
+
+LOGGER = logging.getLogger('nipype.interface')
 
 SUBJECT_TEMPLATE = """\
 \t<ul class="elem-desc">
@@ -30,6 +33,7 @@ FUNCTIONAL_TEMPLATE = """\
 \t\t<details open>
 \t\t<summary>Summary</summary>
 \t\t<ul class="elem-desc">
+\t\t\t<li>Original orientation: {ornt}</li>
 \t\t\t<li>Repetition time (TR): {tr:.03g}s</li>
 \t\t\t<li>Phase-encoding (PE) direction: {pedir}</li>
 \t\t\t<li>{multiecho}</li>
@@ -158,7 +162,7 @@ class FunctionalSummaryInputSpec(BaseInterfaceInputSpec):
                                desc='Slice timing correction used')
     distortion_correction = traits.Str(desc='Susceptibility distortion correction method',
                                        mandatory=True)
-    pe_direction = traits.Enum(None, 'i', 'i-', 'j', 'j-', mandatory=True,
+    pe_direction = traits.Enum(None, 'i', 'i-', 'j', 'j-', 'k', 'k-', mandatory=True,
                                desc='Phase-encoding direction detected')
     registration = traits.Enum('FSL', 'FreeSurfer', mandatory=True,
                                desc='Functional/anatomical registration method')
@@ -173,6 +177,7 @@ class FunctionalSummaryInputSpec(BaseInterfaceInputSpec):
     dummy_scans = traits.Either(traits.Int(), None, desc='number of dummy scans specified by user')
     algo_dummy_scans = traits.Int(desc='number of dummy scans determined by algorithm')
     echo_idx = traits.List([], usedefault=True, desc="BIDS echo identifiers")
+    orientation = traits.Str(mandatory=True, desc='Orientation of the voxel axes')
 
 
 class FunctionalSummary(SummaryInterface):
@@ -194,10 +199,8 @@ class FunctionalSummary(SummaryInterface):
                 '(boundary-based registration, BBR) - %d dof' % dof,
                 'FreeSurfer <code>mri_coreg</code> - %d dof' % dof],
         }[self.inputs.registration][self.inputs.fallback]
-        if self.inputs.pe_direction is None:
-            pedir = 'MISSING - Assuming Anterior-Posterior'
-        else:
-            pedir = {'i': 'Left-Right', 'j': 'Anterior-Posterior'}[self.inputs.pe_direction[0]]
+
+        pedir = get_world_pedir(self.inputs.orientation, self.inputs.pe_direction)
 
         if isdefined(self.inputs.confounds_file):
             with open(self.inputs.confounds_file) as cfh:
@@ -233,7 +236,7 @@ class FunctionalSummary(SummaryInterface):
         return FUNCTIONAL_TEMPLATE.format(
             pedir=pedir, stc=stc, sdc=self.inputs.distortion_correction, registration=reg,
             confounds=re.sub(r'[\t ]+', ', ', conflist), tr=self.inputs.tr,
-            dummy_scan_desc=dummy_scan_msg, multiecho=multiecho)
+            dummy_scan_desc=dummy_scan_msg, multiecho=multiecho, ornt=self.inputs.orientation)
 
 
 class AboutSummaryInputSpec(BaseInterfaceInputSpec):
@@ -249,3 +252,27 @@ class AboutSummary(SummaryInterface):
         return ABOUT_TEMPLATE.format(version=self.inputs.version,
                                      command=self.inputs.command,
                                      date=time.strftime("%Y-%m-%d %H:%M:%S %z"))
+
+
+def get_world_pedir(ornt, pe_direction):
+    """Return world direction of phase encoding"""
+    axes = (
+        ("Right", "Left"),
+        ("Anterior", "Posterior"),
+        ("Superior", "Inferior")
+    )
+    ax_idcs = {"i": 0, "j": 1, "k": 2}
+
+    if pe_direction is not None:
+        axcode = ornt[ax_idcs[pe_direction[0]]]
+        inv = pe_direction[1:] == "-"
+
+        for ax in axes:
+            for flip in (ax, ax[::-1]):
+                if flip[not inv].startswith(axcode):
+                    return "-".join(flip)
+    LOGGER.warning(
+        "Cannot determine world direction of phase encoding. "
+        f"Orientation: {ornt}; PE dir: {pe_direction}"
+    )
+    return "Could not be determined - assuming Anterior-Posterior"
