@@ -263,13 +263,14 @@ def get_world_pedir(ornt, pe_direction):
     )
     ax_idcs = {"i": 0, "j": 1, "k": 2}
 
-    axcode = ornt[ax_idcs[pe_direction[0]]]
-    inv = pe_direction[1:] == "-"
+    if pe_direction is not None:
+        axcode = ornt[ax_idcs[pe_direction[0]]]
+        inv = pe_direction[1:] == "-"
 
-    for ax in axes:
-        for flip in (ax, ax[::-1]):
-            if flip[not inv].startswith(axcode):
-                return "-".join(flip)
+        for ax in axes:
+            for flip in (ax, ax[::-1]):
+                if flip[not inv].startswith(axcode):
+                    return "-".join(flip)
     LOGGER.warning(
         "Cannot determine world direction of phase encoding. "
         f"Orientation: {ornt}; PE dir: {pe_direction}"
