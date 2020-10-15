@@ -481,9 +481,9 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html"""
         "--output-layout",
         action="store",
         default="legacy",
-        choices=("yoda", "legacy"),
+        choices=("bids", "legacy"),
         help="Organization of outputs. legacy (default) creates derivative "
-        "datasets as subdirectories of outputs. yoda places fMRIPrep derivatives "
+        "datasets as subdirectories of outputs. bids places fMRIPrep derivatives "
         "directly in the output directory, and defaults to placing FreeSurfer "
         "derivatives in <output-dir>/sourcedata/freesurfer."
     )
@@ -655,12 +655,12 @@ applied."""
     output_layout = config.execution.output_layout
 
     if config.execution.fs_subjects_dir is None:
-        if output_layout == "yoda":
+        if output_layout == "bids":
             config.execution.fs_subjects_dir = output_dir / "sourcedata" / "freesurfer"
         elif output_layout == "legacy":
             config.execution.fs_subjects_dir = output_dir / "freesurfer"
     if config.execution.fmriprep_dir is None:
-        if output_layout == "yoda":
+        if output_layout == "bids":
             config.execution.fmriprep_dir = output_dir
         elif output_layout == "legacy":
             config.execution.fmriprep_dir = output_dir / "fmriprep"
