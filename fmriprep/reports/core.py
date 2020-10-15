@@ -1,3 +1,4 @@
+from pathlib import Path
 from niworkflows.reports.core import Report as _Report
 
 # This patch is intended to permit fMRIPrep 20.2.0 LTS to use the YODA-style
@@ -24,9 +25,9 @@ class Report(_Report):
         self.index(settings["sections"])
 
 
-###
-### The following are the interface used directly by fMRIPrep
-###
+#
+# The following are the interface used directly by fMRIPrep
+#
 
 def run_reports(
     out_dir,
@@ -46,7 +47,7 @@ def run_reports(
 
     >>> from pkg_resources import resource_filename
     >>> from shutil import copytree
-    >>> test_data_path = resource_filename('niworkflows', 'data/tests/work')
+    >>> test_data_path = resource_filename('fmriprep', 'data/tests/work')
     >>> testdir = Path(tmpdir)
     >>> data_dir = copytree(test_data_path, str(testdir / 'work'))
     >>> (testdir / 'fmriprep').mkdir(parents=True, exist_ok=True)
@@ -54,7 +55,7 @@ def run_reports(
     .. doctest::
 
     >>> run_reports(testdir / 'out', '01', 'madeoutuuid', packagename='fmriprep',
-    ...             reportlets_dir=testdir / 'work' / 'reportlets')
+    ...             reportlets_dir=testdir / 'work' / 'reportlets' / 'fmriprep')
     0
 
     .. testcleanup::
