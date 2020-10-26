@@ -41,6 +41,7 @@ jobs:
             else
               echo "Pulling registry image from DockerHub"
               docker pull registry:2
+              mkdir -p /tmp/images
               docker save registry:2 | gzip > /tmp/images/registry.tar.gz
             fi
             docker run -d -p 5000:5000 --restart=always --name=registry \
