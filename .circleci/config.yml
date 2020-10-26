@@ -28,7 +28,9 @@ jobs:
       - run:
           name: Docker authentication
           command: |
-            docker login -u $DOCKER_USER -p $DOCKER_PASS
+            if [[ -n $DOCKER_PASS ]]; then
+              docker login -u $DOCKER_USER -p $DOCKER_PASS
+            fi
       - run:
           name: Set up Docker registry
           command: |
@@ -255,7 +257,9 @@ jobs:
       - run:
           name: Docker authentication
           command: |
-            docker login -u $DOCKER_USER -p $DOCKER_PASS
+            if [[ -n $DOCKER_PASS ]]; then
+              docker login -u $DOCKER_USER -p $DOCKER_PASS
+            fi
       - run:
           name: Set-up a Docker registry
           command: |
@@ -352,7 +356,9 @@ jobs:
       - run:
           name: Docker authentication
           command: |
-            docker login -u $DOCKER_USER -p $DOCKER_PASS
+            if [[ -n $DOCKER_PASS ]]; then
+              docker login -u $DOCKER_USER -p $DOCKER_PASS
+            fi
       - run:
           name: Set-up a Docker registry
           command: |
@@ -557,7 +563,9 @@ jobs:
       - run:
           name: Docker authentication
           command: |
-            docker login -u $DOCKER_USER -p $DOCKER_PASS
+            if [[ -n $DOCKER_PASS ]]; then
+              docker login -u $DOCKER_USER -p $DOCKER_PASS
+            fi
       - run:
           name: Set-up a Docker registry
           command: |
@@ -717,7 +725,9 @@ jobs:
       - run:
           name: Docker authentication
           command: |
-            docker login -u $DOCKER_USER -p $DOCKER_PASS
+            if [[ -n $DOCKER_PASS ]]; then
+              docker login -u $DOCKER_USER -p $DOCKER_PASS
+            fi
       - run:
           name: Set-up a Docker registry
           command: |
@@ -834,7 +844,9 @@ jobs:
       - run:
           name: Docker authentication
           command: |
-            docker login -u $DOCKER_USER -p $DOCKER_PASS
+            if [[ -n $DOCKER_PASS ]]; then
+              docker login -u $DOCKER_USER -p $DOCKER_PASS
+            fi
       - run:
           name: Setup a Docker registry
           command: |
@@ -877,7 +889,9 @@ jobs:
       - run:
           name: Docker authentication
           command: |
-            docker login -u $DOCKER_USER -p $DOCKER_PASS
+            if [[ -n $DOCKER_PASS ]]; then
+              docker login -u $DOCKER_USER -p $DOCKER_PASS
+            fi
       - run:
           name: Set-up a Docker registry
           command: |
