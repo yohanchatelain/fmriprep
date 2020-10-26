@@ -25,6 +25,7 @@ jobs:
             - build-v4-
           paths:
             - /tmp/docker
+            - /tmp/images
       - run:
           name: Docker authentication
           command: |
@@ -34,6 +35,14 @@ jobs:
       - run:
           name: Set up Docker registry
           command: |
+            if [[ -f /tmp/images/registry.tar.gz ]]; then
+              echo "Loading saved registry image"
+              docker load < /tmp/images/registry.tar.gz
+            else
+              echo "Pulling registry image from DockerHub"
+              docker pull registry:2
+              docker save registry:2 | gzip > /tmp/images/registry.tar.gz
+            fi
             docker run -d -p 5000:5000 --restart=always --name=registry \
                 -v /tmp/docker:/var/lib/registry registry:2
       - run:
@@ -104,6 +113,7 @@ jobs:
          key: build-v4-{{ .Branch }}-{{ epoch }}
          paths:
             - /tmp/docker
+            - /tmp/images
 
   get_data:
     machine:
@@ -251,6 +261,7 @@ jobs:
             - build-v4-
           paths:
             - /tmp/docker
+            - /tmp/images
       - restore_cache:
           keys:
             - data-v8-{{ .Revision }}
@@ -263,6 +274,13 @@ jobs:
       - run:
           name: Set-up a Docker registry
           command: |
+            if [[ -f /tmp/images/registry.tar.gz ]]; then
+              echo "Loading saved registry image"
+              docker load < /tmp/images/registry.tar.gz
+            else
+              echo "Pulling registry image from DockerHub"
+              docker pull registry:2
+            fi
             docker run -d -p 5000:5000 --restart=always --name=registry \
                 -v /tmp/docker:/var/lib/registry registry:2
       - run:
@@ -344,6 +362,7 @@ jobs:
             - build-v4-
           paths:
             - /tmp/docker
+            - /tmp/images
       - restore_cache:
           keys:
             - data-v8-{{ .Branch }}-{{ .Revision }}
@@ -362,6 +381,13 @@ jobs:
       - run:
           name: Set-up a Docker registry
           command: |
+            if [[ -f /tmp/images/registry.tar.gz ]]; then
+              echo "Loading saved registry image"
+              docker load < /tmp/images/registry.tar.gz
+            else
+              echo "Pulling registry image from DockerHub"
+              docker pull registry:2
+            fi
             docker run -d -p 5000:5000 --restart=always --name=registry \
                 -v /tmp/docker:/var/lib/registry registry:2
       - run:
@@ -540,6 +566,7 @@ jobs:
             - build-v4-
           paths:
             - /tmp/docker
+            - /tmp/images
       - restore_cache:
           keys:
             - data-v8-{{ .Branch }}-{{ .Revision }}
@@ -569,6 +596,13 @@ jobs:
       - run:
           name: Set-up a Docker registry
           command: |
+            if [[ -f /tmp/images/registry.tar.gz ]]; then
+              echo "Loading saved registry image"
+              docker load < /tmp/images/registry.tar.gz
+            else
+              echo "Pulling registry image from DockerHub"
+              docker pull registry:2
+            fi
             docker run -d -p 5000:5000 --restart=always --name=registry \
                 -v /tmp/docker:/var/lib/registry registry:2
       - run:
@@ -704,6 +738,7 @@ jobs:
             - build-v4-
           paths:
             - /tmp/docker
+            - /tmp/images
       - restore_cache:
           keys:
             - data-v8-{{ .Branch }}-{{ .Revision }}
@@ -731,6 +766,13 @@ jobs:
       - run:
           name: Set-up a Docker registry
           command: |
+            if [[ -f /tmp/images/registry.tar.gz ]]; then
+              echo "Loading saved registry image"
+              docker load < /tmp/images/registry.tar.gz
+            else
+              echo "Pulling registry image from DockerHub"
+              docker pull registry:2
+            fi
             docker run -d -p 5000:5000 --restart=always --name=registry \
                 -v /tmp/docker:/var/lib/registry registry:2
       - run:
@@ -841,6 +883,7 @@ jobs:
             - build-v4-
           paths:
             - /tmp/docker
+            - /tmp/images
       - run:
           name: Docker authentication
           command: |
@@ -850,8 +893,15 @@ jobs:
       - run:
           name: Setup a Docker registry
           command: |
+            if [[ -f /tmp/images/registry.tar.gz ]]; then
+              echo "Loading saved registry image"
+              docker load < /tmp/images/registry.tar.gz
+            else
+              echo "Pulling registry image from DockerHub"
+              docker pull registry:2
+            fi
             docker run -d -p 5000:5000 --restart=always --name=registry \
-              -v /tmp/docker:/var/lib/registry registry:2
+                -v /tmp/docker:/var/lib/registry registry:2
       - run:
           name: Pull images from local registry
           command: |
@@ -886,6 +936,7 @@ jobs:
             - build-v4-
           paths:
             - /tmp/docker
+            - /tmp/images
       - run:
           name: Docker authentication
           command: |
@@ -895,6 +946,13 @@ jobs:
       - run:
           name: Set-up a Docker registry
           command: |
+            if [[ -f /tmp/images/registry.tar.gz ]]; then
+              echo "Loading saved registry image"
+              docker load < /tmp/images/registry.tar.gz
+            else
+              echo "Pulling registry image from DockerHub"
+              docker pull registry:2
+            fi
             docker run -d -p 5000:5000 --restart=always --name=registry \
                 -v /tmp/docker:/var/lib/registry registry:2
       - run:
