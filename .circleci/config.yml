@@ -17,7 +17,6 @@ jobs:
               echo "Only docs build"
               circleci step halt
             fi
-
       - restore_cache:
           keys:
             - build-v4-{{ .Branch }}-{{ epoch }}
@@ -26,6 +25,10 @@ jobs:
             - build-v4-
           paths:
             - /tmp/docker
+      - run:
+          name: Docker authentication
+          command: |
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
       - run:
           name: Set up Docker registry
           command: |
@@ -250,6 +253,10 @@ jobs:
           keys:
             - data-v8-{{ .Revision }}
       - run:
+          name: Docker authentication
+          command: |
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
+      - run:
           name: Set-up a Docker registry
           command: |
             docker run -d -p 5000:5000 --restart=always --name=registry \
@@ -342,6 +349,10 @@ jobs:
             - ds005-anat-v18-{{ .Branch }}
             - ds005-anat-v18-master
             - ds005-anat-v18-
+      - run:
+          name: Docker authentication
+          command: |
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
       - run:
           name: Set-up a Docker registry
           command: |
@@ -544,6 +555,10 @@ jobs:
             pip install --upgrade pip setuptools
             pip install --upgrade /tmp/src/fmriprep/wrapper/
       - run:
+          name: Docker authentication
+          command: |
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
+      - run:
           name: Set-up a Docker registry
           command: |
             docker run -d -p 5000:5000 --restart=always --name=registry \
@@ -700,6 +715,10 @@ jobs:
             pip install --upgrade pip setuptools
             pip install --upgrade /tmp/src/fmriprep/wrapper/
       - run:
+          name: Docker authentication
+          command: |
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
+      - run:
           name: Set-up a Docker registry
           command: |
             docker run -d -p 5000:5000 --restart=always --name=registry \
@@ -813,6 +832,10 @@ jobs:
           paths:
             - /tmp/docker
       - run:
+          name: Docker authentication
+          command: |
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
+      - run:
           name: Setup a Docker registry
           command: |
             docker run -d -p 5000:5000 --restart=always --name=registry \
@@ -826,11 +849,8 @@ jobs:
           name: Deploy to Docker Hub
           no_output_timeout: 40m
           command: |
-            if [[ -n "$DOCKER_PASS" ]]; then
-              docker login -u $DOCKER_USER -p $DOCKER_PASS
-              docker tag nipreps/fmriprep nipreps/fmriprep:${CIRCLE_BRANCH#docker/}
-              docker push nipreps/fmriprep:${CIRCLE_BRANCH#docker/}
-            fi
+            docker tag nipreps/fmriprep nipreps/fmriprep:${CIRCLE_BRANCH#docker/}
+            docker push nipreps/fmriprep:${CIRCLE_BRANCH#docker/}
 
   deploy_docker:
     machine:
@@ -854,6 +874,10 @@ jobs:
             - build-v4-
           paths:
             - /tmp/docker
+      - run:
+          name: Docker authentication
+          command: |
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
       - run:
           name: Set-up a Docker registry
           command: |
