@@ -6,7 +6,7 @@ A Python module to maintain unique, run-wide *fMRIPrep* settings.
 This module implements the memory structures to keep a consistent, singleton config.
 Settings are passed across processes via filesystem, and a copy of the settings for
 each run and subject is left under
-``<output_dir>/sub-<participant_id>/log/<run_unique_id>/fmriprep.toml``.
+``<fmriprep_dir>/sub-<participant_id>/log/<run_unique_id>/fmriprep.toml``.
 Settings are stored using :abbr:`ToML (Tom's Markup Language)`.
 The module has a :py:func:`~fmriprep.config.to_filename` function to allow writting out
 the settings to hard disk in *ToML* format, which looks like:
@@ -370,6 +370,8 @@ class execution(_Config):
     """Debug mode(s)."""
     echo_idx = None
     """Select a particular echo for multi-echo EPI datasets."""
+    fmriprep_dir = None
+    """Root of fMRIPrep BIDS Derivatives dataset. Depends on output_layout."""
     fs_license_file = _fs_license
     """An existing file containing a FreeSurfer license."""
     fs_subjects_dir = None
@@ -388,6 +390,8 @@ class execution(_Config):
     """Do not monitor *fMRIPrep* using Sentry.io."""
     output_dir = None
     """Folder where derivatives will be stored."""
+    output_layout = None
+    """Layout of derivatives within output_dir."""
     output_spaces = None
     """List of (non)standard spaces designated (with the ``--output-spaces`` flag of
     the command line) as spatial references for outputs."""
@@ -412,6 +416,7 @@ class execution(_Config):
         "anat_derivatives",
         "bids_dir",
         "bids_database_dir",
+        "fmriprep_dir",
         "fs_license_file",
         "fs_subjects_dir",
         "layout",
