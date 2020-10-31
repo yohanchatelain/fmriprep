@@ -515,7 +515,7 @@ jobs:
             if [ -f /tmp/.nofasttrack ]; then
                 CHECK_OUTPUTS_FILE="${DATASET}_bids_outputs.txt"
             fi
-            find /tmp/${DATASET}/bids \( -path */figures -o -path */log -o -path */sourcedata \) -prune -o -name "*" -print | sed s+/tmp/${DATASET}/++ | sort > /tmp/${DATASET}/test/outputs.out
+            find /tmp/${DATASET}/bids \( -path */figures -o -path */log \) -prune -o -name "*" -print | sed s+/tmp/${DATASET}/++ | grep -v sourcedata | sort > /tmp/${DATASET}/test/outputs.out
             diff /tmp/src/fmriprep/.circleci/${CHECK_OUTPUTS_FILE} /tmp/${DATASET}/test/outputs.out
             exit $?
       - run:
