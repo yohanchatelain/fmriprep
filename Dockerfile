@@ -139,6 +139,8 @@ RUN conda install -y python=3.7.1 \
                      graphviz=2.40.1 \
                      traits=4.6.0 \
                      zlib; sync && \
+    chmod -R a+rX /usr/local/miniconda; sync && \
+    chmod +x /usr/local/miniconda/bin/*; sync && \
     conda clean -y --all && sync && \
     rm -rf ~/.conda ~/.cache/pip/*; sync
 
