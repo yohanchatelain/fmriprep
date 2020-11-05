@@ -38,7 +38,8 @@ def prepare_timing_parameters(metadata):
     """
     timing_parameters = {
         key: metadata[key]
-        for key in ("RepetitionTime", "VolumeTiming", "DelayTime", "AcquisitionDuration", "SliceTiming")
+        for key in ("RepetitionTime", "VolumeTiming", "DelayTime",
+                    "AcquisitionDuration", "SliceTiming")
         if key in metadata}
 
     if "SliceTiming" in timing_parameters:
