@@ -99,6 +99,8 @@ def init_func_derivatives_wf(
     from niworkflows.interfaces.utility import KeySelect
     from smriprep.workflows.outputs import _bids_relative
 
+    timing_parameters = prepare_timing_parameters(metadata)
+
     nonstd_spaces = set(spaces.get_nonstandard())
     workflow = Workflow(name=name)
 
@@ -150,8 +152,7 @@ def init_func_derivatives_wf(
         ds_bold_native = pe.Node(
             DerivativesDataSink(
                 base_directory=output_dir, desc='preproc', compress=True, SkullStripped=False,
-                RepetitionTime=metadata.get('RepetitionTime'), TaskName=metadata.get('TaskName'),
-                dismiss_entities=("echo",)),
+                TaskName=metadata.get('TaskName'), **timing_parameters),
             name='ds_bold_native', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_native_ref = pe.Node(
@@ -180,8 +181,7 @@ def init_func_derivatives_wf(
         ds_bold_t1 = pe.Node(
             DerivativesDataSink(
                 base_directory=output_dir, space='T1w', desc='preproc', compress=True,
-                SkullStripped=False, RepetitionTime=metadata.get('RepetitionTime'),
-                TaskName=metadata.get('TaskName'), dismiss_entities=("echo",)),
+                SkullStripped=False, TaskName=metadata.get('TaskName'), **timing_parameters),
             name='ds_bold_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_t1_ref = pe.Node(
@@ -234,7 +234,7 @@ def init_func_derivatives_wf(
         ds_aroma_std = pe.Node(
             DerivativesDataSink(
                 base_directory=output_dir, space='MNI152NLin6Asym', desc='smoothAROMAnonaggr',
-                compress=True),
+                compress=True, TaskName=metadata.get('TaskName'), **timing_parameters),
             name='ds_aroma_std', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
 
@@ -267,8 +267,7 @@ def init_func_derivatives_wf(
         ds_bold_std = pe.Node(
             DerivativesDataSink(
                 base_directory=output_dir, desc='preproc', compress=True, SkullStripped=False,
-                RepetitionTime=metadata.get('RepetitionTime'), TaskName=metadata.get('TaskName'),
-                dismiss_entities=("echo",)),
+                TaskName=metadata.get('TaskName'), **timing_parameters),
             name='ds_bold_std', run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_std_ref = pe.Node(
             DerivativesDataSink(base_directory=output_dir, suffix='boldref', compress=True,
@@ -356,7 +355,8 @@ def init_func_derivatives_wf(
                                 run_without_submitting=True)
 
         ds_bold_surfs = pe.MapNode(DerivativesDataSink(
-            base_directory=output_dir, extension="func.gii", dismiss_entities=("echo",)),
+            base_directory=output_dir, extension=".func.gii",
+            TaskName=metadata.get('TaskName'), **timing_parameters),
             iterfield=['in_file', 'hemi'], name='ds_bold_surfs',
             run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
 
@@ -374,7 +374,8 @@ def init_func_derivatives_wf(
     # CIFTI output
     if cifti_output:
         ds_bold_cifti = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix='bold', compress=False, dismiss_entities=("echo",)),
+            base_directory=output_dir, suffix='bold', compress=False,
+            TaskName=metadata.get('TaskName'), **timing_parameters),
             name='ds_bold_cifti', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         workflow.connect([
