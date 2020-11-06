@@ -1,3 +1,22 @@
+20.2.1 (November 06, 2020)
+==========================
+Bug-fix release in the 20.2.x LTS series.
+
+This release adds missing metadata to GIFTI and CIFTI-2 derivatives and fixes a logging
+bug affecting a small number of datasets.
+
+Additionally the ``--output-layout bids`` flag will now output fMRIPrep derivatives directly
+into the output directory, nesting FreeSurfer derivatives by default in
+``<output>/sourcedata/freesurfer``. This layout allows the output root to be a valid BIDS
+Derivatives dataset, simplifying data management and provenance tracking with content tracking
+tools, such as `DataLad <https://handbook.datalad.org/>`__. This layout will likely become the
+default in future release series.
+
+  * ENH: Output TaskName and timing metadata for all resampled BOLD series (#2320)
+  * ENH: Add --output-layout CLI option to enable BIDS (YODA) mode (#2303)
+  * ENH: Add Docker authentication to increase pull rate limit (#2316)
+  * FIX: Specify logger for warning (#2298)
+
 20.2.0 (September 28, 2020)
 ===========================
 With this third minor release series of 2020,
