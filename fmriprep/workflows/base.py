@@ -64,7 +64,7 @@ def init_fmriprep_wf():
         single_subject_wf = init_single_subject_wf(subject_id)
 
         single_subject_wf.config['execution']['crashdump_dir'] = str(
-            config.execution.output_dir / "fmriprep" / "-".join(("sub", subject_id))
+            config.execution.fmriprep_dir / f"sub-{subject_id}"
             / "log" / config.execution.run_uuid
         )
         for node in single_subject_wf._get_all_nodes():
@@ -76,7 +76,7 @@ def init_fmriprep_wf():
             fmriprep_wf.add_nodes([single_subject_wf])
 
         # Dump a copy of the config file into the log directory
-        log_dir = config.execution.output_dir / 'fmriprep' / 'sub-{}'.format(subject_id) \
+        log_dir = config.execution.fmriprep_dir / f"sub-{subject_id}" \
             / 'log' / config.execution.run_uuid
         log_dir.mkdir(exist_ok=True, parents=True)
         config.to_filename(log_dir / 'fmriprep.toml')
@@ -202,7 +202,7 @@ It is released under the [CC0]\
 
 """.format(nilearn_ver=NILEARN_VERSION)
 
-    output_dir = str(config.execution.output_dir)
+    fmriprep_dir = str(config.execution.fmriprep_dir)
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['subjects_dir']),
                         name='inputnode')
@@ -225,12 +225,12 @@ It is released under the [CC0]\
                     name='about', run_without_submitting=True)
 
     ds_report_summary = pe.Node(
-        DerivativesDataSink(base_directory=output_dir, desc='summary', datatype="figures",
+        DerivativesDataSink(base_directory=fmriprep_dir, desc='summary', datatype="figures",
                             dismiss_entities=("echo",)),
         name='ds_report_summary', run_without_submitting=True)
 
     ds_report_about = pe.Node(
-        DerivativesDataSink(base_directory=output_dir, desc='about', datatype="figures",
+        DerivativesDataSink(base_directory=fmriprep_dir, desc='about', datatype="figures",
                             dismiss_entities=("echo",)),
         name='ds_report_about', run_without_submitting=True)
 
@@ -243,7 +243,7 @@ It is released under the [CC0]\
         hires=config.workflow.hires,
         longitudinal=config.workflow.longitudinal,
         omp_nthreads=config.nipype.omp_nthreads,
-        output_dir=output_dir,
+        output_dir=fmriprep_dir,
         skull_strip_fixed_seed=config.workflow.skull_strip_fixed_seed,
         skull_strip_mode=config.workflow.skull_strip_t1w,
         skull_strip_template=Reference.from_string(
@@ -285,7 +285,7 @@ It is released under the [CC0]\
     # Overwrite ``out_path_base`` of smriprep's DataSinks
     for node in workflow.list_node_names():
         if node.split('.')[-1].startswith('ds_'):
-            workflow.get_node(node).interface.out_path_base = 'fmriprep'
+            workflow.get_node(node).interface.out_path_base = ""
 
     if anat_only:
         return workflow

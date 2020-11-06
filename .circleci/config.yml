@@ -467,10 +467,11 @@ jobs:
       - store_artifacts:
           path: /tmp/ds005/derivatives
       - run:
-          name: Move intermediate results for second run
+          name: Copy intermediate results for re-runs
           command: |
             mkdir -p /tmp/${DATASET}/derivatives_partial
             sudo cp -a /tmp/${DATASET}/work /tmp/${DATASET}/work_partial
+            sudo cp -a /tmp/${DATASET}/work /tmp/${DATASET}/work_bids
             sudo rm -rf /tmp/${DATASET}/work_partial/fmriprep_wf/single_subject_01_wf/func_preproc_task_mixedgamblestask_run_02_wf/ica_aroma_wf
       - run:
           name: Checking outputs of full fMRIPrep run
@@ -481,6 +482,40 @@ jobs:
                 CHECK_OUTPUTS_FILE="${DATASET}_outputs.txt"
             fi
             find /tmp/${DATASET}/derivatives \( -path */figures -o -path */log \) -prune -o -name "*" -print | sed s+/tmp/${DATASET}/derivatives/++ | sort > /tmp/${DATASET}/test/outputs.out
+            diff /tmp/src/fmriprep/.circleci/${CHECK_OUTPUTS_FILE} /tmp/${DATASET}/test/outputs.out
+            exit $?
+      - run:
+          name: Prepare BIDS Derivatives dataset
+          command: |
+            mkdir -p /tmp/${DATASET}/bids/sourcedata
+            cp -r /tmp/${DATASET}/freesurfer /tmp/${DATASET}/bids/sourcedata/freesurfer
+      - run:
+          name: Re-run with BIDS layout
+          no_output_timeout: 2h
+          command: |
+            FASTRACK_ARG="--anat-derivatives /tmp/${DATASET}/smriprep-0.6"
+            if [ -f /tmp/.nofasttrack ]; then
+                FASTRACK_ARG=""
+            fi
+            fmriprep-docker -i nipreps/fmriprep:latest \
+                -e FMRIPREP_DEV 1 -u $(id -u) \
+                --network none \
+                --config $PWD/nipype.cfg -w /tmp/${DATASET}/work_bids \
+                /tmp/data/${DATASET}/ /tmp/${DATASET}/bids participant \
+                ${FASTRACK_ARG} \
+                --output-layout bids \
+                --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
+                --output-spaces MNI152NLin2009cAsym \
+                --nthreads 2 -vv
+      - run:
+          name: Checking outputs of partial fMRIPrep run
+          command: |
+            mkdir -p /tmp/${DATASET}/test
+            CHECK_OUTPUTS_FILE="${DATASET}_bids_fasttrack_outputs.txt"
+            if [ -f /tmp/.nofasttrack ]; then
+                CHECK_OUTPUTS_FILE="${DATASET}_bids_outputs.txt"
+            fi
+            find /tmp/${DATASET}/bids \( -path */figures -o -path */log \) -prune -o -name "*" -print | sed s+/tmp/${DATASET}/++ | grep -v sourcedata | sort > /tmp/${DATASET}/test/outputs.out
             diff /tmp/src/fmriprep/.circleci/${CHECK_OUTPUTS_FILE} /tmp/${DATASET}/test/outputs.out
             exit $?
       - run:

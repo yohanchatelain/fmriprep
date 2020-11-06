@@ -1,12 +1,59 @@
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
 """Writing out derivative files."""
+import numpy as np
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 
 from fmriprep import config
 from fmriprep.config import DEFAULT_MEMORY_MIN_GB
 from fmriprep.interfaces import DerivativesDataSink
+
+
+def prepare_timing_parameters(metadata):
+    """ Convert initial timing metadata to post-realignment timing metadata
+
+    In particular, SliceTiming metadata is invalid once STC or any realignment is applied,
+    as a matrix of voxels no longer corresponds to an acquisition slice.
+    Therefore, if SliceTiming is present in the metadata dictionary, and a sparse
+    acquisition paradigm is detected, DelayTime or AcquisitionDuration must be derived to
+    preserve the timing interpretation.
+
+    Examples
+    --------
+
+    >>> prepare_timing_parameters(dict(RepetitionTime=2))
+    {'RepetitionTime': 2}
+    >>> prepare_timing_parameters(dict(RepetitionTime=2, DelayTime=0.5))
+    {'RepetitionTime': 2, 'DelayTime': 0.5}
+    >>> prepare_timing_parameters(dict(RepetitionTime=2, SliceTiming=[0.0, 0.2, 0.4, 0.6]))
+    {'RepetitionTime': 2, 'DelayTime': 1.2}
+    >>> prepare_timing_parameters(dict(VolumeTiming=[0.0, 1.0, 2.0, 5.0, 6.0, 7.0],
+    ...                                AcquisitionDuration=1.0))
+    {'VolumeTiming': [0.0, 1.0, 2.0, 5.0, 6.0, 7.0], 'AcquisitionDuration': 1.0}
+    >>> prepare_timing_parameters(dict(VolumeTiming=[0.0, 1.0, 2.0, 5.0, 6.0, 7.0],
+    ...                                SliceTiming=[0.0, 0.2, 0.4, 0.6, 0.8]))
+    {'VolumeTiming': [0.0, 1.0, 2.0, 5.0, 6.0, 7.0], 'AcquisitionDuration': 1.0}
+
+    """
+    timing_parameters = {
+        key: metadata[key]
+        for key in ("RepetitionTime", "VolumeTiming", "DelayTime",
+                    "AcquisitionDuration", "SliceTiming")
+        if key in metadata}
+
+    if "SliceTiming" in timing_parameters:
+        st = sorted(timing_parameters.pop("SliceTiming"))
+        TA = st[-1] + (st[1] - st[0])  # Final slice onset - slice duration
+        # For constant TR paradigms, use DelayTime
+        if "RepetitionTime" in timing_parameters:
+            TR = timing_parameters["RepetitionTime"]
+            if not np.isclose(TR, TA) and TA < TR:
+                timing_parameters["DelayTime"] = TR - TA
+        # For variable TR paradigms, use AcquisitionDuration
+        elif "VolumeTiming" in timing_parameters:
+            timing_parameters["AcquisitionDuration"] = TA
+    return timing_parameters
 
 
 def init_func_derivatives_wf(
@@ -52,6 +99,8 @@ def init_func_derivatives_wf(
     from niworkflows.engine.workflows import LiterateWorkflow as Workflow
     from niworkflows.interfaces.utility import KeySelect
     from smriprep.workflows.outputs import _bids_relative
+
+    timing_parameters = prepare_timing_parameters(metadata)
 
     nonstd_spaces = set(spaces.get_nonstandard())
     workflow = Workflow(name=name)
@@ -104,8 +153,7 @@ def init_func_derivatives_wf(
         ds_bold_native = pe.Node(
             DerivativesDataSink(
                 base_directory=output_dir, desc='preproc', compress=True, SkullStripped=False,
-                RepetitionTime=metadata.get('RepetitionTime'), TaskName=metadata.get('TaskName'),
-                dismiss_entities=("echo",)),
+                TaskName=metadata.get('TaskName'), **timing_parameters),
             name='ds_bold_native', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_native_ref = pe.Node(
@@ -134,8 +182,7 @@ def init_func_derivatives_wf(
         ds_bold_t1 = pe.Node(
             DerivativesDataSink(
                 base_directory=output_dir, space='T1w', desc='preproc', compress=True,
-                SkullStripped=False, RepetitionTime=metadata.get('RepetitionTime'),
-                TaskName=metadata.get('TaskName'), dismiss_entities=("echo",)),
+                SkullStripped=False, TaskName=metadata.get('TaskName'), **timing_parameters),
             name='ds_bold_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_t1_ref = pe.Node(
@@ -188,7 +235,7 @@ def init_func_derivatives_wf(
         ds_aroma_std = pe.Node(
             DerivativesDataSink(
                 base_directory=output_dir, space='MNI152NLin6Asym', desc='smoothAROMAnonaggr',
-                compress=True),
+                compress=True, TaskName=metadata.get('TaskName'), **timing_parameters),
             name='ds_aroma_std', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
 
@@ -221,8 +268,7 @@ def init_func_derivatives_wf(
         ds_bold_std = pe.Node(
             DerivativesDataSink(
                 base_directory=output_dir, desc='preproc', compress=True, SkullStripped=False,
-                RepetitionTime=metadata.get('RepetitionTime'), TaskName=metadata.get('TaskName'),
-                dismiss_entities=("echo",)),
+                TaskName=metadata.get('TaskName'), **timing_parameters),
             name='ds_bold_std', run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_std_ref = pe.Node(
             DerivativesDataSink(base_directory=output_dir, suffix='boldref', compress=True,
@@ -310,7 +356,8 @@ def init_func_derivatives_wf(
                                 run_without_submitting=True)
 
         ds_bold_surfs = pe.MapNode(DerivativesDataSink(
-            base_directory=output_dir, extension="func.gii", dismiss_entities=("echo",)),
+            base_directory=output_dir, extension=".func.gii",
+            TaskName=metadata.get('TaskName'), **timing_parameters),
             iterfield=['in_file', 'hemi'], name='ds_bold_surfs',
             run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
 
@@ -328,7 +375,8 @@ def init_func_derivatives_wf(
     # CIFTI output
     if cifti_output:
         ds_bold_cifti = pe.Node(DerivativesDataSink(
-            base_directory=output_dir, suffix='bold', compress=False, dismiss_entities=("echo",)),
+            base_directory=output_dir, suffix='bold', compress=False,
+            TaskName=metadata.get('TaskName'), **timing_parameters),
             name='ds_bold_cifti', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         workflow.connect([

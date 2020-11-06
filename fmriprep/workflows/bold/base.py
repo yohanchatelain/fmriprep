@@ -151,7 +151,7 @@ def init_func_preproc_wf(bold_file):
     omp_nthreads = config.nipype.omp_nthreads
     freesurfer = config.workflow.run_reconall
     spaces = config.workflow.spaces
-    output_dir = str(config.execution.output_dir)
+    fmriprep_dir = str(config.execution.fmriprep_dir)
 
     # Extract BIDS entities and metadata from BOLD file(s)
     entities = extract_entities(bold_file)
@@ -281,7 +281,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         cifti_output=config.workflow.cifti_output,
         freesurfer=freesurfer,
         metadata=metadata,
-        output_dir=output_dir,
+        output_dir=fmriprep_dir,
         spaces=spaces,
         use_aroma=config.workflow.use_aroma,
     )
@@ -576,12 +576,12 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         # And ensure echo is dropped from report
         for node in fmap_unwarp_report_wf.list_node_names():
             if node.split('.')[-1].startswith('ds_'):
-                fmap_unwarp_report_wf.get_node(node).interface.out_path_base = 'fmriprep'
+                fmap_unwarp_report_wf.get_node(node).interface.out_path_base = ""
                 fmap_unwarp_report_wf.get_node(node).inputs.dismiss_entities = ("echo",)
 
         for node in bold_sdc_wf.list_node_names():
             if node.split('.')[-1].startswith('ds_'):
-                bold_sdc_wf.get_node(node).interface.out_path_base = 'fmriprep'
+                bold_sdc_wf.get_node(node).interface.out_path_base = ""
                 bold_sdc_wf.get_node(node).inputs.dismiss_entities = ("echo",)
 
         if 'syn' in fmaps:
@@ -613,7 +613,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             # And ensure echo is dropped from report
             for node in syn_unwarp_report_wf.list_node_names():
                 if node.split('.')[-1].startswith('ds_'):
-                    syn_unwarp_report_wf.get_node(node).interface.out_path_base = 'fmriprep'
+                    syn_unwarp_report_wf.get_node(node).interface.out_path_base = ""
                     syn_unwarp_report_wf.get_node(node).inputs.dismiss_entities = ("echo",)
 
     # Map final BOLD mask into T1w space (if required)
@@ -857,8 +857,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         mem_gb=config.DEFAULT_MEMORY_MIN_GB)
 
     ds_report_validation = pe.Node(
-        DerivativesDataSink(base_directory=output_dir, desc='validation', datatype="figures",
-                            dismiss_entities=("echo",)),
+        DerivativesDataSink(desc='validation', datatype="figures", dismiss_entities=("echo",)),
         name='ds_report_validation', run_without_submitting=True,
         mem_gb=config.DEFAULT_MEMORY_MIN_GB)
 
@@ -871,7 +870,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     # Fill-in datasinks of reportlets seen so far
     for node in workflow.list_node_names():
         if node.split('.')[-1].startswith('ds_report'):
-            workflow.get_node(node).inputs.base_directory = output_dir
+            workflow.get_node(node).inputs.base_directory = fmriprep_dir
             workflow.get_node(node).inputs.source_file = ref_file
 
     return workflow
