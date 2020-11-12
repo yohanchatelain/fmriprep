@@ -1013,14 +1013,14 @@ jobs:
 
   test_deploy_pypi:
     docker:
-      - image: circleci/python:3.7.4
+      - image: circleci/python:3.8.5
     working_directory: /tmp/src/fmriprep
     steps:
       - checkout
       - run:
           name: Build fMRIPrep
           command: |
-            pip install --user --upgrade twine importlib-metadata  # For use in checking distributions
+            python -m pip install --user twine  # For use in checking distributions
             THISVERSION=$( python get_version.py )
             THISVERSION=${THISVERSION%.dirty*}
             THISVERSION=${CIRCLE_TAG:-$THISVERSION}
@@ -1029,7 +1029,7 @@ jobs:
             pip install --upgrade "pip>=19.1" numpy
             echo "${CIRCLE_TAG:-$THISVERSION}" > fmriprep/VERSION
             python setup.py sdist
-            pip wheel --no-deps -w dist/ .
+            python -m pip wheel --no-deps -w dist/ .
       - store_artifacts:
           path: /tmp/src/fmriprep/dist
       - run:
@@ -1038,11 +1038,11 @@ jobs:
             THISVERSION=$( python get_version.py )
             THISVERSION=${THISVERSION%.dirty*}
             THISVERSION=${CIRCLE_TAG:-$THISVERSION}
-            twine check dist/fmriprep*.tar.gz
+            python -m twine check dist/fmriprep*.tar.gz
             virtualenv --python=python sdist
             source sdist/bin/activate
-            pip install --upgrade "pip>=19.1" numpy
-            pip install dist/fmriprep*.tar.gz
+            python -m pip install --upgrade "pip>=19.1" numpy
+            python -m pip install dist/fmriprep*.tar.gz
             which fmriprep | grep sdist\\/bin
             INSTALLED_VERSION=$(fmriprep --version)
             INSTALLED_VERSION=${INSTALLED_VERSION%$'\r'}
@@ -1056,10 +1056,10 @@ jobs:
             THISVERSION=$( python get_version.py )
             THISVERSION=${THISVERSION%.dirty*}
             THISVERSION=${CIRCLE_TAG:-$THISVERSION}
-            twine check dist/fmriprep*.whl
+            python -m twine check dist/fmriprep*.whl
             virtualenv --python=python wheel
             source wheel/bin/activate
-            pip install dist/fmriprep*.whl
+            python -m pip install dist/fmriprep*.whl
             which fmriprep | grep wheel\\/bin
             INSTALLED_VERSION=$(fmriprep --version)
             INSTALLED_VERSION=${INSTALLED_VERSION%$'\r'}
@@ -1075,16 +1075,16 @@ jobs:
             cd wrapper
             virtualenv --python=python build
             source build/bin/activate
-            pip install --upgrade "pip>=19.1"
+            python -m pip install --upgrade "pip>=19.1"
             sed -i -E "s/(__version__ = )'[A-Za-z0-9.-]+'/\1'${CIRCLE_TAG:-$THISVERSION}'/" fmriprep_docker.py
             python setup.py sdist
-            pip wheel --no-deps -w dist/ .
+            python -m pip wheel --no-deps -w dist/ .
       - store_artifacts:
           path: /tmp/src/fmriprep/wrapper/dist
 
   deploy_pypi:
     docker:
-      - image: circleci/python:3.7.4
+      - image: circleci/python:3.8.5
     working_directory: /tmp/src/fmriprep
     steps:
       - checkout
@@ -1094,10 +1094,10 @@ jobs:
             THISVERSION=$( python get_version.py )
             virtualenv --python=python build
             source build/bin/activate
-            pip install --upgrade "pip>=19.1"
+            python -m pip install --upgrade "pip>=19.1"
             echo "${CIRCLE_TAG:-$THISVERSION}" > fmriprep/VERSION
             python setup.py sdist
-            pip wheel --no-deps -w dist/ .
+            python -m pip wheel --no-deps -w dist/ .
       - run:
           name: Build fmriprep-docker
           command: |
@@ -1105,15 +1105,15 @@ jobs:
             cd wrapper
             virtualenv --python=python build
             source build/bin/activate
-            pip install --upgrade "pip>=19.1"
+            python -m pip install --upgrade "pip>=19.1"
             sed -i -E "s/(__version__ = )'[A-Za-z0-9.-]+'/\1'${CIRCLE_TAG:-$THISVERSION}'/" fmriprep_docker.py
             python setup.py sdist
-            pip wheel --no-deps -w dist/ .
+            python -m pip wheel --no-deps -w dist/ .
       - run:
           name: Upload packages to PyPI
           command: |
-            pip install --user --upgrade twine importlib-metadata
-            twine upload dist/fmriprep* wrapper/dist/fmriprep*
+            python -m pip install --user twine
+            python -m twine upload dist/fmriprep* wrapper/dist/fmriprep*
 
   deployable:
     docker:
