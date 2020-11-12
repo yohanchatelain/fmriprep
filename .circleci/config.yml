@@ -1020,7 +1020,7 @@ jobs:
       - run:
           name: Build fMRIPrep
           command: |
-            pip install --user twine  # For use in checking distributions
+            pip install --user --upgrade twine importlib-metadata  # For use in checking distributions
             THISVERSION=$( python get_version.py )
             THISVERSION=${THISVERSION%.dirty*}
             THISVERSION=${CIRCLE_TAG:-$THISVERSION}
@@ -1112,7 +1112,7 @@ jobs:
       - run:
           name: Upload packages to PyPI
           command: |
-            pip install --user twine
+            pip install --user --upgrade twine importlib-metadata
             twine upload dist/fmriprep* wrapper/dist/fmriprep*
 
   deployable:
