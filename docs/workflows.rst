@@ -61,8 +61,8 @@ single reference template (see `Longitudinal processing`_).
     In the case of brain-extracted (skull-stripped) T1w images, attempting to perform
     brain extraction again will often have poor results and may cause *fMRIPrep* to crash.
     *fMRIPrep* can attempt to detect these cases using a heuristic to check if the
-    T1w image is already masked. This must be explicitly requested with
-    ``---skull-strip-t1w auto``.
+    T1w image is already masked.
+    This must be explicitly requested with ``---skull-strip-t1w auto``.
     If this heuristic fails, and you know your images are skull-stripped, you can skip brain
     extraction with ``--skull-strip-t1w skip``. Likewise, if you know your images are not skull-stripped and the heuristic incorrectly
     determines that they are, you can force skull stripping with ``--skull-strip-t1w force`` which is the current default behavior.
