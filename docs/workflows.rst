@@ -67,7 +67,7 @@ single reference template (see `Longitudinal processing`_).
     extraction with ``--skull-strip-t1w skip``.
     Likewise, if you know your images are not skull-stripped and the heuristic incorrectly
     determines that they are, you can force skull stripping with ``--skull-strip-t1w force``,
-     which is the current default behavior.
+    which is the current default behavior.
 
 See also *sMRIPrep*'s
 :py:func:`~smriprep.workflows.anatomical.init_anat_preproc_wf`.
