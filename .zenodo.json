@@ -3,6 +3,12 @@
   "description": "<p>fMRIPrep is a robust and easy-to-use pipeline for preprocessing of diverse fMRI data. The transparent workflow dispenses of manual intervention, thereby ensuring the reproducibility of the results.</p>",
   "contributors": [
     {
+      "affiliation": "Speech & Hearing Bioscience & Technology Program, Harvard University",
+      "name": "Mentch, Jeff",
+      "orcid": "0000-0002-7762-8678",
+      "type": "Researcher"
+    },
+    {
       "affiliation": "Centre for Modern Interdisciplinary Technologies, Nicolaus Copernicus University in Toru\u0144",
       "name": "Finc, Karolina",
       "orcid": "0000-0002-0157-030X",
