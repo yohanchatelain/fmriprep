@@ -421,9 +421,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         inputnode.inputs.bold_file = ref_file  # Replace reference w first echo
 
         join_echos = pe.JoinNode(
-            niu.IdentityInterface(fields=['bold_files', 'skullstripped_bold_files']),
+            niu.IdentityInterface(fields=['bold_files']),
             joinsource=('meepi_echos' if run_stc is True else 'boldbuffer'),
-            joinfield=['bold_files', 'skullstripped_bold_files'],
+            joinfield=['bold_files'],
             name='join_echos'
         )
 
@@ -539,12 +539,12 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('outputnode.bold', 'bold_files')]),
             (join_echos, final_boldref_wf, [
                 ('bold_files', 'inputnode.bold_file')]),
-            (bold_bold_trans_wf, skullstrip_bold_wf, [
-                ('outputnode.bold', 'inputnode.in_file')]),
-            (skullstrip_bold_wf, join_echos, [
-                ('outputnode.skull_stripped_file', 'skullstripped_bold_files')]),
+            (join_echos, skullstrip_bold_wf, [
+                (('bold_files', pop_file), 'inputnode.in_file')]),
+            (skullstrip_bold_wf, bold_t2s_wf, [
+                ('outputnode.mask_file', 'inputnode.mask_file')]),
             (join_echos, bold_t2s_wf, [
-                ('skullstripped_bold_files', 'inputnode.bold_file')]),
+                ('bold_files', 'inputnode.bold_file')]),
             (bold_t2s_wf, bold_confounds_wf, [
                 ('outputnode.bold', 'inputnode.bold')]),
             (bold_t2s_wf, split_opt_comb, [
