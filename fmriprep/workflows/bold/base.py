@@ -413,9 +413,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
     # MULTI-ECHO EPI DATA #############################################
     if multiecho:  # instantiate relevant interfaces, imports
-        from niworkflows.func.util import init_skullstrip_bold_wf
-        skullstrip_bold_wf = init_skullstrip_bold_wf(name='skullstrip_bold_wf')
-
         split_opt_comb = bold_split.clone(name='split_opt_comb')
 
         inputnode.inputs.bold_file = ref_file  # Replace reference w first echo
@@ -539,10 +536,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('outputnode.bold', 'bold_files')]),
             (join_echos, final_boldref_wf, [
                 ('bold_files', 'inputnode.bold_file')]),
-            (join_echos, skullstrip_bold_wf, [
-                (('bold_files', pop_file), 'inputnode.in_file')]),
-            (skullstrip_bold_wf, bold_t2s_wf, [
-                ('outputnode.mask_file', 'inputnode.mask_file')]),
+            # use same mask used by bold_bold_trans_wf
+            (bold_sdc_wf, bold_t2s_wf, [
+                ('outputnode.epi_mask', 'inputnode.bold_mask')]),
             (join_echos, bold_t2s_wf, [
                 ('bold_files', 'inputnode.bold_file')]),
             (bold_t2s_wf, bold_confounds_wf, [
