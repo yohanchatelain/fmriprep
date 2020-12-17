@@ -536,9 +536,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ('outputnode.bold', 'bold_files')]),
             (join_echos, final_boldref_wf, [
                 ('bold_files', 'inputnode.bold_file')]),
-            # use same mask used by bold_bold_trans_wf
-            (bold_sdc_wf, bold_t2s_wf, [
-                ('outputnode.epi_mask', 'inputnode.bold_mask')]),
+            # use reference image mask used by bold_bold_trans_wf
+            (bold_bold_trans_wf, bold_t2s_wf, [
+                (('outputnode.bold_mask', pop_file), 'inputnode.bold_mask')]),
             (join_echos, bold_t2s_wf, [
                 ('bold_files', 'inputnode.bold_file')]),
             (bold_t2s_wf, bold_confounds_wf, [
