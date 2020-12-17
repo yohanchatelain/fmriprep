@@ -81,7 +81,8 @@ The optimally combined time series was carried forward as the *preprocessed BOLD
     t2smap_node = pe.Node(T2SMap(echo_times=list(echo_times)), name='t2smap_node')
 
     workflow.connect([
-        (inputnode, t2smap_node, [('bold_file', 'in_files'), ('bold_mask', 'mask_file')]),
+        (inputnode, t2smap_node, [('bold_file', 'in_files'),
+                                  ('bold_mask', 'mask_file')]),
         (t2smap_node, outputnode, [('optimal_comb', 'bold')]),
     ])
 
