@@ -187,6 +187,7 @@ def _build_parser():
         dest="memory_gb",
         action="store",
         type=_to_gb,
+        metavar="MEMORY_MB",
         help="upper bound memory limit for fMRIPrep processes",
     )
     g_perfm.add_argument(
