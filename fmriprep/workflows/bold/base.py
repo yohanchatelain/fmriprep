@@ -940,8 +940,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ('outputnode.corrected_mask', 'inputnode.bold_mask'),
             ('outputnode.fieldmap', 'inputnode.fieldwarp'),
         ]),
-        (unwarp_masker, bold_bold_trans_wf, [
-            ('out_mask', 'inputnode.bold_mask')]),
         (unwarp_wf, unwarp_masker, [('outputnode.corrected', 'in_file')]),
         (unwarp_masker, bold_confounds_wf, [('out_mask', 'inputnode.bold_mask')]),
         (unwarp_masker, bold_t1_trans_wf, [
