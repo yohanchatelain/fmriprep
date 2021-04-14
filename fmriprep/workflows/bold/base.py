@@ -200,6 +200,7 @@ def init_func_preproc_wf(bold_file):
     sbref_msg = f"No single-band-reference found for {os.path.basename(ref_file)}."
     if sbref_files and 'sbref' in config.workflow.ignore:
         sbref_msg = "Single-band reference file(s) found and ignored."
+        sbref_files = []
     elif sbref_files:
         sbref_msg = "Using single-band reference file(s) {}.".format(
             ','.join([os.path.basename(sbf) for sbf in sbref_files]))
