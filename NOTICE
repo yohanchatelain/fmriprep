@@ -13,3 +13,9 @@ by Doug Greve, Dave Tuch, Tom Liu, and Bryon Mueller with generous
 help from the FSL crew (www.fmrib.ox.ac.uk/fsl) and the Biomedical
 Informatics Research Network (www.nbirn.net).
 
+This software is also distributed as a Docker container image.
+The bootstraping file for the image ("Dockerfile") is licensed
+under the MIT License.
+
+This software may be distributed through an add-on package called
+"Docker Wrapper" that is under the BSD 3-clause License.
