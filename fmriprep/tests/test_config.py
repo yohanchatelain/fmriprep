@@ -5,11 +5,10 @@ import pytest
 from toml import loads
 from niworkflows.utils.spaces import format_reference
 
-from .. import config
-
 
 def test_config_spaces():
     """Check that all necessary spaces are recorded in the config."""
+    from .. import config
     filename = Path(pkgrf('fmriprep', 'data/tests/config.toml'))
     settings = loads(filename.read_text())
     for sectionname, configs in settings.items():
@@ -53,6 +52,8 @@ def test_config_spaces():
         for s in spaces.references if s.standard and s.dim == 3
     ] == ['MNI152NLin2009cAsym']
 
+    del config
+
 
 @pytest.mark.parametrize("master_seed,ants_seed,numpy_seed", [
     (1, 17612, 8272), (100, 19094, 60232)
@@ -60,11 +61,15 @@ def test_config_spaces():
 def test_prng_seed(master_seed, ants_seed, numpy_seed):
     """Ensure seeds are properly tracked"""
     import os
+    from .. import config
 
     seeds = config.seeds
-    seeds.load({'_random_seed': master_seed})
-    seeds.init()
+    seeds.load({'_random_seed': master_seed}, init=True)
     assert seeds.master == master_seed
     assert seeds.ants == ants_seed
     assert seeds.numpy == numpy_seed
     assert os.getenv("ANTS_RANDOM_SEED") == str(ants_seed)
+
+    # reset config
+    del config
+    del os.environ["ANTS_RANDOM_SEED"]
