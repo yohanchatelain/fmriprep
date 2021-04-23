@@ -1,14 +1,41 @@
 """Check the configuration module and file."""
+import os
 from pathlib import Path
 from pkg_resources import resource_filename as pkgrf
+from unittest.mock import patch
+
 import pytest
 from toml import loads
 from niworkflows.utils.spaces import format_reference
 
+from .. import config
+
+
+def _reset_config():
+    """
+    Forcibly reload the configuration module to restore defaults.
+
+    .. caution::
+      `importlib.reload` creates new sets of objects, but will not remove
+      previous references to those objects."""
+    import importlib
+    importlib.reload(config)
+
+
+def test_reset_config():
+    execution = config.execution
+    setattr(execution, 'bids_dir', 'TESTING')
+    assert config.execution.bids_dir == 'TESTING'
+    _reset_config()
+    assert config.execution.bids_dir is None
+    # Even though the config module was reset,
+    # previous references to config classes
+    # have not been touched.
+    assert execution.bids_dir == 'TESTING'
+
 
 def test_config_spaces():
     """Check that all necessary spaces are recorded in the config."""
-    from .. import config
     filename = Path(pkgrf('fmriprep', 'data/tests/config.toml'))
     settings = loads(filename.read_text())
     for sectionname, configs in settings.items():
@@ -51,8 +78,7 @@ def test_config_spaces():
         format_reference((s.fullname, s.spec))
         for s in spaces.references if s.standard and s.dim == 3
     ] == ['MNI152NLin2009cAsym']
-
-    del config
+    _reset_config()
 
 
 @pytest.mark.parametrize("master_seed,ants_seed,numpy_seed", [
@@ -60,16 +86,15 @@ def test_config_spaces():
 ])
 def test_prng_seed(master_seed, ants_seed, numpy_seed):
     """Ensure seeds are properly tracked"""
-    import os
-    from .. import config
-
     seeds = config.seeds
-    seeds.load({'_random_seed': master_seed}, init=True)
-    assert seeds.master == master_seed
-    assert seeds.ants == ants_seed
-    assert seeds.numpy == numpy_seed
-    assert os.getenv("ANTS_RANDOM_SEED") == str(ants_seed)
+    with patch.dict(os.environ, {}):
+        seeds.load({'_random_seed': master_seed}, init=True)
+        assert getattr(seeds, 'master') == master_seed
+        assert seeds.ants == ants_seed
+        assert seeds.numpy == numpy_seed
+        assert os.getenv("ANTS_RANDOM_SEED") == str(ants_seed)
 
-    # reset config
-    del config
-    del os.environ["ANTS_RANDOM_SEED"]
+    _reset_config()
+    assert os.getenv("ANTS_RANDOM_SEED") is None
+    for seed in ('_random_seed', 'master', 'ants', 'numpy'):
+        assert getattr(config.seeds, seed) is None
