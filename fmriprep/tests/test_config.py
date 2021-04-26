@@ -95,6 +95,5 @@ def test_prng_seed(master_seed, ants_seed, numpy_seed):
         assert os.getenv("ANTS_RANDOM_SEED") == str(ants_seed)
 
     _reset_config()
-    assert os.getenv("ANTS_RANDOM_SEED") is None
     for seed in ('_random_seed', 'master', 'ants', 'numpy'):
         assert getattr(config.seeds, seed) is None
