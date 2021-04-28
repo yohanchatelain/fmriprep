@@ -220,7 +220,7 @@ def init_func_preproc_wf(bold_file):
     run_stc = (
         bool(metadata.get("SliceTiming"))
         and 'slicetiming' not in config.workflow.ignore
-        and (_get_series_len(ref_file) > 4 or "TooShort")
+        and (_get_series_len(ref_file, config.workflow.dummy_scans) > 4 or "TooShort")
     )
 
     # Build workflow
@@ -874,15 +874,13 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     return workflow
 
 
-def _get_series_len(bold_fname):
+def _get_series_len(bold_fname, skip_vols):
     from niworkflows.interfaces.registration import _get_vols_to_discard
     img = nb.load(bold_fname)
     if len(img.shape) < 4:
         return 1
 
-    if isinstance(config.workflow.dummy_scans, int):
-        skip_vols = config.workflow.dummy_scans
-    else:
+    if skip_vols is None:
         skip_vols = _get_vols_to_discard(img)
 
     return img.shape[3] - skip_vols
