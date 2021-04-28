@@ -880,7 +880,10 @@ def _get_series_len(bold_fname):
     if len(img.shape) < 4:
         return 1
 
-    skip_vols = _get_vols_to_discard(img)
+    if isinstance(config.workflow.dummy_scans, int):
+        skip_vols = config.workflow.dummy_scans
+    else:
+        skip_vols = _get_vols_to_discard(img)
 
     return img.shape[3] - skip_vols
 
