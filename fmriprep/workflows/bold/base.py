@@ -202,6 +202,7 @@ def init_func_preproc_wf(bold_file):
     sbref_msg = f"No single-band-reference found for {os.path.basename(ref_file)}."
     if sbref_files and 'sbref' in config.workflow.ignore:
         sbref_msg = "Single-band reference file(s) found and ignored."
+        sbref_files = []
     elif sbref_files:
         sbref_msg = "Using single-band reference file(s) {}.".format(
             ','.join([os.path.basename(sbf) for sbf in sbref_files]))
@@ -221,7 +222,7 @@ def init_func_preproc_wf(bold_file):
     run_stc = (
         bool(metadata.get("SliceTiming"))
         and 'slicetiming' not in config.workflow.ignore
-        and (_get_series_len(ref_file) > 4 or "TooShort")
+        and (_get_series_len(ref_file, config.workflow.dummy_scans) > 4 or "TooShort")
     )
 
     # Build workflow
@@ -876,13 +877,14 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     return workflow
 
 
-def _get_series_len(bold_fname):
+def _get_series_len(bold_fname, skip_vols):
     from niworkflows.interfaces.registration import _get_vols_to_discard
     img = nb.load(bold_fname)
     if len(img.shape) < 4:
         return 1
 
-    skip_vols = _get_vols_to_discard(img)
+    if skip_vols is None:
+        skip_vols = _get_vols_to_discard(img)
 
     return img.shape[3] - skip_vols
 
