@@ -203,18 +203,18 @@ ENV PATH="/usr/local/miniconda/bin:$PATH" \
     PYTHONNOUSERSITE=1
 
 # Installing precomputed python packages
-RUN conda install -y python=3.8 && \
-    conda install -y pip=20.0 && \
-    conda install -y mkl=2020.2 && \
-    conda install -y mkl-service && \
-    conda install -y numpy=1.20 && \
-    conda install -y scipy=1.6 && \
-    conda install -y scikit-learn=0.24 && \
-    conda install -y matplotlib=3.3 && \
-    conda install -y pandas=1.2 && \
-    conda install -y libxslt=1.1 && \
-    conda install -y traits=6.1.0 && \
-    conda install -y zlib; sync && \
+RUN conda install -y python=3.8 \
+                     pip=21.0 \
+                     mkl=2021.2 \
+                     mkl-service=2.3 \
+                     numpy=1.20 \
+                     scipy=1.6 \
+                     scikit-learn=0.24 \
+                     matplotlib=3.3 \
+                     pandas=1.2 \
+                     libxslt=1.1 \
+                     traits=6.2 \
+                     zstd=1.4; sync && \
     chmod -R a+rX /usr/local/miniconda; sync && \
     chmod +x /usr/local/miniconda/bin/*; sync && \
     conda clean -y --all && sync && \
