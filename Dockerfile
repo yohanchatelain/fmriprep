@@ -22,6 +22,7 @@ RUN apt-get update && \
                     pkg-config \
                     graphviz \
                     pandoc \
+                    pandoc-citeproc \
                     git && \
     curl -sSL https://deb.nodesource.com/setup_14.x | bash - && \
     apt-get install -y --no-install-recommends \
