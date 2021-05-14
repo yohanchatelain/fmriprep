@@ -1,8 +1,14 @@
+About the *NiPreps* framework licensing
+---------------------------------------
+Please check https://www.nipreps.org/community/licensing/ for detailed
+information on the criteria we use to license *fMRIPrep* and other
+projects of the framework.
+
 License information
 -------------------
 Copyright (c) 2020, the *NiPreps* Developers.
 
-As of the 20.3.x pre-release and release series, *fMRIPrep* is 
+As of the 20.3.x pre-release and release series, *fMRIPrep* is
 licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -17,7 +23,7 @@ limitations under the License.
 Copyright (c) 2015-2020, the *fMRIPrep* developers and the CRN.
 All rights reserved.
 
-*fMRIPrep* 20.2 series and earlier are 
+*fMRIPrep* 20.2 series and earlier are
 licensed under the BSD 3-clause license.
 You may obtain a copy of the License at
 https://opensource.org/licenses/BSD-3-Clause
