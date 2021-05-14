@@ -13,6 +13,9 @@ by Doug Greve, Dave Tuch, Tom Liu, and Bryon Mueller with generous
 help from the FSL crew (www.fmrib.ox.ac.uk/fsl) and the Biomedical
 Informatics Research Network (www.nbirn.net).
 
+This software redistributes the versioneer Python package, which is
+Public domain source code.
+
 This software is also distributed as a Docker container image.
 The bootstraping file for the image ("Dockerfile") is licensed
 under the MIT License.
