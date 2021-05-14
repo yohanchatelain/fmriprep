@@ -136,6 +136,14 @@ def check_memory(image):
 
 
 def merge_help(wrapper_help, target_help):
+    def _get_posargs(usage):
+        posargs = []
+        for t_arg in t_usage.split('\n')[-3:]:
+            line = t_arg.lstrip()
+            if line[0].isalnum() or line[0] == "{":
+                posargs.append(line)
+        return " ".join(posargs)
+
     # Matches all flags with up to one nested square bracket
     opt_re = re.compile(r'(\[--?[\w-]+(?:[^\[\]]+(?:\[[^\[\]]+\])?)?\])')
     # Matches flag name only
@@ -151,7 +159,7 @@ def merge_help(wrapper_help, target_help):
     t_groups = t_details.split('\n\n')
 
     w_posargs = w_usage.split('\n')[-1].lstrip()
-    t_posargs = t_usage.split('\n')[-1].lstrip()
+    t_posargs = _get_posargs(t_usage)
 
     w_options = opt_re.findall(w_usage)
     w_flags = sum(map(flag_re.findall, w_options), [])
