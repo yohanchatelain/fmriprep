@@ -124,9 +124,9 @@ jobs:
     steps:
       - restore_cache:
           keys:
-            - data-v8-{{ .Branch }}-{{ .Revision }}
-            - data-v8-{{ .Branch }}
-            - data-v8-
+            - data-v9-{{ .Branch }}-{{ .Revision }}
+            - data-v9-{{ .Branch }}
+            - data-v9-
       - run:
           name: Get test data from ds000005
           command: |
@@ -203,7 +203,7 @@ jobs:
               echo "sMRIPrep derivatives of ds000210 were cached"
             fi
       - save_cache:
-         key: data-v8-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
+         key: data-v9-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
          paths:
             - /tmp/data
             - /tmp/ds005/freesurfer
@@ -265,7 +265,7 @@ jobs:
             - /tmp/images
       - restore_cache:
           keys:
-            - data-v8-{{ .Revision }}
+            - data-v9-{{ .Revision }}
       - run:
           name: Docker authentication
           command: |
@@ -366,7 +366,7 @@ jobs:
             - /tmp/images
       - restore_cache:
           keys:
-            - data-v8-{{ .Branch }}-{{ .Revision }}
+            - data-v9-{{ .Branch }}-{{ .Revision }}
       - restore_cache:
           keys:
             - ds005-anat-v18-{{ .Branch }}-{{ .Revision }}
@@ -605,7 +605,7 @@ jobs:
             - /tmp/images
       - restore_cache:
           keys:
-            - data-v8-{{ .Branch }}-{{ .Revision }}
+            - data-v9-{{ .Branch }}-{{ .Revision }}
       - restore_cache:
           keys:
             - ds054-anat-v14-{{ .Branch }}-{{ .Revision }}
@@ -777,7 +777,7 @@ jobs:
             - /tmp/images
       - restore_cache:
           keys:
-            - data-v8-{{ .Branch }}-{{ .Revision }}
+            - data-v9-{{ .Branch }}-{{ .Revision }}
       - restore_cache:
           keys:
             - ds210-anat-v12-{{ .Branch }}-{{ .Revision }}
