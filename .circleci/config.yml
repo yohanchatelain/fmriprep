@@ -6,7 +6,9 @@ jobs:
       TZ: "/usr/share/zoneinfo/America/Los_Angeles"
       SCRATCH: "/scratch"
     machine:
-      image: ubuntu-1604:202007-01
+      # https://discuss.circleci.com/t/linux-machine-executor-images-2021-april-q2-update/39928
+      # upgrade Docker version
+      image: ubuntu-2004:202104-01
     working_directory: /tmp/src/fmriprep
     steps:
       - checkout
@@ -118,8 +120,7 @@ jobs:
 
   get_data:
     machine:
-      # Ubuntu 14.04 with Docker 17.10.0-ce
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202104-01
     working_directory: /home/circleci/data
     steps:
       - restore_cache:
@@ -235,7 +236,7 @@ jobs:
 
   test_pytest:
     machine:
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202104-01
     working_directory: /tmp/src/fmriprep
     steps:
       - checkout:
@@ -329,7 +330,7 @@ jobs:
 
   ds005:
     machine:
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202104-01
     working_directory: /tmp/ds005
     environment:
       - FS_LICENSE: /tmp/fslicense/license.txt
@@ -572,7 +573,7 @@ jobs:
 
   ds054:
     machine:
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202104-01
     working_directory: /tmp/ds054
     environment:
       - FS_LICENSE: /tmp/fslicense/license.txt
@@ -744,7 +745,7 @@ jobs:
 
   ds210:
     machine:
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202104-01
     working_directory: /tmp/ds210
     environment:
       - FS_LICENSE: /tmp/fslicense/license.txt
@@ -891,7 +892,7 @@ jobs:
 
   deploy_docker_patches:
     machine:
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202104-01
     working_directory: /tmp/src/fmriprep
     steps:
 
@@ -952,7 +953,7 @@ jobs:
 
   deploy_docker:
     machine:
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202104-01
     working_directory: /tmp/src/fmriprep
     steps:
       - checkout:
