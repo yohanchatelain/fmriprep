@@ -417,7 +417,11 @@ def main():
                'DOCKER_VERSION_8395080871=%s' % docker_version]
 
     if not opts.no_tty:
-        command.append('-it')
+        if opts.help:
+            # TTY can corrupt stdout
+            command.append('-i')
+        else:
+            command.append('-it')
 
     # Patch working repositories into installed package directories
     if opts.patch:
