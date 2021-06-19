@@ -266,7 +266,7 @@ jobs:
             - /tmp/images
       - restore_cache:
           keys:
-            - data-v9-{{ .Revision }}
+            - data-v9-{{ .Branch }}-{{ .Revision }}
       - run:
           name: Docker authentication
           command: |
