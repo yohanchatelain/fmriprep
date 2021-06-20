@@ -6,7 +6,9 @@ jobs:
       TZ: "/usr/share/zoneinfo/America/Los_Angeles"
       SCRATCH: "/scratch"
     machine:
-      image: ubuntu-1604:202007-01
+      # https://discuss.circleci.com/t/linux-machine-executor-images-2021-april-q2-update/39928
+      # upgrade Docker version
+      image: ubuntu-2004:202104-01
     working_directory: /tmp/src/fmriprep
     steps:
       - checkout
@@ -118,15 +120,14 @@ jobs:
 
   get_data:
     machine:
-      # Ubuntu 14.04 with Docker 17.10.0-ce
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202104-01
     working_directory: /home/circleci/data
     steps:
       - restore_cache:
           keys:
-            - data-v8-{{ .Branch }}-{{ .Revision }}
-            - data-v8-{{ .Branch }}
-            - data-v8-
+            - data-v9-{{ .Branch }}-{{ .Revision }}
+            - data-v9-{{ .Branch }}
+            - data-v9-
       - run:
           name: Get test data from ds000005
           command: |
@@ -203,7 +204,7 @@ jobs:
               echo "sMRIPrep derivatives of ds000210 were cached"
             fi
       - save_cache:
-         key: data-v8-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
+         key: data-v9-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
          paths:
             - /tmp/data
             - /tmp/ds005/freesurfer
@@ -235,7 +236,7 @@ jobs:
 
   test_pytest:
     machine:
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202104-01
     working_directory: /tmp/src/fmriprep
     steps:
       - checkout:
@@ -265,7 +266,7 @@ jobs:
             - /tmp/images
       - restore_cache:
           keys:
-            - data-v8-{{ .Revision }}
+            - data-v9-{{ .Branch }}-{{ .Revision }}
       - run:
           name: Docker authentication
           command: |
@@ -329,7 +330,7 @@ jobs:
 
   ds005:
     machine:
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202104-01
     working_directory: /tmp/ds005
     environment:
       - FS_LICENSE: /tmp/fslicense/license.txt
@@ -366,7 +367,7 @@ jobs:
             - /tmp/images
       - restore_cache:
           keys:
-            - data-v8-{{ .Branch }}-{{ .Revision }}
+            - data-v9-{{ .Branch }}-{{ .Revision }}
       - restore_cache:
           keys:
             - ds005-anat-v18-{{ .Branch }}-{{ .Revision }}
@@ -403,8 +404,6 @@ jobs:
                          sed -e 's/.* 3\./3./' -e 's/ .*//')
             pyenv local $PY3
             mkdir -p /tmp/${DATASET}/derivatives
-            sudo setfacl -d -m group:$(id -gn):rwx /tmp/${DATASET}/derivatives
-            sudo setfacl -m group:$(id -gn):rwx /tmp/${DATASET}/derivatives
             pip install --upgrade pip setuptools
             pip install --upgrade /tmp/src/fmriprep/wrapper/
       - run:
@@ -412,13 +411,9 @@ jobs:
           no_output_timeout: 2h
           command: |
             mkdir -p /tmp/${DATASET}/work /tmp/${DATASET}/derivatives
-            sudo setfacl -d -m group:$(id -gn):rwx /tmp/${DATASET}/derivatives && \
-                sudo setfacl -m group:$(id -gn):rwx /tmp/${DATASET}/derivatives
-            sudo setfacl -d -m group:$(id -gn):rwx /tmp/${DATASET}/work && \
-                sudo setfacl -m group:$(id -gn):rwx /tmp/${DATASET}/work
             if [ -f /tmp/.nofasttrack ]; then
                 fmriprep-docker -i nipreps/fmriprep:latest \
-                    -e FMRIPREP_DEV 1 -u $(id -u) \
+                    -e FMRIPREP_DEV 1 --user $(id -u):$(id -g) \
                     --network none \
                     --config $PWD/nipype.cfg -w /tmp/${DATASET}/work \
                     /tmp/data/${DATASET} /tmp/${DATASET}/derivatives participant \
@@ -443,16 +438,12 @@ jobs:
           name: Run full fMRIPrep on ds005 (LegacyMultiProc plugin)
           no_output_timeout: 2h
           command: |
-            sudo setfacl -d -m group:$(id -gn):rwx /tmp/${DATASET}/derivatives && \
-                sudo setfacl -m group:$(id -gn):rwx /tmp/${DATASET}/derivatives
-            sudo setfacl -d -m group:$(id -gn):rwx /tmp/${DATASET}/work && \
-                sudo setfacl -m group:$(id -gn):rwx /tmp/${DATASET}/work
             FASTRACK_ARG="--anat-derivatives /tmp/${DATASET}/smriprep-0.6"
             if [ -f /tmp/.nofasttrack ]; then
                 FASTRACK_ARG=""
             fi
             fmriprep-docker -i nipreps/fmriprep:latest \
-                -e FMRIPREP_DEV 1 -u $(id -u) \
+                -e FMRIPREP_DEV 1 --user $(id -u):$(id -g) \
                 --network none \
                 --config $PWD/nipype.cfg -w /tmp/${DATASET}/work \
                 /tmp/data/${DATASET} /tmp/${DATASET}/derivatives participant \
@@ -498,7 +489,7 @@ jobs:
                 FASTRACK_ARG=""
             fi
             fmriprep-docker -i nipreps/fmriprep:latest \
-                -e FMRIPREP_DEV 1 -u $(id -u) \
+                -e FMRIPREP_DEV 1 --user $(id -u):$(id -g) \
                 --network none \
                 --config $PWD/nipype.cfg -w /tmp/${DATASET}/work_bids \
                 /tmp/data/${DATASET}/ /tmp/${DATASET}/bids participant \
@@ -528,7 +519,7 @@ jobs:
                 FASTRACK_ARG=""
             fi
             fmriprep-docker -i nipreps/fmriprep:latest \
-                -e FMRIPREP_DEV 1 -u $(id -u) \
+                -e FMRIPREP_DEV 1 --user $(id -u):$(id -g) \
                 --network none \
                 --config $PWD/nipype.cfg -w /tmp/${DATASET}/work_partial \
                 /tmp/data/${DATASET} /tmp/${DATASET}/derivatives_partial participant \
@@ -572,7 +563,7 @@ jobs:
 
   ds054:
     machine:
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202104-01
     working_directory: /tmp/ds054
     environment:
       - FS_LICENSE: /tmp/fslicense/license.txt
@@ -605,7 +596,7 @@ jobs:
             - /tmp/images
       - restore_cache:
           keys:
-            - data-v8-{{ .Branch }}-{{ .Revision }}
+            - data-v9-{{ .Branch }}-{{ .Revision }}
       - restore_cache:
           keys:
             - ds054-anat-v14-{{ .Branch }}-{{ .Revision }}
@@ -619,8 +610,6 @@ jobs:
                          sed -e 's/.* 3\./3./' -e 's/ .*//')
             pyenv local $PY3
             mkdir -p /tmp/${DATASET}/derivatives
-            sudo setfacl -d -m group:$(id -gn):rwx /tmp/${DATASET}/derivatives
-            sudo setfacl -m group:$(id -gn):rwx /tmp/${DATASET}/derivatives
             pip install --upgrade pip setuptools
             pip install --upgrade /tmp/src/fmriprep/wrapper/
       - run:
@@ -651,13 +640,9 @@ jobs:
           no_output_timeout: 2h
           command: |
             mkdir -p /tmp/${DATASET}/work /tmp/${DATASET}/derivatives
-            sudo setfacl -d -m group:$(id -gn):rwx /tmp/${DATASET}/derivatives && \
-                sudo setfacl -m group:$(id -gn):rwx /tmp/${DATASET}/derivatives
-            sudo setfacl -d -m group:$(id -gn):rwx /tmp/${DATASET}/work && \
-                sudo setfacl -m group:$(id -gn):rwx /tmp/${DATASET}/work
             if [ -f /tmp/.nofasttrack ]; then
                 fmriprep-docker -i nipreps/fmriprep:latest \
-                    -e FMRIPREP_DEV 1 \
+                    -e FMRIPREP_DEV 1 --user $(id -u):$(id -g) \
                     --config $PWD/nipype.cfg -w /tmp/${DATASET}/work \
                     /tmp/data/${DATASET} /tmp/${DATASET}/derivatives participant \
                     --fs-no-reconall --sloppy --write-graph \
@@ -679,16 +664,12 @@ jobs:
           name: Run full fMRIPrep on ds054
           no_output_timeout: 2h
           command: |
-            sudo setfacl -d -m group:$(id -gn):rwx /tmp/${DATASET}/derivatives && \
-                sudo setfacl -m group:$(id -gn):rwx /tmp/${DATASET}/derivatives
-            sudo setfacl -d -m group:$(id -gn):rwx /tmp/${DATASET}/work && \
-                sudo setfacl -m group:$(id -gn):rwx /tmp/${DATASET}/work
             FASTRACK_ARG="--anat-derivatives /tmp/${DATASET}/smriprep-0.6"
             if [ -f /tmp/.nofasttrack ]; then
                 FASTRACK_ARG=""
             fi
             fmriprep-docker -i nipreps/fmriprep:latest \
-                -e FMRIPREP_DEV 1 \
+                -e FMRIPREP_DEV 1 --user $(id -u):$(id -g) \
                 --config $PWD/nipype.cfg -w /tmp/${DATASET}/work \
                 /tmp/data/${DATASET} /tmp/${DATASET}/derivatives participant \
                 ${FASTRACK_ARG} \
@@ -717,7 +698,7 @@ jobs:
                 /tmp/${DATASET}/derivatives/fmriprep/sub-100185/log/$UUID/
             set +e
             fmriprep-docker -i nipreps/fmriprep:latest \
-                -e FMRIPREP_DEV 1 \
+                -e FMRIPREP_DEV 1 --user $(id -u):$(id -g) \
                 --config $PWD/nipype.cfg -w /tmp/${DATASET}/work \
                 /tmp/data/${DATASET} /tmp/${DATASET}/derivatives participant \
                 --fs-no-reconall --sloppy --write-graph \
@@ -744,7 +725,7 @@ jobs:
 
   ds210:
     machine:
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202104-01
     working_directory: /tmp/ds210
     environment:
       - FS_LICENSE: /tmp/fslicense/license.txt
@@ -777,7 +758,7 @@ jobs:
             - /tmp/images
       - restore_cache:
           keys:
-            - data-v8-{{ .Branch }}-{{ .Revision }}
+            - data-v9-{{ .Branch }}-{{ .Revision }}
       - restore_cache:
           keys:
             - ds210-anat-v12-{{ .Branch }}-{{ .Revision }}
@@ -790,7 +771,7 @@ jobs:
             export PY3=$(pyenv versions | grep '3\.' |
                          sed -e 's/.* 3\./3./' -e 's/ .*//')
             pyenv local $PY3
-            mkdir -p /tmp/${DATASET}/derivatives && sudo setfacl -d -m group:$(id -gn):rwx /tmp/${DATASET}/derivatives && sudo setfacl -m group:$(id -gn):rwx /tmp/${DATASET}/derivatives
+            mkdir -p /tmp/${DATASET}/derivatives
             pip install --upgrade pip setuptools
             pip install --upgrade /tmp/src/fmriprep/wrapper/
       - run:
@@ -821,13 +802,9 @@ jobs:
           no_output_timeout: 2h
           command: |
             mkdir -p /tmp/${DATASET}/work /tmp/${DATASET}/derivatives
-            sudo setfacl -d -m group:$(id -gn):rwx /tmp/${DATASET}/derivatives && \
-                sudo setfacl -m group:$(id -gn):rwx /tmp/${DATASET}/derivatives
-            sudo setfacl -d -m group:$(id -gn):rwx /tmp/${DATASET}/work && \
-                sudo setfacl -m group:$(id -gn):rwx /tmp/${DATASET}/work
             if [ -f /tmp/.nofasttrack ]; then
                 fmriprep-docker -i nipreps/fmriprep:latest \
-                    -e FMRIPREP_DEV 1 \
+                    -e FMRIPREP_DEV 1 --user $(id -u):$(id -g) \
                     --config $PWD/nipype.cfg -w /tmp/${DATASET}/work \
                     /tmp/data/${DATASET} /tmp/${DATASET}/derivatives participant \
                     --fs-no-reconall --sloppy --write-graph \
@@ -854,7 +831,7 @@ jobs:
                 FASTRACK_ARG=""
             fi
             fmriprep-docker -i nipreps/fmriprep:latest \
-                -e FMRIPREP_DEV 1 \
+                -e FMRIPREP_DEV 1 --user $(id -u):$(id -g) \
                 --config $PWD/nipype.cfg -w /tmp/${DATASET}/work \
                 /tmp/data/${DATASET} /tmp/${DATASET}/derivatives participant \
                 ${FASTRACK_ARG} \
@@ -891,7 +868,7 @@ jobs:
 
   deploy_docker_patches:
     machine:
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202104-01
     working_directory: /tmp/src/fmriprep
     steps:
 
@@ -952,7 +929,7 @@ jobs:
 
   deploy_docker:
     machine:
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202104-01
     working_directory: /tmp/src/fmriprep
     steps:
       - checkout:
