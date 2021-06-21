@@ -55,11 +55,17 @@ def _build_parser():
             for k, v in dct.items()
         }
 
-    def _bids_filter(value):
-        from json import loads
+    def _bids_filter(value, parser):
+        from json import loads, JSONDecodeError
 
-        if value and Path(value).exists():
-            return loads(Path(value).read_text(), object_hook=_filter_pybids_none_any)
+        if value:
+            if Path(value).exists():
+                try:
+                    return loads(Path(value).read_text(), object_hook=_filter_pybids_none_any)
+                except JSONDecodeError as e:
+                    raise parser.error(f"JSON syntax error in: <{value}>.")
+            else:
+                raise parser.error(f"Path does not exist: <{value}>.")
 
     verstr = f"fMRIPrep v{config.environment.version}"
     currentv = Version(config.environment.version)
