@@ -21,8 +21,7 @@ jobs:
           keys:
             - build-v4-{{ .Branch }}-{{ epoch }}
             - build-v4-{{ .Branch }}-
-            - build-v4-master-
-            - build-v4-
+            - build-v4-maint/20.2.x-
           paths:
             - /tmp/docker
             - /tmp/images
@@ -371,7 +370,7 @@ jobs:
           keys:
             - ds005-anat-v18-{{ .Branch }}-{{ .Revision }}
             - ds005-anat-v18-{{ .Branch }}
-            - ds005-anat-v18-master
+            - ds005-anat-v18-maint/20.2.x
             - ds005-anat-v18-
       - run:
           name: Docker authentication
@@ -610,7 +609,7 @@ jobs:
           keys:
             - ds054-anat-v14-{{ .Branch }}-{{ .Revision }}
             - ds054-anat-v14-{{ .Branch }}
-            - ds054-anat-v14-master
+            - ds054-anat-v14-maint/20.2.x
             - ds054-anat-v14-
       - run:
           name: Setting up test
@@ -782,7 +781,7 @@ jobs:
           keys:
             - ds210-anat-v12-{{ .Branch }}-{{ .Revision }}
             - ds210-anat-v12-{{ .Branch }}-
-            - ds210-anat-v12-master
+            - ds210-anat-v12-maint/20.2.x
             - ds210-anat-v12-
       - run:
           name: Setting up test
