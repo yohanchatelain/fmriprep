@@ -114,3 +114,28 @@ def test_get_parser_blacklist(monkeypatch, capsys, flagged):
     assert ("FLAGGED" in captured) is flagged[0]
     if flagged[0]:
         assert (flagged[1] or "reason: unknown") in captured
+
+
+def test_bids_filter_file(tmp_path, capsys):
+    bids_path = tmp_path / "data"
+    out_path = tmp_path / "out"
+    bff = tmp_path / "filter.json"
+    args = [str(bids_path), str(out_path), "participant",
+            "--bids-filter-file", str(bff)]
+    bids_path.mkdir()
+
+    parser = _build_parser()
+
+    with pytest.raises(SystemExit) as error:
+        parser.parse_args(args)
+
+    err = capsys.readouterr().err
+    assert "Path does not exist:" in err
+
+    bff.write_text('{"invalid json": }')
+
+    with pytest.raises(SystemExit) as error:
+        parser.parse_args(args)
+
+    err = capsys.readouterr().err
+    assert "JSON syntax error in:" in err
