@@ -82,7 +82,7 @@ def _build_parser():
     PathExists = partial(_path_exists, parser=parser)
     IsFile = partial(_is_file, parser=parser)
     PositiveInt = partial(_min_one, parser=parser)
-    BIDSFilter = partial(_bids_filter, parser=_bids_filter)
+    BIDSFilter = partial(_bids_filter, parser=parser)
 
     # Arguments as specified by BIDS-Apps
     # required, positional arguments
