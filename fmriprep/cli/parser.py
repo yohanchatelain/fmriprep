@@ -165,9 +165,9 @@ def _build_parser():
     g_bids.add_argument(
         "--bids-database-dir",
         metavar="PATH",
-        type=PathExists,
-        help="Path to an existing PyBIDS database folder, for faster indexing "
-             "(especially useful for large datasets)."
+        type=Path,
+        help="Path to a PyBIDS database folder, for faster indexing (especially "
+             "useful for large datasets). Will be created if not present."
     )
 
     g_perfm = parser.add_argument_group("Options to handle performance")
