@@ -436,9 +436,15 @@ class execution(_Config):
             import re
             from bids.layout import BIDSLayout
 
-            _db_path = cls.bids_database_dir or (
-                cls.work_dir / cls.run_uuid / "bids_db"
-            )
+            if cls.bids_database_dir:
+                _db_path = cls.bids_database_dir
+                if not _db_path.exists():
+                    logging.getLogger("cli").warn(
+                        f"Creating PyBIDS database directory: {_db_path}"
+                    )
+            else:
+                _db_path = cls.work_dir / cls.run_uuid / "bids_db"
+
             _db_path.mkdir(exist_ok=True, parents=True)
             cls._layout = BIDSLayout(
                 str(cls.bids_dir),
