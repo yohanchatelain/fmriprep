@@ -439,7 +439,7 @@ class execution(_Config):
             if cls.bids_database_dir:
                 _db_path = cls.bids_database_dir
                 if not _db_path.exists():
-                    logging.getLogger("cli").warn(
+                    logging.getLogger("cli").warning(
                         f"Creating PyBIDS database directory: {_db_path}"
                     )
             else:
