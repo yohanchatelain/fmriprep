@@ -303,23 +303,35 @@ tasks and sessions), the following preprocessing was performed.
     for bold_file in subject_data['bold']:
         func_preproc_wf = init_func_preproc_wf(bold_file)
 
-        workflow.connect([
-            (anat_preproc_wf, func_preproc_wf,
-             [('outputnode.t1w_preproc', 'inputnode.t1w_preproc'),
-              ('outputnode.t1w_mask', 'inputnode.t1w_mask'),
-              ('outputnode.t1w_dseg', 'inputnode.t1w_dseg'),
-              ('outputnode.t1w_aseg', 'inputnode.t1w_aseg'),
-              ('outputnode.t1w_aparc', 'inputnode.t1w_aparc'),
-              ('outputnode.t1w_tpms', 'inputnode.t1w_tpms'),
-              ('outputnode.template', 'inputnode.template'),
-              ('outputnode.anat2std_xfm', 'inputnode.anat2std_xfm'),
-              ('outputnode.std2anat_xfm', 'inputnode.std2anat_xfm'),
-              # Undefined if --fs-no-reconall, but this is safe
-              ('outputnode.subjects_dir', 'inputnode.subjects_dir'),
-              ('outputnode.subject_id', 'inputnode.subject_id'),
-              ('outputnode.t1w2fsnative_xfm', 'inputnode.t1w2fsnative_xfm'),
-              ('outputnode.fsnative2t1w_xfm', 'inputnode.fsnative2t1w_xfm')]),
-        ])
+        try:
+            workflow.connect([
+                (anat_preproc_wf, func_preproc_wf,
+                 [('outputnode.t1w_preproc', 'inputnode.t1w_preproc'),
+                  ('outputnode.t1w_mask', 'inputnode.t1w_mask'),
+                  ('outputnode.t1w_dseg', 'inputnode.t1w_dseg'),
+                  ('outputnode.t1w_aseg', 'inputnode.t1w_aseg'),
+                  ('outputnode.t1w_aparc', 'inputnode.t1w_aparc'),
+                  ('outputnode.t1w_tpms', 'inputnode.t1w_tpms'),
+                  ('outputnode.template', 'inputnode.template'),
+                  ('outputnode.anat2std_xfm', 'inputnode.anat2std_xfm'),
+                  ('outputnode.std2anat_xfm', 'inputnode.std2anat_xfm'),
+                  # Undefined if --fs-no-reconall, but this is safe
+                  ('outputnode.subjects_dir', 'inputnode.subjects_dir'),
+                  ('outputnode.subject_id', 'inputnode.subject_id'),
+                  ('outputnode.t1w2fsnative_xfm', 'inputnode.t1w2fsnative_xfm'),
+                  ('outputnode.fsnative2t1w_xfm', 'inputnode.fsnative2t1w_xfm')]),
+            ])
+        except OSError as err:
+            if err.args[0].startswith("Duplicate node name"):
+                msg = (
+                    f"Could not create subworkflow for {bold_file}. "
+                    f"{func_preproc_wf.name} already exists. "
+                    "Check if uncompressed (.nii) and compressed (.nii.gz) files are both present."
+                )
+                config.loggers.workflow.error(msg)
+                raise OSError(msg) from err
+            else:
+                raise
     return workflow
 
 
