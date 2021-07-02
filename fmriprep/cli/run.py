@@ -33,16 +33,28 @@ def main():
     # CRITICAL Call build_workflow(config_file, retval) in a subprocess.
     # Because Python on Linux does not ever free virtual memory (VM), running the
     # workflow construction jailed within a process preempts excessive VM buildup.
-    with Manager() as mgr:
+    try:
+        with Manager() as mgr:
+            from .workflow import build_workflow
+
+            retval = mgr.dict()
+            p = Process(target=build_workflow, args=(str(config_file), retval))
+            p.start()
+            p.join()
+
+            retcode = p.exitcode or retval.get("return_code", 0)
+            fmriprep_wf = retval.get("workflow", None)
+    except ConnectionError:
+        config.loggers.workflow.warning(
+            "Could not build workflow in separate process. Attempting to build "
+            "in main process. This may impact memory footprint."
+        )
+        # Attempt to fall back to building in the main process
         from .workflow import build_workflow
-
-        retval = mgr.dict()
-        p = Process(target=build_workflow, args=(str(config_file), retval))
-        p.start()
-        p.join()
-
-        retcode = p.exitcode or retval.get("return_code", 0)
-        fmriprep_wf = retval.get("workflow", None)
+        retval = {}
+        build_workflow(str(config_file), retval)
+        fmriprep_wf = retval["workflow"]
+        retcode = 0
 
     # CRITICAL Load the config from the file. This is necessary because the ``build_workflow``
     # function executed constrained in a process may change the config (and thus the global
