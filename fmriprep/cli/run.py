@@ -92,6 +92,16 @@ def main():
     try:
         fmriprep_wf.run(**config.nipype.get_plugin())
     except Exception as e:
+        msg = "Issue encountered while running fMRIPrep."
+        from concurrent.futures.process import BrokenProcessPool
+        if isinstance(e, BrokenProcessPool):
+            msg += " Usually, this is a result of insufficent memory."
+            if config.environment.exec_env in ("docker", "fmriprep-docker"):
+                msg += (
+                    " Ensure Docker has sufficent resources available "
+                    "(https://docs.docker.com/docker-for-mac/#resources)"
+                )
+            config.loggers.workflow.error(msg)
         if not config.execution.notrack:
             from ..utils.sentry import process_crashfile
 
@@ -109,7 +119,7 @@ def main():
             if "Workflow did not execute cleanly" not in str(e):
                 sentry_sdk.capture_exception(e)
         config.loggers.workflow.critical("fMRIPrep failed: %s", e)
-        raise
+        raise RuntimeError(msg) from e
     else:
         config.loggers.workflow.log(25, "fMRIPrep finished successfully!")
         if not config.execution.notrack:
