@@ -1,6 +1,8 @@
-version: 2
-jobs:
+version: 2.1
+orbs:
+  docker: circleci/docker@1.6.0
 
+jobs:
   build:
     environment:
       TZ: "/usr/share/zoneinfo/America/Los_Angeles"
@@ -28,6 +30,7 @@ jobs:
           paths:
             - /tmp/docker
             - /tmp/images
+      - docker/install-docker-credential-helper
       - run:
           name: Docker authentication
           command: |
