@@ -490,15 +490,17 @@ Co-registration was configured with {dof} degrees of freedom{reason}.
         BBRegisterRPT(
             dof=bold2t1w_dof,
             contrast_type='t2',
-            init="header" if bold2t1w_init == "header" else Undefined,
             registered_file=True,
             out_lta_file=True,
             generate_report=True
         ),
         name='bbregister', mem_gb=12
     )
+    if bold2t1w_init == "header":
+        bbregister.inputs.init = "header"
 
-    transforms = pe.Node(niu.Merge(2), run_without_submitting=True, name='transforms')
+    transforms = pe.Node(niu.Merge(1 if bold2t1w_init == "header" else 2),
+                         run_without_submitting=True, name='transforms')
     lta_ras2ras = pe.MapNode(LTAConvert(out_lta=True), iterfield=['in_lta'],
                              name='lta_ras2ras', mem_gb=2)
     select_transform = pe.Node(niu.Select(), run_without_submitting=True, name='select_transform')
@@ -509,7 +511,6 @@ Co-registration was configured with {dof} degrees of freedom{reason}.
         (inputnode, merge_ltas, [('fsnative2t1w_xfm', 'in2')]),
         # Wire up the co-registration alternatives
         (bbregister, transforms, [('out_lta_file', 'in1')]),
-        (mri_coreg, transforms, [('out_lta_file', 'in2')]),
         (transforms, lta_ras2ras, [('out', 'in_lta')]),
         (lta_ras2ras, select_transform, [('out_lta', 'inlist')]),
         (select_transform, merge_ltas, [('out', 'in1')]),
@@ -525,6 +526,7 @@ Co-registration was configured with {dof} degrees of freedom{reason}.
                                     ('subject_id', 'subject_id'),
                                     ('in_file', 'source_file')]),
             (mri_coreg, bbregister, [('out_lta_file', 'init_reg_file')]),
+            (mri_coreg, transforms, [('out_lta_file', 'in2')]),
         ])
 
         # Short-circuit workflow building, use initial registration
