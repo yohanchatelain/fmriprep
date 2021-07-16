@@ -1,3 +1,13 @@
+20.1.4 (July 16, 2021)
+======================
+Hotfix release addressing a bug on *fMRIPrep*'s resampling to standard spaces.
+This release also includes some maintenance changes handling old versions of software.
+
+  * FIX: Feed *NiTransforms* with LTAs of type RAS2RAS (#2444)
+  * MAINT: Pin ``svgutils==0.3.1`` for the 20.1.x series (#2450)
+  * MAINT: Keep pip and setuptools with support for Python 3.5 (#2449)
+  * MAINT: Some dependencies cannot be left unpinned (#2446)
+
 20.1.3 (September 15, 2020)
 ===========================
 Bug-fix release in the 20.1.x series.
