@@ -1,6 +1,8 @@
-version: 2
-jobs:
+version: 2.1
+orbs:
+  docker: circleci/docker@1.6.0
 
+jobs:
   build:
     environment:
       TZ: "/usr/share/zoneinfo/America/Los_Angeles"
@@ -28,11 +30,12 @@ jobs:
           paths:
             - /tmp/docker
             - /tmp/images
+      - docker/install-docker-credential-helper
       - run:
           name: Docker authentication
           command: |
-            if [[ -n $DOCKER_PASS ]]; then
-              docker login -u $DOCKER_USER -p $DOCKER_PASS
+            if [[ -n $DOCKER_PAT ]]; then
+              echo "$DOCKER_PAT" | docker login -u $DOCKER_USER --password-stdin
             fi
       - run:
           name: Set up Docker registry
@@ -267,11 +270,12 @@ jobs:
       - restore_cache:
           keys:
             - data-v9-{{ .Branch }}-{{ .Revision }}
+      - docker/install-docker-credential-helper
       - run:
           name: Docker authentication
           command: |
-            if [[ -n $DOCKER_PASS ]]; then
-              docker login -u $DOCKER_USER -p $DOCKER_PASS
+            if [[ -n $DOCKER_PAT ]]; then
+              echo "$DOCKER_PAT" | docker login -u $DOCKER_USER --password-stdin
             fi
       - run:
           name: Set-up a Docker registry
@@ -374,11 +378,12 @@ jobs:
             - ds005-anat-v18-{{ .Branch }}
             - ds005-anat-v18-master
             - ds005-anat-v18-
+      - docker/install-docker-credential-helper
       - run:
           name: Docker authentication
           command: |
-            if [[ -n $DOCKER_PASS ]]; then
-              docker login -u $DOCKER_USER -p $DOCKER_PASS
+            if [[ -n $DOCKER_PAT ]]; then
+              echo "$DOCKER_PAT" | docker login -u $DOCKER_USER --password-stdin
             fi
       - run:
           name: Set-up a Docker registry
@@ -612,11 +617,12 @@ jobs:
             mkdir -p /tmp/${DATASET}/derivatives
             pip install --upgrade pip setuptools
             pip install --upgrade /tmp/src/fmriprep/wrapper/
+      - docker/install-docker-credential-helper
       - run:
           name: Docker authentication
           command: |
-            if [[ -n $DOCKER_PASS ]]; then
-              docker login -u $DOCKER_USER -p $DOCKER_PASS
+            if [[ -n $DOCKER_PAT ]]; then
+              echo "$DOCKER_PAT" | docker login -u $DOCKER_USER --password-stdin
             fi
       - run:
           name: Set-up a Docker registry
@@ -774,11 +780,12 @@ jobs:
             mkdir -p /tmp/${DATASET}/derivatives
             pip install --upgrade pip setuptools
             pip install --upgrade /tmp/src/fmriprep/wrapper/
+      - docker/install-docker-credential-helper
       - run:
           name: Docker authentication
           command: |
-            if [[ -n $DOCKER_PASS ]]; then
-              docker login -u $DOCKER_USER -p $DOCKER_PASS
+            if [[ -n $DOCKER_PAT ]]; then
+              echo "$DOCKER_PAT" | docker login -u $DOCKER_USER --password-stdin
             fi
       - run:
           name: Set-up a Docker registry
@@ -897,11 +904,12 @@ jobs:
           paths:
             - /tmp/docker
             - /tmp/images
+      - docker/install-docker-credential-helper
       - run:
           name: Docker authentication
           command: |
-            if [[ -n $DOCKER_PASS ]]; then
-              docker login -u $DOCKER_USER -p $DOCKER_PASS
+            if [[ -n $DOCKER_PAT ]]; then
+              echo "$DOCKER_PAT" | docker login -u $DOCKER_USER --password-stdin
             fi
       - run:
           name: Setup a Docker registry
@@ -950,11 +958,12 @@ jobs:
           paths:
             - /tmp/docker
             - /tmp/images
+      - docker/install-docker-credential-helper
       - run:
           name: Docker authentication
           command: |
-            if [[ -n $DOCKER_PASS ]]; then
-              docker login -u $DOCKER_USER -p $DOCKER_PASS
+            if [[ -n $DOCKER_PAT ]]; then
+              echo "$DOCKER_PAT" | docker login -u $DOCKER_USER --password-stdin
             fi
       - run:
           name: Set-up a Docker registry
@@ -977,8 +986,8 @@ jobs:
           name: Deploy to Docker Hub
           no_output_timeout: 40m
           command: |
-            if [[ -n "$DOCKER_PASS" ]]; then
-              docker login -u $DOCKER_USER -p $DOCKER_PASS
+            if [[ -n "$DOCKER_PAT" ]]; then
+              echo "$DOCKER_PAT" | docker login -u $DOCKER_USER --password-stdin
               docker tag nipreps/fmriprep nipreps/fmriprep:unstable
               docker push nipreps/fmriprep:unstable
               if [[ -n "$CIRCLE_TAG" ]]; then
