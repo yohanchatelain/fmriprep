@@ -289,7 +289,7 @@ jobs:
             pyenv local $PY3
             echo -n "Python version: "
             python --version
-            pip install --upgrade pip setuptools
+            pip install --upgrade "pip<21" "setuptools<51"
             pip install --upgrade wrapper/
             which fmriprep-docker
             fmriprep-docker -i poldracklab/fmriprep:latest --help
@@ -398,7 +398,7 @@ jobs:
             mkdir -p /tmp/${DATASET}/derivatives
             sudo setfacl -d -m group:$(id -gn):rwx /tmp/${DATASET}/derivatives
             sudo setfacl -m group:$(id -gn):rwx /tmp/${DATASET}/derivatives
-            pip install --upgrade pip setuptools
+            pip install --upgrade "pip<21.0" "setuptools<51.0"
             pip install --upgrade /tmp/src/fmriprep/wrapper/
       - run:
           name: Run anatomical workflow on ds005
@@ -578,7 +578,7 @@ jobs:
             mkdir -p /tmp/${DATASET}/derivatives
             sudo setfacl -d -m group:$(id -gn):rwx /tmp/${DATASET}/derivatives
             sudo setfacl -m group:$(id -gn):rwx /tmp/${DATASET}/derivatives
-            pip install --upgrade pip setuptools
+            pip install --upgrade "pip<21.0" "setuptools<51.0"
             pip install --upgrade /tmp/src/fmriprep/wrapper/
       - run:
           name: Set-up a Docker registry
@@ -734,7 +734,7 @@ jobs:
                          sed -e 's/.* 3\./3./' -e 's/ .*//')
             pyenv local $PY3
             mkdir -p /tmp/${DATASET}/derivatives && sudo setfacl -d -m group:$(id -gn):rwx /tmp/${DATASET}/derivatives && sudo setfacl -m group:$(id -gn):rwx /tmp/${DATASET}/derivatives
-            pip install --upgrade pip setuptools
+            pip install --upgrade "pip<21.0" "setuptools<51.0"
             pip install --upgrade /tmp/src/fmriprep/wrapper/
       - run:
           name: Set-up a Docker registry
@@ -931,7 +931,7 @@ jobs:
             THISVERSION=${CIRCLE_TAG:-$THISVERSION}
             virtualenv --python=python build
             source build/bin/activate
-            pip install --upgrade "pip>=19.1" numpy
+            pip install --upgrade "pip>=19.1,<21.0" numpy
             echo "${CIRCLE_TAG:-$THISVERSION}" > fmriprep/VERSION
             python setup.py sdist
             pip wheel --no-deps -w dist/ .
@@ -946,7 +946,7 @@ jobs:
             twine check dist/fmriprep*.tar.gz
             virtualenv --python=python sdist
             source sdist/bin/activate
-            pip install --upgrade "pip>=19.1" numpy
+            pip install --upgrade "pip>=19.1,<21.0" numpy
             pip install dist/fmriprep*.tar.gz
             which fmriprep | grep sdist\\/bin
             INSTALLED_VERSION=$(fmriprep --version)
@@ -980,7 +980,7 @@ jobs:
             cd wrapper
             virtualenv --python=python build
             source build/bin/activate
-            pip install --upgrade "pip>=19.1"
+            pip install --upgrade "pip>=19.1,<21.0"
             sed -i -E "s/(__version__ = )'[A-Za-z0-9.-]+'/\1'${CIRCLE_TAG:-$THISVERSION}'/" fmriprep_docker.py
             python setup.py sdist
             pip wheel --no-deps -w dist/ .
@@ -999,7 +999,7 @@ jobs:
             THISVERSION=$( python get_version.py )
             virtualenv --python=python build
             source build/bin/activate
-            pip install --upgrade "pip>=19.1"
+            pip install --upgrade "pip>=19.1,<21.0"
             echo "${CIRCLE_TAG:-$THISVERSION}" > fmriprep/VERSION
             python setup.py sdist
             pip wheel --no-deps -w dist/ .
@@ -1010,7 +1010,7 @@ jobs:
             cd wrapper
             virtualenv --python=python build
             source build/bin/activate
-            pip install --upgrade "pip>=19.1"
+            pip install --upgrade "pip>=19.1,<21.0"
             sed -i -E "s/(__version__ = )'[A-Za-z0-9.-]+'/\1'${CIRCLE_TAG:-$THISVERSION}'/" fmriprep_docker.py
             python setup.py sdist
             pip wheel --no-deps -w dist/ .
