@@ -270,6 +270,7 @@ jobs:
       - restore_cache:
           keys:
             - data-v9-{{ .Branch }}-{{ .Revision }}
+      - docker/install-docker-credential-helper
       - run:
           name: Docker authentication
           command: |
@@ -377,6 +378,7 @@ jobs:
             - ds005-anat-v18-{{ .Branch }}
             - ds005-anat-v18-master
             - ds005-anat-v18-
+      - docker/install-docker-credential-helper
       - run:
           name: Docker authentication
           command: |
@@ -615,6 +617,7 @@ jobs:
             mkdir -p /tmp/${DATASET}/derivatives
             pip install --upgrade pip setuptools
             pip install --upgrade /tmp/src/fmriprep/wrapper/
+      - docker/install-docker-credential-helper
       - run:
           name: Docker authentication
           command: |
@@ -777,6 +780,7 @@ jobs:
             mkdir -p /tmp/${DATASET}/derivatives
             pip install --upgrade pip setuptools
             pip install --upgrade /tmp/src/fmriprep/wrapper/
+      - docker/install-docker-credential-helper
       - run:
           name: Docker authentication
           command: |
@@ -900,6 +904,7 @@ jobs:
           paths:
             - /tmp/docker
             - /tmp/images
+      - docker/install-docker-credential-helper
       - run:
           name: Docker authentication
           command: |
@@ -953,6 +958,7 @@ jobs:
           paths:
             - /tmp/docker
             - /tmp/images
+      - docker/install-docker-credential-helper
       - run:
           name: Docker authentication
           command: |
