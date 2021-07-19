@@ -102,7 +102,7 @@ ENV PATH=$ANTSPATH:$PATH
 # Installing SVGO and bids-validator
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
 RUN apt-get install -y nodejs
-RUN npm install -g svgo bids-validator@1.4.0 &&
+RUN npm install -g svgo bids-validator@1.4.0 && \
     rm -rf /root/.npm
 
 # Installing and setting up ICA_AROMA
