@@ -23,7 +23,8 @@ jobs:
             fi
       - restore_cache:
           keys:
-            - build-v4-{{ .Branch }}-{{ epoch }}
+            - build-v4-{{ .Branch }}-{{ .Revision }}
+            - build-v4--{{ .Revision }}
             - build-v4-{{ .Branch }}-
             - build-v4-master-
             - build-v4-
@@ -116,7 +117,7 @@ jobs:
           paths:
             - src/fmriprep
       - save_cache:
-         key: build-v4-{{ .Branch }}-{{ epoch }}
+         key: build-v4-{{ .Branch }}-{{ .Revision }}
          paths:
             - /tmp/docker
             - /tmp/images
@@ -129,7 +130,9 @@ jobs:
       - restore_cache:
           keys:
             - data-v9-{{ .Branch }}-{{ .Revision }}
-            - data-v9-{{ .Branch }}
+            - data-v9--{{ .Revision }}
+            - data-v9-{{ .Branch }}-
+            - data-v9-master-
             - data-v9-
       - run:
           name: Get test data from ds000005
@@ -207,7 +210,7 @@ jobs:
               echo "sMRIPrep derivatives of ds000210 were cached"
             fi
       - save_cache:
-         key: data-v9-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
+         key: data-v9-{{ .Branch }}-{{ .Revision }}
          paths:
             - /tmp/data
             - /tmp/ds005/freesurfer
@@ -261,9 +264,7 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - build-v4-{{ .Branch }}-{{ epoch }}
-            - build-v4-{{ .Branch }}-
-            - build-v4-
+            - build-v4-{{ .Branch }}-{{ .Revision }}
           paths:
             - /tmp/docker
             - /tmp/images
@@ -363,9 +364,7 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - build-v4-{{ .Branch }}-{{ epoch }}
-            - build-v4-{{ .Branch }}-
-            - build-v4-
+            - build-v4-{{ .Branch }}-{{ .Revision }}
           paths:
             - /tmp/docker
             - /tmp/images
@@ -375,8 +374,9 @@ jobs:
       - restore_cache:
           keys:
             - ds005-anat-v18-{{ .Branch }}-{{ .Revision }}
-            - ds005-anat-v18-{{ .Branch }}
-            - ds005-anat-v18-master
+            - ds005-anat-v18--{{ .Revision }}
+            - ds005-anat-v18-{{ .Branch }}-
+            - ds005-anat-v18-master-
             - ds005-anat-v18-
       - docker/install-docker-credential-helper
       - run:
@@ -435,7 +435,7 @@ jobs:
             rm -rf /tmp/${DATASET}/work/reportlets
             rm -rf /tmp/${DATASET}/derivatives/fmriprep
       - save_cache:
-         key: ds005-anat-v18-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
+         key: ds005-anat-v18-{{ .Branch }}-{{ .Revision }}
          paths:
             - /tmp/ds005/work
 
@@ -593,9 +593,7 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - build-v4-{{ .Branch }}-{{ epoch }}
-            - build-v4-{{ .Branch }}-
-            - build-v4-
+            - build-v4-{{ .Branch }}-{{ .Revision }}
           paths:
             - /tmp/docker
             - /tmp/images
@@ -605,8 +603,9 @@ jobs:
       - restore_cache:
           keys:
             - ds054-anat-v14-{{ .Branch }}-{{ .Revision }}
-            - ds054-anat-v14-{{ .Branch }}
-            - ds054-anat-v14-master
+            - ds054-anat-v14--{{ .Revision }}
+            - ds054-anat-v14-{{ .Branch }}-
+            - ds054-anat-v14-master-
             - ds054-anat-v14-
       - run:
           name: Setting up test
@@ -662,7 +661,7 @@ jobs:
             rm -rf /tmp/${DATASET}/work/reportlets
             rm -rf /tmp/${DATASET}/derivatives/fmriprep
       - save_cache:
-         key: ds054-anat-v14-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
+         key: ds054-anat-v14-{{ .Branch }}-{{ .Revision }}
          paths:
             - /tmp/ds054/work
 
@@ -756,9 +755,7 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - build-v4-{{ .Branch }}-{{ epoch }}
-            - build-v4-{{ .Branch }}-
-            - build-v4-
+            - build-v4-{{ .Branch }}-{{ .Revision }}
           paths:
             - /tmp/docker
             - /tmp/images
@@ -768,8 +765,9 @@ jobs:
       - restore_cache:
           keys:
             - ds210-anat-v12-{{ .Branch }}-{{ .Revision }}
+            - ds210-anat-v12--{{ .Revision }}
             - ds210-anat-v12-{{ .Branch }}-
-            - ds210-anat-v12-master
+            - ds210-anat-v12-master-
             - ds210-anat-v12-
       - run:
           name: Setting up test
@@ -825,7 +823,7 @@ jobs:
             rm -rf /tmp/${DATASET}/work/reportlets
             rm -rf /tmp/${DATASET}/derivatives/fmriprep
       - save_cache:
-         key: ds210-anat-v12-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
+         key: ds210-anat-v12-{{ .Branch }}-{{ .Revision }}
          paths:
             - /tmp/ds210/work
 
@@ -898,9 +896,7 @@ jobs:
             fi
       - restore_cache:
           keys:
-            - build-v4-{{ .Branch }}-{{ epoch }}
-            - build-v4-{{ .Branch }}-
-            - build-v4-
+            - build-v4-{{ .Branch }}-{{ .Revision }}
           paths:
             - /tmp/docker
             - /tmp/images
@@ -952,9 +948,7 @@ jobs:
             fi
       - restore_cache:
           keys:
-            - build-v4-{{ .Branch }}-{{ epoch }}
-            - build-v4-{{ .Branch }}-
-            - build-v4-
+            - build-v4-{{ .Branch }}-{{ .Revision }}
           paths:
             - /tmp/docker
             - /tmp/images
