@@ -146,9 +146,9 @@ def init_func_preproc_wf(bold_file):
 
     workflow = Workflow(name=wf_name)
 
-    if nb.load(bold_file).shape[3:] <= (1,):
+    if nb.load(bold_file).shape[3:] <= (5,):
         config.loggers.workflow.warning(
-            f"3D BOLD series <{ref_file}> detected. Skipping."
+            f"Too short BOLD series  (<= 5 timepoints). Skipping processing of <{ref_file}>."
         )
         return workflow
 
