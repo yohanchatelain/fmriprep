@@ -601,6 +601,7 @@ def parse_args(args=None, namespace=None):
     parser = _build_parser()
     opts = parser.parse_args(args, namespace)
 
+
     if opts.config_file:
         skip = {} if opts.reports_only else {"execution": ("run_uuid",)}
         config.load(opts.config_file, skip=skip)
@@ -608,6 +609,18 @@ def parse_args(args=None, namespace=None):
 
     config.execution.log_level = int(max(25 - 5 * opts.verbose_count, logging.DEBUG))
     config.from_dict(vars(opts))
+
+    if not config.execution.notrack:
+        try:
+            import sentry_sdk
+        except ImportError:
+            config.execution.notrack = True
+            config.loggers.cli.warning("Telemetry disabled because sentry_sdk is not installed.")
+        else:
+            config.loggers.cli.info(
+                "Telemetry system to collect crashes and errors is enabled "
+                "- thanks for your feedback!. Use option ``--notrack`` to opt out."
+            )
 
     # Initialize --output-spaces if not defined
     if config.execution.output_spaces is None:
