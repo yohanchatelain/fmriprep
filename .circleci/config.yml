@@ -319,7 +319,7 @@ jobs:
       - run:
           name: Test fmriprep-wrapper (Python 3)
           command: |
-            export PY3=$(pyenv versions | grep '3\.' |
+            export PY3=$(pyenv versions | grep '3\.7' |
                          sed -e 's/.* 3\./3./' -e 's/ .*//')
             pyenv local $PY3
             echo -n "Python version: "
