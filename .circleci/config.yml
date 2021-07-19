@@ -60,14 +60,14 @@ jobs:
             set -e
             if [[ "$success" = "0" ]]; then
                 echo "Pulling from local registry"
-                docker tag localhost:5000/ubuntu ubuntu:xenial-20200706
+                docker tag localhost:5000/ubuntu ubuntu:focal
                 docker pull localhost:5000/fmriprep
                 docker tag localhost:5000/fmriprep nipreps/fmriprep:latest
                 docker tag localhost:5000/fmriprep nipreps/fmriprep
             else
                 echo "Pulling from Docker Hub"
-                docker pull ubuntu:xenial-20200706
-                docker tag ubuntu:xenial-20200706 localhost:5000/ubuntu
+                docker pull ubuntu:focal
+                docker tag ubuntu:focal localhost:5000/ubuntu
                 docker push localhost:5000/ubuntu
                 docker pull nipreps/fmriprep:latest
             fi
