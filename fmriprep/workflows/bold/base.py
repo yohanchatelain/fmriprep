@@ -152,7 +152,6 @@ def init_func_preproc_wf(bold_file):
         )
         return workflow
 
-
     mem_gb = {'filesize': 1, 'resampled': 1, 'largemem': 1}
     bold_tlen = 10
 
