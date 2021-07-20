@@ -48,6 +48,8 @@ def fetch_OASIS():
     Expected templates:
 
     tpl-OASIS30ANTs/tpl-OASIS30ANTs_res-01_T1w.nii.gz
+    tpl-OASIS30ANTs/tpl-OASIS30ANTs_res-01_label-WM_probseg.nii.gz
+    tpl-OASIS30ANTs/tpl-OASIS30ANTs_res-01_label-BS_probseg.nii.gz
     tpl-OASIS30ANTs/tpl-OASIS30ANTs_res-01_label-brain_probseg.nii.gz
     tpl-OASIS30ANTs/tpl-OASIS30ANTs_res-01_desc-brain_mask.nii.gz
     tpl-OASIS30ANTs/tpl-OASIS30ANTs_res-01_desc-BrainCerebellumExtraction_mask.nii.gz
@@ -55,6 +57,8 @@ def fetch_OASIS():
     template = "OASIS30ANTs"
 
     tf.get(template, resolution=1, desc=None, label=None, suffix='T1w')
+    tf.get(template, resolution=1, label='WM', suffix='probseg')
+    tf.get(template, resolution=1, label='BS', suffix='probseg')
     tf.get(template, resolution=1, label='brain', suffix='probseg')
     tf.get(template, resolution=1, label='brain', suffix='mask')
     tf.get(template, resolution=1, desc='BrainCerebellumExtraction', suffix='mask')
