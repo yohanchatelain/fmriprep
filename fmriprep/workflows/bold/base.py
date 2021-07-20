@@ -144,9 +144,11 @@ def init_func_preproc_wf(bold_file):
     from niworkflows.interfaces.utils import DictMerge
     from sdcflows.workflows.base import init_sdc_estimate_wf, fieldmap_wrangler
 
-    if nb.load(bold_file).shape[3:] <= (5,):
+    if nb.load(
+        bold_file[0] if isinstance(bold_file, (list, tuple)) else bold_file
+    ).shape[3:] <= (5 - config.execution.sloppy,):
         config.loggers.workflow.warning(
-            f"Too short BOLD series  (<= 5 timepoints). Skipping processing of <{ref_file}>."
+            f"Too short BOLD series (<= 5 timepoints). Skipping processing of <{bold_file}>."
         )
         return
 
