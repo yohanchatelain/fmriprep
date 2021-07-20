@@ -181,7 +181,7 @@ RUN curl -sSL "https://dl.dropbox.com/s/gwf51ykkk5bifyj/ants-Linux-centos6_x86_6
 
 # Installing SVGO and bids-validator
 RUN npm install -g svgo@^2.3 bids-validator@1.5.7 \
-  && rm -rf ~/.npm ~/.empty
+  && rm -rf ~/.npm ~/.empty /root/.npm
 
 # Installing and setting up ICA_AROMA
 WORKDIR /opt/ICA-AROMA
