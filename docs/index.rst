@@ -16,14 +16,11 @@ Contents
 
    installation
    usage
-   docker
-   singularity
    workflows
    sdc
    outputs
    spaces
    faq
-   contributors
    citing
    api
    changes
