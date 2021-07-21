@@ -361,15 +361,21 @@ Susceptibility Distortion Correction (SDC)
 One of the major problems that affects :abbr:`EPI (echo planar imaging)` data
 is the spatial distortion caused by the inhomogeneity of the field inside
 the scanner.
-Please refer to :ref:`sdc` for details on the
-available workflows.
 
 .. figure:: _static/unwarping.svg
 
     Applying susceptibility-derived distortion correction, based on
     fieldmap estimation.
 
-See also *SDCFlows*' :py:func:`~sdcflows.workflows.base.init_sdc_estimate_wf`
+Please note that all routines for susceptibility-derived distortion correction
+have been excised off of *fMRIPrep* for utilization on other projects
+(e.g., `dMRIPrep <https://www.nipreps.org/dmriprep>`__).
+For more detailed documentation on
+:abbr:`SDC (susceptibility-derived distortion correction)`
+routines, check on the `SDCFlows component <https://www.nipreps.org/sdcflows>`__.
+
+Theory, methods and references are found within the
+`SDCFlows documentation <https://www.nipreps.org/sdcflows/master/api/sdcflows.workflows.fit.fieldmap.html>`__.
 
 Pre-processed BOLD in native space
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

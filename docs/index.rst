@@ -17,7 +17,6 @@ Contents
    installation
    usage
    workflows
-   sdc
    outputs
    spaces
    faq
