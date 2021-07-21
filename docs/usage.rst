@@ -5,14 +5,14 @@
 Usage Notes
 ===========
 .. warning::
-   As of *fMRIPRep* 1.0.12, the software includes a tracking system
+   As of *fMRIPrep* 1.0.12, the software includes a tracking system
    to report usage statistics and errors. Users can opt-out using
    the ``--notrack`` command line argument.
 
 
 Execution and the BIDS format
 -----------------------------
-The *fMRIPRep* workflow takes as principal input the path of the dataset
+The *fMRIPrep* workflow takes as principal input the path of the dataset
 that is to be processed.
 The input dataset is required to be in valid :abbr:`BIDS (Brain Imaging Data
 Structure)` format, and it must include at least one T1w structural image and
@@ -27,6 +27,8 @@ Example: ::
 
     fmriprep data/bids_root/ out/ participant -w work/
 
+Further information about BIDS and BIDS-Apps can be found at the
+`NiPreps portal <https://www.nipreps.org/apps/framework/>`__.
 
 Command-Line Arguments
 ----------------------
@@ -45,7 +47,6 @@ The command-line interface of the docker wrapper
    :prog: fmriprep-docker
    :nodefault:
    :nodefaultconst:
-
 
 .. _fs_license:
 
