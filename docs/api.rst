@@ -13,9 +13,16 @@ you get started.
 
 Setting up your development environment
 ---------------------------------------
-Making changes to *fMRIPrep* and creating derived works is easy.
-To setup your environment, we recommend 
-`the following tips and the use of containers <https://www.nipreps.org/devs/devenv/>`__.
+We believe that *fMRIPrep* must be free to use, inspect, and critique.
+Correspondingly, you should be free to modify our software to improve it 
+or adapt it to new use cases and we especially welcome contributions to
+improve it or its documentation.
+
+We actively direct efforts into making the scrutiny and improvement processes
+as easy as possible.
+As part of such efforts, we maintain some 
+`tips and guidelines for developers <https://www.nipreps.org/devs/devenv/>`__
+to help minimize your burden if you want to modify the software.
 
 Internal configuration system
 -----------------------------
