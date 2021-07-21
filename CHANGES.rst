@@ -1,3 +1,20 @@
+20.2.3 (July 21, 2021)
+======================
+Patch release in the 20.2.x LTS series.
+Addresses minimal problems in some edge-cases, overall improves the documentation and infrastructure.
+Exercises some maintenance operations addressing problems surfaced when the previous tag 20.2.2 was released.
+
+  * FIX: Address the problems of a sloppy merge (#2468)
+  * FIX: ``DerivativesDataSink`` nondeterministic checksums fixed with ``niworkflows=~1.3.4`` (#2458)
+  * FIX: Address dependency incompatibilities by pinning specific packages (#2463)
+  * FIX: Unprotected import of ``sentry_sdk``, which is not a dependency (#2460)
+  * ENH: Detect 3D & too-short BOLD series, warn and skip run's workflow building (#2461)
+  * DOC: Transfer duplicated documentation to www.nipreps.org (#2469)
+  * DOC: Better explanation on how spike regressors are generated (#2465)
+  * DOC: Clarify that ``res-2`` entity does not mean 2mm (#2466)
+  * MAINT: Containers - remove ``/root/.npm`` (#2464)
+  * MAINT: Back port CircleCI configuration from dev branch (#2456)
+
 20.2.2 (July 16, 2021)
 ======================
 Hot-fix release in the 20.2.x LTS series.
