@@ -20,6 +20,5 @@ Contents
    outputs
    spaces
    faq
-   citing
    api
    changes
