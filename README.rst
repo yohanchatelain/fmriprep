@@ -105,6 +105,14 @@ For a more detailed description of the citation boilerplate and its relevance,
 please check out the
 `NiPreps documentation <https://www.nipreps.org/intro/transparency/#citation-boilerplates>`__.
 
+**Plagiarism disclaimer**.
+The boilerplate text is public domain, distributed under the
+`CC0 license <https://creativecommons.org/publicdomain/zero/1.0/>`__,
+and we recommend *fMRIPrep* users to reproduce it verbatim in their works.
+Therefore, if reviewers and/or editors raise concerns because the text is flagged by automated
+plagiarism detection, please refer them to the *NiPreps* community and/or the note to this
+effect in the `boilerplate documentation page <https://www.nipreps.org/intro/transparency/#citation-boilerplates>`__.
+
 **Papers**.
 *fMRIPrep* contributors have published two relevant papers:
 `Esteban et al. (2019) <https://doi.org/10.1038/s41592-018-0235-4>`__
