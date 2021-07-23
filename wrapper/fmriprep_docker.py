@@ -1,18 +1,19 @@
 #!/usr/bin/env python
 """
-The fMRIPrep on Docker wrapper
+The *fMRIPrep* on Docker wrapper
 
-
-This is a lightweight Python wrapper to run fMRIPrep.
+This is a lightweight Python wrapper to run *fMRIPrep*.
 Docker must be installed and running. This can be checked
 running ::
 
   docker info
 
-Please report any feedback to our GitHub repository
-(https://github.com/nipreps/fmriprep) and do not
-forget to credit all the authors of software that fMRIPrep
-uses (https://fmriprep.readthedocs.io/en/latest/citing.html).
+Please acknowledge this work using the citation boilerplate that *fMRIPrep* includes
+in the visual report generated for every subject processed.
+For a more detailed description of the citation boilerplate and its relevance,
+please check out the
+`NiPreps documentation <https://www.nipreps.org/intro/transparency/#citation-boilerplates>`__.
+Please report any feedback to our `GitHub repository <https://github.com/nipreps/fmriprep>`__.
 """
 import sys
 import os

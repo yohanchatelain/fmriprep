@@ -48,6 +48,30 @@ The command-line interface of the docker wrapper
    :nodefault:
    :nodefaultconst:
 
+
+
+Limitations and reasons not to use *fMRIPrep*
+---------------------------------------------
+
+1. Very narrow :abbr:`FoV (field-of-view)` images oftentimes do not contain
+   enough information for standard image registration methods to work correctly.
+   Also, problems may arise when extracting the brain from these data.
+   fMRIPrep supports pre-aligned BOLD series, and accepting pre-computed
+   derivatives such as brain masks is a target of future effort.
+2. *fMRIPrep* may also underperform for particular populations (e.g., infants) and
+   non-human brains, although appropriate templates can be provided to overcome the
+   issue.
+3. The "EPInorm" approach is currently not supported, although we plan to implement
+   this feature (see `#620 <https://github.com/nipreps/fmriprep/issues/620>`__).
+4. If you really want unlimited flexibility (which is obviously a double-edged sword).
+5. If you want students to suffer through implementing each step for didactic purposes,
+   or to learn shell-scripting or Python along the way.
+6. If you are trying to reproduce some *in-house* lab pipeline.
+
+(Reasons 4-6 were kindly provided by S. Nastase in his
+`open review <https://pubpeer.com/publications/6B3E024EAEBF2C80085FDF644C2085>`__
+of our `pre-print <https://doi.org/10.1101/306951>`__).
+
 .. _fs_license:
 
 The FreeSurfer license
