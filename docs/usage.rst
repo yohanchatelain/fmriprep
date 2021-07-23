@@ -56,8 +56,8 @@ Limitations and reasons not to use *fMRIPrep*
 1. Very narrow :abbr:`FoV (field-of-view)` images oftentimes do not contain
    enough information for standard image registration methods to work correctly.
    Also, problems may arise when extracting the brain from these data.
-   Supporting these particular images is already a future line of the development
-   road-map.
+   fMRIPrep supports pre-aligned BOLD series, and accepting pre-computed
+   derivatives such as brain masks is a target of future effort.
 2. *fMRIPrep* may also underperform for particular populations (e.g., infants) and
    non-human brains, although appropriate templates can be provided to overcome the
    issue.
