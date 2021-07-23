@@ -34,6 +34,8 @@ a hard-limited memory-scope.
 
 def build_workflow(config_file, retval):
     """Create the Nipype Workflow that supports the whole execution graph."""
+    from pathlib import Path
+    from pkg_resources import resource_filename as pkgrf
     from niworkflows.utils.bids import collect_participants, check_pipeline_version
     from niworkflows.utils.misc import check_valid_fs_license
     from niworkflows.reports import generate_reports
@@ -49,6 +51,16 @@ def build_workflow(config_file, retval):
 
     retval["return_code"] = 1
     retval["workflow"] = None
+
+    banner = [f"Running fMRIPrep version {version}"]
+    notice_path = Path(pkgrf("fmriprep", "data/NOTICE"))
+    if notice_path.exists():
+        banner[0] += "\n"
+        banner += [f"License NOTICE {'#' * 50}"]
+        banner += [f"fMRIPrep {version}"]
+        banner += notice_path.read_text().splitlines(keepends=False)[1:]
+        banner += ["#" * len(banner[1])]
+    build_log.log(25, f"\n{' ' * 9}".join(banner))
 
     # warn if older results exist: check for dataset_description.json in output folder
     msg = check_pipeline_version(version, fmriprep_dir / "dataset_description.json")
@@ -70,8 +82,6 @@ def build_workflow(config_file, retval):
 
     # Called with reports only
     if config.execution.reports_only:
-        from pkg_resources import resource_filename as pkgrf
-
         build_log.log(
             25, "Running --reports-only on participants %s", ", ".join(subject_list)
         )
@@ -85,21 +95,25 @@ def build_workflow(config_file, retval):
         return retval
 
     # Build main workflow
-    init_msg = f"""
-    Running fMRIPREP version {config.environment.version}:
-      * BIDS dataset path: {config.execution.bids_dir}.
-      * Participant list: {subject_list}.
-      * Run identifier: {config.execution.run_uuid}.
-      * Output spaces: {config.execution.output_spaces}."""
+    init_msg = [
+        "Building fMRIPrep's workflow:",
+        f"BIDS dataset path: {config.execution.bids_dir}.",
+        f"Participant list: {subject_list}.",
+        f"Run identifier: {config.execution.run_uuid}.",
+        f"Output spaces: {config.execution.output_spaces}.",
+    ]
 
     if config.execution.anat_derivatives:
-        init_msg += f"""
-      * Anatomical derivatives: {config.execution.anat_derivatives}."""
+        init_msg += [
+            f"Anatomical derivatives: {config.execution.anat_derivatives}."
+        ]
 
     if config.execution.fs_subjects_dir:
-        init_msg += f"""
-      * Pre-run FreeSurfer's SUBJECTS_DIR: {config.execution.fs_subjects_dir}."""
-    build_log.log(25, init_msg)
+        init_msg += [
+            f"Pre-run FreeSurfer's SUBJECTS_DIR: {config.execution.fs_subjects_dir}."
+        ]
+
+    build_log.log(25, f"\n{' ' * 11}* ".join(init_msg))
 
     retval["workflow"] = init_fmriprep_wf()
 
