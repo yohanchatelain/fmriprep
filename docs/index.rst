@@ -5,8 +5,6 @@
 
 .. include:: links.rst
 .. include:: ../README.rst
-.. include:: license.rst
-
 
 Contents
 --------

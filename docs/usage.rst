@@ -210,3 +210,6 @@ http://neurostars.org/tags/fmriprep/
 To participate in the *fMRIPRep* development-related discussions please use the
 following mailing list: http://mail.python.org/mailman/listinfo/neuroimaging
 Please add *[fmriprep]* to the subject line when posting on the mailing list.
+
+
+.. include:: license.rst
