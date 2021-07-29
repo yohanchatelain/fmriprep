@@ -45,6 +45,53 @@ A full list of changes can be found below.
 * MAINT: Move away from nearly deprecated images (#2295)
 * MAINT: Migrate from poldracklab to nipreps orgs (#2290)
 
+.. admonition:: Author list for papers based on *fMRIPrep* 21.0.x series
+
+    As described in the `Contributor Guidelines
+    <https://www.nipreps.org/community/CONTRIBUTING/#recognizing-contributions>`__,
+    anyone listed as developer or contributor may write and submit manuscripts
+    about *fMRIPrep*.
+    To do so, please move the author(s) name(s) to the front of the following list:
+
+    Markiewicz, Christopher J. \ :sup:`1`\ ; Blair, Ross W. \ :sup:`1`\ ; Goncalves, Mathias \ :sup:`1`\ ; Kent, James D. \ :sup:`2`\ ; DuPre, Elizabeth \ :sup:`3`\ ; Salo, Taylor \ :sup:`4`\ ; Ciric, Rastko \ :sup:`1`\ ; Pinsard, Basile \ :sup:`5`\ ; Heinsfeld, Anibal S. \ :sup:`6`\ ; Benson, Noah C. \ :sup:`7`\ ; de la Vega, Alejandro \ :sup:`8`\ ; Feingold, Franklin \ :sup:`1`\ ; Valabregue, Romain \ :sup:`9`\ ; Sneve, Markus H. \ :sup:`10`\ ; Finc, Karolina \ :sup:`11`\ ; Erramuzpe, Asier \ :sup:`12`\ ; Moodie, Craig A. \ :sup:`1`\ ; Mentch, Jeff \ :sup:`13`\ ; Jacoby, Nir \ :sup:`14`\ ; Lurie, Daniel J. \ :sup:`15`\ ; Ye, Zhifang \ :sup:`16`\ ; Frederick, Blaise B. \ :sup:`17, 18`\ ; Ma, Feilong \ :sup:`19`\ ; Tooley, Ursula A. \ :sup:`20`\ ; Liem, Franz \ :sup:`21`\ ; Halchenko, Yaroslav O. \ :sup:`19`\ ; Adebimpe, Azeez \ :sup:`22`\ ; Rivera-Dompenciel, Adriana \ :sup:`2`\ ; Amlien, Inge K. \ :sup:`10`\ ; Wexler, Joseph B. \ :sup:`1`\ ; Waller, Lea \ :sup:`23`\ ; Thompson, William H. \ :sup:`1`\ ; Isik, Ayse Ilkay \ :sup:`24`\ ; Stojić, Hrvoje \ :sup:`25`\ ; Groen, Iris I. A. \ :sup:`26`\ ; Jamison, Keith W. \ :sup:`27`\ ; Sitek, Kevin R. \ :sup:`13`\ ; Urchs, Sebastian \ :sup:`3`\ ; Gomez, Daniel E. P. \ :sup:`28`\ ; Devenyi, Grabriel A. \ :sup:`29`\ ; Naveau, Mikaël \ :sup:`30`\ ; Velasco, Pablo \ :sup:`31`\ ; Bellec, Pierre \ :sup:`5`\ ; Cieslak, Matthew \ :sup:`22`\ ; Ghosh, Satrajit S. \ :sup:`32, 33`\ ; Satterthwaite, Theodore D. \ :sup:`22`\ ; Wright, Jessey \ :sup:`1`\ ; Gorgolewski, Krzysztof J. \ :sup:`1`\ ; Poldrack, Russell A. \ :sup:`1`\ ; Esteban, Oscar \ :sup:`34`\ .
+
+    Affiliations:
+
+      1. Department of Psychology, Stanford University
+      2. Neuroscience Program, University of Iowa
+      3. Montreal Neurological Institute, McGill University
+      4. Department of Psychology, Florida International University
+      5. SIMEXP Lab, CRIUGM, University of Montréal, Montréal, Canada
+      6. Child Mind Institute
+      7. Department of Psychology, New York University
+      8. University of Texas at Austin
+      9. CENIR, INSERM U1127, CNRS UMR 7225, UPMC Univ Paris 06 UMR S 1127, Institut du Cerveau et de la Moelle épinière, ICM, F-75013, Paris, France
+      10. Center for Lifespan Changes in Brain and Cognition, University of Oslo
+      11. Centre for Modern Interdisciplinary Technologies, Nicolaus Copernicus University in Toruń
+      12. Computational Neuroimaging Lab, BioCruces Health Research Institute
+      13. Speech & Hearing Bioscience & Technology Program, Harvard University
+      14. Department of Psychology, Columbia University
+      15. Department of Psychology, University of California, Berkeley
+      16. State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University
+      17. McLean Hospital Brain Imaging Center, MA, USA
+      18. Consolidated Department of Psychiatry, Harvard Medical School, MA, USA
+      19. Dartmouth College: Hanover, NH, United States
+      20. Department of Neuroscience, University of Pennsylvania, PA, USA
+      21. URPP Dynamics of Healthy Aging, University of Zurich
+      22. Perelman School of Medicine, University of Pennsylvania, PA, USA
+      23. Charite Universitatsmedizin Berlin, Germany
+      24. Max Planck Institute for Empirical Aesthetics
+      25. Max Planck UCL Centre for Computational Psychiatry and Ageing Research, University College London
+      26. Department of Psychology, New York University, NY, USA
+      27. Department of Radiology, Weill Cornell Medicine
+      28. Donders Institute for Brain, Cognition and Behaviour, Radboud University Nijmegen
+      29. Department of Psychiatry, McGill University
+      30. Cyceron, UMS 3408 (CNRS - UCBN), France
+      31. Center for Brain Imaging, New York University
+      32. McGovern Institute for Brain Research, MIT, MA, USA
+      33. Department of Otolaryngology, Harvard Medical School, MA, USA
+      34. Department of Radiology, CHUV, Université de Lausanne
+
 20.2.x LTS (long-term-support) series
 =====================================
 20.2.3 (July 21, 2021)
