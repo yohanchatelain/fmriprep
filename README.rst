@@ -1,10 +1,8 @@
 *fMRIPrep*: A Robust Preprocessing Pipeline for fMRI Data
 =========================================================
-
-This pipeline is developed by the `Poldrack lab at Stanford University
-<https://poldracklab.stanford.edu/>`_ for use at the `Center for Reproducible
-Neuroscience (CRN) <http://reproducibility.stanford.edu/>`_, as well as for
-open-source software distribution.
+*fMRIPrep* is a *NiPreps (NeuroImaging PREProcessing toolS)* application
+(`www.nipreps.org <https://www.nipreps.org>`__) for the preprocessing of
+task-based and resting-state functional MRI (fMRI).
 
 .. image:: https://img.shields.io/badge/docker-nipreps/fmriprep-brightgreen.svg?logo=docker&style=flat
   :target: https://hub.docker.com/r/nipreps/fmriprep/tags/
@@ -79,10 +77,8 @@ This tool allows you to easily do the following:
 More information and documentation can be found at
 https://fmriprep.readthedocs.io/
 
-
 Principles
 ----------
-
 *fMRIPrep* is built around three principles:
 
 1. **Robustness** - The pipeline adapts the preprocessing steps depending on
@@ -100,37 +96,48 @@ Principles
    the process and decide which subjects should be kept for the group level
    analysis.
 
-
-Limitations and reasons not to use *fMRIPrep*
----------------------------------------------
-
-1. Very narrow :abbr:`FoV (field-of-view)` images oftentimes do not contain
-   enough information for standard image registration methods to work correctly.
-   Also, problems may arise when extracting the brain from these data.
-   Supporting these particular images is already a future line of the development
-   road-map.
-2. *fMRIPrep* may also underperform for particular populations (e.g., infants) and
-   non-human brains, although appropriate templates can be provided to overcome the
-   issue.
-3. The "EPInorm" approach is currently not supported, although we plan to implement
-   this feature (see `#620 <https://github.com/nipreps/fmriprep/issues/620>`_).
-4. If you really want unlimited flexibility (which is obviously a double-edged sword).
-5. If you want students to suffer through implementing each step for didactic purposes,
-   or to learn shell-scripting or Python along the way.
-6. If you are trying to reproduce some *in-house* lab pipeline.
-
-(Reasons 4-6 were kindly provided by S. Nastase in his
-`open review <https://pubpeer.com/publications/6B3E024EAEBF2C80085FDF644C2085>`__
-of our `pre-print <https://doi.org/10.1101/306951>`__).
-
-
-Acknowledgements
-----------------
-
+Citation
+--------
+**Citation boilerplate**.
 Please acknowledge this work using the citation boilerplate that *fMRIPrep* includes
 in the visual report generated for every subject processed.
-For an illustration of how the citation boilerplate generally reads, please
-check `our documentation <https://fmriprep.readthedocs.io/en/latest/citing.html>`__.
+For a more detailed description of the citation boilerplate and its relevance,
+please check out the
+`NiPreps documentation <https://www.nipreps.org/intro/transparency/#citation-boilerplates>`__.
+
+**Plagiarism disclaimer**.
+The boilerplate text is public domain, distributed under the
+`CC0 license <https://creativecommons.org/publicdomain/zero/1.0/>`__,
+and we recommend *fMRIPrep* users to reproduce it verbatim in their works.
+Therefore, if reviewers and/or editors raise concerns because the text is flagged by automated
+plagiarism detection, please refer them to the *NiPreps* community and/or the note to this
+effect in the `boilerplate documentation page <https://www.nipreps.org/intro/transparency/#citation-boilerplates>`__.
+
+**Papers**.
+*fMRIPrep* contributors have published two relevant papers:
+`Esteban et al. (2019) <https://doi.org/10.1038/s41592-018-0235-4>`__
+[`preprint <https://doi.org/10.1101/306951>`__], and
+`Esteban et al. (2020) <https://doi.org/10.1038/s41596-020-0327-3>`__
+[`preprint <https://doi.org/10.1101/694364>`__].
+
+**Other**.
+Other materials that have been generated over time include the
+`OHBM 2018 software demonstration <https://effigies.github.io/fmriprep-demo/>`__
+and some conference posters:
+
+* Organization for Human Brain Mapping 2018
+  (`Abstract <https://ww5.aievolution.com/hbm1801/index.cfm?do=abs.viewAbs&abs=1321>`__;
+  `PDF <https://files.aievolution.com/hbm1801/abstracts/31779/2035_Markiewicz.pdf>`__)
+
+.. image:: _static/OHBM2018-poster_thumb.png
+   :target: _static/OHBM2018-poster.png
+
+* Organization for Human Brain Mapping 2017
+  (`Abstract <https://ww5.aievolution.com/hbm1701/index.cfm?do=abs.viewAbs&abs=4111>`__;
+  `PDF <https://f1000research.com/posters/6-1129>`__)
+
+.. image:: _static/OHBM2017-poster_thumb.png
+   :target: _static/OHBM2017-poster.png
 
 License information
 -------------------
@@ -154,3 +161,10 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+Acknowledgements
+----------------
+This work is steered and maintained by the `NiPreps Community <https://www.nipreps.org>`__.
+This work was supported by the Laura and John Arnold Foundation,
+the NIH (grant NBIB R01EB020740, PI: Ghosh),
+and NIMH (R24MH114705, R24MH117179, R01MH121867, PI: Poldrack)

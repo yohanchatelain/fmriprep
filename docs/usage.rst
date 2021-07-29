@@ -5,14 +5,14 @@
 Usage Notes
 ===========
 .. warning::
-   As of *fMRIPRep* 1.0.12, the software includes a tracking system
+   As of *fMRIPrep* 1.0.12, the software includes a tracking system
    to report usage statistics and errors. Users can opt-out using
    the ``--notrack`` command line argument.
 
 
 Execution and the BIDS format
 -----------------------------
-The *fMRIPRep* workflow takes as principal input the path of the dataset
+The *fMRIPrep* workflow takes as principal input the path of the dataset
 that is to be processed.
 The input dataset is required to be in valid :abbr:`BIDS (Brain Imaging Data
 Structure)` format, and it must include at least one T1w structural image and
@@ -27,6 +27,8 @@ Example: ::
 
     fmriprep data/bids_root/ out/ participant -w work/
 
+Further information about BIDS and BIDS-Apps can be found at the
+`NiPreps portal <https://www.nipreps.org/apps/framework/>`__.
 
 Command-Line Arguments
 ----------------------
@@ -46,6 +48,29 @@ The command-line interface of the docker wrapper
    :nodefault:
    :nodefaultconst:
 
+
+
+Limitations and reasons not to use *fMRIPrep*
+---------------------------------------------
+
+1. Very narrow :abbr:`FoV (field-of-view)` images oftentimes do not contain
+   enough information for standard image registration methods to work correctly.
+   Also, problems may arise when extracting the brain from these data.
+   fMRIPrep supports pre-aligned BOLD series, and accepting pre-computed
+   derivatives such as brain masks is a target of future effort.
+2. *fMRIPrep* may also underperform for particular populations (e.g., infants) and
+   non-human brains, although appropriate templates can be provided to overcome the
+   issue.
+3. The "EPInorm" approach is currently not supported, although we plan to implement
+   this feature (see `#620 <https://github.com/nipreps/fmriprep/issues/620>`__).
+4. If you really want unlimited flexibility (which is obviously a double-edged sword).
+5. If you want students to suffer through implementing each step for didactic purposes,
+   or to learn shell-scripting or Python along the way.
+6. If you are trying to reproduce some *in-house* lab pipeline.
+
+(Reasons 4-6 were kindly provided by S. Nastase in his
+`open review <https://pubpeer.com/publications/6B3E024EAEBF2C80085FDF644C2085>`__
+of our `pre-print <https://doi.org/10.1101/306951>`__).
 
 .. _fs_license:
 

@@ -1,6 +1,8 @@
-version: 2
-jobs:
+version: 2.1
+orbs:
+  docker: circleci/docker@1.6.0
 
+jobs:
   build:
     environment:
       TZ: "/usr/share/zoneinfo/America/Los_Angeles"
@@ -21,18 +23,20 @@ jobs:
             fi
       - restore_cache:
           keys:
-            - build-v4-{{ .Branch }}-{{ epoch }}
+            - build-v4-{{ .Branch }}-{{ .Revision }}
+            - build-v4--{{ .Revision }}
             - build-v4-{{ .Branch }}-
             - build-v4-master-
             - build-v4-
           paths:
             - /tmp/docker
             - /tmp/images
+      - docker/install-docker-credential-helper
       - run:
           name: Docker authentication
           command: |
-            if [[ -n $DOCKER_PASS ]]; then
-              docker login -u $DOCKER_USER -p $DOCKER_PASS
+            if [[ -n $DOCKER_PAT ]]; then
+              echo "$DOCKER_PAT" | docker login -u $DOCKER_USER --password-stdin
             fi
       - run:
           name: Set up Docker registry
@@ -57,14 +61,14 @@ jobs:
             set -e
             if [[ "$success" = "0" ]]; then
                 echo "Pulling from local registry"
-                docker tag localhost:5000/ubuntu ubuntu:xenial-20200706
+                docker tag localhost:5000/ubuntu ubuntu:focal
                 docker pull localhost:5000/fmriprep
                 docker tag localhost:5000/fmriprep nipreps/fmriprep:latest
                 docker tag localhost:5000/fmriprep nipreps/fmriprep
             else
                 echo "Pulling from Docker Hub"
-                docker pull ubuntu:xenial-20200706
-                docker tag ubuntu:xenial-20200706 localhost:5000/ubuntu
+                docker pull ubuntu:focal
+                docker tag ubuntu:focal localhost:5000/ubuntu
                 docker push localhost:5000/ubuntu
                 docker pull nipreps/fmriprep:latest
             fi
@@ -84,7 +88,6 @@ jobs:
               echo "them to your fork with ``git push origin --tags``"
             fi
             sed -i -E "s/(__version__ = )'[A-Za-z0-9.-]+'/\1'${CIRCLE_TAG:-$THISVERSION}'/" wrapper/fmriprep_docker.py
-            sed -i -E "s/(var version = )'[A-Za-z0-9.-]+'/\1'${CIRCLE_TAG:-$THISVERSION}'/" docs/citing.rst
             sed -i "s/title = {FMRIPrep}/title = {FMRIPrep ${CIRCLE_TAG:-$THISVERSION}}/" fmriprep/data/boilerplate.bib
             # Build docker image
             e=1 && for i in {1..5}; do
@@ -113,7 +116,7 @@ jobs:
           paths:
             - src/fmriprep
       - save_cache:
-         key: build-v4-{{ .Branch }}-{{ epoch }}
+         key: build-v4-{{ .Branch }}-{{ .Revision }}
          paths:
             - /tmp/docker
             - /tmp/images
@@ -126,7 +129,9 @@ jobs:
       - restore_cache:
           keys:
             - data-v9-{{ .Branch }}-{{ .Revision }}
-            - data-v9-{{ .Branch }}
+            - data-v9--{{ .Revision }}
+            - data-v9-{{ .Branch }}-
+            - data-v9-master-
             - data-v9-
       - run:
           name: Get test data from ds000005
@@ -204,7 +209,7 @@ jobs:
               echo "sMRIPrep derivatives of ds000210 were cached"
             fi
       - save_cache:
-         key: data-v9-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
+         key: data-v9-{{ .Branch }}-{{ .Revision }}
          paths:
             - /tmp/data
             - /tmp/ds005/freesurfer
@@ -258,20 +263,19 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - build-v4-{{ .Branch }}-{{ epoch }}
-            - build-v4-{{ .Branch }}-
-            - build-v4-
+            - build-v4-{{ .Branch }}-{{ .Revision }}
           paths:
             - /tmp/docker
             - /tmp/images
       - restore_cache:
           keys:
             - data-v9-{{ .Branch }}-{{ .Revision }}
+      - docker/install-docker-credential-helper
       - run:
           name: Docker authentication
           command: |
-            if [[ -n $DOCKER_PASS ]]; then
-              docker login -u $DOCKER_USER -p $DOCKER_PASS
+            if [[ -n $DOCKER_PAT ]]; then
+              echo "$DOCKER_PAT" | docker login -u $DOCKER_USER --password-stdin
             fi
       - run:
           name: Set-up a Docker registry
@@ -359,9 +363,7 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - build-v4-{{ .Branch }}-{{ epoch }}
-            - build-v4-{{ .Branch }}-
-            - build-v4-
+            - build-v4-{{ .Branch }}-{{ .Revision }}
           paths:
             - /tmp/docker
             - /tmp/images
@@ -371,14 +373,16 @@ jobs:
       - restore_cache:
           keys:
             - ds005-anat-v18-{{ .Branch }}-{{ .Revision }}
-            - ds005-anat-v18-{{ .Branch }}
-            - ds005-anat-v18-master
+            - ds005-anat-v18--{{ .Revision }}
+            - ds005-anat-v18-{{ .Branch }}-
+            - ds005-anat-v18-master-
             - ds005-anat-v18-
+      - docker/install-docker-credential-helper
       - run:
           name: Docker authentication
           command: |
-            if [[ -n $DOCKER_PASS ]]; then
-              docker login -u $DOCKER_USER -p $DOCKER_PASS
+            if [[ -n $DOCKER_PAT ]]; then
+              echo "$DOCKER_PAT" | docker login -u $DOCKER_USER --password-stdin
             fi
       - run:
           name: Set-up a Docker registry
@@ -430,7 +434,7 @@ jobs:
             rm -rf /tmp/${DATASET}/work/reportlets
             rm -rf /tmp/${DATASET}/derivatives/fmriprep
       - save_cache:
-         key: ds005-anat-v18-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
+         key: ds005-anat-v18-{{ .Branch }}-{{ .Revision }}
          paths:
             - /tmp/ds005/work
 
@@ -588,9 +592,7 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - build-v4-{{ .Branch }}-{{ epoch }}
-            - build-v4-{{ .Branch }}-
-            - build-v4-
+            - build-v4-{{ .Branch }}-{{ .Revision }}
           paths:
             - /tmp/docker
             - /tmp/images
@@ -600,8 +602,9 @@ jobs:
       - restore_cache:
           keys:
             - ds054-anat-v14-{{ .Branch }}-{{ .Revision }}
-            - ds054-anat-v14-{{ .Branch }}
-            - ds054-anat-v14-master
+            - ds054-anat-v14--{{ .Revision }}
+            - ds054-anat-v14-{{ .Branch }}-
+            - ds054-anat-v14-master-
             - ds054-anat-v14-
       - run:
           name: Setting up test
@@ -612,11 +615,12 @@ jobs:
             mkdir -p /tmp/${DATASET}/derivatives
             pip install --upgrade pip setuptools
             pip install --upgrade /tmp/src/fmriprep/wrapper/
+      - docker/install-docker-credential-helper
       - run:
           name: Docker authentication
           command: |
-            if [[ -n $DOCKER_PASS ]]; then
-              docker login -u $DOCKER_USER -p $DOCKER_PASS
+            if [[ -n $DOCKER_PAT ]]; then
+              echo "$DOCKER_PAT" | docker login -u $DOCKER_USER --password-stdin
             fi
       - run:
           name: Set-up a Docker registry
@@ -656,7 +660,7 @@ jobs:
             rm -rf /tmp/${DATASET}/work/reportlets
             rm -rf /tmp/${DATASET}/derivatives/fmriprep
       - save_cache:
-         key: ds054-anat-v14-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
+         key: ds054-anat-v14-{{ .Branch }}-{{ .Revision }}
          paths:
             - /tmp/ds054/work
 
@@ -750,9 +754,7 @@ jobs:
           at: /tmp
       - restore_cache:
           keys:
-            - build-v4-{{ .Branch }}-{{ epoch }}
-            - build-v4-{{ .Branch }}-
-            - build-v4-
+            - build-v4-{{ .Branch }}-{{ .Revision }}
           paths:
             - /tmp/docker
             - /tmp/images
@@ -762,8 +764,9 @@ jobs:
       - restore_cache:
           keys:
             - ds210-anat-v12-{{ .Branch }}-{{ .Revision }}
+            - ds210-anat-v12--{{ .Revision }}
             - ds210-anat-v12-{{ .Branch }}-
-            - ds210-anat-v12-master
+            - ds210-anat-v12-master-
             - ds210-anat-v12-
       - run:
           name: Setting up test
@@ -774,11 +777,12 @@ jobs:
             mkdir -p /tmp/${DATASET}/derivatives
             pip install --upgrade pip setuptools
             pip install --upgrade /tmp/src/fmriprep/wrapper/
+      - docker/install-docker-credential-helper
       - run:
           name: Docker authentication
           command: |
-            if [[ -n $DOCKER_PASS ]]; then
-              docker login -u $DOCKER_USER -p $DOCKER_PASS
+            if [[ -n $DOCKER_PAT ]]; then
+              echo "$DOCKER_PAT" | docker login -u $DOCKER_USER --password-stdin
             fi
       - run:
           name: Set-up a Docker registry
@@ -818,7 +822,7 @@ jobs:
             rm -rf /tmp/${DATASET}/work/reportlets
             rm -rf /tmp/${DATASET}/derivatives/fmriprep
       - save_cache:
-         key: ds210-anat-v12-{{ .Branch }}-{{ .Revision }}-{{ epoch }}
+         key: ds210-anat-v12-{{ .Branch }}-{{ .Revision }}
          paths:
             - /tmp/ds210/work
 
@@ -891,17 +895,16 @@ jobs:
             fi
       - restore_cache:
           keys:
-            - build-v4-{{ .Branch }}-{{ epoch }}
-            - build-v4-{{ .Branch }}-
-            - build-v4-
+            - build-v4-{{ .Branch }}-{{ .Revision }}
           paths:
             - /tmp/docker
             - /tmp/images
+      - docker/install-docker-credential-helper
       - run:
           name: Docker authentication
           command: |
-            if [[ -n $DOCKER_PASS ]]; then
-              docker login -u $DOCKER_USER -p $DOCKER_PASS
+            if [[ -n $DOCKER_PAT ]]; then
+              echo "$DOCKER_PAT" | docker login -u $DOCKER_USER --password-stdin
             fi
       - run:
           name: Setup a Docker registry
@@ -944,17 +947,16 @@ jobs:
             fi
       - restore_cache:
           keys:
-            - build-v4-{{ .Branch }}-{{ epoch }}
-            - build-v4-{{ .Branch }}-
-            - build-v4-
+            - build-v4-{{ .Branch }}-{{ .Revision }}
           paths:
             - /tmp/docker
             - /tmp/images
+      - docker/install-docker-credential-helper
       - run:
           name: Docker authentication
           command: |
-            if [[ -n $DOCKER_PASS ]]; then
-              docker login -u $DOCKER_USER -p $DOCKER_PASS
+            if [[ -n $DOCKER_PAT ]]; then
+              echo "$DOCKER_PAT" | docker login -u $DOCKER_USER --password-stdin
             fi
       - run:
           name: Set-up a Docker registry
@@ -977,8 +979,8 @@ jobs:
           name: Deploy to Docker Hub
           no_output_timeout: 40m
           command: |
-            if [[ -n "$DOCKER_PASS" ]]; then
-              docker login -u $DOCKER_USER -p $DOCKER_PASS
+            if [[ -n "$DOCKER_PAT" ]]; then
+              echo "$DOCKER_PAT" | docker login -u $DOCKER_USER --password-stdin
               docker tag nipreps/fmriprep nipreps/fmriprep:unstable
               docker push nipreps/fmriprep:unstable
               if [[ -n "$CIRCLE_TAG" ]]; then
@@ -1123,9 +1125,9 @@ workflows:
       - test_deploy_pypi:
           filters:
             branches:
-              ignore:
-                - /docs\/.*/
-                - /docker\/.*/
+              only:
+                - /rel\/.*/
+                - /maint\/.*/
             tags:
               only: /.*/
 
