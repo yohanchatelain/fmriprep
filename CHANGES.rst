@@ -1,22 +1,71 @@
+21.0.0 (TBD)
+============
+First major release in the 21.0.x series.
+Upstreams bugfix #2444 (feed *NiTransforms* with LTAs of type RAS2RAS)
+
+.. admonition:: New license - Apache 2.0
+
+    As of the first release candidate in the 21.0.x series,
+    *fMRIPrep* adheres to the 
+    `general licensing guidelines <https://www.nipreps.org/community/licensing/>`__
+    of the *NiPreps framework*, and is licensed under the
+    the Apache License, Version 2.0.
+    Please check the guidelines before deriving work from *fMRIPrep*.
+
+.. caution::
+
+    Major version changes signal that the new series may break backwards 
+    compatibility: working directories from previous versions
+    **should not be reused**.
+    `Learn more at the *NiPreps* documentation website
+    <https://www.nipreps.org/devs/releases/>`__.
+
+Thank you for using *fMRIPrep*!
+If you encounter any issues with this release, please let us know
+by posting an issue on our GitHub page!
+
+A full list of changes can be found below.
+
+* FIX: Clarify phase encoding direction, rather than axis (#2302)
+* ENH: Ease CI packaging tests (#2472)
+* ENH: Bump ``Dockerfile`` (#2409)
+* DOC: Refactor ``README`` and citing information (#2474)
+* DOC: Point documentation at *SDCFlows* and remove SDC section (#2470)
+* DOC: Adds ``--mem`` metavar (#2378)
+* DOC: Skull stripping is forced by default (#2345)
+* MAINT: Relicense +20.3.x - BSD-3-Clause -> Apache License 2.0 (#2325)
+* MAINT: Add missing OASIS30 WM/BS probsegs (#2471)
+* MAINT: Update BIDS validator to 1.8.0 (#2443)
+* MAINT: Remove traces of Xenial base (#2459)
+* MAINT: Revise CircleCI's cache tags to avoid mixups between builds (#2457)
+* MAINT: Increase minimum tedana version (#2366)
+* MAINT: Docker hub has disabled password authentication (#2448)
+* MAINT: Dockerfile (#2270)
+* MAINT: Add Lea Waller to ``contributors.json`` (#2304)
+* MAINT: Move away from nearly deprecated images (#2295)
+* MAINT: Migrate from poldracklab to nipreps orgs (#2290)
+
+20.2.x LTS (long-term-support) series
+=====================================
 20.2.3 (July 21, 2021)
-======================
+----------------------
 Patch release in the 20.2.x LTS series.
 Addresses minimal problems in some edge-cases, overall improves the documentation and infrastructure.
 Exercises some maintenance operations addressing problems surfaced when the previous tag 20.2.2 was released.
 
-  * FIX: Address the problems of a sloppy merge (#2468)
-  * FIX: ``DerivativesDataSink`` nondeterministic checksums fixed with ``niworkflows=~1.3.4`` (#2458)
-  * FIX: Address dependency incompatibilities by pinning specific packages (#2463)
-  * FIX: Unprotected import of ``sentry_sdk``, which is not a dependency (#2460)
-  * ENH: Detect 3D & too-short BOLD series, warn and skip run's workflow building (#2461)
-  * DOC: Transfer duplicated documentation to www.nipreps.org (#2469)
-  * DOC: Better explanation on how spike regressors are generated (#2465)
-  * DOC: Clarify that ``res-2`` entity does not mean 2mm (#2466)
-  * MAINT: Containers - remove ``/root/.npm`` (#2464)
-  * MAINT: Back port CircleCI configuration from dev branch (#2456)
+* FIX: Address the problems of a sloppy merge (#2468)
+* FIX: ``DerivativesDataSink`` nondeterministic checksums fixed with ``niworkflows=~1.3.4`` (#2458)
+* FIX: Address dependency incompatibilities by pinning specific packages (#2463)
+* FIX: Unprotected import of ``sentry_sdk``, which is not a dependency (#2460)
+* ENH: Detect 3D & too-short BOLD series, warn and skip run's workflow building (#2461)
+* DOC: Transfer duplicated documentation to www.nipreps.org (#2469)
+* DOC: Better explanation on how spike regressors are generated (#2465)
+* DOC: Clarify that ``res-2`` entity does not mean 2mm (#2466)
+* MAINT: Containers - remove ``/root/.npm`` (#2464)
+* MAINT: Back port CircleCI configuration from dev branch (#2456)
 
 20.2.2 (July 16, 2021)
-======================
+----------------------
 Hot-fix release in the 20.2.x LTS series.
 Addressing a bug on *fMRIPrep*'s resampling to standard spaces (#2444).
 In addition, some other relevant bug-fixes and performance improvements are built in this patch.
@@ -36,7 +85,7 @@ In addition, some other relevant bug-fixes and performance improvements are buil
 * MAINT: Failing CI (#2401)
 
 20.2.1 (November 06, 2020)
-==========================
+--------------------------
 Bug-fix release in the 20.2.x LTS series.
 
 This release adds missing metadata to GIFTI and CIFTI-2 derivatives and fixes a logging
@@ -55,7 +104,7 @@ default in future release series.
 * FIX: Specify logger for warning (#2298)
 
 20.2.0 (September 28, 2020)
-===========================
+---------------------------
 With this third minor release series of 2020,
 the first *fMRIPrep LTS* (*long-term support*) is finally here!
 
@@ -166,8 +215,10 @@ A full list of changes can be found below.
       32. State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University
       33. Department of Radiology, CHUV, Université de Lausanne
 
+20.1.x series
+=============
 20.1.4 (July 16, 2021)
-======================
+----------------------
 Hotfix release addressing a bug on *fMRIPrep*'s resampling to standard spaces.
 This release also includes some maintenance changes handling old versions of software.
 
@@ -177,7 +228,7 @@ This release also includes some maintenance changes handling old versions of sof
 * MAINT: Some dependencies cannot be left unpinned (#2446)
 
 20.1.3 (September 15, 2020)
-===========================
+---------------------------
 Bug-fix release in the 20.1.x series.
 
 * FIX: Dependency conflict between *NiWorkflows* and *TemplateFlow* (#2269)
@@ -185,7 +236,7 @@ Bug-fix release in the 20.1.x series.
 * MAINT: Update dependency pinnings including ``niworkflows~=1.2.9`` and three minimal bug-fixes.
 
 20.1.2 (September 04, 2020)
-===========================
+---------------------------
 Bug-fix release in the 20.1.x series.
 
 * FIX: Revise confounds in confounds-correlation plots (#2252)
@@ -193,7 +244,7 @@ Bug-fix release in the 20.1.x series.
 * DOC: Update new sMRIPrep location (#2211)
 
 20.1.1 (June 04, 2020)
-======================
+----------------------
 Bug-fix release in the 20.1.x series.
 
 * FIX: FreeSurfer license manipulation & canary (#2165)
@@ -202,7 +253,7 @@ Bug-fix release in the 20.1.x series.
 * MAINT: Use legacy pip/setuptools for py2 checking (#2156)
 
 20.1.0 (May 27, 2020)
-=====================
+---------------------
 The second minor release series of 2020 is finally here!
 
 *fMRIPrep* 20.1.0 introduces a magnitude of new features and improvements.
@@ -336,8 +387,8 @@ A full list of changes can be found below.
       30. Max Planck UCL Centre for Computational Psychiatry and Ageing Research, University College London
       31. State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University
 
-20.0.x series (February 2020)
-=============================
+20.0.x series
+=============
 20.0.7 (May 5, 2020)
 --------------------
 Bug-fix release in the 20.0.x series.
