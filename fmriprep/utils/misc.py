@@ -22,7 +22,4 @@ def fips_enabled():
     """
     from pathlib import Path
     fips = Path("/proc/sys/crypto/fips_enabled")
-    try:
-        return fips.read_text()[0] != "0"
-    except FileNotFoundError:
-        return False
+    return fips.exists() and fips.read_text()[0] != "0"
