@@ -11,3 +11,18 @@ def check_deps(workflow):
         for node in workflow._get_all_nodes()
         if (hasattr(node.interface, '_cmd')
             and which(node.interface._cmd.split()[0]) is None))
+
+
+def fips_enabled():
+    """
+    Check if FIPS is enabled on the system.
+
+    For more information, see:
+    https://github.com/nipreps/fmriprep/issues/2480#issuecomment-891199276
+    """
+    from pathlib import Path
+    fips = Path("/proc/sys/crypto/fips_enabled")
+    try:
+        return fips.read_text()[0] != "0"
+    except FileNotFoundError:
+        return False
