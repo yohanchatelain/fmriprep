@@ -1,7 +1,8 @@
 21.0.0 (TBD)
 ============
 First major release in the 21.0.x series.
-Upstreams bugfix #2444 (feed *NiTransforms* with LTAs of type RAS2RAS)
+The most prominent feature initiated with the 21.0.x series is the 
+integration of the new *SDCFlows 2.0* API.
 
 .. admonition:: New license - Apache 2.0
 
