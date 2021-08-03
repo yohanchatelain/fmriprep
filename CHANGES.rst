@@ -1,6 +1,8 @@
-21.0.0 (TBD)
-============
-First major release in the 21.0.x series.
+21.0.0 *Kreek* (TBD)
+====================
+First major release in the 21.0.x series, codename *Kreek* (after
+`Mary Jeanne Kreek (1937-2021) <https://en.wikipedia.org/wiki/Mary_Jeanne_Kreek>`__,
+neurobiologist specializing in the study and treatment of addiction).
 Upstreams bugfix #2444 (feed *NiTransforms* with LTAs of type RAS2RAS)
 
 .. admonition:: New license - Apache 2.0
@@ -33,6 +35,7 @@ A full list of changes can be found below.
 * DOC: Point documentation at *SDCFlows* and remove SDC section (#2470)
 * DOC: Adds ``--mem`` metavar (#2378)
 * DOC: Skull stripping is forced by default (#2345)
+* MAINT: Codename convention proposal - female neuroscientists (#2488)
 * MAINT: Relicense +20.3.x - BSD-3-Clause -> Apache License 2.0 (#2325)
 * MAINT: Add missing OASIS30 WM/BS probsegs (#2471)
 * MAINT: Update BIDS validator to 1.8.0 (#2443)
