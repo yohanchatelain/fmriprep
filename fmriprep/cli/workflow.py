@@ -119,7 +119,14 @@ def build_workflow(config_file, retval):
 
     # Check for FS license after building the workflow
     if not check_valid_fs_license():
-        build_log.critical("""\
+        from ..utils.misc import fips_enabled
+        if fips_enabled():
+            build_log.critical("""\
+ERROR: Federal Information Processing Standard (FIPS) mode is enabled on your system. \
+FreeSurfer (and thus fMRIPrep) cannot be used in FIPS mode. \
+Contact your system administrator for assistance.""")
+        else:
+            build_log.critical("""\
 ERROR: a valid license file is required for FreeSurfer to run. fMRIPrep looked for an existing \
 license file at several paths, in this order: 1) command line argument ``--fs-license-file``; \
 2) ``$FS_LICENSE`` environment variable; and 3) the ``$FREESURFER_HOME/license.txt`` path. Get it \
