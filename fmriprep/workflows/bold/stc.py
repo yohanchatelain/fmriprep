@@ -27,13 +27,29 @@ Slice-Timing Correction (STC) of BOLD images
 .. autofunction:: init_bold_stc_wf
 
 """
+import nibabel as nb
 from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu, afni
+from nipype.interfaces.base import isdefined
 
 from ... import config
 
 
 LOGGER = config.loggers.workflow
+
+
+class TShift(afni.TShift):
+    """Patched version of TShift implementing the "TooShort" behavior."""
+
+    def _pre_run_hook(self, runtime):
+        ignore = self.inputs.ignore if isdefined(self.inputs.ignore) else 0
+        ntsteps = nb.load(self.inputs.in_file).shape[3]
+        if ntsteps - ignore < 5:
+            raise RuntimeError(
+                f"Insufficient length of BOLD data ({ntsteps} time points) after "
+                f"discarding {ignore} nonsteady-state (or 'dummy') time points."
+            )
+        return runtime
 
 
 def init_bold_stc_wf(metadata, name='bold_stc_wf'):
@@ -89,10 +105,10 @@ AFNI {afni_ver} [@afni, RRID:SCR_005927].
 
     # It would be good to fingerprint memory use of afni.TShift
     slice_timing_correction = pe.Node(
-        afni.TShift(outputtype='NIFTI_GZ',
-                    tr='{}s'.format(metadata["RepetitionTime"]),
-                    slice_timing=metadata['SliceTiming'],
-                    slice_encoding_direction=metadata.get('SliceEncodingDirection', 'k')),
+        TShift(outputtype='NIFTI_GZ',
+               tr=f"{metadata['RepetitionTime']}s",
+               slice_timing=metadata['SliceTiming'],
+               slice_encoding_direction=metadata.get('SliceEncodingDirection', 'k')),
         name='slice_timing_correction')
 
     copy_xform = pe.Node(CopyXForm(), name='copy_xform', mem_gb=0.1)

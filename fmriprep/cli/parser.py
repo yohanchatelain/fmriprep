@@ -335,7 +335,7 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html"""
         action="store",
         default=None,
         type=int,
-        help="Number of non steady state volumes.",
+        help="Number of nonsteady-state volumes.",
     )
     g_conf.add_argument(
         "--random-seed",
