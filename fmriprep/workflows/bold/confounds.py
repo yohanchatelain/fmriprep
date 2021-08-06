@@ -36,8 +36,9 @@ from nipype.pipeline import engine as pe
 from templateflow.api import get as get_template
 
 from ...config import DEFAULT_MEMORY_MIN_GB
-from ...interfaces import (
-    GatherConfounds, ICAConfounds, FMRISummary, DerivativesDataSink
+from ...interfaces import DerivativesDataSink
+from ...interfaces.confounds import (
+    GatherConfounds, ICAConfounds, FMRISummary,
 )
 
 
@@ -146,7 +147,7 @@ def init_bold_confs_wf(
     from niworkflows.interfaces.confounds import ExpandModel, SpikeRegressors
     from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
     from niworkflows.interfaces.images import SignalExtraction
-    from niworkflows.interfaces.masks import ROIsPlot
+    from niworkflows.interfaces.reportlets.masks import ROIsPlot
     from niworkflows.interfaces.nibabel import ApplyMask, Binarize
     from niworkflows.interfaces.patches import (
         RobustACompCor as ACompCor,
@@ -155,7 +156,7 @@ def init_bold_confs_wf(
     from niworkflows.interfaces.plotting import (
         CompCorVariancePlot, ConfoundsCorrelationPlot
     )
-    from niworkflows.interfaces.utils import (
+    from niworkflows.interfaces.utility import (
         AddTSVHeader, TSV2JSON, DictMerge
     )
     from ...interfaces.confounds import aCompCorMasks
@@ -638,9 +639,8 @@ def init_ica_aroma_wf(
 
     """
     from niworkflows.engine.workflows import LiterateWorkflow as Workflow
-    from niworkflows.interfaces.segmentation import ICA_AROMARPT
-    from niworkflows.interfaces.utility import KeySelect
-    from niworkflows.interfaces.utils import TSV2JSON
+    from niworkflows.interfaces.reportlets.segmentation import ICA_AROMARPT
+    from niworkflows.interfaces.utility import KeySelect, TSV2JSON
 
     workflow = Workflow(name=name)
     workflow.__postdesc__ = """\

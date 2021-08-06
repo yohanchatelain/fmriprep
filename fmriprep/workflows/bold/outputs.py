@@ -464,7 +464,7 @@ def init_bold_preproc_report_wf(mem_gb, reportlets_dir, name='bold_preproc_repor
     """
     from nipype.algorithms.confounds import TSNR
     from niworkflows.engine.workflows import LiterateWorkflow as Workflow
-    from niworkflows.interfaces import SimpleBeforeAfter
+    from niworkflows.interfaces.reportlets.registration import SimpleBeforeAfterRPT
     from ...interfaces import DerivativesDataSink
 
     workflow = Workflow(name=name)
@@ -475,7 +475,7 @@ def init_bold_preproc_report_wf(mem_gb, reportlets_dir, name='bold_preproc_repor
     pre_tsnr = pe.Node(TSNR(), name='pre_tsnr', mem_gb=mem_gb * 4.5)
     pos_tsnr = pe.Node(TSNR(), name='pos_tsnr', mem_gb=mem_gb * 4.5)
 
-    bold_rpt = pe.Node(SimpleBeforeAfter(), name='bold_rpt',
+    bold_rpt = pe.Node(SimpleBeforeAfterRPT(), name='bold_rpt',
                        mem_gb=0.1)
     ds_report_bold = pe.Node(
         DerivativesDataSink(base_directory=reportlets_dir, desc='preproc',
