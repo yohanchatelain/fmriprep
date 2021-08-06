@@ -234,6 +234,7 @@ RUN conda install -y python=3.8 \
                      numpy=1.20 \
                      scipy=1.6 \
                      scikit-learn=0.24 \
+                     scikit-image=0.18 \
                      matplotlib=3.3 \
                      pandas=1.2 \
                      libxslt=1.1 \
@@ -259,12 +260,11 @@ RUN python -c "from matplotlib import font_manager" && \
     sed -i 's/\(backend *: \).*$/\1Agg/g' $( python -c "import matplotlib; print(matplotlib.matplotlib_fname())" )
 
 # Precaching atlases
-COPY setup.cfg fmriprep-setup.cfg
 COPY scripts/fetch_templates.py fetch_templates.py
 
-RUN pip install --no-cache-dir "$( grep templateflow fmriprep-setup.cfg | xargs )" && \
+RUN pip install --no-cache-dir templateflow && \
     python fetch_templates.py && \
-    rm fmriprep-setup.cfg fetch_templates.py && \
+    rm fetch_templates.py && \
     find $HOME/.cache/templateflow -type d -exec chmod go=u {} + && \
     find $HOME/.cache/templateflow -type f -exec chmod go=u {} +
 
