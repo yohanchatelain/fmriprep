@@ -37,7 +37,8 @@ from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 
 from .. import config
-from ..interfaces import SubjectSummary, AboutSummary, DerivativesDataSink
+from ..interfaces import DerivativesDataSink
+from ..interfaces.reports import SubjectSummary, AboutSummary
 from .bold import init_func_preproc_wf
 
 

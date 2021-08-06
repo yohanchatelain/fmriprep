@@ -36,8 +36,9 @@ from nipype.pipeline import engine as pe
 from templateflow.api import get as get_template
 
 from ...config import DEFAULT_MEMORY_MIN_GB
-from ...interfaces import (
-    GatherConfounds, ICAConfounds, FMRISummary, DerivativesDataSink
+from ...interfaces import DerivativesDataSink
+from ...interfaces.confounds import (
+    GatherConfounds, ICAConfounds, FMRISummary,
 )
 
 
