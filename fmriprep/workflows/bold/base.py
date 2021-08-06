@@ -938,7 +938,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         # remaining workflow connections
         (unwarp_wf, bold_bold_trans_wf, [
             ('outputnode.corrected_mask', 'inputnode.bold_mask'),
-            ('outputnode.fieldmap', 'inputnode.fieldwarp'),
+            ('outputnode.fieldwarp', 'inputnode.fieldwarp'),
         ]),
         (unwarp_wf, unwarp_masker, [('outputnode.corrected', 'in_file')]),
         (unwarp_masker, bold_confounds_wf, [('out_mask', 'inputnode.bold_mask')]),
@@ -952,10 +952,10 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     if not multiecho:
         workflow.connect([
             (unwarp_wf, bold_t1_trans_wf, [
-                ('outputnode.fieldmap', 'inputnode.fieldwarp'),
+                ('outputnode.fieldwarp', 'inputnode.fieldwarp'),
             ]),
             (unwarp_wf, bold_std_trans_wf, [
-                ('outputnode.fieldmap', 'inputnode.fieldwarp')]),
+                ('outputnode.fieldwarp', 'inputnode.fieldwarp')]),
         ])
     # fmt: on
 
