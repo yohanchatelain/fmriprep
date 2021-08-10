@@ -200,9 +200,11 @@ are saved::
       sub-<subject_label>_[specifiers]_desc-MELODIC_mixing.tsv
 
 .. caution::
-   Slice timing correction in fMRIPrep is referenced to the middle slice which leads to a time shift in the volume onsets by 0.5 TR (for example, assuming a TR of 2 s, original 
-   onsets of 0, 2 and 4 s would be shifted to 1, 3 and 5 s). In case you did not disable slice timing correction, you should consider this shift in subsequent analyses (e.g. general 
-   linear modeling). 
+   Slice timing correction in fMRIPrep is referenced to the middle slice which leads to a time shift in the volume onsets by 0.5 TR (for example, assuming a TR of 
+   2 s, original onsets of 0, 2 and 4 s would be shifted to 1, 3 and 5 s). In case you did not disable slice timing correction, you should consider this shift in  
+   subsequent analyses (e.g. general linear modeling). For example, when specifying a first-level model, you should set parameters in your software package or 
+   first-level model function accordingly (e.g. select middle slice as reference). Alternatively, you could manually adjust the volume onsets (e.g. as mentioned in 
+   the example above from [0, 2, 4] to [1, 3, 5]) or the event onsets accordingly.
 
 Confounds
 ---------
