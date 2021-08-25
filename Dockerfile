@@ -280,7 +280,8 @@ RUN find $HOME -type d -exec chmod go=u {} + && \
     find $HOME -type f -exec chmod go=u {} + && \
     rm -rf $HOME/.npm $HOME/.conda $HOME/.empty
 
-ENV IS_DOCKER_8395080871=1
+ENV IS_DOCKER_8395080871=1 \
+    LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/lib/x86_64-linux-gnu"
 
 RUN ldconfig
 WORKDIR /tmp
