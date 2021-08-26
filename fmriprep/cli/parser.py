@@ -87,10 +87,13 @@ def _build_parser():
         elif value == "middle":
             value = 1
         try:
-            return float(value)
+            value = float(value)
         except ValueError:
             raise parser.error("Slice time reference must be number, 'start', or 'middle'. "
                                f"Received {value}.")
+        if not 0 <= val <= 1:
+            raise parser.error(f"Slice time reference must be in range 0-1. Received {value}.")
+        return value
 
 
     verstr = f"fMRIPrep v{config.environment.version}"
