@@ -81,6 +81,18 @@ def _build_parser():
         if value and Path(value).exists():
             return loads(Path(value).read_text(), object_hook=_filter_pybids_none_any)
 
+    def _slice_time_ref(value, parser):
+        if value == "start":
+            value = 0
+        elif value == "middle":
+            value = 1
+        try:
+            return float(value)
+        except ValueError:
+            raise parser.error("Slice time reference must be number, 'start', or 'middle'. "
+                               f"Received {value}.")
+
+
     verstr = f"fMRIPrep v{config.environment.version}"
     currentv = Version(config.environment.version)
     is_release = not any(
@@ -328,6 +340,17 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html"""
         default=False,
         help="Replace medial wall values with NaNs on functional GIFTI files. Only "
         "performed for GIFTI files mapped to a freesurfer subject (fsaverage or fsnative).",
+    )
+    g_conf.add_argument(
+        "--slice-time-ref",
+        required=False,
+        action="store",
+        default=None,
+        type=_slice_time_ref,
+        help="The time of the reference slice to correct BOLD values to, as a fraction "
+             "acquisition time. 0 indicates the start, 0.5 the midpoint, and 1 the end "
+             "of acquisition. The alias `start` corresponds to 0, and `middle` to 0.5. "
+             "The default value is 0.5.",
     )
     g_conf.add_argument(
         "--dummy-scans",
