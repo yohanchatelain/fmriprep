@@ -237,19 +237,27 @@ def init_func_preproc_wf(bold_file, has_fieldmap=False):
     config.loggers.workflow.info(sbref_msg)
 
     if has_fieldmap:
-        from pathlib import Path
-        import re
-        from sdcflows.fieldmaps import get_identifier
+        # First check if specified via B0FieldSource
+        estimator_key = listify(metadata.get("B0FieldSource"))
 
-        bold_rel = re.sub(
-            r"^sub-[a-zA-Z0-9]*/", "", str(Path(bold_file).relative_to(layout.root))
-        )
-        estimator_key = get_identifier(bold_rel)
+        if not estimator_key:
+            from pathlib import Path
+            import re
+            from sdcflows.fieldmaps import get_identifier
+
+            # Fallback to IntendedFor
+            bold_rel = re.sub(
+                r"^sub-[a-zA-Z0-9]*/", "", str(Path(bold_file).relative_to(layout.root))
+            )
+            estimator_key = get_identifier(bold_rel)
+
         if not estimator_key:
             has_fieldmap = False
             config.loggers.workflow.critical(
                 f"None of the available B0 fieldmaps are associated to <{bold_rel}>"
             )
+        else:
+            config.loggers.workflow.info(f"Found usable B0 fieldmap <{estimator_key}>")
 
     # Check whether STC must/can be run
     run_stc = (
