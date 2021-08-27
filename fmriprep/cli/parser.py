@@ -85,7 +85,7 @@ def _build_parser():
         if value == "start":
             value = 0
         elif value == "middle":
-            value = 1
+            value = 0.5
         try:
             value = float(value)
         except ValueError:
