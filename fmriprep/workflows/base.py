@@ -312,7 +312,7 @@ It is released under the [CC0]\
         return workflow
 
     fmap_estimators = None
-    if "fieldmap" not in config.workflow.ignore:
+    if "fieldmaps" not in config.workflow.ignore:
         from sdcflows.utils.wrangler import find_estimators
 
         # SDC Step 1: Run basic heuristics to identify available data for fieldmap estimation
@@ -340,8 +340,9 @@ tasks and sessions), the following preprocessing was performed.
 """.format(num_bold=len(subject_data['bold']))
 
     func_preproc_wfs = []
+    has_fieldmap = bool(fmap_estimators)
     for bold_file in subject_data['bold']:
-        func_preproc_wf = init_func_preproc_wf(bold_file, has_fieldmap=bool(fmap_estimators))
+        func_preproc_wf = init_func_preproc_wf(bold_file, has_fieldmap=has_fieldmap)
         if func_preproc_wf is None:
             continue
 
@@ -363,6 +364,9 @@ tasks and sessions), the following preprocessing was performed.
               ('outputnode.fsnative2t1w_xfm', 'inputnode.fsnative2t1w_xfm')]),
         ])
         func_preproc_wfs.append(func_preproc_wf)
+
+    if not has_fieldmap:
+        return workflow
 
     from sdcflows.workflows.base import init_fmap_preproc_wf
     from sdcflows import fieldmaps as fm
