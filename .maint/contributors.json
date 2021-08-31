@@ -131,6 +131,11 @@
     "orcid": "0000-0001-6948-9068"
   },
   {
+    "affiliation": "Department of Radiology, University Hospital of Lausanne",
+    "name": "Provins, Céline",
+    "orcid":"0000-0002-1668-9629"
+  },
+  {
     "affiliation": "Neuroscience Program, University of Iowa",
     "name": "Rivera-Dompenciel, Adriana",
     "orcid": "0000-0002-3339-4857"
@@ -199,10 +204,5 @@
     "affiliation": "State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University",
     "name": "Ye, Zhifang",
     "orcid": "0000-0003-0489-2619"
-  },
-  {
-    "affiliation": "Department of Radiology, University Hospital of Lausanne",
-    "name": "Provins, Céline",
-    "orcid":""
   }
 ]
