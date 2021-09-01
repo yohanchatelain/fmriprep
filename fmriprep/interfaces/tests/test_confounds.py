@@ -17,3 +17,14 @@ def test_RenameACompCor(tmp_path, data_dir):
     renamed_meta = Path(res.outputs.metadata_file).read_text()
     assert renamed_components == target_components
     assert renamed_meta == target_meta
+
+
+def test_FilterDropped(tmp_path, data_dir):
+    filt = pe.Node(confounds.FilterDropped(), name="filt", base_dir=str(tmp_path))
+    filt.inputs.in_file = data_dir / "component_metadata_truncated.tsv"
+
+    res = filt.run()
+
+    target_meta = Path.read_text(data_dir / "component_metadata_filtered.tsv")
+    filtered_meta = Path(res.outputs.out_file).read_text()
+    assert filtered_meta == target_meta
