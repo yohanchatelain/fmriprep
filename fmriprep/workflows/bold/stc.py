@@ -96,7 +96,7 @@ def init_bold_stc_wf(metadata, name='bold_stc_wf'):
     slice_times = metadata["SliceTiming"]
     first, last = min(slice_times), max(slice_times)
     frac = config.workflow.slice_time_ref
-    tzero = first + frac * (last - first)
+    tzero = np.round(first + frac * (last - first), 3)
 
     afni_ver = ''.join('%02d' % v for v in afni.Info().version() or [])
     workflow = Workflow(name=name)
