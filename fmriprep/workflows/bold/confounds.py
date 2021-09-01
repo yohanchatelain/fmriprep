@@ -38,7 +38,7 @@ from templateflow.api import get as get_template
 from ...config import DEFAULT_MEMORY_MIN_GB
 from ...interfaces import DerivativesDataSink
 from ...interfaces.confounds import (
-    GatherConfounds, ICAConfounds, FMRISummary, RenameACompCor,
+    GatherConfounds, ICAConfounds, FMRISummary, RenameACompCor, FilterDropped,
 )
 
 
@@ -289,6 +289,8 @@ Frames that exceeded a threshold of {regressors_fd_th} mm FD or
     concat = pe.Node(GatherConfounds(), name="concat", mem_gb=0.01, run_without_submitting=True)
 
     # CompCor metadata
+    tcc_metadata_filter = pe.Node(FilterDropped(), name="tcc_metadata_filter")
+    acc_metadata_filter = pe.Node(FilterDropped(), name="acc_metadata_filter")
     tcc_metadata_fmt = pe.Node(
         TSV2JSON(index_column='component', drop_columns=['mask'], output=None,
                  additional_metadata={'Method': 'tCompCor'}, enforce_case=True),
@@ -405,8 +407,10 @@ Frames that exceeded a threshold of {regressors_fd_th} mm FD or
         (add_std_dvars_header, concat, [('out_file', 'std_dvars')]),
 
         # Confounds metadata
-        (tcompcor, tcc_metadata_fmt, [('metadata_file', 'in_file')]),
-        (rename_acompcor, acc_metadata_fmt, [('metadata_file', 'in_file')]),
+        (tcompcor, tcc_metadata_filter, [('metadata_file', 'in_file')]),
+        (tcc_metadata_filter, tcc_metadata_fmt, [('out_file', 'in_file')]),
+        (rename_acompcor, acc_metadata_filter, [('metadata_file', 'in_file')]),
+        (acc_metadata_filter, acc_metadata_fmt, [('out_file', 'in_file')]),
         (tcc_metadata_fmt, mrg_conf_metadata, [('output', 'in1')]),
         (acc_metadata_fmt, mrg_conf_metadata, [('output', 'in2')]),
         (mrg_conf_metadata, mrg_conf_metadata2, [('out', 'in_dicts')]),
