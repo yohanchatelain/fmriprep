@@ -73,6 +73,31 @@ class aCompCorMasks(SimpleInterface):
         return runtime
 
 
+class _FilterDroppedInputSpec(BaseInterfaceInputSpec):
+    in_file = File(exists=True, desc='input CompCor metadata')
+
+
+class _FilterDroppedOutputSpec(TraitedSpec):
+    out_file = File(desc='filtered CompCor metadata')
+
+
+class FilterDropped(SimpleInterface):
+    input_spec = _FilterDroppedInputSpec
+    output_spec = _FilterDroppedOutputSpec
+
+    def _run_interface(self, runtime):
+        self._results["out_file"] = fname_presuffix(
+            self.inputs.in_file,
+            suffix='_filtered',
+            use_ext=True,
+            newpath=runtime.cwd)
+
+        metadata = pd.read_csv(self.inputs.in_file, sep='\t')
+        metadata[metadata.retained].to_csv(self._results["out_file"], sep='\t', index=False)
+
+        return runtime
+
+
 class _RenameACompCorInputSpec(BaseInterfaceInputSpec):
     components_file = File(exists=True, desc='input aCompCor components')
     metadata_file = File(exists=True, desc='input aCompCor metadata')
