@@ -898,7 +898,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         )
 
     sdc_report = pe.Node(
-        SimpleBeforeAfter(before_label="Distorted", after_label="Corrected"),
+        SimpleBeforeAfter(
+            before_label="Distorted", after_label="Corrected", dismiss_affine=True,
+        ),
         name="sdc_report",
         mem_gb=0.1,
     )
