@@ -383,7 +383,8 @@ tasks and sessions), the following preprocessing was performed.
         subject=subject_id,
     )
     fmap_wf.__desc__ = f"""
-Fieldmap data preprocessing
+Preprocessing of B<sub>0</sub> inhomogeneity mappings
+
 : A total of {len(fmap_estimators)} fieldmaps were found available within the input
 BIDS structure for this particular subject.
 """
