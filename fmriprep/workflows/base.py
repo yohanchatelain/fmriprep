@@ -313,7 +313,7 @@ It is released under the [CC0]\
 
     fmap_estimators = None
     # TODO 21.0.0: Implement SyN
-    if any(config.workflow.use_syn_sdc, config.workflow.force_syn):
+    if any((config.workflow.use_syn_sdc, config.workflow.force_syn)):
         config.loggers.workflow.critical("SyN processing is not yet implemented.")
 
     if "fieldmaps" not in config.workflow.ignore:
