@@ -312,6 +312,10 @@ It is released under the [CC0]\
         return workflow
 
     fmap_estimators = None
+    # TODO 21.0.0: Implement SyN
+    if any(config.workflow.use_syn_sdc, config.workflow.force_syn):
+        config.loggers.workflow.critical("SyN processing is not yet implemented.")
+
     if "fieldmaps" not in config.workflow.ignore:
         from sdcflows.utils.wrangler import find_estimators
 
@@ -320,7 +324,7 @@ It is released under the [CC0]\
         fmap_estimators = find_estimators(
             layout=config.execution.layout,
             subject=subject_id,
-            fmapless=False,  # config.workflow.use_syn,
+            fmapless=False,  # config.workflow.use_syn_sdc,
             force_fmapless=False,  # config.workflow.force_syn,
         )
 
