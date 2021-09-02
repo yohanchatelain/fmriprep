@@ -82,6 +82,10 @@ class _FilterDroppedOutputSpec(TraitedSpec):
 
 
 class FilterDropped(SimpleInterface):
+    """Filter dropped components from CompCor metadata files
+
+    Uses the boolean ``retained`` column to identify rows to keep or filter.
+    """
     input_spec = _FilterDroppedInputSpec
     output_spec = _FilterDroppedOutputSpec
 
@@ -109,6 +113,14 @@ class _RenameACompCorOutputSpec(TraitedSpec):
 
 
 class RenameACompCor(SimpleInterface):
+    """Rename ACompCor components based on their masks
+
+    Components from the "CSF" mask are ``c_comp_cor_*``.
+    Components from the "WM" mask are ``w_comp_cor_*``.
+    Components from the "combined" mask are ``a_comp_cor_*``.
+
+    Each set of components is renumbered to start at ``?_comp_cor_00``.
+    """
     input_spec = _RenameACompCorInputSpec
     output_spec = _RenameACompCorOutputSpec
 
