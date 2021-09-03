@@ -1,3 +1,25 @@
+# emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
+# vi: set ft=python sts=4 ts=4 sw=4 et:
+#
+# Copyright 2021 The NiPreps Developers <nipreps@gmail.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We support and encourage derived works from this project, please read
+# about our expectations at
+#
+#     https://www.nipreps.org/community/licensing/
+#
 """
 The workflow builder factory method.
 
@@ -12,6 +34,8 @@ a hard-limited memory-scope.
 
 def build_workflow(config_file, retval):
     """Create the Nipype Workflow that supports the whole execution graph."""
+    from pathlib import Path
+    from pkg_resources import resource_filename as pkgrf
     from niworkflows.utils.bids import collect_participants, check_pipeline_version
     from niworkflows.utils.misc import check_valid_fs_license
     from niworkflows.reports import generate_reports
@@ -27,6 +51,16 @@ def build_workflow(config_file, retval):
 
     retval["return_code"] = 1
     retval["workflow"] = None
+
+    banner = [f"Running fMRIPrep version {version}"]
+    notice_path = Path(pkgrf("fmriprep", "data/NOTICE"))
+    if notice_path.exists():
+        banner[0] += "\n"
+        banner += [f"License NOTICE {'#' * 50}"]
+        banner += [f"fMRIPrep {version}"]
+        banner += notice_path.read_text().splitlines(keepends=False)[1:]
+        banner += ["#" * len(banner[1])]
+    build_log.log(25, f"\n{' ' * 9}".join(banner))
 
     # warn if older results exist: check for dataset_description.json in output folder
     msg = check_pipeline_version(version, fmriprep_dir / "dataset_description.json")
@@ -48,8 +82,6 @@ def build_workflow(config_file, retval):
 
     # Called with reports only
     if config.execution.reports_only:
-        from pkg_resources import resource_filename as pkgrf
-
         build_log.log(
             25, "Running --reports-only on participants %s", ", ".join(subject_list)
         )
@@ -63,27 +95,38 @@ def build_workflow(config_file, retval):
         return retval
 
     # Build main workflow
-    init_msg = f"""
-    Running fMRIPREP version {config.environment.version}:
-      * BIDS dataset path: {config.execution.bids_dir}.
-      * Participant list: {subject_list}.
-      * Run identifier: {config.execution.run_uuid}.
-      * Output spaces: {config.execution.output_spaces}."""
+    init_msg = [
+        "Building fMRIPrep's workflow:",
+        f"BIDS dataset path: {config.execution.bids_dir}.",
+        f"Participant list: {subject_list}.",
+        f"Run identifier: {config.execution.run_uuid}.",
+        f"Output spaces: {config.execution.output_spaces}.",
+    ]
 
     if config.execution.anat_derivatives:
-        init_msg += f"""
-      * Anatomical derivatives: {config.execution.anat_derivatives}."""
+        init_msg += [
+            f"Anatomical derivatives: {config.execution.anat_derivatives}."
+        ]
 
     if config.execution.fs_subjects_dir:
-        init_msg += f"""
-      * Pre-run FreeSurfer's SUBJECTS_DIR: {config.execution.fs_subjects_dir}."""
-    build_log.log(25, init_msg)
+        init_msg += [
+            f"Pre-run FreeSurfer's SUBJECTS_DIR: {config.execution.fs_subjects_dir}."
+        ]
+
+    build_log.log(25, f"\n{' ' * 11}* ".join(init_msg))
 
     retval["workflow"] = init_fmriprep_wf()
 
     # Check for FS license after building the workflow
     if not check_valid_fs_license():
-        build_log.critical("""\
+        from ..utils.misc import fips_enabled
+        if fips_enabled():
+            build_log.critical("""\
+ERROR: Federal Information Processing Standard (FIPS) mode is enabled on your system. \
+FreeSurfer (and thus fMRIPrep) cannot be used in FIPS mode. \
+Contact your system administrator for assistance.""")
+        else:
+            build_log.critical("""\
 ERROR: a valid license file is required for FreeSurfer to run. fMRIPrep looked for an existing \
 license file at several paths, in this order: 1) command line argument ``--fs-license-file``; \
 2) ``$FS_LICENSE`` environment variable; and 3) the ``$FREESURFER_HOME/license.txt`` path. Get it \

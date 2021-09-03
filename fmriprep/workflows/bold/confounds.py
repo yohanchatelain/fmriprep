@@ -1,5 +1,25 @@
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
+#
+# Copyright 2021 The NiPreps Developers <nipreps@gmail.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We support and encourage derived works from this project, please read
+# about our expectations at
+#
+#     https://www.nipreps.org/community/licensing/
+#
 """
 Calculate BOLD confounds
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -16,8 +36,9 @@ from nipype.pipeline import engine as pe
 from templateflow.api import get as get_template
 
 from ...config import DEFAULT_MEMORY_MIN_GB
-from ...interfaces import (
-    GatherConfounds, ICAConfounds, FMRISummary, DerivativesDataSink
+from ...interfaces import DerivativesDataSink
+from ...interfaces.confounds import (
+    GatherConfounds, ICAConfounds, FMRISummary, RenameACompCor, FilterDropped,
 )
 
 
@@ -126,7 +147,7 @@ def init_bold_confs_wf(
     from niworkflows.interfaces.confounds import ExpandModel, SpikeRegressors
     from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
     from niworkflows.interfaces.images import SignalExtraction
-    from niworkflows.interfaces.masks import ROIsPlot
+    from niworkflows.interfaces.reportlets.masks import ROIsPlot
     from niworkflows.interfaces.nibabel import ApplyMask, Binarize
     from niworkflows.interfaces.patches import (
         RobustACompCor as ACompCor,
@@ -135,7 +156,7 @@ def init_bold_confs_wf(
     from niworkflows.interfaces.plotting import (
         CompCorVariancePlot, ConfoundsCorrelationPlot
     )
-    from niworkflows.interfaces.utils import (
+    from niworkflows.interfaces.utility import (
         AddTSVHeader, TSV2JSON, DictMerge
     )
     from ...interfaces.confounds import aCompCorMasks
@@ -240,6 +261,9 @@ Frames that exceeded a threshold of {regressors_fd_th} mm FD or
         tcompcor.inputs.repetition_time = metadata['RepetitionTime']
         acompcor.inputs.repetition_time = metadata['RepetitionTime']
 
+    # Split aCompCor results into a_comp_cor, c_comp_cor, w_comp_cor
+    rename_acompcor = pe.Node(RenameACompCor(), name="rename_acompcor")
+
     # Global and segment regressors
     signals_class_labels = [
         "global_signal", "csf", "white_matter", "csf_wm", "tcompcor",
@@ -265,6 +289,8 @@ Frames that exceeded a threshold of {regressors_fd_th} mm FD or
     concat = pe.Node(GatherConfounds(), name="concat", mem_gb=0.01, run_without_submitting=True)
 
     # CompCor metadata
+    tcc_metadata_filter = pe.Node(FilterDropped(), name="tcc_metadata_filter")
+    acc_metadata_filter = pe.Node(FilterDropped(), name="acc_metadata_filter")
     tcc_metadata_fmt = pe.Node(
         TSV2JSON(index_column='component', drop_columns=['mask'], output=None,
                  additional_metadata={'Method': 'tCompCor'}, enforce_case=True),
@@ -351,6 +377,8 @@ Frames that exceeded a threshold of {regressors_fd_th} mm FD or
         (acc_msk_tfm, acc_msk_brain, [("output_image", "in_file")]),
         (acc_msk_brain, acc_msk_bin, [("out_file", "in_file")]),
         (acc_msk_bin, acompcor, [("out_file", "mask_files")]),
+        (acompcor, rename_acompcor, [("components_file", "components_file"),
+                                     ("metadata_file", "metadata_file")]),
 
         # tCompCor
         (inputnode, tcompcor, [("bold", "realigned_file"),
@@ -372,15 +400,17 @@ Frames that exceeded a threshold of {regressors_fd_th} mm FD or
         (fdisp, concat, [('out_file', 'fd')]),
         (tcompcor, concat, [('components_file', 'tcompcor'),
                             ('pre_filter_file', 'cos_basis')]),
-        (acompcor, concat, [('components_file', 'acompcor')]),
+        (rename_acompcor, concat, [('components_file', 'acompcor')]),
         (add_motion_headers, concat, [('out_file', 'motion')]),
         (add_rmsd_header, concat, [('out_file', 'rmsd')]),
         (add_dvars_header, concat, [('out_file', 'dvars')]),
         (add_std_dvars_header, concat, [('out_file', 'std_dvars')]),
 
         # Confounds metadata
-        (tcompcor, tcc_metadata_fmt, [('metadata_file', 'in_file')]),
-        (acompcor, acc_metadata_fmt, [('metadata_file', 'in_file')]),
+        (tcompcor, tcc_metadata_filter, [('metadata_file', 'in_file')]),
+        (tcc_metadata_filter, tcc_metadata_fmt, [('out_file', 'in_file')]),
+        (rename_acompcor, acc_metadata_filter, [('metadata_file', 'in_file')]),
+        (acc_metadata_filter, acc_metadata_fmt, [('out_file', 'in_file')]),
         (tcc_metadata_fmt, mrg_conf_metadata, [('output', 'in1')]),
         (acc_metadata_fmt, mrg_conf_metadata, [('output', 'in2')]),
         (mrg_conf_metadata, mrg_conf_metadata2, [('out', 'in_dicts')]),
@@ -401,7 +431,7 @@ Frames that exceeded a threshold of {regressors_fd_th} mm FD or
         (mrg_compcor, rois_plot, [('out', 'in_rois')]),
         (rois_plot, ds_report_bold_rois, [('out_report', 'in_file')]),
         (tcompcor, mrg_cc_metadata, [('metadata_file', 'in1')]),
-        (acompcor, mrg_cc_metadata, [('metadata_file', 'in2')]),
+        (rename_acompcor, mrg_cc_metadata, [('metadata_file', 'in2')]),
         (mrg_cc_metadata, compcor_plot, [('out', 'metadata_files')]),
         (compcor_plot, ds_report_compcor, [('out_file', 'in_file')]),
         (concat, conf_corr_plot, [('confounds_file', 'confounds_file'),
@@ -618,9 +648,8 @@ def init_ica_aroma_wf(
 
     """
     from niworkflows.engine.workflows import LiterateWorkflow as Workflow
-    from niworkflows.interfaces.segmentation import ICA_AROMARPT
-    from niworkflows.interfaces.utility import KeySelect
-    from niworkflows.interfaces.utils import TSV2JSON
+    from niworkflows.interfaces.reportlets.segmentation import ICA_AROMARPT
+    from niworkflows.interfaces.utility import KeySelect, TSV2JSON
 
     workflow = Workflow(name=name)
     workflow.__postdesc__ = """\

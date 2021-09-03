@@ -1,5 +1,25 @@
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
+#
+# Copyright 2021 The NiPreps Developers <nipreps@gmail.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We support and encourage derived works from this project, please read
+# about our expectations at
+#
+#     https://www.nipreps.org/community/licensing/
+#
 """Utilities to handle BIDS inputs."""
 import os
 import sys
@@ -148,10 +168,10 @@ def validate_input_dir(exec_env, bids_dir, participant_label):
         if ignored_subs:
             for sub in ignored_subs:
                 validator_config_dict["ignoredFiles"].append("/sub-%s/**" % sub)
-    with tempfile.NamedTemporaryFile('w+') as temp:
+    with tempfile.NamedTemporaryFile(mode='w+', suffix='.json') as temp:
         temp.write(json.dumps(validator_config_dict))
         temp.flush()
         try:
-            subprocess.check_call(['bids-validator', bids_dir, '-c', temp.name])
+            subprocess.check_call(['bids-validator', str(bids_dir), '-c', temp.name])
         except FileNotFoundError:
             print("bids-validator does not appear to be installed", file=sys.stderr)

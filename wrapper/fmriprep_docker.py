@@ -1,18 +1,19 @@
 #!/usr/bin/env python
 """
-The fMRIPrep on Docker wrapper
+The *fMRIPrep* on Docker wrapper
 
-
-This is a lightweight Python wrapper to run fMRIPrep.
+This is a lightweight Python wrapper to run *fMRIPrep*.
 Docker must be installed and running. This can be checked
 running ::
 
   docker info
 
-Please report any feedback to our GitHub repository
-(https://github.com/nipreps/fmriprep) and do not
-forget to credit all the authors of software that fMRIPrep
-uses (https://fmriprep.readthedocs.io/en/latest/citing.html).
+Please acknowledge this work using the citation boilerplate that *fMRIPrep* includes
+in the visual report generated for every subject processed.
+For a more detailed description of the citation boilerplate and its relevance,
+please check out the
+`NiPreps documentation <https://www.nipreps.org/intro/transparency/#citation-boilerplates>`__.
+Please report any feedback to our `GitHub repository <https://github.com/nipreps/fmriprep>`__.
 """
 import sys
 import os
@@ -29,7 +30,7 @@ __bugreports__ = 'https://github.com/nipreps/fmriprep/issues'
 MISSING = """
 Image '{}' is missing
 Would you like to download? [Y/n] """
-PKG_PATH = '/usr/local/miniconda/lib/python3.7/site-packages'
+PKG_PATH = '/usr/local/miniconda/lib/python3.8/site-packages'
 TF_TEMPLATES = (
     'MNI152Lin',
     'MNI152NLin2009cAsym',
@@ -136,6 +137,24 @@ def check_memory(image):
 
 
 def merge_help(wrapper_help, target_help):
+    def _get_posargs(usage):
+        """
+        Extract positional arguments from usage string.
+
+        This function can be used by both native fmriprep (`fmriprep -h`)
+        and the docker wrapper (`fmriprep-docker -h`).
+        """
+        posargs = []
+        for targ in usage.split('\n')[-3:]:
+            line = targ.lstrip()
+            if line.startswith('usage'):
+                continue
+            if line[0].isalnum() or line[0] == "{":
+                posargs.append(line)
+            elif line[0] == '[' and (line[1].isalnum() or line[1] == "{"):
+                posargs.append(line)
+        return " ".join(posargs)
+
     # Matches all flags with up to one nested square bracket
     opt_re = re.compile(r'(\[--?[\w-]+(?:[^\[\]]+(?:\[[^\[\]]+\])?)?\])')
     # Matches flag name only
@@ -150,8 +169,8 @@ def merge_help(wrapper_help, target_help):
     t_usage, t_details = t_help.split('\n\n', 1)
     t_groups = t_details.split('\n\n')
 
-    w_posargs = w_usage.split('\n')[-1].lstrip()
-    t_posargs = t_usage.split('\n')[-1].lstrip()
+    w_posargs = _get_posargs(w_usage)
+    t_posargs = _get_posargs(t_usage)
 
     w_options = opt_re.findall(w_usage)
     w_flags = sum(map(flag_re.findall, w_options), [])
@@ -409,7 +428,11 @@ def main():
                'DOCKER_VERSION_8395080871=%s' % docker_version]
 
     if not opts.no_tty:
-        command.append('-it')
+        if opts.help:
+            # TTY can corrupt stdout
+            command.append('-i')
+        else:
+            command.append('-it')
 
     # Patch working repositories into installed package directories
     if opts.patch:

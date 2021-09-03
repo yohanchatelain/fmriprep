@@ -1,5 +1,25 @@
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
+#
+# Copyright 2021 The NiPreps Developers <nipreps@gmail.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We support and encourage derived works from this project, please read
+# about our expectations at
+#
+#     https://www.nipreps.org/community/licensing/
+#
 """
 Registration workflows
 ++++++++++++++++++++++
@@ -260,7 +280,7 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, use_compression=True
     from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
     from niworkflows.interfaces.itk import MultiApplyTransforms
     from niworkflows.interfaces.nilearn import Merge
-    from niworkflows.interfaces.utils import GenerateSamplingReference
+    from niworkflows.interfaces.nibabel import GenerateSamplingReference
 
     workflow = Workflow(name=name)
     inputnode = pe.Node(
@@ -455,17 +475,6 @@ Co-registration was configured with {dof} degrees of freedom{reason}.
             LOGGER.warning("Initializing BBR with header; affine fallback disabled")
             use_bbr = True
 
-    merge_ltas = pe.Node(niu.Merge(2), name='merge_ltas', run_without_submitting=True)
-    concat_xfm = pe.Node(ConcatenateXFMs(inverse=True), name='concat_xfm')
-
-    workflow.connect([
-        # Output ITK transforms
-        (inputnode, merge_ltas, [('fsnative2t1w_xfm', 'in2')]),
-        (merge_ltas, concat_xfm, [('out', 'in_xfms')]),
-        (concat_xfm, outputnode, [('out_xfm', 'itk_bold_to_t1')]),
-        (concat_xfm, outputnode, [('out_inv', 'itk_t1_to_bold')]),
-    ])
-
     # Define both nodes, but only connect conditionally
     mri_coreg = pe.Node(
         MRICoregRPT(dof=bold2t1w_dof, sep=[4], ftol=0.0001, linmintol=0.01,
@@ -473,71 +482,92 @@ Co-registration was configured with {dof} degrees of freedom{reason}.
         name='mri_coreg', n_procs=omp_nthreads, mem_gb=5)
 
     bbregister = pe.Node(
-        BBRegisterRPT(dof=bold2t1w_dof, contrast_type='t2', registered_file=True,
-                      out_lta_file=True, generate_report=True),
-        name='bbregister', mem_gb=12)
+        BBRegisterRPT(
+            dof=bold2t1w_dof,
+            contrast_type='t2',
+            registered_file=True,
+            out_lta_file=True,
+            generate_report=True
+        ),
+        name='bbregister', mem_gb=12
+    )
+    if bold2t1w_init == "header":
+        bbregister.inputs.init = "header"
 
-    # Use mri_coreg
+    transforms = pe.Node(niu.Merge(2), run_without_submitting=True, name='transforms')
+    lta_ras2ras = pe.MapNode(LTAConvert(out_lta=True), iterfield=['in_lta'],
+                             name='lta_ras2ras', mem_gb=2)
+    # In cases where Merge(2) only has `in1` or `in2` defined
+    # output list will just contain a single element
+    select_transform = pe.Node(
+        niu.Select(index=0),
+        run_without_submitting=True,
+        name='select_transform'
+    )
+    merge_ltas = pe.Node(niu.Merge(2), name='merge_ltas', run_without_submitting=True)
+    concat_xfm = pe.Node(ConcatenateXFMs(inverse=True), name='concat_xfm')
+
+    workflow.connect([
+        (inputnode, merge_ltas, [('fsnative2t1w_xfm', 'in2')]),
+        # Wire up the co-registration alternatives
+        (transforms, lta_ras2ras, [('out', 'in_lta')]),
+        (lta_ras2ras, select_transform, [('out_lta', 'inlist')]),
+        (select_transform, merge_ltas, [('out', 'in1')]),
+        (merge_ltas, concat_xfm, [('out', 'in_xfms')]),
+        (concat_xfm, outputnode, [('out_xfm', 'itk_bold_to_t1')]),
+        (concat_xfm, outputnode, [('out_inv', 'itk_t1_to_bold')]),
+    ])
+
+    # Do not initialize with header, use mri_coreg
     if bold2t1w_init == "register":
         workflow.connect([
             (inputnode, mri_coreg, [('subjects_dir', 'subjects_dir'),
                                     ('subject_id', 'subject_id'),
                                     ('in_file', 'source_file')]),
+            (mri_coreg, transforms, [('out_lta_file', 'in2')]),
         ])
 
         # Short-circuit workflow building, use initial registration
         if use_bbr is False:
             workflow.connect([
                 (mri_coreg, outputnode, [('out_report', 'out_report')]),
-                (mri_coreg, merge_ltas, [('out_lta_file', 'in1')])])
+            ])
             outputnode.inputs.fallback = True
 
             return workflow
+
+        # Otherwise bbregister will also be used
+        workflow.connect(mri_coreg, 'out_lta_file', bbregister, 'init_reg_file')
 
     # Use bbregister
     workflow.connect([
         (inputnode, bbregister, [('subjects_dir', 'subjects_dir'),
                                  ('subject_id', 'subject_id'),
                                  ('in_file', 'source_file')]),
+        (bbregister, transforms, [('out_lta_file', 'in1')]),
     ])
-
-    if bold2t1w_init == "header":
-        bbregister.inputs.init = "header"
-    else:
-        workflow.connect([(mri_coreg, bbregister, [('out_lta_file', 'init_reg_file')])])
 
     # Short-circuit workflow building, use boundary-based registration
     if use_bbr is True:
         workflow.connect([
             (bbregister, outputnode, [('out_report', 'out_report')]),
-            (bbregister, merge_ltas, [('out_lta_file', 'in1')])])
+        ])
         outputnode.inputs.fallback = False
 
         return workflow
 
     # Only reach this point if bold2t1w_init is "register" and use_bbr is None
-
-    transforms = pe.Node(niu.Merge(2), run_without_submitting=True, name='transforms')
     reports = pe.Node(niu.Merge(2), run_without_submitting=True, name='reports')
 
-    lta_ras2ras = pe.MapNode(LTAConvert(out_lta=True), iterfield=['in_lta'],
-                             name='lta_ras2ras', mem_gb=2)
     compare_transforms = pe.Node(niu.Function(function=compare_xforms), name='compare_transforms')
-
-    select_transform = pe.Node(niu.Select(), run_without_submitting=True, name='select_transform')
     select_report = pe.Node(niu.Select(), run_without_submitting=True, name='select_report')
 
     workflow.connect([
-        (bbregister, transforms, [('out_lta_file', 'in1')]),
-        (mri_coreg, transforms, [('out_lta_file', 'in2')]),
         # Normalize LTA transforms to RAS2RAS (inputs are VOX2VOX) and compare
-        (transforms, lta_ras2ras, [('out', 'in_lta')]),
         (lta_ras2ras, compare_transforms, [('out_lta', 'lta_list')]),
         (compare_transforms, outputnode, [('out', 'fallback')]),
         # Select output transform
-        (transforms, select_transform, [('out', 'inlist')]),
         (compare_transforms, select_transform, [('out', 'index')]),
-        (select_transform, merge_ltas, [('out', 'in1')]),
         # Select output report
         (bbregister, reports, [('out_report', 'in1')]),
         (mri_coreg, reports, [('out_report', 'in2')]),
@@ -619,7 +649,7 @@ def init_fsl_bbr_wf(use_bbr, bold2t1w_dof, bold2t1w_init, sloppy=False, name='fs
     from niworkflows.engine.workflows import LiterateWorkflow as Workflow
     from niworkflows.utils.images import dseg_label as _dseg_label
     from niworkflows.interfaces.freesurfer import PatchedLTAConvert as LTAConvert
-    from niworkflows.interfaces.registration import FLIRTRPT
+    from niworkflows.interfaces.reportlets.registration import FLIRTRPT
     workflow = Workflow(name=name)
     workflow.__desc__ = """\
 The BOLD reference was then co-registered to the T1w reference using

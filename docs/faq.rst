@@ -1,8 +1,14 @@
 .. include:: links.rst
 
-========================
-FAQ, Tips, and Tricks
-========================
+================================
+FAQ - Frequently Asked Questions
+================================
+
+.. contents::
+    :local:
+    :depth: 1
+
+------------
 
 Should I run quality control of my images before running *fMRIPrep*?
 --------------------------------------------------------------------
@@ -118,7 +124,7 @@ In general, please be cautious of deleting files and mindful why a file may exis
 
 Running subjects in parallel
 ----------------------------
-When running several subjects in parallel, and depending on your settings, fMRIPrep may
+When running several subjects in parallel, and depending on your settings, *fMRIPrep* may
 fall into race conditions.
 A symptomatic output looks like: ::
 
@@ -127,9 +133,9 @@ A symptomatic output looks like: ::
 If you would like to run *fMRIPrep* in parallel on multiple subjects please use
 `this method <https://neurostars.org/t/updated-fmriprep-workaround-for-running-subjects-in-parallel/6677>`__.
 
-How much CPU time and RAM should I allocate for a typical fMRIPrep run?
------------------------------------------------------------------------
-The recommended way to run fMRIPrep is to process one subject per container instance. A typical preprocessing run
+How much CPU time and RAM should I allocate for a typical *fMRIPrep* run?
+-------------------------------------------------------------------------
+The recommended way to run *fMRIPrep* is to process one subject per container instance. A typical preprocessing run
 without surface processing with FreeSurfer can be completed in about 2 hours with 4 CPUs or in about 1 hour with 16 CPUs.
 More than 16 CPUs do not translate into faster processing times for a single subject. About 8GB of memory should be
 available for a single subject preprocessing run.
@@ -140,14 +146,14 @@ CPUs and 64 GB of physical memory:
 .. figure:: _static/fmriprep_benchmark.svg
 
 **Compute Time**: time in hours to complete the preprocessing for all subjects. **Physical Memory**: the maximum of RAM usage
-used across all fMRIPrep processes as reported by the HCP job manager. **Virtual Memory**: the maximum of virtual memory used
-across all fMRIPrep processes as reported by the HCP job manager. **Threads**: the maximum number of threads per process as
+used across all *fMRIPrep* processes as reported by the HCP job manager. **Virtual Memory**: the maximum of virtual memory used
+across all *fMRIPrep* processes as reported by the HCP job manager. **Threads**: the maximum number of threads per process as
 specified with ``–omp-nthreads`` in the fMRIPrep command.
 
-The above figure illustrates that processing 2 subjects in 2 fMRIPrep instances with 8 CPUs each is approximately as fast as
-processing 2 subjects in one fMRIPrep instance with 16 CPUs. However, on a distributed compute cluster, the two 8 CPU
+The above figure illustrates that processing 2 subjects in 2 *fMRIPrep* instances with 8 CPUs each is approximately as fast as
+processing 2 subjects in one *fMRIPrep* instance with 16 CPUs. However, on a distributed compute cluster, the two 8 CPU
 instances may be allocated faster than the single 16 CPU instance, thus completing faster in practice. If more than one
-subject is processed in a single fMRIPrep instance, then limiting the number of threads per process to roughly the
+subject is processed in a single *fMRIPrep* instance, then limiting the number of threads per process to roughly the
 number of CPUs divided by the number of subjects is most efficient.
 
 .. _upgrading:
@@ -183,8 +189,8 @@ For further details, please check `its documentation section <spaces.html#templa
 
 .. _tf_no_internet:
 
-How do you use TemplateFlow in the absence of access to the Internet?
----------------------------------------------------------------------
+How do you use *TemplateFlow* in the absence of access to the Internet?
+-----------------------------------------------------------------------
 This is a fairly common situation in :abbr:`HPCs (high-performance computing)`
 systems, where the so-called login nodes have access to the Internet but
 compute nodes are isolated, or in PC/laptop environments if you are traveling.
@@ -222,9 +228,9 @@ runtime environment is able to access the filesystem, at the location of your
 *TemplateFlow home* directory.
 If you are a Singularity user, please check out :ref:`singularity_tf`.
 
-How do I select only certain files to be input to fMRIPrep?
------------------------------------------------------------
-Using the ``--bids-filter-file`` flag, you can pass fMRIPrep a JSON file that
+How do I select only certain files to be input to *fMRIPrep*?
+-------------------------------------------------------------
+Using the ``--bids-filter-file`` flag, you can pass *fMRIPrep* a JSON file that
 describes a custom BIDS filter for selecting files with PyBIDS, with the syntax
 ``{<query>: {<entity>: <filter>, ...},...}``. For example::
 
@@ -315,3 +321,25 @@ Note that any discrepancies between the pre-indexed database and
 the BIDS dataset complicate the provenance of fMRIPrep derivatives.
 If `--bids-database-dir` is used, the referenced directory should be
 preserved for the sake of reporting and reproducibility.
+
+Error in slice timing correction: *insufficient length of BOLD data after discarding nonsteady-states*
+------------------------------------------------------------------------------------------------------
+Typically, the scanner will be in a *nonsteady state* during a few initial time points of the acquisition,
+until it stabilizes.
+These *nonsteady states* (also called *dummy* scans) typically show greater T1 contrast and higher average
+intensity, and therefore potentially are detrimental if used in the interpolation of slice timing corrections.
+Hence, *nonsteady states* are discarded by the slice timing correction tool (in this case, AFNI's ``3dTShift``).
+However, ``3dTShift`` requires that at least five (5) time points are present in the target series, after
+dismissing the initial *nonsteady states*.
+
+*fMRIPrep* estimates the number of *nonsteady states* within the pipeline, unless the parameter is provided
+by the user with the argument ``--dummy-scans <num>``.
+Either way, if the number of *nonsteady states* is, say 4, then the length of the BOLD series must be greater
+than 8.
+If you encounter this error, first check that the number of *nonsteady states* is not suspiciously large
+(it typically ranges from zero to five).
+Next, if the number of *nonsteady states* is reasonable, consider why your BOLD time series are so short
+and whether slice timing correction is appropriate under these conditions.
+Finally, you can either skip the slice-timing correction with the argument ``--ignore slicetiming`` or
+enforce a number of *nonsteady states* lower than the maximum for your data with ``--dummy-scans <num>``.
+Please note that both strategies will apply to all tasks and runs that are to be processed.

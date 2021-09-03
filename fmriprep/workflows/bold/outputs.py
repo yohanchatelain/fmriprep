@@ -1,5 +1,25 @@
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
+#
+# Copyright 2021 The NiPreps Developers <nipreps@gmail.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We support and encourage derived works from this project, please read
+# about our expectations at
+#
+#     https://www.nipreps.org/community/licensing/
+#
 """Writing out derivative files."""
 import numpy as np
 from nipype.pipeline import engine as pe
@@ -444,7 +464,7 @@ def init_bold_preproc_report_wf(mem_gb, reportlets_dir, name='bold_preproc_repor
     """
     from nipype.algorithms.confounds import TSNR
     from niworkflows.engine.workflows import LiterateWorkflow as Workflow
-    from niworkflows.interfaces import SimpleBeforeAfter
+    from niworkflows.interfaces.reportlets.registration import SimpleBeforeAfterRPT
     from ...interfaces import DerivativesDataSink
 
     workflow = Workflow(name=name)
@@ -455,7 +475,7 @@ def init_bold_preproc_report_wf(mem_gb, reportlets_dir, name='bold_preproc_repor
     pre_tsnr = pe.Node(TSNR(), name='pre_tsnr', mem_gb=mem_gb * 4.5)
     pos_tsnr = pe.Node(TSNR(), name='pos_tsnr', mem_gb=mem_gb * 4.5)
 
-    bold_rpt = pe.Node(SimpleBeforeAfter(), name='bold_rpt',
+    bold_rpt = pe.Node(SimpleBeforeAfterRPT(), name='bold_rpt',
                        mem_gb=0.1)
     ds_report_bold = pe.Node(
         DerivativesDataSink(base_directory=reportlets_dir, desc='preproc',

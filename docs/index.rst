@@ -5,8 +5,6 @@
 
 .. include:: links.rst
 .. include:: ../README.rst
-.. include:: license.rst
-
 
 Contents
 --------
@@ -16,14 +14,9 @@ Contents
 
    installation
    usage
-   docker
-   singularity
    workflows
-   sdc
    outputs
    spaces
    faq
-   contributors
-   citing
    api
    changes

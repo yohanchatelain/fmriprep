@@ -41,7 +41,7 @@ Visual Reports
 *fMRIPrep* outputs summary reports, written to ``<output dir>/fmriprep/sub-<subject_label>.html``.
 These reports provide a quick way to make visual inspection of the results easy.
 Each report is self contained and thus can be easily shared with collaborators (for example via email).
-`View a sample report. <_static/sample_report.html>`_
+`View a sample report. <_static/SampleReport/sample_report.html>`_
 
 Derivatives of *fMRIPrep* (preprocessed data)
 ---------------------------------------------
@@ -299,10 +299,10 @@ including outlier points in the subsequent first-level analysis when building
 the design matrix.
 Averaged value of confound (for example, mean ``framewise_displacement``)
 can also be added as regressors in group level analysis [Yan2013]_.
-*Spike regressors* for outlier censoring can also be generated from within *fMRIPrep* using
-the command line options ``--fd-spike-threshold`` and ``--dvars-spike-threshold``
-(default: FD > 0.5 mm or DVARS > 1.5).
-Spike regressors are stored in separate ``motion_outlier_XX`` columns.
+*Regressors of motion spikes* for outlier censoring are generated from within *fMRIPrep*,
+and their calculation may be adjusted with the command line options ``--fd-spike-threshold``
+and ``--dvars-spike-threshold`` (defaults are FD > 0.5 mm or DVARS > 1.5).
+Regressors of motion spikes are stored in separate ``motion_outlier_XX`` columns.
 
 **Discrete cosine-basis regressors**.
 Physiological and instrumental (scanner) noise sources are generally present in fMRI

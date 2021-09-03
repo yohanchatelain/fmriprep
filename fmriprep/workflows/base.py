@@ -1,5 +1,25 @@
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
+#
+# Copyright 2021 The NiPreps Developers <nipreps@gmail.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We support and encourage derived works from this project, please read
+# about our expectations at
+#
+#     https://www.nipreps.org/community/licensing/
+#
 """
 fMRIPrep base processing workflows
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -17,7 +37,8 @@ from nipype.pipeline import engine as pe
 from nipype.interfaces import utility as niu
 
 from .. import config
-from ..interfaces import SubjectSummary, AboutSummary, DerivativesDataSink
+from ..interfaces import DerivativesDataSink
+from ..interfaces.reports import SubjectSummary, AboutSummary
 from .bold import init_func_preproc_wf
 
 
@@ -290,6 +311,28 @@ It is released under the [CC0]\
     if anat_only:
         return workflow
 
+    fmap_estimators = None
+    # TODO 21.0.0: Implement SyN
+    if any((config.workflow.use_syn_sdc, config.workflow.force_syn)):
+        config.loggers.workflow.critical("SyN processing is not yet implemented.")
+
+    if "fieldmaps" not in config.workflow.ignore:
+        from sdcflows.utils.wrangler import find_estimators
+
+        # SDC Step 1: Run basic heuristics to identify available data for fieldmap estimation
+        # For now, no fmapless
+        fmap_estimators = find_estimators(
+            layout=config.execution.layout,
+            subject=subject_id,
+            fmapless=False,  # config.workflow.use_syn_sdc,
+            force_fmapless=False,  # config.workflow.force_syn,
+        )
+
+        config.loggers.workflow.debug(
+            f"{len(fmap_estimators)} fieldmap estimators found: "
+            f"{[e.method for e in fmap_estimators]}"
+        )
+
     # Append the functional section to the existing anatomical exerpt
     # That way we do not need to stream down the number of bold datasets
     anat_preproc_wf.__postdesc__ = (anat_preproc_wf.__postdesc__ or '') + """
@@ -300,8 +343,12 @@ Functional data preprocessing
 tasks and sessions), the following preprocessing was performed.
 """.format(num_bold=len(subject_data['bold']))
 
+    func_preproc_wfs = []
+    has_fieldmap = bool(fmap_estimators)
     for bold_file in subject_data['bold']:
-        func_preproc_wf = init_func_preproc_wf(bold_file)
+        func_preproc_wf = init_func_preproc_wf(bold_file, has_fieldmap=has_fieldmap)
+        if func_preproc_wf is None:
+            continue
 
         workflow.connect([
             (anat_preproc_wf, func_preproc_wf,
@@ -320,14 +367,73 @@ tasks and sessions), the following preprocessing was performed.
               ('outputnode.t1w2fsnative_xfm', 'inputnode.t1w2fsnative_xfm'),
               ('outputnode.fsnative2t1w_xfm', 'inputnode.fsnative2t1w_xfm')]),
         ])
+        func_preproc_wfs.append(func_preproc_wf)
+
+    if not has_fieldmap:
+        return workflow
+
+    from sdcflows.workflows.base import init_fmap_preproc_wf
+    from sdcflows import fieldmaps as fm
+
+    fmap_wf = init_fmap_preproc_wf(
+        debug="fieldmaps" in config.execution.debug,
+        estimators=fmap_estimators,
+        omp_nthreads=config.nipype.omp_nthreads,
+        output_dir=fmriprep_dir,
+        subject=subject_id,
+    )
+    fmap_wf.__desc__ = f"""
+Preprocessing of B<sub>0</sub> inhomogeneity mappings
+
+: A total of {len(fmap_estimators)} fieldmaps were found available within the input
+BIDS structure for this particular subject.
+"""
+    for func_preproc_wf in func_preproc_wfs:
+        # fmt: off
+        workflow.connect([
+            (fmap_wf, func_preproc_wf, [
+                ("outputnode.fmap", "inputnode.fmap"),
+                ("outputnode.fmap_ref", "inputnode.fmap_ref"),
+                ("outputnode.fmap_coeff", "inputnode.fmap_coeff"),
+                ("outputnode.fmap_mask", "inputnode.fmap_mask"),
+                ("outputnode.fmap_id", "inputnode.fmap_id"),
+                ("outputnode.method", "inputnode.sdc_method"),
+            ]),
+        ])
+        # fmt: on
+
+    # Overwrite ``out_path_base`` of sdcflows's DataSinks
+    for node in fmap_wf.list_node_names():
+        if node.split(".")[-1].startswith("ds_"):
+            fmap_wf.get_node(node).interface.out_path_base = ""
+
+    # Step 3: Manually connect PEPOLAR
+    for estimator in fmap_estimators:
+        config.loggers.workflow.info(f"""\
+Setting-up fieldmap "{estimator.bids_id}" ({estimator.method}) with \
+<{', '.join(s.path.name for s in estimator.sources)}>""")
+        if estimator.method in (fm.EstimatorType.MAPPED, fm.EstimatorType.PHASEDIFF):
+            continue
+
+        suffices = set(s.suffix for s in estimator.sources)
+
+        if estimator.method == fm.EstimatorType.PEPOLAR and sorted(suffices) == ["epi"]:
+            getattr(fmap_wf.inputs, f"in_{estimator.bids_id}").in_data = [
+                str(s.path) for s in estimator.sources
+            ]
+            getattr(fmap_wf.inputs, f"in_{estimator.bids_id}").metadata = [
+                s.metadata for s in estimator.sources
+            ]
+            continue
+
+        if estimator.method == fm.EstimatorType.PEPOLAR:
+            raise NotImplementedError(
+                "Sophisticated PEPOLAR schemes are unsupported."
+            )
+        # TODO: SyN fieldmap processing
+
     return workflow
 
 
 def _prefix(subid):
     return subid if subid.startswith('sub-') else f'sub-{subid}'
-
-
-def _pop(inlist):
-    if isinstance(inlist, (list, tuple)):
-        return inlist[0]
-    return inlist

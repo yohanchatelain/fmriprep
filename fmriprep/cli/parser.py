@@ -1,5 +1,25 @@
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
+#
+# Copyright 2021 The NiPreps Developers <nipreps@gmail.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# We support and encourage derived works from this project, please read
+# about our expectations at
+#
+#     https://www.nipreps.org/community/licensing/
+#
 """Parser."""
 import sys
 from .. import config
@@ -60,6 +80,21 @@ def _build_parser():
 
         if value and Path(value).exists():
             return loads(Path(value).read_text(), object_hook=_filter_pybids_none_any)
+
+    def _slice_time_ref(value, parser):
+        if value == "start":
+            value = 0
+        elif value == "middle":
+            value = 0.5
+        try:
+            value = float(value)
+        except ValueError:
+            raise parser.error("Slice time reference must be number, 'start', or 'middle'. "
+                               f"Received {value}.")
+        if not 0 <= val <= 1:
+            raise parser.error(f"Slice time reference must be in range 0-1. Received {value}.")
+        return value
+
 
     verstr = f"fMRIPrep v{config.environment.version}"
     currentv = Version(config.environment.version)
@@ -187,6 +222,7 @@ def _build_parser():
         dest="memory_gb",
         action="store",
         type=_to_gb,
+        metavar="MEMORY_MB",
         help="upper bound memory limit for fMRIPrep processes",
     )
     g_perfm.add_argument(
@@ -309,12 +345,23 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html"""
         "performed for GIFTI files mapped to a freesurfer subject (fsaverage or fsnative).",
     )
     g_conf.add_argument(
+        "--slice-time-ref",
+        required=False,
+        action="store",
+        default=None,
+        type=_slice_time_ref,
+        help="The time of the reference slice to correct BOLD values to, as a fraction "
+             "acquisition time. 0 indicates the start, 0.5 the midpoint, and 1 the end "
+             "of acquisition. The alias `start` corresponds to 0, and `middle` to 0.5. "
+             "The default value is 0.5.",
+    )
+    g_conf.add_argument(
         "--dummy-scans",
         required=False,
         action="store",
         default=None,
         type=int,
-        help="Number of non steady state volumes.",
+        help="Number of nonsteady-state volumes.",
     )
     g_conf.add_argument(
         "--random-seed",
@@ -593,6 +640,7 @@ def parse_args(args=None, namespace=None):
     parser = _build_parser()
     opts = parser.parse_args(args, namespace)
 
+
     if opts.config_file:
         skip = {} if opts.reports_only else {"execution": ("run_uuid",)}
         config.load(opts.config_file, skip=skip)
@@ -600,6 +648,18 @@ def parse_args(args=None, namespace=None):
 
     config.execution.log_level = int(max(25 - 5 * opts.verbose_count, logging.DEBUG))
     config.from_dict(vars(opts))
+
+    if not config.execution.notrack:
+        try:
+            import sentry_sdk
+        except ImportError:
+            config.execution.notrack = True
+            config.loggers.cli.warning("Telemetry disabled because sentry_sdk is not installed.")
+        else:
+            config.loggers.cli.info(
+                "Telemetry system to collect crashes and errors is enabled "
+                "- thanks for your feedback!. Use option ``--notrack`` to opt out."
+            )
 
     # Initialize --output-spaces if not defined
     if config.execution.output_spaces is None:
