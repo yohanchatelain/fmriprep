@@ -199,7 +199,7 @@ are saved::
       sub-<subject_label>_[specifiers]_AROMAnoiseICs.csv
       sub-<subject_label>_[specifiers]_desc-MELODIC_mixing.tsv
 
-.. caution::
+.. danger::
    Slice timing correction in *fMRIPrep* is referenced to the middle slice by default,
    which leads to a time shift in the volume onsets by 0.5 TR (repetition time).
    For example, assuming a TR of 2s, original onsets of 0, 2, and 4s would be shifted
