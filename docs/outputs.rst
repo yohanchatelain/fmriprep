@@ -203,7 +203,7 @@ are saved::
    Slice timing correction in *fMRIPrep* is referenced to the middle slice by default,
    which leads to a time shift in the volume onsets by 0.5 TR (repetition time).
    For example, assuming a TR of 2s, original onsets of 0, 2, and 4s would be shifted
-   to 1, 3, and 5s, respectively).
+   to 1, 3, and 5s, respectively.
    In case you did execute slice timing correction, you must check that subsequent
    analyses (e.g., general linear modeling) consider the right onset shifts.
    For example, when specifying a first-level model, you should set parameters in your
