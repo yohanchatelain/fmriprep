@@ -41,7 +41,7 @@ Visual Reports
 *fMRIPrep* outputs summary reports, written to ``<output dir>/fmriprep/sub-<subject_label>.html``.
 These reports provide a quick way to make visual inspection of the results easy.
 Each report is self contained and thus can be easily shared with collaborators (for example via email).
-`View a sample report. <_static/sample_report.html>`_
+`View a sample report. <_static/SampleReport/sample_report.html>`_
 
 Derivatives of *fMRIPrep* (preprocessed data)
 ---------------------------------------------
