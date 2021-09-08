@@ -147,6 +147,8 @@ def test_parse_args(tmp_path):
     out_dir = tmp_path / "out"
     work_dir = tmp_path / "work"
 
-    parse_args(args=[bids_dir, str(out_dir), "participant", "-w", str(work_dir)])
+    parse_args(args=[bids_dir, str(out_dir), "participant",  # BIDS App
+                     "-w", str(work_dir),                    # Don't pollute CWD
+                     "--skip-bids-validation"])              # Empty files make BIDS sad
     assert config.execution.layout.root == bids_dir
     _reset_config()
