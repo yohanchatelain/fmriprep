@@ -144,7 +144,9 @@ def test_parse_args(tmp_path):
     """Basic smoke test showing that our parse_args() function
     implements the BIDS App protocol"""
     bids_dir = pkgrf('fmriprep', 'data/tests/ds000005')
+    out_dir = tmp_path / "out"
+    work_dir = tmp_path / "work"
 
-    parse_args(args=[bids_dir, str(tmp_path), "participant"])
+    parse_args(args=[bids_dir, str(out_dir), "participant", "-w", str(work_dir)])
     assert config.execution.layout.root == bids_dir
     _reset_config()
