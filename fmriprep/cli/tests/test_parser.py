@@ -22,10 +22,12 @@
 #
 """Test parser."""
 from packaging.version import Version
+from pkg_resources import resource_filename as pkgrf
 import pytest
-from ..parser import _build_parser
+from ..parser import _build_parser, parse_args
 from .. import version as _version
 from ... import config
+from ...tests.test_config import _reset_config
 
 MIN_ARGS = ["data/", "out/", "participant"]
 
@@ -136,3 +138,13 @@ def test_get_parser_blacklist(monkeypatch, capsys, flagged):
     assert ("FLAGGED" in captured) is flagged[0]
     if flagged[0]:
         assert (flagged[1] or "reason: unknown") in captured
+
+
+def test_parse_args(tmp_path):
+    """Basic smoke test showing that our parse_args() function
+    implements the BIDS App protocol"""
+    bids_dir = pkgrf('fmriprep', 'data/tests/ds000005')
+
+    parse_args(args=[bids_dir, str(tmp_path), "participant"])
+    assert config.execution.layout.root == bids_dir
+    _reset_config()
