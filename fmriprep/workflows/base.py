@@ -312,11 +312,10 @@ It is released under the [CC0]\
         return workflow
 
     fmap_estimators = None
-    # TODO 21.0.0: Implement SyN
-    if any((config.workflow.use_syn_sdc, config.workflow.force_syn)):
-        config.loggers.workflow.critical("SyN processing is not yet implemented.")
 
-    if "fieldmaps" not in config.workflow.ignore:
+    if any(("fieldmaps" not in config.workflow.ignore,
+            config.workflow.use_syn_sdc,
+            config.workflow.force_syn)):
         from sdcflows.utils.wrangler import find_estimators
 
         # SDC Step 1: Run basic heuristics to identify available data for fieldmap estimation
@@ -324,14 +323,22 @@ It is released under the [CC0]\
         fmap_estimators = find_estimators(
             layout=config.execution.layout,
             subject=subject_id,
-            fmapless=False,  # config.workflow.use_syn_sdc,
-            force_fmapless=False,  # config.workflow.force_syn,
+            fmapless=config.workflow.use_syn_sdc,
+            force_fmapless=config.workflow.force_syn,
         )
 
         config.loggers.workflow.debug(
             f"{len(fmap_estimators)} fieldmap estimators found: "
             f"{[e.method for e in fmap_estimators]}"
         )
+
+        if "fieldmaps" in config.workflow.ignore:
+            fmap_estimators = [f for f in fmap_estimators
+                               if f.method == fm.EstimatorType.ANAT]
+            config.loggers.workflow.debug(
+                "Ignoring fieldmap scans, using anatomical estimators: "
+                f"{[e.method for e in fmap_estimators]}"
+            )
 
     # Append the functional section to the existing anatomical exerpt
     # That way we do not need to stream down the number of bold datasets
@@ -424,13 +431,44 @@ Setting-up fieldmap "{estimator.bids_id}" ({estimator.method}) with \
             getattr(fmap_wf.inputs, f"in_{estimator.bids_id}").metadata = [
                 s.metadata for s in estimator.sources
             ]
-            continue
 
-        if estimator.method == fm.EstimatorType.PEPOLAR:
+        elif estimator.method == fm.EstimatorType.PEPOLAR:
             raise NotImplementedError(
                 "Sophisticated PEPOLAR schemes are unsupported."
             )
-        # TODO: SyN fieldmap processing
+
+        elif estimator.method == fm.EstimatorType.ANAT:
+            from sdcflows.workflows.fit.syn import init_syn_preprocessing_wf
+            sources = [str(s.path) for s in estimator.sources if s.suffix == "bold"]
+            layout = config.execution.layout
+            syn_preprocessing_wf = init_syn_preprocessing_wf(
+                omp_nthreads=config.nipype.omp_nthreads,
+                debug=config.execution.sloppy,
+                auto_bold_nss=True,
+                t1w_inversion=True,
+                name=f"syn_preprocessing_{estimator.bids_ids}",
+            )
+            syn_preprocessing_wf.inputs.inputnode.in_epis = sources
+            syn_preprocessing_wf.inputs.inputnode.in_meta = [
+                layout.get_metadata(s) for s in sources
+            ]
+
+            # fmt:off
+            workflow.connect([
+                (anat_preproc_wf, syn_preprocessing_wf, [
+                    ("outputnode.t1w_preproc", "inputnode.in_anat"),
+                    ("outputnode.t1w_mask", "inputnode.mask_anat"),
+                    ("outputnode.std2anat_xfm", "inputnode.std2anat_xfm"),
+                ]),
+                (syn_preprocessing_wf, fmap_wf, [
+                    ("outputnode.epi_ref", f"in_{estimator.bids_id}.epi_ref"),
+                    ("outputnode.epi_mask", f"in_{estimator.bids_id}.epi_mask"),
+                    ("outputnode.anat_ref", f"in_{estimator.bids_id}.anat_ref"),
+                    ("outputnode.anat_mask", f"in_{estimator.bids_id}.anat_mask"),
+                    ("outputnode.sd_prior", f"in_{estimator.bids_id}.sd_prior"),
+                ]),
+            ])
+            # fmt:on
 
     return workflow
 
