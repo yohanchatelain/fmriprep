@@ -440,7 +440,7 @@ Setting-up fieldmap "{estimator.bids_id}" ({estimator.method}) with \
         elif estimator.method == fm.EstimatorType.ANAT:
             from sdcflows.workflows.fit.syn import init_syn_preprocessing_wf
             sources = [str(s.path) for s in estimator.sources if s.suffix == "bold"]
-            layout = config.execution.layout
+            source_meta = [s.metadata for s in estimator.sources if s.suffix == "bold"]
             syn_preprocessing_wf = init_syn_preprocessing_wf(
                 omp_nthreads=config.nipype.omp_nthreads,
                 debug=config.execution.sloppy,
@@ -449,9 +449,7 @@ Setting-up fieldmap "{estimator.bids_id}" ({estimator.method}) with \
                 name=f"syn_preprocessing_{estimator.bids_id}",
             )
             syn_preprocessing_wf.inputs.inputnode.in_epis = sources
-            syn_preprocessing_wf.inputs.inputnode.in_meta = [
-                layout.get_metadata(s) for s in sources
-            ]
+            syn_preprocessing_wf.inputs.inputnode.in_meta = source_meta
 
             # fmt:off
             workflow.connect([
@@ -469,6 +467,14 @@ Setting-up fieldmap "{estimator.bids_id}" ({estimator.method}) with \
                 ]),
             ])
             # fmt:on
+
+            # TotalReadoutTime is calculated or imputed by find_estimators
+            # Use enhanced metadata for SyN-SDC
+            from .bold.base import _get_wf_name
+            for func_preproc_wf in func_preproc_wfs:
+                for source, meta in zip(sources, source_meta):
+                    if func_preproc_wf.name == _get_wf_name(source):
+                        func_preproc_wf.inputs.unwarp_wf.inputnode.metadata = meta
 
     return workflow
 
