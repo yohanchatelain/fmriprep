@@ -311,6 +311,7 @@ It is released under the [CC0]\
     if anat_only:
         return workflow
 
+    from sdcflows import fieldmaps as fm
     fmap_estimators = None
 
     if any(("fieldmaps" not in config.workflow.ignore,
@@ -380,7 +381,6 @@ tasks and sessions), the following preprocessing was performed.
         return workflow
 
     from sdcflows.workflows.base import init_fmap_preproc_wf
-    from sdcflows import fieldmaps as fm
 
     fmap_wf = init_fmap_preproc_wf(
         debug="fieldmaps" in config.execution.debug,
@@ -446,7 +446,7 @@ Setting-up fieldmap "{estimator.bids_id}" ({estimator.method}) with \
                 debug=config.execution.sloppy,
                 auto_bold_nss=True,
                 t1w_inversion=True,
-                name=f"syn_preprocessing_{estimator.bids_ids}",
+                name=f"syn_preprocessing_{estimator.bids_id}",
             )
             syn_preprocessing_wf.inputs.inputnode.in_epis = sources
             syn_preprocessing_wf.inputs.inputnode.in_meta = [
