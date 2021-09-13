@@ -282,6 +282,8 @@ RUN find $HOME -type d -exec chmod go=u {} + && \
 
 ENV IS_DOCKER_8395080871=1
 
+# ABI tags can interfere when running on Singularity
+RUN strip --remove-section=.note.ABI-tag /usr/lib/x86_64-linux-gnu/libQt5Core.so.5
 RUN ldconfig
 WORKDIR /tmp
 ENTRYPOINT ["/usr/local/miniconda/bin/fmriprep"]
