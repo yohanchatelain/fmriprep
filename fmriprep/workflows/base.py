@@ -328,6 +328,13 @@ It is released under the [CC0]\
             force_fmapless=config.workflow.force_syn,
         )
 
+        if config.workflow.use_syn_sdc and not fmap_estimators:
+            message = ("Fieldmap-less (SyN) estimation was requested, but "
+                       "PhaseEncodingDirection information appears to be "
+                       "absent.")
+            config.loggers.workflow.error(message)
+            raise ValueError(message)
+
         config.loggers.workflow.debug(
             f"{len(fmap_estimators)} fieldmap estimators found: "
             f"{[e.method for e in fmap_estimators]}"
