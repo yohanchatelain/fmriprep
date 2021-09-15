@@ -62,6 +62,9 @@ def prepare_timing_parameters(metadata):
                     "AcquisitionDuration", "SliceTiming")
         if key in metadata}
 
+    run_stc = "SliceTiming" in metadata and 'slicetiming' not in config.workflow.ignore
+    timing_parameters["SliceTimingCorrected"] = run_stc
+
     if "SliceTiming" in timing_parameters:
         st = sorted(timing_parameters.pop("SliceTiming"))
         TA = st[-1] + (st[1] - st[0])  # Final slice onset - slice duration
@@ -73,6 +76,13 @@ def prepare_timing_parameters(metadata):
         # For variable TR paradigms, use AcquisitionDuration
         elif "VolumeTiming" in timing_parameters:
             timing_parameters["AcquisitionDuration"] = TA
+
+        if run_stc:
+            first, last = st[0], st[-1]
+            frac = config.workflow.slice_time_ref
+            tzero = np.round(first + frac * (last - first), 3)
+            timing_parameters["StartTime"] = tzero
+
     return timing_parameters
 
 
