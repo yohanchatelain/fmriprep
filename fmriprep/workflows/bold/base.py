@@ -1101,7 +1101,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (("outputnode.fieldwarp", _pop), "inputnode.fieldwarp"),
         ]),
         (unwarp_wf, bold_final, [("outputnode.corrected", "bold")]),
-
     ])
     # fmt:on
 
