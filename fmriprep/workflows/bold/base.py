@@ -976,7 +976,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ("outputnode.xforms", "inputnode.hmc_xforms"),
             ]),
             (final_boldref_wf, bold_final, [
-                ("outputnode.ref_image", "boldref"),
                 ("outputnode.bold_mask", "mask"),
             ]),
         ])
@@ -991,6 +990,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 (bold_bold_trans_wf, bold_final, [
                     ("outputnode.bold", "bold"),
                 ]),
+                (final_boldref_wf, bold_final, [
+                    ("outputnode.ref_image", "boldref"),
+                ]),
             ] if not multiecho
             else [
                 (bold_bold_trans_wf, join_echos, [
@@ -1003,7 +1005,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ]),
                 (bold_t2s_wf, bold_final, [
                     ("outputnode.bold", "boldref"),
-                ])
+                ]),
             ]
         )
         # fmt:on
