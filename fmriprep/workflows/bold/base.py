@@ -1013,6 +1013,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         SimpleBeforeAfterRPT as SimpleBeforeAfter,
     )
     from niworkflows.interfaces.utility import KeySelect
+    from sdcflows.utils.misc import front as _pop
     from sdcflows.workflows.apply.registration import init_coeff2epi_wf
     from sdcflows.workflows.apply.correction import init_unwarp_wf
 
@@ -1089,7 +1090,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         (sdc_report, ds_report_sdc, [("out_report", "in_file")]),
         # remaining workflow connections
         (unwarp_wf, bold_std_trans_wf, [
-            ("outputnode.fieldwarp", "inputnode.fieldwarp"),
+            # TEMPORARY: For the moment we can't use frame-wise fieldmaps
+            (("outputnode.fieldwarp", _pop), "inputnode.fieldwarp"),
         ]),
         (unwarp_wf, bold_final, [("outputnode.corrected", "bold"),
                                  ("outputnode.corrected_ref", "boldref"),
@@ -1102,7 +1104,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         # fmt:off
         workflow.connect([
             (unwarp_wf, bold_t1_trans_wf, [
-                ("outputnode.fieldwarp", "inputnode.fieldwarp"),
+                # TEMPORARY: For the moment we can't use frame-wise fieldmaps
+                (("outputnode.fieldwarp", _pop), "inputnode.fieldwarp"),
             ]),
             (bold_split, unwarp_wf, [
                 ("out_files", "inputnode.distorted")]),
