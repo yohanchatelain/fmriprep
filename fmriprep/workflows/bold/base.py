@@ -620,7 +620,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (inputnode, func_derivatives_wf, [
                 (("bold_file", combine_meepi_source), "inputnode.source_file"),
             ]),
-            (join_echos, bold_final, [("bold_files", "bold")]),
             (join_echos, bold_t2s_wf, [("bold_files", "inputnode.bold_file")]),
             (bold_t2s_wf, split_opt_comb, [("outputnode.bold", "in_file")]),
             (split_opt_comb, bold_t1_trans_wf, [("out_files", "inputnode.bold_split")]),
@@ -1004,7 +1003,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                     (("outputnode.bold_mask", pop_file), "inputnode.bold_mask"),
                 ]),
                 (bold_t2s_wf, bold_final, [
-                    ("outputnode.bold", "boldref"),
+                    ("outputnode.bold", "bold"),
+                    ("outputnode.t2star_map", "boldref"),
                 ]),
             ]
         )
