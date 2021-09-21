@@ -421,6 +421,7 @@ jobs:
                     --network none \
                     --config $PWD/nipype.cfg -w /tmp/${DATASET}/work \
                     /tmp/data/${DATASET} /tmp/${DATASET}/derivatives participant \
+                    --output-layout legacy \
                     --fs-subjects-dir /tmp/${DATASET}/freesurfer \
                     --skull-strip-template OASIS30ANTs:res-1 \
                     --output-spaces MNI152NLin2009cAsym MNI152NLin6Asym \
@@ -453,6 +454,7 @@ jobs:
                 /tmp/data/${DATASET} /tmp/${DATASET}/derivatives participant \
                 --fs-subjects-dir /tmp/${DATASET}/freesurfer \
                 ${FASTRACK_ARG} \
+                --output-layout legacy \
                 --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
                 --use-aroma \
                 --skull-strip-template OASIS30ANTs:res-1 \
@@ -472,9 +474,9 @@ jobs:
           name: Checking outputs of full fMRIPrep run
           command: |
             mkdir -p /tmp/${DATASET}/test
-            CHECK_OUTPUTS_FILE="${DATASET}_fasttrack_outputs.txt"
+            CHECK_OUTPUTS_FILE="${DATASET}_legacy_fasttrack_outputs.txt"
             if [ -f /tmp/.nofasttrack ]; then
-                CHECK_OUTPUTS_FILE="${DATASET}_outputs.txt"
+                CHECK_OUTPUTS_FILE="${DATASET}_legacy_outputs.txt"
             fi
             find /tmp/${DATASET}/derivatives \( -path */figures -o -path */log \) -prune -o -name "*" -print | sed s+/tmp/${DATASET}/derivatives/++ | sort > /tmp/${DATASET}/test/outputs.out
             diff /tmp/src/fmriprep/.circleci/${CHECK_OUTPUTS_FILE} /tmp/${DATASET}/test/outputs.out
@@ -498,7 +500,6 @@ jobs:
                 --config $PWD/nipype.cfg -w /tmp/${DATASET}/work_bids \
                 /tmp/data/${DATASET}/ /tmp/${DATASET}/bids participant \
                 ${FASTRACK_ARG} \
-                --output-layout bids \
                 --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
                 --output-spaces MNI152NLin2009cAsym \
                 --nthreads 2 -vv
@@ -529,6 +530,7 @@ jobs:
                 /tmp/data/${DATASET} /tmp/${DATASET}/derivatives_partial participant \
                 --fs-subjects-dir /tmp/${DATASET}/freesurfer \
                 ${FASTRACK_ARG} \
+                --output-layout legacy \
                 --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
                 --output-spaces MNI152NLin2009cAsym fsaverage5 fsnative MNI152NLin6Asym anat \
                 --aroma-melodic-dimensionality 2 --use-aroma \
@@ -537,9 +539,9 @@ jobs:
           name: Checking outputs of partial fMRIPrep run
           command: |
             mkdir -p /tmp/${DATASET}/test
-            CHECK_OUTPUTS_FILE="${DATASET}_partial_fasttrack_outputs.txt"
+            CHECK_OUTPUTS_FILE="${DATASET}_legacy_partial_fasttrack_outputs.txt"
             if [ -f /tmp/.nofasttrack ]; then
-                CHECK_OUTPUTS_FILE="${DATASET}_partial_outputs.txt"
+                CHECK_OUTPUTS_FILE="${DATASET}_legacy_partial_outputs.txt"
             fi
             sudo rm -rf /tmp/${DATASET}/derivatives_partial/freesurfer
             find /tmp/${DATASET}/derivatives_partial \( -path */figures -o -path */log \) -prune -o -name "*" -print | sed s+/tmp/${DATASET}/derivatives_partial/++ | sort > /tmp/${DATASET}/test/outputs.out
@@ -649,6 +651,7 @@ jobs:
                     -e FMRIPREP_DEV 1 --user $(id -u):$(id -g) \
                     --config $PWD/nipype.cfg -w /tmp/${DATASET}/work \
                     /tmp/data/${DATASET} /tmp/${DATASET}/derivatives participant \
+                    --output-layout legacy \
                     --fs-no-reconall --sloppy --write-graph \
                     --output-spaces MNI152NLin2009cAsym \
                     --mem_mb 4096 --nthreads 2 --anat-only -vv
@@ -677,6 +680,7 @@ jobs:
                 --config $PWD/nipype.cfg -w /tmp/${DATASET}/work \
                 /tmp/data/${DATASET} /tmp/${DATASET}/derivatives participant \
                 ${FASTRACK_ARG} \
+                --output-layout legacy \
                 --fs-no-reconall --sloppy \
                 --output-spaces MNI152NLin2009cAsym:res-2 anat func \
                 --mem_mb 4096 --nthreads 2 -vv --debug compcor
@@ -705,6 +709,7 @@ jobs:
                 -e FMRIPREP_DEV 1 --user $(id -u):$(id -g) \
                 --config $PWD/nipype.cfg -w /tmp/${DATASET}/work \
                 /tmp/data/${DATASET} /tmp/${DATASET}/derivatives participant \
+                --output-layout legacy \
                 --fs-no-reconall --sloppy --write-graph \
                 --output-spaces MNI152NLin2009cAsym:res-2 anat func \
                 --reports-only --config-file /tmp/${DATASET}/work/${UUID}/config.toml -vv
@@ -811,6 +816,7 @@ jobs:
                     -e FMRIPREP_DEV 1 --user $(id -u):$(id -g) \
                     --config $PWD/nipype.cfg -w /tmp/${DATASET}/work \
                     /tmp/data/${DATASET} /tmp/${DATASET}/derivatives participant \
+                    --output-layout legacy \
                     --fs-no-reconall --sloppy --write-graph \
                     --output-spaces MNI152NLin2009cAsym \
                     --mem_mb 4096 --nthreads 2 --anat-only -vv
@@ -839,6 +845,7 @@ jobs:
                 --config $PWD/nipype.cfg -w /tmp/${DATASET}/work \
                 /tmp/data/${DATASET} /tmp/${DATASET}/derivatives participant \
                 ${FASTRACK_ARG} \
+                --output-layout legacy \
                 --fs-no-reconall --use-syn-sdc --ignore slicetiming \
                 --dummy-scans 1 --sloppy --write-graph \
                 --output-spaces MNI152NLin2009cAsym \
