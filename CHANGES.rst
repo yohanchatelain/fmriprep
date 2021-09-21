@@ -2,6 +2,17 @@
 ============
 A new major version of fMRIPrep is finally here!
 
+  21.0.0rc1
+  ---------
+  * DOC: Add --index-metadata to `pybids layout` faq (#2546)
+  * DOC: Add warning about slice timing correction in output documentation. (#2502)
+  * ENH: Make bids the default output layout option (#2555)
+  * ENH: Mask multi-echo data with reference mask instead of echo-specific masks (#2349)
+  * FIX: Missing numpy import (#2533)
+  * DOCKER: Shrink Docker image size (#2551)
+  * DOCKER: Strip ABI tag from libQt5Core.so.5 to prevent Singularity failures (#2535)
+  * MAINT: Run pytest through GitHub actions (#2529)
+
   21.0.0rc0
   ---------
   * DOC: Update sample report (#2519)
