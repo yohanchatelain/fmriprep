@@ -458,7 +458,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         regressors_fd_th=config.workflow.regressors_fd_th,
         regressors_dvars_th=config.workflow.regressors_dvars_th,
         name="bold_confounds_wf",
-
     )
     bold_confounds_wf.get_node("inputnode").inputs.t1_transform_flags = [False]
 
@@ -520,8 +519,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             name="bold_t2smap_wf",
         )
 
-    bold_final = pe.Node(niu.IdentityInterface(fields=["bold", "boldref", "mask"]),
-                         name="bold_final")
+    bold_final = pe.Node(
+        niu.IdentityInterface(fields=["bold", "boldref", "mask"]), name="bold_final"
+    )
 
     # MAIN WORKFLOW STRUCTURE #######################################################
     # fmt:off
