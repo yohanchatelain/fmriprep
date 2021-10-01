@@ -445,7 +445,9 @@ Setting-up fieldmap "{estimator.bids_id}" ({estimator.method}) with \
             )
 
         elif estimator.method == fm.EstimatorType.ANAT:
+            from niworkflows.interfaces.utility import KeySelect
             from sdcflows.workflows.fit.syn import init_syn_preprocessing_wf
+
             sources = [str(s.path) for s in estimator.sources if s.suffix == "bold"]
             source_meta = [s.metadata for s in estimator.sources if s.suffix == "bold"]
             syn_preprocessing_wf = init_syn_preprocessing_wf(
@@ -458,12 +460,24 @@ Setting-up fieldmap "{estimator.bids_id}" ({estimator.method}) with \
             syn_preprocessing_wf.inputs.inputnode.in_epis = sources
             syn_preprocessing_wf.inputs.inputnode.in_meta = source_meta
 
+            # Select "MNI152NLin2009cAsym" from standard references.
+            fmap_select_std = pe.Node(
+                KeySelect(fields=["std2anat_xfm"], key="MNI152NLin2009cAsym"),
+                name="fmap_select_std",
+                run_without_submitting=True,
+            )
+
             # fmt:off
             workflow.connect([
+                (anat_preproc_wf, fmap_select_std, [
+                    ("outputnode.std2anat_xfm", "std2anat_xfm"),
+                    ("outputnode.template", "keys")]),
                 (anat_preproc_wf, syn_preprocessing_wf, [
                     ("outputnode.t1w_preproc", "inputnode.in_anat"),
                     ("outputnode.t1w_mask", "inputnode.mask_anat"),
-                    ("outputnode.std2anat_xfm", "inputnode.std2anat_xfm"),
+                ]),
+                (fmap_select_std, syn_preprocessing_wf, [
+                    ("std2anat_xfm", "inputnode.std2anat_xfm"),
                 ]),
                 (syn_preprocessing_wf, fmap_wf, [
                     ("outputnode.epi_ref", f"in_{estimator.bids_id}.epi_ref"),
