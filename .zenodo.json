@@ -15,15 +15,15 @@
       "type": "Researcher"
     },
     {
-      "affiliation": "Department of Psychology, Stanford University",
-      "name": "Feingold, Franklin",
-      "orcid": "0000-0002-6533-2909",
-      "type": "Researcher"
-    },
-    {
       "affiliation": "Department of Neuroscience, University of Pennsylvania, PA, USA",
       "name": "Tooley, Ursula A.",
       "orcid": "0000-0001-6377-3885",
+      "type": "Researcher"
+    },
+    {
+      "affiliation": "Department of Psychology, Stanford University",
+      "name": "Feingold, Franklin",
+      "orcid": "0000-0002-6533-2909",
       "type": "Researcher"
     },
     {
@@ -69,6 +69,24 @@
       "type": "Researcher"
     },
     {
+      "affiliation": "Charite Universitatsmedizin Berlin, Germany",
+      "name": "Waller, Lea",
+      "orcid": "0000-0002-3239-6957",
+      "type": "Researcher"
+    },
+    {
+      "affiliation": "Speech & Hearing Bioscience & Technology Program, Harvard University",
+      "name": "Mentch, Jeff",
+      "orcid": "0000-0002-7762-8678",
+      "type": "Researcher"
+    },
+    {
+      "affiliation": "Center for Lifespan Changes in Brain and Cognition, University of Oslo",
+      "name": "Sneve, Markus H.",
+      "orcid": "0000-0001-7644-7915",
+      "type": "Researcher"
+    },
+    {
       "affiliation": "McLean Hospital Brain Imaging Center, MA, USA",
       "name": "Frederick, Blaise B.",
       "orcid": "0000-0001-5832-5279",
@@ -81,15 +99,9 @@
       "type": "Researcher"
     },
     {
-      "affiliation": "Center for Lifespan Changes in Brain and Cognition, University of Oslo",
-      "name": "Sneve, Markus H.",
-      "orcid": "0000-0001-7644-7915",
-      "type": "Researcher"
-    },
-    {
-      "affiliation": "URPP Dynamics of Healthy Aging, University of Zurich",
-      "name": "Liem, Franz",
-      "orcid": "0000-0003-0646-4810",
+      "affiliation": "Department of Psychology, Stanford University",
+      "name": "Wexler, Joseph B.",
+      "orcid": "0000-0001-6424-8740",
       "type": "Researcher"
     },
     {
@@ -105,15 +117,9 @@
       "type": "Researcher"
     },
     {
-      "affiliation": "Department of Psychology, Stanford University",
-      "name": "Wexler, Joseph B.",
-      "orcid": "0000-0001-6424-8740",
-      "type": "Researcher"
-    },
-    {
-      "affiliation": "Department of Psychology, New York University, NY, USA",
-      "name": "Groen, Iris I. A.",
-      "orcid": "0000-0002-5536-6128",
+      "affiliation": "URPP Dynamics of Healthy Aging, University of Zurich",
+      "name": "Liem, Franz",
+      "orcid": "0000-0003-0646-4810",
       "type": "Researcher"
     },
     {
@@ -150,6 +156,12 @@
       "affiliation": "Donders Institute for Brain, Cognition and Behaviour, Radboud University Nijmegen",
       "name": "Gomez, Daniel E. P.",
       "orcid": "0000-0001-8635-021X",
+      "type": "Researcher"
+    },
+    {
+      "affiliation": "Department of Psychology, New York University, NY, USA",
+      "name": "Groen, Iris I. A.",
+      "orcid": "0000-0002-5536-6128",
       "type": "Researcher"
     },
     {
