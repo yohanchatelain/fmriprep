@@ -54,6 +54,23 @@ A new major version of fMRIPrep is finally here!
   * MAINT: Migrate from poldracklab to nipreps orgs (#2290)
   * MAINT: Ease CI packaging tests (#2472)
 
+20.2.4 (October 04, 2021)
+=========================
+Bug-fix release in the 20.2.x LTS series.
+
+This release includes some fixes to minor bugs, and includes enhancements
+to allow the user to specify a different slice-timing-correction (STC) target.
+
+Each BOLD series will contain ``SliceTimingCorrected`` metadata to indicate
+whether STC was performed. If performed, the ``StartTime`` metadata field will
+be set to indicate the onset time of the BOLD series.
+
+  * FIX: Avoid unnecessary connections based on branching logic (#2508)
+  * FIX: Permit missing TR to show PyBIDS error at workflow construction time (#2513)
+  * [BACKPORT] FIX: Catch FreeSurfer error related to FIPS being enabled (#2490)
+  * ENH: Use ``BIDSLayoutIndexer`` and do not index unnecessary modalities (#2494)
+  * [BACKPORT] ENH: Slice-timing correction improvements (#2565)
+
 20.2.3 (July 21, 2021)
 ======================
 Patch release in the 20.2.x LTS series.
