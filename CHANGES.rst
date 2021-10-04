@@ -1,4 +1,4 @@
-20.2.4 (October 01, 2021)
+20.2.4 (October 04, 2021)
 =========================
 Bug-fix release in the 20.2.x LTS series.
 
