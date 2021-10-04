@@ -126,7 +126,7 @@ def test_bids_filter_file(tmp_path, capsys):
 
     parser = _build_parser()
 
-    with pytest.raises(SystemExit) as error:
+    with pytest.raises(SystemExit):
         parser.parse_args(args)
 
     err = capsys.readouterr().err
@@ -134,7 +134,7 @@ def test_bids_filter_file(tmp_path, capsys):
 
     bff.write_text('{"invalid json": }')
 
-    with pytest.raises(SystemExit) as error:
+    with pytest.raises(SystemExit):
         parser.parse_args(args)
 
     err = capsys.readouterr().err

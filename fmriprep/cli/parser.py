@@ -62,7 +62,7 @@ def _build_parser():
             if Path(value).exists():
                 try:
                     return loads(Path(value).read_text(), object_hook=_filter_pybids_none_any)
-                except JSONDecodeError as e:
+                except JSONDecodeError:
                     raise parser.error(f"JSON syntax error in: <{value}>.")
             else:
                 raise parser.error(f"Path does not exist: <{value}>.")
@@ -77,10 +77,9 @@ def _build_parser():
         except ValueError:
             raise parser.error("Slice time reference must be number, 'start', or 'middle'. "
                                f"Received {value}.")
-        if not 0 <= val <= 1:
+        if not 0 <= value <= 1:
             raise parser.error(f"Slice time reference must be in range 0-1. Received {value}.")
         return value
-
 
     verstr = f"fMRIPrep v{config.environment.version}"
     currentv = Version(config.environment.version)
@@ -626,7 +625,6 @@ def parse_args(args=None, namespace=None):
 
     parser = _build_parser()
     opts = parser.parse_args(args, namespace)
-
 
     if opts.config_file:
         skip = {} if opts.reports_only else {"execution": ("run_uuid",)}
