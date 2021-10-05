@@ -336,6 +336,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 "bold_aseg_std",
                 "bold_aparc_std",
                 "bold_native",
+                "bold_native_ref",
+                "bold_mask_native",
                 "bold_cifti",
                 "cifti_variant",
                 "cifti_metadata",
@@ -400,6 +402,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ("bold_aparc_t1", "inputnode.bold_aparc_t1"),
             ("bold_mask_t1", "inputnode.bold_mask_t1"),
             ("bold_native", "inputnode.bold_native"),
+            ("bold_native_ref", "inputnode.bold_native_ref"),
+            ("bold_mask_native", "inputnode.bold_mask_native"),
             ("confounds", "inputnode.confounds"),
             ("surfaces", "inputnode.surf_files"),
             ("aroma_noise_ics", "inputnode.aroma_noise_ics"),
@@ -633,6 +637,11 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ("outputnode.acompcor_masks", "acompcor_masks"),
             ("outputnode.tcompcor_mask", "tcompcor_mask"),
         ]),
+        # Native-space BOLD files (if calculated)
+        (bold_final, outputnode, [
+            ("bold", "bold_native"),
+            ("boldref", "bold_native_ref"),
+        ]),
         # Summary
         (outputnode, summary, [("confounds", "confounds_file")]),
     ])
@@ -684,17 +693,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (bold_t1_trans_wf, boldmask_to_t1w, [("outputnode.bold_mask_t1", "reference_image")]),
             (bold_final, boldmask_to_t1w, [("mask", "input_image")]),
             (boldmask_to_t1w, outputnode, [("output_image", "bold_mask_t1")]),
-        ])
-        # fmt:on
-
-    if nonstd_spaces.intersection(("func", "run", "bold", "boldref", "sbref")):
-        # fmt:off
-        workflow.connect([
-            (bold_final, func_derivatives_wf, [
-                ("boldref", "inputnode.bold_native_ref"),
-                ("mask", "inputnode.bold_mask_native"),
-            ]),
-            (bold_final, outputnode, [("bold", "bold_native")]),
         ])
         # fmt:on
 
@@ -1003,6 +1001,10 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (bold_split, bold_bold_trans_wf, [("out_files", "inputnode.bold_file")]),
             (bold_hmc_wf, bold_bold_trans_wf, [
                 ("outputnode.xforms", "inputnode.hmc_xforms"),
+            ]),
+            (final_boldref_wf, outputnode, [
+                ("outputnode.ref_image", "bold_native_ref"),
+                ("outputnode.bold_mask", "mask"),
             ]),
         ])
 
