@@ -75,8 +75,8 @@ def _build_parser():
             for k, v in dct.items()
         }
 
-    def _bids_filter(value):
-        from json import loads
+    def _bids_filter(value, parser):
+        from json import loads, JSONDecodeError
 
         if value:
             if Path(value).exists():
@@ -116,6 +116,7 @@ def _build_parser():
     PathExists = partial(_path_exists, parser=parser)
     IsFile = partial(_is_file, parser=parser)
     PositiveInt = partial(_min_one, parser=parser)
+    BIDSFilter = partial(_bids_filter, parser=parser)
 
     # Arguments as specified by BIDS-Apps
     # required, positional arguments
@@ -179,7 +180,7 @@ def _build_parser():
         "--bids-filter-file",
         dest="bids_filters",
         action="store",
-        type=_bids_filter,
+        type=BIDSFilter,
         metavar="FILE",
         help="a JSON file describing custom BIDS input filters using PyBIDS. "
         "For further details, please check out "
@@ -198,9 +199,9 @@ def _build_parser():
     g_bids.add_argument(
         "--bids-database-dir",
         metavar="PATH",
-        type=PathExists,
-        help="Path to an existing PyBIDS database folder, for faster indexing "
-             "(especially useful for large datasets)."
+        type=Path,
+        help="Path to a PyBIDS database folder, for faster indexing (especially "
+             "useful for large datasets). Will be created if not present."
     )
 
     g_perfm = parser.add_argument_group("Options to handle performance")
