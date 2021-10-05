@@ -5,7 +5,7 @@ import sys
 from .. import config
 
 
-def _build_parser():
+def _build_parser(**kwargs):
     """Build parser object."""
     from functools import partial
     from pathlib import Path
@@ -92,6 +92,7 @@ def _build_parser():
             config.environment.version
         ),
         formatter_class=ArgumentDefaultsHelpFormatter,
+        **kwargs,
     )
     PathExists = partial(_path_exists, parser=parser)
     IsFile = partial(_is_file, parser=parser)
