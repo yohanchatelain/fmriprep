@@ -241,6 +241,21 @@ def init_func_derivatives_wf(
             (raw_sources, ds_bold_mask_native, [('out', 'RawSources')]),
         ])
 
+    if config.execution.output_echos and multiecho:
+        ds_bold_echos_native = pe.Node(
+            DerivativesDataSink(
+                base_directory=output_dir, desc='preproc', compress=True, SkullStripped=False,
+                TaskName=metadata.get('TaskName'), EchoTime=metadata.get('EchoTime'),
+                **timing_parameters),
+            name='ds_bold_echos_native', run_without_submitting=True,
+            mem_gb=DEFAULT_MEMORY_MIN_GB)
+
+        workflow.connect([
+            (inputnode, ds_bold_echos_native, [
+                ('source_file', 'source_file'),
+                ('bold_echos_native', 'in_file')]),
+        ])
+
     # Resample to T1w space
     if nonstd_spaces.intersection(('T1w', 'anat')):
         ds_bold_t1 = pe.Node(
