@@ -315,6 +315,14 @@ any spatial references. For further details, please check out \
 https://fmriprep.readthedocs.io/en/%s/spaces.html"""
         % (currentv.base_version if is_release else "latest"),
     )
+    g_conf.add_argument(
+        "--output-echos",
+        action="store_true",
+        default=False,
+        help="""\
+Output individual echo time series with slice, motion and susceptibility correction. \
+Useful for further Tedana processing post-fMRIPrep."""
+    )
 
     g_conf.add_argument(
         "--bold2t1w-init",
