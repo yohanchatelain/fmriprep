@@ -374,6 +374,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         cifti_output=config.workflow.cifti_output,
         freesurfer=freesurfer,
         metadata=metadata,
+        multiecho=multiecho,
         output_dir=fmriprep_dir,
         spaces=spaces,
         use_aroma=config.workflow.use_aroma,
