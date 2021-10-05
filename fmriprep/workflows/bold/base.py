@@ -79,7 +79,7 @@ def init_func_preproc_wf(bold_file, has_fieldmap=False):
     Parameters
     ----------
     bold_file
-        BOLD series NIfTI file
+        Path to NIfTI file (single echo) or list of paths to NIfTI files (multi-echo)
     has_fieldmap : :obj:`bool`
         Signals the workflow to use inputnode fieldmap files
 
@@ -975,6 +975,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ("outputnode.xforms", "inputnode.hmc_xforms"),
             ]),
             (final_boldref_wf, bold_final, [
+                ("outputnode.ref_image", "boldref"),
                 ("outputnode.bold_mask", "mask"),
             ]),
         ])
@@ -989,9 +990,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 (bold_bold_trans_wf, bold_final, [
                     ("outputnode.bold", "bold"),
                 ]),
-                (final_boldref_wf, bold_final, [
-                    ("outputnode.ref_image", "boldref"),
-                ]),
             ] if not multiecho
             else [
                 (bold_bold_trans_wf, join_echos, [
@@ -1004,7 +1002,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ]),
                 (bold_t2s_wf, bold_final, [
                     ("outputnode.bold", "bold"),
-                    ("outputnode.t2star_map", "boldref"),
                 ]),
             ]
         )
