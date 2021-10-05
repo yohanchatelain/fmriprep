@@ -6,7 +6,10 @@ from .. import config
 
 
 def _build_parser(**kwargs):
-    """Build parser object."""
+    """Build parser object.
+
+    ``kwargs`` are passed to ``argparse.ArgumentParser`` (mainly useful for debugging).
+    """
     from functools import partial
     from pathlib import Path
     from argparse import (
