@@ -338,6 +338,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 "bold_native",
                 "bold_native_ref",
                 "bold_mask_native",
+                "bold_echos_native",
                 "bold_cifti",
                 "cifti_variant",
                 "cifti_metadata",
@@ -404,6 +405,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ("bold_native", "inputnode.bold_native"),
             ("bold_native_ref", "inputnode.bold_native_ref"),
             ("bold_mask_native", "inputnode.bold_mask_native"),
+            ("bold_echos_native", "inputnode.bold_echos_native"),
             ("confounds", "inputnode.confounds"),
             ("surfaces", "inputnode.surf_files"),
             ("aroma_noise_ics", "inputnode.aroma_noise_ics"),
@@ -542,7 +544,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         )
 
     bold_final = pe.Node(
-        niu.IdentityInterface(fields=["bold", "boldref", "mask"]), name="bold_final"
+        niu.IdentityInterface(fields=["bold", "boldref", "mask", "bold_echos"]),
+        name="bold_final"
     )
 
     # Generate a final BOLD reference
@@ -641,6 +644,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         (bold_final, outputnode, [
             ("bold", "bold_native"),
             ("boldref", "bold_native_ref"),
+            ("bold_echos", "bold_echos_native"),
         ]),
         # Summary
         (outputnode, summary, [("confounds", "confounds_file")]),
@@ -663,9 +667,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (inputnode, func_derivatives_wf, [
                 (("bold_file", combine_meepi_source), "inputnode.source_file"),
             ]),
-            (join_echos, bold_t2s_wf, [
-                ("bold_files", "inputnode.bold_file"),
-            ]),
+            (join_echos, bold_t2s_wf, [("bold_files", "inputnode.bold_file")]),
+            (join_echos, bold_final, [("bold_files", "bold_echos")]),
             (bold_t2s_wf, split_opt_comb, [("outputnode.bold", "in_file")]),
             (split_opt_comb, bold_t1_trans_wf, [("out_files", "inputnode.bold_split")]),
             (bold_t2s_wf, bold_final, [("outputnode.bold", "bold")]),
