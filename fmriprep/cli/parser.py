@@ -98,6 +98,7 @@ def _build_parser(**kwargs):
     IsFile = partial(_is_file, parser=parser)
     PositiveInt = partial(_min_one, parser=parser)
     BIDSFilter = partial(_bids_filter, parser=parser)
+    SliceTimeRef = partial(_slice_time_ref, parser=parser)
 
     # Arguments as specified by BIDS-Apps
     # required, positional arguments
@@ -336,7 +337,7 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html"""
         required=False,
         action="store",
         default=None,
-        type=_slice_time_ref,
+        type=SliceTimeRef,
         help="The time of the reference slice to correct BOLD values to, as a fraction "
              "acquisition time. 0 indicates the start, 0.5 the midpoint, and 1 the end "
              "of acquisition. The alias `start` corresponds to 0, and `middle` to 0.5. "
