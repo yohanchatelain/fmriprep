@@ -259,9 +259,6 @@ RUN curl -sSLO https://www.humanconnectome.org/storage/app/media/workbench/workb
 ENV PATH="/opt/workbench/bin_linux64:$PATH" \
     LD_LIBRARY_PATH="/opt/workbench/lib_linux64:$LD_LIBRARY_PATH"
 
-# ABI tags can interfere when running on Singularity
-RUN strip --remove-section=.note.ABI-tag /usr/lib/x86_64-linux-gnu/libQt5Core.so.5
-
 # Installing and setting up miniconda
 RUN curl -sSLO https://repo.continuum.io/miniconda/Miniconda3-py38_4.9.2-Linux-x86_64.sh && \
     bash Miniconda3-py38_4.9.2-Linux-x86_64.sh -b -p /usr/local/miniconda && \
@@ -277,25 +274,25 @@ ENV PATH="/usr/local/miniconda/bin:$PATH" \
 # Installing precomputed python packages
 RUN conda install -y -c conda-forge -c anaconda \
                      python=3.8 \
-                     git-annex \
-                     graphviz=2.40 \
-                     libxml2=2.9 \
-                     libxslt=1.1 \
+                     git-annex=*=alldep* \
+                     graphviz=2 \
+                     libxml2=2 \
+                     libxslt=1 \
                      matplotlib=3.3 \
-                     mkl-service=2.3 \
-                     mkl=2021.2 \
+                     mkl-service \
+                     mkl \
                      nodejs \
                      numpy=1.20 \
                      pandas=1.2 \
-                     pandoc=2.11 \
-                     pip=21.0 \
+                     pandoc=2.14 \
+                     pip=21.2 \
                      scikit-image=0.18 \
                      scikit-learn=0.24 \
                      scipy=1.6 \
-                     setuptools=51.1 \
+                     setuptools=58.2 \
                      traits=6.2 \
-                     zlib \
-                     zstd=1.4; sync && \
+                     zlib=1.2 \
+                     zstd=1.5; sync && \
     chmod -R a+rX /usr/local/miniconda; sync && \
     chmod +x /usr/local/miniconda/bin/*; sync && \
     conda clean -y --all && sync && \
@@ -342,6 +339,9 @@ RUN find $HOME -type d -exec chmod go=u {} + && \
 
 ENV IS_DOCKER_8395080871=1
 
+
+# ABI tags can interfere when running on Singularity
+RUN strip --remove-section=.note.ABI-tag /usr/lib/x86_64-linux-gnu/libQt5Core.so.5
 RUN ldconfig
 WORKDIR /tmp
 ENTRYPOINT ["/usr/local/miniconda/bin/fmriprep"]
