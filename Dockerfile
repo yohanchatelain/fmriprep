@@ -277,13 +277,13 @@ ENV PATH="/usr/local/miniconda/bin:$PATH" \
 RUN conda install -y -c conda-forge -c anaconda \
                      python=3.8 \
                      git-annex=*=alldep* \
-                     graphviz=2 \
-                     libxml2=2 \
-                     libxslt=1 \
+                     graphviz=2.49 \
+                     libxml2=2.9 \
+                     libxslt=1.1 \
                      matplotlib=3.3 \
-                     mkl-service \
-                     mkl \
-                     nodejs \
+                     mkl-service=2.4 \
+                     mkl=2021.3 \
+                     nodejs=16 \
                      numpy=1.20 \
                      pandas=1.2 \
                      pandoc=2.14 \
