@@ -117,6 +117,7 @@ def init_func_derivatives_wf(
     cifti_output,
     freesurfer,
     metadata,
+    multiecho,
     output_dir,
     spaces,
     use_aroma,
@@ -135,6 +136,8 @@ def init_func_derivatives_wf(
         Whether FreeSurfer anatomical processing was run.
     metadata : :obj:`dict`
         Metadata dictionary associated to the BOLD run.
+    multiecho : :obj:`bool`
+        Derivatives were generated from multi-echo time series.
     output_dir : :obj:`str`
         Where derivatives should be written out to.
     spaces : :py:class:`~niworkflows.utils.spaces.SpatialReferences`
@@ -160,6 +163,10 @@ def init_func_derivatives_wf(
 
     nonstd_spaces = set(spaces.get_nonstandard())
     workflow = Workflow(name=name)
+
+    # BOLD series will generally be unmasked unless multiecho,
+    # as the optimal combination is undefined outside a bounded mask
+    masked = multiecho
 
     inputnode = pe.Node(niu.IdentityInterface(fields=[
         'aroma_noise_ics', 'bold_aparc_std', 'bold_aparc_t1', 'bold_aseg_std',
@@ -208,7 +215,7 @@ def init_func_derivatives_wf(
     if nonstd_spaces.intersection(('func', 'run', 'bold', 'boldref', 'sbref')):
         ds_bold_native = pe.Node(
             DerivativesDataSink(
-                base_directory=output_dir, desc='preproc', compress=True, SkullStripped=False,
+                base_directory=output_dir, desc='preproc', compress=True, SkullStripped=masked,
                 TaskName=metadata.get('TaskName'), **timing_parameters),
             name='ds_bold_native', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
@@ -238,7 +245,7 @@ def init_func_derivatives_wf(
         ds_bold_t1 = pe.Node(
             DerivativesDataSink(
                 base_directory=output_dir, space='T1w', desc='preproc', compress=True,
-                SkullStripped=False, TaskName=metadata.get('TaskName'), **timing_parameters),
+                SkullStripped=masked, TaskName=metadata.get('TaskName'), **timing_parameters),
             name='ds_bold_t1', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_t1_ref = pe.Node(
@@ -323,7 +330,7 @@ def init_func_derivatives_wf(
 
         ds_bold_std = pe.Node(
             DerivativesDataSink(
-                base_directory=output_dir, desc='preproc', compress=True, SkullStripped=False,
+                base_directory=output_dir, desc='preproc', compress=True, SkullStripped=masked,
                 TaskName=metadata.get('TaskName'), **timing_parameters),
             name='ds_bold_std', run_without_submitting=True, mem_gb=DEFAULT_MEMORY_MIN_GB)
         ds_bold_std_ref = pe.Node(
