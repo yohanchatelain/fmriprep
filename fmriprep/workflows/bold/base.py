@@ -628,6 +628,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (inputnode, func_derivatives_wf, [("bold_file", "inputnode.source_file")]),
             (bold_split, bold_t1_trans_wf, [("out_files", "inputnode.bold_split")]),
             (bold_hmc_wf, bold_t1_trans_wf, [("outputnode.xforms", "inputnode.hmc_xforms")]),
+            (final_boldref_wf, bold_final, [
+                ("outputnode.ref_image", "boldref"),
+            ]),
         ])
         # fmt:on
     else:  # for meepi, use optimal combination
