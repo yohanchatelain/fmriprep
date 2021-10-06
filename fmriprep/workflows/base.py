@@ -488,15 +488,6 @@ Setting-up fieldmap "{estimator.bids_id}" ({estimator.method}) with \
                 ]),
             ])
             # fmt:on
-
-            # TotalReadoutTime is calculated or imputed by find_estimators
-            # Use enhanced metadata for SyN-SDC
-            from .bold.base import _get_wf_name
-            for func_preproc_wf in func_preproc_wfs:
-                for source, meta in zip(sources, source_meta):
-                    if func_preproc_wf.name == _get_wf_name(source):
-                        func_preproc_wf.inputs.unwarp_wf.inputnode.metadata = meta
-
     return workflow
 
 
