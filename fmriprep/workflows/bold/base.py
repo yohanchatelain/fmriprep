@@ -524,6 +524,15 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         niu.IdentityInterface(fields=["bold", "boldref", "mask"]), name="bold_final"
     )
 
+    # Generate a final BOLD reference
+    # This BOLD references *does not use* single-band reference images.
+    final_boldref_wf = init_bold_reference_wf(
+        name="final_boldref_wf",
+        omp_nthreads=omp_nthreads,
+        multiecho=multiecho,
+    )
+    final_boldref_wf.__desc__ = None  # Unset description to avoid second appearance
+
     # MAIN WORKFLOW STRUCTURE #######################################################
     # fmt:off
     workflow.connect([
@@ -590,6 +599,13 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         (initial_boldref_wf, bold_confounds_wf, [
             ("outputnode.skip_vols", "inputnode.skip_vols"),
         ]),
+        (initial_boldref_wf, final_boldref_wf, [
+            ("outputnode.skip_vols", "inputnode.dummy_scans"),
+        ]),
+        (final_boldref_wf, bold_final, [
+            ("outputnode.ref_image", "boldref"),
+            ("outputnode.bold_mask", "mask"),
+        ]),
         (bold_final, bold_confounds_wf, [
             ("bold", "inputnode.bold"),
             ("mask", "inputnode.bold_mask"),
@@ -624,6 +640,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (join_echos, bold_t2s_wf, [("bold_files", "inputnode.bold_file")]),
             (bold_t2s_wf, split_opt_comb, [("outputnode.bold", "in_file")]),
             (split_opt_comb, bold_t1_trans_wf, [("out_files", "inputnode.bold_split")]),
+            (bold_t2s_wf, bold_final, [
+                ("outputnode.bold", "bold"),
+            ]),
         ])
         # fmt:on
 
@@ -959,25 +978,12 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         bold_bold_trans_wf.inputs.inputnode.name_source = ref_file
         bold_bold_trans_wf.inputs.inputnode.fieldwarp = "identity"
 
-        # Generate a final BOLD reference
-        # This BOLD references *does not use* single-band reference images.
-        final_boldref_wf = init_bold_reference_wf(
-            name="final_boldref_wf",
-            omp_nthreads=omp_nthreads,
-            multiecho=multiecho,
-        )
-        final_boldref_wf.__desc__ = None  # Unset description to avoid second appearance
-
         # fmt:off
         workflow.connect([
             # Connect bold_bold_trans_wf
             (bold_split, bold_bold_trans_wf, [("out_files", "inputnode.bold_file")]),
             (bold_hmc_wf, bold_bold_trans_wf, [
                 ("outputnode.xforms", "inputnode.hmc_xforms"),
-            ]),
-            (final_boldref_wf, bold_final, [
-                ("outputnode.ref_image", "boldref"),
-                ("outputnode.bold_mask", "mask"),
             ]),
         ])
         # fmt:on
@@ -1000,9 +1006,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 # use reference image mask used by bold_bold_trans_wf
                 (bold_bold_trans_wf, bold_t2s_wf, [
                     (("outputnode.bold_mask", pop_file), "inputnode.bold_mask"),
-                ]),
-                (bold_t2s_wf, bold_final, [
-                    ("outputnode.bold", "bold"),
                 ]),
             ]
         )
@@ -1084,8 +1087,12 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ("outputnode.xforms", "inputnode.hmc_xforms")]),
         (initial_boldref_wf, sdc_report, [
             ("outputnode.ref_image", "before")]),
-        (unwarp_wf, sdc_report, [("outputnode.corrected_ref", "after"),
-                                 ("outputnode.corrected_mask", "wm_seg")]),
+        (unwarp_wf, final_boldref_wf, [
+            ("outputnode.corrected_ref", "inputnode.bold_file"),
+        ]),
+        (final_boldref_wf, sdc_report, [
+            ("outputnode.ref_image", "after"),
+            ("outputnode.bold_mask", "wm_seg")]),
         (inputnode, ds_report_sdc, [("bold_file", "source_file")]),
         (sdc_report, ds_report_sdc, [("out_report", "in_file")]),
         # remaining workflow connections
@@ -1093,9 +1100,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             # TEMPORARY: For the moment we can't use frame-wise fieldmaps
             (("outputnode.fieldwarp", _pop), "inputnode.fieldwarp"),
         ]),
-        (unwarp_wf, bold_final, [("outputnode.corrected", "bold"),
-                                 ("outputnode.corrected_ref", "boldref"),
-                                 ("outputnode.corrected_mask", "mask")]),
+        (unwarp_wf, bold_final, [("outputnode.corrected", "bold")]),
 
     ])
     # fmt:on
