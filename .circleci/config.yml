@@ -53,7 +53,7 @@ jobs:
             docker run -d -p 5000:5000 --restart=always --name=registry \
                 -v /tmp/docker:/var/lib/registry registry:2
       - run:
-          name: Pull images
+          name: Pull Ubuntu/focal image
           command: |
             set +e
             docker pull localhost:5000/ubuntu
@@ -62,14 +62,41 @@ jobs:
             if [[ "$success" = "0" ]]; then
                 echo "Pulling from local registry"
                 docker tag localhost:5000/ubuntu ubuntu:focal
-                docker pull localhost:5000/fmriprep
-                docker tag localhost:5000/fmriprep nipreps/fmriprep:latest
-                docker tag localhost:5000/fmriprep nipreps/fmriprep
             else
                 echo "Pulling from Docker Hub"
                 docker pull ubuntu:focal
                 docker tag ubuntu:focal localhost:5000/ubuntu
                 docker push localhost:5000/ubuntu
+            fi
+      - run:
+          name: Pull nipreps/miniconda
+          command: |
+            set +e
+            docker pull localhost:5000/miniconda:1.2.0
+            success=$?
+            set -e
+            if [[ "$success" = "0" ]]; then
+                echo "Pulled from local registry"
+                docker tag localhost:5000/miniconda:1.2.0 nipreps/miniconda:1.2.0
+            else
+                echo "Pulling from Docker Hub"
+                docker pull nipreps/miniconda:1.2.0
+                docker tag nipreps/miniconda:1.2.0 localhost:5000/miniconda:1.2.0
+                docker push localhost:5000/miniconda:1.2.0
+            fi
+      - run:
+          name: Pull fMRIPrep Docker image
+          command: |
+            set +e
+            docker pull localhost:5000/fmriprep
+            success=$?
+            set -e
+            if [[ "$success" = "0" ]]; then
+                echo "Pulled from local registry"
+                docker tag localhost:5000/fmriprep nipreps/fmriprep:latest
+                docker tag localhost:5000/fmriprep nipreps/fmriprep
+            else
+                echo "Pulling from Docker Hub"
                 docker pull nipreps/fmriprep:latest
             fi
       - run:

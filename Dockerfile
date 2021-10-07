@@ -261,68 +261,37 @@ RUN curl -sSLO https://www.humanconnectome.org/storage/app/media/workbench/workb
 ENV PATH="/opt/workbench/bin_linux64:$PATH" \
     LD_LIBRARY_PATH="/opt/workbench/lib_linux64:$LD_LIBRARY_PATH"
 
-# Installing and setting up miniconda
-RUN curl -sSLO https://repo.continuum.io/miniconda/Miniconda3-py38_4.9.2-Linux-x86_64.sh && \
-    bash Miniconda3-py38_4.9.2-Linux-x86_64.sh -b -p /usr/local/miniconda && \
-    rm Miniconda3-py38_4.9.2-Linux-x86_64.sh
+COPY --from=nipreps/miniconda:1.2.0 /opt/conda /opt/conda
+
+RUN ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
+    echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
+    echo "conda activate base" >> ~/.bashrc
 
 # Set CPATH for packages relying on compiled libs (e.g. indexed_gzip)
-ENV PATH="/usr/local/miniconda/bin:$PATH" \
-    CPATH="/usr/local/miniconda/include:$CPATH" \
+ENV PATH="/opt/conda/bin:$PATH" \
+    CPATH="/opt/conda/include:$CPATH" \
+    LD_LIBRARY_PATH="/opt/conda/lib:$LD_LIBRARY_PATH" \
     LANG="C.UTF-8" \
     LC_ALL="C.UTF-8" \
     PYTHONNOUSERSITE=1
-
-# Installing precomputed python packages
-RUN conda install -y -c conda-forge -c anaconda \
-                     python=3.8 \
-                     git-annex=*=alldep* \
-                     graphviz=2.49 \
-                     libxml2=2.9 \
-                     libxslt=1.1 \
-                     matplotlib=3.3 \
-                     mkl-service=2.4 \
-                     mkl=2021.3 \
-                     nodejs=16 \
-                     numpy=1.20 \
-                     pandas=1.2 \
-                     pandoc=2.14 \
-                     pip=21.2 \
-                     scikit-image=0.18 \
-                     scikit-learn=0.24 \
-                     scipy=1.6 \
-                     setuptools=58.2 \
-                     traits=6.2 \
-                     zlib=1.2 \
-                     zstd=1.5; sync && \
-    chmod -R a+rX /usr/local/miniconda; sync && \
-    chmod +x /usr/local/miniconda/bin/*; sync && \
-    conda clean -y --all && sync && \
-    rm -rf ~/.conda ~/.cache/pip/*; sync
-
-# Precaching fonts, set 'Agg' as default backend for matplotlib
-RUN python -c "from matplotlib import font_manager" && \
-    sed -i 's/\(backend *: \).*$/\1Agg/g' $( python -c "import matplotlib; print(matplotlib.matplotlib_fname())" )
 
 # Unless otherwise specified each process should only use one thread - nipype
 # will handle parallelization
 ENV MKL_NUM_THREADS=1 \
     OMP_NUM_THREADS=1
 
-# Installing SVGO and bids-validator
-RUN npm install -g svgo@^2.3 bids-validator@1.8.0 \
-  && rm -rf ~/.npm ~/.empty /root/.npm
-
 # Create a shared $HOME directory
 RUN useradd -m -s /bin/bash -G users fmriprep
 WORKDIR /home/fmriprep
 ENV HOME="/home/fmriprep"
 
+RUN echo ". /opt/conda/etc/profile.d/conda.sh" >> $HOME/.bashrc && \
+    echo "conda activate base" >> $HOME/.bashrc
+
 # Precaching atlases
 COPY scripts/fetch_templates.py fetch_templates.py
 
-RUN pip install --no-cache-dir templateflow && \
-    python fetch_templates.py && \
+RUN /opt/conda/bin/python fetch_templates.py && \
     rm fetch_templates.py && \
     find $HOME/.cache/templateflow -type d -exec chmod go=u {} + && \
     find $HOME/.cache/templateflow -type f -exec chmod go=u {} +
@@ -333,7 +302,7 @@ ARG VERSION
 # Force static versioning within container
 RUN echo "${VERSION}" > /src/fmriprep/fmriprep/VERSION && \
     echo "include fmriprep/VERSION" >> /src/fmriprep/MANIFEST.in && \
-    pip install --no-cache-dir "/src/fmriprep[all]"
+    /opt/conda/bin/python -m pip install --no-cache-dir "/src/fmriprep[all]"
 
 RUN find $HOME -type d -exec chmod go=u {} + && \
     find $HOME -type f -exec chmod go=u {} + && \
@@ -343,7 +312,7 @@ ENV IS_DOCKER_8395080871=1
 
 RUN ldconfig
 WORKDIR /tmp
-ENTRYPOINT ["/usr/local/miniconda/bin/fmriprep"]
+ENTRYPOINT ["/opt/conda/bin/fmriprep"]
 
 ARG BUILD_DATE
 ARG VCS_REF
