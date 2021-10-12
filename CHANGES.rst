@@ -54,6 +54,18 @@ A new major version of fMRIPrep is finally here!
   * MAINT: Migrate from poldracklab to nipreps orgs (#2290)
   * MAINT: Ease CI packaging tests (#2472)
 
+20.2.5 (October 12, 2021)
+=========================
+Bug-fix release in the 20.2.x LTS series.
+
+This release includes a fix to `--slice-time-ref` parsing. Also, some
+issues in anatomical processing are resolved, including poorly-interpolated
+labels in aseg segmentations, and probabilistic segmentations have reverted
+to FAST.
+
+  * FIX: --slice-time-ref option parsing (#2573)
+  * CI: Add style checks (missing since Travis got throttled) (#2570)
+
 20.2.4 (October 04, 2021)
 =========================
 Bug-fix release in the 20.2.x LTS series.

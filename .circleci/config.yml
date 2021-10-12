@@ -17,7 +17,10 @@ jobs:
       - run:
           name: Check whether build should be skipped
           command: |
-            if [[ "$( git log --format='format:%s' -n 1 $CIRCLE_SHA1 | grep -i -E '^docs?(\(\w+\))?:' )" != "" ]]; then
+            set -x +e
+            COMMIT_MSG="$(git log --format='format:%s' -n 1 $CIRCLE_SHA1)"
+            DOCBUILD="$(echo ${COMMIT_MSG} | grep -i -E '^docs?(\(\w+\))?:')"
+            if [ -z "$CIRCLE_TAG" -a -n "$DOCBUILD" ]; then
               echo "Only docs build"
               circleci step halt
             fi
@@ -277,11 +280,15 @@ jobs:
           name: Check whether build should be skipped
           command: |
             cd /home/circleci/src/fmriprep
-            if [[ "$( git log --format='format:%s' -n 1 $CIRCLE_SHA1 | grep -i -E '^docs?(\(\w+\))?:' )" != "" ]]; then
+            set -x +e
+            COMMIT_MSG="$(git log --format='format:%s' -n 1 $CIRCLE_SHA1)"
+            DOCBUILD="$(echo ${COMMIT_MSG} | grep -i -E '^docs?(\(\w+\))?:')"
+            SKIP_PYTEST="$(echo ${COMMIT_MSG} | grep -i -E '\[skip[ _]?tests\]')"
+            if [ -z "$CIRCLE_TAG" -a -n "$DOCBUILD" ]; then
               echo "Only docs build"
               circleci step halt
             fi
-            if [[ "$( git log --format=oneline -n 1 $CIRCLE_SHA1 | grep -i -E '\[skip[ _]?tests\]' )" != "" ]]; then
+            if [ -z "$CIRCLE_TAG" -a -n "$SKIP_PYTEST" ]; then
               echo "Skipping pytest job"
               circleci step halt
             fi
@@ -370,18 +377,23 @@ jobs:
       - checkout:
           path: /home/circleci/src/fmriprep
       - run:
-          name: Check whether build should be skipped
+          name: Check whether build should be skipped or fast-tracked
           command: |
             cd /home/circleci/src/fmriprep
-            if [[ "$( git log --format='format:%s' -n 1 $CIRCLE_SHA1 | grep -i -E '^docs?(\(\w+\))?:' )" != "" ]]; then
+            set -x +e
+            COMMIT_MSG="$(git log --format='format:%s' -n 1 $CIRCLE_SHA1)"
+            DOCBUILD="$(echo ${COMMIT_MSG} | grep -i -E '^docs?(\(\w+\))?:' )"
+            SKIP_DS005="$(echo ${COMMIT_MSG} | grep -i -E '\[skip[ _]?ds005\]' )"
+            NO_FASTTRACK="$(echo ${COMMIT_MSG} | grep -i -E '\[no[ _-]?fasttrack\]' )"
+            if [ -z "$CIRCLE_TAG" -a -n "$DOCBUILD" ]; then
               echo "Only docs build"
               circleci step halt
             fi
-            if [[ "$( git log --format=oneline -n 1 $CIRCLE_SHA1 | grep -i -E '\[skip[ _]?ds005\]' )" != "" ]]; then
+            if [ -z "$CIRCLE_TAG" -a -n "$SKIP_DS005" ]; then
               echo "Skipping ds000005 build"
               circleci step halt
             fi
-            if [[ "$( git log --format=oneline -n 1 $CIRCLE_SHA1 | grep -i -E '\[no[ _-]?fasttrack\]' )" != "" ]]; then
+            if [[ -n "$NO_FASTTRACK" ]]; then
               touch /tmp/.nofasttrack
               echo "Anatomical fasttrack reusing sMRIPrep's derivatives will not be used."
             fi
@@ -608,11 +620,15 @@ jobs:
           name: Check whether build should be skipped
           command: |
             cd /home/circleci/src/fmriprep
-            if [[ "$( git log --format='format:%s' -n 1 $CIRCLE_SHA1 | grep -i -E '^docs?(\(\w+\))?:' )" != "" ]]; then
+            set -x +e
+            COMMIT_MSG="$(git log --format='format:%s' -n 1 $CIRCLE_SHA1)"
+            DOCBUILD="$(echo ${COMMIT_MSG} | grep -i -E '^docs?(\(\w+\))?:')"
+            SKIP_DS054="$(echo ${COMMIT_MSG} | grep -i -E '\[skip[ _]?ds054\]' )"
+            if [ -z "$CIRCLE_TAG" -a -n "$DOCBUILD" ]; then
               echo "Only docs build"
               circleci step halt
             fi
-            if [[ "$( git log --format=oneline -n 1 $CIRCLE_SHA1 | grep -i -E '\[skip[ _]?ds054\]' )" != "" ]]; then
+            if [ -z "$CIRCLE_TAG" -a -n "$SKIP_DS054" ]; then
               echo "Skipping ds000054 build"
               circleci step halt
             fi
@@ -773,11 +789,15 @@ jobs:
           name: Check whether build should be skipped
           command: |
             cd /home/circleci/src/fmriprep
-            if [[ "$( git log --format='format:%s' -n 1 $CIRCLE_SHA1 | grep -i -E '^docs?(\(\w+\))?:' )" != "" ]]; then
+            set -x +e
+            COMMIT_MSG="$(git log --format='format:%s' -n 1 $CIRCLE_SHA1)"
+            DOCBUILD="$(echo ${COMMIT_MSG} | grep -i -E '^docs?(\(\w+\))?:')"
+            SKIP_DS210="$(echo ${COMMIT_MSG} | grep -i -E '\[skip[ _]?ds054\]' )"
+            if [ -z "$CIRCLE_TAG" -a -n "$DOCBUILD" ]; then
               echo "Only docs build"
               circleci step halt
             fi
-            if [[ "$( git log --format=oneline -n 1 $CIRCLE_SHA1 | grep -i -E '\[skip[ _]?ds210\]' )" != "" ]]; then
+            if [ -z "$CIRCLE_TAG" -a -n "$SKIP_DS210" ]; then
               echo "Skipping ds000210 build"
               circleci step halt
             fi
@@ -919,14 +939,6 @@ jobs:
             fi
       - checkout:
           path: /home/circleci/src/fmriprep
-      - run:
-          name: Check whether build should be skipped
-          command: |
-            cd /home/circleci/src/fmriprep
-            if [[ "$( git log --format='format:%s' -n 1 $CIRCLE_SHA1 | grep -i -E '^docs?(\(\w+\))?:' )" != "" ]]; then
-              echo "Only docs build"
-              circleci step halt
-            fi
       - restore_cache:
           keys:
             - build-v4-{{ .Branch }}-{{ .Revision }}
@@ -975,7 +987,10 @@ jobs:
           name: Check whether build should be skipped
           command: |
             cd /home/circleci/src/fmriprep
-            if [[ "$( git log --format='format:%s' -n 1 $CIRCLE_SHA1 | grep -i -E '^docs?(\(\w+\))?:' )" != "" ]]; then
+            set -x +e
+            COMMIT_MSG="$(git log --format='format:%s' -n 1 $CIRCLE_SHA1)"
+            DOCBUILD="$(echo ${COMMIT_MSG} | grep -i -E '^docs?(\(\w+\))?:')"
+            if [ -z "$CIRCLE_TAG" -a -n "$DOCBUILD" ]; then
               echo "Only docs build"
               circleci step halt
             fi

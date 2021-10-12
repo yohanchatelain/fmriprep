@@ -177,3 +177,19 @@ def test_bids_filter_file(tmp_path, capsys):
 
     err = capsys.readouterr().err
     assert "JSON syntax error in:" in err
+    _reset_config()
+
+
+@pytest.mark.parametrize("st_ref", (None, "0", "1", "0.5", "start", "middle"))
+def test_slice_time_ref(tmp_path, st_ref):
+    bids_path = tmp_path / "data"
+    out_path = tmp_path / "out"
+    args = [str(bids_path), str(out_path), "participant"]
+    if st_ref:
+        args.extend(["--slice-time-ref", st_ref])
+    bids_path.mkdir()
+
+    parser = _build_parser()
+
+    parser.parse_args(args)
+    _reset_config()
