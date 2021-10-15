@@ -75,17 +75,17 @@ jobs:
           name: Pull nipreps/miniconda
           command: |
             set +e
-            docker pull localhost:5000/miniconda:1.2.0
+            docker pull localhost:5000/miniconda:py38_1.3.2
             success=$?
             set -e
             if [[ "$success" = "0" ]]; then
                 echo "Pulled from local registry"
-                docker tag localhost:5000/miniconda:1.2.0 nipreps/miniconda:1.2.0
+                docker tag localhost:5000/miniconda:py38_1.3.2 nipreps/miniconda:py38_1.3.2
             else
                 echo "Pulling from Docker Hub"
-                docker pull nipreps/miniconda:1.2.0
-                docker tag nipreps/miniconda:1.2.0 localhost:5000/miniconda:1.2.0
-                docker push localhost:5000/miniconda:1.2.0
+                docker pull nipreps/miniconda:py38_1.3.2
+                docker tag nipreps/miniconda:py38_1.3.2 localhost:5000/miniconda:py38_1.3.2
+                docker push localhost:5000/miniconda:py38_1.3.2
             fi
       - run:
           name: Pull fMRIPrep Docker image

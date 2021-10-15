@@ -261,7 +261,7 @@ RUN curl -sSLO https://www.humanconnectome.org/storage/app/media/workbench/workb
 ENV PATH="/opt/workbench/bin_linux64:$PATH" \
     LD_LIBRARY_PATH="/opt/workbench/lib_linux64:$LD_LIBRARY_PATH"
 
-COPY --from=nipreps/miniconda:1.2.0 /opt/conda /opt/conda
+COPY --from=nipreps/miniconda:py38_1.3.2 /opt/conda /opt/conda
 
 RUN ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
     echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
