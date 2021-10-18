@@ -454,7 +454,7 @@ Setting-up fieldmap "{estimator.bids_id}" ({estimator.method}) with \
                 omp_nthreads=config.nipype.omp_nthreads,
                 debug=config.execution.sloppy,
                 auto_bold_nss=True,
-                t1w_inversion=True,
+                t1w_inversion=False,
                 name=f"syn_preprocessing_{estimator.bids_id}",
             )
             syn_preprocessing_wf.inputs.inputnode.in_epis = sources
