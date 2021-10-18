@@ -479,6 +479,12 @@ jobs:
             - /tmp/ds005/work
 
       - run:
+          name: Attempt run without PE metadata (should fail)
+          no_output_timeout: 2h
+          command: |
+            echo "TODO"
+
+      - run:
           name: Run full fMRIPrep on ds005 (LegacyMultiProc plugin)
           no_output_timeout: 2h
           command: |
@@ -486,6 +492,15 @@ jobs:
             if [ -f /tmp/.nofasttrack ]; then
                 FASTRACK_ARG=""
             fi
+
+            # Inject pretend metadata
+            echo '{"PhaseEncodingDirection": "j"}' >> /tmp/data/${DATASET}/bold.json
+
+            # REMOVE in case the above works out
+            # json_sidecar=/tmp/data/${DATASET}/task-mixedgamblestask_bold.json
+            # awk 'NR==1{print; print "    \"TotalReadoutTime\": 0.05,"} NR!=1' ${json_sidecar} > tmp && mv tmp ${json_sidecar}
+            # awk 'NR==1{print; print "    \"PhaseEncodingDirection\": \"j\","} NR!=1' ${json_sidecar} > tmp && mv tmp ${json_sidecar}
+
             fmriprep-docker -i nipreps/fmriprep:latest \
                 -e FMRIPREP_DEV 1 --user $(id -u):$(id -g) \
                 --network none \
@@ -880,6 +895,12 @@ jobs:
             - /tmp/ds210/work
 
       - run:
+          name: Attempt run without PE metadata (should fail)
+          no_output_timeout: 2h
+          command: |
+            echo "TODO"
+
+      - run:
           name: Run full fMRIPrep on ds000210
           no_output_timeout: 2h
           command: |
@@ -887,6 +908,11 @@ jobs:
             if [ -f /tmp/.nofasttrack ]; then
                 FASTRACK_ARG=""
             fi
+
+            # Inject pretend metadata for SDCFlows not to crash
+            # TODO / open question - do all echos need the metadata?
+            echo '{"PhaseEncodingDirection": "j"}' >> /tmp/data/${DATASET}/task-cuedSGT_bold.json
+
             fmriprep-docker -i nipreps/fmriprep:latest \
                 -e FMRIPREP_DEV 1 --user $(id -u):$(id -g) \
                 --config $PWD/nipype.cfg -w /tmp/${DATASET}/work \
