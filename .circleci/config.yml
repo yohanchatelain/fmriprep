@@ -494,12 +494,9 @@ jobs:
             fi
 
             # Inject pretend metadata
-            echo '{"PhaseEncodingDirection": "j"}' >> /tmp/data/${DATASET}/bold.json
-
-            # REMOVE in case the above works out
-            # json_sidecar=/tmp/data/${DATASET}/task-mixedgamblestask_bold.json
-            # awk 'NR==1{print; print "    \"TotalReadoutTime\": 0.05,"} NR!=1' ${json_sidecar} > tmp && mv tmp ${json_sidecar}
-            # awk 'NR==1{print; print "    \"PhaseEncodingDirection\": \"j\","} NR!=1' ${json_sidecar} > tmp && mv tmp ${json_sidecar}
+            json_sidecar=/tmp/data/${DATASET}/task-mixedgamblestask_bold.json
+            awk 'NR==1{print; print "    \"TotalReadoutTime\": 0.05,"} NR!=1' ${json_sidecar} > tmp && mv tmp ${json_sidecar}
+            awk 'NR==1{print; print "    \"PhaseEncodingDirection\": \"j\","} NR!=1' ${json_sidecar} > tmp && mv tmp ${json_sidecar}
 
             fmriprep-docker -i nipreps/fmriprep:latest \
                 -e FMRIPREP_DEV 1 --user $(id -u):$(id -g) \
@@ -911,7 +908,9 @@ jobs:
 
             # Inject pretend metadata for SDCFlows not to crash
             # TODO / open question - do all echos need the metadata?
+            chmod +w /tmp/data/${DATASET}
             echo '{"PhaseEncodingDirection": "j"}' >> /tmp/data/${DATASET}/task-cuedSGT_bold.json
+            chmod -R -w /tmp/data/${DATASET}
 
             fmriprep-docker -i nipreps/fmriprep:latest \
                 -e FMRIPREP_DEV 1 --user $(id -u):$(id -g) \
