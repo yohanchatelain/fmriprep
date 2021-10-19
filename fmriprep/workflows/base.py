@@ -335,17 +335,23 @@ It is released under the [CC0]\
             config.loggers.workflow.error(message)
             raise ValueError(message)
 
-        config.loggers.workflow.debug(
-            f"{len(fmap_estimators)} fieldmap estimators found: "
-            f"{[e.method for e in fmap_estimators]}"
-        )
-
-        if "fieldmaps" in config.workflow.ignore:
+        if (
+            "fieldmaps" in config.workflow.ignore
+            and [f for f in fmap_estimators
+                 if f.method != fm.EstimatorType.ANAT]
+        ):
+            config.loggers.workflow.info(
+                'Option "--ignore fieldmaps" was set, but either "--use-syn-sdc" '
+                'or "--force-syn" were given, so fieldmap-less estimation will be executed.'
+            )
             fmap_estimators = [f for f in fmap_estimators
                                if f.method == fm.EstimatorType.ANAT]
-            config.loggers.workflow.debug(
-                "Ignoring fieldmap scans, using anatomical estimators: "
-                f"{[e.method for e in fmap_estimators]}"
+
+        if fmap_estimators:
+            config.loggers.workflow.info(
+                "B0 field inhomogeneity map will be estimated with "
+                f" the following {len(fmap_estimators)} estimators: "
+                f"{[e.method for e in fmap_estimators]}."
             )
 
     # Append the functional section to the existing anatomical exerpt
@@ -426,6 +432,8 @@ BIDS structure for this particular subject.
         config.loggers.workflow.info(f"""\
 Setting-up fieldmap "{estimator.bids_id}" ({estimator.method}) with \
 <{', '.join(s.path.name for s in estimator.sources)}>""")
+
+        # Mapped and phasediff can be connected internally by SDCFlows
         if estimator.method in (fm.EstimatorType.MAPPED, fm.EstimatorType.PHASEDIFF):
             continue
 

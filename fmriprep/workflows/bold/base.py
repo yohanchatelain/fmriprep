@@ -252,15 +252,19 @@ def init_func_preproc_wf(bold_file, has_fieldmap=False):
             from sdcflows.fieldmaps import get_identifier
 
             # Fallback to IntendedFor
-            bold_rel = re.sub(
-                r"^sub-[a-zA-Z0-9]*/", "", str(Path(bold_file).relative_to(layout.root))
+            intended_rel = re.sub(
+                r"^sub-[a-zA-Z0-9]*/",
+                "",
+                str(Path(
+                    bold_file if not multiecho else bold_file[0]
+                ).relative_to(layout.root))
             )
-            estimator_key = get_identifier(bold_rel)
+            estimator_key = get_identifier(intended_rel)
 
         if not estimator_key:
             has_fieldmap = False
             config.loggers.workflow.critical(
-                f"None of the available B0 fieldmaps are associated to <{bold_rel}>"
+                f"None of the available B0 fieldmaps are associated to <{bold_file}>"
             )
         else:
             config.loggers.workflow.info(f"Found usable B0 fieldmap <{estimator_key}>")
