@@ -641,9 +641,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (join_echos, bold_t2s_wf, [("bold_files", "inputnode.bold_file")]),
             (bold_t2s_wf, split_opt_comb, [("outputnode.bold", "in_file")]),
             (split_opt_comb, bold_t1_trans_wf, [("out_files", "inputnode.bold_split")]),
-            (bold_t2s_wf, bold_final, [
-                ("outputnode.bold", "bold"),
-            ]),
+            (bold_t2s_wf, bold_final, [("outputnode.bold", "bold")]),
         ])
         # fmt:on
 
