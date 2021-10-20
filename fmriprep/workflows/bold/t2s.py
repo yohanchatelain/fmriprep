@@ -76,18 +76,20 @@ def init_bold_t2s_wf(echo_times, mem_gb, omp_nthreads,
     -------
     bold
         the optimally combined time series for all supplied echos
+    t2star_map
+        the calculated T2:sup:`★` map
 
     """
     from niworkflows.engine.workflows import LiterateWorkflow as Workflow
 
     workflow = Workflow(name=name)
     workflow.__desc__ = """\
-A T2\\* map was estimated from the preprocessed BOLD by fitting to a monoexponential signal
-decay model with nonlinear regression, using T2\\*/S0 estimates from a log-linear
-regression fit as initial values.
-For each voxel, the maximal number of echoes with reliable signal in that voxel were
-used to fit the model.
-The calculated T2\\* map was then used to optimally combine preprocessed BOLD across
+A T2<sup>★</sup> map was estimated from the preprocessed EPI echoes, by voxel-wise fitting
+the maximal number of echoes with reliable signal in that voxel to a monoexponential signal
+decay model with nonlinear regression.
+The T2<sup>★</sup>/S<sub>0</sub> estimates from a log-linear regression fit were used for
+initial values.
+The calculated T2<sup>★</sup> map was then used to optimally combine preprocessed BOLD across
 echoes following the method described in [@posse_t2s].
 The optimally combined time series was carried forward as the *preprocessed BOLD*.
 """
