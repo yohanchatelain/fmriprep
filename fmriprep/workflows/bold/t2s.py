@@ -40,7 +40,7 @@ LOGGER = config.loggers.workflow
 # pylint: disable=R0914
 def init_bold_t2s_wf(echo_times, mem_gb, omp_nthreads,
                      name='bold_t2s_wf'):
-    """
+    r"""
     Combine multiple echos of :abbr:`ME-EPI (multi-echo echo-planar imaging)`.
 
     This workflow wraps the `tedana`_ `T2* workflow`_ to optimally
