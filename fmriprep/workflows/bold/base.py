@@ -1105,22 +1105,14 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (("outputnode.fieldwarp", _pop), "inputnode.fieldwarp"),
         ]),
     ])
+    
+    # Connect corrected ouputs depending on whether it is SE or ME
+    workflow.connect([
+        (unwarp_wf, bold_final, [("outputnode.corrected", "bold")]),
+    ] if not multiecho else [
+        (unwarp_wf, join_echos, [("outputnode.corrected", "bold_files")]),
+    ])
     # fmt:on
-
-    if not multiecho:
-        # fmt:off
-        workflow.connect([
-            (unwarp_wf, bold_final, [("outputnode.corrected", "bold")]),
-        ])
-        # fmt:on
-    else:
-        # fmt:off
-        workflow.connect([
-            (unwarp_wf, join_echos, [
-                ("outputnode.outputnode", "bold_files"),
-            ]),
-        ])
-        # fmt:on
 
     return workflow
 
