@@ -44,11 +44,11 @@ def init_bold_t2s_wf(echo_times, mem_gb, omp_nthreads,
     Combine multiple echos of :abbr:`ME-EPI (multi-echo echo-planar imaging)`.
 
     This workflow wraps the `tedana`_ `T2* workflow`_ to optimally
-    combine multiple echos and derive a T2* map.
+    combine multiple echos and derive a T2\ :sup:`★` map.
     The following steps are performed:
 
     #. :abbr:`HMC (head motion correction)` on individual echo files.
-    #. Compute the T2* map
+    #. Compute the T2\ :sup:`★` map
     #. Create an optimally combined ME-EPI time series
 
     .. _tedana: https://github.com/me-ica/tedana
@@ -77,7 +77,7 @@ def init_bold_t2s_wf(echo_times, mem_gb, omp_nthreads,
     bold
         the optimally combined time series for all supplied echos
     t2star_map
-        the calculated T2:sup:`★` map
+        the calculated T2\ :sup:`★` map
 
     """
     from niworkflows.engine.workflows import LiterateWorkflow as Workflow
