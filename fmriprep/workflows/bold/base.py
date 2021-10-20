@@ -1101,17 +1101,16 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (("outputnode.fieldwarp", _pop), "inputnode.fieldwarp"),
         ]),
         (unwarp_wf, bold_final, [("outputnode.corrected", "bold")]),
-
+        (unwarp_wf, bold_t1_trans_wf, [
+            # TEMPORARY: For the moment we can't use frame-wise fieldmaps
+            (("outputnode.fieldwarp", _pop), "inputnode.fieldwarp"),
+        ]),
     ])
     # fmt:on
 
     if not multiecho:
         # fmt:off
         workflow.connect([
-            (unwarp_wf, bold_t1_trans_wf, [
-                # TEMPORARY: For the moment we can't use frame-wise fieldmaps
-                (("outputnode.fieldwarp", _pop), "inputnode.fieldwarp"),
-            ]),
             (bold_split, unwarp_wf, [
                 ("out_files", "inputnode.distorted")]),
         ])
