@@ -488,14 +488,15 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 (meepi_echos, bold_stc_wf, [("bold_file", "inputnode.bold_file")]),
             ])
             # fmt:on
-    elif not multiecho:  # STC is too short or False
+
+    # bypass STC from original BOLD in both SE and ME cases
+    elif not multiecho:  # SE and skip-STC
         # fmt:off
-        # bypass STC from original BOLD to the splitter through boldbuffer
         workflow.connect([
             (initial_boldref_wf, boldbuffer, [("outputnode.bold_file", "bold_file")]),
         ])
         # fmt:on
-    else:
+    else:  # ME and skip-STC
         # for meepi, iterate over all meepi echos to boldbuffer
         boldbuffer.iterables = ("bold_file", bold_file)
 
@@ -999,9 +1000,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ]),
             ] if not multiecho
             else [
-                (bold_bold_trans_wf, join_echos, [
-                    ("outputnode.bold", "bold_files"),
-                ]),
                 (join_echos, final_boldref_wf, [("bold_files", "inputnode.bold_file")]),
                 # use reference image mask used by bold_bold_trans_wf
                 (bold_bold_trans_wf, bold_t2s_wf, [
@@ -1087,6 +1085,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ("outputnode.xforms", "inputnode.hmc_xforms")]),
         (initial_boldref_wf, sdc_report, [
             ("outputnode.ref_image", "before")]),
+        (bold_split, unwarp_wf, [
+            ("out_files", "inputnode.distorted")]),
         (unwarp_wf, final_boldref_wf, [
             ("outputnode.corrected_ref", "inputnode.bold_file"),
         ]),
@@ -1096,12 +1096,11 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         (inputnode, ds_report_sdc, [("bold_file", "source_file")]),
         (sdc_report, ds_report_sdc, [("out_report", "in_file")]),
         # remaining workflow connections
-        (unwarp_wf, bold_std_trans_wf, [
+        (unwarp_wf, bold_t1_trans_wf, [
             # TEMPORARY: For the moment we can't use frame-wise fieldmaps
             (("outputnode.fieldwarp", _pop), "inputnode.fieldwarp"),
         ]),
-        (unwarp_wf, bold_final, [("outputnode.corrected", "bold")]),
-        (unwarp_wf, bold_t1_trans_wf, [
+        (unwarp_wf, bold_std_trans_wf, [
             # TEMPORARY: For the moment we can't use frame-wise fieldmaps
             (("outputnode.fieldwarp", _pop), "inputnode.fieldwarp"),
         ]),
@@ -1111,15 +1110,15 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     if not multiecho:
         # fmt:off
         workflow.connect([
-            (bold_split, unwarp_wf, [
-                ("out_files", "inputnode.distorted")]),
+            (unwarp_wf, bold_final, [("outputnode.corrected", "bold")]),
         ])
         # fmt:on
     else:
         # fmt:off
         workflow.connect([
-            (split_opt_comb, unwarp_wf, [
-                ("out_files", "inputnode.distorted")])
+            (unwarp_wf, join_echos, [
+                ("outputnode.outputnode", "bold_files"),
+            ]),
         ])
         # fmt:on
 
