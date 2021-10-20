@@ -267,7 +267,9 @@ def init_func_preproc_wf(bold_file, has_fieldmap=False):
                 f"None of the available B0 fieldmaps are associated to <{bold_file}>"
             )
         else:
-            config.loggers.workflow.info(f"Found usable B0 fieldmap <{estimator_key}>")
+            config.loggers.workflow.info(
+                f"Found usable B0-map (fieldmap) estimator(s) <{', '.join(estimator_key)}> "
+                f"to correct <{bold_file}> for susceptibility-derived distortions.")
 
     # Check whether STC must/can be run
     run_stc = (
@@ -644,9 +646,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (join_echos, bold_t2s_wf, [("bold_files", "inputnode.bold_file")]),
             (bold_t2s_wf, split_opt_comb, [("outputnode.bold", "in_file")]),
             (split_opt_comb, bold_t1_trans_wf, [("out_files", "inputnode.bold_split")]),
-            (bold_t2s_wf, bold_final, [
-                ("outputnode.bold", "bold"),
-            ]),
         ])
         # fmt:on
 
@@ -1010,6 +1009,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 # use reference image mask used by bold_bold_trans_wf
                 (bold_bold_trans_wf, bold_t2s_wf, [
                     (("outputnode.bold_mask", pop_file), "inputnode.bold_mask"),
+                ]),
+                (bold_t2s_wf, bold_final, [
+                    ("outputnode.bold", "bold"),
                 ]),
             ]
         )
