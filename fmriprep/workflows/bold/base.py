@@ -984,27 +984,22 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (bold_hmc_wf, bold_bold_trans_wf, [
                 ("outputnode.xforms", "inputnode.hmc_xforms"),
             ]),
+            (bold_bold_trans_wf, final_boldref_wf, [
+                ("outputnode.bold", "inputnode.bold_file"),
+            ]),
         ])
         # fmt:on
 
         # fmt:off
-        workflow.connect(
-            [
-                (bold_bold_trans_wf, final_boldref_wf, [
-                    ("outputnode.bold", "inputnode.bold_file"),
-                ]),
-                (bold_bold_trans_wf, bold_final, [
-                    ("outputnode.bold", "bold"),
-                ]),
-            ] if not multiecho
-            else [
-                (join_echos, final_boldref_wf, [("bold_files", "inputnode.bold_file")]),
-                # use reference image mask used by bold_bold_trans_wf
-                (bold_bold_trans_wf, bold_t2s_wf, [
-                    (("outputnode.bold_mask", pop_file), "inputnode.bold_mask"),
-                ]),
-            ]
-        )
+        workflow.connect([
+            (bold_bold_trans_wf, bold_final, [("outputnode.bold", "bold")]),
+        ] if not multiecho else [
+            (bold_bold_trans_wf, join_echos, [("outputnode.bold", "bold_files")]),
+            # use reference image mask used by bold_bold_trans_wf
+            (bold_bold_trans_wf, bold_t2s_wf, [
+                (("outputnode.bold_mask", pop_file), "inputnode.bold_mask"),
+            ]),
+        ])
         # fmt:on
         return workflow
 
@@ -1103,7 +1098,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (("outputnode.fieldwarp", _pop), "inputnode.fieldwarp"),
         ]),
     ])
-    
+
     # Connect corrected ouputs depending on whether it is SE or ME
     workflow.connect([
         (unwarp_wf, bold_final, [("outputnode.corrected", "bold")]),
