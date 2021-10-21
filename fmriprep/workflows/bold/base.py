@@ -1135,7 +1135,10 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
     # fmt:off
     workflow.connect([
-        (unwarp_wf, join_echos, [("outputnode.corrected", "bold_files")]),
+        (unwarp_wf, join_echos, [
+            ("outputnode.corrected", "bold_files"),
+            ("outputnode.corrected_mask", "bold_masks"),
+        ]),
         (unwarp_wf, join_sdc_echos, [
             ("outputnode.fieldmap", "fieldmap"),
             ("outputnode.fieldwarp", "fieldwarp"),
