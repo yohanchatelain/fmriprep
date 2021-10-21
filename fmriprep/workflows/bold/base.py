@@ -507,7 +507,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         inputnode.inputs.bold_file = ref_file  # Replace reference w first echo
 
         join_echos = pe.JoinNode(
-            niu.IdentityInterface(fields=["bold_files"]),
+            niu.IdentityInterface(fields=["bold_files", "bold_masks"]),
             joinsource=("meepi_echos" if run_stc is True else "boldbuffer"),
             joinfield=["bold_files"],
             name="join_echos",
@@ -984,20 +984,26 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (bold_hmc_wf, bold_bold_trans_wf, [
                 ("outputnode.xforms", "inputnode.hmc_xforms"),
             ]),
-            (bold_bold_trans_wf, final_boldref_wf, [
-                ("outputnode.bold", "inputnode.bold_file"),
-            ]),
         ])
         # fmt:on
 
         # fmt:off
         workflow.connect([
             (bold_bold_trans_wf, bold_final, [("outputnode.bold", "bold")]),
+            (bold_bold_trans_wf, final_boldref_wf, [
+                ("outputnode.bold", "inputnode.bold_file"),
+            ]),
         ] if not multiecho else [
-            (bold_bold_trans_wf, join_echos, [("outputnode.bold", "bold_files")]),
+            (bold_bold_trans_wf, join_echos, [
+                ("outputnode.bold", "bold_files"),
+                ("outputnode.bold_mask", "bold_masks"),
+            ]),
             # use reference image mask used by bold_bold_trans_wf
-            (bold_bold_trans_wf, bold_t2s_wf, [
-                (("outputnode.bold_mask", pop_file), "inputnode.bold_mask"),
+            (join_echos, bold_t2s_wf, [
+                (("bold_masks", pop_file), "inputnode.bold_mask"),
+            ]),
+            (join_echos, final_boldref_wf, [
+                ("bold_files", "inputnode.bold_file"),
             ]),
         ])
         # fmt:on
@@ -1007,7 +1013,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         SimpleBeforeAfterRPT as SimpleBeforeAfter,
     )
     from niworkflows.interfaces.utility import KeySelect
-    from sdcflows.utils.misc import front as _pop
     from sdcflows.workflows.apply.registration import init_coeff2epi_wf
     from sdcflows.workflows.apply.correction import init_unwarp_wf
 
@@ -1080,30 +1085,76 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ("outputnode.ref_image", "before")]),
         (bold_split, unwarp_wf, [
             ("out_files", "inputnode.distorted")]),
-        (unwarp_wf, final_boldref_wf, [
-            ("outputnode.corrected_ref", "inputnode.bold_file"),
-        ]),
         (final_boldref_wf, sdc_report, [
             ("outputnode.ref_image", "after"),
             ("outputnode.bold_mask", "wm_seg")]),
         (inputnode, ds_report_sdc, [("bold_file", "source_file")]),
         (sdc_report, ds_report_sdc, [("out_report", "in_file")]),
-        # remaining workflow connections
-        (unwarp_wf, bold_t1_trans_wf, [
-            # TEMPORARY: For the moment we can't use frame-wise fieldmaps
-            (("outputnode.fieldwarp", _pop), "inputnode.fieldwarp"),
-        ]),
-        (unwarp_wf, bold_std_trans_wf, [
-            # TEMPORARY: For the moment we can't use frame-wise fieldmaps
-            (("outputnode.fieldwarp", _pop), "inputnode.fieldwarp"),
-        ]),
-    ])
 
-    # Connect corrected ouputs depending on whether it is SE or ME
+    ])
+    # fmt:on
+
+    if not multiecho:
+        # fmt:off
+        workflow.connect([
+            (unwarp_wf, bold_final, [("outputnode.corrected", "bold")]),
+            # remaining workflow connections
+            (unwarp_wf, final_boldref_wf, [
+                ("outputnode.corrected", "inputnode.bold_file"),
+            ]),
+            (unwarp_wf, bold_t1_trans_wf, [
+                # TEMPORARY: For the moment we can't use frame-wise fieldmaps
+                (("outputnode.fieldwarp", pop_file), "inputnode.fieldwarp"),
+            ]),
+            (unwarp_wf, bold_std_trans_wf, [
+                # TEMPORARY: For the moment we can't use frame-wise fieldmaps
+                (("outputnode.fieldwarp", pop_file), "inputnode.fieldwarp"),
+            ]),
+        ])
+        # fmt:on
+        return workflow
+
+    # Finalize connections if ME-EPI
+    join_sdc_echos = pe.JoinNode(
+        niu.IdentityInterface(
+            fields=[
+                "fieldmap",
+                "fieldwarp",
+                "corrected",
+                "corrected_ref",
+                "corrected_mask",
+            ]
+        ),
+        joinsource=("meepi_echos" if run_stc is True else "boldbuffer"),
+        joinfield=["bold_files"],
+        name="join_sdc_echos",
+    )
+
+    def _dpop(list_of_lists):
+        return list_of_lists[0][0]
+
+    # fmt:off
     workflow.connect([
-        (unwarp_wf, bold_final, [("outputnode.corrected", "bold")]),
-    ] if not multiecho else [
         (unwarp_wf, join_echos, [("outputnode.corrected", "bold_files")]),
+        (unwarp_wf, join_sdc_echos, [
+            ("outputnode.fieldmap", "fieldmap"),
+            ("outputnode.fieldwarp", "fieldwarp"),
+            ("outputnode.corrected", "corrected"),
+            ("outputnode.corrected_ref", "corrected_ref"),
+            ("outputnode.corrected_mask", "corrected_mask"),
+        ]),
+        # remaining workflow connections
+        (join_sdc_echos, final_boldref_wf, [
+            ("corrected", "inputnode.bold_file"),
+        ]),
+        (join_sdc_echos, bold_t1_trans_wf, [
+            # TEMPORARY: For the moment we can't use frame-wise fieldmaps
+            (("fieldwarp", _dpop), "inputnode.fieldwarp"),
+        ]),
+        (join_sdc_echos, bold_std_trans_wf, [
+            # TEMPORARY: For the moment we can't use frame-wise fieldmaps
+            (("fieldwarp", _dpop), "inputnode.fieldwarp"),
+        ]),
     ])
     # fmt:on
 
