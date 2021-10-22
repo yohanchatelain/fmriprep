@@ -629,7 +629,7 @@ surface space.
                 density='164k',
                 desc='std',
                 suffix='sphere',
-                extension=['.surf.gii']
+                extension='.surf.gii',
             )
         )
         for hemi in 'LR'
@@ -642,7 +642,7 @@ surface space.
                 density='164k',
                 desc='vaavg',
                 suffix='midthickness',
-                extension=['.shape.gii']
+                extension='.shape.gii',
             )
         )
         for hemi in 'LR'
@@ -655,7 +655,7 @@ surface space.
                 hemi=hemi,
                 density=fslr_density,
                 suffix='sphere',
-                extension=['.surf.gii']
+                extension='.surf.gii',
             )
         )
         for hemi in 'LR'
@@ -668,7 +668,7 @@ surface space.
                 density=fslr_density,
                 desc='vaavg',
                 suffix='midthickness',
-                extension=['.shape.gii']
+                extension='.shape.gii',
             )
         )
         for hemi in 'LR'
