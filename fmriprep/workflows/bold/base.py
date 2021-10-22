@@ -1035,7 +1035,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         debug="fieldmaps" in config.execution.debug,
         omp_nthreads=config.nipype.omp_nthreads,
     )
-    unwarp_wf.inputs.inputnode.metadata = layout.get_metadata(str(bold_file))
+    unwarp_wf.inputs.inputnode.metadata = metadata
 
     output_select = pe.Node(
         KeySelect(fields=["fmap", "fmap_ref", "fmap_coeff", "fmap_mask", "sdc_method"]),

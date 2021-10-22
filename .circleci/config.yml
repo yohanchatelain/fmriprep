@@ -893,7 +893,7 @@ jobs:
             # Inject pretend metadata for SDCFlows not to crash
             # TODO / open question - do all echos need the metadata?
             chmod +w /tmp/data/${DATASET}
-            echo '{"PhaseEncodingDirection": "j"}' >> /tmp/data/${DATASET}/task-cuedSGT_bold.json
+            echo '{"PhaseEncodingDirection": "j", "TotalReadoutTime": 0.058}' >> /tmp/data/${DATASET}/task-cuedSGT_bold.json
             chmod -R -w /tmp/data/${DATASET}
 
             fmriprep-docker -i nipreps/fmriprep:latest \
