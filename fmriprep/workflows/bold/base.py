@@ -350,7 +350,10 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
     # BOLD buffer: an identity used as a pointer to either the original BOLD
     # or the STC'ed one for further use.
-    boldbuffer = pe.Node(niu.IdentityInterface(fields=["bold_file"]), name="boldbuffer")
+    boldbuffer = pe.Node(niu.IdentityInterface(fields=["bold_file", "name_source"]),
+                         name="boldbuffer")
+    if multiecho:
+        boldbuffer.synchronize = True
 
     summary = pe.Node(
         FunctionalSummary(
@@ -482,10 +485,14 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             # fmt:on
         else:  # for meepi, iterate through stc_wf for all workflows
             meepi_echos = boldbuffer.clone(name="meepi_echos")
-            meepi_echos.iterables = ("bold_file", bold_file)
+            meepi_echos.iterables = [
+                ("bold_file", bold_file),
+                ("name_source", bold_file),
+            ]
             # fmt:off
             workflow.connect([
                 (meepi_echos, bold_stc_wf, [("bold_file", "inputnode.bold_file")]),
+                (meepi_echos, boldbuffer, [("name_source", "name_source")]),
             ])
             # fmt:on
 
@@ -498,7 +505,10 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         # fmt:on
     else:  # ME and skip-STC
         # for meepi, iterate over all meepi echos to boldbuffer
-        boldbuffer.iterables = ("bold_file", bold_file)
+        boldbuffer.iterables = [
+            ("bold_file", bold_file),
+            ("name_source", bold_file),
+        ]
 
     # MULTI-ECHO EPI DATA #############################################
     if multiecho:  # instantiate relevant interfaces, imports
@@ -976,8 +986,10 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             use_fieldwarp=False,
             name="bold_bold_trans_wf",
         )
-        bold_bold_trans_wf.inputs.inputnode.name_source = ref_file
         bold_bold_trans_wf.inputs.inputnode.fieldwarp = "identity"
+
+        if not multiecho:
+            bold_bold_trans_wf.inputs.inputnode.name_source = ref_file
 
         # fmt:off
         workflow.connect([
@@ -987,9 +999,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ("outputnode.xforms", "inputnode.hmc_xforms"),
             ]),
         ])
-        # fmt:on
 
-        # fmt:off
         workflow.connect([
             (bold_bold_trans_wf, bold_final, [("outputnode.bold", "bold")]),
             (bold_bold_trans_wf, final_boldref_wf, [
@@ -998,6 +1008,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         ] if not multiecho else [
             (initial_boldref_wf, bold_t2s_wf, [
                 ("outputnode.bold_mask", "inputnode.bold_mask"),
+            ]),
+            (boldbuffer, bold_bold_trans_wf, [
+                ("name_source", "inputnode.name_source"),
             ]),
             (bold_bold_trans_wf, join_echos, [
                 ("outputnode.bold", "bold_files"),
