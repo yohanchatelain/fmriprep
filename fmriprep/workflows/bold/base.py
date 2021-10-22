@@ -507,7 +507,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         inputnode.inputs.bold_file = ref_file  # Replace reference w first echo
 
         join_echos = pe.JoinNode(
-            niu.IdentityInterface(fields=["bold_files", "bold_masks"]),
+            niu.IdentityInterface(fields=["bold_files"]),
             joinsource=("meepi_echos" if run_stc is True else "boldbuffer"),
             joinfield=["bold_files"],
             name="join_echos",
@@ -640,7 +640,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ]),
             (join_echos, bold_t2s_wf, [
                 ("bold_files", "inputnode.bold_file"),
-                (("bold_masks", pop_file), "inputnode.bold_mask"),
             ]),
             (bold_t2s_wf, split_opt_comb, [("outputnode.bold", "in_file")]),
             (split_opt_comb, bold_t1_trans_wf, [("out_files", "inputnode.bold_split")]),
@@ -997,9 +996,11 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ("outputnode.bold", "inputnode.bold_file"),
             ]),
         ] if not multiecho else [
+            (initial_boldref_wf, bold_t2s_wf, [
+                ("outputnode.bold_mask", "inputnode.bold_mask"),
+            ]),
             (bold_bold_trans_wf, join_echos, [
                 ("outputnode.bold", "bold_files"),
-                ("outputnode.bold_mask", "bold_masks"),
             ]),
             (join_echos, final_boldref_wf, [
                 ("bold_files", "inputnode.bold_file"),
@@ -1136,7 +1137,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     workflow.connect([
         (unwarp_wf, join_echos, [
             ("outputnode.corrected", "bold_files"),
-            ("outputnode.corrected_mask", "bold_masks"),
         ]),
         (unwarp_wf, join_sdc_echos, [
             ("outputnode.fieldmap", "fieldmap"),
@@ -1148,6 +1148,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         # remaining workflow connections
         (join_sdc_echos, final_boldref_wf, [
             ("corrected", "inputnode.bold_file"),
+        ]),
+        (join_sdc_echos, bold_t2s_wf, [
+            ("corrected_mask", "inputnode.bold_mask"),
         ]),
         (join_sdc_echos, bold_t1_trans_wf, [
             # TEMPORARY: For the moment we can't use frame-wise fieldmaps
