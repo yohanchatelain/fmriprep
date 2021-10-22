@@ -56,9 +56,8 @@ class T2SMapInputSpec(CommandLineInputSpec):
                              mandatory=True,
                              minlen=3,
                              desc='echo times')
-    mask_file = File(argstr='--mask',
+    mask_file = File(argstr='--mask %s',
                      position=3,
-                     mandatory=False,
                      desc='mask file',
                      exists=True)
     fittype = traits.Enum('curvefit', 'loglin',
@@ -95,6 +94,7 @@ class T2SMap(CommandLine):
     >>> t2smap.cmdline  # doctest: +ELLIPSIS
     't2smap -d sub-01_run-01_echo-1_bold.nii.gz sub-01_run-01_echo-2_bold.nii.gz \
 sub-01_run-01_echo-3_bold.nii.gz -e 13.0 27.0 43.0 --fittype curvefit'
+
     """
     _cmd = 't2smap'
     input_spec = T2SMapInputSpec
