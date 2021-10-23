@@ -1145,7 +1145,13 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ]
         ),
         joinsource=("meepi_echos" if run_stc is True else "boldbuffer"),
-        joinfield=["bold_files"],
+        joinfield=[
+            "fieldmap",
+            "fieldwarp",
+            "corrected",
+            "corrected_ref",
+            "corrected_mask",
+        ],
         name="join_sdc_echos",
     )
 
@@ -1169,7 +1175,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ("corrected", "inputnode.bold_file"),
         ]),
         (join_sdc_echos, bold_t2s_wf, [
-            ("corrected_mask", "inputnode.bold_mask"),
+            (("corrected_mask", pop_file), "inputnode.bold_mask"),
         ]),
         (join_sdc_echos, bold_t1_trans_wf, [
             # TEMPORARY: For the moment we can't use frame-wise fieldmaps
