@@ -252,18 +252,24 @@ def init_func_preproc_wf(bold_file, has_fieldmap=False):
             from sdcflows.fieldmaps import get_identifier
 
             # Fallback to IntendedFor
-            bold_rel = re.sub(
-                r"^sub-[a-zA-Z0-9]*/", "", str(Path(bold_file).relative_to(layout.root))
+            intended_rel = re.sub(
+                r"^sub-[a-zA-Z0-9]*/",
+                "",
+                str(Path(
+                    bold_file if not multiecho else bold_file[0]
+                ).relative_to(layout.root))
             )
-            estimator_key = get_identifier(bold_rel)
+            estimator_key = get_identifier(intended_rel)
 
         if not estimator_key:
             has_fieldmap = False
             config.loggers.workflow.critical(
-                f"None of the available B0 fieldmaps are associated to <{bold_rel}>"
+                f"None of the available B0 fieldmaps are associated to <{bold_file}>"
             )
         else:
-            config.loggers.workflow.info(f"Found usable B0 fieldmap <{estimator_key}>")
+            config.loggers.workflow.info(
+                f"Found usable B0-map (fieldmap) estimator(s) <{', '.join(estimator_key)}> "
+                f"to correct <{bold_file}> for susceptibility-derived distortions.")
 
     # Check whether STC must/can be run
     run_stc = (
@@ -1038,7 +1044,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         debug="fieldmaps" in config.execution.debug,
         omp_nthreads=config.nipype.omp_nthreads,
     )
-    unwarp_wf.inputs.inputnode.metadata = layout.get_metadata(str(bold_file))
+    unwarp_wf.inputs.inputnode.metadata = metadata
 
     output_select = pe.Node(
         KeySelect(fields=["fmap", "fmap_ref", "fmap_coeff", "fmap_mask", "sdc_method"]),
@@ -1139,7 +1145,13 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ]
         ),
         joinsource=("meepi_echos" if run_stc is True else "boldbuffer"),
-        joinfield=["bold_files"],
+        joinfield=[
+            "fieldmap",
+            "fieldwarp",
+            "corrected",
+            "corrected_ref",
+            "corrected_mask",
+        ],
         name="join_sdc_echos",
     )
 
@@ -1163,7 +1175,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ("corrected", "inputnode.bold_file"),
         ]),
         (join_sdc_echos, bold_t2s_wf, [
-            ("corrected_mask", "inputnode.bold_mask"),
+            (("corrected_mask", pop_file), "inputnode.bold_mask"),
         ]),
         (join_sdc_echos, bold_t1_trans_wf, [
             # TEMPORARY: For the moment we can't use frame-wise fieldmaps

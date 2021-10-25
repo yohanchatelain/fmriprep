@@ -311,12 +311,12 @@ It is released under the [CC0]\
     if anat_only:
         return workflow
 
+    from sdcflows import fieldmaps as fm
     fmap_estimators = None
-    # TODO 21.0.0: Implement SyN
-    if any((config.workflow.use_syn_sdc, config.workflow.force_syn)):
-        config.loggers.workflow.critical("SyN processing is not yet implemented.")
 
-    if "fieldmaps" not in config.workflow.ignore:
+    if any(("fieldmaps" not in config.workflow.ignore,
+            config.workflow.use_syn_sdc,
+            config.workflow.force_syn)):
         from sdcflows.utils.wrangler import find_estimators
 
         # SDC Step 1: Run basic heuristics to identify available data for fieldmap estimation
@@ -324,14 +324,35 @@ It is released under the [CC0]\
         fmap_estimators = find_estimators(
             layout=config.execution.layout,
             subject=subject_id,
-            fmapless=False,  # config.workflow.use_syn_sdc,
-            force_fmapless=False,  # config.workflow.force_syn,
+            fmapless=config.workflow.use_syn_sdc,
+            force_fmapless=config.workflow.force_syn,
         )
 
-        config.loggers.workflow.debug(
-            f"{len(fmap_estimators)} fieldmap estimators found: "
-            f"{[e.method for e in fmap_estimators]}"
-        )
+        if config.workflow.use_syn_sdc and not fmap_estimators:
+            message = ("Fieldmap-less (SyN) estimation was requested, but "
+                       "PhaseEncodingDirection information appears to be "
+                       "absent.")
+            config.loggers.workflow.error(message)
+            raise ValueError(message)
+
+        if (
+            "fieldmaps" in config.workflow.ignore
+            and [f for f in fmap_estimators
+                 if f.method != fm.EstimatorType.ANAT]
+        ):
+            config.loggers.workflow.info(
+                'Option "--ignore fieldmaps" was set, but either "--use-syn-sdc" '
+                'or "--force-syn" were given, so fieldmap-less estimation will be executed.'
+            )
+            fmap_estimators = [f for f in fmap_estimators
+                               if f.method == fm.EstimatorType.ANAT]
+
+        if fmap_estimators:
+            config.loggers.workflow.info(
+                "B0 field inhomogeneity map will be estimated with "
+                f" the following {len(fmap_estimators)} estimators: "
+                f"{[e.method for e in fmap_estimators]}."
+            )
 
     # Append the functional section to the existing anatomical exerpt
     # That way we do not need to stream down the number of bold datasets
@@ -373,7 +394,6 @@ tasks and sessions), the following preprocessing was performed.
         return workflow
 
     from sdcflows.workflows.base import init_fmap_preproc_wf
-    from sdcflows import fieldmaps as fm
 
     fmap_wf = init_fmap_preproc_wf(
         debug="fieldmaps" in config.execution.debug,
@@ -412,6 +432,8 @@ BIDS structure for this particular subject.
         config.loggers.workflow.info(f"""\
 Setting-up fieldmap "{estimator.bids_id}" ({estimator.method}) with \
 <{', '.join(s.path.name for s in estimator.sources)}>""")
+
+        # Mapped and phasediff can be connected internally by SDCFlows
         if estimator.method in (fm.EstimatorType.MAPPED, fm.EstimatorType.PHASEDIFF):
             continue
 
@@ -424,14 +446,56 @@ Setting-up fieldmap "{estimator.bids_id}" ({estimator.method}) with \
             getattr(fmap_wf.inputs, f"in_{estimator.bids_id}").metadata = [
                 s.metadata for s in estimator.sources
             ]
-            continue
 
-        if estimator.method == fm.EstimatorType.PEPOLAR:
+        elif estimator.method == fm.EstimatorType.PEPOLAR:
             raise NotImplementedError(
                 "Sophisticated PEPOLAR schemes are unsupported."
             )
-        # TODO: SyN fieldmap processing
 
+        elif estimator.method == fm.EstimatorType.ANAT:
+            from niworkflows.interfaces.utility import KeySelect
+            from sdcflows.workflows.fit.syn import init_syn_preprocessing_wf
+
+            sources = [str(s.path) for s in estimator.sources if s.suffix == "bold"]
+            source_meta = [s.metadata for s in estimator.sources if s.suffix == "bold"]
+            syn_preprocessing_wf = init_syn_preprocessing_wf(
+                omp_nthreads=config.nipype.omp_nthreads,
+                debug=config.execution.sloppy,
+                auto_bold_nss=True,
+                t1w_inversion=False,
+                name=f"syn_preprocessing_{estimator.bids_id}",
+            )
+            syn_preprocessing_wf.inputs.inputnode.in_epis = sources
+            syn_preprocessing_wf.inputs.inputnode.in_meta = source_meta
+
+            # Select "MNI152NLin2009cAsym" from standard references.
+            fmap_select_std = pe.Node(
+                KeySelect(fields=["std2anat_xfm"], key="MNI152NLin2009cAsym"),
+                name="fmap_select_std",
+                run_without_submitting=True,
+            )
+
+            # fmt:off
+            workflow.connect([
+                (anat_preproc_wf, fmap_select_std, [
+                    ("outputnode.std2anat_xfm", "std2anat_xfm"),
+                    ("outputnode.template", "keys")]),
+                (anat_preproc_wf, syn_preprocessing_wf, [
+                    ("outputnode.t1w_preproc", "inputnode.in_anat"),
+                    ("outputnode.t1w_mask", "inputnode.mask_anat"),
+                ]),
+                (fmap_select_std, syn_preprocessing_wf, [
+                    ("std2anat_xfm", "inputnode.std2anat_xfm"),
+                ]),
+                (syn_preprocessing_wf, fmap_wf, [
+                    ("outputnode.epi_ref", f"in_{estimator.bids_id}.epi_ref"),
+                    ("outputnode.epi_mask", f"in_{estimator.bids_id}.epi_mask"),
+                    ("outputnode.anat_ref", f"in_{estimator.bids_id}.anat_ref"),
+                    ("outputnode.anat_mask", f"in_{estimator.bids_id}.anat_mask"),
+                    ("outputnode.sd_prior", f"in_{estimator.bids_id}.sd_prior"),
+                ]),
+            ])
+            # fmt:on
     return workflow
 
 
