@@ -1,3 +1,13 @@
+20.2.6 (October 27, 2021)
+=========================
+Patch release in the 20.2.x LTS series.
+
+This release includes an updated runtime environment for Docker/Singularity users.
+This environment includes a newer release of `indexed_gzip`, fixing `CrcError`s previously encountered.
+
+  * CI: Run full workflows on tags (#2593)
+  * RF: Add extension field to differentiate from upcoming templates (#2613)
+
 20.2.5 (October 12, 2021)
 =========================
 Bug-fix release in the 20.2.x LTS series.
