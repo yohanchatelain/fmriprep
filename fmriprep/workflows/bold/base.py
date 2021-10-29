@@ -1006,7 +1006,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ("outputnode.xforms", "inputnode.hmc_xforms"),
             ]),
             (final_boldref_wf, outputnode, [
-                ("outputnode.ref_image", "bold_native_ref"),
                 ("outputnode.bold_mask", "mask"),
             ]),
         ])
