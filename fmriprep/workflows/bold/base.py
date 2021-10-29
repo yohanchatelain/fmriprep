@@ -185,9 +185,12 @@ def init_func_preproc_wf(bold_file, has_fieldmap=False):
     entities = extract_entities(bold_file)
     layout = config.execution.layout
 
+    # Extract metadata
+    all_metadata = [layout.get_metadata(fname) for fname in listify(bold_file)]
+
     # Take first file as reference
     ref_file = pop_file(bold_file)
-    metadata = layout.get_metadata(ref_file)
+    metadata = all_metadata[0]
     # get original image orientation
     ref_orientation = get_img_orientation(ref_file)
 
@@ -385,7 +388,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         bids_root=layout.root,
         cifti_output=config.workflow.cifti_output,
         freesurfer=freesurfer,
-        metadata=metadata,
+        all_metadata=all_metadata,
         multiecho=multiecho,
         output_dir=fmriprep_dir,
         spaces=spaces,

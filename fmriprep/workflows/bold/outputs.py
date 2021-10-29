@@ -116,7 +116,7 @@ def init_func_derivatives_wf(
     bids_root,
     cifti_output,
     freesurfer,
-    metadata,
+    all_metadata,
     multiecho,
     output_dir,
     spaces,
@@ -158,6 +158,8 @@ def init_func_derivatives_wf(
     from niworkflows.engine.workflows import LiterateWorkflow as Workflow
     from niworkflows.interfaces.utility import KeySelect
     from smriprep.workflows.outputs import _bids_relative
+
+    metadata = all_metadata[0]
 
     timing_parameters = prepare_timing_parameters(metadata)
 
@@ -243,13 +245,16 @@ def init_func_derivatives_wf(
         ])
 
     if config.execution.output_echos and multiecho:
-        ds_bold_echos_native = pe.Node(
+        ds_bold_echos_native = pe.MapNode(
             DerivativesDataSink(
                 base_directory=output_dir, desc='preproc', compress=True, SkullStripped=False,
-                TaskName=metadata.get('TaskName'), EchoTime=metadata.get('EchoTime'),
-                **timing_parameters),
+                TaskName=metadata.get('TaskName'), **timing_parameters),
+            iterfield=['source_file', 'in_file', 'meta_dict'],
             name='ds_bold_echos_native', run_without_submitting=True,
             mem_gb=DEFAULT_MEMORY_MIN_GB)
+        ds_bold_echos_native.inputs.meta_dict = [
+            {"EchoTime": md["EchoTime"]} for md in all_metadata
+        ]
 
         workflow.connect([
             (inputnode, ds_bold_echos_native, [
