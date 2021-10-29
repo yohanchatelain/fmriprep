@@ -175,7 +175,8 @@ def init_func_derivatives_wf(
         'bold_mask_native', 'bold_echos_native',
         'cifti_variant', 'cifti_metadata', 'cifti_density',
         'confounds', 'confounds_metadata', 'melodic_mix', 'nonaggr_denoised_file',
-        'source_file', 'surf_files', 'surf_refs', 'template', 'spatial_reference',
+        'source_file', 'all_source_files',
+        'surf_files', 'surf_refs', 'template', 'spatial_reference',
         'bold2anat_xfm', 'anat2bold_xfm', 'acompcor_masks', 'tcompcor_mask']),
         name='inputnode')
 
@@ -203,7 +204,7 @@ def init_func_derivatives_wf(
         name='ds_t1w_tpl_inv_xfm', run_without_submitting=True)
 
     workflow.connect([
-        (inputnode, raw_sources, [('source_file', 'in_files')]),
+        (inputnode, raw_sources, [('all_source_files', 'in_files')]),
         (inputnode, ds_confounds, [('source_file', 'source_file'),
                                    ('confounds', 'in_file'),
                                    ('confounds_metadata', 'meta_dict')]),
@@ -252,7 +253,7 @@ def init_func_derivatives_wf(
 
         workflow.connect([
             (inputnode, ds_bold_echos_native, [
-                ('source_file', 'source_file'),
+                ('all_source_files', 'source_file'),
                 ('bold_echos_native', 'in_file')]),
         ])
 

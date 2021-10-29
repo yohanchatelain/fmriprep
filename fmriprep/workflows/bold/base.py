@@ -391,6 +391,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         spaces=spaces,
         use_aroma=config.workflow.use_aroma,
     )
+    func_derivatives_wf.inputs.inputnode.all_source_files = bold_file
 
     # fmt:off
     workflow.connect([
