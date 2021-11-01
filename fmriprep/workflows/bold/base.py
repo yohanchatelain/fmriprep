@@ -648,6 +648,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         (bold_final, outputnode, [
             ("bold", "bold_native"),
             ("boldref", "bold_native_ref"),
+            ("mask", "bold_mask_native"),
             ("bold_echos", "bold_echos_native"),
         ]),
         # Summary
@@ -1008,9 +1009,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (bold_split, bold_bold_trans_wf, [("out_files", "inputnode.bold_file")]),
             (bold_hmc_wf, bold_bold_trans_wf, [
                 ("outputnode.xforms", "inputnode.hmc_xforms"),
-            ]),
-            (final_boldref_wf, outputnode, [
-                ("outputnode.bold_mask", "mask"),
             ]),
         ])
 
