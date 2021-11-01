@@ -410,7 +410,7 @@ class execution(_Config):
     """Do not monitor *fMRIPrep* using Sentry.io."""
     output_dir = None
     """Folder where derivatives will be stored."""
-    output_echos = False
+    me_output_echos = False
     """Output individual echo time series with slice, motion and susceptibility correction"""
     output_layout = None
     """Layout of derivatives within output_dir."""

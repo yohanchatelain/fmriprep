@@ -316,7 +316,7 @@ https://fmriprep.readthedocs.io/en/%s/spaces.html"""
         % (currentv.base_version if is_release else "latest"),
     )
     g_conf.add_argument(
-        "--output-echos",
+        "--me-output-echos",
         action="store_true",
         default=False,
         help="""\

@@ -244,7 +244,7 @@ def init_func_derivatives_wf(
             (raw_sources, ds_bold_mask_native, [('out', 'RawSources')]),
         ])
 
-    if config.execution.output_echos and multiecho:
+    if multiecho and config.execution.me_output_echos:
         ds_bold_echos_native = pe.MapNode(
             DerivativesDataSink(
                 base_directory=output_dir, desc='preproc', compress=True, SkullStripped=False,
