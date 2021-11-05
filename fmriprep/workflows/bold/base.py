@@ -185,9 +185,12 @@ def init_func_preproc_wf(bold_file, has_fieldmap=False):
     entities = extract_entities(bold_file)
     layout = config.execution.layout
 
+    # Extract metadata
+    all_metadata = [layout.get_metadata(fname) for fname in listify(bold_file)]
+
     # Take first file as reference
     ref_file = pop_file(bold_file)
-    metadata = layout.get_metadata(ref_file)
+    metadata = all_metadata[0]
     # get original image orientation
     ref_orientation = get_img_orientation(ref_file)
 
@@ -336,6 +339,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 "bold_aseg_std",
                 "bold_aparc_std",
                 "bold_native",
+                "bold_native_ref",
+                "bold_mask_native",
+                "bold_echos_native",
                 "bold_cifti",
                 "cifti_variant",
                 "cifti_metadata",
@@ -382,12 +388,13 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         bids_root=layout.root,
         cifti_output=config.workflow.cifti_output,
         freesurfer=freesurfer,
-        metadata=metadata,
+        all_metadata=all_metadata,
         multiecho=multiecho,
         output_dir=fmriprep_dir,
         spaces=spaces,
         use_aroma=config.workflow.use_aroma,
     )
+    func_derivatives_wf.inputs.inputnode.all_source_files = bold_file
 
     # fmt:off
     workflow.connect([
@@ -400,6 +407,9 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ("bold_aparc_t1", "inputnode.bold_aparc_t1"),
             ("bold_mask_t1", "inputnode.bold_mask_t1"),
             ("bold_native", "inputnode.bold_native"),
+            ("bold_native_ref", "inputnode.bold_native_ref"),
+            ("bold_mask_native", "inputnode.bold_mask_native"),
+            ("bold_echos_native", "inputnode.bold_echos_native"),
             ("confounds", "inputnode.confounds"),
             ("surfaces", "inputnode.surf_files"),
             ("aroma_noise_ics", "inputnode.aroma_noise_ics"),
@@ -538,7 +548,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         )
 
     bold_final = pe.Node(
-        niu.IdentityInterface(fields=["bold", "boldref", "mask"]), name="bold_final"
+        niu.IdentityInterface(fields=["bold", "boldref", "mask", "bold_echos"]),
+        name="bold_final"
     )
 
     # Generate a final BOLD reference
@@ -633,6 +644,13 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ("outputnode.acompcor_masks", "acompcor_masks"),
             ("outputnode.tcompcor_mask", "tcompcor_mask"),
         ]),
+        # Native-space BOLD files (if calculated)
+        (bold_final, outputnode, [
+            ("bold", "bold_native"),
+            ("boldref", "bold_native_ref"),
+            ("mask", "bold_mask_native"),
+            ("bold_echos", "bold_echos_native"),
+        ]),
         # Summary
         (outputnode, summary, [("confounds", "confounds_file")]),
     ])
@@ -654,9 +672,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (inputnode, func_derivatives_wf, [
                 (("bold_file", combine_meepi_source), "inputnode.source_file"),
             ]),
-            (join_echos, bold_t2s_wf, [
-                ("bold_files", "inputnode.bold_file"),
-            ]),
+            (join_echos, bold_t2s_wf, [("bold_files", "inputnode.bold_file")]),
+            (join_echos, bold_final, [("bold_files", "bold_echos")]),
             (bold_t2s_wf, split_opt_comb, [("outputnode.bold", "in_file")]),
             (split_opt_comb, bold_t1_trans_wf, [("out_files", "inputnode.bold_split")]),
             (bold_t2s_wf, bold_final, [("outputnode.bold", "bold")]),
@@ -684,17 +701,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             (bold_t1_trans_wf, boldmask_to_t1w, [("outputnode.bold_mask_t1", "reference_image")]),
             (bold_final, boldmask_to_t1w, [("mask", "input_image")]),
             (boldmask_to_t1w, outputnode, [("output_image", "bold_mask_t1")]),
-        ])
-        # fmt:on
-
-    if nonstd_spaces.intersection(("func", "run", "bold", "boldref", "sbref")):
-        # fmt:off
-        workflow.connect([
-            (bold_final, func_derivatives_wf, [
-                ("boldref", "inputnode.bold_native_ref"),
-                ("mask", "inputnode.bold_mask_native"),
-            ]),
-            (bold_final, outputnode, [("bold", "bold_native")]),
         ])
         # fmt:on
 
