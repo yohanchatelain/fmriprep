@@ -658,11 +658,13 @@ def init_fsl_bbr_wf(use_bbr, bold2t1w_dof, bold2t1w_init, omp_nthreads, sloppy=F
     workflow = Workflow(name=name)
     workflow.__desc__ = """\
 The BOLD reference was then co-registered to the T1w reference using
-`flirt` [FSL {fsl_ver}, @flirt] with the boundary-based registration [@bbr]
-cost-function.
-Co-registration was configured with nine degrees of freedom to account
-for distortions remaining in the BOLD reference.
-""".format(fsl_ver=FLIRTRPT().version or '<ver>')
+`mri_coreg` (FreeSurfer) followed by `flirt` [FSL {fsl_ver}, @flirt]
+with the boundary-based registration [@bbr] cost-function.
+Co-registration was configured with {dof} degrees of freedom{reason}.
+""".format(fsl_ver=FLIRTRPT().version or '<ver>',
+           dof={6: 'six', 9: 'nine', 12: 'twelve'}[bold2t1w_dof],
+           reason='' if bold2t1w_dof == 6 else
+                  'to account for distortions remaining in the BOLD reference')
 
     inputnode = pe.Node(
         niu.IdentityInterface([
