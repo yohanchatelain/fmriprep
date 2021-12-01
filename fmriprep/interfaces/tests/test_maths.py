@@ -27,3 +27,25 @@ def test_Clip(tmp_path):
     assert ret.outputs.out_file == in_file
     out_img = nb.load(ret.outputs.out_file)
     assert np.allclose(out_img.get_fdata(), [[[-1., 1.], [-2., 2.]]])
+
+    clip = pe.Node(
+        Clip(in_file=in_file, minimum=-1, maximum=1),
+        name="clip",
+        base_dir=tmp_path)
+
+    ret = clip.run()
+
+    assert ret.outputs.out_file == str(tmp_path / "clip/input_clipped.nii")
+    out_img = nb.load(ret.outputs.out_file)
+    assert np.allclose(out_img.get_fdata(), [[[-1., 1.], [-1., 1.]]])
+
+    nonpositive = pe.Node(
+        Clip(in_file=in_file, maximum=0),
+        name="nonpositive",
+        base_dir=tmp_path)
+
+    ret = nonpositive.run()
+
+    assert ret.outputs.out_file == str(tmp_path / "nonpositive/input_clipped.nii")
+    out_img = nb.load(ret.outputs.out_file)
+    assert np.allclose(out_img.get_fdata(), [[[-1., 0.], [-2., 0.]]])
