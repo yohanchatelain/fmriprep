@@ -564,7 +564,7 @@ def init_bold_preproc_trans_wf(
         BOLD series, resampled in native space, including all preprocessing
 
     """
-    from fmriprep.interfaces.maths import Threshold
+    from fmriprep.interfaces.maths import Clip
     from niworkflows.engine.workflows import LiterateWorkflow as Workflow
     from niworkflows.interfaces.itk import MultiApplyTransforms
     from niworkflows.interfaces.nilearn import Merge
@@ -613,7 +613,7 @@ the transforms to correct for head-motion"""
 
     # Interpolation can occasionally produce below-zero values as an artifact
     threshold = pe.MapNode(
-        Threshold(),
+        Clip(minimum=0),
         name="threshold",
         iterfield=['in_file'],
         mem_gb=DEFAULT_MEMORY_MIN_GB)
