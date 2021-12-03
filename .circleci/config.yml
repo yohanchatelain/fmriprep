@@ -514,7 +514,7 @@ jobs:
             fi
             find /tmp/${DATASET}/derivatives \( -path */figures -o -path */log \) -prune -o -name "*" -print | sed s+/tmp/${DATASET}/derivatives/++ | sort > /tmp/${DATASET}/test/outputs.out
             diff /tmp/src/fmriprep/.circleci/${CHECK_OUTPUTS_FILE} /tmp/${DATASET}/test/outputs.out
-            # exit $?
+            exit $?
       - run:
           name: Prepare BIDS Derivatives dataset
           command: |
@@ -534,7 +534,7 @@ jobs:
                 --config $PWD/nipype.cfg -w /tmp/${DATASET}/work_bids \
                 /tmp/data/${DATASET}/ /tmp/${DATASET}/bids participant \
                 ${FASTRACK_ARG} \
-                --sloppy --write-graph --use-syn-sdc --mem_mb 4096 \
+                --sloppy --write-graph --mem_mb 4096 \
                 --output-spaces fsaverage5 \
                 --nthreads 2 -vv
       - run:
@@ -547,7 +547,7 @@ jobs:
             fi
             find /tmp/${DATASET}/bids \( -path */figures -o -path */log \) -prune -o -name "*" -print | sed s+/tmp/${DATASET}/++ | grep -v sourcedata | sort > /tmp/${DATASET}/test/outputs.out
             diff /tmp/src/fmriprep/.circleci/${CHECK_OUTPUTS_FILE} /tmp/${DATASET}/test/outputs.out
-            # exit $?
+            exit $?
       - run:
           name: Re-run fMRIPrep on single run of task data
           no_output_timeout: 2h
