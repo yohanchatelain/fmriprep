@@ -362,10 +362,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
 
     # BOLD buffer: an identity used as a pointer to either the original BOLD
     # or the STC'ed one for further use.
-    boldbuffer = pe.Node(niu.IdentityInterface(fields=["bold_file", "name_source"]),
-                         name="boldbuffer")
-    if multiecho:
-        boldbuffer.synchronize = True
+    boldbuffer = pe.Node(niu.IdentityInterface(fields=["bold_file"]), name="boldbuffer")
 
     summary = pe.Node(
         FunctionalSummary(
@@ -503,12 +500,10 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             meepi_echos = boldbuffer.clone(name="meepi_echos")
             meepi_echos.iterables = [
                 ("bold_file", bold_file),
-                ("name_source", bold_file),
             ]
             # fmt:off
             workflow.connect([
                 (meepi_echos, bold_stc_wf, [("bold_file", "inputnode.bold_file")]),
-                (meepi_echos, boldbuffer, [("name_source", "name_source")]),
             ])
             # fmt:on
 
@@ -523,7 +518,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         # for meepi, iterate over all meepi echos to boldbuffer
         boldbuffer.iterables = [
             ("bold_file", bold_file),
-            ("name_source", bold_file),
         ]
 
     # MULTI-ECHO EPI DATA #############################################
@@ -1022,7 +1016,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
                 ("outputnode.bold_mask", "inputnode.bold_mask"),
             ]),
             (boldbuffer, bold_bold_trans_wf, [
-                ("name_source", "inputnode.name_source"),
+                ("bold_file", "inputnode.name_source"),
             ]),
             (bold_bold_trans_wf, join_echos, [
                 ("outputnode.bold", "bold_files"),
