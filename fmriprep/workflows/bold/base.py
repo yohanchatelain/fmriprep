@@ -557,9 +557,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ("outputnode.raw_ref_image", "inputnode.raw_ref_image"),
             ("outputnode.bold_file", "inputnode.bold_file"),
         ]),
-        (initial_boldref_wf, summary, [
-            ("outputnode.algo_dummy_scans", "algo_dummy_scans"),
-        ]),
         # EPI-T1w registration workflow
         (inputnode, bold_reg_wf, [
             ("t1w_dseg", "inputnode.t1w_dseg"),
@@ -595,7 +592,6 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ("outputnode.bold_aseg_t1", "bold_aseg_t1"),
             ("outputnode.bold_aparc_t1", "bold_aparc_t1"),
         ]),
-        (bold_reg_wf, summary, [("outputnode.fallback", "fallback")]),
         # Connect bold_confounds_wf
         (inputnode, bold_confounds_wf, [
             ("t1w_tpms", "inputnode.t1w_tpms"),
@@ -636,6 +632,8 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
             ("bold_echos", "bold_echos_native"),
         ]),
         # Summary
+        (initial_boldref_wf, summary, [("outputnode.algo_dummy_scans", "algo_dummy_scans")]),
+        (bold_reg_wf, summary, [("outputnode.fallback", "fallback")]),
         (outputnode, summary, [("confounds", "confounds_file")]),
         # Select echo indices for original/validated BOLD files
         (echo_index, bold_source, [("echoidx", "index")]),
