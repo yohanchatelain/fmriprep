@@ -549,7 +549,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         (inputnode, t1w_brain, [("t1w_preproc", "in_file"),
                                 ("t1w_mask", "in_mask")]),
         # Select validated bold files per-echo
-        (initial_boldref_wf, validated_bold, [("outputnode.bold_file", "inlist")]),
+        (initial_boldref_wf, validated_bold, [("val_bold.out_file", "inlist")]),
         # BOLD buffer has slice-time corrected if it was run, original otherwise
         (boldbuffer, bold_split, [("bold_file", "in_file")]),
         # HMC
