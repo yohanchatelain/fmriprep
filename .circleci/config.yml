@@ -900,7 +900,7 @@ jobs:
                 --config $PWD/nipype.cfg -w /tmp/${DATASET}/work \
                 /tmp/data/${DATASET} /tmp/${DATASET}/derivatives participant \
                 ${FASTRACK_ARG} \
-                --output-layout legacy \
+                --output-layout legacy --me-output-echos \
                 --fs-no-reconall --use-syn-sdc --ignore slicetiming \
                 --dummy-scans 1 --sloppy --write-graph \
                 --output-spaces MNI152NLin2009cAsym \
