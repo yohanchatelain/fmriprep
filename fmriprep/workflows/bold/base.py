@@ -445,7 +445,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
     initial_boldref_wf.inputs.inputnode.dummy_scans = config.workflow.dummy_scans
 
     # Select validated BOLD files (orientations checked or corrected)
-    validated_bold = pe.Node(niu.Select(), name="validated_bold")
+    select_bold = pe.Node(niu.Select(), name="select_bold")
 
     # Top-level BOLD splitter
     bold_split = pe.Node(
@@ -498,14 +498,14 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         # fmt:off
         workflow.connect([
             (initial_boldref_wf, bold_stc_wf, [("outputnode.skip_vols", "inputnode.skip_vols")]),
-            (validated_bold, bold_stc_wf, [("out", "inputnode.bold_file")]),
+            (select_bold, bold_stc_wf, [("out", "inputnode.bold_file")]),
             (bold_stc_wf, boldbuffer, [("outputnode.stc_file", "bold_file")]),
         ])
         # fmt:on
 
     # bypass STC from original BOLD in both SE and ME cases
     else:
-        workflow.connect([(validated_bold, boldbuffer, [("out", "bold_file")])])
+        workflow.connect([(select_bold, boldbuffer, [("out", "bold_file")])])
 
     # MULTI-ECHO EPI DATA #############################################
     if multiecho:  # instantiate relevant interfaces, imports
@@ -549,7 +549,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         (inputnode, t1w_brain, [("t1w_preproc", "in_file"),
                                 ("t1w_mask", "in_mask")]),
         # Select validated bold files per-echo
-        (initial_boldref_wf, validated_bold, [("outputnode.all_bold_files", "inlist")]),
+        (initial_boldref_wf, select_bold, [("outputnode.all_bold_files", "inlist")]),
         # BOLD buffer has slice-time corrected if it was run, original otherwise
         (boldbuffer, bold_split, [("bold_file", "in_file")]),
         # HMC
@@ -637,7 +637,7 @@ Non-gridded (surface) resamplings were performed using `mri_vol2surf`
         (outputnode, summary, [("confounds", "confounds_file")]),
         # Select echo indices for original/validated BOLD files
         (echo_index, bold_source, [("echoidx", "index")]),
-        (echo_index, validated_bold, [("echoidx", "index")]),
+        (echo_index, select_bold, [("echoidx", "index")]),
     ])
     # fmt:on
 
