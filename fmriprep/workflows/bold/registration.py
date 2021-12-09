@@ -276,6 +276,7 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, use_compression=True
       * :py:func:`~fmriprep.workflows.bold.registration.init_fsl_bbr_wf`
 
     """
+    from fmriprep.interfaces.maths import Clip
     from niworkflows.engine.workflows import LiterateWorkflow as Workflow
     from niworkflows.func.util import init_bold_reference_wf
     from niworkflows.interfaces.fixes import FixHeaderApplyTransforms as ApplyTransforms
@@ -338,6 +339,13 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, use_compression=True
         MultiApplyTransforms(interpolation="LanczosWindowedSinc", float=True, copy_dtype=True),
         name='bold_to_t1w_transform', mem_gb=mem_gb * 3 * omp_nthreads, n_procs=omp_nthreads)
 
+    # Interpolation can occasionally produce below-zero values as an artifact
+    threshold = pe.MapNode(
+        Clip(minimum=0),
+        name="threshold",
+        iterfield=['in_file'],
+        mem_gb=DEFAULT_MEMORY_MIN_GB)
+
     # merge 3D volumes into 4D timeseries
     merge = pe.Node(Merge(compress=use_compression), name='merge', mem_gb=mem_gb)
 
@@ -357,7 +365,8 @@ def init_bold_t1_trans_wf(freesurfer, mem_gb, omp_nthreads, use_compression=True
         (inputnode, bold_to_t1w_transform, [('bold_split', 'input_image')]),
         (merge_xforms, bold_to_t1w_transform, [('out', 'transforms')]),
         (gen_ref, bold_to_t1w_transform, [('out_file', 'reference_image')]),
-        (bold_to_t1w_transform, merge, [('out_files', 'in_files')]),
+        (bold_to_t1w_transform, threshold, [('out_files', 'in_file')]),
+        (threshold, merge, [('out_file', 'in_files')]),
         (merge, gen_final_ref, [('out_file', 'inputnode.bold_file')]),
         (mask_t1w_tfm, gen_final_ref, [('output_image', 'inputnode.bold_mask')]),
         (merge, outputnode, [('out_file', 'bold_t1')]),
