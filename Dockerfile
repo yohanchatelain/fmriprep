@@ -179,6 +179,9 @@ RUN pip install --no-cache-dir "$( grep templateflow fmriprep-setup.cfg | xargs 
     find $HOME/.cache/templateflow -type d -exec chmod go=u {} + && \
     find $HOME/.cache/templateflow -type f -exec chmod go=u {} +
 
+# Hack: Install packages that are binary compatible with pinned numpy
+RUN pip install --no-cache-dir scikit-image==0.17.2 pywavelets==1.1.1
+
 # Installing FMRIPREP
 COPY . /src/fmriprep
 ARG VERSION
