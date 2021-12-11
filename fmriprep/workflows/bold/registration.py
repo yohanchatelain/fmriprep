@@ -652,7 +652,8 @@ for distortions remaining in the BOLD reference.
     wm_mask = pe.Node(niu.Function(function=_dseg_label), name='wm_mask')
     wm_mask.inputs.label = 2  # BIDS default is WM=2
     flt_bbr_init = pe.Node(FLIRTRPT(dof=6, generate_report=not use_bbr,
-                                    uses_qform=True), name='flt_bbr_init')
+                                    uses_qform=True, args="-basescale 1"),
+                           name='flt_bbr_init')
 
     if bold2t1w_init not in ("register", "header"):
         raise ValueError(f"Unknown BOLD-T1w initialization option: {bold2t1w_init}")
@@ -694,7 +695,7 @@ for distortions remaining in the BOLD reference.
         return workflow
 
     flt_bbr = pe.Node(
-        FLIRTRPT(cost_func='bbr', dof=bold2t1w_dof, generate_report=True),
+        FLIRTRPT(cost_func='bbr', dof=bold2t1w_dof, args="-basescale 1", generate_report=True),
         name='flt_bbr')
 
     FSLDIR = os.getenv('FSLDIR')
