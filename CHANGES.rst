@@ -1,75 +1,95 @@
-21.0.0 (TBD)
-============
-A new major version of fMRIPrep is finally here!
+21.0.0 (December 13, 2021)
+==========================
+A new series is finally here!
 
-  21.0.0rc2
-  ---------
-  * DOC: ME | Add missing output to documentation, improve boilerplate (#2608)
-  * ENH: Tedana-friendly ME derivatives (#2575)
-  * ENH: Better integration of *SDCFlows*' unwarping (#2576)
-  * ENH: Refactor workflow to adopt *SDCFlows*' new correction workflow (#2547)
-  * FIX: Restore SyN-SDC (#2530)
-  * FIX: Confusing I/O field ``bold_mask`` in bold-to-bold resampling workflow (#2611)
-  * FIX: ME | Revise SDC compute graph (#2610)
-  * FIX: Propagate the SDC warp to resampling node also with ME (#2609)
-  * FIX: Optimize build job on CircleCI (#2605)
-  * FIX: Minor multiecho issues (#2574)
-  * MAINT: Finalize the work we started with the refactor of the Docker image (#2601)
-  * MAINT: Run full workflows on tags (#2593)
-  * MAINT: Stage Python environment of Docker image from nipreps/miniconda (#2581)
-  * MAINT: Stop NeuroDebian dependency in Dockerfile (#2578)
+Some highlights of this version's new features include a substantial rework of fMRIPrep's
+susceptibility distortion correction (including the addition of FSL's `topup` as the new
+default PEPOLAR correction technique), improved flexibility for multiecho scans, and
+dependency version upgrades within the Docker environment.
 
-  21.0.0rc1
-  ---------
-  * DOC: Add --index-metadata to `pybids layout` faq (#2546)
-  * DOC: Add warning about slice timing correction in output documentation. (#2502)
-  * ENH: Make bids the default output layout option (#2555)
-  * ENH: Mask multi-echo data with reference mask instead of echo-specific masks (#2349)
-  * FIX: Missing numpy import (#2533)
-  * DOCKER: Shrink Docker image size (#2551)
-  * DOCKER: Strip ABI tag from libQt5Core.so.5 to prevent Singularity failures (#2535)
-  * MAINT: Run pytest through GitHub actions (#2529)
+.. note::
 
-  21.0.0rc0
-  ---------
-  * DOC: Update sample report (#2519)
-  * DOC: Refactor README and citing information (#2474)
-  * DOC: Point documentation at *SDCFlows* and remove SDC section (#2470)\
-  * DOC: Transfer duplicated documentation to www.nipreps.org (#2469)
-  * DOC: Better explanation on how spike regressors are generated (#2465)
-  * DOC: Clarify that ``res-2`` entity does not mean 2mm (#2466)
-  * DOC: adds --mem metavar (#2378)
-  * DOC: skull stripping is forced by default (#2345)
-  * ENH: Add flag for STC reference time and set in all cases (#2520)
-  * ENH: Use ``BIDSLayoutIndexer`` and do not index unnecessary modalities (#2494)
-  * ENH: Allow users to download templateflow templates to directory (#2482)
-  * ENH: Detect 3D & too-short BOLD series, warn and skip run's workflow building (#2461)
-  * ENH: Modernize Dockerfile (#2409) (#2270)
-  * ENH: Leverage SDCFlows 2.x API (#2392)
-  * FIX: Avoid eager imports from *NiWorkflows* causing API breaks (#2495)
-  * FIX: Split aCompCor into aCompCor, cCompCor, wCompCor (#2523)
-  * FIX: Avoid unnecessary connections based on branching logic (#2508)
-  * FIX: Permit missing TR to show PyBIDS error at workflow construction time (#2513)
-  * FIX: Simplify STC logic for too short BOLD series (#2489)
-  * FIX: Catch FreeSurfer error related to FIPS being enabled (#2490)
-  * FIX: ``DerivativesDataSink`` nondeterministic checksums fixed with ``niworkflows=~1.3.4`` (#2458)
-  * FIX: Address dependency incompatibilities by pinning specific packages (#2463)
-  * FIX: Unprotected import of ``sentry_sdk``, which is not a dependency (#2460)
-  * FIX: Clarify phase encoding direction, rather than axis (#2302)
-  * MAINT: Relicense +20.3.x - BSD-3-Clause -> Apache License 2.0 (#2325)
-  * MAINT: Add missing OASIS30 WM/BS probsegs (#2471)
-  * MAINT: Update BIDS validator to 1.8.0 (#2443)
-  * MAINT: Address the problems of a sloppy merge (#2468)
-  * MAINT: Containers - remove ``/root/.npm`` (#2464)
-  * MAINT: Remove traces of Xenial base (#2459)
-  * MAINT: Revise CircleCI's cache tags to avoid mixups between builds (#2457)
-  * MAINT: Back port CircleCI configuration from dev branch (#2456)
-  * MAINT: Increase minimum tedana version (#2366)
-  * MAINT: Docker hub has disabled password authentication (#2448)
-  * MAINT: Add Lea Waller to ``contributors.json`` (#2304)
-  * MAINT: Move away from nearly deprecated images (#2295)
-  * MAINT: Migrate from poldracklab to nipreps orgs (#2290)
-  * MAINT: Ease CI packaging tests (#2472)
+  To follow BIDS Derivatives more closely, *fMRIPrep*'s default output layout has changed.
+  To enable the legacy layout, use the `--output-layout legacy` flag.
+  For more information, please see https://fmriprep.org/en/latest/outputs.html#layout
+
+.. caution::
+
+    As with all minor version increments, working directories
+    from previous versions **should not be reused**.
+
+Thank you for using *fMRIPrep*!
+If you encounter any issues with this release, please let us know
+by posting an issue on our GitHub page!
+
+A full list of changes can be found below.
+
+* DOC: Remove mention to ``epidewarp.fsl`` from ``NOTICE`` (#2629)
+* DOC: Update description of output layout, add discussion of legacy mode (#2646)
+* DOC: ME | Add missing output to documentation, improve boilerplate (#2608)
+* DOC: Add --index-metadata to `pybids layout` faq (#2546)
+* DOC: Add warning about slice timing correction in output documentation. (#2502)
+* DOC: Update sample report (#2519)
+* DOC: Refactor README and citing information (#2474)
+* DOC: Point documentation at *SDCFlows* and remove SDC section (#2470)\
+* DOC: Transfer duplicated documentation to www.nipreps.org (#2469)
+* DOC: Better explanation on how spike regressors are generated (#2465)
+* DOC: Clarify that ``res-2`` entity does not mean 2mm (#2466)
+* DOC: adds --mem metavar (#2378)
+* DOC: skull stripping is forced by default (#2345)
+* DOCKER: Shrink Docker image size (#2551)
+* DOCKER: Strip ABI tag from libQt5Core.so.5 to prevent Singularity failures (#2535)
+* ENH: Make bids the default output layout option (#2555)
+* ENH: Mask multi-echo data with reference mask instead of echo-specific masks (#2349)
+* ENH: Replace initial FLIRT with mri_coreg, use -basescale 1 for FLIRT-BBR (#2625)
+* ENH: Add flag for STC reference time and set in all cases (#2520)
+* ENH: Use ``BIDSLayoutIndexer`` and do not index unnecessary modalities (#2494)
+* ENH: Allow users to download templateflow templates to directory (#2482)
+* ENH: Detect 3D & too-short BOLD series, warn and skip run's workflow building (#2461)
+* ENH: Modernize Dockerfile (#2409) (#2270)
+* ENH: Leverage SDCFlows 2.x API (#2392)
+* ENH: Tedana-friendly ME derivatives (#2575)
+* ENH: Better integration of *SDCFlows*' unwarping (#2576)
+* ENH: Refactor workflow to adopt *SDCFlows*' new correction workflow (#2547)
+* FIX: Threshold boldref resampled values to be non-negative (#2630)
+* FIX: Restore SyN-SDC (#2530)
+* FIX: Confusing I/O field ``bold_mask`` in bold-to-bold resampling workflow (#2611)
+* FIX: ME | Revise SDC compute graph (#2610)
+* FIX: Propagate the SDC warp to resampling node also with ME (#2609)
+* FIX: Optimize build job on CircleCI (#2605)
+* FIX: Minor multiecho issues (#2574)
+* FIX: Missing numpy import (#2533)
+* FIX: Avoid eager imports from *NiWorkflows* causing API breaks (#2495)
+* FIX: Split aCompCor into aCompCor, cCompCor, wCompCor (#2523)
+* FIX: Avoid unnecessary connections based on branching logic (#2508)
+* FIX: Permit missing TR to show PyBIDS error at workflow construction time (#2513)
+* FIX: Simplify STC logic for too short BOLD series (#2489)
+* FIX: Catch FreeSurfer error related to FIPS being enabled (#2490)
+* FIX: ``DerivativesDataSink`` nondeterministic checksums fixed with ``niworkflows=~1.3.4`` (#2458)
+* FIX: Address dependency incompatibilities by pinning specific packages (#2463)
+* FIX: Unprotected import of ``sentry_sdk``, which is not a dependency (#2460)
+* FIX: Clarify phase encoding direction, rather than axis (#2302)
+* MAINT: Reduce redundant processing of ds005 (#2649)
+* MAINT: Finalize the work we started with the refactor of the Docker image (#2601)
+* MAINT: Run full workflows on tags (#2593)
+* MAINT: Stage Python environment of Docker image from nipreps/miniconda (#2581)
+* MAINT: Stop NeuroDebian dependency in Dockerfile (#2578)
+* MAINT: Run pytest through GitHub actions (#2529)
+* MAINT: Relicense +20.3.x - BSD-3-Clause -> Apache License 2.0 (#2325)
+* MAINT: Add missing OASIS30 WM/BS probsegs (#2471)
+* MAINT: Update BIDS validator to 1.8.0 (#2443)
+* MAINT: Address the problems of a sloppy merge (#2468)
+* MAINT: Containers - remove ``/root/.npm`` (#2464)
+* MAINT: Remove traces of Xenial base (#2459)
+* MAINT: Revise CircleCI's cache tags to avoid mixups between builds (#2457)
+* MAINT: Back port CircleCI configuration from dev branch (#2456)
+* MAINT: Increase minimum tedana version (#2366)
+* MAINT: Docker hub has disabled password authentication (#2448)
+* MAINT: Add Lea Waller to ``contributors.json`` (#2304)
+* MAINT: Move away from nearly deprecated images (#2295)
+* MAINT: Migrate from poldracklab to nipreps orgs (#2290)
+* MAINT: Ease CI packaging tests (#2472)
+* RF/FIX: Iterate over echo indices, not filenames, simplifying iteration logic (#2651)
 
 20.2.5 (October 12, 2021)
 =========================
