@@ -1,4 +1,4 @@
-21.0.0 (December 13, 2021)
+21.0.0 (December 14, 2021)
 ==========================
 A new series is finally here!
 
@@ -69,6 +69,7 @@ A full list of changes can be found below.
 * FIX: Address dependency incompatibilities by pinning specific packages (#2463)
 * FIX: Unprotected import of ``sentry_sdk``, which is not a dependency (#2460)
 * FIX: Clarify phase encoding direction, rather than axis (#2302)
+* MAINT: Conform fast-track outputs to BIDS ordering (#2663)
 * MAINT: Reduce redundant processing of ds005 (#2649)
 * MAINT: Finalize the work we started with the refactor of the Docker image (#2601)
 * MAINT: Run full workflows on tags (#2593)
